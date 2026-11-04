@@ -86,21 +86,36 @@ class FakeSession:
         pass
 
 
-def authenticate_proof(
-    monkeypatch: pytest.MonkeyPatch,
-    model: models.TrezorModel,
-    proof: messages.AuthenticityProof,
-    version: tuple[int, int, int] = MCU_VERSION,
-    **kwargs: t.Any,
-) -> RootPublicKeys | None:
-    monkeypatch.setattr(
-        authentication.device, "authenticate", lambda session, challenge: proof
-    )
-    return authentication.authenticate_device(
-        FakeSession(model, version),  # type: ignore [arg-type]
-        CHALLENGE,
-        **kwargs,
-    )
+class AuthFromProof(t.Protocol):
+    def __call__(
+        self,
+        model: models.TrezorModel,
+        proof: messages.AuthenticityProof,
+        version: tuple[int, int, int] = MCU_VERSION,
+        **kwargs: t.Any,
+    ) -> RootPublicKeys | None: ...
+
+
+@pytest.fixture
+def auth_proof(monkeypatch: pytest.MonkeyPatch) -> AuthFromProof:
+    """Call `authenticate_device` with a fake session returning the given proof."""
+
+    def do(
+        model: models.TrezorModel,
+        proof: messages.AuthenticityProof,
+        version: tuple[int, int, int] = MCU_VERSION,
+        **kwargs: t.Any,
+    ) -> RootPublicKeys | None:
+        monkeypatch.setattr(
+            authentication.device, "authenticate", lambda session, challenge: proof
+        )
+        return authentication.authenticate_device(
+            FakeSession(model, version),  # type: ignore [arg-type]
+            CHALLENGE,
+            **kwargs,
+        )
+
+    return do
 
 
 # ==== tests with generated root keys ====
@@ -330,14 +345,29 @@ def verify(
     )
 
 
-def authenticate(
-    monkeypatch: pytest.MonkeyPatch,
-    model: models.TrezorModel,
-    chains: t.Mapping[AttestationSource, Chain],
-    version: tuple[int, int, int] = MCU_VERSION,
-    **kwargs: t.Any,
-) -> RootPublicKeys | None:
-    return authenticate_proof(monkeypatch, model, make_proof(chains), version, **kwargs)
+class AuthFromChains(t.Protocol):
+    def __call__(
+        self,
+        model: models.TrezorModel,
+        chains: t.Mapping[AttestationSource, Chain],
+        version: tuple[int, int, int] = MCU_VERSION,
+        **kwargs: t.Any,
+    ) -> RootPublicKeys | None: ...
+
+
+@pytest.fixture
+def auth(auth_proof: AuthFromProof) -> AuthFromChains:
+    """Call `authenticate_device` with a fake session returning the given chains."""
+
+    def do(
+        model: models.TrezorModel,
+        chains: t.Mapping[AttestationSource, Chain],
+        version: tuple[int, int, int] = MCU_VERSION,
+        **kwargs: t.Any,
+    ) -> RootPublicKeys | None:
+        return auth_proof(model, make_proof(chains), version, **kwargs)
+
+    return do
 
 
 # ---- verify_authentication_response ----
@@ -491,21 +521,17 @@ def test_verify_custom_root_mismatch(
 # ---- authenticate_device ----
 
 
-def test_authenticate_t3w1(roots: Roots, monkeypatch: pytest.MonkeyPatch) -> None:
-    root = authenticate(monkeypatch, models.T3W1, make_chains(roots.t3w1_prod))
+def test_authenticate_t3w1(roots: Roots, auth: AuthFromChains) -> None:
+    root = auth(models.T3W1, make_chains(roots.t3w1_prod))
     assert root is roots.t3w1_prod.public_keys
 
 
-def test_authenticate_t3w1_debug(
-    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
-) -> None:
+def test_authenticate_t3w1_debug(roots: Roots, auth: AuthFromChains, rejects: Rejects) -> None:
     chains = make_chains(roots.t3w1_debug)
-    root = authenticate(
-        monkeypatch, models.T3W1, chains, allow_development_devices=True
-    )
+    root = auth(models.T3W1, chains, allow_development_devices=True)
     assert root is roots.t3w1_debug.public_keys
     with rejects("manufactured by Test DEBUG root"):
-        authenticate(monkeypatch, models.T3W1, chains)
+        auth(models.T3W1, chains)
 
 
 @pytest.mark.parametrize(
@@ -514,7 +540,7 @@ def test_authenticate_t3w1_debug(
 )
 def test_authenticate_t3w1_missing_proof(
     roots: Roots,
-    monkeypatch: pytest.MonkeyPatch,
+    auth: AuthFromChains,
     rejects: Rejects,
     source: AttestationSource,
     message: str,
@@ -522,34 +548,31 @@ def test_authenticate_t3w1_missing_proof(
     chains = make_chains(roots.t3w1_prod)
     del chains[source]
     with rejects(message):
-        authenticate(monkeypatch, models.T3W1, chains)
+        auth(models.T3W1, chains)
 
 
 @pytest.mark.parametrize("source", [TROPIC, MCU])
 def test_authenticate_t3w1_invalid_proof(
-    roots: Roots,
-    monkeypatch: pytest.MonkeyPatch,
-    rejects: Rejects,
-    source: AttestationSource,
+    roots: Roots, auth: AuthFromChains, rejects: Rejects, source: AttestationSource
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
     unknown_root = FakeRoot((models.T3W1,), RootKeyType.PROD)
     chains[source] = make_chain(unknown_root, source)
     with rejects("issued by an unknown root"):
-        authenticate(monkeypatch, models.T3W1, chains)
+        auth(models.T3W1, chains)
 
 
 def test_authenticate_t3w1_mcu_min_version(
-    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
+    roots: Roots, auth: AuthFromChains, rejects: Rejects
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
-    root = authenticate(monkeypatch, models.T3W1, chains, version=MCU_VERSION)
+    root = auth(models.T3W1, chains, version=MCU_VERSION)
     assert root is roots.t3w1_prod.public_keys
 
     major, minor, patch = MCU_VERSION
     older = (major, minor, patch - 1)
     with rejects("does not support MCU attestation"):
-        authenticate(monkeypatch, models.T3W1, chains, version=older)
+        auth(models.T3W1, chains, version=older)
 
 
 @pytest.mark.parametrize(
@@ -561,7 +584,7 @@ def test_authenticate_t3w1_mcu_min_version(
 )
 def test_authenticate_optiga_only(
     roots: Roots,
-    monkeypatch: pytest.MonkeyPatch,
+    auth: AuthFromChains,
     model: models.TrezorModel,
     root_name: str,
     common_name: str,
@@ -572,15 +595,12 @@ def test_authenticate_optiga_only(
     garbage = make_chain(FakeRoot((model,), RootKeyType.PROD), TROPIC, common_name)
     garbage_mcu = make_chain(FakeRoot((model,), RootKeyType.PROD), MCU, common_name)
     chains = {OPTIGA: chain, TROPIC: garbage, MCU: garbage_mcu}
-    assert authenticate(monkeypatch, model, chains) is root.public_keys
+    assert auth(model, chains) is root.public_keys
 
 
 @pytest.mark.parametrize("source", [OPTIGA, TROPIC])
 def test_authenticate_allowlist(
-    roots: Roots,
-    monkeypatch: pytest.MonkeyPatch,
-    rejects: Rejects,
-    source: AttestationSource,
+    roots: Roots, auth: AuthFromChains, rejects: Rejects, source: AttestationSource
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
     ca_pubkey = authentication.Certificate(chains[source].certificates[1]).public_key
@@ -588,15 +608,12 @@ def test_authenticate_allowlist(
         {"revoked_pubkeys": [ca_pubkey.to_bytes().hex()]}
     )
     with rejects("denied by allowlist"):
-        authenticate(monkeypatch, models.T3W1, chains, allowlist=revoked)
+        auth(models.T3W1, chains, allowlist=revoked)
 
 
-def test_authenticate_custom_roots(
-    roots: Roots, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_authenticate_custom_roots(roots: Roots, auth: AuthFromChains) -> None:
     chains = make_chains(roots.t3w1_debug)
-    root = authenticate(
-        monkeypatch,
+    root = auth(
         models.T3W1,
         chains,
         p256_root_pubkey=roots.t3w1_debug.pubkey_bytes(OPTIGA),
@@ -616,7 +633,7 @@ def test_authenticate_custom_roots(
 )
 def test_authenticate_custom_root_requires_proof(
     roots: Roots,
-    monkeypatch: pytest.MonkeyPatch,
+    auth: AuthFromChains,
     rejects: Rejects,
     root_pubkey_arg: str,
     source: AttestationSource,
@@ -626,25 +643,22 @@ def test_authenticate_custom_root_requires_proof(
     chain = make_chain(roots.t3t1_prod, OPTIGA, "T3T1 Trezor Safe 5")
     kwargs: dict[str, t.Any] = {root_pubkey_arg: roots.t3w1_debug.pubkey_bytes(source)}
     with rejects(message):
-        authenticate(monkeypatch, models.T3T1, {OPTIGA: chain}, **kwargs)
+        auth(models.T3T1, {OPTIGA: chain}, **kwargs)
 
 
-def test_authenticate_mixed_roots(
-    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
-) -> None:
+def test_authenticate_mixed_roots(roots: Roots, auth: AuthFromChains, rejects: Rejects) -> None:
     chains = make_chains(roots.t3w1_prod)
     chains[TROPIC] = make_chain(roots.t3w1_backup, TROPIC)
     with rejects("different root authorities"):
-        authenticate(monkeypatch, models.T3W1, chains)
+        auth(models.T3W1, chains)
 
 
 def test_authenticate_mixed_custom_and_builtin_roots(
-    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
+    roots: Roots, auth: AuthFromChains, rejects: Rejects
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
     with rejects("different root authorities"):
-        authenticate(
-            monkeypatch,
+        auth(
             models.T3W1,
             chains,
             ed25519_root_pubkey=roots.t3w1_prod.pubkey_bytes(TROPIC),
@@ -652,51 +666,48 @@ def test_authenticate_mixed_custom_and_builtin_roots(
 
 
 def test_authenticate_inconsistent_serial_numbers(
-    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
+    roots: Roots, auth: AuthFromChains, rejects: Rejects
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
     chains[MCU] = make_chain(roots.t3w1_prod, MCU, serial_number="99999999999999")
     with rejects("inconsistent serial numbers"):
-        authenticate(monkeypatch, models.T3W1, chains)
+        auth(models.T3W1, chains)
 
 
 def test_authenticate_inconsistent_common_names(
-    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
+    roots: Roots, auth: AuthFromChains, rejects: Rejects
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
     chains[TROPIC] = make_chain(roots.t3w1_prod, TROPIC, "T3W1 Trezor Safe 7 Pro")
     with rejects("inconsistent common names"):
-        authenticate(monkeypatch, models.T3W1, chains)
+        auth(models.T3W1, chains)
 
 
 def test_authenticate_model_mismatch(
-    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
+    roots: Roots, auth: AuthFromChains, rejects: Rejects
 ) -> None:
     # A T3W1 reporting itself as a T3T1 to skip the Tropic and MCU checks.
     chains = make_chains(roots.t3w1_prod)
     with rejects("does not match model T3T1"):
-        authenticate(monkeypatch, models.T3T1, chains)
+        auth(models.T3T1, chains)
 
 
 def test_authenticate_model_mismatch_safe5_as_t3w1(
-    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
+    roots: Roots, auth: AuthFromChains, rejects: Rejects
 ) -> None:
     # A Safe 5 Optiga in a device reporting itself as a T3W1.
     chain = make_chain(roots.t3t1_prod, OPTIGA, "T3T1 Trezor Safe 5")
     with rejects("Missing Tropic"):
-        authenticate(monkeypatch, models.T3W1, {OPTIGA: chain})
+        auth(models.T3W1, {OPTIGA: chain})
 
 
 @pytest.mark.parametrize("serial_number", [None, ""])
 def test_authenticate_t3w1_missing_serial_number(
-    roots: Roots,
-    monkeypatch: pytest.MonkeyPatch,
-    rejects: Rejects,
-    serial_number: str | None,
+    roots: Roots, auth: AuthFromChains, rejects: Rejects, serial_number: str | None
 ) -> None:
     chains = make_chains(roots.t3w1_prod, serial_number=serial_number)
     with rejects("Missing serial number"):
-        authenticate(monkeypatch, models.T3W1, chains)
+        auth(models.T3W1, chains)
 
 
 @pytest.mark.parametrize(
@@ -712,7 +723,7 @@ def test_authenticate_t3w1_missing_serial_number(
 )
 def test_authenticate_safe3_safe5_serial_number(
     roots: Roots,
-    monkeypatch: pytest.MonkeyPatch,
+    auth: AuthFromChains,
     model: models.TrezorModel,
     root_name: str,
     common_name: str,
@@ -720,7 +731,7 @@ def test_authenticate_safe3_safe5_serial_number(
 ) -> None:
     root = getattr(roots, root_name)
     chain = make_chain(root, OPTIGA, common_name, serial_number)
-    assert authenticate(monkeypatch, model, {OPTIGA: chain}) is root.public_keys
+    assert auth(model, {OPTIGA: chain}) is root.public_keys
 
 
 # ==== tests with the built-in root keys ====
@@ -878,7 +889,7 @@ def test_emulator_chain(rejects: Rejects, chain: EmulatorChain) -> None:
     "model", EMULATOR_MODELS, ids=[m.internal_name for m in EMULATOR_MODELS]
 )
 def test_authenticate_emulator(
-    monkeypatch: pytest.MonkeyPatch, model: models.TrezorModel
+    auth_proof: AuthFromProof, model: models.TrezorModel
 ) -> None:
     proof = messages.AuthenticityProof(optiga_signature=b"")
     for chain in EMULATOR_CHAINS:
@@ -886,7 +897,7 @@ def test_authenticate_emulator(
             source = chain.source.value
             setattr(proof, f"{source}_signature", emulator_signature(chain.source))
             setattr(proof, f"{source}_certificates", chain.certificates)
-    root = authenticate_proof(monkeypatch, model, proof, allow_development_devices=True)
+    root = auth_proof(model, proof, allow_development_devices=True)
     assert root is not None
     assert root.devel
     assert model in root.trezor_models
