@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor import io
-from trezor.wire.errors import DataError, FirmwareError
+from trezor.wire.errors import AppError, DataError
 
 if __debug__:
     from trezor import log
@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from typing import NoReturn
 
     from trezor.ui import ProgressLayout
+    from trezor.wire.errors import Error
     from trezorapp import AppImage
 
     from apps.common.keychain import Keychain
@@ -29,12 +30,10 @@ LIFECYCLE_ABORT = 0
 
 # message id of a Core reply reporting a failed request
 MSG_ID_ERROR = 0xFFFF
+# message id of a Core reply refusing a key path outside the app's manifest
+MSG_ID_FORBIDDEN_PATH = 0xFFFE
 
 _SLIP24_NAMESPACE = [b"SLIP-0024"]
-
-
-class ApplicationError(FirmwareError):
-    """The app crashed or broke the lifecycle protocol."""
 
 
 def describe(exception: BaseException) -> str:
@@ -90,9 +89,11 @@ class Session:
         self.stopped = True
         self.image.stop()
 
-    def die(self, exception: Exception) -> NoReturn:
+    def die(self, reason: str, error: Error | None = None) -> NoReturn:
+        """Stop the app and fail with `error` (`AppError` by default); `reason`
+        is only logged."""
         self.dead = True
         if __debug__:
-            log.error(__name__, f"Task died due to exception: {exception}")
+            log.error(__name__, f"App stopped: {reason}")
         self.stop()
-        raise exception
+        raise error or AppError()

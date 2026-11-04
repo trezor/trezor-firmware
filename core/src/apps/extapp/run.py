@@ -9,7 +9,7 @@ from trezor.messages import ExtAppMessage
 from trezor.ui import Shutdown as ui_shutdown
 from trezor.ui.layouts import error_popup, interact_simple
 from trezor.wire import context
-from trezor.wire.errors import DataError, Error, FirmwareError
+from trezor.wire.errors import AppError, DataError, Error
 
 from apps.common import paths
 
@@ -22,7 +22,6 @@ from .session import (
     SERVICE_UI,
     SERVICE_WIRE,
     SERVICE_WIRE_ERROR,
-    ApplicationError,
     Session,
     describe,
 )
@@ -73,7 +72,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse | None:
         finally:
             await _stop_app(session)
         if not session.response_sent:
-            session.die(ApplicationError("App exited without a response"))
+            session.die("App exited without a response")
         return response
     except Exception as e:
         if session.dead:
@@ -159,10 +158,10 @@ async def _stop_app(session: Session) -> None:
             try:
                 await loop.wait(_APP_EXIT_EVENT, timeout_ms=_STOP_TIMEOUT_MS)
             except loop.Timeout:
-                session.die(ApplicationError("App did not stop"))
+                session.die("App did not stop", AppError("Application not responding"))
 
     if not image.exited_normally():
-        session.die(ApplicationError("App crashed"))
+        session.die("App crashed")
 
 
 async def _send_request(session: Session, request: ExtAppMessage) -> None:
@@ -175,9 +174,7 @@ async def _send_request(session: Session, request: ExtAppMessage) -> None:
             retries -= 1
             if retries == 0 or not session.image.is_running():
                 session.die(
-                    DataError(
-                        f"Failed to send request {request.message_id} to app: {describe(e)}"
-                    )
+                    f"Failed to send request {request.message_id}: {describe(e)}"
                 )
         await loop.sleep(_START_RETRY_MS)
 
@@ -219,9 +216,8 @@ async def _serve(session: Session, request: ExtAppMessage) -> ExtAppResponse | N
             msg = await _next_message(session)
         except loop.Timeout:
             session.die(
-                DataError(
-                    f"No message from app within {_IPC_TIMEOUT_MS} ms after service {last_service}"
-                )
+                f"No message from app within {_IPC_TIMEOUT_MS} ms after service {last_service}",
+                AppError("Application not responding"),
             )
 
         if msg is None:
@@ -237,7 +233,7 @@ async def _serve(session: Session, request: ExtAppMessage) -> ExtAppResponse | N
                     return wire.final_response(session, msg)
                 await wire.handle(session, msg)
             elif service == SERVICE_WIRE_ERROR:
-                wire.handle_error(msg)
+                wire.handle_error(session, msg)
             elif service == SERVICE_UI:
                 await ui.handle(session, msg)
             elif service == SERVICE_PROGRESS:
@@ -245,11 +241,7 @@ async def _serve(session: Session, request: ExtAppMessage) -> ExtAppResponse | N
             elif service == SERVICE_CRYPTO:
                 await crypto.handle(session, msg)
             else:
-                session.die(
-                    DataError(
-                        f"Unknown IPC service {service} (message {msg.message_id})"
-                    )
-                )
+                session.die(f"Unknown IPC service {service} (message {msg.message_id})")
         except (
             Error,
             MemoryError,
@@ -260,10 +252,7 @@ async def _serve(session: Session, request: ExtAppMessage) -> ExtAppResponse | N
             # failures with their own code and message, and workflow control flow
             raise
         except Exception as e:
-            # a bare exception would reach the host as an empty `FirmwareError`;
-            # stop the app too, it may still be waiting for Core's answer
+            # stop the app, it may still be waiting for Core's answer
             session.die(
-                FirmwareError(
-                    f"Service {service} (message {msg.message_id}) failed: {e.__class__.__name__}: {e}"
-                )
+                f"Service {service} (message {msg.message_id}) failed: {e.__class__.__name__}: {e}"
             )

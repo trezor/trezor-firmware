@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor.enums import FailureType
 from trezor.messages import ExtAppResponse
 from trezor.wire import context
 from trezor.wire.errors import DataError, Error
@@ -16,6 +17,14 @@ if TYPE_CHECKING:
     from trezor.messages import ExtAppMessage
 
     from .session import Session
+
+# failure codes an app may report (`Error::code()` in the SDK)
+_APP_FAILURE_CODES = (
+    FailureType.UnexpectedMessage,
+    FailureType.DataError,
+    FailureType.ActionCancelled,
+    FailureType.ProcessError,
+)
 
 
 async def handle(session: Session, msg: IpcMessage) -> None:
@@ -41,17 +50,18 @@ def handle_host_message(session: Session, msg: ExtAppMessage) -> None:
     if msg.instance_id != session.instance_id:
         raise DataError("Invalid instance ID")
     if msg.message_id > 0xFFFF:
-        session.die(DataError("Invalid message ID."))
+        # the host's fault, not the app's
+        session.die("Invalid message ID from host", DataError("Invalid message ID"))
     session.response_sent = False
     try:
         session.send(SERVICE_WIRE, msg.message_id, msg.data)
     except Exception:
         # e.g. the message does not fit the app's inbox; the app would keep
         # waiting for it, so stop the app instead
-        session.die(DataError("Failed to send host message to app"))
+        session.die("Failed to send host message to app")
 
 
-def handle_error(msg: IpcMessage) -> NoReturn:
+def handle_error(session: Session, msg: IpcMessage) -> NoReturn:
     """Fail the request with the app's error."""
     err_message = (
         msg.data.decode("utf-8", "replace")
@@ -60,4 +70,7 @@ def handle_error(msg: IpcMessage) -> NoReturn:
     )
     if __debug__:
         log.debug(__name__, f"Received wire error message: {err_message}")
-    raise Error(msg.message_id, err_message)  # pyright: ignore [reportArgumentType]
+    for code in _APP_FAILURE_CODES:
+        if code == msg.message_id:
+            raise Error(code, err_message)
+    session.die(f"Invalid failure code {msg.message_id}")
