@@ -9,7 +9,10 @@ CI_RUN_URL = f"https://github.com/trezor/trezor-firmware/actions/runs/{RUN_ID}"
 # Same columns/rows shape as ci/make_pull_comment.py (Core's own UI report
 # comment), except the columns are individual extapps rather than test types
 # -- there's only one test type (device tests) for extapps today.
-APPS = ["tron"]
+# Apps tested in sdk.yml's `extapp_device_test`, and whether they have UI tests.
+APPS = {"tron": True, "testapp": False}
+# testapp is only translated to English (see the matrix excludes in sdk.yml).
+APP_LANGS = {"testapp": ["en"]}
 MODELS = ["t3w1"]
 
 
@@ -29,13 +32,14 @@ def main():
 def print_table(lang):
     print(f"\n# `{lang}`\n")
 
-    header = ["model"] + APPS
+    apps = [app for app in APPS if lang in APP_LANGS.get(app, [lang])]
+    header = ["model"] + apps
     print("|".join(header))
     print("|".join(["-"] * len(header)))
 
     for model in MODELS:
         row = [f"{model}"]
-        for app in APPS:
+        for app in apps:
             # No master-branch diff column here (unlike Core's report): extapp
             # device tests don't run with --do-master-diff yet, since tron's
             # ui_tests/reporting module (sdk/apps/tron/tests/ui_tests/reporting)
@@ -43,6 +47,10 @@ def print_table(lang):
             test_prefix = f"{REPORT_URL}/{model}-{lang}-extapp_device_test_{app}"
 
             job_img = f'<img src="{test_prefix}-status.png"/>'
+            if not APPS[app]:
+                # no UI tests, so no report: only the job status
+                row.append(job_img)
+                continue
 
             test_diff = f"[test]({test_prefix}-index.html)"
             test_screens = f"[all]({test_prefix}-differing_screens.html)"
