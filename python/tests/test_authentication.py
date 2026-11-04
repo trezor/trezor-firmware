@@ -300,33 +300,6 @@ def make_proof(
     )
 
 
-class RootSpec(t.NamedTuple):
-    name: str
-    trezor_models: tuple[models.TrezorModel, ...]
-    key_type: RootKeyType
-    sources: tuple[AttestationSource, ...] = (OPTIGA, TROPIC, MCU)
-
-
-ROOT_SPECS = (
-    RootSpec("t3w1_prod", (models.T3W1,), RootKeyType.PROD),
-    RootSpec("t3w1_backup", (models.T3W1,), RootKeyType.PROD_BACKUP),
-    RootSpec("t3w1_debug", (models.T3W1,), RootKeyType.DEBUG),
-    RootSpec("t3t1_prod", (models.T3T1,), RootKeyType.PROD, (OPTIGA,)),
-    RootSpec("t3t1_debug", (models.T3T1,), RootKeyType.DEBUG, (OPTIGA,)),
-    RootSpec("t2b1_prod", (models.T2B1,), RootKeyType.PROD, (OPTIGA,)),
-    RootSpec("t3b1_prod", (models.T3B1,), RootKeyType.PROD, (OPTIGA,)),
-    RootSpec("safe3_debug", (models.T2B1, models.T3B1), RootKeyType.DEBUG, (OPTIGA,)),
-)
-
-# every valid root x model x source combination
-ROOT_MATRIX = [
-    (spec, model, source)
-    for spec in ROOT_SPECS
-    for model in spec.trezor_models
-    for source in spec.sources
-]
-
-
 class Roots(t.NamedTuple):
     t3w1_prod: FakeRoot
     t3w1_backup: FakeRoot
@@ -338,29 +311,44 @@ class Roots(t.NamedTuple):
     safe3_debug: FakeRoot
 
     def prod(self, model: models.TrezorModel) -> FakeRoot:
-        (spec,) = (
-            s
-            for s in ROOT_SPECS
-            if s.key_type is RootKeyType.PROD and model in s.trezor_models
-        )
-        return getattr(self, spec.name)
+        prod_roots = {
+            models.T3W1: self.t3w1_prod,
+            models.T3T1: self.t3t1_prod,
+            models.T2B1: self.t2b1_prod,
+            models.T3B1: self.t3b1_prod,
+        }
+        return prod_roots[model]
 
 
-@pytest.fixture(scope="module")
-def module_roots() -> Roots:
-    return Roots(
-        **{s.name: FakeRoot(s.trezor_models, s.key_type, s.sources) for s in ROOT_SPECS}
-    )
+# generated at import time, so that the tests can be parametrized by them
+ROOTS = Roots(
+    t3w1_prod=FakeRoot((models.T3W1,), RootKeyType.PROD),
+    t3w1_backup=FakeRoot((models.T3W1,), RootKeyType.PROD_BACKUP),
+    t3w1_debug=FakeRoot((models.T3W1,), RootKeyType.DEBUG),
+    t3t1_prod=FakeRoot((models.T3T1,), RootKeyType.PROD, (OPTIGA,)),
+    t3t1_debug=FakeRoot((models.T3T1,), RootKeyType.DEBUG, (OPTIGA,)),
+    t2b1_prod=FakeRoot((models.T2B1,), RootKeyType.PROD, (OPTIGA,)),
+    t3b1_prod=FakeRoot((models.T3B1,), RootKeyType.PROD, (OPTIGA,)),
+    safe3_debug=FakeRoot((models.T2B1, models.T3B1), RootKeyType.DEBUG, (OPTIGA,)),
+)
+
+# every valid root x model x source combination
+ROOT_MATRIX = [
+    (root, model, source)
+    for root in ROOTS
+    for model in root.certificate.trezor_models
+    for source in root.keys
+]
 
 
 @pytest.fixture
-def roots(module_roots: Roots, monkeypatch: pytest.MonkeyPatch) -> Roots:
+def roots(monkeypatch: pytest.MonkeyPatch) -> Roots:
     monkeypatch.setattr(
         authentication,
         "ROOT_PUBLIC_KEYS",
-        [root.certificate for root in module_roots],
+        [root.certificate for root in ROOTS],
     )
-    return module_roots
+    return ROOTS
 
 
 def verify(
@@ -420,18 +408,18 @@ def test_model_cn_format() -> None:
     assert model_cn(models.T3W1) == "T3W1 Trezor Safe 7"
 
 
+@pytest.mark.usefixtures("roots")
 @pytest.mark.parametrize(
-    "spec, model, source",
+    "root, model, source",
     ROOT_MATRIX,
-    ids=[f"{s.name}-{m.internal_name}-{src.value}" for s, m, src in ROOT_MATRIX],
+    ids=[
+        f"{r.certificate.key_type.name}-{m.internal_name}-{src.value}"
+        for r, m, src in ROOT_MATRIX
+    ],
 )
 def test_verify_builtin_root(
-    roots: Roots,
-    spec: RootSpec,
-    model: models.TrezorModel,
-    source: AttestationSource,
+    root: FakeRoot, model: models.TrezorModel, source: AttestationSource
 ) -> None:
-    root = getattr(roots, spec.name)
     chain = make_chain(root, source, model_cn(model))
     result = verify(chain, source, allow_development_devices=root.certificate.devel)
     assert result.root is root.certificate
