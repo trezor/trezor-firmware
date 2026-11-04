@@ -244,6 +244,7 @@ fn confirm_ethereum_approve<'a>(
         false,
         Some(br_name),
         ButtonRequestType::Other.into(),
+        false,
     ))?)?;
 
     let account_item = account_path.map(|p| {
@@ -320,6 +321,7 @@ fn confirm_ethereum_clear_signing(
         false,
         Some("confirm_contract"),
         ButtonRequestType::Other.into(),
+        false,
     ))?;
     ui::error_if_not_confirmed(ui::confirm_summary(ui::ConfirmSummary::new(
         tr!("words__send"),
@@ -941,6 +943,7 @@ fn confirm_ethereum_vault_tx(
                     false,
                     name,
                     br_code,
+                    false,
                 ))
             },
             &menu,
@@ -963,6 +966,7 @@ fn confirm_ethereum_vault_tx(
                     false,
                     name,
                     br_code,
+                    false,
                 ))
             },
             &menu,
@@ -1088,6 +1092,7 @@ fn confirm_ethereum_vault_claim(
                         false,
                         name,
                         br_code,
+                        false,
                     ))
                 },
                 &menu,
