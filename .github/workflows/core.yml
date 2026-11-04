@@ -138,6 +138,18 @@ jobs:
             core/build/artifacts/latest/*.map
             core/build/artifacts/pub/*
           retention-days: 7
+      # Memory report on MemBrowse for PRs and pushes to main; the PR comment is posted by membrowse-comment.yml.
+      # Not on the nightly schedule or workflow_dispatch: they would re-upload the main tip without its parent.
+      - uses: ./.github/actions/membrowse
+        if: >
+          matrix.type == 'normal' && !matrix.miniscript && !matrix.n1w1 && matrix.model != 'D001' &&
+          (github.event_name == 'pull_request' ||
+           (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+        continue-on-error: true  # never fail the firmware build because of the report
+        with:
+          model: ${{ matrix.model }}
+          coins: ${{ matrix.coins }}
+          api-key: ${{ secrets.MEMBROWSE_API_KEY }}
 
   core_emu:
     name: Build emu (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }}, ${{ matrix.asan }}${{ matrix.miniscript && ', miniscript' || '' }}${{matrix.n1w1 && ', n1w1' || '' }})

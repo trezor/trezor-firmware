@@ -1,0 +1,92 @@
+name: 'MemBrowse memory report'
+description: 'Upload memory usage of the built firmware, kernel, secmon and bootloader to MemBrowse'
+inputs:
+  model:
+    description: 'Trezor model, e.g. T3W1'
+    required: true
+  coins:
+    description: 'universal or btconly'
+    required: true
+  api-key:
+    description: 'MemBrowse API key (empty for fork PRs, which upload without one)'
+    required: false
+    default: ''
+runs:
+  using: "composite"
+  steps:
+    - name: Resolve linker scripts
+      id: cfg
+      shell: bash
+      env:
+        MODEL: ${{ inputs.model }}
+        COINS: ${{ inputs.coins }}
+      run: |
+        model_dir=core/embed/models/$MODEL
+        mcu=$(sed -n 's/^mcu *= *"\(.*\)"/\1/p' "$model_dir/model.toml")
+        # Same mapping as core/embed/xbuild/src/trezor.rs (link_as)
+        case "$mcu" in
+          stm32f4*) linker_dir=core/embed/sys/linker/stm32f4 ;;
+          *) linker_dir=core/embed/sys/linker/$mcu ;;
+        esac
+        # Firmware, kernel and secmon enable the secmon_layout feature, the bootloader does not
+        layout_ld=$model_dir/memory.ld
+        if grep -q '"secmon_layout"' "$model_dir/model.toml"; then
+          layout_ld=$model_dir/memory_secmon.ld
+        fi
+        artifacts=core/build/artifacts/$MODEL
+        {
+          echo "artifacts=$artifacts"
+          echo "linker_dir=$linker_dir"
+          echo "layout_ld=$layout_ld"
+          echo "memory_ld=$model_dir/memory.ld"
+          echo "suffix=$([ "$COINS" = btconly ] && echo -btconly)"
+          for project in kernel secmon bootloader; do
+            echo "has_$project=$([ "$COINS" = universal ] && [ -f "$artifacts/$project.elf" ] && echo true)"
+          done
+        } >> "$GITHUB_OUTPUT"
+        cat "$GITHUB_OUTPUT"
+
+    - name: MemBrowse firmware
+      uses: membrowse/membrowse-action@v1
+      with:
+        target_name: ${{ inputs.model }}-firmware${{ steps.cfg.outputs.suffix }}
+        elf: ${{ steps.cfg.outputs.artifacts }}/firmware.elf
+        ld: ${{ steps.cfg.outputs.layout_ld }} ${{ steps.cfg.outputs.linker_dir }}/firmware.ld
+        map_file: ${{ steps.cfg.outputs.artifacts }}/firmware.map
+        # The MicroPython heap takes all RAM left in its region; its usage is only known at runtime
+        skip_sections: .heap
+        exclude_alignment: true
+        api_key: ${{ inputs.api-key }}
+
+    - name: MemBrowse kernel
+      if: steps.cfg.outputs.has_kernel == 'true'
+      uses: membrowse/membrowse-action@v1
+      with:
+        target_name: ${{ inputs.model }}-kernel
+        elf: ${{ steps.cfg.outputs.artifacts }}/kernel.elf
+        ld: ${{ steps.cfg.outputs.layout_ld }} ${{ steps.cfg.outputs.linker_dir }}/kernel.ld
+        map_file: ${{ steps.cfg.outputs.artifacts }}/kernel.map
+        exclude_alignment: true
+        api_key: ${{ inputs.api-key }}
+
+    - name: MemBrowse secmon
+      if: steps.cfg.outputs.has_secmon == 'true'
+      uses: membrowse/membrowse-action@v1
+      with:
+        target_name: ${{ inputs.model }}-secmon
+        elf: ${{ steps.cfg.outputs.artifacts }}/secmon.elf
+        ld: ${{ steps.cfg.outputs.layout_ld }} ${{ steps.cfg.outputs.linker_dir }}/secmon.ld
+        map_file: ${{ steps.cfg.outputs.artifacts }}/secmon.map
+        exclude_alignment: true
+        api_key: ${{ inputs.api-key }}
+
+    - name: MemBrowse bootloader
+      if: steps.cfg.outputs.has_bootloader == 'true'
+      uses: membrowse/membrowse-action@v1
+      with:
+        target_name: ${{ inputs.model }}-bootloader
+        elf: ${{ steps.cfg.outputs.artifacts }}/bootloader.elf
+        ld: ${{ steps.cfg.outputs.memory_ld }} ${{ steps.cfg.outputs.linker_dir }}/bootloader.ld
+        map_file: ${{ steps.cfg.outputs.artifacts }}/bootloader.map
+        exclude_alignment: true
+        api_key: ${{ inputs.api-key }}
