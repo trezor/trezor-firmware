@@ -74,7 +74,7 @@ dependencies = [
 [[package]]
 name = "base58ck"
 version = "0.1.101"
-source = "git+https://github.com/trezor/rust-bitcoin?rev=574af27f6f3c15a7a1da864124a1bb789f3847f7#574af27f6f3c15a7a1da864124a1bb789f3847f7"
+source = "git+https://github.com/trezor/rust-bitcoin?rev=ada82111f84006e72e36887409077010c49a5f86#ada82111f84006e72e36887409077010c49a5f86"
 dependencies = [
  "bitcoin_hashes",
 ]
@@ -106,7 +106,7 @@ dependencies = [
 [[package]]
 name = "bitcoin"
 version = "0.32.102"
-source = "git+https://github.com/trezor/rust-bitcoin?rev=574af27f6f3c15a7a1da864124a1bb789f3847f7#574af27f6f3c15a7a1da864124a1bb789f3847f7"
+source = "git+https://github.com/trezor/rust-bitcoin?rev=ada82111f84006e72e36887409077010c49a5f86#ada82111f84006e72e36887409077010c49a5f86"
 dependencies = [
  "base58ck",
  "bech32",
@@ -136,7 +136,7 @@ checksum = "e8bea3a9f0cfece4564e37cb49a38cc245ca5184719e50d7d0dda3268722c4e2"
 [[package]]
 name = "bitcoin-io"
 version = "0.1.101"
-source = "git+https://github.com/trezor/rust-bitcoin?rev=574af27f6f3c15a7a1da864124a1bb789f3847f7#574af27f6f3c15a7a1da864124a1bb789f3847f7"
+source = "git+https://github.com/trezor/rust-bitcoin?rev=ada82111f84006e72e36887409077010c49a5f86#ada82111f84006e72e36887409077010c49a5f86"
 dependencies = [
  "bitcoin-consensus-encoding",
 ]
@@ -144,7 +144,7 @@ dependencies = [
 [[package]]
 name = "bitcoin-units"
 version = "0.1.101"
-source = "git+https://github.com/trezor/rust-bitcoin?rev=574af27f6f3c15a7a1da864124a1bb789f3847f7#574af27f6f3c15a7a1da864124a1bb789f3847f7"
+source = "git+https://github.com/trezor/rust-bitcoin?rev=ada82111f84006e72e36887409077010c49a5f86#ada82111f84006e72e36887409077010c49a5f86"
 dependencies = [
  "bitcoin-consensus-encoding",
 ]
@@ -152,7 +152,7 @@ dependencies = [
 [[package]]
 name = "bitcoin_hashes"
 version = "0.14.101"
-source = "git+https://github.com/trezor/rust-bitcoin?rev=574af27f6f3c15a7a1da864124a1bb789f3847f7#574af27f6f3c15a7a1da864124a1bb789f3847f7"
+source = "git+https://github.com/trezor/rust-bitcoin?rev=ada82111f84006e72e36887409077010c49a5f86#ada82111f84006e72e36887409077010c49a5f86"
 dependencies = [
  "bitcoin-io",
  "hex-conservative 0.2.3",
@@ -635,8 +635,8 @@ checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
 name = "miniscript"
-version = "13.1.0"
-source = "git+https://github.com/trezor/rust-miniscript?rev=ed5fb94ca0ee4dc3873e5968924f77d1784f9201#ed5fb94ca0ee4dc3873e5968924f77d1784f9201"
+version = "13.2.0"
+source = "git+https://github.com/trezor/rust-miniscript?rev=2764b7945b7248b4fff729fc2ca97ce4fd952bda#2764b7945b7248b4fff729fc2ca97ce4fd952bda"
 dependencies = [
  "bech32",
  "bitcoin",

@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor import utils
 from trezor.enums import InputScriptType, OutputScriptType, RequestType
 from trezor.messages import (
     PaymentRequest,
