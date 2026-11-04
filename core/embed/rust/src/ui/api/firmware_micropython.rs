@@ -19,6 +19,8 @@ use crate::micropython::module::Module;
 use crate::micropython::qstr::Qstr;
 use crate::micropython::{util, Error, Obj};
 use crate::strutil::TString;
+#[cfg(feature = "app_loading")]
+use crate::translations::TR;
 use crate::trezorhal::model;
 use crate::ui::backlight::BACKLIGHT_LEVELS_OBJ;
 use crate::ui::component::Empty;
@@ -1326,6 +1328,10 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             for item in m.items.as_ref() {
                 unwrap!(vec.push(SelectMenuItem::new(tstr(item), MenuItemIntent::Standard)));
             }
+            if let Some(cancel) = m.cancel.as_ref() {
+                vec.push(SelectMenuItem::new(tstr(cancel), MenuItemIntent::Danger))
+                    .map_err(|_| Error::ValueError(c"Too many menu items"))?;
+            }
             wrap(
                 ModelUI::select_menu(vec, 0)?,
                 m.br_code.to_native(),
@@ -1494,7 +1500,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 obj_from_proplist(&m.props),
                 m.hold,
                 tstr_opt(&m.verb),
-                false,
+                m.external_menu,
             )?,
             m.br_code.to_native(),
             m.br_name.as_ref(),
@@ -1546,7 +1552,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
         Archived::<TrezorUiEnum>::ShowAddress(m) => wrap(
             ModelUI::flow_get_address(
                 tstr(&m.address),
-                tstr_opt(&m.title).unwrap_or("Receive".into()),
+                tstr_opt(&m.title).unwrap_or(TR::words__receive.into()),
                 tstr_opt(&m.subtitle),
                 None,
                 None,
