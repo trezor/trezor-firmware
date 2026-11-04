@@ -256,6 +256,24 @@ def signature_unsafe(m: bytes, sk: bytes, pk: bytes) -> bytes:
     return encodepoint(R) + encodeint(S)
 
 
+def signature_unsafe_expanded(m: bytes, scalar: bytes, prefix: bytes) -> bytes:
+    """
+    Signature with an expanded secret key (scalar + prefix), which is how
+    e.g. Tropic stores Ed25519 keys. Skips the seed expansion step of
+    `signature_unsafe`, the rest of the algorithm is identical.
+
+    Not safe to use with secret keys or secret data.
+
+    See module docstring.  This function should be used for testing only.
+    """
+    a = decodeint(scalar)
+    pk = encodepoint(scalarmult_B(a))
+    r = Hint(prefix + m)
+    R = scalarmult_B(r)
+    S = (r + Hint(encodepoint(R) + pk + m) * a) % l
+    return encodepoint(R) + encodeint(S)
+
+
 def isoncurve(P: Point) -> bool:
     x, y, z, t = P
     return (
