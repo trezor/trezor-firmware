@@ -9,10 +9,18 @@ use trezor_app_sdk::traits::crypto::{
     BoxedHasher, CanonicalSig, CryptoError, CryptoV1, Curve, EcdsaCurve, HashingAlgorithm,
     HmacAlgorithm,
 };
-use trezor_app_sdk::traits::util::{FastResult, TIMEOUT_MAX};
-use trezor_app_sdk::traits::wire::WireError;
+use trezor_app_sdk::traits::util::{CoreServiceError, FastResult, ServiceResult, TIMEOUT_MAX};
 
-use crate::wire::{CoreIpcService, MSG_ID_ERROR, ipc_call, to_bytes};
+use crate::wire::{
+    CoreIpcService, MSG_ID_ERROR, MSG_ID_FORBIDDEN_PATH, call_failed, ipc_call, to_bytes,
+};
+
+/// A failed call into Core's crypto service, as reported to the app.
+type CryptoCallError = CoreServiceError<CryptoError>;
+
+fn unexpected_response() -> CryptoCallError {
+    call_failed("unexpected crypto response")
+}
 
 mod hashers;
 
@@ -20,54 +28,61 @@ mod hashers;
 /// raw response bytes. Each `CryptoV1` method reads the [`TrezorCryptoResult`]
 /// shape it expects out of them with one of the `expect_*` helpers below, and
 /// copies out its own return value before the buffer goes out of scope.
-fn ipc_crypto_call(value: &TrezorCryptoEnum) -> Result<BoxedSlice<u8>, WireError> {
-    let bytes = to_bytes(value).map_err(|_| WireError::DecodeError)?;
+fn ipc_crypto_call(value: &TrezorCryptoEnum) -> Result<BoxedSlice<u8>, CryptoCallError> {
+    let bytes = to_bytes(value).map_err(|_| call_failed("failed to serialize crypto request"))?;
     let id = value.id() as u16;
-    let (response_id, data) = ipc_call(CoreIpcService::Crypto.into(), id, &bytes, TIMEOUT_MAX)?;
+    let (response_id, data) = ipc_call(CoreIpcService::Crypto.into(), id, &bytes, TIMEOUT_MAX)
+        .map_err(CoreServiceError::system)?;
+    if response_id == MSG_ID_FORBIDDEN_PATH {
+        return Err(CoreServiceError::ServiceError(
+            CryptoError::ForbiddenKeyPath,
+        ));
+    }
     if response_id == MSG_ID_ERROR {
-        return Err(WireError::OperationFailed);
+        // Core has logged why
+        return Err(CoreServiceError::ServiceCallFailed);
     }
     // Core answers with the id of the request
     if response_id != id {
-        return Err(WireError::UnexpectedResponse);
+        return Err(unexpected_response());
     }
     Ok(data)
 }
 
 /// The archived [`TrezorCryptoResult`] in a crypto service response.
-fn access_result(data: &[u8]) -> Result<&rkyv::Archived<TrezorCryptoResult<'_>>, WireError> {
+fn access_result(data: &[u8]) -> Result<&rkyv::Archived<TrezorCryptoResult<'_>>, CryptoCallError> {
     rkyv::access::<rkyv::Archived<TrezorCryptoResult>, Failure>(data)
-        .map_err(|_| WireError::DecodeError)
+        .map_err(|_| call_failed("failed to decode crypto response"))
 }
 
 /// A `Bytes` result.
-fn expect_bytes(data: &[u8]) -> Result<&[u8], WireError> {
+fn expect_bytes(data: &[u8]) -> Result<&[u8], CryptoCallError> {
     match access_result(data)? {
         rkyv::Archived::<TrezorCryptoResult>::Bytes(bytes) => Ok(bytes.as_ref()),
-        _ => Err(WireError::UnexpectedResponse),
+        _ => Err(unexpected_response()),
     }
 }
 
 /// A `Bytes` result of exactly `N` bytes.
-fn expect_array<const N: usize>(data: &[u8]) -> Result<[u8; N], WireError> {
+fn expect_array<const N: usize>(data: &[u8]) -> Result<[u8; N], CryptoCallError> {
     expect_bytes(data)?
         .try_into()
-        .map_err(|_| WireError::UnexpectedResponse)
+        .map_err(|_| unexpected_response())
 }
 
 /// A `String` result.
-fn expect_str(data: &[u8]) -> Result<&str, WireError> {
+fn expect_str(data: &[u8]) -> Result<&str, CryptoCallError> {
     match access_result(data)? {
         rkyv::Archived::<TrezorCryptoResult>::String(string) => Ok(string.as_ref()),
-        _ => Err(WireError::UnexpectedResponse),
+        _ => Err(unexpected_response()),
     }
 }
 
 /// A `Boolean` result.
-fn expect_bool(data: &[u8]) -> Result<bool, WireError> {
+fn expect_bool(data: &[u8]) -> Result<bool, CryptoCallError> {
     match access_result(data)? {
         rkyv::Archived::<TrezorCryptoResult>::Boolean(value) => Ok(*value),
-        _ => Err(WireError::UnexpectedResponse),
+        _ => Err(unexpected_response()),
     }
 }
 
@@ -154,7 +169,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         curve: Curve,
         address_n: Slice<'a, u32>,
         xpub_magic: u32,
-    ) -> FastResult<[u8; 111], WireError> {
+    ) -> ServiceResult<[u8; 111], CryptoError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::GetXpub {
                 curve: curve as u8,
@@ -164,7 +179,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
             expect_str(&data)?
                 .as_bytes()
                 .try_into()
-                .map_err(|_| WireError::UnexpectedResponse)
+                .map_err(|_| unexpected_response())
         })()
         .into()
     }
@@ -174,7 +189,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         curve: Curve,
         address_n: Slice<'a, u32>,
         compressed: bool,
-    ) -> FastResult<BoxedSlice<u8>, WireError> {
+    ) -> ServiceResult<BoxedSlice<u8>, CryptoError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::GetPublicKey {
                 curve: curve as u8,
@@ -184,7 +199,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
             let key = expect_bytes(&data)?;
             match key.len() {
                 32 | 33 | 65 => Ok(BoxedSlice::from(key)),
-                _ => Err(WireError::UnexpectedResponse),
+                _ => Err(unexpected_response()),
             }
         })()
         .into()
@@ -197,7 +212,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         digest: &'a [u8; 32],
         compressed: bool,
         canonical: CanonicalSig,
-    ) -> FastResult<[u8; 65], WireError> {
+    ) -> ServiceResult<[u8; 65], CryptoError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::EcdsaSignDigest {
                 curve: curve as u8,
@@ -215,7 +230,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         &self,
         address_n: Slice<'a, u32>,
         message: Slice<'a, u8>,
-    ) -> FastResult<[u8; 64], WireError> {
+    ) -> ServiceResult<[u8; 64], CryptoError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::Ed25519Sign {
                 address_n: address_n.as_slice().into(),
@@ -232,7 +247,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         mac: &'a [u8; 32],
         address: Str<'a>,
         slip44: u32,
-    ) -> FastResult<(), WireError> {
+    ) -> ServiceResult<(), CryptoError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::CheckAddressMac {
                 address_n: address_n.as_slice().into(),
@@ -240,10 +255,9 @@ impl CryptoV1 for TrezorCryptoV1Impl {
                 address: address.as_str().into(),
                 slip44,
             })?;
-            // a wrong MAC comes back as `MSG_ID_ERROR`
             match expect_bool(&data)? {
                 true => Ok(()),
-                false => Err(WireError::OperationFailed),
+                false => Err(CoreServiceError::ServiceError(CryptoError::InvalidMac)),
             }
         })()
         .into()
@@ -254,7 +268,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         address_n: Slice<'a, u32>,
         address: Str<'a>,
         slip44: u32,
-    ) -> FastResult<[u8; 32], WireError> {
+    ) -> ServiceResult<[u8; 32], CryptoError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::GetAddressMac {
                 address_n: address_n.as_slice().into(),
@@ -269,7 +283,7 @@ impl CryptoV1 for TrezorCryptoV1Impl {
     extern "C" fn verify_nonce_cache<'a>(
         &self,
         nonce: Slice<'a, u8>,
-    ) -> FastResult<bool, WireError> {
+    ) -> ServiceResult<bool, CryptoError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::VerifyNonceCache {
                 nonce: nonce.as_slice().into(),
