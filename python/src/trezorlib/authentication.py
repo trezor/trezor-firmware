@@ -513,6 +513,11 @@ class AuthenticationResult(t.NamedTuple):
     serial_number: str | None
 
 
+def roots_for_model(model: models.TrezorModel) -> list[RootCertificate]:
+    """Built-in root certificates that can attest the given model."""
+    return [r for r in ROOT_PUBLIC_KEYS if model in r.trezor_models]
+
+
 def verify_authentication_response(
     challenge: bytes,
     signature: bytes,
@@ -613,10 +618,7 @@ def verify_authentication_response(
             LOG.error("Unknown model in device certificate: %s", device_common_name)
             raise DeviceNotAuthentic
 
-        root_certificates = [
-            r for r in ROOT_PUBLIC_KEYS if device_model in r.trezor_models
-        ]
-        for root in root_certificates:
+        for root in roots_for_model(device_model):
             try:
                 root_pubkey = root.pubkey_for_attestation_source(attestation_source)
                 root_pubkey.verify_certificate(cert.cert)
