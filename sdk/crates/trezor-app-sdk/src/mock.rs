@@ -37,8 +37,8 @@ use crate::traits::ui::{
     ShowInfoWithCancel, ShowMismatch, ShowProperties, ShowPublicKey, ShowSuccess, ShowWarning,
     TrezorUiResult, UiV1, UiV1Vtable,
 };
-use crate::traits::util::FastResult;
-use crate::traits::wire::{WireError, WireMessage, WireV1, WireV1Vtable};
+use crate::traits::util::{CoreServiceError, FastResult, ServiceResult};
+use crate::traits::wire::{WireMessage, WireV1, WireV1Vtable};
 
 // ============================================================================
 // Dummy implementation of the stable ABI, for host-based unit tests.
@@ -138,7 +138,7 @@ impl CryptoV1 for DummyCrypto {
         _curve: Curve,
         _address_n: Slice<'a, u32>,
         _xpub_magic: u32,
-    ) -> FastResult<[u8; 111], WireError> {
+    ) -> ServiceResult<[u8; 111], CryptoError> {
         unimplemented!("not exercised by the current test suite")
     }
 
@@ -147,7 +147,7 @@ impl CryptoV1 for DummyCrypto {
         _curve: Curve,
         _address_n: Slice<'a, u32>,
         _compressed: bool,
-    ) -> FastResult<stabby::boxed::BoxedSlice<u8>, WireError> {
+    ) -> ServiceResult<stabby::boxed::BoxedSlice<u8>, CryptoError> {
         unimplemented!("not exercised by the current test suite")
     }
 
@@ -158,7 +158,7 @@ impl CryptoV1 for DummyCrypto {
         _digest: &'a [u8; 32],
         _compressed: bool,
         _canonical: CanonicalSig,
-    ) -> FastResult<[u8; 65], WireError> {
+    ) -> ServiceResult<[u8; 65], CryptoError> {
         unimplemented!("not exercised by the current test suite")
     }
 
@@ -166,7 +166,7 @@ impl CryptoV1 for DummyCrypto {
         &self,
         _address_n: Slice<'a, u32>,
         _message: Slice<'a, u8>,
-    ) -> FastResult<[u8; 64], WireError> {
+    ) -> ServiceResult<[u8; 64], CryptoError> {
         unimplemented!("not exercised by the current test suite")
     }
 
@@ -176,7 +176,7 @@ impl CryptoV1 for DummyCrypto {
         _mac: &'a [u8; 32],
         _address: Str<'a>,
         _slip44: u32,
-    ) -> FastResult<(), WireError> {
+    ) -> ServiceResult<(), CryptoError> {
         unimplemented!("not exercised by the current test suite")
     }
 
@@ -185,14 +185,14 @@ impl CryptoV1 for DummyCrypto {
         _address_n: Slice<'a, u32>,
         _address: Str<'a>,
         _slip44: u32,
-    ) -> FastResult<[u8; 32], WireError> {
+    ) -> ServiceResult<[u8; 32], CryptoError> {
         unimplemented!("not exercised by the current test suite")
     }
 
     extern "C" fn verify_nonce_cache<'a>(
         &self,
         _nonce: Slice<'a, u8>,
-    ) -> FastResult<bool, WireError> {
+    ) -> ServiceResult<bool, CryptoError> {
         unimplemented!("not exercised by the current test suite")
     }
 
@@ -288,24 +288,16 @@ impl SyslogV1 for DummySyslog {
 struct DummyWire;
 
 impl WireV1 for DummyWire {
-    extern "C" fn wire_receive(&self, _timeout_ms: u32) -> FastResult<WireMessage, WireError> {
-        Err(WireError::Timeout).into()
+    extern "C" fn wire_receive(&self, _timeout_ms: u32) -> ServiceResult<WireMessage> {
+        Err(CoreServiceError::Timeout).into()
     }
 
-    extern "C" fn wire_send<'a>(
-        &self,
-        _id: u16,
-        _data: Slice<'a, u8>,
-    ) -> FastResult<(), WireError> {
-        Err(WireError::FailedToSend).into()
+    extern "C" fn wire_send<'a>(&self, _id: u16, _data: Slice<'a, u8>) -> ServiceResult<()> {
+        Err(CoreServiceError::ServiceCallFailed).into()
     }
 
-    extern "C" fn wire_error<'a>(
-        &self,
-        _code: u16,
-        _message: Str<'a>,
-    ) -> FastResult<(), WireError> {
-        Err(WireError::FailedToSend).into()
+    extern "C" fn wire_error<'a>(&self, _code: u16, _message: Str<'a>) -> ServiceResult<()> {
+        Err(CoreServiceError::ServiceCallFailed).into()
     }
 }
 
@@ -315,113 +307,104 @@ impl UiV1 for DummyUi {
     extern "C" fn confirm_value<'a>(
         &self,
         _value: ConfirmValue<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         unimplemented!("not exercised by the current test suite")
     }
 
     extern "C" fn confirm_value_intro<'a>(
         &self,
         _value: ConfirmValueIntro<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         unimplemented!("not exercised by the current test suite")
     }
 
     extern "C" fn confirm_summary<'a>(
         &self,
         _value: ConfirmSummary<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         unimplemented!("not exercised by the current test suite")
     }
 
     extern "C" fn confirm_action<'a>(
         &self,
         _value: ConfirmAction<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn select_menu<'a>(
-        &self,
-        _value: SelectMenu<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    extern "C" fn select_menu<'a>(&self, _value: SelectMenu<'a>) -> ServiceResult<TrezorUiResult> {
         unimplemented!("not exercised by the current test suite")
     }
 
     extern "C" fn confirm_properties<'a>(
         &self,
         _value: ConfirmProperties<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn show_properties<'a>(
-        &self,
-        _value: ShowProperties<'a>,
-    ) -> FastResult<(), WireError> {
+    extern "C" fn show_properties<'a>(&self, _value: ShowProperties<'a>) -> ServiceResult<()> {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn show_warning<'a>(&self, _value: ShowWarning<'a>) -> FastResult<(), WireError> {
+    extern "C" fn show_warning<'a>(&self, _value: ShowWarning<'a>) -> ServiceResult<()> {
         unimplemented!("not exercised by the current test suite")
     }
 
     extern "C" fn show_info_with_cancel<'a>(
         &self,
         _value: ShowInfoWithCancel<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         unimplemented!("not exercised by the current test suite")
     }
 
     extern "C" fn show_mismatch<'a>(
         &self,
         _value: ShowMismatch<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         unimplemented!("not exercised by the current test suite")
     }
 
     extern "C" fn confirm_trade<'a>(
         &self,
         _value: ConfirmTrade<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn show_danger<'a>(
-        &self,
-        _value: ShowDanger<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    extern "C" fn show_danger<'a>(&self, _value: ShowDanger<'a>) -> ServiceResult<TrezorUiResult> {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn show_success<'a>(&self, _value: ShowSuccess<'a>) -> FastResult<(), WireError> {
+    extern "C" fn show_success<'a>(&self, _value: ShowSuccess<'a>) -> ServiceResult<()> {
         unimplemented!("not exercised by the current test suite")
     }
 
     extern "C" fn request_number<'a>(
         &self,
         _value: RequestNumber<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         unimplemented!("not exercised by the current test suite")
     }
 
     extern "C" fn show_public_key<'a>(
         &self,
         _value: ShowPublicKey<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         unimplemented!("not exercised by the current test suite")
     }
 
     extern "C" fn confirm_with_info<'a>(
         &self,
         _value: ConfirmWithInfo<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         unimplemented!("not exercised by the current test suite")
     }
 
     extern "C" fn show_address<'a>(
         &self,
         _value: ShowAddress<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         unimplemented!("not exercised by the current test suite")
     }
 
@@ -431,7 +414,7 @@ impl UiV1 for DummyUi {
         _title: stabby::option::Option<stabby::slice::Slice<'a, u8>>,
         _indeterminate: bool,
         _danger: bool,
-    ) -> FastResult<(), WireError> {
+    ) -> ServiceResult<()> {
         unimplemented!("not exercised by the current test suite")
     }
 
@@ -439,11 +422,11 @@ impl UiV1 for DummyUi {
         &self,
         _description: stabby::option::Option<stabby::slice::Slice<'a, u8>>,
         _value: u32,
-    ) -> FastResult<(), WireError> {
+    ) -> ServiceResult<()> {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn end_progress(&self) -> FastResult<(), WireError> {
+    extern "C" fn end_progress(&self) -> ServiceResult<()> {
         unimplemented!("not exercised by the current test suite")
     }
 }

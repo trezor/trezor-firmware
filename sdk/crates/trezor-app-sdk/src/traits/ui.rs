@@ -18,8 +18,7 @@ use stabby::option::Option as StabbyOption;
 use stabby::slice::Slice;
 use stabby::str::Str;
 
-use super::util::FastResult;
-use super::wire::WireError;
+use super::util::ServiceResult;
 
 // the app-side constructors are in `crate::ui`
 
@@ -291,65 +290,53 @@ pub trait UiV1: Send + Sync {
     extern "C" fn confirm_value<'a>(
         &self,
         value: ConfirmValue<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
+    ) -> ServiceResult<TrezorUiResult>;
     extern "C" fn confirm_value_intro<'a>(
         &self,
         value: ConfirmValueIntro<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
+    ) -> ServiceResult<TrezorUiResult>;
     extern "C" fn confirm_summary<'a>(
         &self,
         value: ConfirmSummary<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
+    ) -> ServiceResult<TrezorUiResult>;
     extern "C" fn confirm_action<'a>(
         &self,
         value: ConfirmAction<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    extern "C" fn select_menu<'a>(
-        &self,
-        value: SelectMenu<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
+    ) -> ServiceResult<TrezorUiResult>;
+    extern "C" fn select_menu<'a>(&self, value: SelectMenu<'a>) -> ServiceResult<TrezorUiResult>;
     extern "C" fn confirm_properties<'a>(
         &self,
         value: ConfirmProperties<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    extern "C" fn show_properties<'a>(
-        &self,
-        value: ShowProperties<'a>,
-    ) -> FastResult<(), WireError>;
-    extern "C" fn show_warning<'a>(&self, value: ShowWarning<'a>) -> FastResult<(), WireError>;
+    ) -> ServiceResult<TrezorUiResult>;
+    extern "C" fn show_properties<'a>(&self, value: ShowProperties<'a>) -> ServiceResult<()>;
+    extern "C" fn show_warning<'a>(&self, value: ShowWarning<'a>) -> ServiceResult<()>;
     extern "C" fn show_info_with_cancel<'a>(
         &self,
         value: ShowInfoWithCancel<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
+    ) -> ServiceResult<TrezorUiResult>;
     extern "C" fn show_mismatch<'a>(
         &self,
         value: ShowMismatch<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
+    ) -> ServiceResult<TrezorUiResult>;
     extern "C" fn confirm_trade<'a>(
         &self,
         value: ConfirmTrade<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    extern "C" fn show_danger<'a>(
-        &self,
-        value: ShowDanger<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    extern "C" fn show_success<'a>(&self, value: ShowSuccess<'a>) -> FastResult<(), WireError>;
+    ) -> ServiceResult<TrezorUiResult>;
+    extern "C" fn show_danger<'a>(&self, value: ShowDanger<'a>) -> ServiceResult<TrezorUiResult>;
+    extern "C" fn show_success<'a>(&self, value: ShowSuccess<'a>) -> ServiceResult<()>;
     extern "C" fn request_number<'a>(
         &self,
         value: RequestNumber<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
+    ) -> ServiceResult<TrezorUiResult>;
     extern "C" fn show_public_key<'a>(
         &self,
         value: ShowPublicKey<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
+    ) -> ServiceResult<TrezorUiResult>;
     extern "C" fn confirm_with_info<'a>(
         &self,
         value: ConfirmWithInfo<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
-    extern "C" fn show_address<'a>(
-        &self,
-        value: ShowAddress<'a>,
-    ) -> FastResult<TrezorUiResult, WireError>;
+    ) -> ServiceResult<TrezorUiResult>;
+    extern "C" fn show_address<'a>(&self, value: ShowAddress<'a>) -> ServiceResult<TrezorUiResult>;
 
     extern "C" fn init_progress<'a>(
         &self,
@@ -357,13 +344,13 @@ pub trait UiV1: Send + Sync {
         title: StabbyOption<Slice<'a, u8>>,
         indeterminate: bool,
         danger: bool,
-    ) -> FastResult<(), WireError>;
+    ) -> ServiceResult<()>;
     extern "C" fn update_progress<'a>(
         &self,
         description: StabbyOption<Slice<'a, u8>>,
         value: u32,
-    ) -> FastResult<(), WireError>;
-    extern "C" fn end_progress(&self) -> FastResult<(), WireError>;
+    ) -> ServiceResult<()>;
+    extern "C" fn end_progress(&self) -> ServiceResult<()>;
 }
 
 pub type UiV1Vtable = stabby::vtable!(UiV1 + Send + Sync);

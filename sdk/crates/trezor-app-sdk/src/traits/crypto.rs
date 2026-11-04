@@ -3,8 +3,7 @@ use stabby::boxed::{Box, BoxedSlice};
 use stabby::slice::Slice;
 use stabby::str::Str;
 
-use super::util::FastResult;
-use super::wire::WireError;
+use super::util::{FastResult, ServiceResult};
 
 #[stabby::stabby]
 #[repr(u8)]
@@ -12,6 +11,10 @@ pub enum CryptoError {
     InvalidPublicKey,
     InvalidSignature,
     InvalidEncoding,
+    /// The address MAC does not match.
+    InvalidMac,
+    /// The key path is outside the app's manifest.
+    ForbiddenKeyPath,
 }
 
 #[stabby::stabby(checked)]
@@ -88,14 +91,14 @@ pub trait CryptoV1: Send + Sync {
         curve: Curve,
         address_n: Slice<'a, u32>,
         xpub_magic: u32,
-    ) -> FastResult<[u8; 111], WireError>;
+    ) -> ServiceResult<[u8; 111], CryptoError>;
     /// Derives the public key for `address_n` on `curve`.
     extern "C" fn get_public_key<'a>(
         &self,
         curve: Curve,
         address_n: Slice<'a, u32>,
         compressed: bool,
-    ) -> FastResult<BoxedSlice<u8>, WireError>;
+    ) -> ServiceResult<BoxedSlice<u8>, CryptoError>;
     /// Signs a raw 32-byte digest with the ECDSA key at `address_n`; Ed25519
     /// has no digest signing, see [`Self::ed25519_sign`].
     ///
@@ -108,23 +111,24 @@ pub trait CryptoV1: Send + Sync {
         digest: &'a [u8; 32],
         compressed: bool,
         canonical: CanonicalSig,
-    ) -> FastResult<[u8; 65], WireError>;
+    ) -> ServiceResult<[u8; 65], CryptoError>;
     /// Signs `message` with the Ed25519 key at `address_n`.
     extern "C" fn ed25519_sign<'a>(
         &self,
         address_n: Slice<'a, u32>,
         message: Slice<'a, u8>,
-    ) -> FastResult<[u8; 64], WireError>;
+    ) -> ServiceResult<[u8; 64], CryptoError>;
     /// Verifies a MAC previously produced by [`Self::get_address_mac`] for
     /// `address_n`, `address` and the coin type `slip44`, confirming the
-    /// pairing hasn't been tampered with. Fails on a wrong MAC.
+    /// pairing hasn't been tampered with. Fails with
+    /// [`CryptoError::InvalidMac`] on a wrong MAC.
     extern "C" fn check_address_mac<'a>(
         &self,
         address_n: Slice<'a, u32>,
         mac: &'a [u8; 32],
         address: Str<'a>,
         slip44: u32,
-    ) -> FastResult<(), WireError>;
+    ) -> ServiceResult<(), CryptoError>;
     /// Computes a MAC binding `address_n` to `address` of the coin type
     /// `slip44`, so a cached `address` can later be re-authenticated via
     /// [`Self::check_address_mac`] without a full re-derivation.
@@ -133,13 +137,13 @@ pub trait CryptoV1: Send + Sync {
         address_n: Slice<'a, u32>,
         address: Str<'a>,
         slip44: u32,
-    ) -> FastResult<[u8; 32], WireError>;
+    ) -> ServiceResult<[u8; 32], CryptoError>;
     /// Checks `nonce` against Core's cached-nonce store, returning whether
     /// it's still valid.
     extern "C" fn verify_nonce_cache<'a>(
         &self,
         nonce: Slice<'a, u8>,
-    ) -> FastResult<bool, WireError>;
+    ) -> ServiceResult<bool, CryptoError>;
 
     /// Verifies a 64-byte `r||s` ECDSA `signature` of `digest` against
     /// `public_key`, given in compressed or uncompressed SEC1 form.

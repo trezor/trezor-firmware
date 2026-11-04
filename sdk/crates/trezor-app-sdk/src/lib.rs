@@ -27,6 +27,7 @@
 
 extern crate alloc;
 
+#[cfg(feature = "app")]
 pub mod error;
 // Always available: shared API structs used by both core app and extapps
 pub mod structs;

@@ -1,11 +1,7 @@
-#[cfg(all(feature = "debug", feature = "app"))]
+#[cfg(feature = "debug")]
 use crate::alloc_types::Box;
-#[cfg(feature = "app")]
 use crate::traits::crypto::CryptoError;
-#[cfg(feature = "app")]
-use crate::traits::util::FastResult;
-#[cfg(feature = "app")]
-use crate::traits::wire::WireError;
+use crate::traits::util::{CoreServiceError, FastResult};
 
 /// A wrapper which aligns its inner value to 8 bytes.
 #[doc(hidden)]
@@ -25,7 +21,7 @@ pub enum Error {
     ValueError(&'static str),
     /// Core asked the app to stop, the error must reach the app's entry point.
     Stopped,
-    #[cfg(all(feature = "debug", feature = "app"))]
+    #[cfg(feature = "debug")]
     Context {
         file: &'static str,
         line: u32,
@@ -33,33 +29,43 @@ pub enum Error {
     },
 }
 
+// `FailureType` values (messages-common.proto) that Core accepts from apps
+const FAILURE_UNEXPECTED_MESSAGE: u16 = 1;
+const FAILURE_DATA_ERROR: u16 = 3;
+const FAILURE_ACTION_CANCELLED: u16 = 4;
+const FAILURE_PROCESS_ERROR: u16 = 9;
+
 impl Error {
+    /// The `FailureType` Core reports to the host.
     pub fn code(&self) -> u16 {
         match self {
-            Self::ServiceError => 2,
-            Self::DataError(_) => 3,
-            Self::Cancelled => 4,
-            Self::InvalidFunction => 5,
-            Self::InvalidMessage => 6,
-            Self::InvalidArgument => 7,
-            Self::ValueError(_) => 8,
-            Self::Stopped => 9,
-            #[cfg(all(feature = "debug", feature = "app"))]
+            Self::ServiceError => FAILURE_PROCESS_ERROR,
+            Self::DataError(_) => FAILURE_DATA_ERROR,
+            Self::Cancelled => FAILURE_ACTION_CANCELLED,
+            Self::InvalidFunction => FAILURE_UNEXPECTED_MESSAGE,
+            Self::InvalidMessage => FAILURE_DATA_ERROR,
+            Self::InvalidArgument => FAILURE_DATA_ERROR,
+            Self::ValueError(_) => FAILURE_DATA_ERROR,
+            // never reaches the host: the app exits instead
+            Self::Stopped => FAILURE_PROCESS_ERROR,
+            #[cfg(feature = "debug")]
             Self::Context { source, .. } => source.code(),
         }
     }
 
+    /// The message Core reports to the host; tells apart variants sharing a
+    /// code.
     pub fn message(&self) -> &'static str {
         match self {
-            Self::ServiceError => "",
-            Self::InvalidFunction => "",
-            Self::InvalidMessage => "",
-            Self::InvalidArgument => "",
+            Self::ServiceError => "service error",
+            Self::InvalidFunction => "invalid function",
+            Self::InvalidMessage => "invalid message",
+            Self::InvalidArgument => "invalid argument",
             Self::DataError(msg) => msg,
             Self::ValueError(msg) => msg,
-            Self::Cancelled => "",
-            Self::Stopped => "",
-            #[cfg(all(feature = "debug", feature = "app"))]
+            Self::Cancelled => "cancelled",
+            Self::Stopped => "stopped",
+            #[cfg(feature = "debug")]
             Self::Context { source, .. } => source.message(),
         }
     }
@@ -68,7 +74,7 @@ impl Error {
     pub fn is_stopped(&self) -> bool {
         match self {
             Self::Stopped => true,
-            #[cfg(all(feature = "debug", feature = "app"))]
+            #[cfg(feature = "debug")]
             Self::Context { source, .. } => source.is_stopped(),
             _ => false,
         }
@@ -84,12 +90,12 @@ impl Error {
             Self::InvalidArgument => "InvalidArgument",
             Self::ValueError(_) => "ValueError",
             Self::Stopped => "Stopped",
-            #[cfg(all(feature = "debug", feature = "app"))]
+            #[cfg(feature = "debug")]
             Self::Context { source, .. } => source.error_type(),
         }
     }
 
-    #[cfg(all(feature = "debug", feature = "app"))]
+    #[cfg(feature = "debug")]
     pub fn c_at(self, loc: &'static core::panic::Location<'static>) -> Self {
         Error::Context {
             file: loc.file(),
@@ -98,7 +104,7 @@ impl Error {
         }
     }
 
-    #[cfg(all(feature = "debug", feature = "app"))]
+    #[cfg(feature = "debug")]
     pub fn source(&self) -> Option<&Error> {
         match self {
             Error::Context { source, .. } => Some(&*source),
@@ -107,7 +113,6 @@ impl Error {
     }
 }
 
-#[cfg(feature = "app")]
 impl CryptoError {
     /// Returns a static human-readable description of the error.
     pub fn message(&self) -> &'static str {
@@ -115,51 +120,57 @@ impl CryptoError {
             Self::InvalidPublicKey => "invalid public key",
             Self::InvalidSignature => "invalid signature",
             Self::InvalidEncoding => "invalid encoding",
+            Self::InvalidMac => "invalid MAC",
+            // same text as Core's own `ForbiddenKeyPath`
+            Self::ForbiddenKeyPath => "Forbidden key path",
         }
     }
 }
 
-#[cfg(feature = "app")]
-impl From<WireError> for Error {
-    fn from(error: WireError) -> Self {
+impl From<CoreServiceError<()>> for Error {
+    fn from(error: CoreServiceError<()>) -> Self {
         match error {
-            WireError::Stopped => Error::Stopped,
-            error => Error::DataError(error.message()),
+            CoreServiceError::StopApplication => Error::Stopped,
+            // details are in Core's log
+            CoreServiceError::ServiceError(())
+            | CoreServiceError::Timeout
+            | CoreServiceError::ServiceCallFailed => Error::ServiceError,
         }
     }
 }
 
-#[cfg(feature = "app")]
 impl From<CryptoError> for Error {
     fn from(error: CryptoError) -> Self {
         Error::DataError(error.message())
     }
 }
 
+impl From<CoreServiceError<CryptoError>> for Error {
+    fn from(error: CoreServiceError<CryptoError>) -> Self {
+        match error {
+            CoreServiceError::ServiceError(e) => e.into(),
+            e => e.system::<()>().into(),
+        }
+    }
+}
+
 /// Converts the stable-ABI [`FastResult`] a [`WireV1`](crate::traits::wire::WireV1)/
 /// [`CryptoV1`](crate::traits::crypto::CryptoV1)/[`UiV1`](crate::traits::ui::UiV1)
-/// call returns into this crate's own [`Result`] — every wire call site was
-/// hand-rolling `.into_result().map_err(Into::into)` for this.
-#[cfg(feature = "app")]
+/// call returns into this crate's own [`Result`].
 pub trait IntoAppResult<T> {
     fn into_app_result(self) -> Result<T>;
 }
 
-#[cfg(feature = "app")]
-impl<T> IntoAppResult<T> for FastResult<T, WireError> {
+impl<T, E> IntoAppResult<T> for FastResult<T, E>
+where
+    Error: From<E>,
+{
     fn into_app_result(self) -> Result<T> {
         self.into_result().map_err(Into::into)
     }
 }
 
-#[cfg(feature = "app")]
-impl<T> IntoAppResult<T> for FastResult<T, CryptoError> {
-    fn into_app_result(self) -> Result<T> {
-        self.into_result().map_err(Into::into)
-    }
-}
-
-#[cfg(all(feature = "debug", feature = "app"))]
+#[cfg(feature = "debug")]
 impl ufmt::uDisplay for Error {
     fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> core::result::Result<(), W::Error>
     where
@@ -190,7 +201,7 @@ impl ufmt::uDisplay for Error {
     }
 }
 
-#[cfg(not(all(feature = "debug", feature = "app")))]
+#[cfg(not(feature = "debug"))]
 impl ufmt::uDisplay for Error {
     fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> core::result::Result<(), W::Error>
     where
@@ -259,34 +270,45 @@ pub trait ResultExt<T> {
 }
 
 impl<T> ResultExt<T> for Result<T> {
-    #[cfg(all(feature = "debug", feature = "app"))]
+    #[cfg(feature = "debug")]
     #[track_caller]
     fn c(self) -> Self {
         let loc = core::panic::Location::caller();
         self.map_err(|e| e.c_at(loc))
     }
 
-    #[cfg(not(all(feature = "debug", feature = "app")))]
+    #[cfg(not(feature = "debug"))]
     fn c(self) -> Self {
         self
     }
 }
 
-#[cfg(all(test, feature = "app"))]
+#[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn stop_signal_survives_conversion() {
-        assert!(Error::from(WireError::Stopped).is_stopped());
-        assert!(!Error::from(WireError::OperationFailed).is_stopped());
+        assert!(Error::from(CoreServiceError::<()>::StopApplication).is_stopped());
+        assert!(Error::from(CoreServiceError::<CryptoError>::StopApplication).is_stopped());
+        assert!(!Error::from(CoreServiceError::<()>::ServiceCallFailed).is_stopped());
         assert!(!Error::DataError("stopped").is_stopped());
+    }
+
+    #[test]
+    fn service_errors_convert() {
+        let error = Error::from(CoreServiceError::ServiceError(CryptoError::InvalidMac));
+        assert_eq!(error.code(), FAILURE_DATA_ERROR);
+        assert_eq!(error.message(), "invalid MAC");
+        let error = Error::from(CoreServiceError::<CryptoError>::Timeout);
+        assert_eq!(error.code(), FAILURE_PROCESS_ERROR);
     }
 
     #[cfg(feature = "debug")]
     #[test]
     fn stop_signal_survives_context() {
-        let error = Error::from(WireError::Stopped).c_at(core::panic::Location::caller());
+        let error = Error::from(CoreServiceError::<()>::StopApplication)
+            .c_at(core::panic::Location::caller());
         assert!(error.is_stopped());
     }
 }
