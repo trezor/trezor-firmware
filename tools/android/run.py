@@ -97,6 +97,12 @@ def main() -> int:
         help="disable the APK's animations, as device tests need (always "
         "disabled when headless)",
     )
+    parser.add_argument(
+        "--card-port",
+        type=int,
+        help="reach a card model server on the host's TCP port (firmware "
+        "built with TREZOR_VAULT_CARD=1)",
+    )
     args = parser.parse_args()
     if not 30000 < args.port <= 65536 - PORT_COUNT:
         parser.error(f"--port must be between 30001 and {65536 - PORT_COUNT}")
@@ -140,6 +146,7 @@ def main() -> int:
     )
 
     forwarded: list[int] = []
+    reversed_card = False
     relay: subprocess.Popen[str] | None = None
     log_follower: subprocess.Popen[bytes] | None = None
 
@@ -171,6 +178,11 @@ def main() -> int:
             command("forward", f"tcp:{port}", f"tcp:{port}", capture_output=True)
             forwarded.append(port)
         HostRelay(args.port)
+        if args.card_port:
+            # The firmware connects to the card on the device's localhost.
+            port = f"tcp:{args.card_port}"
+            command("reverse", port, port, capture_output=True)
+            reversed_card = True
         print(f"export TREZOR_PATH=udp:127.0.0.1:{args.port}", flush=True)
 
         if args.apk:
@@ -180,7 +192,8 @@ def main() -> int:
                     "shell",
                     f"am start -W -n {APP_PACKAGE}/.TrezorActivity"
                     f" --ei port {args.port}"
-                    f" --ez disable_animation {str(args.disable_animation).lower()}",
+                    f" --ez disable_animation {str(args.disable_animation).lower()}"
+                    f" --ei card_port {args.card_port or 0}",
                     capture_output=True,
                 )
                 # Show the firmware's log, as when running it headless. Each
@@ -207,6 +220,8 @@ def main() -> int:
             "TREZOR_UDP_PORT": str(args.port),
             "TREZOR_DISABLE_ANIMATION": "1",
         }
+        if args.card_port:
+            environment["TREZOR_CARD_PORT"] = str(args.card_port)
         assignments = " ".join(
             shlex.quote(f"{key}={value}") for key, value in environment.items()
         )
@@ -242,6 +257,12 @@ def main() -> int:
                 relay.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 relay.kill()
+        if reversed_card:
+            subprocess.run(
+                [*adb, "reverse", "--remove", f"tcp:{args.card_port}"],
+                check=False,
+                capture_output=True,
+            )
         for port in forwarded:
             subprocess.run(
                 [*adb, "forward", "--remove", f"tcp:{port}"],

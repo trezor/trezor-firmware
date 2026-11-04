@@ -19,6 +19,11 @@ public class TrezorActivity extends SDLActivity {
             Os.setenv("TREZOR_PROFILE_DIR", getFilesDir().getPath(), true);
             Os.setenv("TREZOR_PROFILE_NAME", "android", true);
             Os.setenv("TREZOR_UDP_PORT", Integer.toString(port), true);
+            // Card vault builds reach the card model through adb reverse.
+            int cardPort = getIntent().getIntExtra("card_port", 0);
+            if (cardPort > 0) {
+                Os.setenv("TREZOR_CARD_PORT", Integer.toString(cardPort), true);
+            }
             // Device tests need animations disabled, like emu.py --headless.
             if (getIntent().getBooleanExtra("disable_animation", false)) {
                 Os.setenv("TREZOR_DISABLE_ANIMATION", "1", true);

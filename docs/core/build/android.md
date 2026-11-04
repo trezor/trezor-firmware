@@ -126,6 +126,26 @@ Clients use the same `TREZOR_PATH` as with the virtual device, relayed over adb.
 The headless firmware's UDP sockets are also bound to all device interfaces, so
 a client with network access to the phone can connect to it directly.
 
+## Seed on an NFC card
+
+With `--card`, the build keeps the seed off the phone: every operation derived
+from it runs on a card, reached through the vault's card backend
+(`core/embed/sec/vault/card/`). Until a real card exists, a card model on the
+host plays both the card and the user who taps it (`tests/card_model/`).
+
+```sh
+nix-shell tools/android/shell.nix --run "uv sync && bash tools/android/build.sh x86_64 T3W1 --card"
+tools/android/start.sh --apk --card --card-delay 3000 --card-hold 2000
+```
+
+`start.sh --card` builds and starts the card model, lets the firmware reach it
+through `adb reverse`, and stops it with the runner. When an operation needs
+the card, the Trezor screen asks for it with a 30 s countdown, then shows
+whether the card was read. `--card-delay` sets how long the simulated user
+takes to present the card, and `--card-hold` how long the card stays without a
+command; the next operation then needs a new tap. The card model uses the
+`all all ...` seed of the device tests, which therefore run unchanged.
+
 ## Implementation notes
 
 Persistent storage, the task scheduler, and firmware application code use the

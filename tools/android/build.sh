@@ -3,12 +3,22 @@
 set -euo pipefail
 
 repo_dir=$(cd "$(dirname "$0")/../.." && pwd)
+# --card: seed-derived operations run on a card model, see tests/card_model.
+positional=()
+for arg in "$@"; do
+    if [ "$arg" = --card ]; then
+        export TREZOR_VAULT_CARD=1
+    else
+        positional+=("$arg")
+    fi
+done
+set -- "${positional[@]}"
 abi=${1:-arm64-v8a}
 model=${2:-T2T1}
 case "$abi" in
     arm64-v8a) target=aarch64-linux-android; compiler=aarch64-linux-android ;;
     x86_64) target=x86_64-linux-android; compiler=x86_64-linux-android ;;
-    *) echo "Usage: $0 [arm64-v8a|x86_64] [model]" >&2; exit 2 ;;
+    *) echo "Usage: $0 [arm64-v8a|x86_64] [model] [--card]" >&2; exit 2 ;;
 esac
 
 : "${ANDROID_NDK_HOME:?Use nix-shell tools/android/shell.nix}"
