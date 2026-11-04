@@ -209,6 +209,7 @@ pub(crate) fn confirm_properties(
                     false,
                     name,
                     br(ButtonRequestType::ConfirmOutput),
+                    false,
                 ))
             },
             &menu,
@@ -730,6 +731,7 @@ fn confirm_args(
                     false,
                     name,
                     br(ButtonRequestType::ConfirmOutput),
+                    false,
                 ))
             },
             &menu,
