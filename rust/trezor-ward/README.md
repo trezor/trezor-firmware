@@ -61,3 +61,34 @@ hashes to the digest the proof commits to.
 
 The verifier is `no_std`, allocates nothing, and keeps no state: which root to trust, and
 whether one is held at all, is the caller's concern.
+
+### Prover
+
+`Tree` holds the whole map and keeps every node's digest current. `Tree::from_entries` builds
+the canonical tree from scratch; `set` and `remove` maintain it one change at a time along a
+deliberately separate code path; and `prove(key)` records the lookup for any key, present or
+absent, as a `Proof` whose bytes go to the verifier. The prover needs `std` (feature `use_std`).
+
+```rust
+use trezor_ward::trie::{Entry, Sha256, Tree};
+
+// The host holds the map.
+let mut tree: Tree<[u8; 32], Vec<u8>, Sha256> = Tree::new();
+tree.set([1; 32], b"one".to_vec());
+tree.set([2; 32], b"two".to_vec());
+let root = tree.root();            // what the device holds
+let proof = tree.prove(&[2; 32]);  // what the host sends, together with the value
+
+// The device verifies, reads, and derives the root of the change.
+let new_root = match proof.verify(&root, &[2; 32]).unwrap() {
+    Entry::Occupied(entry) => {
+        assert_eq!(entry.value(b"two").unwrap(), b"two");
+        entry.replace(b"deux")
+    }
+    Entry::Vacant(_) => unreachable!(),
+};
+
+// The host applies the same change and arrives at the same root.
+tree.set([2; 32], b"deux".to_vec());
+assert_eq!(tree.root(), new_root);
+```

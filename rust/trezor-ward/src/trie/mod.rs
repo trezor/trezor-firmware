@@ -4,9 +4,11 @@
 //!
 //! `common` holds what the prover and the verifier must agree on byte for byte. `verifier`
 //! holds a proof against a trusted root and derives the root a change produces, from the root
-//! and the proof alone.
+//! and the proof alone. `prover` (feature `use_std`) holds the whole map and serves proofs.
 
 pub mod common;
+#[cfg(feature = "use_std")]
+pub mod prover;
 pub mod verifier;
 
 #[cfg(feature = "sha2")]
@@ -15,4 +17,6 @@ pub use common::{
     BitPos, ByteArray, Error, HashFn, Hashable, Key, Leaf, Proof, Step, Steps, bit, branch_digest,
     crit_bit, empty_root, key_bits, key_len, leaf_digest,
 };
+#[cfg(feature = "use_std")]
+pub use prover::Tree;
 pub use verifier::{Entry, OccupiedEntry, VacantEntry};
