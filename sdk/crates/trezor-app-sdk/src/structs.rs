@@ -603,6 +603,7 @@ pub struct ConfirmProperties<'a> {
     pub hold: bool,
     pub br_name: Option<StrSlice<'a>>,
     pub br_code: i32,
+    pub external_menu: bool,
 }
 
 impl<'a> ConfirmProperties<'a> {
@@ -614,6 +615,7 @@ impl<'a> ConfirmProperties<'a> {
         hold: bool,
         br_name: Option<&'a str>,
         br_code: i32,
+        external_menu: bool,
     ) -> Self {
         Self {
             title: title.into(),
@@ -623,6 +625,7 @@ impl<'a> ConfirmProperties<'a> {
             hold,
             br_name: br_name.map(|s| s.into()),
             br_code,
+            external_menu,
         }
     }
 }
