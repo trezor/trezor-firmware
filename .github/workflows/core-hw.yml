@@ -91,8 +91,8 @@ jobs:
           nix-dev-shell: default
       - name: uhubctl
         run: |
-          $NIX_RUN uhubctl || true
           $UV_RUN core/tools/check-usb-permissions.py |& tee check-usb-permissions.log
+          $NIX_RUN uhubctl
       - run: $UV_RUN make -C core build_firmware
       - run: $UV_RUN ci/hardware_tests/bootstrap.py "$TREZOR_MODEL" core/build/artifacts/latest/firmware.bin
       - run: |
@@ -190,8 +190,8 @@ jobs:
           nix-dev-shell: default
       - name: uhubctl
         run: |
-          $NIX_RUN uhubctl || true
           $UV_RUN core/tools/check-usb-permissions.py |& tee check-usb-permissions.log
+          $NIX_RUN uhubctl
       - run: $UV_RUN legacy/script/setup
       - run: $UV_RUN legacy/script/cibuild
         env:
