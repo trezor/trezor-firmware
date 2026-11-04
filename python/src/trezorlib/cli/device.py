@@ -46,7 +46,7 @@ BACKUP_TYPE = {
 
 BACKUP_METHOD = {
     "display": messages.BackupMethod.Display,
-    "n1w1": messages.BackupMethod.N1W1,
+    "k1n1": messages.BackupMethod.K1N1,
 }
 
 SD_PROTECT_OPERATIONS = {

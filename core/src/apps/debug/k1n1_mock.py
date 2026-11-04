@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor import log, loop
-from trezor.messages import DebugLinkN1W1Read, DebugLinkN1W1Response, DebugLinkN1W1Write
+from trezor.messages import DebugLinkK1N1Read, DebugLinkK1N1Response, DebugLinkK1N1Write
 from trezor.ui import Layout
 
 if TYPE_CHECKING:
@@ -12,66 +12,66 @@ if TYPE_CHECKING:
     from trezor.wire.context import Context
     from typing_extensions import Self
 
-    DebugLinkN1W1Request = DebugLinkN1W1Read | DebugLinkN1W1Write
+    DebugLinkK1N1Request = DebugLinkK1N1Read | DebugLinkK1N1Write
 
 
-class N1W1Context:
+class K1N1Context:
     def __init__(self) -> None:
-        self.tx: loop.mailbox[DebugLinkN1W1Request | None] = loop.mailbox()
-        self.rx: loop.mailbox[DebugLinkN1W1Response] = loop.mailbox()
+        self.tx: loop.mailbox[DebugLinkK1N1Request | None] = loop.mailbox()
+        self.rx: loop.mailbox[DebugLinkK1N1Response] = loop.mailbox()
 
-    # Invoked by the application (to communicate via N1W1)
+    # Invoked by the application (to communicate via K1N1)
 
     def __enter__(self) -> Self:
-        log.debug(__name__, "N1W1 exchange start")
+        log.debug(__name__, "K1N1 exchange start")
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, tb: Any) -> None:
-        log.debug(__name__, "N1W1 exchange done")
+        log.debug(__name__, "K1N1 exchange done")
         self.tx.put(None)
 
     async def connect(self) -> None:
-        """Wait for N1W1 connection notification."""
+        """Wait for K1N1 connection notification."""
         res = await self.rx
         assert res.value is None
 
     async def read(self, key: str) -> AnyBytes | None:
-        """Read a specific entry from N1W1."""
-        log.debug(__name__, "N1W1 read: %s", key)
-        self.tx.put(DebugLinkN1W1Read(key=key))
-        # blocks until N1W1 connection + response
+        """Read a specific entry from K1N1."""
+        log.debug(__name__, "K1N1 read: %s", key)
+        self.tx.put(DebugLinkK1N1Read(key=key))
+        # blocks until K1N1 connection + response
         resp = await self.rx
-        log.debug(__name__, "N1W1 response: %s", resp.value)
+        log.debug(__name__, "K1N1 response: %s", resp.value)
         return resp.value
 
     async def write(self, key: str, value: AnyBytes | None) -> AnyBytes | None:
-        """Write/delete a specific entry from N1W1."""
-        log.debug(__name__, "N1W1 write: %s %s", key, value)
-        self.tx.put(DebugLinkN1W1Write(key=key, value=value))
-        # blocks until N1W1 connection + response
+        """Write/delete a specific entry from K1N1."""
+        log.debug(__name__, "K1N1 write: %s %s", key, value)
+        self.tx.put(DebugLinkK1N1Write(key=key, value=value))
+        # blocks until K1N1 connection + response
         resp = await self.rx
-        log.debug(__name__, "N1W1 response: %s", resp.value)
+        log.debug(__name__, "K1N1 response: %s", resp.value)
         return resp.value
 
-    # Invoked to communicate with N1W1 emulator over apps.debug.DEBUG_CONTEXT
+    # Invoked to communicate with K1N1 emulator over apps.debug.DEBUG_CONTEXT
 
     async def handle(self, ctx: Context) -> None:
         """Called from `apps.debug.dispatch_DebugLinkConnected()`."""
-        self.rx.put(DebugLinkN1W1Response(value=None))  # notify `self.connect()`
+        self.rx.put(DebugLinkK1N1Response(value=None))  # notify `self.connect()`
         while (req := await self.tx) is not None:
-            res = await ctx.call(req, DebugLinkN1W1Response)
+            res = await ctx.call(req, DebugLinkK1N1Response)
             self.rx.put(res)
 
     async def confirm_connect(
         self, *, title: str, description: str, button: str, br_name: str | None
     ) -> None:
-        """Show a layout waiting for N1W1 connection, allowing cancellation."""
+        """Show a layout waiting for K1N1 connection, allowing cancellation."""
 
         from trezor import TR
         from trezor.ui.layouts.menu import Menu, cancel_leaf, confirm_with_menu
         from trezorui_api import show_info
 
-        self_ctx: N1W1Context = self
+        self_ctx: K1N1Context = self
 
         class _Connect(Layout):
             def create_tasks(self) -> Iterator[loop.Task[None]]:
@@ -79,7 +79,7 @@ class N1W1Context:
                 from trezorui_api import CONFIRMED
 
                 async def _task() -> None:
-                    await self_ctx.connect()  # blocks until N1W1 is connected.
+                    await self_ctx.connect()  # blocks until K1N1 is connected.
                     try:
                         # emitting a message raises Shutdown exception
                         self._emit_message(CONFIRMED)
@@ -103,4 +103,4 @@ class N1W1Context:
             )
 
 
-ctx = N1W1Context()
+ctx = K1N1Context()

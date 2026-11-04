@@ -169,8 +169,8 @@ def get_features() -> Features:
     if utils.USE_NFC:
         f.capabilities.append(Capability.NFC)
 
-    if utils.USE_N1W1:
-        f.capabilities.append(Capability.N1W1)
+    if utils.USE_K1N1:
+        f.capabilities.append(Capability.K1N1)
 
     if utils.USE_MINISCRIPT:
         f.capabilities.append(Capability.Miniscript)

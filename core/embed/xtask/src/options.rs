@@ -213,9 +213,9 @@ build_options! {
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map debug_link: bool,
 
-    /// Enable N1W1 support
+    /// Enable K1N1 support
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
-    map n1w1: bool,
+    map k1n1: bool,
 
     /// Experimental miniscript support.
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]

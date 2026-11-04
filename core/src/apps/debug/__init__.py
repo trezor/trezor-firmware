@@ -28,7 +28,7 @@ if __debug__:
             DebugLinkGetGcInfo,
             DebugLinkGetPairingInfo,
             DebugLinkGetState,
-            DebugLinkN1W1Connected,
+            DebugLinkK1N1Connected,
             DebugLinkOptigaSetSecMax,
             DebugLinkPairingInfo,
             DebugLinkRecordScreen,
@@ -497,11 +497,11 @@ if __debug__:
         finally:
             raise RestartEventLoop
 
-    if utils.USE_N1W1:
+    if utils.USE_K1N1:
 
-        async def dispatch_DebugLinkConnected(msg: DebugLinkN1W1Connected) -> Success:
-            """Exchange a sequence of N1W1 messages."""
-            from .n1w1_mock import ctx
+        async def dispatch_DebugLinkConnected(msg: DebugLinkK1N1Connected) -> Success:
+            """Exchange a sequence of K1N1 messages."""
+            from .k1n1_mock import ctx
 
             assert DEBUG_CONTEXT is not None
             await ctx.handle(DEBUG_CONTEXT)
@@ -626,8 +626,8 @@ if __debug__:
         MessageType.WipeDevice: dispatch_WipeDevice,
     }
 
-    if utils.USE_N1W1:
-        WORKFLOW_HANDLERS[MessageType.DebugLinkN1W1Connected] = (
+    if utils.USE_K1N1:
+        WORKFLOW_HANDLERS[MessageType.DebugLinkK1N1Connected] = (
             dispatch_DebugLinkConnected
         )
 

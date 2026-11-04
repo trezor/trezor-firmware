@@ -74,7 +74,7 @@ log-level                     = { off = ["sys/log_max_off"], error = ["sys/log_m
 log-stack-usage               = { true = ["log_stack_usage"] }
 mem-perf                      = { true = ["memperf"] }
 miniscript                    = { true = ["miniscript"] }
-n1w1                          = { true = ["n1w1"] }  # TODO: move back to `uses` section (after stabilization)
+k1n1                          = { true = ["k1n1"] }  # TODO: move back to `uses` section (after stabilization)
 perf-overlay                  = { true = ["ui_performance_overlay"] }
 production                    = { true = ["production"], false = ["dev_keys"] }
 pyopt                         = { true = ["pyopt"], false = ["debug", "optiga_testing", "ui_debug_overlay"] }

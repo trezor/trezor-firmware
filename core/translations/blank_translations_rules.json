@@ -15,15 +15,15 @@
     "description": "THP related strings only in Delizia and Eckhart"
   },
   {
-    "prefix": "n1w1__",
+    "prefix": "k1n1__",
     "allowedLayouts": [ "Eckhart" ],
-    "description": "N1W1 tag backup only in Eckhart"
+    "description": "K1N1 tag backup only in Eckhart"
   },
   {
     "exact": [
       "backup__type_create",
       "backup__type_have",
-      "backup__type_n1w1",
+      "backup__type_k1n1",
       "backup__type_wordlist"
     ],
     "allowedLayouts": [ "Eckhart" ],

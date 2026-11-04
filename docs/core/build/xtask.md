@@ -93,7 +93,7 @@ cannot be used bare:
 - `--verbose` — verbose cargo output.
 - `--xbuild-trace` — log build script progress (executed commands and timings).
 - `--apps` — enable external app loading.
-- `--n1w1` — enable N1W1 support.
+- `--k1n1` — enable K1N1 support.
 - `--miniscript` — enable experimental Miniscript support.
 - `--ward` — enable experimental WARD support.
 - `--unsafe-fw` — enable unsafe firmware features.

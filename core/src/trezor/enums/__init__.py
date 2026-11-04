@@ -181,7 +181,7 @@ if TYPE_CHECKING:
 
     class BackupMethod(IntEnum):
         Display = 0
-        N1W1 = 1
+        K1N1 = 1
 
     class SafetyCheckLevel(IntEnum):
         Strict = 0
@@ -239,7 +239,7 @@ if TYPE_CHECKING:
         BLE = 22
         NFC = 23
         Tron = 24
-        N1W1 = 25
+        K1N1 = 25
         TouchWakeup = 26
         Ethereum_EIP7702 = 28
         Miniscript = 29
@@ -595,10 +595,10 @@ if TYPE_CHECKING:
         DebugLinkGetPairingInfo = 9011
         DebugLinkPairingInfo = 9012
         DebugLinkSetLogFilter = 9013
-        DebugLinkN1W1Connected = 9014
-        DebugLinkN1W1Write = 9015
-        DebugLinkN1W1Read = 9016
-        DebugLinkN1W1Response = 9017
+        DebugLinkK1N1Connected = 9014
+        DebugLinkK1N1Write = 9015
+        DebugLinkK1N1Read = 9016
+        DebugLinkK1N1Response = 9017
         DebugLinkSetBatteryState = 9018
         EthereumGetPublicKey = 450
         EthereumPublicKey = 451

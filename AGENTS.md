@@ -40,7 +40,7 @@ Makefiles if in doubt; this file only captures what is non-obvious.
   - **Debuglink comes only from `--debug-link`** (set by the `test*` presets); `--pyopt false` alone does not
     enable it. Without debuglink, pytest fails with `RuntimeError: No debuggable device found`.
 - Other flags: `--btc-only`, `--production`, `--bootloader-devel` (exclusive with `--production`), `--asan`,
-  `--disable-tropic`, `--n1w1`, `--debug`. See `xtask build --help`.
+  `--disable-tropic`, `--k1n1`, `--debug`. See `xtask build --help`.
 - Legacy (Trezor One) builds are separate: see `docs/legacy/index.md`.
 
 ## Running the emulator
