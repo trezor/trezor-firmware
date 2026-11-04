@@ -512,6 +512,19 @@ def test_verify_ca_without_ca_extensions(roots: Roots, rejects: Rejects) -> None
         verify(chain, OPTIGA)
 
 
+def test_verify_device_certificate_as_ca(roots: Roots, rejects: Rejects) -> None:
+    # a genuine device key must not be able to issue further device certificates
+    chain = make_chain(roots.t3w1_prod, OPTIGA)
+    device_name = make_x509_name(DEFAULT_COMMON_NAME, SERIAL)
+    forged_key = generate_key(OPTIGA)
+    forged_cert = make_certificate(
+        device_name, device_name, forged_key.public_key(), chain.device_key
+    )
+    forged_chain = Chain([forged_cert, *chain.certificates], forged_key)
+    with rejects("Missing extension"):
+        verify(forged_chain, OPTIGA)
+
+
 def test_verify_debug_root_rejected_by_default(roots: Roots, rejects: Rejects) -> None:
     chain = make_chain(roots.t3w1_debug, OPTIGA)
     with rejects("Successfully verified a Trezor Safe 7"):
