@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import datetime
 import logging
 import typing as t
@@ -53,15 +54,22 @@ def sign(key: PrivateKey, message: bytes) -> bytes:
     return key.sign(message)
 
 
+Rejects = t.Callable[[str], t.ContextManager[None]]
+
+
 @pytest.fixture
-def caplog_error(caplog: pytest.LogCaptureFixture) -> pytest.LogCaptureFixture:
+def rejects(caplog: pytest.LogCaptureFixture) -> Rejects:
+    """Assert that the block raises `DeviceNotAuthentic` and logs the message."""
     caplog.set_level(logging.DEBUG, logger=authentication.LOG.name)
-    return caplog
 
+    @contextlib.contextmanager
+    def ctx(message: str) -> t.Iterator[None]:
+        with pytest.raises(DeviceNotAuthentic):
+            yield
+        errors = [r.getMessage() for r in caplog.records if r.levelno >= logging.ERROR]
+        assert any(message in error for error in errors), errors
 
-def assert_logged_error(caplog: pytest.LogCaptureFixture, message: str) -> None:
-    errors = [r.getMessage() for r in caplog.records if r.levelno >= logging.ERROR]
-    assert any(message in error for error in errors), errors
+    return ctx
 
 
 class FakeSession:
@@ -360,24 +368,20 @@ def test_verify_without_serial_number(roots: Roots) -> None:
 )
 def test_verify_wrong_attestation_source(
     roots: Roots,
-    caplog_error: pytest.LogCaptureFixture,
+    rejects: Rejects,
     chain_source: AttestationSource,
     verify_source: AttestationSource,
 ) -> None:
     chain = make_chain(roots.t3w1_prod, chain_source)
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("issued by an unknown root"):
         verify(chain, verify_source)
-    assert_logged_error(caplog_error, "issued by an unknown root")
 
 
-def test_verify_root_of_other_model(
-    roots: Roots, caplog_error: pytest.LogCaptureFixture
-) -> None:
+def test_verify_root_of_other_model(roots: Roots, rejects: Rejects) -> None:
     # signed by the T3W1 root, but claims to be a T3T1
     chain = make_chain(roots.t3w1_prod, OPTIGA, "T3T1 Trezor Safe 5")
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("issued by an unknown root"):
         verify(chain, OPTIGA)
-    assert_logged_error(caplog_error, "issued by an unknown root")
 
 
 @pytest.mark.parametrize("common_name", ["T2B1 Trezor Safe 3", "T3B1 Trezor Safe 3"])
@@ -387,84 +391,67 @@ def test_verify_root_shared_by_models(roots: Roots, common_name: str) -> None:
     assert result.root is roots.safe3_debug.public_keys
 
 
-def test_verify_unknown_model(
-    roots: Roots, caplog_error: pytest.LogCaptureFixture
-) -> None:
+def test_verify_unknown_model(roots: Roots, rejects: Rejects) -> None:
     chain = make_chain(roots.t3w1_prod, OPTIGA, "X1Z9 Trezor Safe 7")
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("Unknown model in device certificate"):
         verify(chain, OPTIGA)
-    assert_logged_error(caplog_error, "Unknown model in device certificate")
 
 
-def test_verify_no_common_name(
-    roots: Roots, caplog_error: pytest.LogCaptureFixture
-) -> None:
+def test_verify_no_common_name(roots: Roots, rejects: Rejects) -> None:
     chain = make_chain(roots.t3w1_prod, OPTIGA, None)
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("no common_name"):
         verify(chain, OPTIGA)
-    assert_logged_error(caplog_error, "no common_name")
 
 
-def test_verify_wrong_challenge(
-    roots: Roots, caplog_error: pytest.LogCaptureFixture
-) -> None:
+def test_verify_wrong_challenge(roots: Roots, rejects: Rejects) -> None:
     chain = make_chain(roots.t3w1_prod, OPTIGA)
     signature = sign(
         chain.device_key, authentication.get_challenge_message(b"other challenge")
     )
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("Challenge verification failed"):
         verify(chain, OPTIGA, signature=signature)
-    assert_logged_error(caplog_error, "Challenge verification failed")
 
 
 @pytest.mark.usefixtures("roots")
-def test_verify_ca_not_issued_by_root(caplog_error: pytest.LogCaptureFixture) -> None:
+def test_verify_ca_not_issued_by_root(rejects: Rejects) -> None:
     # chain issued by a root that is not among the known roots
     unknown_root = FakeRoot((models.T3W1,), RootKeyType.PROD, (OPTIGA,))
     chain = make_chain(unknown_root, OPTIGA)
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("issued by an unknown root"):
         verify(chain, OPTIGA)
-    assert_logged_error(caplog_error, "issued by an unknown root")
 
 
-def test_verify_device_not_issued_by_ca(
-    roots: Roots, caplog_error: pytest.LogCaptureFixture
-) -> None:
+def test_verify_device_not_issued_by_ca(roots: Roots, rejects: Rejects) -> None:
     chain = make_chain(roots.t3w1_prod, OPTIGA)
     other_chain = make_chain(roots.t3w1_prod, OPTIGA)
     # device certificate of one chain with CA of another
     mixed = Chain(
         [chain.certificates[0], other_chain.certificates[1]], chain.device_key
     )
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("did not sign certificate"):
         verify(mixed, OPTIGA)
-    assert_logged_error(caplog_error, "did not sign certificate")
 
 
-def test_verify_ca_without_ca_extensions(
-    roots: Roots, caplog_error: pytest.LogCaptureFixture
-) -> None:
+def test_verify_ca_without_ca_extensions(roots: Roots, rejects: Rejects) -> None:
     chain = make_chain(roots.t3w1_prod, OPTIGA, ca_extensions=False)
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("Missing extension"):
         verify(chain, OPTIGA)
-    assert_logged_error(caplog_error, "Missing extension")
 
 
 @pytest.mark.parametrize("devel_allowed", [False, True])
 def test_verify_debug_root(
-    roots: Roots, caplog_error: pytest.LogCaptureFixture, devel_allowed: bool
+    roots: Roots, rejects: Rejects, devel_allowed: bool
 ) -> None:
     chain = make_chain(roots.t3w1_debug, OPTIGA)
     if devel_allowed:
         result = verify(chain, OPTIGA, allow_development_devices=True)
         assert result.root is roots.t3w1_debug.public_keys
     else:
-        with pytest.raises(DeviceNotAuthentic):
+        with rejects("Successfully verified a Trezor Safe 7"):
             verify(chain, OPTIGA)
-        assert_logged_error(caplog_error, "Successfully verified a Trezor Safe 7")
 
 
-def test_verify_allowlist(roots: Roots, caplog_error: pytest.LogCaptureFixture) -> None:
+def test_verify_allowlist(roots: Roots, rejects: Rejects) -> None:
     chain = make_chain(roots.t3w1_prod, OPTIGA)
     ca_pubkey = authentication.Certificate(chain.certificates[1]).public_key.to_bytes()
 
@@ -472,9 +459,8 @@ def test_verify_allowlist(roots: Roots, caplog_error: pytest.LogCaptureFixture) 
     verify(chain, OPTIGA, allowlist=allowed)
 
     revoked = authentication.AllowList({"revoked_pubkeys": [ca_pubkey.hex()]})
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("denied by allowlist"):
         verify(chain, OPTIGA, allowlist=revoked)
-    assert_logged_error(caplog_error, "denied by allowlist")
 
 
 @pytest.mark.parametrize("source", [OPTIGA, TROPIC, MCU])
@@ -495,12 +481,11 @@ def test_verify_custom_root_unknown_model(roots: Roots) -> None:
 
 @pytest.mark.parametrize("source", [OPTIGA, TROPIC, MCU])
 def test_verify_custom_root_mismatch(
-    roots: Roots, caplog_error: pytest.LogCaptureFixture, source: AttestationSource
+    roots: Roots, rejects: Rejects, source: AttestationSource
 ) -> None:
     chain = make_chain(roots.t3w1_prod, source)
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("not issued by the specified root"):
         verify(chain, source, root_pubkey=roots.t3w1_debug.pubkey_bytes(source))
-    assert_logged_error(caplog_error, "not issued by the specified root")
 
 
 # ---- authenticate_device ----
@@ -512,18 +497,15 @@ def test_authenticate_t3w1(roots: Roots, monkeypatch: pytest.MonkeyPatch) -> Non
 
 
 def test_authenticate_t3w1_debug(
-    roots: Roots,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog_error: pytest.LogCaptureFixture,
+    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
 ) -> None:
     chains = make_chains(roots.t3w1_debug)
     root = authenticate(
         monkeypatch, models.T3W1, chains, allow_development_devices=True
     )
     assert root is roots.t3w1_debug.public_keys
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("manufactured by Test DEBUG root"):
         authenticate(monkeypatch, models.T3W1, chains)
-    assert_logged_error(caplog_error, "manufactured by Test DEBUG root")
 
 
 @pytest.mark.parametrize(
@@ -533,36 +515,32 @@ def test_authenticate_t3w1_debug(
 def test_authenticate_t3w1_missing_proof(
     roots: Roots,
     monkeypatch: pytest.MonkeyPatch,
-    caplog_error: pytest.LogCaptureFixture,
+    rejects: Rejects,
     source: AttestationSource,
     message: str,
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
     del chains[source]
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects(message):
         authenticate(monkeypatch, models.T3W1, chains)
-    assert_logged_error(caplog_error, message)
 
 
 @pytest.mark.parametrize("source", [TROPIC, MCU])
 def test_authenticate_t3w1_invalid_proof(
     roots: Roots,
     monkeypatch: pytest.MonkeyPatch,
-    caplog_error: pytest.LogCaptureFixture,
+    rejects: Rejects,
     source: AttestationSource,
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
     unknown_root = FakeRoot((models.T3W1,), RootKeyType.PROD)
     chains[source] = make_chain(unknown_root, source)
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("issued by an unknown root"):
         authenticate(monkeypatch, models.T3W1, chains)
-    assert_logged_error(caplog_error, "issued by an unknown root")
 
 
 def test_authenticate_t3w1_mcu_min_version(
-    roots: Roots,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog_error: pytest.LogCaptureFixture,
+    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
     root = authenticate(monkeypatch, models.T3W1, chains, version=MCU_VERSION)
@@ -570,9 +548,8 @@ def test_authenticate_t3w1_mcu_min_version(
 
     major, minor, patch = MCU_VERSION
     older = (major, minor, patch - 1)
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("does not support MCU attestation"):
         authenticate(monkeypatch, models.T3W1, chains, version=older)
-    assert_logged_error(caplog_error, "does not support MCU attestation")
 
 
 @pytest.mark.parametrize(
@@ -602,7 +579,7 @@ def test_authenticate_optiga_only(
 def test_authenticate_allowlist(
     roots: Roots,
     monkeypatch: pytest.MonkeyPatch,
-    caplog_error: pytest.LogCaptureFixture,
+    rejects: Rejects,
     source: AttestationSource,
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
@@ -610,9 +587,8 @@ def test_authenticate_allowlist(
     revoked = authentication.AllowList(
         {"revoked_pubkeys": [ca_pubkey.to_bytes().hex()]}
     )
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("denied by allowlist"):
         authenticate(monkeypatch, models.T3W1, chains, allowlist=revoked)
-    assert_logged_error(caplog_error, "denied by allowlist")
 
 
 def test_authenticate_custom_roots(
@@ -641,7 +617,7 @@ def test_authenticate_custom_roots(
 def test_authenticate_custom_root_requires_proof(
     roots: Roots,
     monkeypatch: pytest.MonkeyPatch,
-    caplog_error: pytest.LogCaptureFixture,
+    rejects: Rejects,
     root_pubkey_arg: str,
     source: AttestationSource,
     message: str,
@@ -649,98 +625,78 @@ def test_authenticate_custom_root_requires_proof(
     # a custom Tropic or MCU root enforces that proof even on a model without it
     chain = make_chain(roots.t3t1_prod, OPTIGA, "T3T1 Trezor Safe 5")
     kwargs: dict[str, t.Any] = {root_pubkey_arg: roots.t3w1_debug.pubkey_bytes(source)}
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects(message):
         authenticate(monkeypatch, models.T3T1, {OPTIGA: chain}, **kwargs)
-    assert_logged_error(caplog_error, message)
 
 
 def test_authenticate_mixed_roots(
-    roots: Roots,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog_error: pytest.LogCaptureFixture,
+    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
     chains[TROPIC] = make_chain(roots.t3w1_backup, TROPIC)
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("different root authorities"):
         authenticate(monkeypatch, models.T3W1, chains)
-    assert_logged_error(caplog_error, "different root authorities")
 
 
 def test_authenticate_mixed_custom_and_builtin_roots(
-    roots: Roots,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog_error: pytest.LogCaptureFixture,
+    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("different root authorities"):
         authenticate(
             monkeypatch,
             models.T3W1,
             chains,
             ed25519_root_pubkey=roots.t3w1_prod.pubkey_bytes(TROPIC),
         )
-    assert_logged_error(caplog_error, "different root authorities")
 
 
 def test_authenticate_inconsistent_serial_numbers(
-    roots: Roots,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog_error: pytest.LogCaptureFixture,
+    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
     chains[MCU] = make_chain(roots.t3w1_prod, MCU, serial_number="99999999999999")
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("inconsistent serial numbers"):
         authenticate(monkeypatch, models.T3W1, chains)
-    assert_logged_error(caplog_error, "inconsistent serial numbers")
 
 
 def test_authenticate_inconsistent_common_names(
-    roots: Roots,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog_error: pytest.LogCaptureFixture,
+    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
     chains[TROPIC] = make_chain(roots.t3w1_prod, TROPIC, "T3W1 Trezor Safe 7 Pro")
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("inconsistent common names"):
         authenticate(monkeypatch, models.T3W1, chains)
-    assert_logged_error(caplog_error, "inconsistent common names")
 
 
 def test_authenticate_model_mismatch(
-    roots: Roots,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog_error: pytest.LogCaptureFixture,
+    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
 ) -> None:
     # A T3W1 reporting itself as a T3T1 to skip the Tropic and MCU checks.
     chains = make_chains(roots.t3w1_prod)
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("does not match model T3T1"):
         authenticate(monkeypatch, models.T3T1, chains)
-    assert_logged_error(caplog_error, "does not match model T3T1")
 
 
 def test_authenticate_model_mismatch_safe5_as_t3w1(
-    roots: Roots,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog_error: pytest.LogCaptureFixture,
+    roots: Roots, monkeypatch: pytest.MonkeyPatch, rejects: Rejects
 ) -> None:
     # A Safe 5 Optiga in a device reporting itself as a T3W1.
     chain = make_chain(roots.t3t1_prod, OPTIGA, "T3T1 Trezor Safe 5")
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("Missing Tropic"):
         authenticate(monkeypatch, models.T3W1, {OPTIGA: chain})
-    assert_logged_error(caplog_error, "Missing Tropic")
 
 
 @pytest.mark.parametrize("serial_number", [None, ""])
 def test_authenticate_t3w1_missing_serial_number(
     roots: Roots,
     monkeypatch: pytest.MonkeyPatch,
-    caplog_error: pytest.LogCaptureFixture,
+    rejects: Rejects,
     serial_number: str | None,
 ) -> None:
     chains = make_chains(roots.t3w1_prod, serial_number=serial_number)
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects("Missing serial number"):
         authenticate(monkeypatch, models.T3W1, chains)
-    assert_logged_error(caplog_error, "Missing serial number")
 
 
 @pytest.mark.parametrize(
@@ -898,9 +854,7 @@ def test_root_keys_mldsa44_valid() -> None:
     EMULATOR_CHAINS,
     ids=[f"{c.source.value}-{c.model.internal_name}" for c in EMULATOR_CHAINS],
 )
-def test_emulator_chain(
-    caplog_error: pytest.LogCaptureFixture, chain: EmulatorChain
-) -> None:
+def test_emulator_chain(rejects: Rejects, chain: EmulatorChain) -> None:
     def verify_emulator(**kwargs: t.Any) -> authentication.AuthenticationResult:
         return authentication.verify_authentication_response(
             CHALLENGE,
@@ -916,9 +870,8 @@ def test_emulator_chain(
     assert result.root.key_type is RootKeyType.DEBUG
     assert chain.model in result.root.trezor_models
 
-    with pytest.raises(DeviceNotAuthentic):
+    with rejects(f"manufactured by {TESTING_ROOT_NAME}"):
         verify_emulator()
-    assert_logged_error(caplog_error, f"manufactured by {TESTING_ROOT_NAME}")
 
 
 @pytest.mark.parametrize(
