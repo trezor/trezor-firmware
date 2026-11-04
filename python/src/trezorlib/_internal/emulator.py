@@ -36,6 +36,12 @@ LOG = logging.getLogger(__name__)
 
 TROPIC_MODEL_WAIT_TIME = 10
 EMULATOR_WAIT_TIME = 30
+
+# The emulator serves its interfaces on UDP ports at fixed offsets to the base
+# port. The highest offset is the BLE event port, see `EVENT_PORT_OFFSET` in
+# `core/embed/io/ble/unix/ble.c` and `CoreEmulator.ble_port()`.
+MAX_PORT_OFFSET = 5
+
 _RUNNING_PIDS = set()
 
 

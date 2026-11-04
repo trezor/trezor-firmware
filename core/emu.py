@@ -14,7 +14,7 @@ from typing import TextIO
 import click
 
 import trezorlib.debuglink
-from trezorlib._internal.emulator import CoreEmulator, TropicModel
+from trezorlib._internal.emulator import MAX_PORT_OFFSET, CoreEmulator, TropicModel
 from trezorlib.cli.debug import record_screen
 from trezorlib.testing import translations
 
@@ -212,7 +212,7 @@ def _from_env(name: str) -> bool:
     "-P",
     "--port",
     metavar="PORT",
-    type=int,
+    type=click.IntRange(1, 65535 - MAX_PORT_OFFSET),
     default=int(os.environ.get("TREZOR_UDP_PORT", 0)) or None,
     help="UDP port number",
 )
@@ -249,7 +249,7 @@ def _from_env(name: str) -> bool:
 )
 @click.option(
     "--tropic-model-port",
-    type=int,
+    type=click.IntRange(1, 65535),
     default=None,
     help="Port of the Tropic01 model. Defaults to a free port for the auto-started model, or to 28992 for an externally managed one (--no-tropic-emulator).",
 )
