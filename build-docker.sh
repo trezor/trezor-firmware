@@ -578,6 +578,7 @@ if echo "${MODELS[@]}" | grep -q T1B1 && echo "${CORE_TARGETS[@]}" | grep -qw fi
       set -e -o pipefail
       cd /reproducible-build/trezor-firmware/legacy
       $GIT_CLEAN_REPO
+      rm -rf /build/*
       ln -s /build build
       uv run script/cibuild
       mkdir -p build/bootloader build/firmware build/intermediate_fw
