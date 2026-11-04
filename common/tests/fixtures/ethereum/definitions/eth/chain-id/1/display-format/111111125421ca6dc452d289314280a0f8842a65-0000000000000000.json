@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "111111125421ca6dc452d289314280a0f8842a65",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "1inch Network: AggregationRouterV6"
+  }
+}
