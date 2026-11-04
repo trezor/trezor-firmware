@@ -258,13 +258,23 @@ Core starts the app anew for every host request that isn't part of a running flo
 
 An app may instead wrap this in a `loop`. It then keeps its state between requests, but it stays running after answering, and Core doesn't return to the homescreen until the host sends something else.
 
-Returning `Err` from `app()` ends the app with an error, which Core treats as a crash. So `handle_wire_message()` must only do so for irreversible problems — e.g. the IPC channel itself failing. Anything the host can recover from (a malformed request, a business-logic failure such as a bad derivation path) is a **non-critical error**: it must be reported with `wire_error()` instead, and `handle_wire_message()` returns `Ok(())`.
+Returning `Err` from `app()` ends the app with an error, which Core treats as a crash: the host gets a detail-less `AppError` ("Application error"), and the details are only in the debug log. So `handle_wire_message()` must only do so for irreversible problems — e.g. the IPC channel itself failing. Anything the host can recover from (a malformed request, a business-logic failure such as a bad derivation path) is a **non-critical error**: it must be reported with `wire_error()` instead, and `handle_wire_message()` returns `Ok(())`.
 
 ### Stopping
 
 Core can ask the app to stop at any time, e.g. when the host sends something other than `ExtAppMessage` in the middle of a flow. Any wire, UI or crypto call then fails with `Error::Stopped`. The app must let that error reach `app()`, which the SDK treats as a normal exit. Mapping it to another error doesn't help, since all the following calls fail the same way.
 
 An app that doesn't exit within 250 ms is killed, and Core reports an error to the host. So long computations can't react to the signal, and may be killed instead.
+
+### Service errors
+
+Every API call that goes through a Core service returns a `CoreServiceError<E>` on failure, where `E` is the service's own error (`CryptoError` for crypto, `()` for wire and UI). The SDK's wrappers turn it into `Error`:
+
+- `ServiceError(e)` — the service's answer, e.g. `CryptoError::InvalidSignature` from `ecdsa_verify_digest`; becomes the matching `Error`.
+- `Timeout`, `ServiceCallFailed` — the call itself failed (IPC, invalid arguments such as a forbidden path or a wrong MAC, undecodable response); becomes `Error::ServiceError`. Core logs the details, they don't cross the API.
+- `StopApplication` — becomes `Error::Stopped`, see above.
+
+To handle a service's own error while still propagating the rest, split it off the raw result with `ServiceResultExt::split_service_error()`.
 
 ### Wire Message Handling
 
