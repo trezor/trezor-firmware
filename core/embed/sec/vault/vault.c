@@ -22,6 +22,9 @@
 #include "slip21.h"
 #include "store.h"
 #include "timing.h"
+#ifdef VAULT_CARD
+#include <sec/vault_card.h>
+#endif
 #ifdef VAULT_TIMING
 #include <sys/logging.h>
 LOG_DECLARE(vault)
@@ -85,7 +88,12 @@ void vault_storage_unlocked(void) {
                            length == 1 && needs_backup == 1);
 }
 
-void vault_storage_locked(void) { vault_backup_granted = false; }
+void vault_storage_locked(void) {
+  vault_backup_granted = false;
+#ifdef VAULT_CARD
+  vault_card_wipe();
+#endif
+}
 
 /* Consumes the permission for one disclosure of the stored mnemonic. */
 static bool vault_backup_take(void) {
@@ -106,6 +114,9 @@ void vault_wipe(void) {
   secret_revoke_all();
   /* Rotate the per-boot key: every outstanding blob stops authenticating. */
   vault_seal_wipe();
+#ifdef VAULT_CARD
+  vault_card_wipe();
+#endif
 }
 
 void vault_revoke_caller(uintptr_t caller) {
@@ -1292,7 +1303,8 @@ bool vault_message_snapshot(uintptr_t caller,
                               unlocked);
 }
 
-#if defined(TREZOR_EMULATOR) && !defined(VAULT_TEST)
+/* With VAULT_CARD, card/vault_card.c provides the entrypoints. */
+#if defined(TREZOR_EMULATOR) && !defined(VAULT_TEST) && !defined(VAULT_CARD)
 bool vault_call(const vault_request_t *request, vault_response_t *response) {
   vault_request_t copy = *request;
   bool ok =

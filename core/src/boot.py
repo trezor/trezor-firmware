@@ -166,6 +166,15 @@ if not utils.USE_OPTIGA or (optiga.get_sec() or 0) < 150:
     ignore_nonpin_loader_messages()
 
 config.init(show_pin_timeout)
+if utils.EMULATOR:
+    from trezor.crypto import bip32
+
+    # Only in emulators built with TREZOR_VAULT_CARD=1, whose seed is on a card.
+    set_card_ui = getattr(bip32, "set_card_ui", None)
+    if set_card_ui is not None:
+        from trezor.pin import show_card_prompt
+
+        set_card_ui(show_card_prompt)
 translations.init()
 if utils.USE_POWER_MANAGER:
     lock_manager.boot()

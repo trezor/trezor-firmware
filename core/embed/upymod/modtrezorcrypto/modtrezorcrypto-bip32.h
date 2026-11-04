@@ -598,6 +598,39 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_bip32_from_storage_obj, 0, 1,
     mod_trezorcrypto_bip32_from_storage);
 
+#ifdef VAULT_CARD
+#include <sec/vault_card.h>
+
+MP_REGISTER_ROOT_POINTER(mp_obj_t trezorcrypto_card_ui);
+
+/* Coreapp draws the card prompt from inside the vault call that waits for
+ * the card, as it draws PIN progress from inside storage. An exception in the
+ * prompt must not unwind through the vault, so it is dropped here. */
+static bool card_ui_wrapper(vault_card_state_t state, uint32_t remaining_ms) {
+  mp_obj_t callback = MP_STATE_VM(trezorcrypto_card_ui);
+  bool cancel = false;
+  nlr_buf_t nlr;
+  if (mp_obj_is_callable(callback) && nlr_push(&nlr) == 0) {
+    cancel = mp_call_function_2(callback, MP_OBJ_NEW_SMALL_INT(state),
+                                mp_obj_new_int_from_uint(remaining_ms)) ==
+             mp_const_true;
+    nlr_pop();
+  }
+  return cancel;
+}
+
+/* set_card_ui(callback: Callable[[int, int], bool] | None) -> None
+ * Emulators built with TREZOR_VAULT_CARD=1 only: the card prompt, called with
+ * a vault_card_state_t and the milliseconds left to tap. True cancels. */
+static mp_obj_t mod_trezorcrypto_bip32_set_card_ui(mp_obj_t callback) {
+  MP_STATE_VM(trezorcrypto_card_ui) = callback;
+  vault_card_set_ui(callback == mp_const_none ? NULL : card_ui_wrapper);
+  return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip32_set_card_ui_obj,
+                                 mod_trezorcrypto_bip32_set_card_ui);
+#endif
+
 static const mp_rom_map_elem_t mod_trezorcrypto_bip32_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_bip32)},
     {MP_ROM_QSTR(MP_QSTR_from_storage),
@@ -605,6 +638,10 @@ static const mp_rom_map_elem_t mod_trezorcrypto_bip32_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_HDNode), MP_ROM_PTR(&mod_trezorcrypto_HDNode_type)},
     {MP_ROM_QSTR(MP_QSTR_from_seed),
      MP_ROM_PTR(&mod_trezorcrypto_bip32_from_seed_obj)},
+#ifdef VAULT_CARD
+    {MP_ROM_QSTR(MP_QSTR_set_card_ui),
+     MP_ROM_PTR(&mod_trezorcrypto_bip32_set_card_ui_obj)},
+#endif
 };
 static MP_DEFINE_CONST_DICT(mod_trezorcrypto_bip32_globals,
                             mod_trezorcrypto_bip32_globals_table);
