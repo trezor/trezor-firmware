@@ -1,7 +1,7 @@
 #[cfg(feature = "debug")]
 use crate::alloc_types::Box;
 use crate::traits::crypto::CryptoError;
-use crate::traits::util::{CoreServiceError, FastResult};
+use crate::traits::util::{CoreServiceError, FastResult, ServiceResult};
 
 /// A wrapper which aligns its inner value to 8 bytes.
 #[doc(hidden)]
@@ -123,6 +123,51 @@ impl CryptoError {
             Self::InvalidMac => "invalid MAC",
             // same text as Core's own `ForbiddenKeyPath`
             Self::ForbiddenKeyPath => "Forbidden key path",
+        }
+    }
+}
+
+impl<E> CoreServiceError<E> {
+    /// Keeps the system errors, for services without errors of their own.
+    pub(crate) fn system<F>(self) -> CoreServiceError<F> {
+        match self {
+            Self::ServiceError(_) | Self::ServiceCallFailed => CoreServiceError::ServiceCallFailed,
+            Self::Timeout => CoreServiceError::Timeout,
+            Self::StopApplication => CoreServiceError::StopApplication,
+        }
+    }
+}
+
+/// Splits a [`ServiceResult`] into its service-specific outcome and the
+/// system errors, so the caller can match on the former and `?` the latter.
+///
+/// ```rust,ignore
+/// match crypto.check_address_mac(...).split_service_error()? {
+///     Ok(()) => { ... }
+///     Err(CryptoError::InvalidMac) => { ... }
+///     Err(_) => { ... }
+/// }
+/// ```
+pub trait ServiceResultExt<T, E> {
+    fn split_service_error(
+        self,
+    ) -> core::result::Result<core::result::Result<T, E>, CoreServiceError<()>>;
+}
+
+impl<T, E> ServiceResultExt<T, E> for ServiceResult<T, E> {
+    fn split_service_error(
+        self,
+    ) -> core::result::Result<core::result::Result<T, E>, CoreServiceError<()>> {
+        match self {
+            FastResult::Ok(t) => Ok(Ok(t)),
+            FastResult::Err(CoreServiceError::ServiceError(e)) => Ok(Err(e)),
+            FastResult::Err(CoreServiceError::Timeout) => Err(CoreServiceError::Timeout),
+            FastResult::Err(CoreServiceError::ServiceCallFailed) => {
+                Err(CoreServiceError::ServiceCallFailed)
+            }
+            FastResult::Err(CoreServiceError::StopApplication) => {
+                Err(CoreServiceError::StopApplication)
+            }
         }
     }
 }
