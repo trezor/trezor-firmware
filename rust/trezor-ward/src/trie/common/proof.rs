@@ -172,6 +172,33 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
     }
 }
 
+#[cfg(feature = "use_std")]
+impl<K: Key, H: HashFn> Proof<Vec<u8>, K, H> {
+    /// The proof of the empty map.
+    pub(crate) fn empty() -> Self {
+        Self {
+            bytes: Vec::new(),
+            _marker: PhantomData,
+        }
+    }
+
+    /// A proof from its parts, `steps` leaf-to-root, checked like bytes from anywhere else:
+    /// a path no tree has is [`Error::Shape`], not the caller's word.
+    pub(crate) fn build(
+        leaf: &Leaf<K, H>,
+        steps: impl IntoIterator<Item = Step<H>>,
+    ) -> Result<Self, Error> {
+        let mut bytes = Vec::with_capacity(Leaf::<K, H>::LEN + 8 * Step::<H>::LEN);
+        bytes.extend_from_slice(leaf.key.as_bytes().as_ref());
+        bytes.extend_from_slice(leaf.value.as_ref());
+        for step in steps {
+            bytes.extend_from_slice(&step.crit_bit.to_bytes());
+            bytes.extend_from_slice(step.sibling.as_ref());
+        }
+        Self::parse(bytes)
+    }
+}
+
 /// The steps of a proof, leaf-to-root; reversed, root-to-leaf.
 pub struct Steps<'a, H> {
     chunks: ChunksExact<'a, u8>,
@@ -406,6 +433,34 @@ mod tests {
         assert_eq!(root_first, [0, 1, 4].map(BitPos::new));
         assert_eq!(proof.steps().nth(1), Some(steps[1]));
         assert_eq!(proof.steps().nth_back(1), Some(steps[1]));
+    }
+
+    #[test]
+    fn build_and_parse_round_trip() {
+        let leaf = Leaf {
+            key: [0b0000_1111],
+            value: [7; 32],
+        };
+        let steps = [
+            Step {
+                crit_bit: BitPos::new(4),
+                sibling: [1; 32],
+            },
+            Step {
+                crit_bit: BitPos::new(0),
+                sibling: [2; 32],
+            },
+        ];
+        let built = P::build(&leaf, steps).unwrap();
+        assert_eq!(
+            P::build(&leaf, [steps[1], steps[0]]).unwrap_err(),
+            Error::Shape
+        );
+        let parsed = P::parse(built.as_bytes()).unwrap();
+        assert_eq!(parsed, built);
+        assert_eq!(parsed.leaf(), Some(leaf));
+        assert!(parsed.steps().eq(steps));
+        assert_eq!(P::empty(), P::parse(Vec::new()).unwrap());
     }
 
     #[test]
