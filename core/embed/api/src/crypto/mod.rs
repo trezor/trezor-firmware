@@ -12,7 +12,8 @@ use trezor_app_sdk::traits::crypto::{
 use trezor_app_sdk::traits::util::{CoreServiceError, FastResult, ServiceResult, TIMEOUT_MAX};
 
 use crate::wire::{
-    CoreIpcService, MSG_ID_ERROR, MSG_ID_FORBIDDEN_PATH, call_failed, ipc_call, to_bytes,
+    CoreIpcService, MSG_ID_ERROR, MSG_ID_FORBIDDEN_PATH, call_failed, ipc_call, service_error,
+    to_bytes,
 };
 
 /// A failed call into Core's crypto service, as reported to the app.
@@ -31,8 +32,8 @@ mod hashers;
 fn ipc_crypto_call(value: &TrezorCryptoEnum) -> Result<BoxedSlice<u8>, CryptoCallError> {
     let bytes = to_bytes(value).map_err(|_| call_failed("failed to serialize crypto request"))?;
     let id = value.id() as u16;
-    let (response_id, data) = ipc_call(CoreIpcService::Crypto.into(), id, &bytes, TIMEOUT_MAX)
-        .map_err(CoreServiceError::system)?;
+    let (response_id, data) =
+        ipc_call(CoreIpcService::Crypto.into(), id, &bytes, TIMEOUT_MAX).map_err(service_error)?;
     if response_id == MSG_ID_FORBIDDEN_PATH {
         return Err(CoreServiceError::ServiceError(
             CryptoError::ForbiddenKeyPath,

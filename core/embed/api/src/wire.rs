@@ -38,6 +38,17 @@ pub(crate) fn call_failed<E>(reason: &str) -> CoreServiceError<E> {
     CoreServiceError::ServiceCallFailed
 }
 
+/// Re-types a failed call for a service with errors of its own.
+pub(crate) fn service_error<E>(error: CallError) -> CoreServiceError<E> {
+    match error {
+        CoreServiceError::ServiceError(()) | CoreServiceError::ServiceCallFailed => {
+            CoreServiceError::ServiceCallFailed
+        }
+        CoreServiceError::Timeout => CoreServiceError::Timeout,
+        CoreServiceError::StopApplication => CoreServiceError::StopApplication,
+    }
+}
+
 fn coreapp() -> TaskId {
     TaskId::from(RemoteSysTask::CoreApp as u8)
 }
