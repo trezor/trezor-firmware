@@ -23,10 +23,20 @@ use sys::ipc::IpcInbox;
 use sys::sysevent::{self, SysEvents};
 use sys::task::TaskId;
 use sys::time::{Instant, Timeout};
-use trezor_app_sdk::traits::util::{FastResult, TIMEOUT_MAX};
-use trezor_app_sdk::traits::wire::{WireError, WireMessage, WireV1};
+use trezor_app_sdk::traits::util::{CoreServiceError, ServiceResult, TIMEOUT_MAX};
+use trezor_app_sdk::traits::wire::{WireMessage, WireV1};
 
 use crate::app_state;
+
+/// A failed call into Core, as reported to the app.
+pub(crate) type CallError = CoreServiceError<()>;
+
+/// Logs why a call failed and reports it as
+/// [`CoreServiceError::ServiceCallFailed`]; the details stay in Core's log.
+pub(crate) fn call_failed<E>(reason: &str) -> CoreServiceError<E> {
+    sys::syslog::log_simple("extapp", sys::syslog::LogLevel::Error, reason);
+    CoreServiceError::ServiceCallFailed
+}
 
 fn coreapp() -> TaskId {
     TaskId::from(RemoteSysTask::CoreApp as u8)
@@ -65,6 +75,9 @@ pub(crate) enum CoreIpcService {
 
 /// Message id of a Core reply reporting a failed request.
 pub(crate) const MSG_ID_ERROR: u16 = 0xFFFF;
+
+/// Message id of a Core reply refusing a key path outside the app's manifest.
+pub(crate) const MSG_ID_FORBIDDEN_PATH: u16 = 0xFFFE;
 
 impl From<CoreIpcService> for u16 {
     fn from(service: CoreIpcService) -> Self {
@@ -108,27 +121,27 @@ fn receive_until(timeout: Timeout) -> Option<ReceivedMessage> {
 }
 
 /// Fails if Core has asked the app to stop.
-fn check_not_stopped() -> Result<(), WireError> {
+fn check_not_stopped() -> Result<(), CallError> {
     if app_state::get().stop_requested.load(Ordering::Relaxed) {
-        return Err(WireError::Stopped);
+        return Err(CoreServiceError::StopApplication);
     }
     Ok(())
 }
 
 /// Waits for a message on `service`. A stop signal from Core can arrive
 /// at any time, and it overrides whatever the app is waiting for.
-fn receive(service: u16, timeout: Timeout) -> Result<ReceivedMessage, WireError> {
+fn receive(service: u16, timeout: Timeout) -> Result<ReceivedMessage, CallError> {
     check_not_stopped()?;
     match receive_until(timeout) {
         Some(msg) if msg.service == u16::from(CoreIpcService::Lifecycle) => {
             app_state::get()
                 .stop_requested
                 .store(true, Ordering::Relaxed);
-            Err(WireError::Stopped)
+            Err(CoreServiceError::StopApplication)
         }
         Some(msg) if msg.service == service => Ok(msg),
-        Some(_) => Err(WireError::UnexpectedService),
-        None => Err(WireError::Timeout),
+        Some(_) => Err(call_failed("received message from unexpected service")),
+        None => Err(CoreServiceError::Timeout),
     }
 }
 
@@ -152,16 +165,16 @@ pub(crate) fn ipc_call(
     id: u16,
     data: &[u8],
     timeout_ms: u32,
-) -> Result<(u16, BoxedSlice<u8>), WireError> {
+) -> Result<(u16, BoxedSlice<u8>), CallError> {
     send(service, id, data)?;
     let msg = receive(service, timeout(timeout_ms))?;
     Ok((msg.id, msg.data))
 }
 
 /// Sends `data` tagged `service`/`id` to Core, unless the app has to stop.
-fn send(service: u16, id: u16, data: &[u8]) -> Result<(), WireError> {
+fn send(service: u16, id: u16, data: &[u8]) -> Result<(), CallError> {
     check_not_stopped()?;
-    sys::ipc::send(coreapp(), service, id, data).map_err(|_| WireError::FailedToSend)
+    sys::ipc::send(coreapp(), service, id, data).map_err(|_| call_failed("failed to send message"))
 }
 
 /// Allocates this app's IPC inbox out of its own heap and registers it with
@@ -176,7 +189,7 @@ fn send(service: u16, id: u16, data: &[u8]) -> Result<(), WireError> {
 /// out of the app's own heap. The inbox owns the buffer and frees it when the
 /// app's state is dropped (see [`app_state::AppState`]).
 ///
-/// The byte size is a power of two of at least 8 (enforced at header
+/// The byte size is a non-zero multiple of 8 (enforced at header
 /// verification), so it always divides evenly into `usize` words on both the
 /// 32-bit target and the 64-bit emulator.
 pub(crate) fn register_inbox(ipc_buffer_size: usize) {
@@ -195,7 +208,7 @@ pub(crate) fn register_inbox(ipc_buffer_size: usize) {
 pub struct WireV1Impl;
 
 impl WireV1 for WireV1Impl {
-    extern "C" fn wire_receive(&self, timeout_ms: u32) -> FastResult<WireMessage, WireError> {
+    extern "C" fn wire_receive(&self, timeout_ms: u32) -> ServiceResult<WireMessage> {
         receive(CoreIpcService::Wire.into(), timeout(timeout_ms))
             .map(|msg| WireMessage {
                 id: msg.id,
@@ -204,11 +217,11 @@ impl WireV1 for WireV1Impl {
             .into()
     }
 
-    extern "C" fn wire_send<'a>(&self, id: u16, data: Slice<'a, u8>) -> FastResult<(), WireError> {
+    extern "C" fn wire_send<'a>(&self, id: u16, data: Slice<'a, u8>) -> ServiceResult<()> {
         send(CoreIpcService::Wire.into(), id, data.as_slice()).into()
     }
 
-    extern "C" fn wire_error<'a>(&self, code: u16, message: Str<'a>) -> FastResult<(), WireError> {
+    extern "C" fn wire_error<'a>(&self, code: u16, message: Str<'a>) -> ServiceResult<()> {
         send(
             CoreIpcService::WireError.into(),
             code,

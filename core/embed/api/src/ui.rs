@@ -16,10 +16,9 @@ use trezor_app_sdk::traits::ui::{
     ShowDanger, ShowInfoWithCancel, ShowMismatch, ShowProperties, ShowPublicKey, ShowSuccess,
     ShowWarning, StrExt, TrezorUiResult, UiV1, as_opt_str,
 };
-use trezor_app_sdk::traits::util::{FastResult, TIMEOUT_MAX};
-use trezor_app_sdk::traits::wire::WireError;
+use trezor_app_sdk::traits::util::{ServiceResult, TIMEOUT_MAX};
 
-use crate::wire::{CoreIpcService, ipc_call, to_bytes};
+use crate::wire::{CallError, CoreIpcService, call_failed, ipc_call, to_bytes};
 
 fn opt_str(bytes: StabbyOption<Slice<'_, u8>>) -> Option<structs::StrSlice<'_>> {
     as_opt_str(bytes).map(Into::into)
@@ -42,13 +41,13 @@ fn to_str_exts<'a>(items: &[StrExt<'a>], out: &mut alloc::vec::Vec<structs::StrE
 }
 
 /// Sends `value` to Core's UI service and deserializes the (owned) result.
-fn ipc_ui_call(value: &TrezorUiEnum) -> Result<WireTrezorUiResult, WireError> {
-    let bytes = to_bytes(value).map_err(|_| WireError::DecodeError)?;
+fn ipc_ui_call(value: &TrezorUiEnum) -> Result<WireTrezorUiResult, CallError> {
+    let bytes = to_bytes(value).map_err(|_| call_failed("failed to serialize UI request"))?;
     let (_id, data) = ipc_call(CoreIpcService::Ui.into(), 0, &bytes, TIMEOUT_MAX)?;
     let archived = rkyv::access::<rkyv::Archived<WireTrezorUiResult>, Failure>(&data)
-        .map_err(|_| WireError::DecodeError)?;
+        .map_err(|_| call_failed("failed to decode UI response"))?;
     rkyv::api::low::deserialize::<WireTrezorUiResult, Failure>(archived)
-        .map_err(|_| WireError::DecodeError)
+        .map_err(|_| call_failed("failed to decode UI response"))
 }
 
 fn to_mirror(result: WireTrezorUiResult) -> TrezorUiResult {
@@ -62,13 +61,13 @@ fn to_mirror(result: WireTrezorUiResult) -> TrezorUiResult {
 }
 
 /// Send a UI call and pass the result through unchanged.
-fn ui_call(value: &TrezorUiEnum) -> Result<TrezorUiResult, WireError> {
+fn ui_call(value: &TrezorUiEnum) -> Result<TrezorUiResult, CallError> {
     ipc_ui_call(value).map(to_mirror)
 }
 
 /// Send a UI call and normalize the result to a plain confirmation: anything
 /// but [`WireTrezorUiResult::Confirmed`] becomes [`TrezorUiResult::Cancelled`].
-fn ui_call_confirm(value: &TrezorUiEnum) -> Result<TrezorUiResult, WireError> {
+fn ui_call_confirm(value: &TrezorUiEnum) -> Result<TrezorUiResult, CallError> {
     match ipc_ui_call(value)? {
         WireTrezorUiResult::Confirmed => Ok(TrezorUiResult::Confirmed),
         _ => Ok(TrezorUiResult::Cancelled),
@@ -76,13 +75,13 @@ fn ui_call_confirm(value: &TrezorUiEnum) -> Result<TrezorUiResult, WireError> {
 }
 
 /// Send a UI call that doesn't expect a meaningful response.
-fn ui_call_void(value: &TrezorUiEnum) -> Result<(), WireError> {
+fn ui_call_void(value: &TrezorUiEnum) -> Result<(), CallError> {
     ipc_ui_call(value)?;
     Ok(())
 }
 
-fn ipc_progress_call(value: &TrezorProgressEnum) -> Result<(), WireError> {
-    let bytes = to_bytes(value).map_err(|_| WireError::DecodeError)?;
+fn ipc_progress_call(value: &TrezorProgressEnum) -> Result<(), CallError> {
+    let bytes = to_bytes(value).map_err(|_| call_failed("failed to serialize progress request"))?;
     ipc_call(
         CoreIpcService::Progress.into(),
         value.id(),
@@ -98,7 +97,7 @@ impl UiV1 for TrezorUiV1Impl {
     extern "C" fn confirm_value<'a>(
         &self,
         value: ConfirmValue<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         ui_call(&TrezorUiEnum::ConfirmValue(structs::ConfirmValue {
             title: value.title.as_str().into(),
             value: value.value.as_str().into(),
@@ -122,7 +121,7 @@ impl UiV1 for TrezorUiV1Impl {
     extern "C" fn confirm_value_intro<'a>(
         &self,
         value: ConfirmValueIntro<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         ui_call(&TrezorUiEnum::ConfirmValueIntro(
             structs::ConfirmValueIntro {
                 title: value.title.as_str().into(),
@@ -143,7 +142,7 @@ impl UiV1 for TrezorUiV1Impl {
     extern "C" fn confirm_summary<'a>(
         &self,
         value: ConfirmSummary<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         let mut account_items = alloc::vec::Vec::new();
         let mut extra_items = alloc::vec::Vec::new();
         if let core::option::Option::Some(items) =
@@ -184,7 +183,7 @@ impl UiV1 for TrezorUiV1Impl {
     extern "C" fn confirm_action<'a>(
         &self,
         value: ConfirmAction<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         ui_call(&TrezorUiEnum::ConfirmAction(structs::ConfirmAction {
             title: value.title.as_str().into(),
             action: value.action.as_str().into(),
@@ -200,10 +199,7 @@ impl UiV1 for TrezorUiV1Impl {
         .into()
     }
 
-    extern "C" fn select_menu<'a>(
-        &self,
-        value: SelectMenu<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    extern "C" fn select_menu<'a>(&self, value: SelectMenu<'a>) -> ServiceResult<TrezorUiResult> {
         let items: alloc::vec::Vec<structs::StrSlice> = value
             .items
             .as_slice()
@@ -221,7 +217,7 @@ impl UiV1 for TrezorUiV1Impl {
     extern "C" fn confirm_properties<'a>(
         &self,
         value: ConfirmProperties<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         let mut props = alloc::vec::Vec::new();
         to_properties(value.props.as_slice(), &mut props);
         ui_call(&TrezorUiEnum::ConfirmProperties(
@@ -239,10 +235,7 @@ impl UiV1 for TrezorUiV1Impl {
         .into()
     }
 
-    extern "C" fn show_properties<'a>(
-        &self,
-        value: ShowProperties<'a>,
-    ) -> FastResult<(), WireError> {
+    extern "C" fn show_properties<'a>(&self, value: ShowProperties<'a>) -> ServiceResult<()> {
         let mut props = alloc::vec::Vec::new();
         to_properties(value.props.as_slice(), &mut props);
         ui_call_void(&TrezorUiEnum::ShowProperties(structs::ShowProperties {
@@ -255,7 +248,7 @@ impl UiV1 for TrezorUiV1Impl {
         .into()
     }
 
-    extern "C" fn show_warning<'a>(&self, value: ShowWarning<'a>) -> FastResult<(), WireError> {
+    extern "C" fn show_warning<'a>(&self, value: ShowWarning<'a>) -> ServiceResult<()> {
         ui_call_void(&TrezorUiEnum::ShowWarning(structs::ShowWarning {
             title: value.title.as_str().into(),
             content: value.content.as_str().into(),
@@ -271,7 +264,7 @@ impl UiV1 for TrezorUiV1Impl {
     extern "C" fn show_info_with_cancel<'a>(
         &self,
         value: ShowInfoWithCancel<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         let mut items = alloc::vec::Vec::new();
         to_properties(value.items.as_slice(), &mut items);
         ui_call_confirm(&TrezorUiEnum::ShowInfoWithCancel(
@@ -289,7 +282,7 @@ impl UiV1 for TrezorUiV1Impl {
     extern "C" fn show_mismatch<'a>(
         &self,
         value: ShowMismatch<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         ui_call_confirm(&TrezorUiEnum::ShowMismatch(structs::ShowMismatch {
             title: value.title.as_str().into(),
             br_code: value.br_code,
@@ -300,7 +293,7 @@ impl UiV1 for TrezorUiV1Impl {
     extern "C" fn confirm_trade<'a>(
         &self,
         value: ConfirmTrade<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         ui_call(&TrezorUiEnum::ConfirmTrade(structs::ConfirmTrade {
             title: value.title.as_str().into(),
             subtitle: value.subtitle.as_str().into(),
@@ -313,10 +306,7 @@ impl UiV1 for TrezorUiV1Impl {
         .into()
     }
 
-    extern "C" fn show_danger<'a>(
-        &self,
-        value: ShowDanger<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    extern "C" fn show_danger<'a>(&self, value: ShowDanger<'a>) -> ServiceResult<TrezorUiResult> {
         ui_call_confirm(&TrezorUiEnum::ShowDanger(structs::ShowDanger {
             title: value.title.as_str().into(),
             content: value.content.as_str().into(),
@@ -328,7 +318,7 @@ impl UiV1 for TrezorUiV1Impl {
         .into()
     }
 
-    extern "C" fn show_success<'a>(&self, value: ShowSuccess<'a>) -> FastResult<(), WireError> {
+    extern "C" fn show_success<'a>(&self, value: ShowSuccess<'a>) -> ServiceResult<()> {
         ui_call_void(&TrezorUiEnum::ShowSuccess(structs::ShowSuccess {
             title: value.title.as_str().into(),
             content: value.content.as_str().into(),
@@ -343,7 +333,7 @@ impl UiV1 for TrezorUiV1Impl {
     extern "C" fn request_number<'a>(
         &self,
         value: RequestNumber<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         match ui_call(&TrezorUiEnum::RequestNumber(structs::RequestNumber {
             title: value.title.as_str().into(),
             content: value.content.as_str().into(),
@@ -362,7 +352,7 @@ impl UiV1 for TrezorUiV1Impl {
     extern "C" fn show_public_key<'a>(
         &self,
         value: ShowPublicKey<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         ui_call(&TrezorUiEnum::ShowPublicKey(structs::ShowPublicKey {
             pubkey: value.pubkey.as_str().into(),
             title: value.title.as_str().into(),
@@ -378,7 +368,7 @@ impl UiV1 for TrezorUiV1Impl {
     extern "C" fn confirm_with_info<'a>(
         &self,
         value: ConfirmWithInfo<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    ) -> ServiceResult<TrezorUiResult> {
         let mut items = alloc::vec::Vec::new();
         to_str_exts(value.items.as_slice(), &mut items);
         ui_call(&TrezorUiEnum::ConfirmWithInfo(structs::ConfirmWithInfo {
@@ -393,10 +383,7 @@ impl UiV1 for TrezorUiV1Impl {
         .into()
     }
 
-    extern "C" fn show_address<'a>(
-        &self,
-        value: ShowAddress<'a>,
-    ) -> FastResult<TrezorUiResult, WireError> {
+    extern "C" fn show_address<'a>(&self, value: ShowAddress<'a>) -> ServiceResult<TrezorUiResult> {
         let mut xpubs = alloc::vec::Vec::new();
         to_properties(value.xpubs.as_slice(), &mut xpubs);
         ui_call(&TrezorUiEnum::ShowAddress(structs::ShowAddress {
@@ -420,7 +407,7 @@ impl UiV1 for TrezorUiV1Impl {
         title: StabbyOption<Slice<'a, u8>>,
         indeterminate: bool,
         danger: bool,
-    ) -> FastResult<(), WireError> {
+    ) -> ServiceResult<()> {
         ipc_progress_call(&TrezorProgressEnum::Init {
             description: opt_str(description),
             title: opt_str(title),
@@ -434,7 +421,7 @@ impl UiV1 for TrezorUiV1Impl {
         &self,
         description: StabbyOption<Slice<'a, u8>>,
         value: u32,
-    ) -> FastResult<(), WireError> {
+    ) -> ServiceResult<()> {
         ipc_progress_call(&TrezorProgressEnum::Update {
             description: opt_str(description),
             value,
@@ -442,7 +429,7 @@ impl UiV1 for TrezorUiV1Impl {
         .into()
     }
 
-    extern "C" fn end_progress(&self) -> FastResult<(), WireError> {
+    extern "C" fn end_progress(&self) -> ServiceResult<()> {
         ipc_progress_call(&TrezorProgressEnum::End).into()
     }
 }
