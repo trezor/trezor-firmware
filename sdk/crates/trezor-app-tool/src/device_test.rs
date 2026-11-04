@@ -40,8 +40,7 @@ fn test_package(package: &Package, app_path: &Path, args: &DeviceTestArgs) -> Re
 
     cmd.args(ui_args(args.ui));
 
-    cmd.env("TREZOR_TRANSLATIONS_DIR", package_dir.join("translations"))
-        .current_dir(package_dir);
+    cmd.current_dir(package_dir);
 
     println!("app-tool: Running device tests");
     println!("\x1b[1;90m{}\x1b[0m", helpers::command_args_to_string(&cmd));
