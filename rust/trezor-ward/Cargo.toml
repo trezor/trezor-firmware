@@ -14,4 +14,6 @@ sha2 = { version = "0.10", optional = true, default-features = false }
 
 [dev-dependencies]
 hex = "0.4"
+rand = { version = "0.9", default-features = false }
+rand_xorshift = "0.4"
 trezor-ward = { path = ".", features = ["use_std", "sha2"] }
