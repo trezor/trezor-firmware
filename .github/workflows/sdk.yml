@@ -413,7 +413,7 @@ jobs:
           status: ${{ job.status }}
           app-root: sdk/apps/${{ matrix.app }}
           job-name: extapp_device_test_${{ matrix.app }}
-        if: always() && matrix.app != 'testapp'
+        if: always()
         continue-on-error: true
 
   extapp_fmt_check:
