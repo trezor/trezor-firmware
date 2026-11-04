@@ -309,6 +309,15 @@ class Roots(t.NamedTuple):
     t3b1_prod: FakeRoot
     safe3_debug: FakeRoot
 
+    def prod(self, model: models.TrezorModel) -> FakeRoot:
+        prod_roots = {
+            models.T3W1: self.t3w1_prod,
+            models.T3T1: self.t3t1_prod,
+            models.T2B1: self.t2b1_prod,
+            models.T3B1: self.t3b1_prod,
+        }
+        return prod_roots[model]
+
 
 @pytest.fixture(scope="module")
 def module_roots() -> Roots:
@@ -594,26 +603,23 @@ def test_authenticate_t3w1_mcu_min_version(
 
 
 @pytest.mark.parametrize(
-    "model, root_name, common_name",
-    [
-        (models.T3T1, "t3t1_prod", "T3T1 Trezor Safe 5"),
-        (models.T2B1, "t2b1_prod", "T2B1 Trezor Safe 3"),
-    ],
+    "model",
+    authentication.OPTIGA_ONLY_MODELS,
+    ids=[m.internal_name for m in authentication.OPTIGA_ONLY_MODELS],
 )
 def test_authenticate_optiga_only(
-    roots: Roots,
-    auth: AuthFromChains,
-    model: models.TrezorModel,
-    root_name: str,
-    common_name: str,
+    roots: Roots, auth: AuthFromChains, model: models.TrezorModel
 ) -> None:
-    root = getattr(roots, root_name)
-    chain = make_chain(root, OPTIGA, common_name)
+    common_name = model_cn(model)
+    chain = make_chain(roots.prod(model), OPTIGA, common_name)
     # Tropic and MCU proofs are not checked on models without them
-    garbage = make_chain(FakeRoot((model,), RootKeyType.PROD), TROPIC, common_name)
-    garbage_mcu = make_chain(FakeRoot((model,), RootKeyType.PROD), MCU, common_name)
-    chains = {OPTIGA: chain, TROPIC: garbage, MCU: garbage_mcu}
-    assert auth(model, chains) is root.public_keys
+    unknown_root = FakeRoot((model,), RootKeyType.PROD)
+    chains = {
+        OPTIGA: chain,
+        TROPIC: make_chain(unknown_root, TROPIC, common_name),
+        MCU: make_chain(unknown_root, MCU, common_name),
+    }
+    assert auth(model, chains) is roots.prod(model).public_keys
 
 
 @pytest.mark.parametrize("source", [OPTIGA, TROPIC])
@@ -729,26 +735,25 @@ def test_authenticate_t3w1_missing_serial_number(
 
 
 @pytest.mark.parametrize(
-    "model, root_name, common_name, serial_number",
+    "model, serial_number",
     [
         # Safe 3 and Safe 5 certificates don't have a serial number
-        (models.T2B1, "t2b1_prod", "T2B1 Trezor Safe 3", None),
-        (models.T3B1, "t3b1_prod", "T3B1 Trezor Safe 3", None),
-        (models.T3T1, "t3t1_prod", "T3T1 Trezor Safe 5", None),
+        (models.T2B1, None),
+        (models.T3B1, None),
+        (models.T3T1, None),
         # but one is accepted if present
-        (models.T3T1, "t3t1_prod", "T3T1 Trezor Safe 5", SERIAL),
+        (models.T3T1, SERIAL),
     ],
+    ids=["T2B1", "T3B1", "T3T1", "T3T1-with-serial"],
 )
 def test_authenticate_safe3_safe5_serial_number(
     roots: Roots,
     auth: AuthFromChains,
     model: models.TrezorModel,
-    root_name: str,
-    common_name: str,
     serial_number: str | None,
 ) -> None:
-    root = getattr(roots, root_name)
-    chain = make_chain(root, OPTIGA, common_name, serial_number)
+    root = roots.prod(model)
+    chain = make_chain(root, OPTIGA, model_cn(model), serial_number)
     assert auth(model, {OPTIGA: chain}) is root.public_keys
 
 
