@@ -659,10 +659,10 @@ def test_authenticate_t3w1_mcu_min_version(
         auth(models.T3W1, chains, version=older)
 
 
+# listed explicitly, so that a model added to OPTIGA_ONLY_MODELS by mistake is not
+# silently tested as Optiga-only
 @pytest.mark.parametrize(
-    "model",
-    authentication.OPTIGA_ONLY_MODELS,
-    ids=[m.internal_name for m in authentication.OPTIGA_ONLY_MODELS],
+    "model", [models.T2B1, models.T3B1, models.T3T1], ids=["T2B1", "T3B1", "T3T1"]
 )
 def test_authenticate_optiga_only(
     roots: Roots, auth: AuthFromChains, model: models.TrezorModel
