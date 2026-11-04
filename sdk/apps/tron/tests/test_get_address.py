@@ -50,7 +50,7 @@ def test_invalid_path(
     session: Session,
     instance_id: int,
 ):
-    with pytest.raises(TrezorFailure, match="DataError"):
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
         tron_ext.get_address(
             session, instance_id, parse_path("m/44h/999h/0h/0/0"), show_display=True
         )
