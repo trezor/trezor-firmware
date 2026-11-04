@@ -215,13 +215,25 @@ jobs:
     # FIXME: testing only, restore the condition above before merging
     if: always() && github.event_name == 'workflow_dispatch'
     needs: [core_device_test, core_monero_test, legacy_device_test]
+    permissions:
+      actions: read     # to list the jobs of this run
     steps:
       - name: Notify scheduled job failure to Slack
         env:
+          GH_TOKEN: ${{ github.token }}
           GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
           COMMIT_SHA: ${{ github.sha }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HW_TESTS_WEBHOOK }}
         run: |
-          jq -n --arg text "Nightly hardware tests failed on \`$GITHUB_REF_NAME\` (<$COMMIT_URL|${COMMIT_SHA::10}>): <$GITHUB_RUN_URL|GitHub run>" '{text: $text}' \
+          # only test jobs; must match the name of the `param` job
+          JOBS=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs?per_page=100" \
+            --jq '.jobs |= map(select(.name != "Determine pipeline parameters"))')
+          # cancelled also covers jobs that hit timeout-minutes
+          FAILED=$(jq -r '.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled") | "• <\(.html_url)|\(.name)>"' <<< "$JOBS")
+          COUNTS=$(jq -r '[.jobs[] | select(.conclusion != null and .conclusion != "skipped")]
+            | "\(map(select(.conclusion != "success")) | length) of \(length) jobs failed"' <<< "$JOBS")
+          HEADER="Nightly hardware tests failed on \`$GITHUB_REF_NAME\` (<$COMMIT_URL|${COMMIT_SHA::10}>), $COUNTS: <$GITHUB_RUN_URL|GitHub run>"
+          jq -n --arg header "$HEADER" --arg failed "$FAILED" \
+            '{text: (if $failed == "" then $header else $header + "\n" + $failed end)}' \
             | curl -sSf -X POST -H 'Content-type: application/json' --data @- "$SLACK_WEBHOOK_URL"
