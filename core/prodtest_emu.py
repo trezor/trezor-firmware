@@ -11,7 +11,7 @@ from pathlib import Path
 
 import click
 
-from trezorlib._internal.emulator import TropicModel
+from trezorlib._internal.emulator import MAX_PORT_OFFSET, TropicModel
 from trezorlib._internal.prodtest_emulator import (
     ProdtestEmulator,
     get_prodtest_emulator,
@@ -54,7 +54,7 @@ PROFILE_BASE = Path.home() / ".trezoremu"
     "-P",
     "--port",
     metavar="PORT",
-    type=int,
+    type=click.IntRange(1, 65535 - MAX_PORT_OFFSET),
     envvar="TREZOR_UDP_PORT",
     default=None,
     help="Base UDP port number (the VCP interface listens on PORT+3)",
@@ -78,7 +78,7 @@ PROFILE_BASE = Path.home() / ".trezoremu"
 )
 @click.option(
     "--tropic-model-port",
-    type=int,
+    type=click.IntRange(1, 65535),
     default=None,
     help="Port of the TROPIC01 model. Defaults to a free port for the auto-started model, or to 28992 for an externally managed one (--no-tropic-emulator).",
 )
