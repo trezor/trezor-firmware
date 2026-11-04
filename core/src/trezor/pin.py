@@ -208,7 +208,7 @@ def show_card_prompt(state: int, remaining_ms: int) -> bool:
         _card_prompt.close()
         _card_prompt = None
     if state == _CARD_DONE:
-        title, description = "Card read", "Done. You can remove the card."
+        title, description = "Card read", "Done."
     elif state == _CARD_TIMEOUT:
         title, description = "No card", "No card was tapped in time."
     elif state == _CARD_CANCELLED:
@@ -221,6 +221,9 @@ def show_card_prompt(state: int, remaining_ms: int) -> bool:
     failed = state != _CARD_DONE
     result = progress(description, title=title, danger=failed)
     result.report(1000, description)
-    # The vault call blocks the firmware anyway; let the user see the outcome.
-    utime.sleep_ms(1500 if failed else 600)
+    # A success returns at once: the workflow may need the card again right
+    # away, while it is still held. A failure ends the workflow, so pause to
+    # let the user read why.
+    if failed:
+        utime.sleep_ms(1500)
     return False
