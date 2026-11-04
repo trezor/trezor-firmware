@@ -77,19 +77,18 @@ pub fn heap_size(package: &Package) -> Result<u32> {
 ///
 /// The key is optional; a missing entry or an explicit 0 means "no opinion"
 /// and yields [`IPC_BUFFER_DEFAULT_SIZE`].
-///
-/// The value must be a power of two. That is not an IPC requirement -- the
-/// kernel queue is a plain byte ring -- but the inbox is allocated as
-/// `[usize]`, so its byte size has to be a multiple of `size_of::<usize>()`,
-/// which is 4 on the ARM target and 8 on the x86-64 emulator. Requiring a
-/// power of two satisfies both with one rule instead of a target-dependent
-/// alignment check.
 pub fn ipc_buffer_size(package: &Package) -> Result<u32> {
     let size = match optional_metadata_number(package, "ipc-buffer-size")? {
         None | Some(0) => IPC_BUFFER_DEFAULT_SIZE,
         Some(size) => size,
     };
+    validate_ipc_buffer_size(size)
+}
 
+/// The inbox is allocated as `[usize]`, so its byte size has to be a multiple
+/// of `size_of::<usize>()`: 4 on the ARM target, 8 on the emulators. A
+/// multiple of 8 covers both.
+fn validate_ipc_buffer_size(size: u64) -> Result<u32> {
     ensure!(
         size >= IPC_BUFFER_MIN_SIZE,
         "IPC buffer size {} is too small (min {} bytes)",
@@ -105,8 +104,8 @@ pub fn ipc_buffer_size(package: &Package) -> Result<u32> {
     );
 
     ensure!(
-        size.is_power_of_two(),
-        "IPC buffer size {} must be a power of two",
+        size % 8 == 0,
+        "IPC buffer size {} must be a multiple of 8",
         size
     );
 
@@ -235,4 +234,26 @@ pub fn dependency_package(package: &Package, name: &str) -> Result<Package> {
         .into_iter()
         .find(|p| p.name == dep.name && dep.req.matches(&p.version))
         .ok_or_else(|| anyhow::anyhow!("Package {} not found in the dependency graph", name))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ipc_buffer_size_accepts_multiples_of_8() {
+        assert_eq!(validate_ipc_buffer_size(12 * 1024).unwrap(), 12 * 1024);
+        assert_eq!(validate_ipc_buffer_size(IPC_BUFFER_MIN_SIZE).unwrap(), 256);
+        assert_eq!(
+            validate_ipc_buffer_size(IPC_BUFFER_MAX_SIZE).unwrap(),
+            65536
+        );
+    }
+
+    #[test]
+    fn ipc_buffer_size_rejects_invalid() {
+        assert!(validate_ipc_buffer_size(12 * 1024 + 4).is_err());
+        assert!(validate_ipc_buffer_size(IPC_BUFFER_MIN_SIZE - 8).is_err());
+        assert!(validate_ipc_buffer_size(IPC_BUFFER_MAX_SIZE + 8).is_err());
+    }
 }
