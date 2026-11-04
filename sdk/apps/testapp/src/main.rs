@@ -205,6 +205,9 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
         Ok(MessageType::Base58Decode) => handle_base58_decode(data),
         Ok(MessageType::Base58CheckEncode) => handle_base58check_encode(data),
         Ok(MessageType::Base58CheckDecode) => handle_base58check_decode(data),
+        // an error out of `app()` ends the app as crashed; a panic would abort
+        // the whole emulator (`panic = "immediate-abort"`)
+        Ok(MessageType::Crash) => Err(Error::DataError("crash requested")),
         Ok(_) => {
             error!("Invalid function: {:?}", id);
             Err(Error::InvalidFunction)

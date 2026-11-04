@@ -1,13 +1,13 @@
 import io
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
-from enum import IntEnum
+from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 import pytest
 
 from trezorlib import exceptions, protobuf
-from trezorlib.messages import ExtAppMessage, ExtAppResponse, Failure
+from trezorlib.messages import ExtAppMessage, ExtAppResponse, Failure, FailureType
 
 from .generated import messages as m
 
@@ -23,34 +23,37 @@ TPUB_MAGIC = 0x043587CF
 XPUB_MAGIC = 0x0488B21E
 
 
-class SdkError(IntEnum):
-    """`trezor_app_sdk::Error::code()`, which Core passes on as the Failure code."""
+class SdkError(Enum):
+    """`trezor_app_sdk::Error` as the host sees it: its Failure code
+    (`Error::code()`) and, for variants without their own text, the message.
+    A failed Core service call (e.g. a forbidden path) is a `ServiceError`."""
 
-    ServiceError = 2
-    DataError = 3
-    Cancelled = 4
-    InvalidFunction = 5
-    InvalidMessage = 6
-    InvalidArgument = 7
-    ValueError = 8
+    ServiceError = (FailureType.ProcessError, "service error")
+    DataError = (FailureType.DataError, None)
+    Cancelled = (FailureType.ActionCancelled, "cancelled")
+    InvalidFunction = (FailureType.UnexpectedMessage, "invalid function")
+    InvalidMessage = (FailureType.DataError, "invalid message")
+    InvalidArgument = (FailureType.DataError, "invalid argument")
 
 
-# `DataError` messages: a `CryptoError` the SDK function returned, or an
-# operation Core reported as failed.
+# `DataError` messages: a `CryptoError` the SDK function returned.
 INVALID_PUBLIC_KEY = "invalid public key"
 INVALID_SIGNATURE = "invalid signature"
 INVALID_ENCODING = "invalid encoding"
-OPERATION_FAILED = "operation failed in Core"
+INVALID_MAC = "invalid MAC"
+FORBIDDEN_KEY_PATH = "Forbidden key path"
 
 
 @contextmanager
 def raises(error: SdkError, message: str | None = None) -> Iterator[None]:
     """Expect the call to fail with the app error `error` (and `message`)."""
+    code, default_message = error.value
     with pytest.raises(exceptions.TrezorFailure) as e:
         yield
-    assert e.value.code == error
-    if message is not None:
-        assert e.value.message == message
+    assert e.value.code == code
+    expected = message or default_message
+    if expected is not None:
+        assert e.value.message == expected
 
 
 def message_id(msg: type[protobuf.MessageType] | protobuf.MessageType) -> int:
@@ -424,3 +427,13 @@ def base58check_decode(session: "Session", instance_id: int, encoded: str) -> by
         expect=[m.Data],
     )
     return res.data
+
+
+# ============================================================================
+# Failures
+# ============================================================================
+
+
+def crash(session: "Session", instance_id: int) -> None:
+    """Make the app crash; it never responds."""
+    call_ext(session, instance_id, msg_data=m.Crash(), expect=[m.Data])

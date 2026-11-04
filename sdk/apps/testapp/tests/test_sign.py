@@ -24,7 +24,7 @@ from trezorlib.tools import parse_path
 
 from . import signing, testapp_ext
 from .generated import messages as m
-from .testapp_ext import DEFAULT_BIP32_PATH, OPERATION_FAILED, SdkError, raises
+from .testapp_ext import DEFAULT_BIP32_PATH, FORBIDDEN_KEY_PATH, SdkError, raises
 
 ADDRESS_N = parse_path(DEFAULT_BIP32_PATH)
 # All hardened, so it works on Ed25519 too.
@@ -126,7 +126,7 @@ def test_ecdsa_sign_digest_zero_digest(
     session: Session, instance_id: int, compressed: bool
 ):
     """An all-zero digest is refused: its signature could be forged for any key."""
-    with raises(SdkError.DataError, OPERATION_FAILED):
+    with raises(SdkError.ServiceError):
         testapp_ext.ecdsa_sign_digest(
             session, instance_id, ADDRESS_N, b"\x00" * 32, compressed
         )
@@ -163,7 +163,7 @@ def test_ecdsa_sign_digest_nist256p1(
 
 def test_ecdsa_sign_digest_canonical_nist256p1(session: Session, instance_id: int):
     """Canonical signatures are secp256k1 only."""
-    with raises(SdkError.DataError, OPERATION_FAILED):
+    with raises(SdkError.ServiceError):
         testapp_ext.ecdsa_sign_digest(
             session,
             instance_id,
@@ -192,13 +192,13 @@ def test_ed25519_sign(session: Session, instance_id: int, message: bytes):
 
 def test_ed25519_sign_empty(session: Session, instance_id: int):
     """trezor-crypto refuses to sign an empty message."""
-    with raises(SdkError.DataError, OPERATION_FAILED):
+    with raises(SdkError.ServiceError):
         testapp_ext.ed25519_sign(session, instance_id, ACCOUNT_N, b"")
 
 
 def test_ed25519_sign_unhardened(session: Session, instance_id: int):
     """Ed25519 keys only exist on hardened paths."""
-    with raises(SdkError.DataError, OPERATION_FAILED):
+    with raises(SdkError.ServiceError):
         testapp_ext.ed25519_sign(session, instance_id, ADDRESS_N, b"message")
 
 
@@ -206,7 +206,7 @@ def test_ed25519_sign_unhardened(session: Session, instance_id: int):
 def test_ecdsa_sign_digest_forbidden_path(
     session: Session, instance_id: int, path: str
 ):
-    with raises(SdkError.DataError, OPERATION_FAILED):
+    with raises(SdkError.DataError, FORBIDDEN_KEY_PATH):
         testapp_ext.ecdsa_sign_digest(
             session, instance_id, parse_path(path), b"\x01" * 32, True
         )
@@ -233,7 +233,7 @@ def test_ecdsa_sign_digest_canonical_ethereum_zero_digest(
     session: Session, instance_id: int
 ):
     """An all-zero digest is refused: its signature could be forged for any key."""
-    with raises(SdkError.DataError, OPERATION_FAILED):
+    with raises(SdkError.ServiceError):
         testapp_ext.ecdsa_sign_digest(
             session,
             instance_id,
@@ -248,7 +248,7 @@ def test_ecdsa_sign_digest_canonical_ethereum_zero_digest(
 def test_ecdsa_sign_digest_canonical_ethereum_forbidden_path(
     session: Session, instance_id: int, path: str
 ):
-    with raises(SdkError.DataError, OPERATION_FAILED):
+    with raises(SdkError.DataError, FORBIDDEN_KEY_PATH):
         testapp_ext.ecdsa_sign_digest(
             session,
             instance_id,

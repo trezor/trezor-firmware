@@ -25,7 +25,7 @@ from .common import parametrize_using_common_fixtures
 from .generated import messages as m
 from .testapp_ext import (
     DEFAULT_BIP32_PATH,
-    OPERATION_FAILED,
+    FORBIDDEN_KEY_PATH,
     TPUB_MAGIC,
     XPUB_MAGIC,
     SdkError,
@@ -86,13 +86,13 @@ def test_get_xpub_matches_core(session: Session, instance_id: int):
 @pytest.mark.parametrize("path", FORBIDDEN_PATHS)
 def test_get_xpub_forbidden_path(session: Session, instance_id: int, path: str):
     """Like signing, keys are limited to the app's manifest paths."""
-    with raises(SdkError.DataError, OPERATION_FAILED):
+    with raises(SdkError.DataError, FORBIDDEN_KEY_PATH):
         testapp_ext.get_xpub(session, instance_id, parse_path(path), XPUB_MAGIC)
 
 
 @pytest.mark.parametrize("path", FORBIDDEN_PATHS)
 def test_get_public_key_forbidden_path(session: Session, instance_id: int, path: str):
-    with raises(SdkError.DataError, OPERATION_FAILED):
+    with raises(SdkError.DataError, FORBIDDEN_KEY_PATH):
         testapp_ext.get_public_key(session, instance_id, parse_path(path), True)
 
 
@@ -131,7 +131,7 @@ def test_get_public_key_ed25519_matches_core(session: Session, instance_id: int)
 
 
 def test_get_public_key_ed25519_unhardened(session: Session, instance_id: int):
-    with raises(SdkError.DataError, OPERATION_FAILED):
+    with raises(SdkError.ServiceError):
         testapp_ext.get_public_key(
             session,
             instance_id,
@@ -143,18 +143,18 @@ def test_get_public_key_ed25519_unhardened(session: Session, instance_id: int):
 
 def test_curve_not_allowed(session: Session, instance_id: int):
     """Curve25519 isn't in the app's manifest."""
-    with raises(SdkError.DataError, OPERATION_FAILED):
+    with raises(SdkError.ServiceError):
         testapp_ext.get_public_key(
             session, instance_id, ACCOUNT_N, False, m.Curve.CurveCurve25519
         )
-    with raises(SdkError.DataError, OPERATION_FAILED):
+    with raises(SdkError.ServiceError):
         testapp_ext.get_xpub(
             session, instance_id, ACCOUNT_N, TPUB_MAGIC, m.Curve.CurveCurve25519
         )
 
 
 def test_get_xpub_slip25_forbidden(session: Session, instance_id: int):
-    with raises(SdkError.DataError, OPERATION_FAILED):
+    with raises(SdkError.DataError, FORBIDDEN_KEY_PATH):
         testapp_ext.get_xpub(session, instance_id, SLIP25_PATH, TPUB_MAGIC)
 
 
@@ -162,13 +162,13 @@ def test_get_xpub_slip25_forbidden(session: Session, instance_id: int):
 def test_get_public_key_slip25_forbidden(
     session: Session, instance_id: int, compressed: bool
 ):
-    with raises(SdkError.DataError, OPERATION_FAILED):
+    with raises(SdkError.DataError, FORBIDDEN_KEY_PATH):
         testapp_ext.get_public_key(session, instance_id, SLIP25_PATH, compressed)
 
 
 def test_app_still_works_after_failure(session: Session, instance_id: int):
     """A failed operation doesn't stop the app."""
-    with raises(SdkError.DataError, OPERATION_FAILED):
+    with raises(SdkError.DataError, FORBIDDEN_KEY_PATH):
         testapp_ext.get_xpub(session, instance_id, SLIP25_PATH, TPUB_MAGIC)
     address_n = parse_path("m/44h/1h/0h")
     assert testapp_ext.get_xpub(session, instance_id, address_n, TPUB_MAGIC).startswith(
