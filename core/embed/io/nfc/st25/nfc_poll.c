@@ -31,8 +31,9 @@
 
 typedef struct {
   bool last_state;       // connection state already reported to this task
-  uint8_t connected;     // unreported connect edge
-  uint8_t disconnected;  // unreported disconnect edge
+  bool connected;        // unreported connect edge
+  bool disconnected;     // unreported disconnect edge
+  bool transceive_done;  // unreported transceive done
 } nfc_fsm_t;
 
 //!< Card connection status flag
@@ -61,17 +62,21 @@ bool nfc_get_event(nfc_event_t* event) {
   assert(event != NULL);
   nfc_fsm_t* fsm = &g_nfc_tls[systask_id(systask_active())];
 
-  if (fsm->connected && fsm->disconnected) {
-    fsm->connected = 0;
-    fsm->disconnected = 0;
+  if (fsm->transceive_done) {
+    fsm->transceive_done = false;
+    *event = NFC_EVENT_TRANSCEIVE_DONE;
+    return true;
+  } else if (fsm->connected && fsm->disconnected) {
+    fsm->connected = false;
+    fsm->disconnected = false;
     fsm->last_state = false;
   } else if (fsm->connected) {
-    fsm->connected = 0;
+    fsm->connected = false;
     fsm->last_state = true;
     *event = NFC_EVENT_CONNECTED;
     return true;
   } else if (fsm->disconnected) {
-    fsm->disconnected = 0;
+    fsm->disconnected = false;
     fsm->last_state = false;
     *event = NFC_EVENT_DISCONNECTED;
     return true;
@@ -104,10 +109,14 @@ static void on_event_poll(void* context, bool read_awaited,
   if (read_awaited) {
     // Run worker
     rfalNfcWorker();
+    bool xfer_pending = nfc_transceive_process();
 
     if (rfalNfcIsDevActivated(rfalNfcGetState())) {
       if (nfc_card_connected) {
-        if (!nfc_check_connection(&nfc_card_info)) {
+        // The presence check would interfere with the exchange in progress.
+        // If the card is removed meanwhile, the exchange fails and the next
+        // check detects it.
+        if (!xfer_pending && !nfc_check_connection(&nfc_card_info)) {
           nfc_restart_discovery();
           nfc_card_connected = false;
         }
@@ -118,24 +127,31 @@ static void on_event_poll(void* context, bool read_awaited,
           nfc_restart_discovery();
         }
       }
+    } else {
+      nfc_card_connected = false;
     }
 
-    syshandle_signal_read_ready(SYSHANDLE_NFC, &nfc_card_connected);
+    void* transceive_done = (void*)nfc_transceive_take_event();
+    syshandle_signal_read_ready(SYSHANDLE_NFC, transceive_done);
   }
 }
 
 static bool on_check_read_ready(void* context, systask_id_t task_id,
                                 void* param) {
   nfc_fsm_t* fsm = &g_nfc_tls[task_id];
-  bool new_state = *(bool*)param;
+  bool new_state = nfc_card_connected;
+  bool transceive_done = (bool)param;
 
+  if (transceive_done) {
+    fsm->transceive_done = true;
+  }
   if (new_state && !(fsm->last_state)) {
-    fsm->connected = 1;
+    fsm->connected = true;
   }
   if (!new_state && fsm->last_state) {
-    fsm->disconnected = 1;
+    fsm->disconnected = true;
   }
-  return fsm->connected || fsm->disconnected;
+  return fsm->connected || fsm->disconnected || fsm->transceive_done;
 }
 
 static const syshandle_vmt_t g_nfc_handle_vmt = {
