@@ -233,6 +233,7 @@ impl UiV1 for TrezorUiV1Impl {
                 hold: value.hold,
                 br_name: opt_str(value.br_name),
                 br_code: value.br_code,
+                external_menu: value.external_menu,
             },
         ))
         .into()
