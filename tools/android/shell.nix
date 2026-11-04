@@ -36,4 +36,9 @@ pkgs.mkShell {
   SDL3_IMAGE_SOURCE = pkgs.sdl3-image.src;
   LIBJPEG_SOURCE = pkgs.libjpeg_turbo.src;
   ANDROID_PKG_CONFIG = "${pkgs.pkg-config-unwrapped}/bin/pkg-config";
+  # inputsFrom brings the main shell's packages, not its environment.
+  LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+  # Unlike the main shell, mkShell wraps the host compiler with hardening.
+  # Its _FORTIFY_SOURCE breaks host tools built with -O0 -Werror (mpy-cross).
+  hardeningDisable = [ "fortify" ];
 }
