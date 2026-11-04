@@ -58,7 +58,7 @@ Before the app's own code runs, Core sets up an allocator over this region, and 
 
 ### IPC buffer size
 
-`ipc-buffer-size` is the size, in bytes, of the inbox Core registers for the app at launch: everything Core sends to the app (API replies and host wire messages) lands there. It must be a power of two between 256 bytes and 64 KiB, and no larger than `heap-size`. If it's omitted or `0`, the build tool uses 1 KiB, which only covers fixed API replies; an app that receives host wire messages needs to declare enough for its largest one.
+`ipc-buffer-size` is the size, in bytes, of the inbox Core registers for the app at launch: everything Core sends to the app (API replies and host wire messages) lands there. It must be a multiple of 8 between 256 bytes and 64 KiB, and no larger than `heap-size`. If it's omitted or `0`, the build tool uses 1 KiB, which only covers fixed API replies; an app that receives host wire messages needs to declare enough for its largest one.
 
 ### Application privilege
 
