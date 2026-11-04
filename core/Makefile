@@ -70,8 +70,8 @@ endif
 ifeq ($(MINISCRIPT),1)
 XTASK_BUILD_OPTS += --miniscript
 endif
-ifeq ($(N1W1),1)
-XTASK_BUILD_OPTS += --n1w1
+ifeq ($(K1N1),1)
+XTASK_BUILD_OPTS += --k1n1
 endif
 ifeq ($(PRODUCTION),1)
 XTASK_BUILD_OPTS += --production

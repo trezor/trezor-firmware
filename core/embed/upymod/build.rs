@@ -76,8 +76,8 @@ fn main() -> Result<()> {
             lib.add_define("USE_TRACKED_ALLOCATOR", Some("1"));
         }
 
-        if cfg!(feature = "n1w1") {
-            lib.add_define("USE_N1W1", Some("1"));
+        if cfg!(feature = "k1n1") {
+            lib.add_define("USE_K1N1", Some("1"));
         }
 
         if cfg!(feature = "nfc") {
@@ -963,7 +963,7 @@ impl<'a> MpyBuilder<'a> {
         let haptic = py_bool(cfg!(feature = "haptic"));
         let mcu_attestation = py_bool(cfg!(feature = "mcu_attestation"));
         let miniscript = py_bool(cfg!(feature = "miniscript"));
-        let n1w1 = py_bool(cfg!(feature = "n1w1"));
+        let k1n1 = py_bool(cfg!(feature = "k1n1"));
         let optiga = py_bool(cfg!(feature = "optiga"));
         let power_manager = py_bool(cfg!(feature = "power_manager"));
         let rgb_led = py_bool(cfg!(feature = "rgb_led"));
@@ -988,7 +988,7 @@ impl<'a> MpyBuilder<'a> {
             format!(r"s/utils\.USE_BLE/{ble}/g"),
             format!(r"s/utils\.USE_BUTTON/{button}/g"),
             format!(r"s/utils\.USE_HAPTIC/{haptic}/g"),
-            format!(r"s/utils\.USE_N1W1/{n1w1}/g"),
+            format!(r"s/utils\.USE_K1N1/{k1n1}/g"),
             format!(r"s/utils\.USE_MINISCRIPT/{miniscript}/g"),
             format!(r"s/utils\.USE_MCU_ATTESTATION/{mcu_attestation}/g"),
             format!(r"s/utils\.USE_OPTIGA/{optiga}/g"),
@@ -1153,7 +1153,7 @@ impl<'a> MpyBuilder<'a> {
             files.add(src, "apps/debug/*.py")?;
 
             if current_model != "T3W1" {
-                files.remove(src, "apps/debug/n1w1_mock.py");
+                files.remove(src, "apps/debug/k1n1_mock.py");
             }
         }
 

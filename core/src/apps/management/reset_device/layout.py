@@ -200,7 +200,7 @@ class _DisplayBackup:
 async def choose_backup_handler(method: BackupMethod | None) -> BackupHandler:
     from trezor.enums import BackupMethod
 
-    if utils.USE_N1W1:
+    if utils.USE_K1N1:
         if method is None:
             from trezor.ui.layouts.recovery import choose_method
 
@@ -209,8 +209,8 @@ async def choose_backup_handler(method: BackupMethod | None) -> BackupHandler:
                 TR.backup__type_create,
             )
 
-        if method is BackupMethod.N1W1:
-            return _N1W1Backup()
+        if method is BackupMethod.K1N1:
+            return _K1N1Backup()
 
     if method not in (None, BackupMethod.Display):
         from trezor import log
@@ -221,46 +221,46 @@ async def choose_backup_handler(method: BackupMethod | None) -> BackupHandler:
     return _DisplayBackup()
 
 
-if utils.USE_N1W1:
+if utils.USE_K1N1:
     from trezor import TR
 
     if TYPE_CHECKING:
         from buffer_types import AnyBytes
 
-        from apps.debug.n1w1_mock import N1W1Context
+        from apps.debug.k1n1_mock import K1N1Context
 
     class RetryWrite(Exception):
         def __init__(self, msg: str) -> None:
             self.msg = msg
 
-    class _N1W1Backup:
+    class _K1N1Backup:
         async def intro(self, num_of_words: int | None = None) -> None:
-            # TODO(N1W1): design/copy
+            # TODO(K1N1): design/copy
             pass
 
         async def backup(self, iter_shares: Iterable[ShareInfo]) -> None:
-            # TODO(N1W1): warn user about safety
+            # TODO(K1N1): warn user about safety
 
             # backup all shares
             for share in iter_shares:
                 await self._backup_share(share)
 
         async def _backup_share(self, share: ShareInfo) -> None:
-            from apps.debug import n1w1_mock
+            from apps.debug import k1n1_mock
 
-            # TODO(N1W1): use protobuf?
+            # TODO(K1N1): use protobuf?
             blob = " ".join(share.words).encode()
 
             if share.index == 0 or share.num_of_shares is None:
-                description, button = TR.n1w1__hold_first, TR.n1w1__footer_first
+                description, button = TR.k1n1__hold_first, TR.k1n1__footer_first
             elif share.index == share.num_of_shares - 1:
-                description, button = TR.n1w1__hold_last, TR.n1w1__footer_last
+                description, button = TR.k1n1__hold_last, TR.k1n1__footer_last
             else:
-                description, button = TR.n1w1__hold_next, TR.n1w1__footer_next
+                description, button = TR.k1n1__hold_next, TR.k1n1__footer_next
 
             while True:
                 try:
-                    with n1w1_mock.ctx as ctx:
+                    with k1n1_mock.ctx as ctx:
                         return await _write_share(ctx, description, button, blob)
                 except RetryWrite as exc:
                     import trezorui_api
@@ -273,11 +273,11 @@ if utils.USE_N1W1:
                         danger=True,
                     ) as layout:
                         await raise_if_not_confirmed(layout, br_name="backup_retry")
-                    # wait for a new N1W1 tag
+                    # wait for a new K1N1 tag
                     continue
 
     async def _write_share(
-        ctx: N1W1Context, description: str, button: str, blob: AnyBytes
+        ctx: K1N1Context, description: str, button: str, blob: AnyBytes
     ) -> None:
         from trezor.ui.layouts.progress import progress
 
@@ -287,17 +287,17 @@ if utils.USE_N1W1:
             button=button,
             br_name="backup_write",
         )
-        # continue N1W1 communication (the tag is connected)
+        # continue K1N1 communication (the tag is connected)
         result = await ctx.read(key="mnemonic")
         if result is not None:
-            raise RetryWrite(TR.n1w1__err_nonempty)
+            raise RetryWrite(TR.k1n1__err_nonempty)
 
-        progress_obj = progress(description=TR.n1w1__writing)
+        progress_obj = progress(description=TR.k1n1__writing)
         progress_obj.start()
         progress_obj.report(100)
         try:
             await ctx.write(key="mnemonic", value=blob)
-            # TODO(N1W1): animate during I/O?
+            # TODO(K1N1): animate during I/O?
             progress_obj.report(1000)
         finally:
             progress_obj.stop()

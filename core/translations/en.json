@@ -169,11 +169,11 @@
       "Delizia": "",
       "Eckhart": "Which type of wallet backup do you have?"
     },
-    "backup__type_n1w1": {
+    "backup__type_k1n1": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "N1W1 backup"
+      "Eckhart": "K1N1 backup"
     },
     "backup__type_wordlist": {
       "Bolt": "",
@@ -1248,6 +1248,72 @@
       "Delizia": "",
       "Eckhart": ""
     },
+    "k1n1__err_damaged": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "This tag is damaged. Continue to try again or scan the next tag."
+    },
+    "k1n1__err_empty": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "This tag is empty. Continue to scan a different tag."
+    },
+    "k1n1__err_nonempty": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Non-empty K1N1 tag."
+    },
+    "k1n1__footer_first": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Start with any tag"
+    },
+    "k1n1__footer_last": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Use the last remaining tag"
+    },
+    "k1n1__footer_next": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Use any remaining tag"
+    },
+    "k1n1__hold_first": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Hold the first tag to the back of this Trezor."
+    },
+    "k1n1__hold_last": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Hold the last tag to the back of this Trezor."
+    },
+    "k1n1__hold_next": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Hold the next tag to the back of this Trezor."
+    },
+    "k1n1__reading": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Reading tag..."
+    },
+    "k1n1__writing": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Writing to tag..."
+    },
     "language__change_to_template": "Change language to {0}?",
     "language__changed": "Language changed successfully.",
     "language__progress": "Changing language...",
@@ -1389,72 +1455,6 @@
     "monero__wanna_export_watchkey": "Do you really want to export watch-only credentials?",
     "monero__wanna_start_refresh": "Do you really want to\nstart refresh?",
     "monero__wanna_sync_key_images": "Do you really want to\nsync key images?",
-    "n1w1__err_damaged": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "This tag is damaged. Continue to try again or scan the next tag."
-    },
-    "n1w1__err_empty": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "This tag is empty. Continue to scan a different tag."
-    },
-    "n1w1__err_nonempty": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Non-empty N1W1 tag."
-    },
-    "n1w1__footer_first": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Start with any tag"
-    },
-    "n1w1__footer_last": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Use the last remaining tag"
-    },
-    "n1w1__footer_next": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Use any remaining tag"
-    },
-    "n1w1__hold_first": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Hold the first tag to the back of this Trezor."
-    },
-    "n1w1__hold_last": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Hold the last tag to the back of this Trezor."
-    },
-    "n1w1__hold_next": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Hold the next tag to the back of this Trezor."
-    },
-    "n1w1__reading": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Reading tag..."
-    },
-    "n1w1__writing": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Writing to tag..."
-    },
     "nem__absolute": {
       "Bolt": "absolute",
       "Caesar": "",

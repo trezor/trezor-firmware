@@ -3128,8 +3128,8 @@ pub mod features {
         Capability_NFC = 23,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_Tron)
         Capability_Tron = 24,
-        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_N1W1)
-        Capability_N1W1 = 25,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_K1N1)
+        Capability_K1N1 = 25,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_TouchWakeup)
         Capability_TouchWakeup = 26,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_Ethereum_EIP7702)
@@ -3171,7 +3171,7 @@ pub mod features {
                 22 => ::std::option::Option::Some(Capability::Capability_BLE),
                 23 => ::std::option::Option::Some(Capability::Capability_NFC),
                 24 => ::std::option::Option::Some(Capability::Capability_Tron),
-                25 => ::std::option::Option::Some(Capability::Capability_N1W1),
+                25 => ::std::option::Option::Some(Capability::Capability_K1N1),
                 26 => ::std::option::Option::Some(Capability::Capability_TouchWakeup),
                 28 => ::std::option::Option::Some(Capability::Capability_Ethereum_EIP7702),
                 29 => ::std::option::Option::Some(Capability::Capability_Miniscript),
@@ -3205,7 +3205,7 @@ pub mod features {
                 "Capability_BLE" => ::std::option::Option::Some(Capability::Capability_BLE),
                 "Capability_NFC" => ::std::option::Option::Some(Capability::Capability_NFC),
                 "Capability_Tron" => ::std::option::Option::Some(Capability::Capability_Tron),
-                "Capability_N1W1" => ::std::option::Option::Some(Capability::Capability_N1W1),
+                "Capability_K1N1" => ::std::option::Option::Some(Capability::Capability_K1N1),
                 "Capability_TouchWakeup" => ::std::option::Option::Some(Capability::Capability_TouchWakeup),
                 "Capability_Ethereum_EIP7702" => ::std::option::Option::Some(Capability::Capability_Ethereum_EIP7702),
                 "Capability_Miniscript" => ::std::option::Option::Some(Capability::Capability_Miniscript),
@@ -3238,7 +3238,7 @@ pub mod features {
             Capability::Capability_BLE,
             Capability::Capability_NFC,
             Capability::Capability_Tron,
-            Capability::Capability_N1W1,
+            Capability::Capability_K1N1,
             Capability::Capability_TouchWakeup,
             Capability::Capability_Ethereum_EIP7702,
             Capability::Capability_Miniscript,
@@ -3277,7 +3277,7 @@ pub mod features {
                 Capability::Capability_BLE => 21,
                 Capability::Capability_NFC => 22,
                 Capability::Capability_Tron => 23,
-                Capability::Capability_N1W1 => 24,
+                Capability::Capability_K1N1 => 24,
                 Capability::Capability_TouchWakeup => 25,
                 Capability::Capability_Ethereum_EIP7702 => 26,
                 Capability::Capability_Miniscript => 27,
@@ -13105,8 +13105,8 @@ impl BackupType {
 pub enum BackupMethod {
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.BackupMethod.Display)
     Display = 0,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.BackupMethod.N1W1)
-    N1W1 = 1,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.BackupMethod.K1N1)
+    K1N1 = 1,
 }
 
 impl ::protobuf::Enum for BackupMethod {
@@ -13119,7 +13119,7 @@ impl ::protobuf::Enum for BackupMethod {
     fn from_i32(value: i32) -> ::std::option::Option<BackupMethod> {
         match value {
             0 => ::std::option::Option::Some(BackupMethod::Display),
-            1 => ::std::option::Option::Some(BackupMethod::N1W1),
+            1 => ::std::option::Option::Some(BackupMethod::K1N1),
             _ => ::std::option::Option::None
         }
     }
@@ -13127,14 +13127,14 @@ impl ::protobuf::Enum for BackupMethod {
     fn from_str(str: &str) -> ::std::option::Option<BackupMethod> {
         match str {
             "Display" => ::std::option::Option::Some(BackupMethod::Display),
-            "N1W1" => ::std::option::Option::Some(BackupMethod::N1W1),
+            "K1N1" => ::std::option::Option::Some(BackupMethod::K1N1),
             _ => ::std::option::Option::None
         }
     }
 
     const VALUES: &'static [BackupMethod] = &[
         BackupMethod::Display,
-        BackupMethod::N1W1,
+        BackupMethod::K1N1,
     ];
 }
 
@@ -13530,7 +13530,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     apability_Haptic\x10\x15\x1a\x04\x80\xa6\x1d\x01\x12\x18\n\x0eCapability\
     _BLE\x10\x16\x1a\x04\x80\xa6\x1d\x01\x12\x18\n\x0eCapability_NFC\x10\x17\
     \x1a\x04\x80\xa6\x1d\x01\x12\x13\n\x0fCapability_Tron\x10\x18\x12\x19\n\
-    \x0fCapability_N1W1\x10\x19\x1a\x04\x80\xa6\x1d\x01\x12\x20\n\x16Capabil\
+    \x0fCapability_K1N1\x10\x19\x1a\x04\x80\xa6\x1d\x01\x12\x20\n\x16Capabil\
     ity_TouchWakeup\x10\x1a\x1a\x04\x80\xa6\x1d\x01\x12\x1f\n\x1bCapability_\
     Ethereum_EIP7702\x10\x1c\x12\x1f\n\x15Capability_Miniscript\x10\x1d\x1a\
     \x04\x80\xa6\x1d\x01\x1a\x04\xc8\xf3\x18\x01\"\x04\x08\x1b\x10\x1b\"\x0c\
@@ -13659,7 +13659,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0cSlip39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanced\x10\x02\x12\x1c\n\
     \x18Slip39_Single_Extendable\x10\x03\x12\x1b\n\x17Slip39_Basic_Extendabl\
     e\x10\x04\x12\x1e\n\x1aSlip39_Advanced_Extendable\x10\x05*%\n\x0cBackupM\
-    ethod\x12\x0b\n\x07Display\x10\0\x12\x08\n\x04N1W1\x10\x01*G\n\x10Safety\
+    ethod\x12\x0b\n\x07Display\x10\0\x12\x08\n\x04K1N1\x10\x01*G\n\x10Safety\
     CheckLevel\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPromptAlways\x10\x01\x12\
     \x15\n\x11PromptTemporarily\x10\x02*=\n\x0fDisplayRotation\x12\t\n\x05No\
     rth\x10\0\x12\x08\n\x04East\x10Z\x12\n\n\x05South\x10\xb4\x01\x12\t\n\

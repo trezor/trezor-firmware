@@ -878,8 +878,8 @@ static const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether a telemetry is supported."""
 /// USE_MINISCRIPT: bool
 /// """Whether Miniscript is supported."""
-/// USE_N1W1: bool
-/// """Whether N1W1 is supported."""
+/// USE_K1N1: bool
+/// """Whether K1N1 is supported."""
 /// USE_AES_GCM: bool
 /// """Whether the AES-GCM is supported."""
 /// USE_WARD: bool
@@ -1011,10 +1011,10 @@ static const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_MINISCRIPT), mp_const_false},
 #endif
-#if USE_N1W1
-    {MP_ROM_QSTR(MP_QSTR_USE_N1W1), mp_const_true},
+#if USE_K1N1
+    {MP_ROM_QSTR(MP_QSTR_USE_K1N1), mp_const_true},
 #else
-    {MP_ROM_QSTR(MP_QSTR_USE_N1W1), mp_const_false},
+    {MP_ROM_QSTR(MP_QSTR_USE_K1N1), mp_const_false},
 #endif
 #if USE_AES_GCM
     {MP_ROM_QSTR(MP_QSTR_USE_AES_GCM), mp_const_true},

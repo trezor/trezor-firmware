@@ -14,7 +14,7 @@ Brightness = 20
 Haptic = 21
 BLE = 22
 NFC = 23
-N1W1 = 25
+K1N1 = 25
 TouchWakeup = 26
 Miniscript = 29
 if not utils.BITCOIN_ONLY:

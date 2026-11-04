@@ -154,9 +154,9 @@ options:
     when: component(firmware)
     type: checkbox
 
-  - id: n1w1
-    name: N1W1 Support
-    description: Enables N1W1 support.
+  - id: k1n1
+    name: K1N1 Support
+    description: Enables K1N1 support.
     group: Features
     when: component(firmware)
     type: checkbox

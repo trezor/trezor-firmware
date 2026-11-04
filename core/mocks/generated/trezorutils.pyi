@@ -290,8 +290,8 @@ USE_TELEMETRY: bool
 """Whether a telemetry is supported."""
 USE_MINISCRIPT: bool
 """Whether Miniscript is supported."""
-USE_N1W1: bool
-"""Whether N1W1 is supported."""
+USE_K1N1: bool
+"""Whether K1N1 is supported."""
 USE_AES_GCM: bool
 """Whether the AES-GCM is supported."""
 USE_WARD: bool
