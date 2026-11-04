@@ -153,6 +153,14 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
         (!bytes.is_empty()).then(|| Leaf::try_from(&bytes[..Leaf::<K, H>::LEN]).unwrap())
     }
 
+    /// A proof borrowing this one's bytes. Already validated, so there is nothing to parse.
+    pub(crate) fn view(&self) -> Proof<&[u8], K, H> {
+        Proof {
+            bytes: self.as_bytes(),
+            _marker: PhantomData,
+        }
+    }
+
     /// The steps, leaf-to-root.
     pub fn steps(&self) -> Steps<'_, H> {
         let bytes = self.as_bytes();
@@ -406,6 +414,7 @@ mod tests {
         let borrowed = P::parse(raw.as_slice()).unwrap();
         let owned = P::parse(raw.clone()).unwrap();
         assert_eq!(borrowed, owned);
+        assert_eq!(owned.view(), borrowed);
         assert_eq!(owned.clone().into_bytes(), raw);
         assert_eq!(borrowed.as_bytes(), owned.as_bytes());
     }

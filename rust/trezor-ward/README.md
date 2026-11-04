@@ -48,3 +48,16 @@ The same proof answers "is `k` present?" for every key `k` whose lookup takes th
 if the terminal key is `k`, absent otherwise. The verifier does not take the host's word for
 either; it derives the answer from the proof after checking that the path is well formed, that
 it is `k`'s own path, and that it folds to the trusted root.
+
+### Verifier
+
+`Proof::verify(root, key)` holds a proof against a trusted root and answers where `key` sits in
+that tree as an `Entry`, modelled on the entry API of `HashMap`: `Occupied`, with the value's
+digest and the handles `replace` and `remove`, or `Vacant`, with `insert`. Each handle returns
+the root the change produces, computed from the old root and the proof alone. Nothing is ever
+derived from an unverified proof, and an insert is only reachable from a vacant entry. A value
+the host supplies is obtained through `OccupiedEntry::value`, which hands it back only if it
+hashes to the digest the proof commits to.
+
+The verifier is `no_std`, allocates nothing, and keeps no state: which root to trust, and
+whether one is held at all, is the caller's concern.

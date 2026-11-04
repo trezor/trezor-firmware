@@ -13,4 +13,5 @@ sha2 = ["dep:sha2"]
 sha2 = { version = "0.10", optional = true, default-features = false }
 
 [dev-dependencies]
+hex = "0.4"
 trezor-ward = { path = ".", features = ["use_std", "sha2"] }
