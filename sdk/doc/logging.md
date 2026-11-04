@@ -61,7 +61,7 @@ For example:
 
 ```sh
 5.248 apps.extapp.crypto ERR Crypto operation 2 failed: Forbidden key path
-5.249 extapp ERR DataError: received unexpected response message
+5.249 extapp ERR ServiceError: service error
 ```
 
 Messages related to modular apps come from two kinds of sources:
