@@ -512,7 +512,7 @@ def test_verify_ca_without_ca_extensions(roots: Roots, rejects: Rejects) -> None
         verify(chain, OPTIGA)
 
 
-def test_verify_debug_root_rejected(roots: Roots, rejects: Rejects) -> None:
+def test_verify_debug_root_rejected_by_default(roots: Roots, rejects: Rejects) -> None:
     chain = make_chain(roots.t3w1_debug, OPTIGA)
     with rejects("Successfully verified a Trezor Safe 7"):
         verify(chain, OPTIGA)
@@ -595,7 +595,7 @@ def test_authenticate_t3w1_missing_proof(
 
 
 @pytest.mark.parametrize("source", [TROPIC, MCU])
-def test_authenticate_t3w1_invalid_proof(
+def test_authenticate_t3w1_unknown_root_proof(
     roots: Roots, auth: AuthFromChains, rejects: Rejects, source: AttestationSource
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
@@ -639,7 +639,7 @@ def test_authenticate_optiga_only(
 
 
 @pytest.mark.parametrize("source", [OPTIGA, TROPIC])
-def test_authenticate_allowlist(
+def test_authenticate_allowlist_revoked(
     roots: Roots, auth: AuthFromChains, rejects: Rejects, source: AttestationSource
 ) -> None:
     chains = make_chains(roots.t3w1_prod)
@@ -723,7 +723,7 @@ def test_authenticate_inconsistent_common_names(
         auth(models.T3W1, chains)
 
 
-def test_authenticate_model_mismatch(
+def test_authenticate_model_mismatch_t3w1_as_t3t1(
     roots: Roots, auth: AuthFromChains, rejects: Rejects
 ) -> None:
     # A T3W1 reporting itself as a T3T1 to skip the Tropic and MCU checks.
@@ -732,7 +732,7 @@ def test_authenticate_model_mismatch(
         auth(models.T3T1, chains)
 
 
-def test_authenticate_model_mismatch_safe5_as_t3w1(
+def test_authenticate_model_mismatch_t3t1_as_t3w1(
     roots: Roots, auth: AuthFromChains, rejects: Rejects
 ) -> None:
     # A Safe 5 Optiga in a device reporting itself as a T3W1.
@@ -762,7 +762,7 @@ def test_authenticate_t3w1_missing_serial_number(
     ],
     ids=["T2B1", "T3B1", "T3T1", "T3T1-with-serial"],
 )
-def test_authenticate_safe3_safe5_serial_number(
+def test_authenticate_optiga_only_serial_number(
     roots: Roots,
     auth: AuthFromChains,
     model: models.TrezorModel,
