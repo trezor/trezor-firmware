@@ -162,6 +162,7 @@ def make_certificate(
     signing_key: PrivateKey,
     *,
     ca: bool = False,
+    path_length: int = 0,
 ) -> bytes:
     builder = (
         x509.CertificateBuilder()
@@ -174,7 +175,7 @@ def make_certificate(
     )
     if ca:
         builder = builder.add_extension(
-            x509.BasicConstraints(ca=True, path_length=0), critical=True
+            x509.BasicConstraints(ca=True, path_length=path_length), critical=True
         ).add_extension(
             x509.KeyUsage(
                 digital_signature=False,
@@ -512,17 +513,44 @@ def test_verify_ca_without_ca_extensions(roots: Roots, rejects: Rejects) -> None
         verify(chain, OPTIGA)
 
 
-def test_verify_device_certificate_as_ca(roots: Roots, rejects: Rejects) -> None:
-    # a genuine device key must not be able to issue further device certificates
-    chain = make_chain(roots.t3w1_prod, OPTIGA)
-    device_name = make_x509_name(DEFAULT_COMMON_NAME, SERIAL)
-    forged_key = generate_key(OPTIGA)
-    forged_cert = make_certificate(
-        device_name, device_name, forged_key.public_key(), chain.device_key
+def make_chain_with_sub_ca(root: FakeRoot, ca_path_length: int) -> Chain:
+    """Build an Optiga chain [device, sub-CA, CA] with a valid sub-CA (pathLen 0)."""
+    root_name = make_x509_name("Test Root")
+    ca_key = generate_key(OPTIGA)
+    ca_name = make_x509_name("Test CA")
+    ca_cert = make_certificate(
+        ca_name,
+        root_name,
+        ca_key.public_key(),
+        root.keys[OPTIGA],
+        ca=True,
+        path_length=ca_path_length,
     )
-    forged_chain = Chain([forged_cert, *chain.certificates], forged_key)
-    with rejects("Missing extension"):
-        verify(forged_chain, OPTIGA)
+    sub_ca_key = generate_key(OPTIGA)
+    sub_ca_name = make_x509_name("Test sub-CA")
+    sub_ca_cert = make_certificate(
+        sub_ca_name, ca_name, sub_ca_key.public_key(), ca_key, ca=True
+    )
+    device_key = generate_key(OPTIGA)
+    device_cert = make_certificate(
+        make_x509_name(DEFAULT_COMMON_NAME, SERIAL),
+        sub_ca_name,
+        device_key.public_key(),
+        sub_ca_key,
+    )
+    return Chain([device_cert, sub_ca_cert, ca_cert], device_key)
+
+
+def test_verify_ca_path_length_allows_sub_ca(roots: Roots) -> None:
+    chain = make_chain_with_sub_ca(roots.t3w1_prod, ca_path_length=1)
+    assert verify(chain, OPTIGA).root is roots.t3w1_prod.certificate
+
+
+def test_verify_ca_path_length_exceeded(roots: Roots, rejects: Rejects) -> None:
+    # every certificate is a valid CA, only the CA's pathLen forbids the sub-CA
+    chain = make_chain_with_sub_ca(roots.t3w1_prod, ca_path_length=0)
+    with rejects("was not permitted to issue"):
+        verify(chain, OPTIGA)
 
 
 def test_verify_debug_root_rejected_by_default(roots: Roots, rejects: Rejects) -> None:
