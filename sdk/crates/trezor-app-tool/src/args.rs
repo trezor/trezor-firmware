@@ -29,6 +29,21 @@ pub enum Language {
     /// Czech.
     #[value(name = "cs")]
     CS = 1,
+    /// German.
+    #[value(name = "de")]
+    DE = 2,
+    /// Spanish.
+    #[value(name = "es")]
+    ES = 3,
+    /// French.
+    #[value(name = "fr")]
+    FR = 4,
+    /// Indonesian.
+    #[value(name = "id")]
+    ID = 5,
+    /// Portuguese.
+    #[value(name = "pt")]
+    PT = 6,
 }
 
 /// A CPU architecture a modular app can be built for. The emulator
@@ -138,6 +153,11 @@ impl Language {
         match self {
             Language::EN => "lang_en",
             Language::CS => "lang_cs",
+            Language::DE => "lang_de",
+            Language::ES => "lang_es",
+            Language::FR => "lang_fr",
+            Language::ID => "lang_id",
+            Language::PT => "lang_pt",
         }
     }
 
@@ -145,6 +165,11 @@ impl Language {
         match self {
             Language::EN => "en",
             Language::CS => "cs",
+            Language::DE => "de",
+            Language::ES => "es",
+            Language::FR => "fr",
+            Language::ID => "id",
+            Language::PT => "pt",
         }
     }
 }
@@ -423,6 +448,11 @@ mod tests {
     fn language_feature_names() {
         assert_eq!(Language::EN.feature_name(), "lang_en");
         assert_eq!(Language::CS.feature_name(), "lang_cs");
+        assert_eq!(Language::DE.feature_name(), "lang_de");
+        assert_eq!(Language::ES.feature_name(), "lang_es");
+        assert_eq!(Language::FR.feature_name(), "lang_fr");
+        assert_eq!(Language::ID.feature_name(), "lang_id");
+        assert_eq!(Language::PT.feature_name(), "lang_pt");
     }
 
     #[test]

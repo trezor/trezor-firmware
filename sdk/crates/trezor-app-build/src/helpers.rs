@@ -5,6 +5,11 @@ pub enum Language {
     #[default]
     English,
     Czech,
+    German,
+    Spanish,
+    French,
+    Indonesian,
+    Portuguese,
 }
 
 impl Language {
@@ -13,6 +18,16 @@ impl Language {
             Self::English
         } else if env::var("CARGO_FEATURE_LANG_CS").is_ok() {
             Self::Czech
+        } else if env::var("CARGO_FEATURE_LANG_DE").is_ok() {
+            Self::German
+        } else if env::var("CARGO_FEATURE_LANG_ES").is_ok() {
+            Self::Spanish
+        } else if env::var("CARGO_FEATURE_LANG_FR").is_ok() {
+            Self::French
+        } else if env::var("CARGO_FEATURE_LANG_ID").is_ok() {
+            Self::Indonesian
+        } else if env::var("CARGO_FEATURE_LANG_PT").is_ok() {
+            Self::Portuguese
         } else {
             Self::default()
         }
@@ -22,6 +37,11 @@ impl Language {
         let name = match self {
             Self::English => "en",
             Self::Czech => "cs",
+            Self::German => "de",
+            Self::Spanish => "es",
+            Self::French => "fr",
+            Self::Indonesian => "id",
+            Self::Portuguese => "pt",
         };
         format!("translations/{}.json", name)
     }
@@ -74,9 +94,14 @@ mod tests {
     use super::*;
     use std::sync::{Mutex, MutexGuard};
 
-    const VARS: [&str; 6] = [
+    const VARS: [&str; 11] = [
         "CARGO_FEATURE_LANG_EN",
         "CARGO_FEATURE_LANG_CS",
+        "CARGO_FEATURE_LANG_DE",
+        "CARGO_FEATURE_LANG_ES",
+        "CARGO_FEATURE_LANG_FR",
+        "CARGO_FEATURE_LANG_ID",
+        "CARGO_FEATURE_LANG_PT",
         "CARGO_FEATURE_MODEL_T3W1",
         "CARGO_FEATURE_MODEL_T3T1",
         "CARGO_FEATURE_TEST",
@@ -128,6 +153,15 @@ mod tests {
         Env::clear();
         env.set(&[("CARGO_FEATURE_LANG_EN", "1")]);
         assert_eq!(Language::from_env().file(), "translations/en.json");
+        for lang in ["de", "es", "fr", "id", "pt"] {
+            Env::clear();
+            let var = format!("CARGO_FEATURE_LANG_{}", lang.to_uppercase());
+            env.set(&[(&var, "1")]);
+            assert_eq!(
+                Language::from_env().file(),
+                format!("translations/{lang}.json")
+            );
+        }
     }
 
     #[test]
