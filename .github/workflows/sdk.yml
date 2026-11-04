@@ -56,7 +56,7 @@ jobs:
       - id: set_vars
         name: Set variables
         run: |
-          echo extapp_test_lang=${{ (github.event_name == 'schedule' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'translations'))) && '[\"en\", \"cs\"]' || '[\"en\"]' }} >> $GITHUB_OUTPUT
+          echo extapp_test_lang=${{ (github.event_name == 'schedule' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'translations'))) && '[\"en\", \"cs\", \"fr\", \"de\", \"es\", \"id\", \"pt\"]' || '[\"en\"]' }} >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
 
   sdk_fmt_check:
@@ -313,6 +313,16 @@ jobs:
           # testapp is only translated to English.
           - app: testapp
             lang: cs
+          - app: testapp
+            lang: fr
+          - app: testapp
+            lang: de
+          - app: testapp
+            lang: es
+          - app: testapp
+            lang: id
+          - app: testapp
+            lang: pt
     env:
       EXTAPP: ${{ matrix.app }}
       EXTAPP_MODEL: ${{ matrix.model }}
@@ -368,6 +378,16 @@ jobs:
           # testapp is only translated to English.
           - app: testapp
             lang: cs
+          - app: testapp
+            lang: fr
+          - app: testapp
+            lang: de
+          - app: testapp
+            lang: es
+          - app: testapp
+            lang: id
+          - app: testapp
+            lang: pt
     env:
       EXTAPP: ${{ matrix.app }}
       EXTAPP_MODEL: ${{ matrix.model }}
