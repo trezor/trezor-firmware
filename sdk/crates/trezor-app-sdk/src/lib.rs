@@ -39,8 +39,6 @@ pub mod traits;
 // Full app runtime — only compiled when `app` feature is enabled
 #[cfg(feature = "app")]
 mod alloc_types;
-// #[cfg(feature = "app")]
-// mod critical_section;
 
 #[cfg(feature = "app")]
 pub mod crypto;

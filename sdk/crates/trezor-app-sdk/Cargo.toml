@@ -15,7 +15,6 @@ crate-type = ["rlib"]
 
 [dependencies]
 rkyv = { version = "0.8", default-features = false }
-critical-section = "1.2.0"
 ufmt = "0.2.0"
 spin = "0.10.0"
 cty = "0.2.2"
