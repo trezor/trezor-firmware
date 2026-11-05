@@ -31,6 +31,8 @@ pub mod fonts;
 pub mod ui_bootloader;
 #[cfg(feature = "micropython")]
 pub mod ui_firmware;
+#[cfg(all(feature = "micropython", feature = "app_loading"))]
+pub mod ui_modui;
 
 #[cfg(feature = "prodtest")]
 mod prodtest;

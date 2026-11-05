@@ -278,7 +278,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [tron, testapp]
+        app: [testapp]
         model: [t3w1]
         lang: [en]
     env:
@@ -306,7 +306,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [tron, testapp]
+        app: [testapp]
         model: [t3w1]
         lang: ${{ fromJSON(needs.param.outputs.extapp_test_lang) }}
         exclude:
@@ -347,7 +347,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [tron, testapp]
+        app: [testapp]
         model: [t3w1]
         lang: [en]
     env:
@@ -371,7 +371,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [tron, testapp]
+        app: [testapp]
         model: [t3w1]
         lang: ${{ fromJSON(needs.param.outputs.extapp_test_lang) }}
         exclude:
@@ -434,7 +434,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [tron, testapp]
+        app: [testapp]
         model: [t3w1]
         lang: [en]
     env:

@@ -5,7 +5,9 @@ use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource};
 use crate::ui::flow::base::{Decision, DecisionBuilder as _};
-use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
+#[cfg(feature = "app_loading")]
+use crate::ui::flow::SwipePage;
+use crate::ui::flow::{FlowComponentDynTrait, FlowController, FlowMsg, SwipeFlow};
 use crate::ui::geometry::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -48,9 +50,6 @@ pub fn new_show_danger(
     value: TString<'static>,
     verb_cancel: Option<TString<'static>>,
 ) -> Result<SwipeFlow, Error> {
-    let confirm: TString = TR::buttons__continue_anyway.into();
-    let done_title: TString = TR::words__operation_cancelled.into();
-
     let verb_cancel = verb_cancel.unwrap_or(TR::buttons__cancel_and_exit.into());
 
     // Message
@@ -66,6 +65,38 @@ pub fn new_show_danger(
     .with_tap_footer(Some(verb_cancel))
     .map_to_button_msg();
     // .one_button_request(ButtonRequestCode::Warning, br_name);
+
+    build(content_message, verb_cancel)
+}
+
+/// A danger whose message is an app's facts, paged by the screen.
+#[cfg(feature = "app_loading")]
+pub fn new_show_danger_fields(
+    title: TString<'static>,
+    fields: crate::ui::ui_modui::FieldList,
+) -> Result<SwipeFlow, Error> {
+    let verb_cancel: TString = TR::buttons__cancel_and_exit.into();
+    // The facts can run over several pages; the flow's swipe-up keeps its
+    // meaning only on the last one.
+    let content_message = Frame::with_header(
+        Header::left_aligned(title).with_menu_button().with_danger(),
+        SwipeContent::new(SwipePage::vertical(fields.into_paragraphs())),
+    )
+    .with_tap_footer(Some(verb_cancel))
+    .with_vertical_pages()
+    .map_to_button_msg();
+
+    build(content_message, verb_cancel)
+}
+
+/// The rest of a danger's flow after its message: the menu to leave or
+/// continue anyway, and the cancelled screen on the way out.
+fn build(
+    content_message: impl FlowComponentDynTrait + 'static,
+    verb_cancel: TString<'static>,
+) -> Result<SwipeFlow, Error> {
+    let confirm: TString = TR::buttons__continue_anyway.into();
+    let done_title: TString = TR::words__operation_cancelled.into();
 
     // Menu
     let content_menu = Frame::with_header(

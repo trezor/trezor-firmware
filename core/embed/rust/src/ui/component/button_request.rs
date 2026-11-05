@@ -99,3 +99,14 @@ pub trait ButtonRequestExt {
 }
 
 impl<T: Component> ButtonRequestExt for T {}
+
+#[cfg(feature = "micropython")]
+mod micropython {
+    use crate::micropython::{Error, Obj};
+    use crate::ui::layout::obj::ComponentMsgObj;
+    impl<T: ComponentMsgObj> ComponentMsgObj for super::SendButtonRequest<T> {
+        fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+            self.inner.msg_try_into_obj(msg)
+        }
+    }
+}
