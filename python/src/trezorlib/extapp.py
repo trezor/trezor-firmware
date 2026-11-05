@@ -17,13 +17,18 @@
 from __future__ import annotations
 
 from hashlib import sha256
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import construct as c
 from construct_classes import subcon
 
+from . import messages
 from .construct_helpers import Reserved, TupleAdapter
 from .firmware.sanity_struct import SanityCheckedStruct
+from .root_packet import RootPacket
+
+if TYPE_CHECKING:
+    from .client import Session
 
 
 class AppHeader(SanityCheckedStruct):
@@ -156,3 +161,90 @@ class AppImage(SanityCheckedStruct):
             raise ValueError("Calculated payload hash does not match header")
 
         return list(reversed(result))
+
+
+def _format_version(version: tuple[int, ...]) -> str:
+    """Format a version tuple into a string representation, removing trailing zeros."""
+    parts = list(version)
+    while len(parts) > 2 and parts[-1] == 0:
+        parts.pop()
+    return "v" + ".".join(str(part) for part in parts)
+
+
+def _version_message(version: tuple[int, ...]) -> messages.Version:
+    return messages.Version(**dict(zip(("major", "minor", "patch", "build"), version)))
+
+
+def load(
+    session: Session,
+    binary: bytes,
+    proof: bytes,
+    root_packet: bytes,
+    min_version: tuple[int, int, int, int] | None,
+    match_fingerprint: bool = False,
+) -> int:
+    """Load an external application onto the device.
+
+    Returns:
+        Instance ID of the loaded app
+    """
+
+    image = AppImage.parse(binary)
+
+    if min_version is not None:
+        min_version_info = f"{_format_version(min_version)}+"
+        if image.header.version < min_version:
+            raise ValueError(
+                "Application version "
+                f"{_format_version(image.header.version)} "
+                "is less than the minimum required version "
+                f"{_format_version(min_version)}"
+            )
+    else:
+        min_version_info = ""
+        min_version = image.header.version
+
+    print(f"Requesting {image.header.id} {min_version_info}")
+
+    fingerprint = image.fingerprint() if match_fingerprint else None
+
+    # Send a request to the device to load the app, providing the hash, app ID, and minimum version.
+    resp = session.call(
+        messages.ExtAppLoad(
+            fingerprint=fingerprint,
+            id=image.header.id,
+            version=_version_message(min_version),
+        )
+    )
+
+    # If the device requests the binary, we proceed to upload it.
+    if isinstance(resp, messages.ExtAppHeaderRequest):
+        rp = RootPacket.parse(root_packet)
+        # Send the header and proof to the device
+
+        resp = session.call(
+            messages.ExtAppHeaderAck(
+                header=image.header_bytes(),
+                proof=proof,
+                root_packet_timestamp=rp.auth.timestamp,
+            )
+        )
+
+        if isinstance(resp, messages.ExtAppRootPacketRequest):
+            resp = session.call(messages.ExtAppRootPacketAck(root_packet=root_packet))
+
+        chunks = image.chunks()
+
+        print(
+            f"Uploading {image.header.id} {_format_version(image.header.version)} ({len(image.payload) / 1024:.1f} KB)"
+        )
+        # Send the payload in chunks as requested by the device
+        while isinstance(resp, messages.ExtAppDataChunkRequest):
+            chunk = chunks[resp.index]
+            resp = session.call(
+                messages.ExtAppDataChunkAck(data=chunk[0], hash=chunk[1])
+            )
+
+    # After the upload, the device should respond with ExtAppLoaded containing the instance ID.
+    resp = messages.ExtAppLoaded.ensure_isinstance(resp)
+    return resp.instance_id
