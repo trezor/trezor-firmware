@@ -1,0 +1,547 @@
+"""Core WARD-facing API: the internal platform boundary (TC) between callers and
+the WARD trust anchor (TW, apps.ward.service).
+
+Two kinds of caller route through here:
+  - On-device apps (Bitcoin/Ethereum getAddress, DisplayAddress, ...) call
+    `lookup_label`, which is CAPABILITY-GATED: the caller passes its first-party
+    `app_id`, checked against a static allowlist. This scopes which on-device app
+    may authenticate a WARD label.
+  - The host-facing WARD wire handlers (apps.ward.*) call the UNGATED ops below
+    (lookup / add_pending / commit / confirm_commit / sync / pending /
+    debug_set_root). The host is the WARD owner/driver, not an on-device app
+    principal, so it is not capability-gated; these are thin pass-throughs kept
+    here only so the trust anchor has a single gateway.
+
+`app_id` is a trusted constant a firmware module passes; the gate is capability
+scoping for on-device apps, not authenticating an untrusted principal.
+"""
+
+# Capability allowlist for the GATED on-device entry point (lookup_label).
+# Each app id maps to the WARD capabilities it may invoke.
+# Only display_address ever reaches a gated entry point; bitcoin/ethereum have no WARD
+# callers (see apps/bitcoin/get_address.py -- the label flow lives in DisplayAddress).
+_CAPABILITIES = {
+    "display_address": ("lookup",),
+}
+
+def _authorize(app_id: str, capability: str) -> None:
+    from trezor.wire import DataError
+
+    if capability not in _CAPABILITIES.get(app_id, ()):
+        raise DataError("app not authorized for WARD " + capability)
+
+
+# --- LeafIdentity / LeafContent wire <-> internal part codec ---
+# A leaf is two independently encoded parts. The wire carries a self-describing
+# oneof per part (EncryptedIdentity|PlainIdentity, EncryptedLeaf|PlaintextLeaf); the
+# firmware works internally on a `part` tuple (encoding, nonce, tag, body). These
+# helpers are the only place that maps between the two, and they enforce that a
+# received encoding matches this build's mode for that part (an encrypted-only
+# release rejects a plaintext part). See leaf.WARD_PLAINTEXT_IDENTITY /
+# WARD_PLAINTEXT_CONTENT.
+
+
+def make_leaf_content(part):
+    """Build a LeafContent from an internal content part."""
+    from trezor.messages import EncryptedLeaf, LeafContent, PlaintextLeaf
+
+    from apps.ward import leaf
+
+    encoding, nonce, tag, body = part if part is not None else leaf.EMPTY_PART
+    if encoding == leaf.ENC_PLAINTEXT:
+        return LeafContent(encoding=1, plaintext=PlaintextLeaf(content=body))
+    return LeafContent(encoding=0, encrypted=EncryptedLeaf(nonce=nonce, tag=tag, ct=body))
+
+
+def read_leaf_content(content):
+    """Read a LeafContent into an internal content part. `content is None` (no leaf on
+    the wire: a pull request, an empty tree, or a non-membership ack) returns None.
+    Rejects a part whose encoding does not match this build."""
+    from trezor.wire import DataError
+
+    from apps.ward import leaf
+
+    if content is None:
+        return None
+    if (content.encoding or 0) == 1:
+        p = content.plaintext
+        body = p.content if (p is not None and p.content is not None) else b""
+        # An EMPTY body is the DELETE sentinel and is mode-agnostic -- there is nothing
+        # to decrypt, so an encrypted-only build must still accept it.
+        if len(body) > 0 and not leaf.WARD_PLAINTEXT_CONTENT:
+            raise DataError("WARD: plaintext leaf but firmware is encrypted-only")
+        return (leaf.ENC_PLAINTEXT, b"", b"", body)
+    if leaf.WARD_PLAINTEXT_CONTENT:
+        raise DataError("WARD: encrypted leaf but firmware is plaintext-only")
+    e = content.encrypted
+    if e is None:
+        return None
+    return (leaf.ENC_ENCRYPTED, e.nonce or b"", e.tag or b"", e.ct or b"")
+
+
+def make_leaf_identity(key_type: str, part):
+    """Build a LeafIdentity from an internal identity part. `key_type` is always
+    clear -- it selects both K_ident and K_data. An EMPTY part yields None: a deleted
+    leaf no longer exists, so there is no identity to describe."""
+    from trezor.messages import EncryptedIdentity, LeafIdentity, PlainIdentity
+
+    from apps.ward import leaf
+
+    if leaf.part_is_empty(part):
+        return None
+    encoding, nonce, tag, body = part
+    if encoding == leaf.ENC_PLAINTEXT:
+        identifier, app_id, device_id = leaf.unpack_identity(body)
+        return LeafIdentity(
+            encoding=1,
+            key_type=key_type,
+            plain=PlainIdentity(
+                identifier=identifier, app_id=app_id.decode(), device_id=device_id
+            ),
+        )
+    return LeafIdentity(
+        encoding=0,
+        key_type=key_type,
+        encrypted=EncryptedIdentity(nonce=nonce, tag=tag, ct=body),
+    )
+
+
+def read_leaf_identity(identity):
+    """Read a LeafIdentity into (key_type, part). `identity is None` returns
+    (None, None). Rejects a part whose encoding does not match this build."""
+    from trezor.wire import DataError
+
+    from apps.ward import keys, leaf
+
+    if identity is None:
+        return None, None
+    key_type = identity.key_type or keys.ENTRY_TYPE_ADDRESS
+    if (identity.encoding or 0) == 1:
+        if not leaf.WARD_PLAINTEXT_IDENTITY:
+            raise DataError("WARD: plaintext identity but firmware is encrypted-only")
+        p = identity.plain
+        if p is None:
+            return key_type, None
+        body = leaf.pack_identity(
+            p.identifier or b"", p.app_id or b"", p.device_id or 0
+        )
+        return key_type, (leaf.ENC_PLAINTEXT, b"", b"", body)
+    if leaf.WARD_PLAINTEXT_IDENTITY:
+        raise DataError("WARD: encrypted identity but firmware is plaintext-only")
+    e = identity.encrypted
+    if e is None:
+        return key_type, None
+    return key_type, (leaf.ENC_ENCRYPTED, e.nonce or b"", e.tag or b"", e.ct or b"")
+
+
+async def _classify_label(
+    app_id: str,
+    address: bytes,
+    id_part,
+    val_part,
+    proof: list[bytes],
+    key_type: str = "address",
+    device_id: int = 0,
+    witness_entry_key: bytes | None = None,
+    witness_commit: bytes | None = None,
+) -> tuple[str, bytes | None]:
+    """Verify a (membership / non-membership) proof against the device's root and
+    classify it. Returns (status, label): status in unknown/membership/non-membership;
+    label is the DECRYPTED value only for a valid membership proof. Shared by the PUSH
+    (verify_label) and PULL (resolve_label) label paths."""
+    valid, _counter, membership, _wallet_id, _ward_id = await lookup(
+        app_id,
+        address,
+        id_part,
+        val_part,
+        proof,
+        key_type=key_type,
+        device_id=device_id,
+        witness_entry_key=witness_entry_key,
+        witness_commit=witness_commit,
+    )
+    if not valid:
+        return "unknown", None
+    if membership:
+        from apps.ward import service
+
+        value = await service.lookup_label(
+            app_id, address, id_part, val_part, proof, key_type, device_id
+        )
+        return "membership", value
+    return "non-membership", None
+
+
+# FIXME(ward, PUSH-ONLY): the PUSH read path. PULL is the default and only exercised
+# model; this is retained for the future PUSH deployment, where the host holds the
+# exported keys (WARDExportKeys) and attaches the proof up front instead of answering a
+# device-initiated WARDProofRequest. It is complete and correct but INACTIVE: nothing
+# calls WARDExportKeys, so no host can currently compute an entry_key to build a proof.
+async def verify_label(
+    app_id: str,
+    address: bytes,
+    id_part,
+    val_part,
+    proof: list[bytes],
+    key_type: str = "address",
+    device_id: int = 0,
+    witness_entry_key: bytes | None = None,
+    witness_commit: bytes | None = None,
+    domain: str | None = None,
+) -> tuple[str, bytes | None]:
+    """GATED PUSH-path label resolution: classify a proof the host attached up-front
+    (e.g. DisplayAddressWithProof). Returns (status, label). `app_id` is the
+    capability principal (gated); `domain` is the WARD domain that forms entry_key,
+    defaulting to `app_id`."""
+    _authorize(app_id, "lookup")
+    return await _classify_label(
+        domain if domain is not None else app_id,
+        address,
+        id_part,
+        val_part,
+        proof,
+        key_type=key_type,
+        device_id=device_id,
+        witness_entry_key=witness_entry_key,
+        witness_commit=witness_commit,
+    )
+
+
+async def resolve_label(
+    app_id: str,
+    address: bytes,
+    domain: str | None = None,
+    key_type: str = "address",
+    device_id: int = 0,
+) -> tuple[str, bytes | None]:
+    """GATED PULL-path label resolution for on-device apps. The device computes the
+    opaque entry_key path itself, sends a WARDProofRequest carrying only that path
+    (never the identifier or domain), and verifies the host's WARDProofAck against
+    its authenticated root. Returns (status, label)."""
+    _authorize(app_id, "lookup")
+    from trezor import log
+    from trezor.messages import WARDProofAck, WARDProofRequest
+    from trezor.wire import context
+
+    from apps.ward import keys
+
+    domain = domain if domain is not None else app_id
+    ek = await keys.entry_key_for(domain, address, key_type, device_id)
+    log.debug(
+        __name__,
+        "resolve_label: pulling proof for domain=%s key_type=%s (entry_key computed)",
+        domain,
+        key_type,
+    )
+    ack = await context.call(WARDProofRequest(entry_key=ek), WARDProofAck)
+    a_val = read_leaf_content(ack.content)
+    _a_kt, a_id = read_leaf_identity(ack.identity)
+    log.debug(
+        __name__,
+        "resolve_label: WARDProofAck membership=%s witness=%s",
+        ack.content is not None,
+        ack.witness_entry_key is not None,
+    )
+
+    # Membership => the two parts; non-membership => witness_*; empty => nothing.
+    return await _classify_label(
+        domain,
+        address,
+        a_id,
+        a_val,
+        ack.proof,
+        key_type=key_type,
+        device_id=device_id,
+        witness_entry_key=ack.witness_entry_key,
+        witness_commit=ack.witness_commit,
+    )
+
+
+# ---------------------------------------------------------------------------
+# UNGATED host-facing ops. The WARD App (host wire handlers) drives these; the
+# host is the WARD owner, not a gated on-device principal. Thin pass-throughs to
+# the trust anchor, kept here so it has a single gateway. Public host-side naming
+# prefers add_pending / sync / reconcile; the legacy wire message names remain.
+# ---------------------------------------------------------------------------
+
+
+# FIXME(ward, PUSH-ONLY): host-pushed proof verification. See verify_label above --
+# reachable today only via the WARDLookup PUSH branch, which no connect method drives.
+async def lookup(
+    app_id,
+    address: bytes,
+    id_part,
+    val_part,
+    proof: list[bytes],
+    key_type: str = "address",
+    device_id: int = 0,
+    witness_entry_key: bytes | None = None,
+    witness_commit: bytes | None = None,
+) -> tuple[bool, int, bool, bytes, bytes]:
+    """Verify a membership / non-membership proof against the device's WARD root.
+    Returns (valid, counter, membership, wallet_id, ward_id). The device forms
+    entry_key from (app_id, key_type, device_id, address); membership carries the
+    leaf's two parts; a non-membership witness is passed opaquely as
+    (witness_entry_key, witness_commit)."""
+    from apps.ward import service
+
+    return await service.lookup(
+        app_id,
+        address,
+        id_part,
+        val_part,
+        proof,
+        key_type=key_type,
+        device_id=device_id,
+        witness_entry_key=witness_entry_key,
+        witness_commit=witness_commit,
+    )
+
+
+async def lookup_pull(
+    app_id,
+    address: bytes,
+    key_type: str = "address",
+    device_id: int = 0,
+) -> tuple[bool, int, bool, bytes, bytes]:
+    """Host-driven PULL verify: the device computes the target entry_key itself,
+    PULLS the proof from the host on demand (WARDProofRequest -> WARDProofAck), and
+    returns the verdict (valid, counter, membership, wallet_id, ward_id). Ungated
+    (the host is the driver, like `lookup`).
+
+    Unlike the pushed `lookup`, the host never has to know the target entry_key: the
+    device sends it in WARDProofRequest, so a NON-membership verdict for an absent
+    address is device-proven (the host builds the witness from the entry_keys it
+    already stores). The wire I/O lives here in the Core gateway, not the trust
+    anchor. Mirrors `resolve_label`, but returns the verdict rather than a label."""
+    from trezor.messages import WARDProofAck, WARDProofRequest
+    from trezor.wire import context
+
+    from apps.ward import keys, service
+
+    ek = await keys.entry_key_for(app_id, address, key_type, device_id)
+    ack = await context.call(WARDProofRequest(entry_key=ek), WARDProofAck)
+    a_val = read_leaf_content(ack.content)
+    _a_kt, a_id = read_leaf_identity(ack.identity)
+
+    return await service.lookup(
+        app_id,
+        address,
+        a_id,
+        a_val,
+        ack.proof,
+        key_type=key_type,
+        device_id=device_id,
+        witness_entry_key=ack.witness_entry_key,
+        witness_commit=ack.witness_commit,
+    )
+
+
+async def queue(
+    app_id,
+    address: bytes,
+    new_value: bytes,
+    key_type: str = "address",
+    device_id: int = 0,
+) -> tuple[int, bytes]:
+    """Queue an edit INTENT via the WARD trust anchor (pull model) for the domain
+    named by app_id. The trust anchor checks its ACL, shows the domain + new value
+    on a trusted screen, and returns (pending_id, wallet_id) only on user approval.
+    No proof and no candidate counter here (strict model: counter_T is derived
+    later, inside the WM-synchronized WARDPerformUpdate flow). key_type/device_id
+    scope the entry_key the candidate will land on (§5.1).
+    """
+    from apps.ward import service
+
+    return await service.queue(app_id, address, new_value, key_type, device_id)
+
+
+async def perform(
+    pending_id: int | None = None,
+) -> tuple:
+    """Authorize a queued intent. Resolves it to its opaque entry_key, PULLS the
+    proof (WARDProofRequest(entry_key, pending_id) -> WARDProofAck), then hands the
+    ack to the trust anchor to derive counter_T + compute the candidate and the new
+    leaf (both parts). The wire I/O (context.call) lives here in the Core gateway.
+    Returns (counter_T, root_T, mac_T, wallet_id, ward_id, entry_key, key_type,
+    id_part, val_part) -- the trailing leaf lets the host store what it cannot
+    compute itself."""
+    from apps.ward import service
+    from trezor.messages import WARDProofAck, WARDProofRequest
+    from trezor.wire import context
+
+    pid, ek = await service.intent(pending_id)
+
+    ack = await context.call(
+        WARDProofRequest(entry_key=ek, pending_id=pid),
+        WARDProofAck,
+    )
+    a_val = read_leaf_content(ack.content)
+    _a_kt, a_id = read_leaf_identity(ack.identity)
+
+    return await service.perform(
+        pid,
+        a_id,
+        a_val,
+        ack.proof,
+        witness_entry_key=ack.witness_entry_key,
+        witness_commit=ack.witness_commit,
+    )
+
+
+async def finalize(
+    counter: int,
+    mac: bytes | None,
+    wm_signature: bytes,
+    pending_id: int | None = None,
+) -> tuple[int, bytes | None, bytes, bytes | None]:
+    from apps.ward import service
+
+    return await service.finalize(counter, mac, wm_signature, pending_id)
+
+
+async def perform_batch(pending_ids: list) -> tuple:
+    """Authorize a BATCH of queued intents as ONE root transition. Pulls a pre-state
+    proof for EACH intent (one WARDProofRequest per opaque entry_key), collects the
+    acks, then hands them all to the trust anchor to fold into one successor root and
+    authenticate with head_mac + AuthCommit. The wire I/O lives here in the gateway.
+    Returns (to_counter, to_root, mac_t, head_mac, auth_commit, sig, wallet_id,
+    ward_id, leaves)."""
+    from apps.ward import service
+    from trezor.messages import WARDProofAck, WARDProofRequest
+    from trezor.wire import context
+
+    resolved = []  # type: list[int]
+    acks = []  # type: list[tuple]
+    for pid in pending_ids:
+        rpid, ek = await service.intent(pid)
+        ack = await context.call(
+            WARDProofRequest(entry_key=ek, pending_id=rpid),
+            WARDProofAck,
+        )
+        a_val = read_leaf_content(ack.content)
+        _a_kt, a_id = read_leaf_identity(ack.identity)
+        acks.append(
+            (
+                a_id,
+                a_val,
+                ack.proof,
+                ack.witness_entry_key,
+                ack.witness_commit,
+            )
+        )
+        resolved.append(rpid)
+
+    return await service.perform_batch(resolved, acks)
+
+
+async def finalize_batch(
+    counter: int,
+    mac: bytes | None,
+    wm_signature: bytes,
+) -> tuple:
+    from apps.ward import service
+
+    return await service.finalize_batch(counter, mac, wm_signature)
+
+
+async def perform_revert(
+    stuck_counter: int,
+    stuck_root: bytes,
+    prev_root: bytes,
+    forward_auth_commit: bytes,
+) -> tuple:
+    """Prepare a one-step rollback. No proof pull — the predecessor is proven by the
+    host-supplied forward AuthCommit the trust anchor verifies."""
+    from apps.ward import service
+
+    return await service.perform_revert(
+        stuck_counter, stuck_root, prev_root, forward_auth_commit
+    )
+
+
+async def finalize_revert(
+    counter: int,
+    mac: bytes | None,
+    wm_signature: bytes,
+) -> tuple:
+    from apps.ward import service
+
+    return await service.finalize_revert(counter, mac, wm_signature)
+
+
+async def discard(
+    pending_id: int | None = None,
+) -> tuple[bytes | None, bytes]:
+    """Abandon queued pending edit(s) for the active wallet. With pending_id, drops
+    just that candidate and returns its address; without, drops all of the
+    wallet's candidates. Returns (discarded_address, wallet_id); discarded_address
+    is None when nothing matched (or in drop-all mode)."""
+    from apps.ward import service
+
+    return await service.discard(pending_id)
+
+
+async def sync() -> tuple[bytes, int, bytes, bytes]:
+    from apps.ward import service
+
+    return await service.sync()
+
+
+async def ingest(
+    counter: int, mac: bytes | None, wm_signature: bytes
+) -> tuple[int, bytes]:
+    from apps.ward import service
+
+    return await service.ingest(counter, mac, wm_signature)
+
+
+async def reconcile(
+    root: bytes | None,
+) -> tuple[int, bytes | None, bytes, bytes | None]:
+    from apps.ward import service
+
+    return await service.reconcile(root)
+
+
+async def verify_chain(links: list) -> tuple:
+    """Adopt the WM-attested head by verifying the AuthCommit chain (Phase 4a). No
+    proof pull — the host supplies the ordered links from its lineage store."""
+    from apps.ward import service
+
+    return await service.verify_chain(links)
+
+
+async def pending() -> tuple[list[int], list[bytes], bytes, bytes]:
+    """Return queued (pending_ids, addresses, wallet_id, ward_id) for the active
+    wallet.
+
+    Note:
+    - wallet_id is still returned for compatibility with current callers
+    - pending() should not be the long-term source of wallet_id
+    - ward_id is the SLIP21-derived WM anchor a host uses to key WARD storage
+    """
+    from apps.ward import service
+
+    return await service.pending()
+
+
+async def debug_set_root(
+    root: bytes,
+) -> tuple[int, bytes | None, bytes, bytes | None]:
+    from apps.ward import service
+
+    return await service.debug_set_root(root)
+
+
+# FIXME(ward, PUSH-ONLY): NO CALLER anywhere in firmware, trezorlib, or connect. This
+# is the single missing wire that would activate the whole PUSH path -- without it a host
+# cannot derive entry_key and therefore cannot push a proof.
+async def export_keys(key_type: str = "address") -> tuple:
+    """PUSH key export (user-confirmed inside the trust anchor). Returns
+    (k_path, k_data, k_ident) for the requested entry type; K_sig is never exported.
+    The three are independent capabilities -- resolve identifier -> path, read values,
+    read identities -- so a caller can be granted indexing without value reads."""
+    from apps.ward import service
+
+    return await service.export_keys(key_type)

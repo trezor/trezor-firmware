@@ -156,6 +156,10 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
             )
         else:
             account = address_n_to_name_or_unknown(coin, address_n, script_type)
+            # WARD label-at-address for Bitcoin getAddress is served via the dedicated
+            # DisplayAddress / DisplayAddressWithProof flows, not by overloading the
+            # shared GetAddress message (whose required repeated ward_proof would break
+            # every plain getAddress on the host). See TODO_Entry_key_as_MAC.
             await show_address(
                 address_short,
                 subtitle=subtitle,

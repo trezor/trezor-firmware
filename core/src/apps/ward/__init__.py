@@ -1,3 +1,15 @@
+"""WARD.
+
+Two parts share this package:
+
+- the offline cache (`store`, `keys.derive_wallet_id`, `open_ward` / `with_ward` below):
+  per-wallet records in protected storage, used by apps such as bitcoin;
+- the PoC trie and its protocol: the WARD write round and sync/lookup flows. Their
+  trust-anchor logic lives in `apps.ward.service` (with `keys`, `leaf`, `trie`); the
+  other modules are thin protobuf handlers that marshal wire messages to/from Core
+  (`apps.common.ward`). Its persistence is `storage.ward_store`, in its own namespace.
+"""
+
 from micropython import const
 from typing import TYPE_CHECKING
 
