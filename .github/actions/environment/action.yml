@@ -17,6 +17,11 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Drop unneeded files
+      # Saves ~20GB on `ubuntu-latest` runners (https://github.com/lumbroso-commons/free-disk-space/blob/main/action.yml)
+      shell: sh
+      run: |
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
     - name: Install nix
       uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3  # cachix/install-nix-action@v31.10.6
       with:
