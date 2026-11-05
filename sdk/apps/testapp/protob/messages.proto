@@ -37,4 +37,18 @@ enum MessageType {
     MessageType_Base58CheckDecode = 25;
     MessageType_Base58 = 26;
     MessageType_Data = 27;
+    MessageType_Review = 28;
+    MessageType_Summary = 29;
+    MessageType_VerifyAddress = 30;
+    MessageType_VerifyPubkey = 31;
+    MessageType_Done = 32;
+    MessageType_StreamData = 33;
+    MessageType_ShowProgress = 34;
+    MessageType_ProgressTick = 35;
+    MessageType_ProgressStep = 36;
+    MessageType_ProgressLabel = 37;
+    MessageType_ProgressReview = 38;
+    MessageType_ProgressNested = 39;
+    MessageType_ProgressEnd = 40;
+    MessageType_UiResult = 41;
 }
