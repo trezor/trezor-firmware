@@ -1,0 +1,310 @@
+WARD export versus current implementation — updated discrepancy review
+Reviewed 2026-11-05; includes uncommitted working-tree changes.
+
+SOURCE AND SCOPE
+
+Archive: /home/psusil/Downloads/2e317517-75eb-4713-b9be-a8b50c650b51_ExportBlock-7f461172-0ba8-4006-a8ac-115d92fb0449.zip
+SHA-256: 4c76b0a25737be3594db88609fe3846b4150c093468c353a8ae13e798cd1f42e
+All 23 exported Markdown pages match the previously extracted copies byte for
+byte. The three exported trie diagrams were also inspected. Linked remote pages
+and remote commits are outside this review; no web lookup was needed.
+
+Repository shorthand (all on petrsusil/ward-poc-encrypted):
+ F = /home/psusil/GitHub_authdb/trezor-firmware, HEAD b4d5a90147
+ S = /home/psusil/GitHub_authdb/trezor-suite-petrsusil/.worktrees/ward-poc-encrypted,
+     HEAD 05b6ed4f60
+ L = /home/psusil/GitHub_authdb/wallets/liana, HEAD 970040a4
+ J = /home/psusil/GitHub_authdb/wallets/Jade, HEAD 56921831
+HEAD alone does not describe this review: substantial repairs are uncommitted.
+The earlier ward-consistency-review.txt is a historical snapshot, not the current
+bug list. This file supersedes its current-status conclusions.
+
+Document shorthand:
+ PLAN = WARD - planning; AP = WARD — Architecture and Protocol;
+ HL = WARD High-Level Design; TM = WARD Architecture: Trezor and WARD Manager;
+ ST = WARD Architecture: Suite and Trezor;
+ REC = WARD Architecture: Evolu, WM, and MPT Reconstruction;
+ APP = WARD Architecture: TrezorApp to WARD Service;
+ S1/S3/S5 = the corresponding implementation-stage pages;
+ SYNC = Synchronization; UX = WARD - UX components.
+Extracted sources: /home/psusil/.cache/ward-validation/design-export/.
+
+CURRENT DISCREPANCIES
+
+R1. MEDIUM — Recovery and rejoin stop at detection.
+ Expected: SYNC's WM-behind-device case, AP recovery, and PLAN's recovery/rejoin
+ paths restore a usable authenticated state with explicit user decisions.
+ Actual: WardHost.sync rejects deviceCounter > WM counter with wm_behind. Missing
+ encrypted lineage also aborts reconstruction. There is no WardRecoverCounter
+ message or host recovery/rejoin operation.
+ Impact: database loss, omitted replica history, or a restored WM database can
+ leave the wallet unable to continue despite retaining its device anchor.
+ Evidence: S packages/wardd/src/host.ts, sync; service.ts, dispatch;
+ F common/protob/messages-ward.proto. Previous findings 16/17, partially repaired.
+ Qualification: ordinary catch-up DOES work when complete history is available.
+
+R2. MEDIUM — Batch/revert/queue management is not exposed by the common host API.
+ Expected: TM/PLAN describe multiple queued edits in one batch, revert, pending
+ inspection/discard, and retry flows.
+ Actual: wardd dispatches only sync, lookup, update, answerProofRequest and status.
+ update uses WARDPerformBatch with exactly one pending ID. Low-level firmware,
+ Python helpers and Rust forwarding allowlist support more messages, but adding
+ an allowlisted message is not an implemented daemon workflow.
+ Impact: callers cannot use those workflows through the shared adapter's normal
+ method API. Failed operations can leave pending state without management UX.
+ Evidence: S packages/wardd/src/service.ts: dispatch; host.ts: update;
+ F rust/ward-relay/src/lib.rs: DEVICE_CALLS; common/protob/messages-ward.proto.
+ Previous finding 17. Multi-edit batching is post-MVP in some exported pages.
+
+R3. MEDIUM — Offline-cache backup/restore and migration remain absent.
+ Expected: S1's MAC-protected WardQueueSetEntry/GetEntry/DeleteEntry export and
+ restore protocol; PLAN's migration of offline entries into synchronized WARD,
+ including sticky entries; miniscript-page policy registration/cache reuse.
+ Actual: local WardStore and the persistent online pending-intent queue exist,
+ but those backup/restore messages and automatic migration/sticky-policy workflow
+ do not. WARDQueueUpdate is the online edit queue, not the S1 backup protocol.
+ Impact: a policy-backup/miniscript integration cannot be inferred from the demo.
+ Evidence: F core/src/apps/ward/store.py; core/src/apps/ward/__init__.py;
+ core/src/storage/ward_store.py; common/protob/messages-ward.proto.
+ Previous finding 22; roadmap gap with concrete missing interfaces.
+
+R4. MEDIUM — General application capability integration is incomplete.
+ Expected: APP passes a trusted firmware principal and gates WARD capabilities;
+ PLAN/miniscript describe ordinary app policy registration and reuse.
+ Actual: the gated lookup principal is display_address. _acl_allows for host
+ writes returns True; writes rely on user confirmation rather than authenticated
+ identity of the host's supplied app_id. Other firmware applications are not
+ generally integrated into WARD lookup/cache workflows.
+ Impact: per-app policy enforcement and miniscript reuse are not delivered by
+ the current label demo. This is not a demonstrated confirmation bypass.
+ Evidence: F core/src/apps/common/ward.py: _CAPABILITIES;
+ core/src/apps/ward/service.py: _acl_allows and queue. Previous finding 23.
+
+R5. MEDIUM — Cross-host Evolu convergence is not demonstrated by the launcher.
+ Expected: HL/ST synchronize hosts through an Evolu relay and shared owner state.
+ Actual: the launcher supplies --data-dir and --verbose, without configuring a
+ relay or shared owner. wardd supports relay options, but its local demo does not
+ establish a two-host replication/recovery deployment.
+ Impact: local persistence and successful emulator writes do not establish
+ remote receipt, availability, or catch-up after another host writes.
+ Evidence: F tools/ward_stack.py: command('wardd');
+ S packages/wardd/src/cli.ts and evoluStorage.ts: constructor/options.
+ Previous finding 24. Local durability before WM publication is now implemented.
+
+R6. MEDIUM — No central host management UX for the planned recovery actions.
+ Expected: UX's app-invokable unavailable/status/pending/conflict interface and
+ inspect/retry/discard/open-in-app actions.
+ Actual: component logs, launcher terminals, and basic Connect/relay calls exist;
+ the shared management surface and the supporting daemon operations do not.
+ Impact: detecting a conflict or unavailable replica does not provide the planned
+ user repair flow. Console logging alone does not implement these actions.
+ Evidence: S packages/wardd/src/service.ts; F tools/ward_stack.py;
+ S packages/connect-core/src/api/wardMethods. Previous finding 26.
+
+R7. MEDIUM — Key derivation and identifiers still differ from AP's formulas.
+ Expected: AP uses first16(SLIP21(seed, ['ward','wallet_id'])) and a separately
+ derived ward_id, with its WARD ROOT v1 MAC family.
+ Actual: local online wallet_id is 20-byte master-public-key Hash160; public
+ ward_id is now the K_sig Ed25519 public key (consistent with newer PLAN/WM).
+ Root MAC uses the AUTHDB MAC v1 derivation bound to local wallet_id. Local
+ mini-WARD derives a separate wallet-storage identifier.
+ Impact: implementations following AP's formulas will derive different anchors
+ and cannot interoperate by copying its wire examples.
+ Evidence: F core/src/apps/ward/keys.py: get_wallet_id, get_ward_id,
+ derive_mac_key, derive_wallet_id; service.py: compute_mac callers.
+ Previous finding 19, partially changed; export itself contains alternatives.
+
+R8. MEDIUM — Isolated Stage 3 authenticated-record mode is not implemented.
+ Expected: S3 authenticates records without proofs, counters, roots or WM, and
+ authenticates plaintext parts with an independent MAC.
+ Actual: the current production path is encrypted full-trie WARD. Debug-only
+ plaintext codecs have no independent plaintext MAC. There is no isolated S3
+ record-only public workflow.
+ Impact: the implementation cannot claim S3's standalone security properties.
+ This is NOT a production plaintext-forgery finding: encrypted parts and trie
+ proofs protect the current production workflow.
+ Evidence: F core/src/apps/ward/leaf.py: plaintext flags, _open, encode methods;
+ common/protob/messages-ward.proto. Previous D6.
+
+R9. MEDIUM — Existing trusted-counter records have no usable root migration path.
+ Expected: persistent anchors survive upgrades and permit documented recovery.
+ Actual: legacy 24-byte counter records are read with root-known=false. WARDSync
+ reports root_known=false at a positive counter, and WardHost.sync refuses that
+ anchor before WARDVerifyChain or reconciliation can repair it.
+ Impact: a device with such a record cannot use the normal host sync path after
+ upgrade. Erasing an anti-rollback anchor is not an acceptable silent migration.
+ Evidence: F core/src/storage/ward_store.py: _load_table legacy branch;
+ core/src/apps/ward/sync.py; S packages/wardd/src/host.ts: root_known check.
+ Status: confirmed control-flow mismatch; upgrade reproduction not run here.
+
+R10. MEDIUM — Recovery-generation replay protection is incomplete as a workflow.
+ Expected: PLAN explicitly prevents replaying cached authorizations after recovery.
+ Actual: accepted changes rotate a random headNonce and signatures bind it.
+ However, there is no recovery operation that creates a fresh recovery epoch;
+ an unknown/reset WM head uses a deterministic genesis nonce. Restoring a database
+ also restores its stored nonce. Normal per-transition rotation alone does not
+ establish the planned post-recovery authorization invalidation rule.
+ Impact: recovery must specify how old approvals become unusable before claiming
+ that property. No end-to-end replay exploit is claimed by this review.
+ Evidence: F tools/ward_manager.py: _head, commit;
+ python/src/trezorlib/ward_protocol.py: genesis_nonce. Previous 17/18, partial.
+
+R11. MEDIUM — Persistence failure can leave the session root ahead of its counter.
+ Expected: authenticated root/counter adoption is an atomic state transition.
+ Actual: reconcile, verify_chain and confirmation paths call ward_head.root_set
+ before ward_store.commit_counter. The latter can reject capacity or fail writing
+ protected storage; the already-modified session cache is not rolled back there.
+ Impact: persisted state stays protected, but subsequent operations in that same
+ session may see a new cached root with the old durable counter. Capacity errors
+ need preflight or failed adoption needs cache restoration/invalidation.
+ Evidence: F core/src/apps/ward/service.py: confirmation/reconcile/verify_chain;
+ core/src/storage/ward_store.py: commit_counter, _put_mru.
+ Status: code-level failure-order risk; fault-injection test not run here.
+
+R12. LOW/MEDIUM — Diagnostic output does not fully identify the WM head.
+ Expected: the requested logs show the head returned by WM and distinguish it
+ from replica-selected state before lineage replay.
+ Actual: HttpWm's wm.head event logs counter and MAC but omits root, signed
+ timestamp and headNonce. reconstruction.ts labels its supplied head source as
+ 'replica', even when sync obtained that head from WM. HTTP manager request/response
+ logs contain more information, but the wardd head event is incomplete/misleading.
+ Evidence: S packages/wardd/src/wm.ts: post; reconstruction.ts: initial event.
+ This is an additional discrepancy against the user's logging requirements.
+
+PROTOCOL/DOCUMENTATION DISAGREEMENTS REQUIRING ONE PUBLISHED BASELINE
+
+User decisions recorded after this review:
+ - WM visibility/history: root-aware WM with signed append-only history.
+ - Chain direction: backward predecessor discovery from WM head to device anchor;
+   complete verification before adoption. Wire links remain oldest-first, from
+   anchor to head, matching the current device verifier. No partial adoption.
+ See docs/misc/ward-manager.md, Selected architecture. V1/V2 are now selected
+ architectural baselines; updating the external export remains outstanding.
+ Other choices below have not been selected by this decision.
+
+V1. WM visibility and history: AP/S5's root-private counter/MAC register differs
+ from HL/TM/REC's root-aware history service. Current WM implements the latter:
+ roots, immutable ordered signed transitions, current-head attestations and CAS.
+ This repairs earlier 1/3/4 but necessarily differs from the root-private variant.
+
+V2. Chain direction: the newer backward-verification page and PLAN walk from the
+ WM head to the device anchor. Device verify_chain currently verifies a supplied
+ forward list from its local anchor to the WM head; the host walks lineage
+ backwards, then reverses the links. Both endpoints are checked, so direction
+ alone is not evidence of an acceptance vulnerability. Incremental predecessor
+ pulls and counting/reporting crossed reverts are not that current API.
+ Evidence: F core/src/apps/ward/service.py: verify_chain; S host.ts: sync;
+ archive AuthCommit backward verification, lines 7–62.
+
+V3. Batch counters: SYNC's illustrative 2 -> 5 batch differs from TM/current
+ protocol's one counter increment per entire batch/revert. Reconstruction assumes
+ contiguous +1 transitions. Document one rule; do not mix these counter models.
+
+V4. Signed formats: implementation uses WARD ATTEST v2 + version byte 2 + nonce +
+ wardId + counter + MAC + timestamp + headNonce. Its WARD WM TRANSITION v2 format
+ also binds kind, both roots/counters, resulting MAC and AuthCommit. Exported
+ v1/transition(tag) formulas are different bytes, not interchangeable descriptions.
+ The entry-key format is now explicitly length-framed WARD PATH v2, whereas some
+ archive formulas remain NUL-framed. New vectors are generated, but the archive
+ and firmware comments have not all been reconciled with this version.
+ Evidence: F python/src/trezorlib/ward_protocol.py; core/src/apps/ward/keys.py;
+ tools/ward_vectors.py; common/tests/fixtures/ward/protocol_v2.json.
+
+V5. Encryption/commit serialization: archive conceptual hash formulas and S3's
+ textual AEAD domains differ from the implementation's framed part serialization
+ and one-byte domains. PLAN also explores deterministic nonces, whereas AP and
+ current firmware use fresh random 12-byte nonces. These are incompatible variants
+ requiring explicit versioning, not evidence that random nonces are broken.
+ Evidence: F core/src/apps/ward/leaf.py: encode_part, _aead_aad, _seal;
+ docs/core/misc/ward-trie.md; PLAN encryption discussion; AP leaf encoding.
+
+V6. Stale API names and comments: archive WardGetEntry/SetEntry/DeleteEntry,
+ separate recover/cas modules and flat proof envelopes do not match current WARD
+ messages and nested identity/content envelopes. In current code, get_ward_id's
+ docstring still describes its former SLIP21 derivation; storage comments still
+ claim LRU eviction; host update comments still describe the old single-update
+ commit ordering; prepareChange comments retain the old empty-value sentinel.
+ These comments contradict repaired behavior and should not be used as contracts.
+ Evidence: F core/src/apps/ward/keys.py: get_ward_id docstring;
+ core/src/storage/ward_store.py: table/_put_mru comments;
+ S packages/wardd/src/host.ts: update docstring;
+ packages/ward/src/app/index.ts: PreparedChange comments.
+
+RESOLVED FINDINGS FROM THE EARLIER REVIEW
+
+Old 1/3/4: WM now verifies wallet signatures over both endpoints, CASes predecessor
+ counter/root/headNonce, atomically appends history, and serves it over HTTP.
+Old 2: positive-counter empty states require a real wallet MAC; no zero-MAC bypass.
+Old 5/6/10: ordinary host update uses signed batch-of-one artifacts, requires
+ appendTransition, persists/replays before WM commit, and surfaces append failure.
+Old 7/8: current wardd lookup returns device verdicts, not cached label metadata;
+ new updates store opaque leaves rather than separate plaintext label rows.
+ Legacy provider APIs/old databases can still contain plaintext; no erasure or
+ migration of existing rows is implied by this change.
+Old 9/14: host catch-up invokes WARDVerifyChain; wallet HMAC verification accepts
+ commit and revert links. Revert orchestration remains R2.
+Old 11/12/13: trusted root/counter/metadata are stored together; no silent rollback-
+ floor eviction; equal-counter reconciliation checks root equality. See R9/R11
+ for remaining migration and failure-order concerns.
+Old 15: production-key generator and build checks now exist. Default config is
+ deliberately unprovisioned/fail-closed; deploying requires explicitly provisioning
+ the matching manager key and building firmware. A production device deployment
+ was not performed in this review.
+Old 16, ordinary case: host reads WM's selected head rather than asking WM to sign
+ a stale local checkpoint; complete local encrypted history permits catch-up.
+Old 18, ordinary case: signed timestamp, durable timestamp floor and rotating
+ per-transition headNonce are now present. See R10 for recovery qualification.
+Old 20/21: length-framed identities and explicit persistent delete intent exist;
+ empty value and delete are distinct at the device/protocol level.
+Old 25: WM history is immutable through its API; memory/Evolu/SQLite append APIs
+ reject conflicting rewrites and permit identical retries. This does not prevent
+ a database administrator/hostile replica from deleting its own data; replay detects
+ missing or inconsistent history. No claim of guaranteed remote availability.
+Old D3: lineage uses (counter,root), handles positive-counter empty roots, replays
+ from genesis, and now collapses exact duplicate transitions while rejecting
+ conflicting records. Older REC pseudocode is less precise than the implementation.
+
+WALLET/CHANNEL SCOPE — NOT OUTSTANDING BUGS UNDER THE USER'S CURRENT REQUIREMENTS
+
+The user narrowed wallet integration to forwarding on a caller-provided Trezor
+session with minimal wallet changes. That is implemented: Jade re-exports the
+shared Python adapter; WardAdapter.session(session) attaches/restores callbacks.
+Liana re-exports Rust Hwi/session helpers; the caller supplies DeviceSession I/O.
+All WARD forwarding logic lives in the adapter. This does not add Trezor discovery
+or spending support to Liana/Jade, and those are outside the requested scope.
+Connect's native Rust bridge remains opt-in Node/Electron; it should not be
+advertised as a browser WASM adapter. Direct in-process wardd is a separate option.
+No dedicated service channel is required or desired; the single caller-owned
+Trezor channel follows the user's explicit decision and the export's rejection
+of the more complex independent-channel proposal.
+
+VALIDATION AND LIMITS
+
+Fresh checks during this review:
+ - 56 Python tests passed: manager, production provisioning, adapter lifetime/
+   re-export, and host cryptography.
+ - 5 focused wardd tests passed: authoritative-head/candidate-persistence security
+   cases and WM client cases; --detectOpenHandles exited successfully.
+ - 9 focused WARD tests passed: lineage/reconstruction and golden crypto mocks.
+ - Generated v2 fixture checks matched both firmware and Suite copies.
+ - Archive checksum and all 23 Markdown contents revalidated.
+Logs: /home/psusil/.cache/ward-validation/consistency-current-{python,wardd,ward}.log
+
+Recent checks from the immediately preceding implementation turn:
+ - 5 shared Rust protocol tests; Liana public HWI integration test; 3 Python
+   callback/import tests; 2 real T3T1 Jade provided-session cases (mock + HTTP WM),
+   including unchanged session.call(DisplayAddress) with an automatic proof pull.
+ - Earlier v2 --long run exercised 10 writes, 10 membership lookups and 10 actual
+   device label displays. It was not a multi-host replication or recovery test.
+
+This review did not run the whole firmware/Suite test suites, production firmware,
+upgrade migration, fault injection for R11, multi-host Evolu replication, recovery,
+or an actual public Connect API + native addon + emulator flow. Passing focused
+tests does not close those validation gaps. R9/R11 distinguish code inspection
+from reproduced failures. Stage 6's exported page contains only a title; it is
+not an additional detailed reconstruction specification.
+
+Suggested implementation order: recovery/queue APIs and upgrade-safe anchors;
+offline cache/miniscript workflows; two-host replication validation and management
+UX; publish one versioned protocol/key-derivation contract and update stale docs.
+This review changes no runtime behavior and performs no commit or push.
