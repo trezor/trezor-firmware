@@ -17,8 +17,10 @@
 from __future__ import annotations
 
 import logging
+import math
 import os
 import tempfile
+import time
 import typing as t
 from dataclasses import asdict, dataclass
 from enum import IntEnum
@@ -481,11 +483,27 @@ def _prepared_test_ctx(
     setup_params.configure_client(session)
     session.close()
 
-    try:
-        yield _raw_test_ctx
-    finally:
-        # Make sure there are no GC leaks from this test
-        _raw_test_ctx.debug.check_gc_info(fail_on_gc_leak)
+    with pytest.MonkeyPatch.context() as patch:
+        delay = float(request.config.getoption("ward_ui_delay") or 0)
+        test_module = request.node.path.stem
+        if delay and (
+            test_module.startswith("test_ward") or test_module == "test_display_address"
+        ):
+            original_decision = _raw_test_ctx.debug._decision
+
+            def delayed_decision(
+                decision: messages.DebugLinkDecision, wait: bool | None = None
+            ) -> None:
+                time.sleep(delay)
+                original_decision(decision, wait)
+
+            patch.setattr(_raw_test_ctx.debug, "_decision", delayed_decision)
+
+        try:
+            yield _raw_test_ctx
+        finally:
+            # Make sure there are no GC leaks from this test
+            _raw_test_ctx.debug.check_gc_info(fail_on_gc_leak)
 
 
 @pytest.fixture(scope="function")
@@ -577,6 +595,13 @@ def pytest_terminal_summary(
 
 def pytest_addoption(parser: Parser) -> None:
     parser.addoption(
+        "--ward-ui-delay",
+        type=float,
+        default=0,
+        metavar="SECONDS",
+        help="Pause before automated input in WARD device tests for GUI viewing (default: 0).",
+    )
+    parser.addoption(
         "--ui",
         action="store",
         choices=["test", "record"],
@@ -648,6 +673,10 @@ def pytest_configure(config: Config) -> None:
 
     Registers known markers, enables verbose output if requested.
     """
+    delay = float(config.getoption("ward_ui_delay") or 0)
+    if not math.isfinite(delay) or delay < 0:
+        raise pytest.UsageError("--ward-ui-delay must be a finite, non-negative number")
+
     # register known markers
     config.addinivalue_line(
         "markers",
