@@ -116,6 +116,21 @@ jobs:
           du -h -d 2 /home/runner/work 2>/dev/null | sort -hr | head -n 15
           echo "=== Nix Store Size ==="
           du -sh /nix/store 2>/dev/null || true
+
+      - name: Drop unneeded files
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet
+          df -h /
+          sudo rm -rf /usr/local/lib/android
+          df -h /
+          sudo rm -rf /opt/ghc
+          df -h /
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          df -h /
+          sudo docker image prune --all --force || true
+          df -h /
+
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
