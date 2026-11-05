@@ -74,7 +74,12 @@
           ]
         },
         "label": "Minimum Amount to receive",
-        "formatter": "FORMATTER_AMOUNT"
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "native_currency_address": [
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "0000000000000000000000000000000000000000"
+        ],
+        "const_token_address": "0000000000000000000000000000000000000000"
       },
       {
         "path": {
