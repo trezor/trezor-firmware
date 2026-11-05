@@ -1,33 +1,31 @@
-use crate::{
-    alloc_types::{String, ToString},
-    uformat,
-};
+use crate::alloc_types::{String, ToString};
 
 use primitive_types::U256;
 
+/// The ticker of a TRX amount.
+pub const TRX: &str = "TRX";
+/// The ticker of an amount in SUN, the unit of a fee limit.
+pub const SUN: &str = "SUN";
+
+/// A TRX amount, given in SUN, as the person reads it: the number alone, its
+/// ticker is [`TRX`].
 pub fn format_trx_amount(amount: u64) -> String {
     // 1 SUN = 0.000001 TRX
     const TRX_AMOUNT_DECIMALS: u32 = 6;
 
-    uformat!(
-        "{} TRX",
-        format_amount_from_digits(&amount.to_string(), TRX_AMOUNT_DECIMALS as usize).as_str()
-    )
+    format_amount_from_digits(&amount.to_string(), TRX_AMOUNT_DECIMALS as usize)
 }
 
-pub fn format_token_amount(amount: U256, token_decimals: u32, token_symbol: &str) -> String {
-    uformat!(
-        "{} {}",
-        format_amount_from_digits(&amount.to_string(), token_decimals as usize).as_str(),
-        token_symbol
-    )
+/// A token amount as the person reads it: the number alone, its ticker is the
+/// token's symbol.
+pub fn format_token_amount(amount: U256, token_decimals: u32) -> String {
+    format_amount_from_digits(&amount.to_string(), token_decimals as usize)
 }
 
+/// An amount in SUN as the person reads it: the number alone, its ticker is
+/// [`SUN`].
 pub fn format_energy_amount(amount: u64) -> String {
-    uformat!(
-        "{} SUN",
-        format_amount_from_digits(&amount.to_string(), 0).as_str()
-    )
+    format_amount_from_digits(&amount.to_string(), 0)
 }
 
 fn format_amount_from_digits(digits: &str, decimals: usize) -> String {
