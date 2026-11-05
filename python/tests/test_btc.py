@@ -234,3 +234,60 @@ def test_coinbase_from_json():
     assert coinbase.prev_hash == b"\x00" * 32
     assert coinbase.prev_index == 2**32 - 1
     assert coinbase.script_sig.hex() == tx_dict["vin"][0]["coinbase"]
+
+
+def test_namecoin_op_message_roundtrip():
+    """Round-trip the NamecoinOp protobuf message via trezorlib.protobuf to
+    confirm the generated message bindings (enum + sub-message + the new
+    namecoin_op field on TxOutputType) are wired correctly after the proto
+    regeneration that introduced PAYTONAMECOINOP."""
+    from io import BytesIO
+
+    from trezorlib import messages, protobuf
+
+    op = messages.NamecoinOp(
+        kind=messages.NameOpKind.NAME_FIRSTUPDATE,
+        name=b"d/example",
+        rand=b"\x01" * 20,
+        value=b'{"ip":"1.2.3.4"}',
+    )
+    out = messages.TxOutputType(
+        address="NHFmgkR3X4xUYXkmgUFTxnRcyN3JpoaTYf",
+        amount=10_000_000,
+        script_type=messages.OutputScriptType.PAYTONAMECOINOP,
+        namecoin_op=op,
+    )
+
+    buf = BytesIO()
+    protobuf.dump_message(buf, out)
+    buf.seek(0)
+    decoded = protobuf.load_message(buf, messages.TxOutputType)
+
+    assert decoded.script_type == messages.OutputScriptType.PAYTONAMECOINOP
+    assert decoded.address == out.address
+    assert decoded.amount == out.amount
+    assert decoded.namecoin_op is not None
+    assert decoded.namecoin_op.kind == messages.NameOpKind.NAME_FIRSTUPDATE
+    assert decoded.namecoin_op.name == b"d/example"
+    assert decoded.namecoin_op.rand == b"\x01" * 20
+    assert decoded.namecoin_op.value == b'{"ip":"1.2.3.4"}'
+
+
+def test_namecoin_op_name_new_message_roundtrip():
+    from io import BytesIO
+
+    from trezorlib import messages, protobuf
+
+    op = messages.NamecoinOp(
+        kind=messages.NameOpKind.NAME_NEW,
+        commitment_hash=b"\xab" * 20,
+    )
+    buf = BytesIO()
+    protobuf.dump_message(buf, op)
+    buf.seek(0)
+    decoded = protobuf.load_message(buf, messages.NamecoinOp)
+    assert decoded.kind == messages.NameOpKind.NAME_NEW
+    assert decoded.commitment_hash == b"\xab" * 20
+    assert decoded.name is None
+    assert decoded.value is None
+    assert decoded.rand is None
