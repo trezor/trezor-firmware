@@ -186,6 +186,38 @@ manifest first (see [Selecting the nRF Connect SDK version](#selecting-the-nrf-c
 west build ./trezor-ble -b t3t2_dk/nrf54ls05b/cpuapp --sysbuild -- -DOVERLAY_CONFIG=debug.conf
 ```
 
+#### BLE console service
+
+`CONFIG_TRZ_CONSOLE` adds a second GATT service (`8c000010-…`, RX `8c000011`,
+TX `8c000012`) that carries an opaque byte console between the STM32 and a
+bonded host: the prodtest CLI on production-test firmware, debug logs on debug
+firmware. It has its own inter-MCU service id (`NRF_SERVICE_CONSOLE`) and
+exists only while the STM32 asks for it: the advertising-on command carries a
+`console` flag that prodtest and debug STM32 builds set and production firmware
+leaves clear, and the service is registered or unregistered at runtime to
+match, so a production nRF image that carries the code exposes nothing. While
+registered, its presence is announced by bit `0x10` of the flags byte in the
+advertising manufacturer data, since the 128-bit UUID does not fit into the
+scan response, so a host can pick a device by service before connecting.
+
+It is selected per board in `boards/<board>.conf`: on for `t3t2_dk` only, the
+model without USB.
+
+#### BLE debuglink service
+
+`CONFIG_TRZ_DEBUG_LINK` adds a third service (`8c000020-…`, RX `8c000021`, TX
+`8c000022`) carrying the debuglink's codec v1 reports between debug STM32
+firmware (`--debug-link`) and a bonded host, the counterpart of the USB debug
+interface on models without USB. Own inter-MCU service id
+(`NRF_SERVICE_DEBUG`), same framing and one-packet credit as the console
+(`src/ble/aux_chan.c` implements both), and the same enable rule: registered
+only while the `debuglink` flag of the advertising-on command is set, which
+`--debug-link` STM32 builds do, so a shipping image can carry it; the firmware
+that turns it on is the debug one, which answers debuglink requests from any
+bonded host. While registered it is announced by bit `0x20` of the advertising
+flags byte, next to the console's `0x10`. It is on in the `t3t2_dk` board
+config only.
+
 
 ### Build Radio test application
 ```sh
