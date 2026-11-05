@@ -4,24 +4,24 @@
 //! The app binary format consists of a fixed-size header followed by the platform
 //! specific executable binary.
 
-use anyhow::{Context, Result, anyhow, ensure};
+use anyhow::{Context, Result, ensure};
 use cargo_metadata::Package;
-use clap::ValueEnum;
 use object::Object;
 use sha2::Digest;
 use std::{
     fs,
     io::Write,
-    mem::size_of,
     path::{Path, PathBuf},
 };
-use zerocopy::{FromBytes, IntoBytes, LittleEndian, U16, U32};
-use zerocopy_derive::{FromBytes, Immutable, IntoBytes};
+use zerocopy::{U16, U32};
 
 use crate::args::{Language, Model, TargetArch};
 
 mod armv8m;
+mod header;
 mod metadata;
+
+pub(crate) use header::{AppHeader, format_version};
 
 impl TargetArch {
     /// Returns the architecture identifier stored in the app header.
@@ -32,86 +32,16 @@ impl TargetArch {
             TargetArch::MacosAarch64 => 2,
         }
     }
-}
 
-/// The app header is a fixed-size structure at the beginning of the application image
-/// containing metadata about the app, such as segment sizes and addresses padded
-/// with zeroes to ensure it is exactly APP_HEADER_SIZE bytes in size.
-#[repr(C)]
-#[derive(IntoBytes, FromBytes, Immutable, Debug)]
-struct AppHeader {
-    /// Magic number to identify the app binary format
-    magic: U32<LittleEndian>,
-    /// Header size in bytes (contains AppHeader::APP_HEADER_SIZE)
-    header_size: U32<LittleEndian>,
-    /// Unique identifier of the app (utf-8 encoded, zero-padded)
-    id: [u8; AppHeader::APP_ID_MAX_LEN],
-    /// App name (utf-8 encoded, zero-padded)
-    app_name: [u8; AppHeader::APP_NAME_MAX_LEN],
-    /// Vendor name (utf-8 encoded, zero-padded)
-    vendor_name: [u8; AppHeader::APP_VENDOR_MAX_LEN],
-    /// Target model identifier (or zeroed for universal apps)
-    model: [u8; 4],
-    /// App version in the format major.minor.patch.build, each as a byte
-    /// For example, version 1.2.3 would be represented as [1, 2, 3, 0]
-    version: [u8; 4],
-    /// SDK version that the app was built against
-    sdk_version: [u8; 4],
-    /// ABI version that the app was built against
-    abi_version: u8,
-    /// Target architecture of the binary payload (e.g., ARMV8M, X86_64)
-    target_arch: u8,
-    /// Application privilege ring
-    app_ring: u8,
-    /// Application language
-    language: u8,
-    /// Size of binary payload (code + init and relocation data)
-    code_size: U32<LittleEndian>,
-    /// Size of RAM required by the app
-    /// (includes stack, heap, and static data)
-    data_size: U32<LittleEndian>,
-    /// Hash of the first payload chunk
-    chunk_hash: [u8; 32],
-    /// Size of each chunk of the binary payload in bytes
-    chunk_size: U16<LittleEndian>,
-    /// Reserved field for runtime purposes (zeroed)
-    reserved2: [u8; 2],
-    /// Curves used for the app (e.g., secp256k1, ed25519)
-    /// (utf-8 encoded, zero-padded)
-    curves: [u8; AppHeader::APP_CURVES_MAX_LEN],
-    /// Allowed BIP32 path prefixes
-    /// Each path is a null-terminated string, and the array
-    /// is zero-padded to a fixed size.
-    paths: [u8; AppHeader::APP_PATHS_MAX_LEN],
-    /// Size, in bytes, of the IPC inbox Core registers for this app at
-    /// launch. Always resolved here -- a 0 in the manifest is replaced by
-    /// `metadata::IPC_BUFFER_DEFAULT_SIZE`, so the header never carries 0.
-    ipc_buffer_size: U32<LittleEndian>,
-    // TODO logo
-}
-
-impl AppHeader {
-    /// Fixed size of the app header in bytes.
-    const APP_HEADER_SIZE: usize = 0x200;
-    /// Magic number used to identify the app binary format in the header.
-    const APP_HEADER_MAGIC: u32 = 0x415A5254; // TRZA
-    /// Chunk size used for hashing the payload in bytes.
-    const CHUNK_SIZE: usize = 2048;
-    /// Maximum length, in bytes, of the packed app identifier.
-    const APP_ID_MAX_LEN: usize = 32;
-    /// Maximum length, in bytes, of the packed app name.
-    const APP_NAME_MAX_LEN: usize = 32;
-    /// Maximum length, in bytes, of the packed vendor name.
-    const APP_VENDOR_MAX_LEN: usize = 32;
-    /// Maximum total length, in bytes, of the packed, null-terminated curve list.
-    const APP_CURVES_MAX_LEN: usize = 64;
-    /// Maximum total length, in bytes, of the packed, null-terminated path list.
-    const APP_PATHS_MAX_LEN: usize = 256;
-
-    fn to_padded_bytes(&self) -> [u8; AppHeader::APP_HEADER_SIZE] {
-        let mut bytes = [0u8; AppHeader::APP_HEADER_SIZE];
-        bytes[..size_of::<AppHeader>()].copy_from_slice(self.as_bytes());
-        bytes
+    /// Returns the architecture with the given app-header identifier, the
+    /// inverse of [`TargetArch::id`].
+    pub fn from_id(id: u8) -> Option<Self> {
+        match id {
+            0 => Some(TargetArch::Armv8m),
+            1 => Some(TargetArch::LinuxX86_64),
+            2 => Some(TargetArch::MacosAarch64),
+            _ => None,
+        }
     }
 }
 
@@ -209,64 +139,35 @@ pub fn convert_elf_to_bin(
     Ok(bin_path)
 }
 
-/// Returns the path of the serialized app (`.tapp`) that
-/// `extapp_tool_advanced.py post-build` writes into `serialized_dir` for the
-/// app binary at `bin_path`. The path is derived from the binary's header and
-/// must match `get_app_name` in that tool:
-/// `<id>/<version>/<id>_<version>_sdk<major.minor>_<arch>_abi<abi>_<model>_<lang>.tapp`.
+pub(crate) const EXT_APP: &str = "tapp";
+
+/// Returns the path of the serialized app (`.tapp`) that [`crate::apptree`]
+/// writes into `serialized_dir` for the app binary at `bin_path`.
 pub fn serialized_app_path(bin_path: &Path, serialized_dir: &Path) -> Result<PathBuf> {
     let bytes = fs::read(bin_path)
         .with_context(|| format!("Failed to read the app binary {:?}", bin_path))?;
-    let (header, _) = AppHeader::read_from_prefix(&bytes)
-        .map_err(|_| anyhow!("App binary {:?} is too short to contain a header", bin_path))?;
-    ensure!(
-        header.magic.get() == AppHeader::APP_HEADER_MAGIC,
-        "App binary {:?} has an invalid header magic",
-        bin_path
-    );
+    let (header, _) = AppHeader::parse(&bytes)
+        .with_context(|| format!("Failed to parse the app binary {:?}", bin_path))?;
+    Ok(serialized_dir.join(serialized_app_relative_path(&header)?))
+}
 
-    let id = unpack_str(&header.id, "App id")?;
-    let model = unpack_str(&header.model, "Model")?;
-    let version = unpack_version(&header.version);
-    let sdk_version = unpack_version(&header.sdk_version[..2]);
-    let arch = [
-        TargetArch::Armv8m,
-        TargetArch::LinuxX86_64,
-        TargetArch::MacosAarch64,
-    ]
-    .into_iter()
-    .find(|arch| arch.id() == header.target_arch)
-    .with_context(|| format!("Unknown target architecture {}", header.target_arch))?;
-    let language = Language::value_variants()
-        .iter()
-        .copied()
-        .find(|&language| language as u8 == header.language)
-        .with_context(|| format!("Unknown language {}", header.language))?;
+/// Returns the path of the serialized app with `header`, relative to the
+/// serialized artifacts directory:
+/// `<id>/<version>/<id>_<version>_sdk<major.minor>_<arch>_abi<abi>_<model>_<lang>.tapp`.
+pub(crate) fn serialized_app_relative_path(header: &AppHeader) -> Result<PathBuf> {
+    let id = header.id()?;
+    let model = header.model()?;
+    let version = format_version(&header.version());
+    let sdk_version = format_version(&header.sdk_version()[..2]);
 
     let name = format!(
-        "{id}_{version}_sdk{sdk_version}_{}_abi{}_{model}_{}.tapp",
-        arch.name(),
-        header.abi_version,
-        language.name(),
+        "{id}_{version}_sdk{sdk_version}_{}_abi{}_{model}_{}.{EXT_APP}",
+        header.target_arch()?.name(),
+        header.abi_version(),
+        header.language()?.name(),
     );
 
-    Ok(serialized_dir.join(id).join(&version).join(name))
-}
-
-/// Formats packed version components as a dot-separated string.
-fn unpack_version(version: &[u8]) -> String {
-    version
-        .iter()
-        .map(u8::to_string)
-        .collect::<Vec<_>>()
-        .join(".")
-}
-
-/// Decodes a zero-padded utf-8 string from the app header.
-fn unpack_str<'a>(bytes: &'a [u8], label: &str) -> Result<&'a str> {
-    std::str::from_utf8(bytes)
-        .with_context(|| format!("{label} is not valid utf-8"))
-        .map(|string| string.trim_end_matches('\0'))
+    Ok(Path::new(id).join(&version).join(name))
 }
 
 /// Converts one to four dot-separated numeric version components into the
@@ -333,15 +234,28 @@ fn pack_str_array<const MAX_LEN: usize>(strings: &[String], label: &str) -> Resu
 /// The approach allows checking the integrity of the payload during loading, by
 /// chunks of the specified size.
 fn hash_payload(payload: &[u8], chunk_size: usize) -> [u8; 32] {
-    payload
-        .chunks(chunk_size)
-        .rev()
-        .fold([0u8; 32], |prev_hash, chunk| {
-            let mut hasher = sha2::Sha256::new();
-            hasher.update(prev_hash);
-            hasher.update(chunk);
-            hasher.finalize().into()
-        })
+    hash_chain(payload, chunk_size)[0]
+}
+
+/// Returns every hash of the payload's hash chain, one more than there are
+/// chunks. Entry `i` is the hash of chunk `i` chained with entry `i + 1`, and
+/// the last entry, past the final chunk, is all zeroes. Entry 0 is the header's
+/// `chunk_hash`; entry `i + 1` is the hash sent alongside chunk `i` when
+/// loading, so Core can verify each chunk as it arrives.
+pub(crate) fn hash_chain(payload: &[u8], chunk_size: usize) -> Vec<[u8; 32]> {
+    let mut prev_hash = [0u8; 32];
+    let mut hashes = vec![prev_hash];
+
+    for chunk in payload.chunks(chunk_size).rev() {
+        let mut hasher = sha2::Sha256::new();
+        hasher.update(prev_hash);
+        hasher.update(chunk);
+        prev_hash = hasher.finalize().into();
+        hashes.push(prev_hash);
+    }
+
+    hashes.reverse();
+    hashes
 }
 
 #[cfg(test)]
@@ -426,8 +340,8 @@ mod tests {
 
     #[test]
     fn empty_payload_hashes_to_zero() {
-        // No chunks to fold over, so the fold's initial value comes through
-        // unchanged -- this is the "chunk_hash" a zero-length app would get.
+        // No chunks to hash, so the chain is just the zero hash -- this is
+        // the "chunk_hash" a zero-length app would get.
         assert_eq!(hash_payload(&[], 16), [0u8; 32]);
     }
 
@@ -467,9 +381,27 @@ mod tests {
         assert_ne!(hash_payload(payload, 4), hash_payload(payload, 8));
     }
 
+    #[test]
+    fn hash_chain_holds_every_link() {
+        // Three chunks give four hashes: the chunk_hash, one per following
+        // chunk, and the terminating zero hash.
+        let payload = b"abcdefghij";
+        let h2 = sha256_of(b"ij", [0u8; 32]);
+        let h1 = sha256_of(b"efgh", h2);
+        let h0 = sha256_of(b"abcd", h1);
+        assert_eq!(hash_chain(payload, 4), vec![h0, h1, h2, [0u8; 32]]);
+    }
+
+    #[test]
+    fn hash_chain_of_empty_payload_is_the_zero_hash() {
+        assert_eq!(hash_chain(&[], 16), vec![[0u8; 32]]);
+    }
+
     fn write_header(name: &str, model: Option<Model>, target_arch: TargetArch) -> PathBuf {
         let mut header = AppHeader::new_zeroed();
         header.magic = U32::new(AppHeader::APP_HEADER_MAGIC);
+        header.header_size = U32::new(AppHeader::APP_HEADER_SIZE as u32);
+        header.chunk_size = U16::new(AppHeader::CHUNK_SIZE as u16);
         header.id = pack_str("tron.trezor.com", "App id").unwrap();
         header.model = model.map_or([0; 4], Model::model_id_bytes);
         header.version = pack_version("0.1.0").unwrap();
