@@ -19,7 +19,7 @@
 
 #pragma once
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 #include <trezor_types.h>
 
@@ -87,4 +87,4 @@ __attribute((noreturn)) void jump_to_vectbl(uint32_t vectbl_addr, uint32_t r11,
 __attribute((noreturn)) void jump_to_vectbl_ns(uint32_t vectbl_addr);
 #endif
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE
