@@ -122,6 +122,12 @@ message GetAddress {
         [default = SPENDADDRESS];  // used to distinguish between various address formats (non-segwit, segwit, etc.)
     optional bool ignore_xpub_magic = 6;  // ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
     optional bool chunkify = 7;           // display the address in chunks of 4 characters
+    // WARD label-at-address is served by the dedicated DisplayAddress /
+    // DisplayAddressWithProof messages, not by overloading GetAddress (a required
+    // repeated ward_proof here breaks every plain getAddress on the host).
+    reserved 8;   // was ward_value
+    reserved 9;   // was ward_proof
+    reserved 10;  // was ward_counter
 }
 
 /**
