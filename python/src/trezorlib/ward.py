@@ -30,7 +30,7 @@ def queue_update(
     new_value: bytes,
     key_type: str = "address",
     device_id: int = 0,
-) -> tuple[Optional[int], Optional[bytes]]:
+) -> Optional[int]:
     """Queue an edit INTENT (pull model). Carries NO proof.
 
     old_value=b"" means the address is currently absent (INSERT); new_value=b""
@@ -101,7 +101,7 @@ def confirmed_by_wm(
     mac: Optional[bytes],
     wm_signature: bytes,
     pending_id: Optional[int] = None,
-) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
+) -> tuple[int, Optional[bytes], Optional[bytes]]:
     """Install a committed candidate with the WM's Ed25519 signature over the exact
     device-derived (counter_T, mac_T). pending_id selects it; if omitted, the
     device targets the single queued candidate.
@@ -139,7 +139,9 @@ def perform_batch(session: "Session", pending_ids: list) -> tuple:
         leaves.append(
             (
                 lf.entry_key,
-                LeafBlob(kt or "address", id_part or EMPTY_PART, val_part or EMPTY_PART),
+                LeafBlob(
+                    kt or "address", id_part or EMPTY_PART, val_part or EMPTY_PART
+                ),
             )
         )
     return (
@@ -277,9 +279,7 @@ def sync(session: "Session") -> tuple[bytes, Optional[bytes]]:
     SLIP21-derived WM-facing ward_id the host forwards to the WM (the WM signs its
     attestation preimage over ward_id, not the local wallet_id).
     """
-    resp = session.call(
-        messages.WARDSync(), expect=messages.WARDSyncAck
-    )
+    resp = session.call(messages.WARDSync(), expect=messages.WARDSyncAck)
     return resp.nonce, resp.ward_id
 
 
@@ -339,7 +339,7 @@ def lookup(
     device_id: int = 0,
     witness_entry_key: Optional[bytes] = None,
     witness_commit: Optional[bytes] = None,
-) -> tuple[bool, bool, int, Optional[bytes]]:
+) -> tuple[bool, bool, int]:
     """PUSH-verify a proof against the device's authenticated root. Returns
     (valid, membership, counter). The device forms
     entry_key = HMAC(K_path, app_id||0x00||key_type||0x00||device_id||address) and,

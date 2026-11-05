@@ -340,7 +340,7 @@ async def show_address(
     with trezorui_api.flow_get_address(
         address=address,
         title=title or TR.address__title_receive_address,
-        subtitle=None,
+        subtitle=subtitle,
         description=network or "",
         hint=None,
         chunkify=chunkify,

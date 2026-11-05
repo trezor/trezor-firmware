@@ -70,21 +70,19 @@ def test_ward_lookup_rejects_relabelled_nonmembership_proof(session: Session) ->
     honest_proof = tree.get_proof_by_key(witness_ek)
     assert len(honest_proof) == 2
     assert int.from_bytes(honest_proof[0][0:2], "big") == 2
-    assert int.from_bytes(honest_proof[0][2:4], "big") == 1
+    assert len(honest_proof[0]) == 34
     assert int.from_bytes(honest_proof[1][0:2], "big") == 0
-    assert int.from_bytes(honest_proof[1][2:4], "big") == 0
+    assert len(honest_proof[1]) == 34
 
     # Sanity-check the intended vulnerable prefix layout on the actual derived keys.
     assert tuple(_addr_bit(target_ek, b) for b in range(3)) == (0, 1, 0)
     assert tuple(_addr_bit(witness_ek, b) for b in range(3)) == (0, 1, 1)
 
     forged_proof = [
-        (1).to_bytes(2, "big") + (0).to_bytes(2, "big") + honest_proof[0][4:],
+        (1).to_bytes(2, "big") + honest_proof[0][2:],
         honest_proof[1],
     ]
-    witness_commit = ward_crypto.commit_of(
-        witness_leaf
-    )
+    witness_commit = ward_crypto.commit_of(witness_leaf)
 
     valid, membership, counter = ward.lookup(
         session,

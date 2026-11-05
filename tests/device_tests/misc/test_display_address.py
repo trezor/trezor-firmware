@@ -3,8 +3,8 @@ import pytest
 from trezorlib import messages, ward
 from trezorlib.authdb_tree import WARDTree
 from trezorlib.debuglink import DebugSession as Session
-
 from trezorlib.testing.device_handler import BackgroundDeviceHandler
+
 from ...ward_mgr_emu import device_ward_keys, sign_ward_update, sign_wm_attestation
 
 _APP = "bitcoin"  # capability principal == queried domain for these tests
@@ -129,8 +129,8 @@ def _add_value_via_device(
 def test_display_wrong_address_more_labels(session: Session) -> None:
     address = "bc1qdemoaddress000000000000000000000000000"
     other_address = "bc1qotheraddress000000000000000000000000000"
-    value = b'TEST:1:{"label":"label1"}'
-    other_value = b'TEST:1:{"label":"label2"}'
+    value = b"label1"
+    other_value = b"label2"
     tree = _tree()
     tree.insert(_APP, address.encode(), value, counter=1)
     tree.insert(_APP, other_address.encode(), other_value, counter=1)
@@ -164,11 +164,12 @@ def test_display_wrong_address_more_labels(session: Session) -> None:
 
     assert response.message == "Address shown"
 
+
 def test_display_address_more_labels(session: Session) -> None:
     address = "bc1qdemoaddress000000000000000000000000000"
     other_address = "bc1qotheraddress000000000000000000000000000"
-    value = b'TEST:1:{"label":"label1"}'
-    other_value = b'TEST:1:{"label":"label2"}'
+    value = b"label1"
+    other_value = b"label2"
     tree = _tree()
     tree.insert(_APP, address.encode(), value, counter=1)
     tree.insert(_APP, other_address.encode(), other_value, counter=1)
@@ -198,8 +199,8 @@ def test_display_address_more_labels(session: Session) -> None:
 def test_display_address_more_labels_via_device(session: Session) -> None:
     address = "bc1qdemoaddress000000000000000000000000000"
     other_address = "bc1qotheraddress000000000000000000000000000"
-    value = b'TEST:1:{"label":"label1"}'
-    other_value = b'TEST:1:{"label":"label2"}'
+    value = b"label1"
+    other_value = b"label2"
     tree = _tree()
     counter = 0
     root_mac = None
@@ -241,8 +242,8 @@ def test_add_value_via_device_increments_leaf_counter(session: Session) -> None:
     counter + 1) and recomputes the root, so a repeated update to the SAME
     address advances its leaf counter 1 -> 2."""
     address = "bc1qdemoaddress000000000000000000000000000"
-    value = b'TEST:1:{"label":"label1"}'
-    updated_value = b'TEST:1:{"label":"label1-updated"}'
+    value = b"label1"
+    updated_value = b"label1-updated"
     tree = _tree()
     counter = 0
     root_mac = None
@@ -272,8 +273,8 @@ def test_add_value_via_device_increments_leaf_counter(session: Session) -> None:
 def test_display_address_single_label(session: Session) -> None:
     address = "bc1qdemoaddress000000000000000000000000000"
     other_address = "bc1qotheraddress000000000000000000000000000"
-    value = b'TEST:1:{"label":"label1"}'
-    other_value = b'TEST:1:{"label":"label2"}'
+    value = b"label1"
+    other_value = b"label2"
     tree = _tree()
     tree.insert(_APP, address.encode(), value, counter=1)
     proof = tree.get_proof(_APP, address.encode())
@@ -299,13 +300,11 @@ def test_display_address_single_label(session: Session) -> None:
     assert response.message == "Address shown"
 
 
-
-
 def test_display_address_unknown_with_wrong_proof(session: Session) -> None:
     address = "bc1qdemoaddress000000000000000000000000000"
     other_address = "bc1qotheraddress000000000000000000000000000"
-    value = b'TEST:1:{"label":"label1"}'
-    other_value = b'TEST:1:{"label":"label2"}'
+    value = b"label1"
+    other_value = b"label2"
     tree = _tree()
     tree.insert(_APP, address.encode(), value, counter=1)
     tree.insert(_APP, other_address.encode(), other_value, counter=1)
@@ -350,8 +349,8 @@ def test_display_address_unknown_with_wrong_proof(session: Session) -> None:
 def test_display_address_more_labels_pull(session: Session) -> None:
     address = "bc1qdemoaddress000000000000000000000000000"
     other_address = "bc1qotheraddress000000000000000000000000000"
-    value = b'TEST:1:{"label":"label1"}'
-    other_value = b'TEST:1:{"label":"label2"}'
+    value = b"label1"
+    other_value = b"label2"
     tree = _tree()
     tree.insert(_APP, address.encode(), value, counter=1)
     tree.insert(_APP, other_address.encode(), other_value, counter=1)
@@ -385,8 +384,8 @@ def test_display_address_non_membership_pull(session: Session) -> None:
     address = "bc1qdemoaddress000000000000000000000000000"
     other_address = "bc1qotheraddress000000000000000000000000000"
     missing_address = "bc1qlabel3000000000000000000000000000000000"
-    value = b'TEST:1:{"label":"label1"}'
-    other_value = b'TEST:1:{"label":"label2"}'
+    value = b"label1"
+    other_value = b"label2"
     tree = _tree()
     tree.insert(_APP, address.encode(), value, counter=1)
     tree.insert(_APP, other_address.encode(), other_value, counter=1)
@@ -410,4 +409,3 @@ def test_display_address_non_membership_pull(session: Session) -> None:
             response = dev.result()
 
     assert response.message == "Address shown"
-
