@@ -29,16 +29,17 @@ from __future__ import annotations
 import os
 import secrets
 import subprocess
+import threading
 import time
 import typing as t
 from pathlib import Path
 
 import pytest
 
+from tools.ward_manager import DEBUG_SEED, WardManager, WardManagerServer
 from trezorlib.debuglink import DebugSession as Session
-from trezorlib.ward_relay import WardAdapter, WarddClient
-
 from trezorlib.testing.device_handler import BackgroundDeviceHandler
+from trezorlib.ward_relay import WardAdapter, WarddClient
 
 SUITE_DIR = os.environ.get("WARDD_SUITE_DIR")
 
@@ -51,13 +52,40 @@ APP = "bitcoin"
 NETWORK = "btc"
 
 
+@pytest.fixture(params=("mock", "http"))
+def wm_url(request: pytest.FixtureRequest, tmp_path: Path) -> t.Iterator[str | None]:
+    if request.param == "mock":
+        yield None
+        return
+
+    manager = WardManager(tmp_path / "wm.sqlite3", DEBUG_SEED)
+    try:
+        with WardManagerServer(manager, port=0) as server:
+            thread = threading.Thread(target=server.serve_forever)
+            thread.start()
+            try:
+                yield f"http://127.0.0.1:{server.server_port}"
+            finally:
+                server.shutdown()
+                thread.join()
+    finally:
+        manager.close()
+
+
 @pytest.fixture
-def wardd(tmp_path: Path) -> t.Iterator[WarddClient]:
-    """A throwaway wardd: in-memory store, debug WM, its own port and token."""
+def wardd_port() -> int:
+    return 30000 + secrets.randbelow(20000)
+
+
+@pytest.fixture
+def wardd(
+    tmp_path: Path, wm_url: str | None, wardd_port: int
+) -> t.Iterator[WarddClient]:
+    """A throwaway wardd with either the mock or the real HTTP WARD Manager."""
     assert SUITE_DIR is not None
     token = secrets.token_hex(16)
     (tmp_path / "token").write_text(token)
-    port = 30000 + secrets.randbelow(20000)
+    port = wardd_port
     proc = subprocess.Popen(
         [
             "node",
@@ -71,6 +99,7 @@ def wardd(tmp_path: Path) -> t.Iterator[WarddClient]:
             str(tmp_path),
             "--token-file",
             str(tmp_path / "token"),
+            *(["--wm-url", wm_url] if wm_url else []),
         ],
         cwd=Path(SUITE_DIR) / "packages" / "wardd",
         stdout=subprocess.PIPE,
@@ -116,7 +145,9 @@ def test_ward_relay_write_lookup_delete(session: Session, wardd: WarddClient) ->
     # insert: the device confirms the intent, pulls the (empty-tree) proof, seals the leaf
     inserted = _confirmed(
         session,
-        lambda s: WardAdapter(s, wardd).update(APP, "bc1qrelay", NETWORK, {"label": "first"}),
+        lambda s: WardAdapter(s, wardd).update(
+            APP, "bc1qrelay", NETWORK, {"label": "first"}
+        ),
     )
     assert inserted["wardId"] == ward_id
     assert inserted["counter"] == 1 and inserted["root"]
@@ -133,7 +164,9 @@ def test_ward_relay_write_lookup_delete(session: Session, wardd: WarddClient) ->
     # update: the device pulls the membership proof of the old leaf
     updated = _confirmed(
         session,
-        lambda s: WardAdapter(s, wardd).update(APP, "bc1qrelay", NETWORK, {"label": "second"}),
+        lambda s: WardAdapter(s, wardd).update(
+            APP, "bc1qrelay", NETWORK, {"label": "second"}
+        ),
     )
     assert updated["counter"] == 2
     assert adapter.lookup(APP, "bc1qrelay", NETWORK)["metadata"] == {"label": "second"}
@@ -158,7 +191,9 @@ def test_ward_relay_multi_entry_tree(session: Session, wardd: WarddClient) -> No
     for counter, address in enumerate(addresses, start=1):
         written = _confirmed(
             session,
-            lambda s, a=address: WardAdapter(s, wardd).update(APP, a, NETWORK, {"label": a}),
+            lambda s, a=address: WardAdapter(s, wardd).update(
+                APP, a, NETWORK, {"label": a}
+            ),
         )
         assert written["counter"] == counter
 
@@ -173,11 +208,15 @@ def test_ward_relay_multi_entry_tree(session: Session, wardd: WarddClient) -> No
     # an update in the middle of the tree, then a delete that re-parents a sibling
     _confirmed(
         session,
-        lambda s: WardAdapter(s, wardd).update(APP, "bc1qbravo", NETWORK, {"label": "B"}),
+        lambda s: WardAdapter(s, wardd).update(
+            APP, "bc1qbravo", NETWORK, {"label": "B"}
+        ),
     )
     _confirmed(
         session,
-        lambda s: WardAdapter(s, wardd).update(APP, "bc1qcharlie", NETWORK, delete=True),
+        lambda s: WardAdapter(s, wardd).update(
+            APP, "bc1qcharlie", NETWORK, delete=True
+        ),
     )
     assert adapter.lookup(APP, "bc1qbravo", NETWORK)["metadata"] == {"label": "B"}
     gone = adapter.lookup(APP, "bc1qcharlie", NETWORK)
@@ -190,7 +229,9 @@ def test_ward_relay_multi_entry_tree(session: Session, wardd: WarddClient) -> No
 def test_ward_relay_display_address(session: Session, wardd: WarddClient) -> None:
     _confirmed(
         session,
-        lambda s: WardAdapter(s, wardd).update(APP, "bc1qshown", NETWORK, {"label": "shown"}),
+        lambda s: WardAdapter(s, wardd).update(
+            APP, "bc1qshown", NETWORK, {"label": "shown"}
+        ),
     )
 
     # the native DisplayAddress pulls the label proof; the adapter answers it through wardd
