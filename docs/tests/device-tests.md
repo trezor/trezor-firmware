@@ -48,6 +48,21 @@ pytest -m stellar  # only runs tests marked with @pytest.mark.stellar
 
 If you want to see debugging information and protocol dumps, run with `-v`.
 
+To watch WARD confirmations, verified labels, and warnings in the emulator GUI,
+omit `-h` and add `--ward-ui-delay=2` to pause for two seconds before each automated
+input in `test_ward*.py` and `test_display_address.py`. Confirmations remain automatic;
+do not click the emulator while the tests run. The default delay is zero.
+
+```sh
+export WARDD_SUITE_DIR=/path/to/trezor-suite  # checkout containing packages/wardd
+./core/emu.py -t -P 31720 -q -c python -m pytest \
+    tests/device_tests/misc/test_ward_relay.py \
+    tests/device_tests/misc/test_display_address.py \
+    tests/device_tests/misc/test_ward.py --ward-ui-delay=2 -v
+```
+
+The relay tests also need the Suite checkout's wardd dependencies installed.
+
 Print statements from testing files are not shown by default. To enable them, use `-s` flag.
 
 If you would like to interact with the device (i.e. press the buttons yourself), just prefix pytest with `INTERACT=1`:
