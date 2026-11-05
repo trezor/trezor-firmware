@@ -54,6 +54,7 @@ default = ["bitcoin", "ethereum", "solana"]
 # Client implementations
 bitcoin = ["dep:bitcoin", "unicode-normalization"]
 ethereum = []
+tron = []
 
 # Just bindings to the Trezor protobufs
 cardano = []
@@ -66,5 +67,4 @@ ripple = []
 solana = []
 stellar = []
 tezos = []
-tron = []
 webauthn = []
