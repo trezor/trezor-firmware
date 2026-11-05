@@ -190,6 +190,9 @@ class AppManifest:
 
     button_callback: t.Callable[[messages.ButtonRequest], None] | None = None
     pin_callback: t.Callable[[messages.PinMatrixRequest], str] | None = None
+    ward_proof_callback: (
+        t.Callable[[messages.WARDProofRequest], messages.WARDProofAck] | None
+    ) = None
 
     credentials: (
         t.Collection[Credential] | t.Callable[[], t.Collection[Credential]]
@@ -203,6 +206,13 @@ class AppManifest:
     def _callback_button(self, msg: messages.ButtonRequest) -> None:
         if self.button_callback is not None:
             self.button_callback(msg)
+
+    def _callback_ward_proof(
+        self, msg: messages.WARDProofRequest
+    ) -> messages.WARDProofAck:
+        if self.ward_proof_callback is None:
+            raise RuntimeError("WARD proof callback was not specified")
+        return self.ward_proof_callback(msg)
 
     def get_credentials(self) -> t.Collection[Credential]:
         if callable(self.credentials):
@@ -499,6 +509,8 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
                 resp = self._callback_pin(session, resp)
             elif isinstance(resp, messages.ButtonRequest):
                 resp = self._callback_button(session, resp)
+            elif isinstance(resp, messages.WARDProofRequest):
+                resp = self._callback_ward_proof(session, resp)
             elif isinstance(resp, messages.Failure):
                 if resp.code in (
                     messages.FailureType.ActionCancelled,
@@ -548,6 +560,14 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
         session.write(messages.ButtonAck())
         self.app._callback_button(msg)
         return session.read()
+
+    def _callback_ward_proof(
+        self, session: SessionType, msg: messages.WARDProofRequest
+    ) -> MessageType:
+        # The device pulled a WARD proof for an address it is about to display;
+        # ask the app to resolve it and answer with a WARDProofAck.
+        ack = self.app._callback_ward_proof(msg)
+        return session.call_raw(ack)
 
     def cancel(self) -> None:
         """Send a Cancel signal to the device, interrupting the current workflow."""
