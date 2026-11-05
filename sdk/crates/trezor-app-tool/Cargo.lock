@@ -164,6 +164,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 
 [[package]]
+name = "fips204"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a823e139c2d539b1b735d31cdce8b0b356671585eac3d54dec79d1d15052093b"
+dependencies = [
+ "rand_core",
+ "sha3",
+ "zeroize",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -199,6 +210,15 @@ name = "itoa"
 version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92ecc6618181def0457392ccd0ee51198e065e016d1d527a7ac1b6dc7c1f09d2"
+
+[[package]]
+name = "keccak"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb26cec98cce3a3d96cbb7bced3c4b16e3d13f27ec56dbd62cbc8f39cfb9d653"
+dependencies = [
+ "cpufeatures",
+]
 
 [[package]]
 name = "lazy_static"
@@ -405,6 +425,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rand_core"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
+
+[[package]]
 name = "regex-automata"
 version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -501,6 +527,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sha3"
+version = "0.10.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77fd7028345d415a4034cf8777cd4f8ab1851274233b45f84e3d955502d93874"
+dependencies = [
+ "digest",
+ "keccak",
+ "zeroize",
+]
+
+[[package]]
 name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -545,6 +582,7 @@ dependencies = [
  "base64",
  "cargo_metadata",
  "clap",
+ "fips204",
  "object",
  "prost-types",
  "protox",
@@ -593,6 +631,26 @@ name = "zerocopy-derive"
 version = "0.8.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88d2b8d9c68ad2b9e4340d7832716a4d21a22a1154777ad56ea55c51a9cf3831"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "zeroize"
+version = "1.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e13084392c5e4bc371903e2935a5eaeed24905a7511356b883835e18a78f6879"
+dependencies = [
+ "zeroize_derive",
+]
+
+[[package]]
+name = "zeroize_derive"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c50655cbb0fe3fc43170059e702f1ce5e19b84cec58dc87b037a09935c2f328"
 dependencies = [
  "proc-macro2",
  "quote",

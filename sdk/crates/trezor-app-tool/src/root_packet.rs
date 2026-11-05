@@ -1,13 +1,18 @@
 //! RootPacket: the Merkle roots of the app rings, signed by the vendor keys.
 //! Byte layout as in `trezorlib.root_packet`.
 
+use anyhow::Result;
+use fips204::ml_dsa_44;
+use fips204::traits::{KeyGen, Signer};
+use sha2::{Digest, Sha256};
+
 pub const MAX_RINGS: usize = 3;
 pub const NUM_SIGNATURES: usize = 2;
 
 const MAGIC: &[u8; 4] = b"TRRP";
 const VERSION: u8 = 1;
 const SIGMASK: u8 = 0b11;
-const SIGNATURE_LEN: usize = 2420;
+const SIGNATURE_LEN: usize = ml_dsa_44::SIG_LEN;
 
 pub struct RootPacket {
     ring_mask: u8,
@@ -36,6 +41,21 @@ impl RootPacket {
         &self.root_rings
     }
 
+    /// Signs the packet with the ML-DSA-44 keys generated from `seeds`, one
+    /// per signature slot.
+    pub fn sign(&mut self, seeds: &[[u8; 32]; NUM_SIGNATURES]) -> Result<()> {
+        let digest: [u8; 32] = Sha256::digest(self.auth_bytes()).into();
+        for (signature, seed) in self.signatures.iter_mut().zip(seeds) {
+            let (_, key) = ml_dsa_44::KG::keygen_from_seed(seed);
+            // Pure ML-DSA with an empty context, as verified by the firmware;
+            // all-zero randomness selects the deterministic variant
+            *signature = key
+                .try_sign_with_seed(&[0; 32], &digest, b"")
+                .map_err(anyhow::Error::msg)?;
+        }
+        Ok(())
+    }
+
     /// The part covered by the signatures.
     fn auth_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
@@ -51,7 +71,7 @@ impl RootPacket {
         bytes
     }
 
-    /// Serializes the packet with zeroed signatures.
+    /// Serializes the packet; the signatures are zeroed until [`Self::sign`].
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = self.auth_bytes();
         bytes.push(SIGMASK);
@@ -66,6 +86,7 @@ impl RootPacket {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use fips204::traits::Verifier;
 
     const AUTH_HEADER_LEN: usize = 4 + 1 + 1 + 2 + 8 + 8;
     const UNAUTH_LEN: usize = 1 + 3 + NUM_SIGNATURES * SIGNATURE_LEN;
@@ -91,5 +112,23 @@ mod tests {
         assert_eq!(&bytes[16..24], &0x0102i64.to_le_bytes()); // chain_timestamp
         assert_eq!(&bytes[24..56], &[0; 32]);
         assert_eq!(&bytes[56..88], &[0xbb; 32]);
+    }
+
+    #[test]
+    fn signatures_verify_with_the_seed_keys() {
+        let seeds = [[0x11; 32], [0x22; 32]];
+        let mut packet = RootPacket::new(&[(0, [0xaa; 32])], 0x0102);
+        packet.sign(&seeds).unwrap();
+
+        let bytes = packet.to_bytes();
+        let auth_len = AUTH_HEADER_LEN + 32;
+        let digest = Sha256::digest(&bytes[..auth_len]);
+        let signatures = bytes[auth_len + 4..].chunks_exact(SIGNATURE_LEN);
+        assert_eq!(signatures.len(), NUM_SIGNATURES);
+
+        for (signature, seed) in signatures.zip(&seeds) {
+            let (public_key, _) = ml_dsa_44::KG::keygen_from_seed(seed);
+            assert!(public_key.verify(&digest, signature.try_into().unwrap(), b""));
+        }
     }
 }
