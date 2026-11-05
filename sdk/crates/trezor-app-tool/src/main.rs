@@ -10,6 +10,7 @@ mod device_test;
 mod fmt;
 mod helpers;
 mod image;
+mod merkle;
 mod prebuild;
 mod pygen;
 
