@@ -49,7 +49,6 @@ from . import (
     eos,
     ethereum,
     evolu,
-    extapp,
     fido,
     firmware,
     monero,
@@ -453,7 +452,6 @@ cli.add_command(firmware.cli)
 cli.add_command(debug.cli)
 cli.add_command(benchmark.cli)
 cli.add_command(ble.cli)
-cli.add_command(extapp.cli)
 
 #
 # Main
