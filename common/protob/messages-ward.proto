@@ -1,0 +1,633 @@
+syntax = "proto2";
+package hw.trezor.messages.ward;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageWard";
+
+// WARD is a pull-oriented update round with a durable device-held pending edit:
+//
+//   WARDQueueUpdate   -- INTENT ONLY. The device shows the old->new change on a
+//                    trusted screen; only if the user approves does it queue the
+//                    intent under a fresh pending_id and return that id. NO proof is
+//                    sent here, the root is NOT computed, and NO candidate counter
+//                    is derived (strict model: counter_T is not a queue-time input).
+//   WARDPerformUpdate -- Authorize the queued intent. The device DERIVES counter_T
+//                    (= current attested counter + 1) here, PULLS the proof it needs
+//                    on demand (WARDProofRequest naming pending_id), computes
+//                    (root_T, mac_T) for counter_T, marks the edit COMMITTED, and
+//                    returns the candidate. The durable counter is NOT yet advanced.
+//   WARDConfirmedByWM -- verify the WM's Ed25519 signature over the exact
+//                    device-derived (counter_T, mac_T), then install the root,
+//                    advance the counter, and drop the queued edit.
+//
+// Multi-slot: several intents may be queued per wallet, each addressed by its own
+// pending_id (bounded by the device storage cap). Commit stays serialized by
+// counter (siblings stamped at the same counter_T at perform time go stale once
+// one confirms).
+// AuthDbInit / AuthDbSetRoot / AuthDbLookup remain in messages-authdb.proto.
+
+/**
+ * Request: Queue a leaf change as an unverified INTENT (pull model).
+ *
+ * This carries NO proof. The device shows the new_value on a trusted
+ * screen and, only on user approval, stores the intent under a fresh pending_id
+ * and returns it. No candidate counter is derived here (strict model: counter_T is
+ * not a queue-time input). The candidate counter and root are derived later, at
+ * WARDPerformUpdate, from a proof the device pulls itself.
+ *
+ * Supported operations (classified at perform time from the pulled proof):
+ *   UPDATE  : new_value non-empty
+ *   DELETE  : new_value empty
+ *   INSERT  : new_value non-empty
+ * The authoritative current state is the proof the device pulls at
+ * WARDPerformUpdate.
+ * @start
+ * @next WARDQueueUpdateAck
+ * @next Failure
+ */
+message WARDQueueUpdate {
+    required bytes  address   = 1;  // identifier to update (== the AEAD-hidden identifier)
+    required bytes  new_value = 2;  // plaintext new value the user confirms; empty means delete
+    optional string app_id    = 3;  // domain; part of scope in entry_key = HMAC(K_path, app_id||0x00||key_type||0x00||device_id||identifier)
+    optional string key_type  = 4;  // scope; also selects K_ident/K_data; default "address"
+    optional uint32 device_id = 5;  // scope device slot; 0 = global (§5)
+}
+
+/**
+ * Response: the queued intent's handle. Returned only after the user approves the
+ * change on the trusted screen; if the user rejects, a Failure is returned and no
+ * intent is queued.
+ * @end
+ */
+message WARDQueueUpdateAck {
+    // No counter here (strict model): the candidate counter_T is first derived at
+    // WARDPerformUpdate, not at queue time. Field 1 is reserved to preserve numbering.
+    reserved 1;
+    optional uint32 pending_id = 2;  // handle for this queued intent; addresses it in perform/confirm/discard
+    reserved 3;  // was wallet_id; write-only (no reader) -- removed
+}
+
+/**
+ * Request: Authorize a queued intent and compute its candidate.
+ *
+ * The device resolves pending_id to the queued intent, PULLS the proof package it
+ * needs (it sends WARDProofRequest(address, pending_id) and the host answers with
+ * WARDProofAck), verifies it against the authenticated root, computes (root_T,
+ * mac_T) using the stored counter_T, and marks the edit COMMITTED. The counter is
+ * still NOT advanced on the device.
+ * @start
+ * @next WARDProofRequest
+ * @next WARDPerformUpdateAck
+ * @next Failure
+ */
+message WARDPerformUpdate {
+    optional uint32 pending_id = 1;  // which queued intent to perform; omit to target the single queued one
+}
+
+/**
+ * Response: The authorized candidate triple.
+ * @end
+ */
+message WARDPerformUpdateAck {
+    required uint32 counter    = 1;  // candidate counter_T, derived on-device here (= current attested counter + 1)
+    optional bytes  new_root   = 2;  // candidate root_T; absent if the tree becomes empty (DELETE to empty)
+    optional bytes  mac        = 3;  // mac_T = HMAC(root_mac_key, wallet_id||counter_T||root_T); absent if empty
+    reserved 4;  // was wallet_id; write-only (no reader) -- removed
+    optional bytes  ward_id    = 5;  // SLIP21-derived WM-facing anchor; the host forwards it to the WM for /commit
+    // The device is the encryptor; the host cannot compute the encrypted leaf, so
+    // the device returns it here for the host to store keyed by entry_key. ct empty
+    // = DELETE (remove the leaf at entry_key).
+    optional bytes  entry_key  = 6;  // opaque 32B path (LeafIdentityMAC) the leaf is stored under
+    reserved 7;                      // was entry_type; key_type now lives on LeafIdentity
+    reserved 8, 9, 10;               // were flat nonce/tag/ct; now inside content
+    optional LeafContent  content  = 11;  // encrypted or plaintext new leaf value (empty = delete)
+    optional LeafIdentity identity = 12;  // the MAC preimage; survives a delete
+}
+
+/**
+ * Request: Install the committed candidate after the WM has signed it.
+ *
+ * The device verifies wm_signature is a valid Ed25519 signature under the
+ * provisioned WM public key over
+ *     b"WARD FINAL v1" || ward_id || counter(4B BE) || mac
+ * and asserts (counter, mac) equal the device-derived (counter_T, mac_T) of the
+ * committed candidate and that counter is strictly greater than the stored
+ * qm_last_counter (anti-rollback) -- the device is the counter authority; the WM
+ * only co-signs. Only then does it install root_T, advance the counter and
+ * qm_last_counter to counter_T, and drop the queued edit.
+ * @start
+ * @next WARDConfirmedByWMAck
+ * @next Failure
+ */
+message WARDConfirmedByWM {
+    required uint32 counter      = 1;  // counter_T; must equal the device-derived committed candidate
+    optional bytes  mac          = 2;  // mac_T; must equal the committed candidate (absent iff the candidate is empty)
+    required bytes  wm_signature = 3;  // WM Ed25519 sig over b"WARD FINAL v1"||ward_id||counter(4B BE)||mac
+    optional uint32 pending_id   = 4;  // which committed candidate to install; omit to target the single queued one
+}
+
+/**
+ * Response: The device's authenticated state after installation.
+ * @end
+ */
+message WARDConfirmedByWMAck {
+    required uint32 counter   = 1;  // counter after install (== counter_T)
+    optional bytes  new_root  = 2;  // installed root; absent if the tree is now empty
+    reserved 3;  // was wallet_id; write-only (no reader) -- removed
+    optional bytes  root_mac  = 4;  // HMAC(root_mac_key, wallet_id||counter||new_root); absent if empty
+}
+
+// ===========================================================================
+// Sync round (bootstrap / refresh): establish the device's authenticated state
+// from the WM-attested (counter, mac) and the host-held root.
+//
+//   WARDSync              -- device mints a per-round nonce (anti-replay)
+//   WARDIngestAttestation -- device verifies the WM's signed (counter, mac)
+//   WARDListPendingEdits  -- device reports its queued pending-edit addresses
+//   WARDReconcile         -- device adopts the host root after checking it
+//                            against the attested mac
+// ===========================================================================
+
+/**
+ * Request: Begin a sync round. The device mints and stores a fresh nonce.
+ * @start
+ * @next WARDSyncAck
+ * @next Failure
+ */
+message WARDSync {
+}
+
+/**
+ * Response: the device-minted nonce (echoed back in the WM attestation).
+ * @end
+ */
+message WARDSyncAck {
+    required bytes  nonce     = 1;  // per-round anti-replay value the WM attestation must echo
+    required uint32 version   = 2;  // WARD protocol version
+    reserved 3;  // was wallet_id; write-only (no reader) -- removed
+    optional bytes  ward_id   = 4;  // SLIP21-derived WM-facing anchor; the host forwards it to the WM for /attest
+}
+
+/**
+ * Request: Deliver the WM's freshness attestation for this wallet.
+ *
+ * The device verifies wm_signature is a valid Ed25519 signature under the
+ * provisioned WM/QM public key over
+ *     b"WARD ATTEST v1" || version(1B) || nonce || ward_id || counter(4B BE) || mac
+ * where nonce is the one minted at WARDSync. It also asserts
+ * counter >= counter_loc (anti-rollback), then records (counter, mac) as the
+ * attested checkpoint for this round.
+ * @start
+ * @next WARDIngestAttestationAck
+ * @next Failure
+ */
+message WARDIngestAttestation {
+    required uint32 counter      = 1;  // counter_ext the WM claims is current
+    optional bytes  mac          = 2;  // mac_ext = MAC(mac_key, root||counter_ext); absent if the tree is empty
+    required bytes  wm_signature = 3;  // Ed25519 sig over the attestation preimage (see above)
+}
+
+/**
+ * Response: acknowledgement of the accepted attestation.
+ * @end
+ */
+message WARDIngestAttestationAck {
+    required uint32 counter   = 1;  // accepted counter_ext
+    reserved 2;  // was wallet_id; write-only (no reader) -- removed
+}
+
+/**
+ * Request: Ask the device for the addresses currently in its pending-edit queue
+ * and their pending_ids (so Suite can fetch/build the corresponding entries).
+ * @start
+ * @next WARDListPendingEditsAck
+ * @next Failure
+ */
+message WARDListPendingEdits {
+}
+
+/**
+ * Response: the queued pending-edit addresses.
+ * @end
+ */
+message WARDListPendingEditsAck {
+    repeated bytes  addresses   = 1;  // addresses of the currently queued pending edits
+    optional bytes  wallet_id   = 2;  // compatibility-only; callers should not depend on list_pending as the wallet_id source
+    repeated uint32 pending_ids = 3;  // parallel to addresses: the pending_id of each queued candidate
+    optional bytes  ward_id     = 4;  // SLIP21-derived WM-facing anchor; hosts use it to resolve wardId up front
+}
+
+/**
+ * Request: Adopt the host-supplied root as the device's authenticated state.
+ *
+ * The device asserts MAC(mac_key, root || counter_ext) == the mac attested at
+ * WARDIngestAttestation (binding the data plane to the state plane), then installs
+ * (root, counter_ext) and advances the anti-rollback ceiling. `root` is absent for
+ * an empty tree (the attested mac is then all-zero). Requires a prior
+ * WARDIngestAttestation in the same round.
+ * @start
+ * @next WARDReconcileAck
+ * @next Failure
+ */
+message WARDReconcile {
+    optional bytes root = 1;  // the current authenticated root; absent for an empty tree
+}
+
+/**
+ * Response: the device's authenticated state after adopting the root.
+ * @end
+ */
+message WARDReconcileAck {
+    required uint32 counter   = 1;  // installed counter (== attested counter_ext)
+    optional bytes  new_root  = 2;  // installed root; absent if the tree is empty
+    reserved 3;  // was wallet_id; write-only (no reader) -- removed
+    optional bytes  root_mac  = 4;  // HMAC(root_mac_key, wallet_id||counter||new_root); absent if empty
+}
+
+/**
+ * Request: Verify a Merkle Patricia Trie proof for a (address, value) pair
+ * against the device's authenticated root (formerly AuthDbLookup).
+ *
+ * Membership proof (witness_address absent): verify (address, value) is present.
+ * Non-membership proof (witness_address present): verify address is absent via a
+ * witness leaf on address's path. Empty proof + no witness = empty tree.
+ * @start
+ * @next WARDLookupAck
+ * @next Failure
+ */
+message WARDLookup {
+    required bytes  address            = 1;  // identifier; device forms entry_key = HMAC(K_path, app_id||0x00||key_type||0x00||device_id||identifier)
+    reserved 2;                              // was plaintext value; membership now carries (nonce,tag,ct)
+    repeated bytes  proof              = 3;  // leaf-to-root; 34B each: u16be(split_bit) || sibling(32B)
+    optional bytes  witness_entry_key  = 4;  // non-membership: witness leaf entry_key (32B; reveals no plaintext)
+    optional bytes  witness_commit     = 5;  // non-membership: witness leaf commit = sha256(0x02||nonce||tag||len32(ct)||ct)
+    reserved 6;                              // was counter; C_leaf now lives inside ct
+    reserved 7;                              // was witness_counter
+    optional string app_id             = 8;  // domain; part of scope
+    optional string key_type           = 9;  // scope; also selects K_ident/K_data; default "address"
+    optional uint32 device_id          = 10; // scope device slot; 0 = global
+    reserved 11, 12, 13;                     // were flat nonce/tag/ct; now inside content
+    optional LeafContent  content      = 14; // membership leaf value; absent = non-membership/absent
+    optional LeafIdentity identity      = 15; // membership leaf identity (MAC preimage)
+}
+
+/**
+ * Response: verification result together with the current counter.
+ * @end
+ */
+message WARDLookupAck {
+    required bool   valid      = 1;  // true if the proof is valid against the stored root
+    required uint32 counter    = 2;  // current global counter
+    optional bool   membership = 3;  // true = membership proof, false = non-membership
+    reserved 4;  // was wallet_id; write-only (no reader) -- removed
+    optional bytes  ward_id    = 5;  // SLIP21-derived WM-facing anchor; scopes host-side WARD storage
+}
+
+/**
+ * Request: DEBUG-ONLY unauthenticated root injection, for tests to seed a root
+ * without the full attest+merge sequence. Rejected on production firmware.
+ * @start
+ * @next WARDDebugSetRootAck
+ * @next Failure
+ */
+message WARDDebugSetRoot {
+    required bytes root = 1;  // 32-byte root to install (increments the counter by 1)
+}
+
+/**
+ * Response: the device state after the debug injection.
+ * @end
+ */
+message WARDDebugSetRootAck {
+    required uint32 counter   = 1;  // counter after install
+    optional bytes  new_root  = 2;  // installed root
+    optional bytes  wallet_id = 3;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier, scopes the tree
+    optional bytes  root_mac  = 4;  // HMAC(root_mac_key, wallet_id||counter||new_root)
+}
+
+/**
+ * Request: DEVICE -> HOST. Emitted mid-workflow when the device needs a WARD proof
+ * on demand instead of having the host push it up-front. Two callers:
+ *   - display/lookup: an on-device app (Bitcoin / Ethereum getAddress,
+ *     DisplayAddress, ...) about to display an address; pending_id is absent.
+ *   - update: WARDPerformUpdate resolving a queued intent; pending_id names it, so
+ *     the host serves the proof for exactly that queued update.
+ * The host answers with the WARD entry + proof it holds (WARDProofAck); the device
+ * verifies it against its own authenticated root before trusting/using the value.
+ * @next WARDProofAck
+ */
+message WARDProofRequest {
+    reserved 1;                      // was plaintext address; the device now sends the opaque entry_key path
+    optional uint32 pending_id = 2;  // set during WARDPerformUpdate: the queued intent this proof is for
+    reserved 3;                      // was app_id; now folded into entry_key, so the host learns no domain either
+    required bytes  entry_key  = 4;  // 32B HMAC path the device computed locally; the host serves the proof for it
+}
+
+/**
+ * Response: HOST -> DEVICE. The WARD entry the host holds for the requested
+ * address, plus the proof binding it to the device's authenticated root.
+ *
+ *   membership     : set value + counter (+ proof); leave the witness_* fields empty.
+ *   non-membership : leave value empty; set proof + witness_address / witness_value /
+ *                    witness_counter (empty tree: leave everything empty).
+ * @end
+ */
+message WARDProofAck {
+    reserved 1;                              // was plaintext value; membership now carries (nonce,tag,ct)
+    repeated bytes  proof             = 2;   // leaf-to-root; 34B each: u16be(split_bit) || sibling(32B)
+    reserved 3;                              // was counter; C_leaf now lives inside ct
+    optional bytes  witness_entry_key = 4;   // non-membership: witness leaf entry_key (32B; reveals no plaintext)
+    optional bytes  witness_commit    = 5;   // non-membership: witness leaf commit = sha256(0x02||nonce||tag||len32(ct)||ct)
+    reserved 6;                              // was witness_counter
+    reserved 7;                              // was app_id; the host no longer knows the domain (opaque entry_key)
+    reserved 8;                              // was entry_type; key_type now lives on LeafIdentity
+    reserved 9, 10, 11;                      // were flat nonce/tag/ct; now inside content
+    optional LeafContent  content     = 12;  // membership leaf value; absent = pull request / empty tree
+    optional LeafIdentity identity    = 13;  // membership leaf identity (MAC preimage)
+}
+
+/**
+ * Request: PUSH key export. The host retrieves the keys it needs to serve the
+ * push flow itself: K_path (to compute entry_key = HMAC(K_path, scope||identifier)
+ * from a plaintext identifier) and K_data(key_type) (to encrypt/decrypt values).
+ * This is a deliberate, gated downgrade of the "Suite holds no keys" property for
+ * the push-capable entry types only; K_sig is NEVER exported. The host is expected
+ * to hold the returned keys in memory only.
+ * @start
+ * @next WARDExportKeysAck
+ * @next Failure
+ */
+message WARDExportKeys {
+    optional string key_type = 1;  // key_type whose K_ident/K_data to export; default "address"
+}
+
+/**
+ * Response: the exported keys for the requested key_type.
+ * @end
+ */
+message WARDExportKeysAck {
+    optional bytes  k_path   = 1;  // HMAC-SHA256 key deriving every entry_key (LeafIdentityMAC)
+    optional bytes  k_data   = 2;  // ChaCha20-Poly1305 key for the requested key_type's LeafContent
+    optional string key_type = 3;  // echoes the requested key_type
+    optional bytes  k_ident  = 4;  // ChaCha20-Poly1305 key for the requested key_type's LeafIdentity
+}
+
+/**
+ * Request: abandon queued pending edit(s) without finalizing them.
+ *
+ * With pending_id, drops just that candidate; without it, drops EVERY candidate
+ * queued for the wallet. If a candidate can never be finalized (e.g. the WM will
+ * not sign it), this lets the host explicitly discard it and free a queue slot.
+ * Scoped to the caller's wallet; candidates belonging to a different (hidden)
+ * wallet are left untouched. Idempotent: discarding when nothing matches succeeds
+ * with no discarded_address.
+ * @start
+ * @next WARDDiscardPendingAck
+ * @next Failure
+ */
+message WARDDiscardPending {
+    optional uint32 pending_id = 1;  // which queued candidate to drop; omit to drop ALL of the wallet's candidates
+}
+
+/**
+ * Response: the outcome of the discard.
+ * @end
+ */
+message WARDDiscardPendingAck {
+    optional bytes  discarded_address = 1;  // address whose edit was discarded; absent if none matched or in drop-all mode
+    optional bytes  wallet_id         = 2;  // RIPEMD160(SHA256(master pubkey)) BIP32 identifier
+    optional uint32 pending_id        = 3;  // echoes the requested pending_id; absent in drop-all mode
+}
+
+/**
+ * A leaf is TWO independently encoded parts, each a self-describing nested "manual
+ * oneof" (trezor's protobuf codegen has no `oneof`, so mutual exclusivity is a code
+ * invariant): `encoding` selects which submessage is meaningful.
+ *
+ *   LeafIdentity  the MAC preimage: identifier + app_id + device_id, under K_ident
+ *   LeafContent   C_leaf + value, under K_data
+ *
+ * `key_type` is ALWAYS CLEAR (it selects both keys) and lives on LeafIdentity, so
+ * it is not repeated per part. Each part's `encoding` byte is inside the commit, so
+ * an encrypted and a plaintext part can never collide:
+ *
+ *   part(p) = encoding(1B)||len8(nonce)||nonce||len8(tag)||tag||len32(body)||body
+ *   commit  = sha256(0x02 || len8(key_type)||key_type
+ *                         || len32(id_part)||id_part || len32(val_part)||val_part)
+ *   leaf    = sha256(0x00 || entry_key || commit)      // entry_key == LeafIdentityMAC
+ *
+ * An empty LeafContent body is a DELETE. Note the identity part SURVIVES a delete,
+ * so a tombstone is still self-describing. See core apps/ward/service.py
+ * WARD_PLAINTEXT_IDENTITY / WARD_PLAINTEXT_CONTENT + commit_of.
+ */
+message EncryptedLeaf {
+    optional bytes nonce = 1;  // 12B AEAD nonce
+    optional bytes tag   = 2;  // 16B Poly1305 tag
+    optional bytes ct    = 3;  // AEAD ciphertext (empty = delete)
+}
+message PlaintextLeaf {
+    optional bytes content = 1;  // C_leaf(4B)||len32(value)||value (empty = delete)
+}
+message LeafContent {
+    optional uint32 encoding        = 1;  // 0 = encrypted (default), 1 = plaintext
+    optional EncryptedLeaf encrypted = 2;  // set when encoding = 0
+    optional PlaintextLeaf plaintext = 3;  // set when encoding = 1
+}
+
+/**
+ * The identity part: everything the entry_key/LeafIdentityMAC is computed over.
+ * Storing it in the leaf is what makes a leaf self-describing — a holder can recover
+ * the full preimage and check that the stored MAC really is its MAC (impossible in
+ * the old format), and it is what a PUSH host needs to resolve identifier -> MAC.
+ */
+message PlainIdentity {
+    optional bytes  identifier = 1;  // the otherwise-hidden identifier, in the clear
+    optional string app_id     = 2;  // domain that owns the entry
+    optional uint32 device_id  = 3;  // scope device slot; 0 = global (§5)
+}
+message EncryptedIdentity {
+    optional bytes nonce = 1;  // 12B AEAD nonce
+    optional bytes tag   = 2;  // 16B Poly1305 tag
+    optional bytes ct    = 3;  // AEAD over len16(identifier)||identifier||len8(app_id)||app_id||device_id(1B)
+}
+message LeafIdentity {
+    optional uint32 encoding             = 1;  // 0 = encrypted (default), 1 = plaintext
+    optional string key_type             = 2;  // ALWAYS CLEAR — selects K_ident and K_data
+    optional EncryptedIdentity encrypted = 3;  // set when encoding = 0
+    optional PlainIdentity     plain     = 4;  // set when encoding = 1
+}
+
+/**
+ * One device leaf produced by a batch commit, for the host to store keyed by
+ * entry_key. Empty content = DELETE (remove the leaf at entry_key).
+ */
+message WARDBatchLeaf {
+    required bytes  entry_key  = 1;  // opaque 32B trie path (LeafIdentityMAC) the leaf is stored under
+    reserved 2;                      // was entry_type; key_type now lives on LeafIdentity
+    reserved 3, 4, 5;                // were flat nonce/tag/ct; now inside content
+    optional LeafContent  content  = 6;  // encrypted or plaintext leaf value (empty = delete)
+    optional LeafIdentity identity = 7;  // the MAC preimage; survives a delete
+}
+
+/**
+ * Request: commit several queued intents as ONE atomic root transition (batch
+ * update). The device pulls a pre-state proof for each intent (one WARDProofRequest
+ * per entry_key), folds them into a single successor root, stamps every leaf at the
+ * one transition counter (counter += 1 for the whole batch), and authenticates the
+ * transition with head_mac + AuthCommit. Order-independent; a duplicate entry_key in
+ * the set is rejected.
+ * @start
+ * @next WARDPerformBatchAck
+ * @next WARDProofRequest
+ * @next Failure
+ */
+message WARDPerformBatch {
+    repeated uint32 pending_ids = 1;  // queued intents to commit together (>=1; no duplicate entry_key)
+}
+
+/**
+ * Response: the authenticated batch candidate. counter is to_counter = from_counter
+ * + 1 (the whole batch is one transition). The host publishes each leaf to the
+ * payload store (parent_hash=from_root, target_hash=new_root) and forwards
+ * (counter, mac, ward_id) to the WM for co-signing.
+ * @end
+ */
+message WARDPerformBatchAck {
+    required uint32 counter      = 1;  // to_counter (= from_counter + 1)
+    optional bytes  from_root    = 2;  // root the batch transitions FROM (empty-tree sentinel if empty)
+    optional bytes  new_root     = 3;  // to_root; absent if the tree becomes empty
+    optional bytes  mac          = 4;  // root MAC the WM co-signs; absent if empty
+    optional bytes  ward_id      = 5;  // SLIP21 WM-facing anchor; host forwards to the WM (the only id the host needs)
+    required bytes  head_mac     = 6;  // MAC(K_head, TAG_HEAD||ward_id||to_counter||to_root)
+    required bytes  auth_commit  = 7;  // MAC(K_auth, TAG_COMMIT||ward_id||from_c||from_root||to_c||to_root)
+    optional bytes  sig_commit   = 8;  // Ed25519(K_sig, <AuthCommit preimage>); present only when WARD_KSIG is on
+    repeated WARDBatchLeaf leaves = 9;  // device-encrypted leaves for the host to store
+}
+
+/**
+ * Request: install a committed batch after the WM co-signs its head. The device
+ * re-verifies the WM signature and the stored AuthCommit, checks the counter is
+ * ahead of its floor, then installs (to_counter, to_root) and drops the whole
+ * pending set. The single counter-advancing step for a batch.
+ * @start
+ * @next WARDConfirmBatchByWMAck
+ * @next Failure
+ */
+message WARDConfirmBatchByWM {
+    required uint32 counter      = 1;  // to_counter; must equal the committed batch
+    optional bytes  mac          = 2;  // root MAC; must equal the committed batch (absent iff empty)
+    required bytes  wm_signature = 3;  // WM Ed25519 over b"WARD FINAL v1"||ward_id||counter(4B BE)||mac
+}
+
+/**
+ * Response: the installed batch head.
+ * @end
+ */
+message WARDConfirmBatchByWMAck {
+    required uint32 counter   = 1;  // counter after install (== to_counter)
+    optional bytes  new_root  = 2;  // installed root; absent if the tree is now empty
+    optional bytes  ward_id   = 3;  // SLIP21 WM-facing anchor
+    optional bytes  root_mac  = 4;  // root MAC; absent if empty
+}
+
+/**
+ * Request: a constrained one-step rollback (ward-design §8.2). The host presents the
+ * FORWARD AuthCommit that created the current stuck head plus the predecessor root it
+ * encodes; the device verifies that MAC (K_auth is seed-shared) to prove the
+ * predecessor, checks the stuck head equals its current authenticated head (counter-
+ * bound), and demotes the head to the predecessor with a FORWARD-incrementing counter
+ * (to_counter = stuck_counter + 1) so the counter stays monotone.
+ * @start
+ * @next WARDPerformRevertAck
+ * @next Failure
+ */
+message WARDPerformRevert {
+    required uint32 stuck_counter       = 1;  // current head counter to demote (must equal the device head)
+    optional bytes  stuck_root          = 2;  // current head root (empty-tree sentinel if empty)
+    optional bytes  prev_root           = 3;  // predecessor to restore (empty-tree sentinel if empty)
+    required bytes  forward_auth_commit = 4;  // AuthCommit that created the stuck head: (stuck_counter-1, prev_root)->(stuck_counter, stuck_root)
+}
+
+/**
+ * Response: the authenticated rollback candidate. counter is to_counter =
+ * stuck_counter + 1; new_root is the restored predecessor. Host forwards
+ * (counter, mac, ward_id) to the WM for co-signing.
+ * @end
+ */
+message WARDPerformRevertAck {
+    required uint32 counter      = 1;  // to_counter (= stuck_counter + 1)
+    optional bytes  from_root    = 2;  // the stuck root being demoted FROM
+    optional bytes  new_root     = 3;  // restored predecessor root; absent if it is the empty tree
+    optional bytes  mac          = 4;  // root MAC the WM co-signs; absent if empty
+    optional bytes  ward_id      = 5;  // SLIP21 WM-facing anchor; host forwards to the WM (the only id the host needs)
+    required bytes  head_mac     = 6;  // MAC(K_head, TAG_HEAD||ward_id||to_counter||prev_root)
+    required bytes  auth_revert  = 7;  // MAC(K_auth, TAG_REVERT||ward_id||stuck_c||stuck_root||to_c||prev_root)
+    optional bytes  sig_commit   = 8;  // Ed25519(K_sig, <AuthRevert preimage>); present only when WARD_KSIG is on
+}
+
+/**
+ * Request: install a rollback after the WM co-signs the demoted head. The device
+ * re-verifies the WM signature and the stored AuthRevert, then installs the
+ * predecessor at the forward-incremented counter.
+ * @start
+ * @next WARDConfirmRevertByWMAck
+ * @next Failure
+ */
+message WARDConfirmRevertByWM {
+    required uint32 counter      = 1;  // to_counter; must equal the committed rollback
+    optional bytes  mac          = 2;  // root MAC; must equal the committed rollback (absent iff empty)
+    required bytes  wm_signature = 3;  // WM Ed25519 over b"WARD FINAL v1"||ward_id||counter(4B BE)||mac
+}
+
+/**
+ * Response: the installed (demoted) head.
+ * @end
+ */
+message WARDConfirmRevertByWMAck {
+    required uint32 counter   = 1;  // counter after install (== to_counter)
+    optional bytes  new_root  = 2;  // installed predecessor root; absent if empty
+    optional bytes  ward_id   = 3;  // SLIP21 WM-facing anchor
+    optional bytes  root_mac  = 4;  // root MAC; absent if empty
+}
+
+/**
+ * One authorized transition link in a chain-verification (another-Trezor read-only
+ * sync). Roots are the 32-byte MAC-preimage form (empty-tree sentinel if empty).
+ */
+message WARDChainLink {
+    required uint32 from_counter = 1;
+    optional bytes  from_root    = 2;  // empty-tree sentinel if empty
+    required uint32 to_counter   = 3;
+    optional bytes  to_root      = 4;  // empty-tree sentinel if empty
+    required bytes  auth_commit  = 5;  // MAC(K_auth, TAG_COMMIT||ward_id||from_c||from_root||to_c||to_root)
+    optional bytes  sig_commit   = 6;  // Ed25519(K_sig, <same preimage>); present only when WARD_KSIG
+}
+
+/**
+ * Request: prove the current WM-attested head sits on a fully Trezor-authorized
+ * canonical path. The device folds the ordered links from its trusted baseline (its
+ * current head; genesis for a fresh device) to the head, verifying per link:
+ * contiguity, a +1 counter step, and AuthCommit (+ SigCommit when WARD_KSIG). It
+ * holds only the running head (O(1) RAM) and does NOT reconstruct roots. The chain
+ * must terminate exactly at the attested head (from the open sync round) and its
+ * terminal root must match the attested mac; only then is the head adopted. Run
+ * AFTER WARDIngestAttestation, in place of WARDReconcile.
+ * @start
+ * @next WARDVerifyChainAck
+ * @next Failure
+ */
+message WARDVerifyChain {
+    repeated WARDChainLink links = 1;  // ordered baseline -> head
+}
+
+/**
+ * Response: the adopted head.
+ * @end
+ */
+message WARDVerifyChainAck {
+    required uint32 counter   = 1;  // installed head counter (== attested)
+    optional bytes  new_root  = 2;  // installed root; absent if the tree is empty
+    optional bytes  ward_id   = 3;  // SLIP21 WM-facing anchor
+    optional bytes  root_mac  = 4;  // root MAC; absent if empty
+}

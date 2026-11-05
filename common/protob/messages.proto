@@ -199,7 +199,9 @@ enum MessageType {
     MessageType_LiskPublicKey = 122 [(wire_out) = true];
     */
     reserved 114 to 122;
-    reserved 123 to 149;  // reserved for internal use
+    MessageType_DisplayAddress = 123 [(wire_in) = true];
+    MessageType_DisplayAddressWithProof = 124 [(wire_in) = true];
+    reserved 125 to 149;  // reserved for internal use
 
     // Tezos
     MessageType_TezosGetAddress = 150 [(wire_in) = true];
@@ -397,6 +399,61 @@ enum MessageType {
     MessageType_TronDelegateResourceContract = 2211 [(wire_in) = true];
     MessageType_TronUnDelegateResourceContract = 2212 [(wire_in) = true];
     MessageType_TronWithdrawBalance = 2213 [(wire_in) = true];
+
+    // AuthDB: all messages migrated to WARD (see below). ids 2300-2307 reserved.
+    // 2300/2301 AuthDbSetRoot(+Response), 2302/2303 AuthDbLookup(+Response),
+    // 2304/2305 AuthDbUpdateLeaf(+Response), 2306/2307 AuthDbInit(+Response).
+    reserved 2300, 2301, 2302, 2303, 2304, 2305, 2306, 2307;
+    // 2308-2329 reserved: removed AuthDb interfaces (clear_root, approve, offline cache,
+    // device-id override, offline-queue/apply/delete/get, fast-forward). Do not reuse.
+
+    // WARD update round (pull model: queue intent -> perform (device pulls proof) -> confirm by WM)
+    MessageType_WARDQueueUpdate = 2330 [(wire_in) = true];
+    MessageType_WARDQueueUpdateAck = 2331 [(wire_out) = true];
+    MessageType_WARDPerformUpdate = 2332 [(wire_in) = true];
+    MessageType_WARDPerformUpdateAck = 2333 [(wire_out) = true];
+    MessageType_WARDConfirmedByWM = 2334 [(wire_in) = true];
+    MessageType_WARDConfirmedByWMAck = 2335 [(wire_out) = true];
+    // WARD sync round (bootstrap/refresh) + lookup + debug seed
+    MessageType_WARDSync = 2336 [(wire_in) = true];
+    MessageType_WARDSyncAck = 2337 [(wire_out) = true];
+    MessageType_WARDIngestAttestation = 2338 [(wire_in) = true];
+    MessageType_WARDIngestAttestationAck = 2339 [(wire_out) = true];
+    MessageType_WARDListPendingEdits = 2340 [(wire_in) = true];
+    MessageType_WARDListPendingEditsAck = 2341 [(wire_out) = true];
+    MessageType_WARDReconcile = 2342 [(wire_in) = true];
+    MessageType_WARDReconcileAck = 2343 [(wire_out) = true];
+    MessageType_WARDLookup = 2344 [(wire_in) = true];
+    MessageType_WARDLookupAck = 2345 [(wire_out) = true];
+    MessageType_WARDDebugSetRoot = 2346 [(wire_in) = true];
+    MessageType_WARDDebugSetRootAck = 2347 [(wire_out) = true];
+    // WARD proof-on-demand (device pulls a proof from the host mid-workflow)
+    MessageType_WARDProofRequest = 2348 [(wire_out) = true];
+    MessageType_WARDProofAck = 2349 [(wire_in) = true];
+    // WARD discard a queued pending edit (unblock the depth-1 offline queue)
+    MessageType_WARDDiscardPending = 2350 [(wire_in) = true];
+    MessageType_WARDDiscardPendingAck = 2351 [(wire_out) = true];
+    // WARD PUSH key export (host retrieves K_index + per-type K_data to compute
+    // entry_key by identifier and encrypt/decrypt values itself; §0 downgrade for
+    // the push-capable class only)
+    MessageType_WARDExportKeys = 2352 [(wire_in) = true];
+    MessageType_WARDExportKeysAck = 2353 [(wire_out) = true];
+    // WARD batch update: N queued intents commit as ONE root transition (counter +1),
+    // authenticated by head_mac + AuthCommit (+ optional Ed25519 SigCommit).
+    MessageType_WARDPerformBatch = 2354 [(wire_in) = true];
+    MessageType_WARDPerformBatchAck = 2355 [(wire_out) = true];
+    MessageType_WARDConfirmBatchByWM = 2356 [(wire_in) = true];
+    MessageType_WARDConfirmBatchByWMAck = 2357 [(wire_out) = true];
+    // WARD constrained one-step rollback (ward-design §8.2): forward-incrementing
+    // counter, predecessor proven by the device family's own forward AuthCommit.
+    MessageType_WARDPerformRevert = 2358 [(wire_in) = true];
+    MessageType_WARDPerformRevertAck = 2359 [(wire_out) = true];
+    MessageType_WARDConfirmRevertByWM = 2360 [(wire_in) = true];
+    MessageType_WARDConfirmRevertByWMAck = 2361 [(wire_out) = true];
+    // WARD another-Trezor chain verification: prove the head sits on a fully
+    // Trezor-authorized canonical path by verifying the AuthCommit chain.
+    MessageType_WARDVerifyChain = 2362 [(wire_in) = true];
+    MessageType_WARDVerifyChainAck = 2363 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
