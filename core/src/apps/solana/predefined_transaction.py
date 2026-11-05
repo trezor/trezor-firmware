@@ -60,11 +60,13 @@ def get_create_associated_token_account_instructions(
 
 def is_predefined_token_transfer(
     instructions: list[Instruction],
+    signer_public_key: bytes,
 ) -> bool:
     """
     Checks that the transaction consists of one or zero create token account instructions
     and one or more transfer token instructions. Also checks that the token program, token mint
-    and destination in the instructions are the same. I.e. valid instructions can be:
+    and destination in the instructions are the same and that the signer is the one
+    spending the tokens. I.e. valid instructions can be:
 
     [transfer]
     [transfer, *transfer]
@@ -100,7 +102,6 @@ def is_predefined_token_transfer(
     token_program = transfer_token_instructions[0].program_id
     token_mint = transfer_token_instructions[0].token_mint[0]
     token_account = transfer_token_instructions[0].destination_account[0]
-    owner = transfer_token_instructions[0].owner[0]
 
     for transfer_token_instruction in transfer_token_instructions:
         if any(
@@ -121,7 +122,7 @@ def is_predefined_token_transfer(
             transfer_token_instruction.program_id != token_program
             or transfer_token_instruction.token_mint[0] != token_mint
             or transfer_token_instruction.destination_account[0] != token_account
-            or transfer_token_instruction.owner[0] != owner
+            or transfer_token_instruction.owner[0] != signer_public_key
         ):
             # there are different token accounts, don't handle as predefined
             return False
@@ -148,6 +149,7 @@ async def try_confirm_token_transfer_transaction(
     transaction: Transaction,
     fee: Fee,
     signer_path: list[int],
+    signer_public_key: bytes,
     blockhash: bytes,
     additional_info: AdditionalTxInfo,
     verified_payment_request: PaymentRequest | None,
@@ -160,6 +162,7 @@ async def try_confirm_token_transfer_transaction(
     visible_instructions = transaction.get_visible_instructions()
     if not is_predefined_token_transfer(
         visible_instructions,
+        signer_public_key,
     ):
         return False
 
@@ -243,7 +246,10 @@ async def try_confirm_predefined_transaction(
             return False
 
     if instructions_count == 1:
-        if SystemProgramTransferInstruction.is_type_of(instructions[0]):
+        if (
+            SystemProgramTransferInstruction.is_type_of(instructions[0])
+            and instructions[0].funding_account[0] == signer_public_key
+        ):
             await confirm_system_transfer(
                 instructions[0],
                 fee,
@@ -268,6 +274,7 @@ async def try_confirm_predefined_transaction(
         transaction,
         fee,
         signer_path,
+        signer_public_key,
         blockhash,
         additional_info,
         verified_payment_request,
