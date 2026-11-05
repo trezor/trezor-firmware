@@ -1,8 +1,10 @@
 //! Reads and validates an app's `[package.metadata.trezor]` fields from its
 //! `Cargo.toml`.
 
+use std::collections::{HashMap, HashSet};
+
 use anyhow::{Context, Result, ensure};
-use cargo_metadata::{MetadataCommand, Package};
+use cargo_metadata::{DependencyKind, Metadata, MetadataCommand, Node, Package, PackageId};
 
 /// Upper bound on an app's IPC inbox, mirroring the kernel's
 /// `IPC_MAX_BUFFER_SIZE` (`core/embed/sys/ipc/inc/sys/ipc.h`). `ipc_register`
@@ -216,24 +218,79 @@ fn metadata_number(package: &Package, key: &str) -> Result<u64> {
 ///
 /// The `Package` values handled by this tool come from a `no_deps` metadata
 /// query, which lists workspace members only, so the dependency graph is
-/// resolved here for the package's manifest.
+/// resolved here for the package's manifest. Fails unless exactly one `name`
+/// package is linked into `package`, see [`unique_linked_package`].
 pub fn dependency_package(package: &Package, name: &str) -> Result<Package> {
-    let dep = package
-        .dependencies
-        .iter()
-        .find(|dep| dep.name == name)
-        .ok_or_else(|| anyhow::anyhow!("Dependency {} not found in Cargo.toml", name))?;
+    ensure!(
+        package.dependencies.iter().any(|dep| dep.name == name),
+        "Dependency {name} not found in Cargo.toml"
+    );
 
     let metadata = MetadataCommand::new()
         .manifest_path(&package.manifest_path)
         .exec()
         .context("Failed to read cargo metadata")?;
 
-    metadata
+    unique_linked_package(&metadata, &package.id, name).cloned()
+}
+
+/// Returns the only package called `name` that `root` links, directly or
+/// transitively, through normal or build dependencies.
+///
+/// Packages used only by other workspace members, or only as dev-dependencies,
+/// are not part of `root`'s build and are ignored. More than one match, e.g.
+/// two `trezor-app-sdk` versions or sources, is an error.
+fn unique_linked_package<'a>(
+    metadata: &'a Metadata,
+    root: &PackageId,
+    name: &str,
+) -> Result<&'a Package> {
+    let resolve = metadata
+        .resolve
+        .as_ref()
+        .context("cargo metadata has no dependency graph")?;
+    let nodes: HashMap<&PackageId, &Node> = resolve.nodes.iter().map(|n| (&n.id, n)).collect();
+
+    let mut linked = HashSet::new();
+    let mut pending = vec![root];
+    while let Some(id) = pending.pop() {
+        if !linked.insert(id) {
+            continue;
+        }
+        let node = nodes
+            .get(id)
+            .with_context(|| format!("Package {id} missing from the dependency graph"))?;
+        // `root`'s dev-dependencies are only resolved for its tests
+        let linked_deps = node.deps.iter().filter(|dep| {
+            dep.dep_kinds.is_empty()
+                || dep
+                    .dep_kinds
+                    .iter()
+                    .any(|kind| kind.kind != DependencyKind::Development)
+        });
+        pending.extend(linked_deps.map(|dep| &dep.pkg));
+    }
+
+    let mut matches = metadata
         .packages
-        .into_iter()
-        .find(|p| p.name == dep.name && dep.req.matches(&p.version))
-        .ok_or_else(|| anyhow::anyhow!("Package {} not found in the dependency graph", name))
+        .iter()
+        .filter(|p| p.name.as_str() == name && linked.contains(&p.id));
+    let found = matches
+        .next()
+        .with_context(|| format!("Package {name} not found in the dependency graph"))?;
+    let others: Vec<_> = matches.collect();
+    if !others.is_empty() {
+        let list = std::iter::once(found)
+            .chain(others)
+            .map(|p| match &p.source {
+                Some(source) => format!("{} ({source})", p.version),
+                None => format!("{} ({})", p.version, p.manifest_path),
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
+        anyhow::bail!("The build pulls in more than one {name} package: {list}");
+    }
+    Ok(found)
 }
 
 #[cfg(test)]
@@ -248,6 +305,109 @@ mod tests {
             validate_ipc_buffer_size(IPC_BUFFER_MAX_SIZE).unwrap(),
             65536
         );
+    }
+
+    /// Writes a throwaway tree of path-only crates (`dir`, `Cargo.toml`) and
+    /// returns `app`'s package from a `no_deps` query, as the tool sees it.
+    fn app_in_tree(test: &str, crates: &[(&str, String)]) -> (std::path::PathBuf, Package) {
+        let root = std::env::temp_dir().join(format!("app-tool-{test}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        for (dir, manifest) in crates {
+            let dir = root.join(dir);
+            std::fs::create_dir_all(dir.join("src")).unwrap();
+            std::fs::write(dir.join("Cargo.toml"), manifest).unwrap();
+            std::fs::write(dir.join("src/lib.rs"), "").unwrap();
+        }
+        let metadata = MetadataCommand::new()
+            .manifest_path(root.join("ws/app/Cargo.toml"))
+            .no_deps()
+            .exec()
+            .unwrap();
+        let app = metadata
+            .packages
+            .into_iter()
+            .find(|p| p.name.as_str() == "app")
+            .unwrap();
+        (root, app)
+    }
+
+    fn manifest(name: &str, version: &str, deps: &str) -> String {
+        format!("[package]\nname = \"{name}\"\nversion = \"{version}\"\nedition = \"2021\"\n{deps}")
+    }
+
+    fn sdk_crates() -> Vec<(&'static str, String)> {
+        vec![
+            ("sdk1", manifest("trezor-app-sdk", "0.1.0", "")),
+            ("sdk2", manifest("trezor-app-sdk", "0.2.0", "")),
+            (
+                "mid",
+                manifest(
+                    "mid",
+                    "0.1.0",
+                    "[dependencies]\ntrezor-app-sdk = { path = \"../sdk2\" }\n",
+                ),
+            ),
+        ]
+    }
+
+    #[test]
+    fn dependency_package_ignores_other_members_and_dev_deps() {
+        let mut crates = sdk_crates();
+        crates.push((
+            "ws",
+            "[workspace]\nmembers = [\"app\", \"other\"]\nresolver = \"2\"\n".into(),
+        ));
+        crates.push((
+            "ws/app",
+            manifest(
+                "app",
+                "0.1.0",
+                "[dependencies]\ntrezor-app-sdk = { path = \"../../sdk1\" }\n\
+                 [dev-dependencies]\nmid = { path = \"../../mid\" }\n",
+            ),
+        ));
+        crates.push((
+            "ws/other",
+            manifest(
+                "other",
+                "0.1.0",
+                "[dependencies]\nmid = { path = \"../../mid\" }\n",
+            ),
+        ));
+        let (root, app) = app_in_tree("single", &crates);
+
+        let sdk = dependency_package(&app, "trezor-app-sdk").unwrap();
+        assert_eq!(sdk.version.to_string(), "0.1.0");
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn dependency_package_rejects_two_linked_sdks() {
+        let mut crates = sdk_crates();
+        crates.push((
+            "ws",
+            "[workspace]\nmembers = [\"app\"]\nresolver = \"2\"\n".into(),
+        ));
+        crates.push((
+            "ws/app",
+            manifest(
+                "app",
+                "0.1.0",
+                "[dependencies]\ntrezor-app-sdk = { path = \"../../sdk1\" }\n\
+                 mid = { path = \"../../mid\" }\n",
+            ),
+        ));
+        let (root, app) = app_in_tree("double", &crates);
+
+        let error = dependency_package(&app, "trezor-app-sdk")
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("more than one trezor-app-sdk"), "{error}");
+        assert!(
+            error.contains("0.1.0") && error.contains("0.2.0"),
+            "{error}"
+        );
+        std::fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
