@@ -1,0 +1,44 @@
+diff --git a/core/embed/io/display/display_utils.c b/core/embed/io/display/display_utils.c
+index bb4c1fac97..a77a94bea0 100644
+--- a/core/embed/io/display/display_utils.c
++++ b/core/embed/io/display/display_utils.c
+@@ -42,7 +42,7 @@ extern void display_clear_save(void);
+ typedef struct {
+   // Screen recording status
+   bool recording;
+-  uint8_t target_directory[256];
++  uint8_t target_directory[1024];
+   uint32_t refresh_index;
+ 
+ } display_recording_t;
+@@ -65,7 +65,7 @@ void display_record_start(uint8_t *target_dir, size_t target_dir_len,
+ 
+   memset(rec->target_directory, 0, sizeof(rec->target_directory));
+   memcpy(rec->target_directory, target_dir,
+-         MIN(sizeof(rec->target_directory), target_dir_len));
++         MIN(sizeof(rec->target_directory) - 1, target_dir_len));
+   rec->refresh_index = refresh_index;
+ }
+ 
+@@ -88,7 +88,7 @@ void display_record_screen(void) {
+     return;
+   }
+ 
+-  char prefix[512];
++  char prefix[1100];
+   snprintf(prefix, sizeof(prefix), "%s/refresh%02" PRIu32 "-",
+            rec->target_directory, rec->refresh_index);
+ 
+diff --git a/core/embed/io/display/unix/display_driver.c b/core/embed/io/display/unix/display_driver.c
+index c83cded9b7..7a61cadb8a 100644
+--- a/core/embed/io/display/unix/display_driver.c
++++ b/core/embed/io/display/unix/display_driver.c
+@@ -744,7 +744,7 @@ void display_save(const char *prefix) {
+ #endif
+ 
+   static int count;
+-  static char filename[256];
++  static char filename[1200];
+   // take a cropped view of the screen contents
+   const SDL_Rect rect = {0, 0, DISPLAY_RESX, DISPLAY_RESY};
+   SDL_Surface *crop = SDL_CreateSurface(rect.w, rect.h, drv->buffer->format);

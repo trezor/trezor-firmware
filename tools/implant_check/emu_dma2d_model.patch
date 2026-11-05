@@ -1,0 +1,146 @@
+diff --git a/core/embed/io/gfx/bitblt/gfx_bitblt_rgb565.c b/core/embed/io/gfx/bitblt/gfx_bitblt_rgb565.c
+index 10d6827bff..bda8d38d53 100644
+--- a/core/embed/io/gfx/bitblt/gfx_bitblt_rgb565.c
++++ b/core/embed/io/gfx/bitblt/gfx_bitblt_rgb565.c
+@@ -31,8 +31,104 @@
+ 
+ volatile uint64_t g_gfx_cycles;
+ 
++#ifdef TREZOR_EMULATOR
++// Lab-only model of the STM32U5 DMA2D rgb565 paths (dma2d_bitblt.c), so that
++// emulator screenshots match what the panel receives on hardware.
++// DMA2D expands RGB565 to 8 bits per channel by bit replication, blends at
++// 8 bits and truncates back to RGB565.
++static inline uint16_t emu_d2d_mix(gfx_color16_t fg, gfx_color16_t bg,
++                                   uint32_t a) {
++  uint32_t r = a8_lerp(gfx_color16_to_r(fg), gfx_color16_to_r(bg), a);
++  uint32_t g = a8_lerp(gfx_color16_to_g(fg), gfx_color16_to_g(bg), a);
++  uint32_t b = a8_lerp(gfx_color16_to_b(fg), gfx_color16_to_b(bg), a);
++  return gfx_color16_rgb(r, g, b);
++}
++
++static bool dma2d_rgb565_fill(const gfx_bitblt_t* bb) {
++  if (bb->src_alpha == 255) return false;  // R2M: identical to the CPU path
++  uint16_t* dst_ptr = (uint16_t*)bb->dst_row + bb->dst_x;
++  for (int y = 0; y < bb->height; y++) {
++    for (int x = 0; x < bb->width; x++) {
++      dst_ptr[x] = emu_d2d_mix(gfx_color_to_color16(bb->src_fg), dst_ptr[x], bb->src_alpha);
++    }
++    dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
++  }
++  return true;
++}
++
++static bool dma2d_rgb565_copy_mono4(const gfx_bitblt_t* bb) {
++  const gfx_color16_t* gradient =
++      gfx_color16_gradient_a4(bb->src_fg, bb->src_bg);
++  gfx_color32_t fg = gfx_color_to_color32(bb->src_fg);
++  gfx_color32_t bg = gfx_color_to_color32(bb->src_bg);
++  uint16_t clut[16];
++  for (int s = 0; s < 16; s++) {
++    clut[s] = gfx_color16_rgb(
++        a4_lerp(gfx_color32_to_r(fg), gfx_color32_to_r(bg), s),
++        a4_lerp(gfx_color32_to_g(fg), gfx_color32_to_g(bg), s),
++        a4_lerp(gfx_color32_to_b(fg), gfx_color32_to_b(bg), s));
++  }
++  int x0 = 0, x1 = bb->width;  // DMA2D handles [x0, x1)
++  if (bb->src_x & 1) x0 = 1;
++  if (x1 - x0 > 0 && ((x1 - x0) & 1)) x1 -= 1;
++  uint16_t* dst_ptr = (uint16_t*)bb->dst_row + bb->dst_x;
++  uint8_t* src_row = (uint8_t*)bb->src_row;
++  for (int y = 0; y < bb->height; y++) {
++    for (int x = 0; x < bb->width; x++) {
++      uint8_t d = src_row[(x + bb->src_x) / 2];
++      uint8_t lum = (x + bb->src_x) & 1 ? d >> 4 : d & 0xF;
++      dst_ptr[x] = (x >= x0 && x < x1) ? clut[lum] : gradient[lum];
++    }
++    dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
++    src_row += bb->src_stride / sizeof(*src_row);
++  }
++  return true;
++}
++
++static bool dma2d_rgb565_blend_mono4(const gfx_bitblt_t* bb) {
++  int x0 = 0, x1 = bb->width;
++  if (bb->src_x & 1) x0 = 1;
++  if (x1 - x0 > 0 && ((x1 - x0) & 1)) x1 -= 1;
++  uint16_t* dst_ptr = (uint16_t*)bb->dst_row + bb->dst_x;
++  uint8_t* src_row = (uint8_t*)bb->src_row;
++  for (int y = 0; y < bb->height; y++) {
++    for (int x = 0; x < bb->width; x++) {
++      uint8_t d = src_row[(x + bb->src_x) / 2];
++      uint8_t a4 = (x + bb->src_x) & 1 ? d >> 4 : d & 0x0F;
++      if (x >= x0 && x < x1) {
++        // L4 CLUT alpha = a4_lerp(255, 0, a4), COMBINE_ALPHA with src_alpha
++        uint32_t a = (a4_lerp(255, 0, a4) * bb->src_alpha) / 255;
++        dst_ptr[x] = emu_d2d_mix(gfx_color_to_color16(bb->src_fg), dst_ptr[x], a);
++      } else {
++        uint8_t a = a4 * bb->src_alpha / 15;
++        dst_ptr[x] = gfx_color16_blend_a8(
++            bb->src_fg, gfx_color16_to_color(dst_ptr[x]), a);
++      }
++    }
++    dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
++    src_row += bb->src_stride / sizeof(*src_row);
++  }
++  return true;
++}
++
++static bool dma2d_rgb565_blend_mono8(const gfx_bitblt_t* bb) {
++  uint16_t* dst_ptr = (uint16_t*)bb->dst_row + bb->dst_x;
++  uint8_t* src_ptr = (uint8_t*)bb->src_row + bb->src_x;
++  for (int y = 0; y < bb->height; y++) {
++    for (int x = 0; x < bb->width; x++) {
++      dst_ptr[x] = emu_d2d_mix(gfx_color_to_color16(bb->src_fg), dst_ptr[x], src_ptr[x]);
++    }
++    dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
++    src_ptr += bb->src_stride / sizeof(*src_ptr);
++  }
++  return true;
++}
++
++static bool dma2d_rgb565_copy_rgb565(const gfx_bitblt_t* bb) { return false; }
++#endif
++
+ void gfx_rgb565_fill(const gfx_bitblt_t* bb) {
+-#if defined(USE_DMA2D) && !defined(TREZOR_EMULATOR)
++#if defined(USE_DMA2D) || defined(TREZOR_EMULATOR)
+   if (!dma2d_rgb565_fill(bb))
+ #endif
+   {
+@@ -79,7 +175,7 @@ void gfx_rgb565_copy_mono1p(const gfx_bitblt_t* bb) {
+ }
+ 
+ void gfx_rgb565_copy_mono4(const gfx_bitblt_t* bb) {
+-#if defined(USE_DMA2D) && !defined(TREZOR_EMULATOR)
++#if defined(USE_DMA2D) || defined(TREZOR_EMULATOR)
+   if (!dma2d_rgb565_copy_mono4(bb))
+ #endif
+   {
+@@ -103,7 +199,7 @@ void gfx_rgb565_copy_mono4(const gfx_bitblt_t* bb) {
+ }
+ 
+ void gfx_rgb565_copy_rgb565(const gfx_bitblt_t* bb) {
+-#if defined(USE_DMA2D) && !defined(TREZOR_EMULATOR)
++#if defined(USE_DMA2D) || defined(TREZOR_EMULATOR)
+   if (!dma2d_rgb565_copy_rgb565(bb))
+ #endif
+   {
+@@ -122,7 +218,7 @@ void gfx_rgb565_copy_rgb565(const gfx_bitblt_t* bb) {
+ }
+ 
+ void gfx_rgb565_blend_mono4(const gfx_bitblt_t* bb) {
+-#if defined(USE_DMA2D) && !defined(TREZOR_EMULATOR)
++#if defined(USE_DMA2D) || defined(TREZOR_EMULATOR)
+   if (!dma2d_rgb565_blend_mono4(bb))
+ #endif
+   {
+@@ -145,7 +241,7 @@ void gfx_rgb565_blend_mono4(const gfx_bitblt_t* bb) {
+ }
+ 
+ void gfx_rgb565_blend_mono8(const gfx_bitblt_t* bb) {
+-#if defined(USE_DMA2D) && !defined(TREZOR_EMULATOR)
++#if defined(USE_DMA2D) || defined(TREZOR_EMULATOR)
+   if (!dma2d_rgb565_blend_mono8(bb))
+ #endif
+   {
