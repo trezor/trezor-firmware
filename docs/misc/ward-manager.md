@@ -1,9 +1,35 @@
 # WARD Manager development service
 
 The encrypted WARD Manager is a REST service in `tools/ward_manager.py`.
-It stores each ward's authoritative counter and root MAC in SQLite and signs
+It stores each ward's authoritative counter, root, root MAC, head nonce and
+timestamp in SQLite, together with append-only signed transition history. It signs
 freshness attestations and accepted commits with Ed25519. Its endpoints match
 `HttpWm` in trezor-suite's `packages/wardd/src/wm.ts`.
+
+## Selected architecture
+
+The WARD Manager is root-aware. It verifies wallet-signed transitions, compares
+their predecessor counter, root and head nonce against its current head, and
+atomically appends each accepted transition while advancing that head. History
+returned by the manager contains accepted transitions; locally persisted candidate
+transitions can also contain rejected branches. The manager sees roots and
+transition metadata, but receives no plaintext records or device secret keys.
+
+Chain discovery runs **backward**, starting at the WM-selected head and following
+predecessors toward the device's trusted `(counter, root)` anchor. The host also
+reconstructs encrypted state from genesis and checks every resulting root.
+
+The `WARDVerifyChain.links` wire ordering is **oldest first**, from the device
+anchor toward the WM head. After discovering the lineage backward, the host
+reverses the required suffix for transmission. The device verifies every link's
+contiguity and wallet authorization, checks the terminal state against the fresh
+WM attestation, and adopts the head only after the entire chain passes. Host
+discovery direction and device verification ordering are distinct; successful
+verification of a partial prefix does not authorize partial head adoption.
+
+These choices supersede the export's root-private WM variant and its alternative
+newest-first device-verification example. They match the current host/device
+implementation; this decision does not change the protobuf ordering.
 
 ## Run it
 
@@ -39,23 +65,31 @@ wardd in the Suite checkout in a second terminal:
 yarn workspace @trezor/wardd start --memory --wm-url http://127.0.0.1:21330
 ```
 
-Keep the manager's checkpoints and wardd's replica together between runs. If a
-persistent manager has advanced while a new in-memory wardd starts at genesis,
-sync returns HTTP 409 until the replica is restored. The manager does not reset
-its authoritative head to match a missing replica.
+Keep the manager's history and wardd's encrypted replica together between runs.
+Sync reads the manager's current head and catches up using complete encrypted
+history. If the replica lacks that history, reconstruction fails until it is
+restored. The manager does not reset its authoritative head to match a missing
+replica.
 
 ## API
 
 POST requests use `Content-Type: application/json`. `wardId`, `nonce`, and
 nonempty `mac` values are 32 bytes encoded as hex. Counters are unsigned 32-bit
-integers. A missing, null, or all-zero MAC denotes an empty tree.
+integers. Roots use an empty string for the empty tree. Only genesis at counter
+zero has no root MAC; positive-counter empty states require a real wallet MAC.
 
 | Method | Path             | Request                                                  | Response                                        |
 | ------ | ---------------- | -------------------------------------------------------- | ----------------------------------------------- |
 | GET    | `/health`        | —                                                        | `status`, signing `publicKey`                   |
-| GET    | `/ward/{wardId}` | —                                                        | `wardId`, `counter`, optional `mac`             |
-| POST   | `/ward/attest`   | `wardId`, `nonce`; optional expected `counter` and `mac` | Stored `counter`, optional `mac`, `signature`   |
-| POST   | `/ward/commit`   | `wardId`, next `counter`, optional `mac`                 | Accepted `counter`, optional `mac`, `signature` |
+| GET    | `/ward/{wardId}` | — | `wardId`, current head |
+| GET    | `/ward/{wardId}/history` | — | `wardId`, current head, ordered `transitions` |
+| POST   | `/ward/attest` | `wardId`, `nonce`; optional expected `counter` and `mac` | Current head and `signature` |
+| POST   | `/ward/commit` | `wardId`, `fromCounter`, `fromRoot`, `counter`, `root`, `mac`, `authCommit`, `signature`, `kind`, `headNonce` | Accepted head and `signature` |
+
+A head contains `counter`, `root`, optional `mac`, `headNonce` and `timestamp`.
+`wardId` is the wallet's K_sig Ed25519 public key. History is ordered by increasing
+counter. Transition signatures bind both endpoints, kind, resulting MAC, AuthCommit
+and the predecessor head nonce.
 
 A ward starts at counter 0 with an empty tree. Attestations always sign the
 stored head. If an expected checkpoint is supplied, it must match; an invented
@@ -65,18 +99,18 @@ Commits must advance the counter by exactly one. The check and update happen in
 one SQLite transaction, before returning the signature. Two different writers
 at the same counter cannot both win. Retrying the identical current checkpoint
 returns the same signature without advancing again. A conflict returns
-`{"error":"checkpoint_conflict","counter":...,"mac":...}`; `mac` is omitted
-for an empty tree. Invalid requests receive HTTP 400, and storage failures
-receive HTTP 503 without a signature.
+`{"error":"checkpoint_conflict",...}` with the current head; `mac` is omitted
+only at genesis. Malformed requests receive HTTP 400, invalid wallet signatures
+receive HTTP 403, and storage failures receive HTTP 503 without a signature.
 
-The signing domains match the encrypted firmware: `WARD ATTEST v1` (version 1,
-nonce, ward ID, counter, MAC) and `WARD FINAL v1` (ward ID, counter, MAC).
+The signing domains match the encrypted firmware: `WARD ATTEST v2` (version 2,
+nonce, ward ID, counter, MAC, timestamp, head nonce), `WARD WM TRANSITION v2`
+(wallet authorization), and `WARD FINAL v1` (ward ID, counter, MAC).
 The manager never receives plaintext labels, addresses, leaves, or device keys.
 
-This development service does not authenticate callers or verify a device's
-transition signature: the existing commit interface supplies only the ward ID,
-counter and MAC. It binds to localhost by default. A custom signing key alone
-does not add caller authorization.
+The manager verifies the wallet's transition signature before advancing state.
+It binds to localhost by default. This authorization does not provide transport
+encryption or authenticate unrelated HTTP operations.
 
 ## Live request and response log
 
