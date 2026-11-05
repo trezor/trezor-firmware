@@ -211,7 +211,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     # Only nightly runs; manual runs are watched by whoever started them.
-    if: failure() && github.event_name == 'schedule'
+    if: failure()
     needs: [core_device_test, core_monero_test, legacy_device_test]
     permissions:
       actions: read     # to list the jobs of this run
