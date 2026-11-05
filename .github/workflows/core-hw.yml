@@ -224,12 +224,11 @@ jobs:
           COMMIT_SHA: ${{ github.sha }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HW_TESTS_WEBHOOK }}
         run: |
-          # only test jobs; must match the name of the `param` job
-          JOBS=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs?per_page=100" \
-            --jq '.jobs |= map(select(.name != "Determine pipeline parameters"))')
+          JOBS=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs?per_page=100")
           # cancelled also covers jobs that hit timeout-minutes
           FAILED=$(jq -r '.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled") | "• <\(.html_url)|\(.name)>"' <<< "$JOBS")
-          COUNTS=$(jq -r '[.jobs[] | select(.conclusion != null and .conclusion != "skipped")]
+          # count only test jobs; must match the name of the `param` job
+          COUNTS=$(jq -r '[.jobs[] | select(.name != "Determine pipeline parameters" and .conclusion != null and .conclusion != "skipped")]
             | "\(map(select(.conclusion != "success")) | length) of \(length) jobs failed"' <<< "$JOBS")
           HEADER="Nightly hardware tests failed on \`$GITHUB_REF_NAME\` (<$COMMIT_URL|${COMMIT_SHA::10}>), $COUNTS: <$GITHUB_RUN_URL|GitHub run>"
           jq -n --arg header "$HEADER" --arg failed "$FAILED" \
