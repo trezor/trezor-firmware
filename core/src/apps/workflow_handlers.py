@@ -108,6 +108,10 @@ def _find_message_handler_module(msg_type: int) -> str:
     # misc
     if msg_type == MessageType.GetEntropy:
         return "apps.misc.get_entropy"
+    if msg_type == MessageType.DisplayAddress:
+        return "apps.display_address.show"
+    if msg_type == MessageType.DisplayAddressWithProof:
+        return "apps.display_address.show_with_proof"
     if msg_type == MessageType.SignIdentity:
         return "apps.misc.sign_identity"
     if msg_type == MessageType.GetECDHSessionKey:
@@ -118,6 +122,42 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.misc.get_firmware_hash"
     if msg_type == MessageType.PaymentNotification:
         return "apps.misc.payment_notification"
+
+    # WARD update round (pull model: queue intent / perform (pull proof) / confirm)
+    if msg_type == MessageType.WARDQueueUpdate:
+        return "apps.ward.queue"
+    if msg_type == MessageType.WARDPerformUpdate:
+        return "apps.ward.perform"
+    if msg_type == MessageType.WARDConfirmedByWM:
+        return "apps.ward.finalize"
+    if msg_type == MessageType.WARDPerformBatch:
+        return "apps.ward.perform_batch"
+    if msg_type == MessageType.WARDConfirmBatchByWM:
+        return "apps.ward.confirm_batch"
+    if msg_type == MessageType.WARDPerformRevert:
+        return "apps.ward.perform_revert"
+    if msg_type == MessageType.WARDConfirmRevertByWM:
+        return "apps.ward.confirm_revert"
+    if msg_type == MessageType.WARDDiscardPending:
+        return "apps.ward.discard"
+
+    # WARD sync round (bootstrap/refresh) + lookup + debug seed
+    if msg_type == MessageType.WARDSync:
+        return "apps.ward.sync"
+    if msg_type == MessageType.WARDIngestAttestation:
+        return "apps.ward.ingest"
+    if msg_type == MessageType.WARDListPendingEdits:
+        return "apps.ward.pending"
+    if msg_type == MessageType.WARDReconcile:
+        return "apps.ward.reconcile"
+    if msg_type == MessageType.WARDVerifyChain:
+        return "apps.ward.verify_chain"
+    if msg_type == MessageType.WARDLookup:
+        return "apps.ward.lookup"
+    if msg_type == MessageType.WARDExportKeys:
+        return "apps.ward.export_keys"
+    if __debug__ and msg_type == MessageType.WARDDebugSetRoot:
+        return "apps.ward.debug_set_root"
 
     # evolu
     if msg_type == MessageType.EvoluGetNode:
