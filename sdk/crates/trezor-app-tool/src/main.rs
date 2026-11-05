@@ -13,6 +13,7 @@ mod image;
 mod merkle;
 mod prebuild;
 mod pygen;
+mod root_packet;
 
 fn main() -> Result<()> {
     let cli = Cli::parse();

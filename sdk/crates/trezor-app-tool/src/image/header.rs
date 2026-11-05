@@ -124,6 +124,25 @@ impl AppHeader {
         self.abi_version
     }
 
+    pub(crate) fn app_ring(&self) -> u8 {
+        self.app_ring
+    }
+
+    pub(crate) fn header_size(&self) -> usize {
+        self.header_size.get() as usize
+    }
+
+    pub(crate) fn code_size(&self) -> usize {
+        self.code_size.get() as usize
+    }
+
+    pub(crate) fn chunk_size(&self) -> usize {
+        self.chunk_size.get() as usize
+    }
+
+    pub(crate) fn chunk_hash(&self) -> [u8; 32] {
+        self.chunk_hash
+    }
     pub(crate) fn target_arch(&self) -> Result<TargetArch> {
         TargetArch::from_id(self.target_arch)
             .with_context(|| format!("Unknown target architecture {}", self.target_arch))
