@@ -24,6 +24,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
+name = "base64"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
+
+[[package]]
 name = "beef"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -536,11 +542,13 @@ name = "trezor-app-tool"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "base64",
  "cargo_metadata",
  "clap",
  "object",
  "prost-types",
  "protox",
+ "serde",
  "serde_json",
  "sha2",
  "zerocopy",
