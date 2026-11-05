@@ -2,8 +2,6 @@
   description = "Trezor Firmware development environment";
 
   inputs = {
-    self.submodules = true;
-
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
