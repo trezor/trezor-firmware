@@ -16,7 +16,12 @@ from trezorlib.authdb_tree import WARDTree
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
 
-from ...ward_mgr_emu import WMEmulator, sign_wm_attestation, wm_initial_sync
+from ...ward_mgr_emu import (
+    WMEmulator,
+    device_ward_keys,
+    sign_wm_attestation,
+    wm_initial_sync,
+)
 
 _APP = "bitcoin"  # capability principal == queried domain for these tests
 
@@ -33,8 +38,8 @@ _VAL_A = b'TEST:1:{"label":"A"}'
 _VAL_B = b'TEST:1:{"label":"B"}'
 
 
-def _single_leaf_tree(address: str, value: bytes) -> WARDTree:
-    tree = WARDTree()
+def _single_leaf_tree(address: str, value: bytes, passphrase: str) -> WARDTree:
+    tree = WARDTree(*device_ward_keys(passphrase=passphrase))
     tree.insert(_APP, address.encode(), value, counter=1)
     return tree
 
@@ -52,24 +57,38 @@ def test_ward_passphrase_wallets_are_isolated(client: Client) -> None:
     assert wallet_id_a is not None and wallet_id_b is not None
     assert wallet_id_a != wallet_id_b
 
-    tree_a = _single_leaf_tree(_ADDR_A, _VAL_A)
-    tree_b = _single_leaf_tree(_ADDR_B, _VAL_B)
-    wm_initial_sync(session_a, wm_a, tree_a, counter=1, wallet_id=wallet_id_a)
-    wm_initial_sync(session_b, wm_b, tree_b, counter=1, wallet_id=wallet_id_b)
+    tree_a = _single_leaf_tree(_ADDR_A, _VAL_A, _PP_A)
+    tree_b = _single_leaf_tree(_ADDR_B, _VAL_B, _PP_B)
 
+    # The volatile head holds one wallet at a time, so sync on each wallet switch.
     # Each wallet authenticates its own entry ...
+    wm_initial_sync(session_a, wm_a, tree_a, counter=1, wallet_id=wallet_id_a)
     valid_a, membership_a, _c = ward.lookup(
-        session_a, _APP, _ADDR_A.encode(), _VAL_A, tree_a.get_proof(_APP, _ADDR_A.encode()), counter=1
+        session_a,
+        _APP,
+        _ADDR_A.encode(),
+        tree_a.get_proof(_APP, _ADDR_A.encode()),
+        leaf=tree_a.leaf_blob(_APP, _ADDR_A.encode()),
     )
     assert valid_a and membership_a
+    wm_initial_sync(session_b, wm_b, tree_b, counter=1, wallet_id=wallet_id_b)
     valid_b, membership_b, _c = ward.lookup(
-        session_b, _APP, _ADDR_B.encode(), _VAL_B, tree_b.get_proof(_APP, _ADDR_B.encode()), counter=1
+        session_b,
+        _APP,
+        _ADDR_B.encode(),
+        tree_b.get_proof(_APP, _ADDR_B.encode()),
+        leaf=tree_b.leaf_blob(_APP, _ADDR_B.encode()),
     )
     assert valid_b and membership_b
 
     # ... and does NOT recognize the other wallet's entry (different root).
+    wm_initial_sync(session_a, wm_a, tree_a, counter=1, wallet_id=wallet_id_a)
     other_valid, _m, _c = ward.lookup(
-        session_a, _APP, _ADDR_B.encode(), _VAL_B, tree_b.get_proof(_APP, _ADDR_B.encode()), counter=1
+        session_a,
+        _APP,
+        _ADDR_B.encode(),
+        tree_b.get_proof(_APP, _ADDR_B.encode()),
+        leaf=tree_b.leaf_blob(_APP, _ADDR_B.encode()),
     )
     assert not other_valid
 
@@ -86,7 +105,7 @@ def test_ward_passphrase_mac_is_wallet_scoped(client: Client) -> None:
     _pending, wallet_id_b = ward.list_pending(session_b)
     assert wallet_id_a is not None and wallet_id_b is not None
 
-    tree = _single_leaf_tree(_ADDR_A, _VAL_A)
+    tree = _single_leaf_tree(_ADDR_A, _VAL_A, _PP_A)
     root = tree.get_root_hash()
     mac_a = wm_a.root_mac(wallet_id_a, 1, root)  # MAC that only wallet A can reproduce
 
@@ -112,7 +131,7 @@ def test_ward_passphrase_attestation_is_wallet_bound(client: Client) -> None:
     _pending, wallet_id_a = ward.list_pending(session_a)
     assert wallet_id_a is not None
 
-    tree = _single_leaf_tree(_ADDR_A, _VAL_A)
+    tree = _single_leaf_tree(_ADDR_A, _VAL_A, _PP_A)
     root = tree.get_root_hash()
     mac_a = wm_a.root_mac(wallet_id_a, 1, root)
 

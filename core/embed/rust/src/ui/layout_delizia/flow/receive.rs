@@ -68,6 +68,7 @@ impl FlowController for Receive {
 #[allow(clippy::too_many_arguments)]
 pub fn new_receive(
     title: TString<'static>,
+    subtitle: Option<TString<'static>>,
     description: Option<TString<'static>>,
     content: ContentType,
     chunkify: bool,
@@ -101,16 +102,18 @@ pub fn new_receive(
         extra_font: &theme::TEXT_DEMIBOLD,
     }
     .into_paragraphs();
-    let content_address = Frame::with_header(
-        Header::left_aligned(title).with_menu_button(),
-        SwipeContent::new(SwipePage::vertical(paragraphs)),
-    )
-    .with_swipeup_footer(None)
-    .with_vertical_pages()
-    .map_to_button_msg()
-    .one_button_request(ButtonRequest::from_num(br_code, br_name))
-    // Count tap-to-confirm screen towards page count
-    .with_pages(|address_pages| address_pages + 1);
+    let mut header = Header::left_aligned(title).with_menu_button();
+    if let Some(subtitle) = subtitle {
+        header = header.with_subtitle(subtitle);
+    }
+    let content_address =
+        Frame::with_header(header, SwipeContent::new(SwipePage::vertical(paragraphs)))
+            .with_swipeup_footer(None)
+            .with_vertical_pages()
+            .map_to_button_msg()
+            .one_button_request(ButtonRequest::from_num(br_code, br_name))
+            // Count tap-to-confirm screen towards page count
+            .with_pages(|address_pages| address_pages + 1);
 
     // Tap
     let content_tap = Frame::with_header(

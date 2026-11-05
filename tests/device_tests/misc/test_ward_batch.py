@@ -9,11 +9,8 @@ FORWARD-incrementing counter (so the counter stays monotone — the anti-replay 
 The WARD Manager's final attestation is signed locally with the debug WM key
 (ward_mgr_emu), accepted only on debug firmware.
 
-KNOWN LIMITATION exercised by ``test_ward_batch_multi_commit`` (xfail): the device
-pulls every pre-state proof against the STATIC pre-batch root, but the current
-``trie.compute_batch_root`` verifies each leaf against the running root, so a batch
-of >=2 leaves is rejected. It needs a real streaming multiproof over the pre-batch
-root (ward-design §4.2). Single-leaf batches and rollback are unaffected.
+Multi-leaf batches support shape-preserving updates over the pre-batch root.
+Inserts and deletes must use single-leaf commits.
 """
 
 import pytest
@@ -73,7 +70,7 @@ def _commit_batch(session: Session, tree: WARDTree, pending_ids: list) -> tuple:
         session, counter, mac, sig
     )
     for lf in leaves:  # (entry_key, LeafBlob)
-        _apply_device_leaf(tree, (None,) * 5 + lf)
+        _apply_device_leaf(tree, (None,) * 4 + lf)
     return out_counter, out_root, from_root, auth_commit
 
 

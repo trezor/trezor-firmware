@@ -548,7 +548,7 @@ impl FirmwareUI for UIDelizia {
     fn flow_get_address(
         address: TString<'static>,
         title: TString<'static>,
-        _subtitle: Option<TString<'static>>,
+        subtitle: Option<TString<'static>>,
         description: Option<TString<'static>>,
         _hint: Option<TString<'static>>,
         chunkify: bool,
@@ -562,6 +562,7 @@ impl FirmwareUI for UIDelizia {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::receive::new_receive(
             title,
+            subtitle,
             description,
             ContentType::Address(address),
             chunkify,
@@ -589,6 +590,7 @@ impl FirmwareUI for UIDelizia {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::receive::new_receive(
             title,
+            None,
             None,
             ContentType::PublicKey(pubkey),
             false,
