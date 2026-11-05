@@ -65,7 +65,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Ini BUKAN alamat Anda"
+      "Eckhart": "Ini BUKAN alamat Anda."
     },
     "address__xpub": {
       "Bolt": "XPUB",
@@ -155,12 +155,6 @@
       "Caesar": "",
       "Delizia": "Pencadangan dompet selesai.",
       "Eckhart": "Pencadangan dompet selesai."
-    },
-    "backup__title_backup_wallet": {
-      "Bolt": "",
-      "Caesar": "Cadangkan dompet",
-      "Delizia": "",
-      "Eckhart": ""
     },
     "backup__title_create_wallet_backup": "Buat cadangan dompet",
     "backup__title_skip": {
@@ -498,12 +492,7 @@
     "cardano__confirming_pool_registration": "Mengofirmasi pendaftaran pool sebagai pemilik.",
     "cardano__confirming_transaction": "Mengonfirmasi transaksi.",
     "cardano__cost": "Biaya",
-    "cardano__credential_intro_template": {
-      "Bolt": "Kredensial {0} adalah {1}",
-      "Caesar": "Kredensial {0} adalah {1}",
-      "Delizia": "Kredensial {0} adalah {1}:",
-      "Eckhart": "Kredensial {0} adalah {1}:"
-    },
+    "cardano__credential_intro_template": "Kredensial {0} adalah {1}",
     "cardano__credential_mismatch": "Kredensial tidak cocok dengan kredensial pembayaran.",
     "cardano__datum_hash": "Hash datum",
     "cardano__delegating_to": "Mendelegasikan ke",
@@ -530,6 +519,7 @@
     "cardano__no_output_tx": "Transaksi tidak memiliki output, jaringan tidak dapat diverifikasi.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Lainnya",
+    "cardano__output_contains_datum_or_ref_script": "",
     "cardano__path": "jalur",
     "cardano__pledge": "Pledge",
     "cardano__pointer": "pointer",
@@ -1316,6 +1306,7 @@
       "Delizia": "",
       "Eckhart": "Buka kunci"
     },
+    "menu__turn_off": "",
     "misc__decrypt_value": "Dekripsi nilai",
     "misc__enable_labeling": "Aktifkan pelabelan?",
     "misc__encrypt_value": "Enkripsi nilai",
@@ -1936,19 +1927,19 @@
     "recovery__enter_each_word": "Masukkan setiap kata cadangan dompet Anda berurutan.",
     "recovery__enter_share_from_diff_group": "Masukkan bagian dari grup lain.",
     "recovery__group_num_template": "Grup {0}",
-    "recovery__group_threshold_reached": "Ambang batas grup tercapai.",
+    "recovery__group_threshold_reached": {
+      "Bolt": "Ambang batas grup tercapai.",
+      "Caesar": "Ambang batas grup tercapai",
+      "Delizia": "Ambang batas grup tercapai",
+      "Eckhart": "Ambang batas grup tercapai."
+    },
     "recovery__invalid_share_entered": "Bagian pemulihan yang dimasukkan tidak valid.",
     "recovery__invalid_wallet_backup_entered": "Cadangan dompet yang dimasukkan tidak valid.",
-    "recovery__more_shares_needed": {
-      "Bolt": "Butuh lebih banyak bagian",
-      "Caesar": "Butuh lebih banyak bagian",
-      "Delizia": "Butuh lebih banyak bagian",
-      "Eckhart": "Butuh lebih banyak bagian."
-    },
+    "recovery__more_shares_needed": "Butuh lebih banyak bagian.",
     "recovery__num_of_words": "Pilih jumlah kata dalam cadangan Anda.",
     "recovery__progress_will_be_lost": "Semua progres akan hilang.",
     "recovery__share_already_entered": {
-      "Bolt": "Bagian sudah dimasukkan",
+      "Bolt": "Bagian sudah dimasukkan.",
       "Caesar": "Bagian sudah dimasukkan",
       "Delizia": "Bagian sudah dimasukkan",
       "Eckhart": "Bagian sudah dimasukkan. Masukkan bagian lain."
@@ -2001,13 +1992,13 @@
     },
     "recovery__x_more_shares_needed_template_plural": {
       "Bolt": "{count} {plural} lagi diperlukan",
-      "Caesar": "{count} {plural} lagi diperlukan",
+      "Caesar": "{count} {plural} lagi diperlukan.",
       "Delizia": "{count} {plural} lagi diperlukan",
       "Eckhart": "{count} {plural} lagi diperlukan."
     },
     "recovery__x_of_y_entered_template": {
       "Bolt": "{0} dari {1} bagian dimasukkan",
-      "Caesar": "{0} dari {1} bagian dimasukkan",
+      "Caesar": "{0} dari {1} bagian dimasukkan.",
       "Delizia": "{0} dari {1} bagian dimasukkan",
       "Eckhart": "{0} dari {1} bagian dimasukkan."
     },
@@ -2065,12 +2056,6 @@
       "Caesar": "",
       "Delizia": "Mari periksa cadangan Anda terlebih dahulu.",
       "Eckhart": "Mari periksa cadangan Anda terlebih dahulu."
-    },
-    "reset__check_backup_title": {
-      "Bolt": "",
-      "Caesar": "Periksa cadangan",
-      "Delizia": "",
-      "Eckhart": "Periksa cadangan"
     },
     "reset__check_group_share_title_template": {
       "Bolt": "Bagian {1} grup {0}",
@@ -2475,7 +2460,7 @@
       "Bolt": "trezor.io/tos",
       "Caesar": "trezor.io/tos",
       "Delizia": "trezor.io/tos",
-      "Eckhart": "Lainnya di trezor.io/tos"
+      "Eckhart": "Lainnya di trezor.io/tos."
     },
     "reset__total_number_of_shares_in_group_template": {
       "Bolt": "Atur jumlah total bagian di grup {0}.",
@@ -2658,7 +2643,7 @@
       "Eckhart": ""
     },
     "sd_card__wrong_sd_card": {
-      "Bolt": "Kartu SD salah.",
+      "Bolt": "Kartu SD salah",
       "Caesar": "",
       "Delizia": "Kartu SD salah.",
       "Eckhart": ""
@@ -2714,8 +2699,8 @@
     "send__to_the_total_amount": {
       "Bolt": "Ke jumlah total:",
       "Caesar": "",
-      "Delizia": "Ke jumlah total:",
-      "Eckhart": "Ke jumlah total:"
+      "Delizia": "Ke jumlah total",
+      "Eckhart": "Ke jumlah total"
     },
     "send__total_amount": "Jumlah total",
     "send__transaction_id": "ID transaksi",
@@ -2728,8 +2713,8 @@
     "send__you_are_contributing": {
       "Bolt": "Anda berkontribusi:",
       "Caesar": "",
-      "Delizia": "Anda berkontribusi:",
-      "Eckhart": "Anda berkontribusi:"
+      "Delizia": "Anda berkontribusi",
+      "Eckhart": "Anda berkontribusi"
     },
     "setting__adjust": "Atur",
     "setting__apply": "Terapkan",
@@ -2770,10 +2755,10 @@
     "solana__claim_question": "Klaim SOL dari akun staking?",
     "solana__claim_recipient_warning": "Mengklaim SOL ke alamat di luar dompet Anda saat ini.",
     "solana__confirm_multisig": "Konfirmasi multisig",
+    "solana__details_not_reviewed": "",
     "solana__expected_fee": "Perkiraan biaya",
     "solana__instruction_accounts_template": "Instruksi berisi {0} akun dan datanya sepanjang {1} byte.",
     "solana__instruction_data": "Data instruksi",
-    "solana__instruction_is_multisig": "Instruksi berikut adalah instruksi multisig.",
     "solana__is_provided_via_lookup_table_template": "{0} disediakan melalui lookup table.",
     "solana__lookup_table_address": "Alamat lookup table",
     "solana__max_fees_rent": "Maks. biaya dan sewa",
@@ -2781,12 +2766,15 @@
     "solana__multiple_signers": "Beberapa penandatangan",
     "solana__offchain_is_multisig": "Pesan berikut membutuhkan beberapa penandatangan.",
     "solana__priority_fee": "Biaya prioritas",
+    "solana__skip_details": "",
+    "solana__skip_details_hint": "",
     "solana__stake": "Stake",
     "solana__stake_account": "Akun staking",
     "solana__stake_on_question": "Stake SOL di {0}?",
     "solana__stake_question": "Stake SOL?",
     "solana__stake_withdrawal_warning": "Dompet saat ini bukan otoritas penarikan staking SOL.",
     "solana__stake_withdrawal_warning_title": "Alamat otoritas penarikan",
+    "solana__title_blind_signing": "",
     "solana__transaction_contains_unknown_instructions": "Transaksi berisi instruksi yang tidak dikenal.",
     "solana__transaction_requires_x_signers_template": "Transaksi butuh {0} penandatangan, yang meningkatkan biaya.",
     "solana__unknown_token": "Token tidak dikenal",
@@ -2798,6 +2786,7 @@
     },
     "solana__unstake": "Unstake",
     "solana__unstake_question": "Unstake SOL dari akun staking?",
+    "solana__view_details_in_menu": "",
     "solana__vote_account": "Akun voting",
     "stellar__account_merge": "Penggabungan Akun",
     "stellar__account_thresholds": "Ambang Batas Akun",
@@ -2901,49 +2890,49 @@
     "thp__autoconnect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Izinkan {0} untuk terhubung otomatis ke Trezor ini?",
       "Eckhart": "Izinkan {0} untuk terhubung otomatis ke Trezor ini?"
     },
     "thp__autoconnect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Izinkan {0} di {1} untuk terhubung otomatis ke Trezor ini?",
       "Eckhart": "Izinkan {0} di {1} untuk terhubung otomatis ke Trezor ini?"
     },
     "thp__autoconnect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Kredensial hubung otomatis",
       "Eckhart": "Kredensial hubung otomatis"
     },
     "thp__code_entry": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Masukkan kode keamanan sekali pakai di {0}",
       "Eckhart": "Masukkan kode keamanan sekali pakai di {0}"
     },
     "thp__code_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Selangkah lagi",
       "Eckhart": "Selangkah lagi"
     },
     "thp__connect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Izinkan {0} untuk terhubung dengan Trezor ini?",
       "Eckhart": "Izinkan {0} untuk terhubung dengan Trezor ini?"
     },
     "thp__connect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Izinkan {0} di {1} untuk terhubung dengan Trezor ini?",
       "Eckhart": "Izinkan {0} di {1} untuk terhubung dengan Trezor ini?"
     },
     "thp__connect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Dialog koneksi",
       "Eckhart": "Dialog koneksi"
     },
     "thp__nfc_text": {
@@ -2955,37 +2944,37 @@
     "thp__pair": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Izinkan {0} untuk terpasang dengan Trezor ini?",
       "Eckhart": "Izinkan {0} untuk terpasang dengan Trezor ini?"
     },
     "thp__pair_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Izinkan {0} di {1} untuk terpasang dengan Trezor ini?",
       "Eckhart": "Izinkan {0} di {1} untuk terpasang dengan Trezor ini?"
     },
     "thp__pair_name": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "{0} adalah nama Trezor Anda.",
       "Eckhart": "{0} adalah nama Trezor Anda."
     },
     "thp__pair_new_device": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Pasang dengan perangkat baru",
       "Eckhart": "Pasang dengan perangkat baru"
     },
     "thp__pair_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Sebelum melanjutkan",
       "Eckhart": "Sebelum melanjutkan"
     },
     "thp__qr_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Pindai kode QR untuk memasangkan",
       "Eckhart": "Pindai kode QR untuk memasangkan"
     },
     "tron__claim_unfrozen_balance": "Klaim saldo yang dicairkan?",
@@ -3183,8 +3172,8 @@
     "tutorial__title_handy_menu": {
       "Bolt": "",
       "Caesar": "Menu",
-      "Delizia": "Menu praktis",
-      "Eckhart": "Menu praktis"
+      "Delizia": "Menu",
+      "Eckhart": "Menu"
     },
     "tutorial__title_hello": {
       "Bolt": "",
@@ -3320,7 +3309,12 @@
       "Delizia": "Kode wipe tidak valid",
       "Eckhart": ""
     },
-    "wipe_code__mismatch": "Kode wipe yang Anda masukkan tidak cocok.",
+    "wipe_code__mismatch": {
+      "Bolt": "Kode wipe yang Anda masukkan tidak cocok.",
+      "Caesar": "Kode wipe yang Anda masukkan tidak cocok",
+      "Delizia": "Kode wipe yang Anda masukkan tidak cocok.",
+      "Eckhart": "Kode wipe yang Anda masukkan tidak cocok."
+    },
     "wipe_code__pin_not_set_description": "PIN harus diatur sebelum aktifkan kode wipe.",
     "wipe_code__reenter": "Masukkan ulang kode wipe",
     "wipe_code__reenter_to_confirm": {
