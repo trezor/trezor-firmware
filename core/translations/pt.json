@@ -101,7 +101,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Este NÃO é seu endereço"
+      "Eckhart": "Este NÃO é seu endereço."
     },
     "address__xpub": {
       "Bolt": "XPUB",
@@ -196,12 +196,6 @@
       "Caesar": "",
       "Delizia": "Backup da carteira concluído.",
       "Eckhart": "Backup da carteira concluído."
-    },
-    "backup__title_backup_wallet": {
-      "Bolt": "",
-      "Caesar": "Fazer backup da carteira",
-      "Delizia": "",
-      "Eckhart": ""
     },
     "backup__title_create_wallet_backup": "Criar backup da carteira",
     "backup__title_skip": {
@@ -544,12 +538,7 @@
     "cardano__confirming_pool_registration": "Confirmando o registro da pool como proprietário.",
     "cardano__confirming_transaction": "Confirmando uma transação.",
     "cardano__cost": "Custo",
-    "cardano__credential_intro_template": {
-      "Bolt": "cuja credencial de {0} é do tipo {1}",
-      "Caesar": "cuja credencial de {0} é do tipo {1}",
-      "Delizia": "cuja credencial de {0} é do tipo {1}:",
-      "Eckhart": "cuja credencial de {0} é do tipo {1}:"
-    },
+    "cardano__credential_intro_template": "cuja credencial de {0} é do tipo {1}",
     "cardano__credential_mismatch": "A credencial não coincide com a credencial de pagamento.",
     "cardano__datum_hash": "Hash do datum",
     "cardano__delegating_to": "Delegando a",
@@ -576,6 +565,7 @@
     "cardano__no_output_tx": "A transação não tem saídas; a rede não pode ser verificada.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Outros",
+    "cardano__output_contains_datum_or_ref_script": "",
     "cardano__path": "caminho",
     "cardano__pledge": "Compromisso",
     "cardano__pointer": "ponteiro",
@@ -1392,6 +1382,7 @@
       "Delizia": "",
       "Eckhart": "Desbloquear"
     },
+    "menu__turn_off": "",
     "misc__decrypt_value": {
       "Bolt": "Desencriptar valor",
       "Caesar": "Desencriptar valor",
@@ -2032,19 +2023,19 @@
     "recovery__enter_each_word": "Insira, em ordem, cada palavra do backup da sua carteira.",
     "recovery__enter_share_from_diff_group": "Insira um share de um grupo diferente.",
     "recovery__group_num_template": "Grupo {0}",
-    "recovery__group_threshold_reached": "Limite mínimo do grupo atingido.",
+    "recovery__group_threshold_reached": {
+      "Bolt": "Limite mínimo do grupo atingido.",
+      "Caesar": "Limite mínimo do grupo atingido",
+      "Delizia": "Limite mínimo do grupo atingido",
+      "Eckhart": "Limite mínimo do grupo atingido."
+    },
     "recovery__invalid_share_entered": "O share de recuperação inserido é inválido.",
     "recovery__invalid_wallet_backup_entered": "O backup de carteira inserido é inválido.",
-    "recovery__more_shares_needed": {
-      "Bolt": "Mais shares necessários",
-      "Caesar": "Mais shares necessários",
-      "Delizia": "Mais shares necessários",
-      "Eckhart": "Mais shares necessários."
-    },
+    "recovery__more_shares_needed": "Mais shares necessários.",
     "recovery__num_of_words": "Selecione o número de palavras do seu backup.",
     "recovery__progress_will_be_lost": "Todo o progresso será perdido.",
     "recovery__share_already_entered": {
-      "Bolt": "Share já inserido",
+      "Bolt": "Share já inserido.",
       "Caesar": "Share já inserido",
       "Delizia": "Share já inserido",
       "Eckhart": "Share já inserido."
@@ -2102,13 +2093,13 @@
     },
     "recovery__x_more_shares_needed_template_plural": {
       "Bolt": "Mais {count} {plural} necessários",
-      "Caesar": "Mais {count} {plural} necessários",
+      "Caesar": "Mais {count} {plural} necessários.",
       "Delizia": "Mais {count} {plural} necessários",
       "Eckhart": "Mais {count} {plural} necessários."
     },
     "recovery__x_of_y_entered_template": {
       "Bolt": "{0} de {1} shares inseridos",
-      "Caesar": "{0} de {1} shares inseridos",
+      "Caesar": "{0} de {1} shares inseridos.",
       "Delizia": "{0} de {1} shares inseridos",
       "Eckhart": "{0} de {1} shares inseridos."
     },
@@ -2171,12 +2162,6 @@
       "Caesar": "",
       "Delizia": "Vamos verificar rapidamente seu backup.",
       "Eckhart": "Vamos verificar rapidamente seu backup."
-    },
-    "reset__check_backup_title": {
-      "Bolt": "",
-      "Caesar": "Verificar backup",
-      "Delizia": "",
-      "Eckhart": "Verificar backup"
     },
     "reset__check_group_share_title_template": {
       "Bolt": "Share {1} do grupo {0}",
@@ -2586,7 +2571,7 @@
       "Bolt": "trezor.io/tos",
       "Caesar": "trezor.io/tos",
       "Delizia": "trezor.io/tos",
-      "Eckhart": "Mais informação em trezor.io/tos"
+      "Eckhart": "Mais informação em trezor.io/tos."
     },
     "reset__total_number_of_shares_in_group_template": {
       "Bolt": "Defina o número total de shares no grupo {0}.",
@@ -2769,7 +2754,7 @@
       "Eckhart": ""
     },
     "sd_card__wrong_sd_card": {
-      "Bolt": "Cartão SD incorreto.",
+      "Bolt": "Cartão SD incorreto",
       "Caesar": "",
       "Delizia": "Cartão SD incorreto.",
       "Eckhart": ""
@@ -2825,8 +2810,8 @@
     "send__to_the_total_amount": {
       "Bolt": "À quantia total de:",
       "Caesar": "",
-      "Delizia": "À quantia total de:",
-      "Eckhart": "À quantia total de:"
+      "Delizia": "À quantia total de",
+      "Eckhart": "À quantia total de"
     },
     "send__total_amount": "Quantia total:",
     "send__transaction_id": "ID da transação",
@@ -2839,8 +2824,8 @@
     "send__you_are_contributing": {
       "Bolt": "Você está contribuindo:",
       "Caesar": "",
-      "Delizia": "Você está contribuindo:",
-      "Eckhart": "Você está contribuindo:"
+      "Delizia": "Você está contribuindo",
+      "Eckhart": "Você está contribuindo"
     },
     "setting__adjust": "Ajustar",
     "setting__apply": "Aplicar",
@@ -2886,10 +2871,10 @@
     "solana__claim_question": "Resgatar SOL da conta de staking?",
     "solana__claim_recipient_warning": "Resgatando SOL para um endereço fora da sua carteira atual.",
     "solana__confirm_multisig": "Confirmar multiass.",
+    "solana__details_not_reviewed": "",
     "solana__expected_fee": "Taxa esperada",
     "solana__instruction_accounts_template": "A instrução contém {0} contas e seus dados têm {1} bytes.",
     "solana__instruction_data": "Dados da instrução",
-    "solana__instruction_is_multisig": "A instrução a seguir é uma instrução multiass.",
     "solana__is_provided_via_lookup_table_template": "{0} é fornecido por meio de uma tabela de consulta.",
     "solana__lookup_table_address": "Endereço da tabela de consulta",
     "solana__max_fees_rent": "Taxas e aluguel máximos",
@@ -2897,12 +2882,15 @@
     "solana__multiple_signers": "Múltiplos signatários",
     "solana__offchain_is_multisig": "A mensagem a seguir requer múltiplos signatários.",
     "solana__priority_fee": "Taxa de prioridade",
+    "solana__skip_details": "",
+    "solana__skip_details_hint": "",
     "solana__stake": "Fazer stake",
     "solana__stake_account": "Conta de stake",
     "solana__stake_on_question": "Fazer stake de SOL no {0}?",
     "solana__stake_question": "Fazer stake de SOL?",
     "solana__stake_withdrawal_warning": "A carteira atual não é a autoridade de saque do staking de SOL.",
     "solana__stake_withdrawal_warning_title": "Endereço da autoridade de saque",
+    "solana__title_blind_signing": "",
     "solana__transaction_contains_unknown_instructions": "A transação contém instruções desconhecidas.",
     "solana__transaction_requires_x_signers_template": "A transação requer {0} signatários, o que aumenta a taxa.",
     "solana__unknown_token": "Token desconhecido",
@@ -2914,6 +2902,7 @@
     },
     "solana__unstake": "Tirar do stake",
     "solana__unstake_question": "Tirar do stake o SOL da conta de staking?",
+    "solana__view_details_in_menu": "",
     "solana__vote_account": "Conta de votação",
     "stellar__account_merge": "Fusão de contas",
     "stellar__account_thresholds": "Limiares da conta",
@@ -3022,49 +3011,49 @@
     "thp__autoconnect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Permitir que {0} se conecte automaticamente a esta Trezor?",
       "Eckhart": "Permitir que {0} se conecte automaticamente a esta Trezor?"
     },
     "thp__autoconnect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Permitir que {0} em {1} se conecte automaticamente a esta Trezor?",
       "Eckhart": "Permitir que {0} em {1} se conecte automaticamente a esta Trezor?"
     },
     "thp__autoconnect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Credencial de conexão automática",
       "Eckhart": "Credencial de conexão automática"
     },
     "thp__code_entry": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Digite este código de segurança único em {0}",
       "Eckhart": "Digite este código de segurança único em {0}"
     },
     "thp__code_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Mais um passo",
       "Eckhart": "Mais um passo"
     },
     "thp__connect": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Permitir que {0} se conecte a esta Trezor?",
       "Eckhart": "Permitir que {0} se conecte a esta Trezor?"
     },
     "thp__connect_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Permitir que {0} em {1} se conecte a esta Trezor?",
       "Eckhart": "Permitir que {0} em {1} se conecte a esta Trezor?"
     },
     "thp__connect_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Diálogo de conexão",
       "Eckhart": "Diálogo de conexão"
     },
     "thp__nfc_text": {
@@ -3076,37 +3065,37 @@
     "thp__pair": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Permitir parear {0} com esta Trezor?",
       "Eckhart": "Permitir parear {0} com esta Trezor?"
     },
     "thp__pair_app": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Permitir parear {0} em {1} com esta Trezor?",
       "Eckhart": "Permitir parear {0} em {1} com esta Trezor?"
     },
     "thp__pair_name": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "{0} é o nome da sua Trezor.",
       "Eckhart": "{0} é o nome da sua Trezor."
     },
     "thp__pair_new_device": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Parear com novo dispositivo",
       "Eckhart": "Parear com novo dispositivo"
     },
     "thp__pair_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Antes de continuar",
       "Eckhart": "Antes de continuar"
     },
     "thp__qr_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "",
+      "Delizia": "Escaneie o QR code para parear",
       "Eckhart": "Escaneie o QR code para parear"
     },
     "tron__claim_unfrozen_balance": "Resgatar saldo descongelado?",
@@ -3177,9 +3166,9 @@
     },
     "tutorial__menu": {
       "Bolt": "",
-      "Caesar": "Encontre no menu opções e ações específicas ao contexto.",
-      "Delizia": "Encontre no menu opções e ações específicas ao contexto.",
-      "Eckhart": "Encontre no menu opções e ações específicas ao contexto."
+      "Caesar": "Encontre no menu opções específicas ao contexto.",
+      "Delizia": "Encontre no menu opções específicas ao contexto.",
+      "Eckhart": "Encontre no menu opções específicas ao contexto."
     },
     "tutorial__menu_appendix": {
       "Bolt": "",
@@ -3304,8 +3293,8 @@
     "tutorial__title_handy_menu": {
       "Bolt": "",
       "Caesar": "Menu",
-      "Delizia": "Menu prático",
-      "Eckhart": "Menu prático"
+      "Delizia": "Menu",
+      "Eckhart": "Menu"
     },
     "tutorial__title_hello": {
       "Bolt": "",
@@ -3404,7 +3393,7 @@
       "Eckhart": "O que é TROPIC01?"
     },
     "u2f__get": "Aumentar e obter valor do contador U2F?",
-    "u2f__set_template": "Def. contador U2F para {0}?",
+    "u2f__set_template": "Definir contador U2F para {0}?",
     "u2f__title_get": "Obter contador U2F",
     "u2f__title_set": "Definir contador U2F",
     "wipe__info": "Todos os dados serão apagados.",
@@ -3441,7 +3430,12 @@
       "Delizia": "Código de limpeza inválido",
       "Eckhart": ""
     },
-    "wipe_code__mismatch": "Os códigos de limpeza inseridos não coincidem.",
+    "wipe_code__mismatch": {
+      "Bolt": "Os códigos de limpeza inseridos não coincidem.",
+      "Caesar": "Os códigos de limpeza inseridos não coincidem",
+      "Delizia": "Os códigos de limpeza inseridos não coincidem.",
+      "Eckhart": "Os códigos de limpeza inseridos não coincidem."
+    },
     "wipe_code__pin_not_set_description": "Defina um PIN antes de ativar o código de limpeza.",
     "wipe_code__reenter": "Reinsira o código de limpeza",
     "wipe_code__reenter_to_confirm": {
