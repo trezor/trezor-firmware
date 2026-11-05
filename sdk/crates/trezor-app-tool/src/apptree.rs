@@ -3,7 +3,7 @@
 //! ([`crate::helpers::artifacts_serialized_dir`]):
 //! - `<id>/<version>/*.tapp`: the apps, serialized as JSON chunks
 //! - `<id>/<version>/*.proof`: Merkle proof of each app in its ring's tree
-//! - `root-packets/*.tmr`: RootPackets with the ring roots
+//! - `root-packets/*.tmr`: dev-signed RootPackets with the ring roots
 //! - `index.v1.json` and `<id>/index.v1.json`: main and per-app indices
 //!
 //! Serialized apps left from earlier builds are kept and included.
@@ -19,8 +19,11 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::image::{self, AppHeader, EXT_APP};
 use crate::merkle::{self, MerkleTree};
-use crate::root_packet::{MAX_RINGS, RootPacket};
+use crate::root_packet::{MAX_RINGS, NUM_SIGNATURES, RootPacket};
 use crate::{artifacts, helpers};
+
+// Development seeds for deterministic ML-DSA-44 dev-key generation
+const DEV_MLDSA_SEEDS: [[u8; 32]; NUM_SIGNATURES] = [[0x71; 32], [0x72; 32]];
 
 const EXT_PROOF: &str = "proof";
 const EXT_ROOTPACKET: &str = "tmr";
@@ -34,7 +37,7 @@ pub fn generate() -> Result<()> {
     let apps = artifacts::artifact_with_ext("bin")?;
     ensure!(!apps.is_empty(), "No generated app images found");
     let artifacts_serialized_dir = helpers::artifacts_serialized_dir()?;
-    println!("app-tool: Building app proofs and RootPacket");
+    println!("app-tool: Building app proofs and dev-signed RootPacket");
 
     // Serialize apps as JSON
     for app in &apps {
@@ -315,7 +318,8 @@ fn write_root_packet(
         .iter()
         .map(|&ring| (ring, ring_roots[usize::from(ring)].unwrap_or([0; 32])))
         .collect();
-    let packet = RootPacket::new(&root_rings, timestamp);
+    let mut packet = RootPacket::new(&root_rings, timestamp);
+    packet.sign(&DEV_MLDSA_SEEDS)?;
 
     let out = SerializedRootPacket {
         timestamp: format!("{timestamp} ({})", format_utc(timestamp)),
@@ -329,7 +333,7 @@ fn write_root_packet(
     fs::write(path, serde_json::to_string_pretty(&out)?)
         .with_context(|| format!("Failed to write {}", path.display()))?;
     println!(
-        "RootPacket (timestamp {timestamp}) written to {}",
+        "Dev-signed RootPacket (timestamp {timestamp}) written to {}",
         path.display()
     );
     Ok(())
@@ -548,6 +552,21 @@ fn civil_from_days(days: i64) -> (i64, i64, i64) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use fips204::ml_dsa_44;
+    use fips204::traits::{KeyGen, SerDes};
+
+    #[test]
+    fn dev_seeds_match_firmware_dev_keys() {
+        // SHA-256 of the dev public keys in core/embed/io/app_arena/root_packet.c
+        let firmware_key_hashes = [
+            "b9c0314b59bee4bca5e80cb5ee1e1ab70488d8274d44d0ae6763c8ef29a0d1d5",
+            "e44dca1fbe17c3f566fe6b234c1ff2b87cfc93446c5b05840db0b6da806727a5",
+        ];
+        for (seed, expected) in DEV_MLDSA_SEEDS.iter().zip(firmware_key_hashes) {
+            let (public_key, _) = ml_dsa_44::KG::keygen_from_seed(seed);
+            assert_eq!(to_hex(&Sha256::digest(public_key.into_bytes())), expected);
+        }
+    }
 
     const CHUNK_SIZE: usize = 4;
 
