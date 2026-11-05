@@ -1,0 +1,20 @@
+[package]
+name = "ward-relay"
+version = "0.1.0"
+edition = "2021"
+license = "LGPL-3.0-only"
+description = "A shared WARD relay for HWI-owned Trezor sessions"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[features]
+default = []
+python = ["dep:pyo3"]
+
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+serde_json = "1"
+thiserror = "2"
+tungstenite = "0.24"
+pyo3 = { version = "0.25", optional = true, features = ["extension-module"] }

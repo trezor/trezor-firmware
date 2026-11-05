@@ -65,6 +65,7 @@
   - [Review Process](misc/review.md)
   - [TOIF Image Format](misc/toif.md)
     - [toiftool](misc/toiftool.md)
+  - [WARD Manager development service](misc/ward-manager.md)
 - [Developers guide](developers/index.md)
   - [Libraries](developers/libraries.md)
   - [Hello World in Trezor Core](developers/hello_world_in_core.md)
