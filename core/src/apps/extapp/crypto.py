@@ -6,7 +6,7 @@ from trezor.wire.errors import DataError
 
 from apps.common import paths
 
-from .session import MSG_ID_ERROR, MSG_ID_FORBIDDEN_PATH, SERVICE_CRYPTO, describe
+from .session import MSG_ID_ERROR, SERVICE_CRYPTO, describe
 
 if __debug__:
     from trezor import log
@@ -42,12 +42,9 @@ _ECDSA_CURVES = _CURVES[:2]
 async def handle(session: Session, msg: IpcMessage) -> None:
     """Run a crypto operation requested by the app and send it the result.
 
-    A failed operation is reported to the app as `MSG_ID_ERROR`, a forbidden
-    key path as `MSG_ID_FORBIDDEN_PATH`; only an unknown operation or a
-    failure to reply kills the app.
+    A failed operation is reported to the app as `MSG_ID_ERROR`; only an
+    unknown operation or a failure to reply kills the app.
     """
-    from apps.common.keychain import ForbiddenKeyPath
-
     handler = _HANDLERS.get(msg.message_id)
     if handler is None:
         session.die("Unknown crypto operation")
@@ -60,12 +57,8 @@ async def handle(session: Session, msg: IpcMessage) -> None:
             log.error(
                 __name__, f"Crypto operation {msg.message_id} failed: {describe(e)}"
             )
-        # the app may report a forbidden path, the rest has no details
-        reply_id = (
-            MSG_ID_FORBIDDEN_PATH if isinstance(e, ForbiddenKeyPath) else MSG_ID_ERROR
-        )
         try:
-            session.send(SERVICE_CRYPTO, reply_id, b"")
+            session.send(SERVICE_CRYPTO, MSG_ID_ERROR, b"")
         except Exception:
             session.die("Failed to send crypto error")
         return
@@ -176,16 +169,13 @@ async def _get_address_mac(session: Session, obj: Any) -> bytes:
 
 
 async def _check_address_mac(session: Session, obj: Any) -> bool:
-    from trezor import utils
-
-    from apps.common.address_mac import get_address_mac
+    from apps.common.address_mac import check_address_mac
 
     address_n, mac, address, slip44 = obj
     keychain = await _address_mac_keychain(session)
-    # the path may belong to another app, e.g. in a memo
-    expected = get_address_mac(address, slip44, address_n, keychain)
-    # a wrong MAC is the app's to handle, not a failed operation
-    return utils.consteq(expected, bytes(mac))
+    # raises on a wrong MAC; the path may belong to another app, e.g. in a memo
+    check_address_mac(address, mac, slip44, address_n, keychain)
+    return True
 
 
 async def _verify_nonce_cache(session: Session, obj: Any) -> bool:

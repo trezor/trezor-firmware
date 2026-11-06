@@ -30,8 +30,6 @@ LIFECYCLE_ABORT = 0
 
 # message id of a Core reply reporting a failed request
 MSG_ID_ERROR = 0xFFFF
-# message id of a Core reply refusing a key path outside the app's manifest
-MSG_ID_FORBIDDEN_PATH = 0xFFFE
 
 _SLIP24_NAMESPACE = [b"SLIP-0024"]
 
