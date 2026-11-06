@@ -14,17 +14,6 @@ pub enum CryptoError {
     InvalidEncoding,
 }
 
-impl CryptoError {
-    /// Returns a static human-readable description of the error.
-    pub fn message(&self) -> &'static str {
-        match self {
-            Self::InvalidPublicKey => "invalid public key",
-            Self::InvalidSignature => "invalid signature",
-            Self::InvalidEncoding => "invalid encoding",
-        }
-    }
-}
-
 #[stabby::stabby(checked)]
 pub trait Hasher {
     extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>);

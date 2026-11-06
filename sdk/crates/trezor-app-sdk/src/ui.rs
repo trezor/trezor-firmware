@@ -5,13 +5,19 @@
 //! Core's response.
 
 use crate::app_runtime::get_ui_or_die;
+
+// constructors of the `traits::ui` structs
+mod constructors;
+
+use constructors::opt_bytes;
+
+use crate::traits::ui::UiV1Dyn as _;
 pub use crate::traits::ui::{
     ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmTrade, ConfirmValue,
     ConfirmValueIntro, ConfirmWithInfo, Property, RequestNumber, SelectMenu, ShowAddress,
     ShowDanger, ShowInfoWithCancel, ShowMismatch, ShowProperties, ShowPublicKey, ShowSuccess,
     ShowWarning, StrExt, TrezorUiResult,
 };
-use crate::traits::ui::{UiV1Dyn as _, opt_bytes};
 use crate::{Error, IntoAppResult, Result};
 
 pub type UiResult = Result<TrezorUiResult>;

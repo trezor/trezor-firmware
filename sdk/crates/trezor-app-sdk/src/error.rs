@@ -108,6 +108,18 @@ impl Error {
 }
 
 #[cfg(feature = "app")]
+impl CryptoError {
+    /// Returns a static human-readable description of the error.
+    pub fn message(&self) -> &'static str {
+        match self {
+            Self::InvalidPublicKey => "invalid public key",
+            Self::InvalidSignature => "invalid signature",
+            Self::InvalidEncoding => "invalid encoding",
+        }
+    }
+}
+
+#[cfg(feature = "app")]
 impl From<WireError> for Error {
     fn from(error: WireError) -> Self {
         match error {

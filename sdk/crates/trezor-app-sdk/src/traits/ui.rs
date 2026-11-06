@@ -21,12 +21,20 @@ use stabby::str::Str;
 use super::util::FastResult;
 use super::wire::WireError;
 
-// constructors of the structs below, and the `Option` field helpers
-mod constructors;
+// the app-side constructors are in `crate::ui`
 
-pub use constructors::as_opt_str;
-#[cfg(feature = "app")]
-pub(crate) use constructors::opt_bytes;
+/// Recovers the `&str` an `opt_bytes`-produced field holds, if any.
+///
+/// # Safety
+///
+/// `bytes`, if present, must have come from `opt_bytes` applied to a
+/// genuine `&str` (true for every field on every type in this module).
+pub fn as_opt_str(bytes: StabbyOption<Slice<'_, u8>>) -> Option<&str> {
+    core::option::Option::from(bytes).map(|b: Slice<'_, u8>| {
+        // SAFETY: see function doc.
+        unsafe { core::str::from_utf8_unchecked(b.as_slice()) }
+    })
+}
 
 /// A key-value pair with an optional monospace flag, used in UI detail views.
 #[stabby::stabby]
