@@ -314,13 +314,13 @@ def test_data_streaming(session: Session, instance_id: int):
         #     code=trezor_messages.ButtonRequestType.ProtectCall
         # )
 
-        def tx_request(l):
+        def tx_request(length):
             return message_filters.TxRequest(
-                data_length=l, signature_r=None, signature_s=None, signature_v=None
+                data_length=length, signature_r=None, signature_s=None, signature_v=None
             )
 
         expected_responses: list[ExpectedResponse] = []
-        expected_responses += [tx_request(l) for l in (1024, 1024, 1024, 3)]
+        expected_responses += [tx_request(length) for length in (1024, 1024, 1024, 3)]
         expected_responses += [br_sign_tx("confirm_data")]
         # related issue: https://github.com/trezor/trezor-firmware/issues/6490
         # TODO: make these consistent!
