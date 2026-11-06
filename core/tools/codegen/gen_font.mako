@@ -11,32 +11,29 @@ use crate::ui::display::font::FontInfo;
 #[cfg(feature = "ui_font_kerning")]
 use crate::ui::display::font::KerningTable;
 % endif
+% if notes:
+
+% for note in notes:
+// NOTE: ${note}
+% endfor
+% endif
 
 % for g in glyphs:
-/// '${g["char"]}' (ASCII ${g["ascii"]})
-const ${g["var_name"]}: [u8; ${g["arr_len"]}] = [ ${g["arr_content"]} ];
+/// '${g["char"]}' (ASCII ${ord(g["char"])})
+const Font_${name}_glyph_${ord(g["char"])}: [u8; ${len(g["data"])}] = [ ${", ".join(map(str, g["data"]))} ];${f'  // {g["comment"]}' if g["comment"] else ""}
 
 % endfor
 /// Nonprintable glyph (inverse colors of '?')
-const ${nonprintable["var_name"]}: [u8; ${nonprintable["arr_len"]}] = [ ${nonprintable["arr_content"]} ];
-% if gen_normal:
+const Font_${name}_glyph_nonprintable: [u8; ${len(nonprintable)}] = [ ${", ".join(map(str, nonprintable))} ];
+% for v in variants:
 
-/// Array of references for '${name}' normal ASCII glyphs
-const Font_${name}: [&[u8]; ${len(glyph_array)}] = [
-% for ref in glyph_array:
-    ${ref},
+/// Array of references for '${name}' ${v["variant"].description} glyphs
+const Font_${name}${v["variant"].suffix}: [&[u8]; ${len(v["refs"])}] = [
+% for glyph_id, comment in v["refs"]:
+    &Font_${name}_glyph_${glyph_id},${f'  // {comment}' if comment else ""}
 % endfor
 ];
-% endif
-% if gen_upper:
-
-/// Array of references for '${name}' ASCII glyphs (forced uppercase)
-const Font_${name}_upper: [&[u8]; ${len(glyph_array_upper)}] = [
-% for ref in glyph_array_upper:
-    ${ref},
 % endfor
-];
-% endif
 % if gen_kernings:
 
 /// Kerning index: (left_char, count), sorted by left_char.
@@ -65,39 +62,17 @@ const Font_${name}_kernings: KerningTable = KerningTable {
     pairs: &Font_${name}_kern_pairs,
 };
 % endif
-% if gen_normal:
+% for v in variants:
 
-/// FontInfo struct for normal ASCII usage
-pub const Font_${name}_info: FontInfo = FontInfo {
-    translation_blob_idx: ${font_info["translation_blob_idx"]},
-    height: ${font_info["height"]},
-    max_height: ${font_info["max_height"]},
-    baseline: ${font_info["baseline"]},
-    glyph_data: &${font_info["glyph_array"]},
-    glyph_nonprintable: &${font_info["nonprintable"]},
+/// FontInfo struct for ${v["variant"].description} usage
+pub const Font_${name}${v["variant"].suffix}_info: FontInfo = FontInfo {
+    translation_blob_idx: ${v["variant"].blob_idx},
+    height: ${height},
+    max_height: ${max_height},
+    baseline: ${baseline},
+    glyph_data: &Font_${name}${v["variant"].suffix},
+    glyph_nonprintable: &Font_${name}_glyph_nonprintable,
     #[cfg(feature = "ui_font_kerning")]
-%if gen_kernings:
-    kernings: Some(&${font_info["kernings"]}),
-%else:
-    kernings: None,
-%endif
+    kernings: ${f"Some(&Font_{name}_kernings)" if gen_kernings else "None"},
 };
-% endif
-% if gen_upper:
-
-/// FontInfo struct for forced uppercase usage
-pub const Font_${name}_upper_info: FontInfo = FontInfo {
-    translation_blob_idx: ${font_info_upper["translation_blob_idx"]},
-    height: ${font_info_upper["height"]},
-    max_height: ${font_info_upper["max_height"]},
-    baseline: ${font_info_upper["baseline"]},
-    glyph_data: &${font_info_upper["glyph_array"]},
-    glyph_nonprintable: &${font_info_upper["nonprintable"]},
-    #[cfg(feature = "ui_font_kerning")]
-%if gen_kernings:
-    kernings: Some(&${font_info_upper["kernings"]}),
-%else:
-    kernings: None,
-%endif
-};
-% endif
+% endfor
