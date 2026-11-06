@@ -123,7 +123,7 @@ def collapsible_rows(rows, cur_dir):
 
 def diff_table(diff: Iterable[tuple[str | None, str | None]], cur_dir: Path) -> None:
     rows = list(diff)
-    has_diff = any(l != r for l, r in rows)
+    has_diff = any(left != right for left, right in rows)
 
     if (
         not has_diff or len(rows) <= _COLLAPSE_UNCHANGED_THRESHOLD
