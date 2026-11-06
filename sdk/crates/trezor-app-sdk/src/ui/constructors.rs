@@ -1,10 +1,10 @@
-//! Constructors of the [`super`] structs, taking plain Rust types.
+//! Constructors of the [`crate::traits::ui`] structs, taking plain Rust types.
 
 use stabby::option::Option as StabbyOption;
 use stabby::slice::Slice;
 use stabby::str::Str;
 
-use super::{
+use crate::traits::ui::{
     ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmTrade, ConfirmValue,
     ConfirmValueIntro, ConfirmWithInfo, Property, RequestNumber, SelectMenu, ShowAddress,
     ShowDanger, ShowInfoWithCancel, ShowMismatch, ShowProperties, ShowPublicKey, ShowSuccess,
@@ -15,19 +15,6 @@ use super::{
 /// niche-friendly `StabbyOption<Slice<u8>>` field representation.
 pub(crate) fn opt_bytes(s: Option<&str>) -> StabbyOption<Slice<'_, u8>> {
     s.map(|s| Slice::from(s.as_bytes())).into()
-}
-
-/// Recovers the `&str` an `opt_bytes`-produced field holds, if any.
-///
-/// # Safety
-///
-/// `bytes`, if present, must have come from `opt_bytes` applied to a
-/// genuine `&str` (true for every field on every type in [`super`]).
-pub fn as_opt_str(bytes: StabbyOption<Slice<'_, u8>>) -> Option<&str> {
-    core::option::Option::from(bytes).map(|b: Slice<'_, u8>| {
-        // SAFETY: see function doc.
-        unsafe { core::str::from_utf8_unchecked(b.as_slice()) }
-    })
 }
 
 impl<'a> Property<'a> {
