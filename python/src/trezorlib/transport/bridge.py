@@ -23,7 +23,7 @@ import requests
 from typing_extensions import Self
 
 from ..log import DUMP_PACKETS
-from . import DeviceIsBusy, Transport, TransportException
+from . import DeviceIsBusy, Timeout, Transport, TransportException
 
 if t.TYPE_CHECKING:
     from ..models import TrezorModel
@@ -193,7 +193,12 @@ class BridgeTransport(Transport):
         self.handle.write_buf(chunk)
 
     def read_chunk(self, *, timeout: float | None = None) -> bytes:
-        return self.handle.read_buf(timeout=timeout)
+        try:
+            return self.handle.read_buf(timeout=timeout)
+        except requests.Timeout as e:
+            self.session = None
+            self._open()
+            raise Timeout(f"Timeout reading Bridge packet ({timeout}s)") from e
 
     def is_open(self) -> bool:
         return self.session is not None
