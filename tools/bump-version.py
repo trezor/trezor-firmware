@@ -64,6 +64,7 @@ def cli(project: str | Path, version: str) -> None:
     - core/embed/projects/firmware (shortcut: core)
     - core/embed/projects/bootloader
     - core/embed/projects/prodtest
+    - core/embed/projects/secmon
     - python
     - nordic/trezor/trezor-ble
     - legacy/firmware (shortcut: legacy)
