@@ -402,7 +402,8 @@ where
         if let Some(page_limit) = self.page_limit {
             t.int("page_limit", i64::from(page_limit));
         }
-        t.int("page_count", i64::from(self.content.pager().total()));
+        t.int("active_page", i64::from(self.content_pager().current()));
+        t.int("page_count", i64::from(self.content_pager().total()));
 
         debug_assert!(!(self.external_menu && self.has_flow_menu));
         t.bool("has_menu", self.external_menu);

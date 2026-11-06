@@ -157,9 +157,12 @@ where
     /// Current choice is still the same, only its inner state has changed
     /// (its sub-page changed).
     fn update_after_current_choice_inner_change(&mut self, ctx: &mut EventCtx) {
+        let preceding_pages = self
+            .pages
+            .scrollbar_page_index(self.content_area, self.page_counter);
         let inner_page = self.current_page.pager().current();
         self.scrollbar.mutate(ctx, |ctx, scrollbar| {
-            scrollbar.change_page(self.page_counter as u16 + inner_page);
+            scrollbar.change_page(preceding_pages + inner_page);
             scrollbar.request_complete_repaint(ctx);
         });
         self.update(ctx, false);
@@ -293,6 +296,8 @@ where
         t.component("Flow");
         t.int("flow_page", self.page_counter as i64);
         t.int("flow_page_count", self.pages.count() as i64);
+        t.int("active_page", i64::from(self.scrollbar.pager().current()));
+        t.int("page_count", i64::from(self.scrollbar.pager().total()));
 
         if let Some(title) = &self.title {
             t.child("title", title);

@@ -481,8 +481,6 @@ impl PageCounter {
 impl crate::trace::Trace for PageCounter {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("PageCounter");
-        t.int("page current", self.pager.current().into());
-        t.int("page max", self.pager.total().into());
     }
 }
 
