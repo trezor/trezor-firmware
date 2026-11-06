@@ -85,7 +85,8 @@ bool buffer_seek(BUFFER_READER *buf, size_t pos) {
 }
 
 bool buffer_read_buffer(BUFFER_READER *src, BUFFER_READER *dest, size_t size) {
-  if ((src->data == NULL) || (src->pos + size > src->size)) {
+  if ((src->data == NULL) || (src->pos > src->size) ||
+      (size > src->size - src->pos)) {
     return false;
   }
 
@@ -117,7 +118,8 @@ bool buffer_put(BUFFER_WRITER *writer, uint8_t byte) {
 
 bool buffer_write_array(BUFFER_WRITER *writer, const uint8_t *src,
                         size_t size) {
-  if ((writer->data == NULL) || (writer->pos + size > writer->size)) {
+  if ((writer->data == NULL) || (writer->pos > writer->size) ||
+      (size > writer->size - writer->pos)) {
     return false;
   }
 
