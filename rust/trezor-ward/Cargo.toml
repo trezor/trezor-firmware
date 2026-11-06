@@ -4,4 +4,16 @@ version = "0.1.0"
 edition = "2024"
 
 [features]
+# The prover (host side); the rest of the crate is no_std and allocation-free.
 use_std = []
+# A ready `Hash` implementation over the `sha2` crate, for hosts.
+sha2 = ["dep:sha2"]
+
+[dependencies]
+sha2 = { version = "0.10", optional = true, default-features = false }
+
+[dev-dependencies]
+hex = "0.4"
+rand = { version = "0.9", default-features = false }
+rand_xorshift = "0.4"
+trezor-ward = { path = ".", features = ["use_std", "sha2"] }
