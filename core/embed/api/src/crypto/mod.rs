@@ -11,10 +11,7 @@ use trezor_app_sdk::traits::crypto::{
 };
 use trezor_app_sdk::traits::util::{CoreServiceError, FastResult, ServiceResult, TIMEOUT_MAX};
 
-use crate::wire::{
-    CoreIpcService, MSG_ID_ERROR, MSG_ID_FORBIDDEN_PATH, call_failed, ipc_call, service_error,
-    to_bytes,
-};
+use crate::wire::{CoreIpcService, MSG_ID_ERROR, call_failed, ipc_call, service_error, to_bytes};
 
 /// A failed call into Core's crypto service, as reported to the app.
 type CryptoCallError = CoreServiceError<CryptoError>;
@@ -34,11 +31,6 @@ fn ipc_crypto_call(value: &TrezorCryptoEnum) -> Result<BoxedSlice<u8>, CryptoCal
     let id = value.id() as u16;
     let (response_id, data) =
         ipc_call(CoreIpcService::Crypto.into(), id, &bytes, TIMEOUT_MAX).map_err(service_error)?;
-    if response_id == MSG_ID_FORBIDDEN_PATH {
-        return Err(CoreServiceError::ServiceError(
-            CryptoError::ForbiddenKeyPath,
-        ));
-    }
     if response_id == MSG_ID_ERROR {
         // Core has logged why
         return Err(CoreServiceError::ServiceCallFailed);
@@ -258,7 +250,8 @@ impl CryptoV1 for TrezorCryptoV1Impl {
             })?;
             match expect_bool(&data)? {
                 true => Ok(()),
-                false => Err(CoreServiceError::ServiceError(CryptoError::InvalidMac)),
+                // a wrong MAC comes back as `MSG_ID_ERROR`
+                false => Err(CoreServiceError::ServiceCallFailed),
             }
         })()
         .into()
