@@ -17,7 +17,6 @@ jobs:
     timeout-minutes: 5
     # Skip cancelled runs, e.g. superseded by a newer push to the same PR
     if: >
-      env.MEMBROWSE_API_KEY != '' &&
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion != 'cancelled'
     permissions:
@@ -34,3 +33,4 @@ jobs:
         env:
           MEMBROWSE_API_KEY: ${{ secrets.MEMBROWSE_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: env.MEMBROWSE_API_KEY != ''
