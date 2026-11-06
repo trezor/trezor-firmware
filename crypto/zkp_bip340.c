@@ -105,7 +105,7 @@ int zkp_bip340_get_public_key(const uint8_t *private_key_bytes,
 // returns 0 on success
 int zkp_bip340_sign_digest(const uint8_t *private_key_bytes,
                            const uint8_t *digest, uint8_t *signature_bytes,
-                           uint8_t *auxiliary_data) {
+                           const uint8_t *auxiliary_data) {
   int result = 0;
 
   secp256k1_context *context_writable = NULL;
