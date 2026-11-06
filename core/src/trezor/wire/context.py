@@ -163,25 +163,23 @@ def try_get_ctx_ids() -> tuple[AnyBytes, AnyBytes] | None:
 if TYPE_CHECKING:
 
     @overload
-    def cache_get(key: int) -> bytes | None:  # noqa: F811
-        ...
+    def cache_get(key: int, default: None = None) -> bytes | None: ...
 
     @overload
-    def cache_get(key: int, default: T) -> bytes | T:  # noqa: F811
-        ...
+    def cache_get(key: int, default: bytes) -> bytes: ...
 
 
-def cache_get(key: int, default: T | None = None) -> bytes | T | None:  # noqa: F811
+def cache_get(key: int, default: bytes | None = None) -> bytes | None:
     cache = _get_cache_for_key(key)
     return cache.get(key, default)
 
 
-def cache_get_bool(key: int) -> bool:  # noqa: F811
+def cache_get_bool(key: int) -> bool:
     cache = _get_cache_for_key(key)
     return cache.get_bool(key)
 
 
-def cache_get_int(key: int, default: T | None = None) -> int | T | None:  # noqa: F811
+def cache_get_int(key: int, default: int | None = None) -> int | None:
     cache = _get_cache_for_key(key)
     return cache.get_int(key, default)
 
