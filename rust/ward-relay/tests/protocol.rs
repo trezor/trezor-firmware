@@ -4,7 +4,73 @@ use std::{
     thread,
 };
 use tungstenite::{Message, WebSocket};
-use ward_relay::{Client, Error};
+use ward_relay::{Client, DeviceSession, Error, Hwi, NamedMessage, ProofHandler};
+
+struct ProvidedSession {
+    calls: Vec<String>,
+}
+
+impl DeviceSession for ProvidedSession {
+    fn exchange(
+        &mut self,
+        name: &str,
+        _: Value,
+        proof: &mut ProofHandler<'_>,
+    ) -> Result<NamedMessage, Error> {
+        self.calls.push(name.into());
+        assert_eq!(
+            proof("WARDProofRequest", json!({"entry_key": "aa"}))?,
+            json!({"proof": []})
+        );
+        Ok((
+            if name == "WARDSync" {
+                "WARDSyncAck"
+            } else {
+                "Address"
+            }
+            .into(),
+            json!({}),
+        ))
+    }
+}
+
+#[test]
+fn hwi_borrows_one_session_for_ward_and_ordinary_calls() {
+    let (url, task) = server(|mut socket| {
+        let request = read(&mut socket);
+        send(
+            &mut socket,
+            json!({"id": request["id"], "deviceCall": {"name": "WARDSync", "message": {}}}),
+        );
+        let proof = read(&mut socket);
+        assert_eq!(proof["method"], "answerProofRequest");
+        send(
+            &mut socket,
+            json!({"id": proof["id"], "result": {"proof": []}}),
+        );
+        let reply = read(&mut socket);
+        assert_eq!(reply["deviceReply"]["name"], "WARDSyncAck");
+        send(
+            &mut socket,
+            json!({"id": request["id"], "result": {"counter": 0}}),
+        );
+        let proof = read(&mut socket);
+        assert_eq!(proof["method"], "answerProofRequest");
+        send(
+            &mut socket,
+            json!({"id": proof["id"], "result": {"proof": []}}),
+        );
+    });
+    let mut client = Client::connect(&url, "test-token").unwrap();
+    let mut session = ProvidedSession { calls: Vec::new() };
+    {
+        let mut hwi = Hwi::new(&mut client, &mut session);
+        assert_eq!(hwi.call("sync", json!({})).unwrap(), json!({"counter": 0}));
+        assert_eq!(hwi.forward("GetAddress", json!({})).unwrap().0, "Address");
+    }
+    assert_eq!(session.calls, ["WARDSync", "GetAddress"]);
+    task.join().unwrap();
+}
 
 fn read(socket: &mut WebSocket<TcpStream>) -> Value {
     serde_json::from_str(socket.read().unwrap().to_text().unwrap()).unwrap()
@@ -90,6 +156,72 @@ fn answers_pulls_during_ordinary_hwi_calls() {
             .unwrap(),
         json!({"deviceCall": {"name": "WARDProofAck", "message": {"proof": []}}})
     );
+    task.join().unwrap();
+}
+
+#[test]
+fn starts_the_listing_and_cache_conversations() {
+    let (url, task) = server(|mut socket| {
+        for method in ["listEntries", "cacheEntry"] {
+            let request = read(&mut socket);
+            assert_eq!(request["method"], method);
+            send(&mut socket, json!({"id": request["id"], "result": {}}));
+        }
+    });
+    let mut client = Client::connect(&url, "test-token").unwrap();
+    for method in ["listEntries", "cacheEntry"] {
+        assert_eq!(
+            client.start(method, json!({})).unwrap(),
+            json!({"result": {}})
+        );
+    }
+    task.join().unwrap();
+}
+
+#[test]
+fn a_broken_conversation_closes_the_socket() {
+    let (url, task) = server(|mut socket| {
+        let request = read(&mut socket);
+        // a frame for another conversation: the client cannot resynchronise
+        send(
+            &mut socket,
+            json!({"id": request["id"].as_u64().unwrap() + 7, "result": {}}),
+        );
+    });
+    let mut client = Client::connect(&url, "test-token").unwrap();
+    assert!(matches!(
+        client.start("sync", json!({})),
+        Err(Error::Protocol(_))
+    ));
+    task.join().unwrap();
+    // later calls fail at the closed socket instead of reading wardd's late frames
+    assert!(matches!(
+        client.start("sync", json!({})),
+        Err(Error::Connection(_))
+    ));
+}
+
+#[test]
+fn answers_listing_node_pulls() {
+    let (url, task) = server(|mut socket| {
+        let request = read(&mut socket);
+        assert_eq!(request["method"], "answerNodeRequest");
+        assert_eq!(request["params"]["request"]["node_hash"], "ab");
+        send(
+            &mut socket,
+            json!({"id": request["id"], "result": {"nodes": []}}),
+        );
+    });
+    let mut client = Client::connect(&url, "test-token").unwrap();
+    assert_eq!(
+        client
+            .answer_ward_request("WARDNodeRequest", json!({"node_hash": "ab"}))
+            .unwrap(),
+        json!({"deviceCall": {"name": "WARDNodeAck", "message": {"nodes": []}}})
+    );
+    assert!(client
+        .answer_ward_request("GetPublicKey", json!({}))
+        .is_err());
     task.join().unwrap();
 }
 

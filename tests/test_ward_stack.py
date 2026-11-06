@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from tools.ward_stack import SCRIPT, combined_log, copy_log, reserve_ports
+from tools.ward_stack import SCRIPT, combined_log, command, copy_log, reserve_ports
 
 
 @pytest.fixture
@@ -29,9 +29,10 @@ def launch_args(tmp_path: Path) -> tuple[list[str], dict[str, str]]:
     for _ in range(100):
         manager = 30000 + secrets.randbelow(20000)
         daemon = 30000 + secrets.randbelow(20000)
+        debug = 30000 + secrets.randbelow(20000)
         emulator = 30008 + 8 * secrets.randbelow(3000)
         try:
-            reserve_ports(manager, daemon, emulator)
+            reserve_ports(manager, daemon, emulator, 3, debug, True)
         except OSError:
             continue
         break
@@ -41,6 +42,7 @@ def launch_args(tmp_path: Path) -> tuple[list[str], dict[str, str]]:
         **os.environ,
         "WARD_MANAGER_PORT": str(manager),
         "WARDD_PORT": str(daemon),
+        "WARDD_DEBUG_PORT": str(debug),
         "TREZOR_UDP_PORT": str(emulator),
     }
     return [
@@ -120,6 +122,46 @@ def test_delays_are_exported_to_every_component(launch_args) -> None:
         assert config["environment"]["WARD_DELAYS"] == "1"
         for role in ("manager", "wardd", "emulator", "hwi"):
             assert "export WARD_DELAYS=1" in (root / f"{role}.sh").read_text()
+    finally:
+        shutil.rmtree(root)
+
+
+@pytest.mark.parametrize(
+    "flag", ["--long", "--extra_long", "--extra-long", "--adversarial"]
+)
+def test_long_demo_reaches_the_hwi(launch_args, flag) -> None:
+    args, env = launch_args
+    result = subprocess.run(
+        args + [flag], env=env, capture_output=True, text=True, check=True
+    )
+    match = re.search(r"Run directory: (.+)", result.stdout)
+    assert match is not None
+    root = Path(match.group(1))
+    try:
+        config = json.loads((root / "config.json").read_text())
+        hwi_args, _ = command(config, "hwi", root / "config.json")
+        assert ("--extra_long" if flag == "--extra-long" else flag) in hwi_args
+    finally:
+        shutil.rmtree(root)
+
+
+@pytest.mark.parametrize("model", ["T3T1", "T3W1"])
+def test_model_selects_its_own_emulator(launch_args, model) -> None:
+    args, env = launch_args
+    result = subprocess.run(
+        args + ["--model", model], env=env, capture_output=True, text=True, check=True
+    )
+    match = re.search(r"Run directory: (.+)", result.stdout)
+    assert match is not None
+    root = Path(match.group(1))
+    try:
+        config = json.loads((root / "config.json").read_text())
+        emulator, _ = command(config, "emulator", root / "config.json")
+        assert config["model"] == model
+        assert (
+            str(Path("artifacts") / model / "firmware-emu")
+            in emulator[emulator.index("--executable") + 1]
+        )
     finally:
         shutil.rmtree(root)
 
@@ -221,3 +263,94 @@ def test_stop_releases_emulator_wait_command(tmp_path: Path) -> None:
         if wait.poll() is None:
             wait.terminate()
             wait.wait(timeout=5)
+
+
+def test_multiple_devices_use_distinct_profiles_ports_and_one_shared_backend(
+    launch_args,
+) -> None:
+    args, env = launch_args
+    result = subprocess.run(
+        args + ["--devices", "3"], env=env, capture_output=True, text=True, check=True
+    )
+    match = re.search(r"Run directory: (.+)", result.stdout)
+    assert match is not None
+    root = Path(match.group(1))
+    try:
+        config = json.loads((root / "config.json").read_text())
+        profiles = []
+        for index in range(3):
+            argv, _ = command(config, f"emulator-{index + 1}", root / "config.json")
+            assert (
+                int(argv[argv.index("-P") + 1]) == config["emulator_port"] + 8 * index
+            )
+            assert "-s" in argv
+            profiles.append(argv[argv.index("-p") + 1])
+            assert (root / f"emulator-{index + 1}.sh").is_file()
+        assert len(set(profiles)) == 3
+        assert result.stdout.count("nix-shell ") == 6
+        argv, _ = command(config, "hwi", root / "config.json")
+        assert str(SCRIPT.parent / "ward_multi.py") in argv
+        assert config["environment"]["WARDD_DEBUG_PORT"] == str(config["debug_port"])
+    finally:
+        shutil.rmtree(root)
+
+
+def test_rejects_overlapping_manager_and_debug_ports(launch_args) -> None:
+    args, env = launch_args
+    result = subprocess.run(
+        args + ["--debug-port", env["WARD_MANAGER_PORT"]],
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2
+    assert "Cannot use the requested ports" in result.stderr
+
+
+def test_reserves_the_second_devices_entire_port_block(launch_args) -> None:
+    args, env = launch_args
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as occupied:
+        occupied.bind(("127.0.0.1", int(env["TREZOR_UDP_PORT"]) + 14))
+        result = subprocess.run(
+            args + ["--devices", "2"], env=env, capture_output=True, text=True
+        )
+    assert result.returncode == 2
+    assert "Cannot use the requested ports" in result.stderr
+
+
+def test_multiple_tropic_emulators_get_independent_model_ports(launch_args) -> None:
+    args, env = launch_args
+    result = subprocess.run(
+        args + ["--devices", "2", "--model", "T3W1"],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    match = re.search(r"Run directory: (.+)", result.stdout)
+    assert match is not None
+    root = Path(match.group(1))
+    try:
+        config = json.loads((root / "config.json").read_text())
+        for index in range(2):
+            argv, _ = command(config, f"emulator-{index + 1}", root / "config.json")
+            assert (
+                int(argv[argv.index("--tropic-emulator-port") + 1])
+                == config["emulator_port"] + 8 * index + 6
+            )
+    finally:
+        shutil.rmtree(root)
+
+
+def test_tropic_model_port_is_reserved(launch_args) -> None:
+    args, env = launch_args
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as occupied:
+        occupied.bind(("127.0.0.1", int(env["TREZOR_UDP_PORT"]) + 14))
+        result = subprocess.run(
+            args + ["--devices", "2", "--model", "T3W1"],
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+    assert result.returncode == 2
+    assert "Cannot use the requested ports" in result.stderr

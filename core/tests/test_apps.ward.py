@@ -191,5 +191,76 @@ class TestWard(TestCaseWithContext):
             await_result(handler("msg"))
 
 
+    def _sealed_leaf(self, identifier, value, app_id="bitcoin"):
+        """A leaf for (app_id, identifier) -> value sealed under this wallet's keys, and
+        its entry_key."""
+        from apps.ward import keys, leaf
+
+        k_path = await_result(keys.derive_k_path())
+        ek = keys.entry_key(k_path, app_id, identifier)
+        id_part = leaf.encode_identity(
+            await_result(keys.derive_k_ident("address")),
+            ek,
+            "address",
+            identifier,
+            app_id,
+        )
+        val_part = leaf.encode_content(
+            await_result(keys.derive_k_data("address")), ek, "address", 1, value
+        )
+        return ek, id_part, val_part
+
+    def test_cache_entry_stores_a_verified_leaf_in_its_apps_store(self):
+        from storage import ward_head
+
+        from apps.ward import cache, keys, leaf, service
+
+        ek, id_part, val_part = self._sealed_leaf(b"bc1qcached", b"cached label")
+        wallet_id = await_result(keys.get_wallet_id())
+        # a one-leaf trie: the root is the leaf itself, the proof is empty
+        ward_head.root_set(wallet_id, leaf.leaf_hash(ek, "address", id_part, val_part))
+
+        replaced, _counter = await_result(
+            service.cache_entry(ek, "address", id_part, val_part, [], False)
+        )
+        self.assertFalse(replaced)
+        # filed under the service's fixed subscope, with its C_leaf and no sticky bit
+        store = self.open().subscope(b"WARD")
+        raw = await_result(store.get(cache.record_key("address", 0, b"bc1qcached")))
+        self.assertEqual(cache.parse_value(raw), (0, 1, b"cached label"))
+
+        replaced, _counter = await_result(
+            service.cache_entry(ek, "address", id_part, val_part, [], False)
+        )
+        self.assertTrue(replaced)
+
+    def test_cache_entry_stores_nothing_the_root_does_not_commit_to(self):
+        from storage import ward_head
+
+        from apps.ward import keys, service
+
+        ek, id_part, val_part = self._sealed_leaf(b"bc1qcached", b"cached label")
+        wallet_id = await_result(keys.get_wallet_id())
+        ward_head.root_set(wallet_id, b"\x55" * 32)
+
+        with self.assertRaises(wire.DataError):
+            await_result(
+                service.cache_entry(ek, "address", id_part, val_part, [], False)
+            )
+        self.assertEqual(self.entries(self.open().subscope(b"WARD")), [])
+
+
+    def test_cache_backup_opens_only_for_the_same_wallet(self):
+        from apps.ward import cache
+
+        key = cache.record_key("address", 0, b"k")
+        value = cache.record_value(1, 3, b"v")
+        blob = await_result(cache.seal(b"bitcoin", key, value))
+        self.assertEqual(await_result(cache.open_blob(blob)), (b"bitcoin", key, value))
+        self.set_seed(SEED_PASSPHRASE)  # another (hidden) wallet of the same seed
+        with self.assertRaises(wire.DataError):
+            await_result(cache.open_blob(blob))
+
+
 if __name__ == "__main__":
     unittest.main()

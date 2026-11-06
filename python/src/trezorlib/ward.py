@@ -30,6 +30,7 @@ def queue_update(
     new_value: bytes,
     key_type: str = "address",
     device_id: int = 0,
+    delete: bool = False,
 ) -> Optional[int]:
     """Queue an edit INTENT (pull model). Carries NO proof.
 
@@ -51,6 +52,7 @@ def queue_update(
             new_value=new_value,
             key_type=key_type,
             device_id=device_id,
+            delete=delete,
         ),
         expect=messages.WARDQueueUpdateAck,
     )
@@ -288,6 +290,9 @@ def ingest_attestation(
     counter_ext: int,
     root_mac_ext: Optional[bytes],
     wm_signature: bytes,
+    *,
+    timestamp: int,
+    head_nonce: bytes,
 ) -> int:
     """Verify and record the WM freshness attestation for the open sync round.
 
@@ -295,7 +300,11 @@ def ingest_attestation(
     """
     resp = session.call(
         messages.WARDIngestAttestation(
-            counter=counter_ext, mac=root_mac_ext, wm_signature=wm_signature
+            counter=counter_ext,
+            mac=root_mac_ext,
+            wm_signature=wm_signature,
+            timestamp=timestamp,
+            head_nonce=head_nonce,
         ),
         expect=messages.WARDIngestAttestationAck,
     )
@@ -510,17 +519,113 @@ def build_proof_ack(tree: "WARDTree", entry_key: bytes) -> messages.WARDProofAck
     )
 
 
+def cache_entry(
+    session: "Session", entry_key: bytes, sticky: bool = False
+) -> messages.WARDCacheEntryAck:
+    """Copy the trie entry at `entry_key` into the device's offline cache, STICKY if
+    asked (kept even after WARD deletes it). The device pulls its proof through the
+    registered ``ward_proof_callback``, verifies it, and stores it in the store of the
+    app the entry belongs to. Returns (replaced, counter) only."""
+    return session.call(
+        messages.WARDCacheEntry(entry_key=entry_key, sticky=sticky),
+        expect=messages.WARDCacheEntryAck,
+    )
+
+
+def export_cache(session: "Session") -> list[bytes]:
+    """Back up the device's cached WARD entries: one blob per entry, sealed so only a
+    device unlocked with the same wallet can load it."""
+    return session.call(
+        messages.WARDCacheExport(), expect=messages.WARDCacheExportAck
+    ).entries
+
+
+def import_cache(session: "Session", blobs: list[bytes]) -> messages.WARDCacheImportAck:
+    """Load backed-up entries into the device's offline cache (sticky bits kept)."""
+    return session.call(
+        messages.WARDCacheImport(entries=blobs), expect=messages.WARDCacheImportAck
+    )
+
+
+def validate_cache(session: "Session") -> messages.WARDValidateCacheAck:
+    """Check every cached entry against the device's root (after a sync); the device
+    pulls one proof per entry through the registered ``ward_proof_callback``."""
+    return session.call(
+        messages.WARDValidateCache(), expect=messages.WARDValidateCacheAck
+    )
+
+
+def list_entries(
+    session: "Session",
+    app_id: Optional[str] = None,
+    key_type: Optional[str] = None,
+    device_id: Optional[int] = None,
+) -> messages.WARDListEntriesAck:
+    """Show every WARD entry matching the filters on the device screen. The device
+    walks its trusted root and pulls each node through the registered
+    ``ward_node_callback`` (e.g. ``tree_node_callback(tree)``), verifying it before
+    use. Returns only counts: (shown, entries, counter, complete)."""
+    return session.call(
+        messages.WARDListEntries(app_id=app_id, key_type=key_type, device_id=device_id),
+        expect=messages.WARDListEntriesAck,
+    )
+
+
+def tree_node_callback(
+    tree: "WARDTree", max_nodes: int = 16
+) -> Callable[[messages.WARDNodeRequest], messages.WARDNodeAck]:
+    """Build an AppManifest.ward_node_callback that serves a listing walk from `tree`:
+    the requested node and up to `max_nodes - 1` descendants in pre-order per round
+    trip.
+
+        client.app.ward_node_callback = ward.tree_node_callback(tree)
+    """
+
+    def _callback(msg: messages.WARDNodeRequest) -> messages.WARDNodeAck:
+        nodes = []
+        for split_bit, left, right, entry_key in tree.get_nodes(
+            msg.node_hash, max_nodes
+        ):
+            if entry_key is None:
+                nodes.append(
+                    messages.WARDTrieNode(split_bit=split_bit, left=left, right=right)
+                )
+                continue
+            leaf = tree.get_leaf(entry_key)
+            assert leaf is not None
+            nodes.append(
+                messages.WARDTrieNode(
+                    entry_key=entry_key,
+                    content=make_leaf_content(leaf.content),
+                    identity=make_leaf_identity(leaf.key_type, leaf.identity),
+                )
+            )
+        return messages.WARDNodeAck(nodes=nodes)
+
+    return _callback
+
+
 def tree_proof_callback(
     tree: "WARDTree",
+    attest: Optional[
+        Callable[[bytes], Optional[messages.WARDAttestation]]
+    ] = None,
 ) -> Callable[[messages.WARDProofRequest], messages.WARDProofAck]:
     """Build an AppManifest.ward_proof_callback that serves proofs from `tree`.
 
     Register it on the client so the device can pull WARD proofs on demand:
         client.app.ward_proof_callback = ward.tree_proof_callback(tree)
+
+    Freshness is optional. With `attest`, a request carrying a `freshness_nonce` is
+    answered with `attest(nonce)` -- the WM's current-head attestation over that
+    nonce, or None when the WM is not asked or unreachable.
     """
 
     def _callback(msg: messages.WARDProofRequest) -> messages.WARDProofAck:
         # The device sends the opaque entry_key path; serve the proof for it.
-        return build_proof_ack(tree, msg.entry_key)
+        ack = build_proof_ack(tree, msg.entry_key)
+        if attest is not None and msg.freshness_nonce is not None:
+            ack.attestation = attest(msg.freshness_nonce)
+        return ack
 
     return _callback

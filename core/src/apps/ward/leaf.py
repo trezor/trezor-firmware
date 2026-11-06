@@ -226,7 +226,11 @@ def unpack_identity(pt: bytes) -> tuple:
 
 
 def encode_identity(
-    k_ident: bytes, entry_key_: bytes, key_type: str, identifier: bytes, app_id,
+    k_ident: bytes,
+    entry_key_: bytes,
+    key_type: str,
+    identifier: bytes,
+    app_id,
     device_id: int = 0,
 ):
     """Build the LeafIdentity part for this build's mode."""
@@ -236,10 +240,10 @@ def encode_identity(
     return _seal(k_ident, _AAD_IDENTITY, entry_key_, key_type, pt)
 
 
-# FIXME(ward, PUSH-ONLY): no on-device caller. The identity part is written on every
-# write but never read back here, so firmware does NOT verify that a leaf's
-# (identifier, app_id, device_id) matches the entry_key it derived -- the identity
-# contributes only its bytes to commit_of. It is host-consumed via exported K_ident.
+# Read back on-device only by the verified listing (`service.list_entries`), which
+# checks the decoded (identifier, app_id, device_id) against the leaf's entry_key
+# before showing it. Lookups never need it: they derive entry_key from the identity
+# they were asked about. Hosts read it with an exported K_ident (PUSH).
 def decode_identity(k_ident: bytes, entry_key_: bytes, key_type: str, part) -> tuple:
     """Return (identifier, app_id, device_id) from a LeafIdentity part."""
     return unpack_identity(_open(k_ident, _AAD_IDENTITY, entry_key_, key_type, part))
@@ -261,10 +265,10 @@ def unpack_content(pt: bytes) -> tuple:
     return c_leaf, pt[8 : 8 + val_len]
 
 
-def encode_content(k_data: bytes, entry_key_: bytes, key_type: str, c_leaf: int, value: bytes):
-    """Build the LeafContent part for this build's mode. An empty value is a delete."""
-    if len(value) == 0:
-        return EMPTY_PART
+def encode_content(
+    k_data: bytes, entry_key_: bytes, key_type: str, c_leaf: int, value: bytes
+):
+    """Encode a present value, including b''. Callers select deletion explicitly."""
     pt = pack_content(c_leaf, value)
     if WARD_PLAINTEXT_CONTENT:
         return (ENC_PLAINTEXT, b"", b"", pt)

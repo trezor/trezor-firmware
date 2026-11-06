@@ -114,7 +114,7 @@ def test_ward_passphrase_mac_is_wallet_scoped(client: Client) -> None:
     nonce_b, ward_id_b = ward.sync(session_b)
     assert ward_id_b is not None
     sig = sign_wm_attestation(nonce_b, 1, mac_a, ward_id_b)
-    ward.ingest_attestation(session_b, 1, mac_a, sig)
+    ward.ingest_attestation(session_b, 1, mac_a, sig, timestamp=1700000000, head_nonce=b"h" * 32)
 
     with pytest.raises(TrezorFailure, match="root does not match the attested mac"):
         ward.reconcile(session_b, root)
@@ -143,4 +143,4 @@ def test_ward_passphrase_attestation_is_wallet_bound(client: Client) -> None:
     # Replay it into a sync round on wallet B.
     ward.sync(session_b)
     with pytest.raises(TrezorFailure, match="attestation verification failed"):
-        ward.ingest_attestation(session_b, 1, mac_a, sig_a)
+        ward.ingest_attestation(session_b, 1, mac_a, sig_a, timestamp=1700000000, head_nonce=b"h" * 32)

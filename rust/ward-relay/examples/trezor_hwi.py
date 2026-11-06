@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -50,12 +52,41 @@ def main() -> None:
     )
     parser.add_argument("--address", default="bc1qwarddemo")
     parser.add_argument(
+        "--long",
+        action="store_true",
+        help="Write ten distinct entries and verify each lookup",
+    )
+    parser.add_argument(
+        "--extra_long",
+        "--extra-long",
+        action="store_true",
+        help="Cover every bounded state/operation combination through depth 10",
+    )
+    parser.add_argument(
         "--label", help="Also confirm and write this label on the debug emulator"
     )
     parser.add_argument(
         "--jade-host", action="store_true", help="Import through jadepy.ward"
     )
+    parser.add_argument(
+        "--adversarial",
+        action="store_true",
+        help="Run protocol attack/rejection tests on this emulator",
+    )
     args = parser.parse_args()
+    if args.adversarial:
+        if args.long or args.extra_long:
+            parser.error("Run --adversarial separately from --long/--extra_long")
+        subprocess.run(
+            [
+                sys.executable,
+                str(Path(__file__).resolve().parents[3] / "tools/ward_adversarial.py"),
+                "--path",
+                args.path,
+            ],
+            check=True,
+        )
+        return
 
     def handoff(hop: str, name: str) -> None:
         if args.delays:
@@ -116,20 +147,107 @@ def main() -> None:
         previous = session.client.app.ward_proof_callback
         session.client.app.ward_proof_callback = answer_proof
         try:
+            if args.extra_long:
+                from trezorlib._internal.ward_stress import run_extra_long
+
+                def confirmed(operation, expected_label=None):
+                    with BackgroundDeviceHandler(hwi) as worker:
+                        worker.run_with_provided_session(session, lambda _: operation())
+                        debug = worker.debuglink()
+                        deadline = time.monotonic() + (180 if args.delays else 30)
+                        layout = debug.read_layout(wait=False).json_str
+                        while "Homescreen" in layout:
+                            if time.monotonic() >= deadline:
+                                raise TimeoutError("No WARD confirmation appeared")
+                            time.sleep(0.05)
+                            layout = debug.read_layout(wait=False).json_str
+                        if expected_label is not None and expected_label not in layout:
+                            raise AssertionError(
+                                f"Device did not display {expected_label!r}"
+                            )
+                        debug.press_yes()
+                        return worker.result()
+
+                def display(params, expected_label):
+                    result = confirmed(
+                        lambda: session.call(
+                            messages.DisplayAddress(
+                                address=params["address"], app_id=params["appId"]
+                            )
+                        ),
+                        expected_label,
+                    )
+                    if not isinstance(result, messages.Success):
+                        raise AssertionError(f"DisplayAddress failed: {result}")
+
+                def verify_lookup(params):
+                    reply = session.call(
+                        messages.WARDLookup(
+                            address=params["address"].encode(),
+                            app_id=params["appId"],
+                            key_type="address",
+                            proof=[],
+                        )
+                    )
+                    if not isinstance(reply, messages.WARDLookupAck):
+                        raise AssertionError(f"WARDLookup failed: {reply}")
+                    return {
+                        "valid": reply.valid,
+                        "isMember": reply.membership,
+                        "counter": reply.counter,
+                        "wardId": bytes(reply.ward_id).hex()
+                        if reply.ward_id is not None
+                        else None,
+                    }
+
+                run_extra_long(
+                    lambda method, params: call(session, method, params),
+                    confirmed,
+                    display,
+                    lambda event: print(
+                        json.dumps(
+                            {
+                                "time": datetime.now(timezone.utc).isoformat(
+                                    timespec="milliseconds"
+                                ),
+                                "service": "HWI",
+                                **event,
+                            }
+                        ),
+                        flush=True,
+                    ),
+                    args.address,
+                    verify_lookup=verify_lookup,
+                )
+                return
             print("sync:", json.dumps(call(session, "sync", {})), flush=True)
-            params = {
-                "appId": "bitcoin",
-                "address": args.address,
-                "networkSymbol": "btc",
-            }
-            if args.label is not None:
+            count = 10 if args.long else 1
+            label = (
+                args.label
+                if args.label is not None
+                else ("WARD demo" if args.long else None)
+            )
+            entries = [
+                {
+                    "appId": "bitcoin",
+                    "address": args.address
+                    if index == 0
+                    else f"{args.address}-{index + 1:02d}",
+                    "networkSymbol": "btc",
+                }
+                for index in range(count)
+            ]
+            for index, params in enumerate(entries):
+                if label is None:
+                    continue
+                entry_label = label if not args.long else f"{label} {index + 1:02d}"
                 with BackgroundDeviceHandler(hwi) as worker:
                     worker.run_with_provided_session(
                         session,
                         lambda active: call(
                             active,
                             "update",
-                            {**params, "metadata": {"label": args.label}},
+                            {**params, "metadata": {"label": entry_label}},
                         ),
                     )
                     debug = worker.debuglink()
@@ -139,8 +257,47 @@ def main() -> None:
                             raise TimeoutError("No confirmation appeared")
                         time.sleep(0.1)
                     debug.press_yes()
-                    print("write:", json.dumps(worker.result()), flush=True)
-            print("lookup:", json.dumps(call(session, "lookup", params)), flush=True)
+                    result = worker.result()
+                    if result.get("conflict") or result.get("localCacheError"):
+                        raise RuntimeError(f"WARD write failed: {result}")
+                    print(f"write {index + 1}/{count}:", json.dumps(result), flush=True)
+            for index, params in enumerate(entries):
+                result = call(session, "lookup", params)
+                if label is not None:
+                    expected_label = (
+                        label if not args.long else f"{label} {index + 1:02d}"
+                    )
+                    if not (result.get("valid") and result.get("isMember")):
+                        raise RuntimeError(
+                            f"WARD lookup failed for entry {index + 1}: {result}"
+                        )
+                    if args.long:
+                        with BackgroundDeviceHandler(hwi) as worker:
+                            worker.run_with_provided_session(
+                                session,
+                                lambda active: active.call(
+                                    messages.DisplayAddress(
+                                        address=params["address"], app_id="bitcoin"
+                                    )
+                                ),
+                            )
+                            debug = worker.debuglink()
+                            deadline = time.monotonic() + (180 if args.delays else 30)
+                            layout = debug.read_layout(wait=False).json_str
+                            while "Homescreen" in layout:
+                                if time.monotonic() >= deadline:
+                                    raise TimeoutError(
+                                        "No authenticated label display appeared"
+                                    )
+                                time.sleep(0.1)
+                                layout = debug.read_layout(wait=False).json_str
+                            if expected_label not in layout:
+                                raise RuntimeError(
+                                    f"Trezor did not show the expected label for entry {index + 1}"
+                                )
+                            debug.press_yes()
+                            worker.result()
+                print(f"lookup {index + 1}/{count}:", json.dumps(result), flush=True)
         finally:
             session.client.app.ward_proof_callback = previous
 

@@ -29,7 +29,7 @@ message DisplayAddress {
     optional string subtitle = 3;         // custom subtitle
     optional bool case_sensitive = 4 [default = true];
     optional bool chunkify = 5;           // display the address in chunks of 4 characters
-    optional string app_id = 6;           // WARD domain to resolve the label in (entry_key input); default "display_address"
+    optional string app_id = 6;           // chosen by the WARD service: absent or "bitcoin" (the host-label domain), else refused
 }
 
 /**
@@ -56,7 +56,7 @@ message DisplayAddressWithProof {
     optional bytes  witness_entry_key  = 9;  // non-membership: witness leaf entry_key (32B; reveals no plaintext)
     optional bytes  witness_commit     = 10; // non-membership: witness leaf commit = sha256(0x02||nonce||tag||len32(ct)||ct)
     reserved 11;                             // was witness_counter
-    optional string app_id             = 12; // WARD domain to resolve the label in (entry_key input); default "display_address"
+    optional string app_id             = 12; // chosen by the WARD service: absent or "bitcoin" (the host-label domain), else refused
     reserved 13;                            // was entry_type; key_type now lives on LeafIdentity
     reserved 14, 15, 16;                     // were flat nonce/tag/ct; now inside content
     optional ward.LeafContent  content  = 17; // membership leaf value; absent = non-membership

@@ -2,33 +2,33 @@
 the WARD trust anchor (TW, apps.ward.service).
 
 Two kinds of caller route through here:
-  - On-device apps (Bitcoin/Ethereum getAddress, DisplayAddress, ...) call
-    `lookup_label`, which is CAPABILITY-GATED: the caller passes its first-party
-    `app_id`, checked against a static allowlist. This scopes which on-device app
-    may authenticate a WARD label.
-  - The host-facing WARD wire handlers (apps.ward.*) call the UNGATED ops below
-    (lookup / add_pending / commit / confirm_commit / sync / pending /
-    debug_set_root). The host is the WARD owner/driver, not an on-device app
-    principal, so it is not capability-gated; these are thin pass-throughs kept
-    here only so the trust anchor has a single gateway.
+  - On-device apps (DisplayAddress; later Bitcoin/Ethereum and third-party apps)
+    call `resolve_label` / `verify_label` with their WardCaller. They are
+    CAPABILITY-GATED by the firmware's grant (`_label_domain`), and never name the
+    domain they read.
+  - The host-facing WARD wire handlers (apps.ward.*) call the ops below (lookup /
+    queue / perform / sync / ...). The host is the WARD driver, not an on-device
+    app; its requests are served under `caller.ADDRESS_LABELS`, the domain the
+    service fixes for host-driven labels (`caller.host_caller`).
 
-`app_id` is a trusted constant a firmware module passes; the gate is capability
-scoping for on-device apps, not authenticating an untrusted principal.
+Every entry point takes a `WardCaller` (apps.ward.caller), which the firmware creates:
+the domain an operation touches comes from the caller's identity, never from a name the
+app or the host passes. Host wire handlers use `caller.host_caller`, which refuses a host
+that tries to pick the domain, key type or device slot.
 """
 
-# Capability allowlist for the GATED on-device entry point (lookup_label).
-# Each app id maps to the WARD capabilities it may invoke.
-# Only display_address ever reaches a gated entry point; bitcoin/ethereum have no WARD
-# callers (see apps/bitcoin/get_address.py -- the label flow lives in DisplayAddress).
-_CAPABILITIES = {
-    "display_address": ("lookup",),
-}
 
-def _authorize(app_id: str, capability: str) -> None:
+def _label_domain(caller):
+    """The domain `caller` may read labels from -- the firmware's grant, never the
+    caller's choice. DisplayAddress reads the host-written address labels; no other app
+    may read labels yet."""
     from trezor.wire import DataError
 
-    if capability not in _CAPABILITIES.get(app_id, ()):
-        raise DataError("app not authorized for WARD " + capability)
+    from apps.ward.caller import ADDRESS_LABELS, DISPLAY_ADDRESS
+
+    if caller is DISPLAY_ADDRESS:
+        return ADDRESS_LABELS
+    raise DataError("app not authorized for WARD lookup")
 
 
 # --- LeafIdentity / LeafContent wire <-> internal part codec ---
@@ -50,7 +50,9 @@ def make_leaf_content(part):
     encoding, nonce, tag, body = part if part is not None else leaf.EMPTY_PART
     if encoding == leaf.ENC_PLAINTEXT:
         return LeafContent(encoding=1, plaintext=PlaintextLeaf(content=body))
-    return LeafContent(encoding=0, encrypted=EncryptedLeaf(nonce=nonce, tag=tag, ct=body))
+    return LeafContent(
+        encoding=0, encrypted=EncryptedLeaf(nonce=nonce, tag=tag, ct=body)
+    )
 
 
 def read_leaf_content(content):
@@ -135,7 +137,7 @@ def read_leaf_identity(identity):
 
 
 async def _classify_label(
-    app_id: str,
+    domain,
     address: bytes,
     id_part,
     val_part,
@@ -150,7 +152,7 @@ async def _classify_label(
     label is the DECRYPTED value only for a valid membership proof. Shared by the PUSH
     (verify_label) and PULL (resolve_label) label paths."""
     valid, _counter, membership, _wallet_id, _ward_id = await lookup(
-        app_id,
+        domain,
         address,
         id_part,
         val_part,
@@ -166,7 +168,7 @@ async def _classify_label(
         from apps.ward import service
 
         value = await service.lookup_label(
-            app_id, address, id_part, val_part, proof, key_type, device_id
+            domain, address, id_part, val_part, proof, key_type, device_id
         )
         return "membership", value
     return "non-membership", None
@@ -178,83 +180,110 @@ async def _classify_label(
 # device-initiated WARDProofRequest. It is complete and correct but INACTIVE: nothing
 # calls WARDExportKeys, so no host can currently compute an entry_key to build a proof.
 async def verify_label(
-    app_id: str,
+    caller,
     address: bytes,
     id_part,
     val_part,
     proof: list[bytes],
-    key_type: str = "address",
-    device_id: int = 0,
     witness_entry_key: bytes | None = None,
     witness_commit: bytes | None = None,
-    domain: str | None = None,
 ) -> tuple[str, bytes | None]:
     """GATED PUSH-path label resolution: classify a proof the host attached up-front
-    (e.g. DisplayAddressWithProof). Returns (status, label). `app_id` is the
-    capability principal (gated); `domain` is the WARD domain that forms entry_key,
-    defaulting to `app_id`."""
-    _authorize(app_id, "lookup")
+    (e.g. DisplayAddressWithProof). Returns (status, label). The domain is the one the
+    firmware grants `caller` for labels (`_label_domain`)."""
     return await _classify_label(
-        domain if domain is not None else app_id,
+        _label_domain(caller),
         address,
         id_part,
         val_part,
         proof,
-        key_type=key_type,
-        device_id=device_id,
         witness_entry_key=witness_entry_key,
         witness_commit=witness_commit,
     )
 
 
-async def resolve_label(
-    app_id: str,
-    address: bytes,
-    domain: str | None = None,
-    key_type: str = "address",
-    device_id: int = 0,
-) -> tuple[str, bytes | None]:
+async def resolve_label(caller, address: bytes) -> tuple[str, bytes | None, int]:
     """GATED PULL-path label resolution for on-device apps. The device computes the
     opaque entry_key path itself, sends a WARDProofRequest carrying only that path
     (never the identifier or domain), and verifies the host's WARDProofAck against
-    its authenticated root. Returns (status, label)."""
-    _authorize(app_id, "lookup")
+    its authenticated root. Returns (status, label, freshness).
+
+    The request also carries a fresh nonce. A host MAY answer it with the WM's
+    current-head attestation; `freshness` is then whether the root the label was
+    checked against is still current (`service.FRESH_*`). Asking the WM is the
+    host's choice -- FRESH_UNCHECKED when it did not.
+
+    The domain is the one the firmware grants `caller` for labels (`_label_domain`);
+    labels are always of key type "address" in device slot 0x00.
+
+    The offline cache follows every verified answer: a cached copy of this entry is
+    updated to the proven value, or removed when WARD proves it absent. A host that
+    answers `unavailable` (no wardd) gets status "cached" with the value of a STICKY
+    cached copy, unverified -- or "unverified" with no label if there is none; see
+    `service.cached_label` for why that is an accepted DoS."""
+    domain = _label_domain(caller)
     from trezor import log
+    from trezor.crypto import random
     from trezor.messages import WARDProofAck, WARDProofRequest
     from trezor.wire import context
 
-    from apps.ward import keys
+    from apps.ward import keys, service
 
-    domain = domain if domain is not None else app_id
-    ek = await keys.entry_key_for(domain, address, key_type, device_id)
-    log.debug(
-        __name__,
-        "resolve_label: pulling proof for domain=%s key_type=%s (entry_key computed)",
-        domain,
-        key_type,
+    ek = await keys.entry_key_for(domain, address)
+    log.debug(__name__, "resolve_label: pulling proof (entry_key computed)")
+    nonce = random.bytes(32)
+    ack = await context.call(
+        WARDProofRequest(entry_key=ek, freshness_nonce=nonce), WARDProofAck
     )
-    ack = await context.call(WARDProofRequest(entry_key=ek), WARDProofAck)
+    if ack.unavailable:
+        cached = await service.cached_label(domain, address)
+        log.debug(
+            __name__, "resolve_label: host unavailable, sticky=%s", cached is not None
+        )
+        if cached is None:
+            return "unverified", None, service.FRESH_UNCHECKED
+        return "cached", cached, service.FRESH_UNCHECKED
     a_val = read_leaf_content(ack.content)
     _a_kt, a_id = read_leaf_identity(ack.identity)
     log.debug(
         __name__,
-        "resolve_label: WARDProofAck membership=%s witness=%s",
+        "resolve_label: WARDProofAck membership=%s witness=%s attested=%s",
         ack.content is not None,
         ack.witness_entry_key is not None,
+        ack.attestation is not None,
     )
 
     # Membership => the two parts; non-membership => witness_*; empty => nothing.
-    return await _classify_label(
+    status, label = await _classify_label(
         domain,
         address,
         a_id,
         a_val,
-        ack.proof,
-        key_type=key_type,
-        device_id=device_id,
-        witness_entry_key=ack.witness_entry_key,
-        witness_commit=ack.witness_commit,
+        [bytes(node) for node in ack.proof],
+        witness_entry_key=(
+            bytes(ack.witness_entry_key) if ack.witness_entry_key is not None else None
+        ),
+        witness_commit=(
+            bytes(ack.witness_commit) if ack.witness_commit is not None else None
+        ),
     )
+    await service.refresh_cached_label(domain, address, status, a_val)
+    att = ack.attestation
+    freshness = await service.label_freshness(
+        nonce,
+        (
+            None
+            if att is None
+            else (
+                att.counter,
+                bytes(att.mac) if att.mac is not None else None,
+                bytes(att.wm_signature),
+                att.timestamp,
+                bytes(att.head_nonce),
+            )
+        ),
+    )
+    return status, label, freshness
 
 
 # ---------------------------------------------------------------------------
@@ -268,7 +297,7 @@ async def resolve_label(
 # FIXME(ward, PUSH-ONLY): host-pushed proof verification. See verify_label above --
 # reachable today only via the WARDLookup PUSH branch, which no connect method drives.
 async def lookup(
-    app_id,
+    caller,
     address: bytes,
     id_part,
     val_part,
@@ -280,13 +309,13 @@ async def lookup(
 ) -> tuple[bool, int, bool, bytes, bytes]:
     """Verify a membership / non-membership proof against the device's WARD root.
     Returns (valid, counter, membership, wallet_id, ward_id). The device forms
-    entry_key from (app_id, key_type, device_id, address); membership carries the
+    entry_key from (caller domain, key_type, device_id, address); membership carries the
     leaf's two parts; a non-membership witness is passed opaquely as
     (witness_entry_key, witness_commit)."""
     from apps.ward import service
 
     return await service.lookup(
-        app_id,
+        caller,
         address,
         id_part,
         val_part,
@@ -299,7 +328,7 @@ async def lookup(
 
 
 async def lookup_pull(
-    app_id,
+    caller,
     address: bytes,
     key_type: str = "address",
     device_id: int = 0,
@@ -319,33 +348,129 @@ async def lookup_pull(
 
     from apps.ward import keys, service
 
-    ek = await keys.entry_key_for(app_id, address, key_type, device_id)
+    ek = await keys.entry_key_for(caller, address, key_type, device_id)
     ack = await context.call(WARDProofRequest(entry_key=ek), WARDProofAck)
     a_val = read_leaf_content(ack.content)
     _a_kt, a_id = read_leaf_identity(ack.identity)
 
     return await service.lookup(
-        app_id,
+        caller,
         address,
         a_id,
         a_val,
-        ack.proof,
+        [bytes(node) for node in ack.proof],
         key_type=key_type,
         device_id=device_id,
-        witness_entry_key=ack.witness_entry_key,
-        witness_commit=ack.witness_commit,
+        witness_entry_key=(
+            bytes(ack.witness_entry_key) if ack.witness_entry_key is not None else None
+        ),
+        witness_commit=(
+            bytes(ack.witness_commit) if ack.witness_commit is not None else None
+        ),
     )
 
 
+async def cache_entry(entry_key: bytes, sticky: bool = False) -> tuple[bool, int]:
+    """Copy the trie entry at `entry_key` into its app's offline cache. The proof pull
+    (WARDProofRequest -> WARDProofAck) lives here in the gateway; the trust anchor
+    verifies it and stores. Returns (replaced, counter)."""
+    from trezor.messages import WARDProofAck, WARDProofRequest
+    from trezor.wire import context
+
+    from apps.ward import service
+
+    ack = await context.call(WARDProofRequest(entry_key=entry_key), WARDProofAck)
+    kt, id_part = read_leaf_identity(ack.identity)
+    return await service.cache_entry(
+        entry_key,
+        kt,
+        id_part,
+        read_leaf_content(ack.content),
+        [bytes(node) for node in ack.proof],
+        ack.witness_entry_key is not None,
+        sticky,
+    )
+
+
+async def validate_cache() -> tuple[int, int, int, int]:
+    """Check the offline cache against the trie; one proof pull (WARDProofRequest ->
+    WARDProofAck) per cached entry lives here in the gateway, the verdicts in the
+    trust anchor. Returns (checked, unchanged, updated, removed)."""
+    from apps.ward import service
+
+    return await service.validate_cache(_pull_entry)
+
+
+async def import_cache(blobs: list[bytes]) -> tuple[int, int]:
+    """Load a cache backup; the trust anchor checks every entry against the root with a
+    proof pulled here (one WARDProofRequest per entry). Returns (imported, skipped)."""
+    from apps.ward import service
+
+    return await service.import_cache(blobs, _pull_entry)
+
+
+async def _pull_entry(entry_key: bytes) -> tuple:
+    """One proof pull for the offline-cache checks: (key_type, id_part, val_part, proof,
+    witness_entry_key, witness_commit). A host that answers `unavailable` fails the
+    check -- these flows act on proofs only, never on their absence."""
+    from trezor.messages import WARDProofAck, WARDProofRequest
+    from trezor.wire import DataError, context
+
+    ack = await context.call(WARDProofRequest(entry_key=entry_key), WARDProofAck)
+    if ack.unavailable:
+        raise DataError("WARD cache: the host cannot serve proofs")
+    kt, id_part = read_leaf_identity(ack.identity)
+    return (
+        kt,
+        id_part,
+        read_leaf_content(ack.content),
+        [bytes(node) for node in ack.proof],
+        bytes(ack.witness_entry_key) if ack.witness_entry_key is not None else None,
+        bytes(ack.witness_commit) if ack.witness_commit is not None else None,
+    )
+
+
+async def list_entries(
+    app_id: str | None = None,
+    key_type: str | None = None,
+    device_id: int | None = None,
+) -> tuple[int, int, int, bool]:
+    """Show every matching entry on-device via a verified walk of the trusted root.
+    The node pulls (WARDNodeRequest -> WARDNodeAck) live here in the gateway; the
+    trust anchor verifies each node before it uses it. Returns
+    (shown, entries, counter, complete)."""
+    from trezor.messages import WARDNodeAck, WARDNodeRequest
+    from trezor.wire import context
+
+    from apps.ward import service
+
+    async def fetch(node_hash: bytes) -> list:
+        ack = await context.call(WARDNodeRequest(node_hash=node_hash), WARDNodeAck)
+        return [
+            (
+                n.split_bit,
+                bytes(n.left) if n.left is not None else None,
+                bytes(n.right) if n.right is not None else None,
+                bytes(n.entry_key) if n.entry_key is not None else None,
+                read_leaf_identity(n.identity),
+                read_leaf_content(n.content),
+            )
+            for n in ack.nodes
+        ]
+
+    return await service.list_entries(fetch, app_id, key_type, device_id)
+
+
 async def queue(
-    app_id,
+    caller,
     address: bytes,
     new_value: bytes,
     key_type: str = "address",
     device_id: int = 0,
+    delete: bool = False,
 ) -> tuple[int, bytes]:
     """Queue an edit INTENT via the WARD trust anchor (pull model) for the domain
-    named by app_id. The trust anchor checks its ACL, shows the domain + new value
+    of `caller` (a firmware-made WardCaller). The trust anchor checks its ACL, shows the domain + new value
     on a trusted screen, and returns (pending_id, wallet_id) only on user approval.
     No proof and no candidate counter here (strict model: counter_T is derived
     later, inside the WM-synchronized WARDPerformUpdate flow). key_type/device_id
@@ -353,7 +478,7 @@ async def queue(
     """
     from apps.ward import service
 
-    return await service.queue(app_id, address, new_value, key_type, device_id)
+    return await service.queue(caller, address, new_value, key_type, device_id, delete)
 
 
 async def perform(
@@ -366,9 +491,10 @@ async def perform(
     Returns (counter_T, root_T, mac_T, wallet_id, ward_id, entry_key, key_type,
     id_part, val_part) -- the trailing leaf lets the host store what it cannot
     compute itself."""
-    from apps.ward import service
     from trezor.messages import WARDProofAck, WARDProofRequest
     from trezor.wire import context
+
+    from apps.ward import service
 
     pid, ek = await service.intent(pending_id)
 
@@ -383,9 +509,13 @@ async def perform(
         pid,
         a_id,
         a_val,
-        ack.proof,
-        witness_entry_key=ack.witness_entry_key,
-        witness_commit=ack.witness_commit,
+        [bytes(node) for node in ack.proof],
+        witness_entry_key=(
+            bytes(ack.witness_entry_key) if ack.witness_entry_key is not None else None
+        ),
+        witness_commit=(
+            bytes(ack.witness_commit) if ack.witness_commit is not None else None
+        ),
     )
 
 
@@ -407,9 +537,10 @@ async def perform_batch(pending_ids: list) -> tuple:
     authenticate with head_mac + AuthCommit. The wire I/O lives here in the gateway.
     Returns (to_counter, to_root, mac_t, head_mac, auth_commit, sig, wallet_id,
     ward_id, leaves)."""
-    from apps.ward import service
     from trezor.messages import WARDProofAck, WARDProofRequest
     from trezor.wire import context
+
+    from apps.ward import service
 
     resolved = []  # type: list[int]
     acks = []  # type: list[tuple]
@@ -425,9 +556,11 @@ async def perform_batch(pending_ids: list) -> tuple:
             (
                 a_id,
                 a_val,
-                ack.proof,
-                ack.witness_entry_key,
-                ack.witness_commit,
+                [bytes(node) for node in ack.proof],
+                bytes(ack.witness_entry_key)
+                if ack.witness_entry_key is not None
+                else None,
+                bytes(ack.witness_commit) if ack.witness_commit is not None else None,
             )
         )
         resolved.append(rpid)
@@ -489,11 +622,15 @@ async def sync() -> tuple[bytes, int, bytes, bytes]:
 
 
 async def ingest(
-    counter: int, mac: bytes | None, wm_signature: bytes
+    counter: int,
+    mac: bytes | None,
+    wm_signature: bytes,
+    timestamp: int,
+    head_nonce: bytes,
 ) -> tuple[int, bytes]:
     from apps.ward import service
 
-    return await service.ingest(counter, mac, wm_signature)
+    return await service.ingest(counter, mac, wm_signature, timestamp, head_nonce)
 
 
 async def reconcile(

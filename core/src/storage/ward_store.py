@@ -7,16 +7,22 @@ _NAMESPACE = common.APP_AUTHDB
 # Persistent (flash) storage keys.
 _COUNTERS = const(0x00)  # per-wallet durable counter_loc table
 _QUEUE = const(0x05)  # WARD pending candidates (multi-slot, keyed by pending_id)
-_PENDING_SEQ = const(0x06)  # monotonic pending_id allocator (device-global, never reused)
-_BATCH = const(0x07)  # per-wallet in-flight COMMITTED transition envelope (batch-update)
+_PENDING_SEQ = const(
+    0x06
+)  # monotonic pending_id allocator (device-global, never reused)
+_BATCH = const(
+    0x07
+)  # per-wallet in-flight COMMITTED transition envelope (batch-update)
 
 # Envelope kind: a forward batch commit vs a one-step rollback (both share the shape).
 BATCH_COMMIT = const(0x00)
 BATCH_REVERT = const(0x01)
 
-WALLET_ID_LENGTH = const(20)  # BIP32 Hash160 identifier: RIPEMD160(SHA256(master pubkey))
+WALLET_ID_LENGTH = const(
+    20
+)  # BIP32 Hash160 identifier: RIPEMD160(SHA256(master pubkey))
 ROOT_LENGTH = const(32)
-MAX_WALLETS = const(16)  # LRU capacity
+MAX_WALLETS = const(16)  # Refuse new wallets at capacity; never evict a rollback floor.
 # Record layout: [wallet_id: 20][counter: 4]
 #
 # The table is an LRU CACHE keyed by the 20-byte wallet_id: it holds up to
@@ -25,12 +31,31 @@ MAX_WALLETS = const(16)  # LRU capacity
 # its wallet to the back, and inserting a new wallet at capacity evicts the front
 # (least-recently-used) record. Callers must only ever read the record for the
 # CURRENTLY ACTIVE wallet_id -- never enumerate across wallets.
-_RECORD_SIZE = const(24)
+_RECORD_SIZE = const(97)
+_TABLE_VERSION = b"WH3"
 EMPTY_ROOT = b"\x00" * ROOT_LENGTH
+
 
 def _load_table() -> bytearray:
     raw = common.get(_NAMESPACE, _COUNTERS)
-    table = bytearray(raw) if raw is not None else bytearray()
+    if raw is None:
+        table = bytearray()
+    elif raw[:3] == _TABLE_VERSION:
+        table = bytearray(raw[3:])
+        if len(table) % _RECORD_SIZE:
+            raise ValueError("corrupt WARD trusted-head table")
+    elif raw[:3] == b"WH2":
+        if (len(raw) - 3) % 57:
+            raise ValueError("corrupt WARD trusted-head table")
+        table = bytearray()
+        for off in range(3, len(raw), 57):
+            table += raw[off : off + 57] + bytes(40)
+    else:
+        if len(raw) % 24:
+            raise ValueError("corrupt legacy WARD counter table")
+        table = bytearray()
+        for off in range(0, len(raw), 24):
+            table += raw[off : off + 24] + bytes(73)
     if __debug__:
         from trezor import log
 
@@ -45,7 +70,7 @@ def _load_table() -> bytearray:
 
 def _save_table(table: bytearray) -> None:
     if table:
-        common.set(_NAMESPACE, _COUNTERS, bytes(table))
+        common.set(_NAMESPACE, _COUNTERS, _TABLE_VERSION + bytes(table))
     else:
         common.delete(_NAMESPACE, _COUNTERS)
 
@@ -85,16 +110,38 @@ def _put_mru(table: bytearray, wallet_id: bytes, record: bytes) -> None:
     if off >= 0:
         table = table[:off] + table[off + _RECORD_SIZE :]
     elif len(table) // _RECORD_SIZE >= MAX_WALLETS:
-        # evict least-recently-used (front of the table)
-        table = table[_RECORD_SIZE:]
+        # KNOWN DEFICIENCY: records are never evicted and every wallet that syncs takes
+        # one -- even a counter-0 genesis reconcile, so 16 passphrase wallets (mistyped
+        # passphrases included) permanently lock WARD out for every further wallet. When
+        # it fires after the WM already committed (finalize_batch), the session root is
+        # left ahead of the durable counter (R11).
+        # FIXME(ward): forget the oldest wallet's anchor (with user confirmation) instead
+        # of refusing, and do not persist counter-0 genesis anchors at all.
+        raise ValueError(
+            "WARD wallet capacity reached; existing rollback floors are protected"
+        )
     table += record
     _save_table(table)
 
 
 def commit_counter(wallet_id: bytes, counter: int) -> None:
-    """Persist only the durable local rollback floor for wallet_id."""
+    """Persist counter and authenticated root atomically in one protected record."""
+    from storage import ward_head
+
     table = _load_table()
-    record = wallet_id + counter.to_bytes(4, "big")
+    off = _find_record(table, wallet_id)
+    if off >= 0 and counter < _read_counter(table, off):
+        raise ValueError("WARD counter regression")
+    present, root = ward_head.root_get(wallet_id)
+    timestamp, head_nonce = ward_head.root_metadata(wallet_id)
+    record = (
+        wallet_id
+        + counter.to_bytes(4, "big")
+        + bytes([1 if present else 0])
+        + (root if root is not None else EMPTY_ROOT)
+        + timestamp.to_bytes(8, "big")
+        + head_nonce
+    )
     _put_mru(table, wallet_id, record)
 
 
@@ -106,9 +153,27 @@ def bump_counter(wallet_id: bytes) -> int:
         new_counter = 1
     else:
         new_counter = _read_counter(table, off) + 1
-    record = wallet_id + new_counter.to_bytes(4, "big")
-    _put_mru(table, wallet_id, record)
+    commit_counter(wallet_id, new_counter)
     return new_counter
+
+
+def trusted_root(wallet_id: bytes):
+    table = _load_table()
+    off = _find_record(table, wallet_id)
+    if off < 0 or table[off + 24] != 1:
+        return False, None
+    root = bytes(table[off + 25 : off + 57])
+    return True, None if root == EMPTY_ROOT else root
+
+
+def trusted_metadata(wallet_id: bytes):
+    table = _load_table()
+    off = _find_record(table, wallet_id)
+    if off < 0:
+        return 0, bytes(32)
+    return int.from_bytes(table[off + 57 : off + 65], "big"), bytes(
+        table[off + 65 : off + 97]
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -233,7 +298,7 @@ def _parse_body(
     # device_id byte defaults to 0.
     key_type, off = _read_lv(body, off)
     device_id = body[off] if off < len(body) else 0
-    if state != QUEUE_COMMITTED or root == EMPTY_ROOT:
+    if state != QUEUE_COMMITTED:
         return (
             counter,
             state,
@@ -250,7 +315,7 @@ def _parse_body(
         state,
         address,
         new_value,
-        root,
+        None if root == EMPTY_ROOT else root,
         mac,
         app_id,
         key_type,
@@ -270,6 +335,7 @@ def _build_body(
     app_id: bytes,
     key_type: bytes,
     device_id: int,
+    delete: bool = False,
 ) -> bytes:
     return (
         pending_id.to_bytes(4, "big")
@@ -287,6 +353,7 @@ def _build_body(
         + len(key_type).to_bytes(2, "big")
         + key_type
         + bytes([device_id & 0xFF])
+        + bytes([1 if delete else 0])
     )
 
 
@@ -299,6 +366,7 @@ def queue_put(
     app_id: bytes,
     key_type: bytes = b"",
     device_id: int = 0,
+    delete: bool = False,
 ) -> None:
     """Store an approved edit INTENT as PENDING under pending_id (pull model:
     no proof, no root/mac yet -- those are filled by queue_set_computed at
@@ -329,6 +397,7 @@ def queue_put(
         app_id,
         key_type,
         device_id,
+        delete,
     )
 
     for i in range(len(records)):
@@ -338,6 +407,18 @@ def queue_put(
     else:
         records.append(body)
     _save_records(records)
+
+
+def queue_is_delete(wallet_id: bytes, pending_id: int) -> bool:
+    for body in _load_records():
+        if _rec_wid(body) == wallet_id and _rec_pid(body) == pending_id:
+            _address, off = _read_lv(body, _OFF_TAIL)
+            value, off = _read_lv(body, off)
+            _app, off = _read_lv(body, off)
+            _kind, off = _read_lv(body, off)
+            # Legacy records used an empty-value sentinel; new records carry a separate operation byte.
+            return body[off + 1] == 1 if off + 1 < len(body) else len(value) == 0
+    raise ValueError("no queued intent")
 
 
 def queue_set_computed(
@@ -383,6 +464,7 @@ def queue_set_computed(
                 app_id,
                 key_type,
                 device_id,
+                queue_is_delete(wallet_id, pending_id),
             )
             _save_records(records)
             return
@@ -393,8 +475,7 @@ def queue_get(
     wallet_id: bytes,
     pending_id: int,
 ) -> (
-    tuple[int, int, bytes, bytes, bytes | None, bytes | None, bytes, bytes, int]
-    | None
+    tuple[int, int, bytes, bytes, bytes | None, bytes | None, bytes, bytes, int] | None
 ):
     """Return (counter, state, address, new_value, root, mac, app_id,
     key_type, device_id) for (wallet_id, pending_id), or None. root/mac are None until

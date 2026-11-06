@@ -193,6 +193,9 @@ class AppManifest:
     ward_proof_callback: (
         t.Callable[[messages.WARDProofRequest], messages.WARDProofAck] | None
     ) = None
+    ward_node_callback: (
+        t.Callable[[messages.WARDNodeRequest], messages.WARDNodeAck] | None
+    ) = None
 
     credentials: (
         t.Collection[Credential] | t.Callable[[], t.Collection[Credential]]
@@ -211,8 +214,17 @@ class AppManifest:
         self, msg: messages.WARDProofRequest
     ) -> messages.WARDProofAck:
         if self.ward_proof_callback is None:
-            raise RuntimeError("WARD proof callback was not specified")
+            # No WARD host here: say so, and the device may fall back to a sticky cached
+            # entry (shown unverified) instead of waiting for a proof that never comes.
+            return messages.WARDProofAck(unavailable=True)
         return self.ward_proof_callback(msg)
+
+    def _callback_ward_node(
+        self, msg: messages.WARDNodeRequest
+    ) -> messages.WARDNodeAck:
+        if self.ward_node_callback is None:
+            raise RuntimeError("WARD node callback was not specified")
+        return self.ward_node_callback(msg)
 
     def get_credentials(self) -> t.Collection[Credential]:
         if callable(self.credentials):
@@ -511,6 +523,8 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
                 resp = self._callback_button(session, resp)
             elif isinstance(resp, messages.WARDProofRequest):
                 resp = self._callback_ward_proof(session, resp)
+            elif isinstance(resp, messages.WARDNodeRequest):
+                resp = session.call_raw(self.app._callback_ward_node(resp))
             elif isinstance(resp, messages.Failure):
                 if resp.code in (
                     messages.FailureType.ActionCancelled,

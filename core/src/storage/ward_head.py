@@ -31,7 +31,9 @@ def sync_begin(wallet_id: bytes, nonce: bytes) -> None:
     cache.get_sessionless_cache().set(APP_WARD_SYNC_RECORD, record)
 
 
-def sync_set_attested(wallet_id: bytes, counter: int, mac: bytes | None) -> None:
+def sync_set_attested(
+    wallet_id: bytes, counter: int, mac: bytes | None, timestamp: int, head_nonce: bytes
+) -> None:
     """Record the accepted WM attestation (counter_ext, mac_ext) for this round."""
     raw = cache.get_sessionless_cache().get(APP_WARD_SYNC_RECORD)
     if not raw or bytes(raw[0:WALLET_ID_LENGTH]) != wallet_id:
@@ -44,7 +46,18 @@ def sync_set_attested(wallet_id: bytes, counter: int, mac: bytes | None) -> None
     buf[off] = SYNC_ATTESTED
     buf[off + 1 : off + 5] = counter.to_bytes(4, "big")
     buf[off + 5 : off + 37] = stored_mac
-    cache.get_sessionless_cache().set(APP_WARD_SYNC_RECORD, bytes(buf))
+    cache.get_sessionless_cache().set(
+        APP_WARD_SYNC_RECORD,
+        bytes(buf[: off + 37]) + timestamp.to_bytes(8, "big") + head_nonce,
+    )
+
+
+def sync_metadata(wallet_id: bytes):
+    raw = cache.get_sessionless_cache().get(APP_WARD_SYNC_RECORD)
+    offset = WALLET_ID_LENGTH + NONCE_LENGTH + 37
+    if not raw or bytes(raw[:WALLET_ID_LENGTH]) != wallet_id or len(raw) != offset + 40:
+        raise ValueError("no authenticated WARD sync metadata")
+    return int.from_bytes(raw[offset : offset + 8], "big"), bytes(raw[offset + 8 :])
 
 
 def sync_get(wallet_id: bytes) -> tuple[bytes, int, int, bytes | None] | None:
@@ -66,20 +79,43 @@ def sync_clear() -> None:
     cache.get_sessionless_cache().delete(APP_WARD_SYNC_RECORD)
 
 
-def root_set(wallet_id: bytes, root: bytes | None) -> None:
+def root_set(
+    wallet_id: bytes,
+    root: bytes | None,
+    timestamp: int | None = None,
+    head_nonce: bytes | None = None,
+) -> None:
     """Install the authenticated root for the active power cycle."""
     stored_root = root if root is not None else EMPTY_ROOT
     if len(stored_root) != ROOT_LENGTH:
         raise ValueError("root must be 32 bytes")
-    cache.get_sessionless_cache().set(APP_WARD_ROOT_RECORD, wallet_id + stored_root)
+    old_timestamp, old_nonce = root_metadata(wallet_id)
+    timestamp = old_timestamp if timestamp is None else timestamp
+    head_nonce = old_nonce if head_nonce is None else head_nonce
+    if len(head_nonce) != 32:
+        raise ValueError("head nonce must be 32 bytes")
+    cache.get_sessionless_cache().set(
+        APP_WARD_ROOT_RECORD,
+        wallet_id + stored_root + timestamp.to_bytes(8, "big") + head_nonce,
+    )
+
+
+def root_metadata(wallet_id: bytes):
+    raw = cache.get_sessionless_cache().get(APP_WARD_ROOT_RECORD)
+    offset = WALLET_ID_LENGTH + ROOT_LENGTH
+    if raw and bytes(raw[:WALLET_ID_LENGTH]) == wallet_id and len(raw) == offset + 40:
+        return int.from_bytes(raw[offset : offset + 8], "big"), bytes(raw[offset + 8 :])
+    from storage.ward_store import trusted_metadata
+
+    return trusted_metadata(wallet_id)
 
 
 def root_get(wallet_id: bytes) -> tuple[bool, bytes | None]:
     """Return (present, root) for the active power-cycle authenticated root."""
     raw = cache.get_sessionless_cache().get(APP_WARD_ROOT_RECORD)
     if not raw or bytes(raw[0:WALLET_ID_LENGTH]) != wallet_id:
-        return False, None
+        from storage.ward_store import trusted_root
+
+        return trusted_root(wallet_id)
     root = bytes(raw[WALLET_ID_LENGTH : WALLET_ID_LENGTH + ROOT_LENGTH])
     return True, (None if root == EMPTY_ROOT else root)
-
-

@@ -48,10 +48,11 @@ option java_outer_classname = "TrezorMessageWard";
  */
 message WARDQueueUpdate {
     required bytes  address   = 1;  // identifier to update (== the AEAD-hidden identifier)
-    required bytes  new_value = 2;  // plaintext new value the user confirms; empty means delete
-    optional string app_id    = 3;  // domain; part of scope in entry_key = HMAC(K_path, app_id||0x00||key_type||0x00||device_id||identifier)
-    optional string key_type  = 4;  // scope; also selects K_ident/K_data; default "address"
-    optional uint32 device_id = 5;  // scope device slot; 0 = global (§5)
+    required bytes  new_value = 2;  // plaintext new value; empty is a valid existing value
+    optional string app_id    = 3;  // chosen by the WARD service, not the host: absent or "bitcoin" (the host-label domain), else refused
+    optional string key_type  = 4;  // chosen by the WARD service: absent or "address", else refused
+    optional uint32 device_id = 5;  // chosen by the WARD service: absent or 0, else refused (device slots are for core apps)
+    optional bool delete = 6 [default = false]; // deletion is explicit, never inferred from value length
 }
 
 /**
@@ -167,6 +168,9 @@ message WARDSyncAck {
     required uint32 version   = 2;  // WARD protocol version
     reserved 3;  // was wallet_id; write-only (no reader) -- removed
     optional bytes  ward_id   = 4;  // SLIP21-derived WM-facing anchor; the host forwards it to the WM for /attest
+    required uint32 counter   = 5;  // durable device trust anchor
+    optional bytes root       = 6;  // absent for an authenticated empty anchor
+    required bool root_known  = 7;  // distinguishes an empty anchor from a legacy counter-only record
 }
 
 /**
@@ -186,6 +190,8 @@ message WARDIngestAttestation {
     required uint32 counter      = 1;  // counter_ext the WM claims is current
     optional bytes  mac          = 2;  // mac_ext = MAC(mac_key, root||counter_ext); absent if the tree is empty
     required bytes  wm_signature = 3;  // Ed25519 sig over the attestation preimage (see above)
+    required uint64 timestamp = 4; // signed UTC seconds, checked against the durable floor
+    required bytes head_nonce = 5; // signed WM generation nonce, rotated after every accepted change
 }
 
 /**
@@ -264,9 +270,9 @@ message WARDLookup {
     optional bytes  witness_commit     = 5;  // non-membership: witness leaf commit = sha256(0x02||nonce||tag||len32(ct)||ct)
     reserved 6;                              // was counter; C_leaf now lives inside ct
     reserved 7;                              // was witness_counter
-    optional string app_id             = 8;  // domain; part of scope
-    optional string key_type           = 9;  // scope; also selects K_ident/K_data; default "address"
-    optional uint32 device_id          = 10; // scope device slot; 0 = global
+    optional string app_id             = 8;  // chosen by the WARD service: absent or "bitcoin", else refused
+    optional string key_type           = 9;  // chosen by the WARD service: absent or "address", else refused
+    optional uint32 device_id          = 10; // chosen by the WARD service: absent or 0, else refused
     reserved 11, 12, 13;                     // were flat nonce/tag/ct; now inside content
     optional LeafContent  content      = 14; // membership leaf value; absent = non-membership/absent
     optional LeafIdentity identity      = 15; // membership leaf identity (MAC preimage)
@@ -322,6 +328,21 @@ message WARDProofRequest {
     optional uint32 pending_id = 2;  // set during WARDPerformUpdate: the queued intent this proof is for
     reserved 3;                      // was app_id; now folded into entry_key, so the host learns no domain either
     required bytes  entry_key  = 4;  // 32B HMAC path the device computed locally; the host serves the proof for it
+    optional bytes  freshness_nonce = 5;  // label pulls: 32B nonce; the host returns the WM's current-head attestation over it
+}
+
+/**
+ * A WM freshness attestation over a device nonce, as in WARDIngestAttestation:
+ * Ed25519 over b"WARD ATTEST v2"||version||nonce||ward_id||counter||mac||timestamp||head_nonce.
+ * Carried in WARDProofAck so a label pull learns whether its root is still current,
+ * without a sync round and without changing device state.
+ */
+message WARDAttestation {
+    required uint32 counter      = 1;  // the WM's current head counter
+    optional bytes  mac          = 2;  // root MAC of that head; absent for the genesis empty tree
+    required bytes  wm_signature = 3;
+    required uint64 timestamp    = 4;  // signed UTC seconds
+    required bytes  head_nonce   = 5;  // signed WM generation nonce
 }
 
 /**
@@ -345,6 +366,8 @@ message WARDProofAck {
     reserved 9, 10, 11;                      // were flat nonce/tag/ct; now inside content
     optional LeafContent  content     = 12;  // membership leaf value; absent = pull request / empty tree
     optional LeafIdentity identity    = 13;  // membership leaf identity (MAC preimage)
+    optional WARDAttestation attestation = 14;  // answers freshness_nonce; absent if the WM was unreachable
+    optional bool unavailable = 15;  // the host has no WARD data to serve (wardd not reachable): the device may fall back to a sticky cached entry
 }
 
 /**
@@ -630,4 +653,163 @@ message WARDVerifyChainAck {
     optional bytes  new_root  = 2;  // installed root; absent if the tree is empty
     optional bytes  ward_id   = 3;  // SLIP21 WM-facing anchor
     optional bytes  root_mac  = 4;  // root MAC; absent if empty
+}
+
+/**
+ * One trie node served to a verified listing walk: a BRANCH (split_bit, left, right)
+ * or, when entry_key is set, a LEAF (entry_key + its two parts).
+ */
+message WARDTrieNode {
+    optional uint32 split_bit = 1;        // branch: the bit this node splits on
+    optional bytes  left      = 2;        // branch: 32B hash of the 0-child
+    optional bytes  right     = 3;        // branch: 32B hash of the 1-child
+    optional bytes  entry_key = 4;        // leaf: 32B path; set => this node is a leaf
+    optional LeafContent  content  = 5;   // leaf: sealed value
+    optional LeafIdentity identity = 6;   // leaf: sealed identity
+}
+
+/**
+ * Request: list every WARD entry on the device screen. The device walks its trusted
+ * root top-down, pulling nodes from the host (WARDNodeRequest) and verifying each
+ * against the hash its parent committed to, so the walk is complete and exact. Leaves
+ * matching the filters are decrypted and shown one per screen; the host learns only
+ * the counts.
+ * @start
+ * @next WARDNodeRequest
+ * @next ButtonRequest
+ * @next WARDListEntriesAck
+ * @next Failure
+ */
+message WARDListEntries {
+    optional string app_id    = 1;  // show only this domain; absent = all
+    optional string key_type  = 2;  // show only this key_type; absent = all
+    optional uint32 device_id = 3;  // show only this device slot; absent = all
+}
+
+/**
+ * Request: DEVICE -> HOST. The listing walk needs the node with this hash.
+ * @next WARDNodeAck
+ */
+message WARDNodeRequest {
+    required bytes node_hash = 1;  // 32B hash the device already trusts
+}
+
+/**
+ * Response: HOST -> DEVICE. The requested node first, then as many of its
+ * descendants as the host chooses, in pre-order (node, left subtree, right subtree),
+ * so one round trip can carry a whole subtree.
+ */
+message WARDNodeAck {
+    repeated WARDTrieNode nodes = 1;
+}
+
+/**
+ * Response: how the listing ended. Counts only -- no entry content leaves the device.
+ * @end
+ */
+message WARDListEntriesAck {
+    required uint32 shown    = 1;  // entries matching the filters that were displayed
+    required uint32 entries  = 2;  // leaves verified so far
+    required uint32 counter  = 3;  // the device counter of the root that was walked
+    required bool   complete = 4;  // false if the user stopped the listing early
+}
+
+/**
+ * Request: copy one WARD entry into the device's offline cache (the app's WARD store).
+ * The device pulls the proof for entry_key (WARDProofRequest), requires membership under
+ * its trusted root, checks the decrypted identity is entry_key's preimage, and stores
+ * identifier -> value in the store of the app the leaf belongs to. The entry_key already
+ * binds that app, and the leaf exists only because the user approved the write for it,
+ * so no further confirmation is asked -- except to make it sticky, which the user confirms.
+ * @start
+ * @next WARDProofRequest
+ * @next ButtonRequest
+ * @next WARDCacheEntryAck
+ * @next Failure
+ */
+message WARDCacheEntry {
+    required bytes entry_key = 1;  // 32B trie path of the entry to cache
+    optional bool  sticky    = 2;  // ask to keep it usable offline: the user confirms on screen; a device-only flag, never in the leaf
+}
+
+/**
+ * Response: the entry is in the offline cache. Nothing of its content is returned.
+ * @end
+ */
+message WARDCacheEntryAck {
+    required bool   replaced = 1;  // a cached record for the same key was overwritten
+    required uint32 counter  = 2;  // the device counter of the root the entry was proven against
+}
+
+/**
+ * Request: back up the offline cache's WARD entries. Each comes back as a blob sealed
+ * under a key only this wallet (seed and passphrase) can derive: the host carrying the
+ * backup can neither read nor forge it. Read-only.
+ * @start
+ * @next WARDCacheExportAck
+ * @next Failure
+ */
+message WARDCacheExport {
+}
+
+/**
+ * Response: one sealed blob per cached entry (sticky bit included).
+ * @end
+ */
+message WARDCacheExportAck {
+    repeated bytes entries = 1;
+}
+
+/**
+ * Request: load backed-up entries (from WARDCacheExport on any device of this wallet)
+ * into the offline cache. A blob this wallet did not seal is refused. Every entry is
+ * checked against the device's root (sync first) with a proof it pulls: entries WARD
+ * still has are stored with WARD's current value, keeping their sticky bit; entries
+ * WARD no longer has are skipped, so an old backup cannot bring them back. The user
+ * confirms an import that makes entries sticky.
+ * @start
+ * @next WARDProofRequest
+ * @next ButtonRequest
+ * @next WARDCacheImportAck
+ * @next Failure
+ */
+message WARDCacheImport {
+    repeated bytes entries = 1;
+}
+
+/**
+ * Response: counts only.
+ * @end
+ */
+message WARDCacheImportAck {
+    required uint32 imported = 1;
+    required uint32 skipped  = 2;  // absent from WARD, or older than the copy already cached
+}
+
+/**
+ * Request: check every cached WARD entry against the device's authenticated root (run
+ * after a sync). The device pulls one proof per entry (WARDProofRequest) and, on
+ * verified proofs only: keeps entries WARD still has with the same value, updates ones
+ * whose value changed, and removes entries WARD no longer has -- sticky ones too. A
+ * change to a sticky entry is shown to the user first.
+ * @start
+ * @next WARDProofRequest
+ * @next ButtonRequest
+ * @next WARDValidateCacheAck
+ * @next Failure
+ */
+message WARDValidateCache {
+}
+
+/**
+ * Response: counts only.
+ * @end
+ */
+message WARDValidateCacheAck {
+    required uint32 checked       = 1;
+    required uint32 unchanged     = 2;
+    required uint32 updated       = 3;
+    required uint32 removed       = 4;
+    reserved 5;                         // was sticky_absent: sticky entries are removed too
+    required uint32 counter       = 6;  // device counter of the root they were checked against
 }

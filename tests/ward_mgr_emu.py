@@ -19,9 +19,9 @@ from __future__ import annotations
 import hashlib
 import hmac as _hmac
 import unicodedata
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
-from trezorlib import _ed25519, ward
+from trezorlib import _ed25519, messages, ward
 from trezorlib.ward import ZERO_MAC
 
 if TYPE_CHECKING:
@@ -48,8 +48,8 @@ DEBUG_QM_SEED = b"AUTHDB QM DEBUG KEY SEED v1 ...."
 
 # WARD attestation domains (must match apps.ward.service).
 _WARD_FINAL_DOMAIN = b"WARD FINAL v1"
-_WARD_ATTEST_DOMAIN = b"WARD ATTEST v1"
-_WARD_ATTEST_VERSION = 1
+_WARD_ATTEST_DOMAIN = b"WARD ATTEST v2"
+_WARD_ATTEST_VERSION = 2
 
 # Transition-auth domains + empty-root sentinel (must match apps.ward.service). Used
 # by the WM CAS to verify a batch-update SigCommit at ingest.
@@ -63,14 +63,14 @@ class WMConflict(Exception):
     (the successor-only CAS compare failed) — the analogue of the HTTP 409 the
     connect client reacts to. Carries the current head so the caller can rebase."""
 
-    def __init__(self, counter: int, root: Optional[bytes], mac: Optional[bytes]) -> None:
+    def __init__(self, counter: int, root: bytes | None, mac: bytes | None) -> None:
         super().__init__("WM head advanced (409): rebase required")
         self.counter = counter
         self.root = root
         self.mac = mac
 
 
-def _norm_root(r: Optional[bytes]) -> Optional[bytes]:
+def _norm_root(r: bytes | None) -> bytes | None:
     """Normalise the empty tree to None (the device sends either None or the 32-byte
     EMPTY_ROOT_HASH sentinel for empty)."""
     return None if (r is None or r == _EMPTY_ROOT_HASH) else r
@@ -80,9 +80,9 @@ def _transition_preimage(
     tag: bytes,
     ward_id: bytes,
     from_counter: int,
-    from_root: Optional[bytes],
+    from_root: bytes | None,
     to_counter: int,
-    to_root: Optional[bytes],
+    to_root: bytes | None,
 ) -> bytes:
     fr = _EMPTY_ROOT_HASH if from_root is None else from_root
     tr = _EMPTY_ROOT_HASH if to_root is None else to_root
@@ -123,8 +123,31 @@ def sign_wm_attestation(
         + ward_id
         + counter.to_bytes(4, "big")
         + mac
+        + (1700000000).to_bytes(8, "big")
+        + b"h" * 32
     )
     return _ed25519_sign(message, qm_seed)
+
+
+def wm_attestation(
+    nonce: bytes,
+    counter: int,
+    mac: bytes | None,
+    ward_id: bytes,
+    qm_seed: bytes = DEBUG_QM_SEED,
+) -> messages.WARDAttestation:
+    """The WM's current-head attestation over a device nonce, in the shape a host
+    attaches to WARDProofAck (optional label freshness). Signed exactly as
+    `sign_wm_attestation`, with its fixed timestamp and head nonce."""
+    return messages.WARDAttestation(
+        counter=counter,
+        mac=mac,
+        wm_signature=sign_wm_attestation(
+            nonce, counter, mac if mac is not None else ZERO_MAC, ward_id, qm_seed
+        ),
+        timestamp=1700000000,
+        head_nonce=b"h" * 32,
+    )
 
 
 def sign_ward_update(
@@ -198,7 +221,7 @@ class WMEmulator:
         self.seed = mnemonic_to_seed(mnemonic, passphrase)
         self.qm_seed = qm_seed
         # Successor-only CAS register + transition history, per ward_id.
-        self._heads: dict[bytes, tuple[int, Optional[bytes], Optional[bytes]]] = {}
+        self._heads: dict[bytes, tuple[int, bytes | None, bytes | None]] = {}
         self._history: dict[bytes, list[dict]] = {}
         # When True (WARD_KSIG on), verify the device's Ed25519 SigCommit at ingest
         # (F4 pre-filter). The harness derives K_sig from the known test seed; a real
@@ -235,7 +258,7 @@ class WMEmulator:
         (SLIP-21 m/"ward"/"K_sig"). A real WM would hold this provisioned."""
         return _ed25519.publickey_unsafe(_slip21_key(self.seed, [b"ward", b"K_sig"]))
 
-    def head(self, ward_id: bytes) -> tuple[int, Optional[bytes], Optional[bytes]]:
+    def head(self, ward_id: bytes) -> tuple[int, bytes | None, bytes | None]:
         """Current authenticated head (counter, root, mac); genesis is (0, None, None)."""
         return self._heads.get(ward_id, (0, None, None))
 
@@ -258,9 +281,9 @@ class WMEmulator:
         self,
         ward_id: bytes,
         from_counter: int,
-        from_root: Optional[bytes],
+        from_root: bytes | None,
         to_counter: int,
-        to_root: Optional[bytes],
+        to_root: bytes | None,
     ) -> bytes:
         """Mint an `AuthCommit` with the ward family's `K_auth` reproduced from the
         test seed (SLIP-21 m/"ward"/"K_auth"), matching `service.auth_commit` byte for
@@ -287,7 +310,14 @@ class WMEmulator:
             fr = t["from_root"] if t["from_root"] is not None else _EMPTY_ROOT_HASH
             tr = t["to_root"] if t["to_root"] is not None else _EMPTY_ROOT_HASH
             out.append(
-                (t["from_counter"], fr, t["to_counter"], tr, t["auth_commit"], t["sig_commit"])
+                (
+                    t["from_counter"],
+                    fr,
+                    t["to_counter"],
+                    tr,
+                    t["auth_commit"],
+                    t["sig_commit"],
+                )
             )
         return out
 
@@ -295,13 +325,13 @@ class WMEmulator:
         self,
         ward_id: bytes,
         from_counter: int,
-        from_root: Optional[bytes],
+        from_root: bytes | None,
         to_counter: int,
-        to_root: Optional[bytes],
-        mac: Optional[bytes],
+        to_root: bytes | None,
+        mac: bytes | None,
         *,
-        auth: Optional[bytes] = None,
-        sig_commit: Optional[bytes] = None,
+        auth: bytes | None = None,
+        sig_commit: bytes | None = None,
         kind: str = "commit",
     ) -> bytes:
         """Successor-only compare-and-swap (ward-design §4.1 step 6, F1 defence in
@@ -323,7 +353,9 @@ class WMEmulator:
 
         if self.verify_sig_commit:
             if sig_commit is None:
-                raise ValueError("WM requires a SigCommit (WARD_KSIG) but none supplied")
+                raise ValueError(
+                    "WM requires a SigCommit (WARD_KSIG) but none supplied"
+                )
             tag = _TAG_REVERT if kind == "revert" else _TAG_COMMIT
             pre = _transition_preimage(
                 tag, ward_id, from_counter, from_root, to_counter, to_root
@@ -331,7 +363,9 @@ class WMEmulator:
             try:
                 _ed25519.checkvalid(sig_commit, pre, self.k_sig_pubkey())
             except Exception:
-                raise ValueError("WM: SigCommit verification failed (unauthorised transition)")
+                raise ValueError(
+                    "WM: SigCommit verification failed (unauthorised transition)"
+                )
 
         self._heads[ward_id] = (to_counter, _norm_root(to_root), mac)
         # The authoritative TransitionRecord (Phase 3a): the canonical
@@ -353,7 +387,9 @@ class WMEmulator:
                 "kind": kind,
             }
         )
-        return self.sign_final(ward_id, to_counter, mac if mac is not None else ZERO_MAC)
+        return self.sign_final(
+            ward_id, to_counter, mac if mac is not None else ZERO_MAC
+        )
 
 
 def wm_initial_sync(
@@ -361,8 +397,8 @@ def wm_initial_sync(
     wm: WMEmulator,
     tree: "WARDTree",
     counter: int,
-    wallet_id: Optional[bytes] = None,
-) -> tuple[int, Optional[bytes], Optional[bytes]]:
+    wallet_id: bytes | None = None,
+) -> tuple[int, bytes | None, bytes | None]:
     """Positive path: the WM attests ``tree`` at ``counter`` and the device adopts
     it via the sync round (WARDSync -> WARDIngestAttestation -> WARDReconcile).
     Returns ``(counter, adopted_root, root_mac)``."""
@@ -380,5 +416,59 @@ def wm_initial_sync(
     sig = wm.sign_attestation(
         ward_id, nonce, counter, mac if mac is not None else ZERO_MAC
     )
-    ward.ingest_attestation(session, counter, mac, sig)
+    ward.ingest_attestation(
+        session, counter, mac, sig, timestamp=1700000000, head_nonce=b"h" * 32
+    )
     return ward.reconcile(session, root)
+
+
+def wm_chain_sync(
+    session: "Session",
+    wm: WMEmulator,
+    from_tree: "WARDTree",
+    from_counter: int,
+    tree: "WARDTree",
+    counter: int,
+) -> tuple[int, bytes | None, bytes | None]:
+    """Refresh path: the WM attests ``tree`` at ``counter`` and an ANCHORED device
+    (at ``from_tree``/``from_counter``) moves forward through WARDVerifyChain, as it
+    must -- reconcile only bootstraps or re-establishes the anchored counter. The
+    links are minted by a family peer (``wm.auth_commit``), one per counter step;
+    intermediate roots are synthetic, since the verifier checks authorization and
+    contiguity, not content. Returns ``(counter, adopted_root, root_mac)``."""
+    _pending, wallet_id = ward.list_pending(session)
+    assert wallet_id is not None
+    root = None if tree.is_empty() else tree.get_root_hash()
+    mac = None if root is None else wm.root_mac(wallet_id, counter, root)
+
+    nonce, ward_id = ward.sync(session)
+    assert ward_id is not None
+    sig = wm.sign_attestation(
+        ward_id, nonce, counter, mac if mac is not None else ZERO_MAC
+    )
+    ward.ingest_attestation(
+        session, counter, mac, sig, timestamp=1700000000, head_nonce=b"h" * 32
+    )
+
+    roots = [None if from_tree.is_empty() else from_tree.get_root_hash()]
+    roots += [
+        hashlib.sha256(b"chain-step-%d" % c).digest()
+        for c in range(from_counter + 1, counter)
+    ]
+    roots.append(root)
+    roots = [r if r is not None else _EMPTY_ROOT_HASH for r in roots]
+    links = [
+        (
+            from_counter + i,
+            roots[i],
+            from_counter + i + 1,
+            roots[i + 1],
+            wm.auth_commit(
+                ward_id, from_counter + i, roots[i], from_counter + i + 1, roots[i + 1]
+            ),
+            None,
+        )
+        for i in range(counter - from_counter)
+    ]
+    out_counter, out_root, _ward_id, root_mac = ward.verify_chain(session, links)
+    return out_counter, out_root, root_mac

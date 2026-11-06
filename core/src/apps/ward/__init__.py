@@ -35,6 +35,18 @@ class WardApp(IntEnum):
     BITCOIN = const(1)
 
 
+# The trie names an app by its domain string (the app_id inside entry_key); the offline
+# cache by a WardApp id. Only domains listed here can be cached.
+_DOMAIN_APPS = {
+    b"bitcoin": WardApp.BITCOIN,
+}
+
+
+def app_for_domain(app_id: bytes) -> WardApp | None:
+    """The WardApp whose offline store holds entries of the trie domain `app_id`."""
+    return _DOMAIN_APPS.get(bytes(app_id))
+
+
 async def open_ward(app: WardApp) -> WardStore:
     """Open the WARD store of `app` in the current passphrase wallet."""
     from .keys import derive_wallet_id

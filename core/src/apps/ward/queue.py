@@ -13,13 +13,13 @@ async def queue(msg: WARDQueueUpdate) -> WARDQueueUpdateAck:
     from trezor.messages import WARDQueueUpdateAck
 
     from apps.common import ward as core
+    from apps.ward.caller import host_caller
 
+    # The host does not choose the domain, key type or slot: refused unless absent or
+    # equal to what the WARD service fixes for host-driven labels.
+    caller = host_caller(msg.app_id, msg.key_type, msg.device_id)
     pending_id, _wallet_id = await core.queue(
-        msg.app_id,
-        msg.address,
-        msg.new_value,
-        msg.key_type or "address",
-        msg.device_id or 0,
+        caller, bytes(msg.address), bytes(msg.new_value), delete=bool(msg.delete)
     )
 
     return WARDQueueUpdateAck(pending_id=pending_id)

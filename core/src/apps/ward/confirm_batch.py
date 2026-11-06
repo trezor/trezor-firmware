@@ -15,7 +15,9 @@ async def confirm_batch(msg: WARDConfirmBatchByWM) -> WARDConfirmBatchByWMAck:
     from apps.common import ward as core
 
     counter, root, ward_id, root_mac = await core.finalize_batch(
-        msg.counter, msg.mac, msg.wm_signature
+        msg.counter,
+        bytes(msg.mac) if msg.mac is not None else None,
+        bytes(msg.wm_signature),
     )
 
     return WARDConfirmBatchByWMAck(

@@ -5,7 +5,13 @@ from trezorlib.authdb_tree import WARDTree
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
-from ...ward_mgr_emu import device_ward_keys, sign_ward_update, sign_wm_attestation
+from ...ward_mgr_emu import (
+    WMEmulator,
+    device_ward_keys,
+    sign_ward_update,
+    sign_wm_attestation,
+    wm_attestation,
+)
 
 _APP = "bitcoin"  # capability principal == queried domain for these tests
 
@@ -73,7 +79,9 @@ def _sync_device(
     assert ward_id is not None
     mac_for_sig = root_mac if root_mac is not None else ward.ZERO_MAC
     sig = sign_wm_attestation(nonce, counter, mac_for_sig, ward_id)
-    ward.ingest_attestation(session, counter, root_mac, sig)
+    ward.ingest_attestation(
+        session, counter, root_mac, sig, timestamp=1700000000, head_nonce=b"h" * 32
+    )
     return ward.reconcile(session, root)
 
 
@@ -409,3 +417,152 @@ def test_display_address_non_membership_pull(session: Session) -> None:
             response = dev.result()
 
     assert response.message == "Address shown"
+
+
+# ---------------------------------------------------------------------------
+# OPTIONAL label freshness: the device's WARDProofRequest carries a nonce, and a host
+# that chooses to ask the WM attaches its current-head attestation over it. Without
+# one (every test above) the label is shown as before; nothing here changes state.
+# ---------------------------------------------------------------------------
+
+_FRESH_ADDRESS = "bc1qdemoaddress000000000000000000000000000"
+
+
+def _fresh_setup(session: Session):
+    """A two-entry tree installed on the device. Returns (tree, counter, root_mac,
+    wallet_id, ward_id)."""
+    tree = _tree()
+    tree.insert(_APP, _FRESH_ADDRESS.encode(), b"label1", counter=1)
+    tree.insert(_APP, b"bc1qotheraddress000000000000000000000000000", b"l2", counter=1)
+    counter, _root, wallet_id, mac = ward.debug_set_root(session, tree.get_root_hash())
+    _nonce, ward_id = ward.sync(session)
+    assert wallet_id is not None and ward_id is not None
+    return tree, counter, mac, wallet_id, ward_id
+
+
+def _pull_screens(session: Session, tree: WARDTree, attest) -> list[str]:
+    """Run a PULL DisplayAddress, approving every screen up to and including the
+    address; returns each screen's title + content, lowercased, whitespace folded."""
+    seen = []
+    with session.test_ctx as client:
+        client.app.ward_proof_callback = ward.tree_proof_callback(tree, attest)
+        with BackgroundDeviceHandler(client) as dev:
+            dev.run_with_provided_session(
+                session,
+                lambda s: s.call(
+                    messages.DisplayAddress(address=_FRESH_ADDRESS, app_id=_APP),
+                    expect=messages.Success,
+                ),
+            )
+            for _screen in range(4):
+                layout = dev.debuglink().read_layout()
+                content = layout.screen_content()
+                seen.append(" ".join((layout.title() + " " + content).lower().split()))
+                dev.debuglink().press_yes()
+                if _FRESH_ADDRESS in content.replace("\n", "").replace(" ", ""):
+                    break
+            assert dev.result().message == "Address shown"
+    return seen
+
+
+def test_display_address_attested_current_label_shows_as_before(
+    session: Session,
+) -> None:
+    """The WM attests exactly the device's head: no extra screen, verified label."""
+    tree, counter, mac, _wallet_id, ward_id = _fresh_setup(session)
+    seen = _pull_screens(
+        session, tree, lambda nonce: wm_attestation(nonce, counter, mac, ward_id)
+    )
+    assert len(seen) == 1
+    assert seen[0].startswith("membership")
+
+
+def test_display_address_attested_newer_head_warns_outdated(session: Session) -> None:
+    """Another device moved the head on: the label is still the verified answer for
+    this device's root, but the user is told it may be outdated first. The device's
+    counter and root do not move."""
+    tree, counter, mac, wallet_id, ward_id = _fresh_setup(session)
+    newer_mac = WMEmulator().root_mac(wallet_id, counter + 1, b"n" * 32)
+    seen = _pull_screens(
+        session,
+        tree,
+        lambda nonce: wm_attestation(nonce, counter + 1, newer_mac, ward_id),
+    )
+    assert "outdated" in seen[0]
+    assert seen[-1].startswith("membership")
+
+    # Still current with respect to its own anchor: nothing was installed.
+    _valid, _member, current = _lookup_membership(session, tree, _FRESH_ADDRESS)
+    assert current == counter
+
+
+@pytest.mark.parametrize("attack", ["forged", "other_nonce", "fork"])
+def test_display_address_bad_attestation_warns_not_confirmed(
+    session: Session, attack: str
+) -> None:
+    """An attached attestation that does not verify -- forged, minted for another
+    nonce (a replay), or naming a different root at the device's own counter (a
+    fork) -- is never read as freshness."""
+    tree, counter, mac, wallet_id, ward_id = _fresh_setup(session)
+
+    def attest(nonce: bytes) -> messages.WARDAttestation:
+        if attack == "forged":
+            att = wm_attestation(nonce, counter, mac, ward_id)
+            att.wm_signature = bytes([att.wm_signature[0] ^ 1]) + att.wm_signature[1:]
+            return att
+        if attack == "other_nonce":
+            return wm_attestation(b"\x00" * 32, counter, mac, ward_id)
+        fork_mac = WMEmulator().root_mac(wallet_id, counter, b"f" * 32)
+        return wm_attestation(nonce, counter, fork_mac, ward_id)
+
+    seen = _pull_screens(session, tree, attest)
+    assert "not confirmed" in seen[0]
+    assert seen[-1].startswith("membership")
+
+
+def test_display_address_label_that_is_not_text_is_not_shown(session: Session) -> None:
+    """A verified label with non-text bytes (here a right-to-left override) could make
+    the screen say something else; the subtitle has no field name to mark a hex form, so
+    the label is withheld behind a warning instead."""
+    tree = _tree()
+    tree.insert(_APP, _FRESH_ADDRESS.encode(), "‮moc.knab".encode(), counter=1)
+    ward.debug_set_root(session, tree.get_root_hash())
+
+    seen = _pull_screens(session, tree, None)
+
+    assert "not plain text" in seen[0]
+    assert seen[-1].startswith("membership")
+    assert "knab" not in seen[-1]
+
+
+def test_display_address_host_cannot_choose_the_label_domain(session: Session) -> None:
+    """DisplayAddress reads the labels in the domain the WARD service grants it; a host
+    asking for another app's domain gets a warning and the bare address, and no proof
+    is ever pulled for that domain."""
+    tree = _tree()
+    tree.insert(_APP, _FRESH_ADDRESS.encode(), b"label1", counter=1)
+    ward.debug_set_root(session, tree.get_root_hash())
+
+    def never(_msg):
+        raise AssertionError("no proof may be pulled for a host-chosen domain")
+
+    seen = []
+    with session.test_ctx as client:
+        client.app.ward_proof_callback = never
+        with BackgroundDeviceHandler(client) as dev:
+            dev.run_with_provided_session(
+                session,
+                lambda s: s.call(
+                    messages.DisplayAddress(address=_FRESH_ADDRESS, app_id="ethereum"),
+                    expect=messages.Success,
+                ),
+            )
+            for _screen in range(2):
+                layout = dev.debuglink().read_layout()
+                text = layout.title() + " " + layout.screen_content()
+                seen.append(" ".join(text.lower().split()))
+                dev.debuglink().press_yes()
+            dev.result()
+
+    assert "ward label unavailable" in seen[0]
+    assert seen[1].startswith("unverified") and "label1" not in seen[1]

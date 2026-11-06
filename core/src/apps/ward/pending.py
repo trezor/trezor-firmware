@@ -15,5 +15,8 @@ async def pending(msg: WARDListPendingEdits) -> WARDListPendingEditsAck:
     pending_ids, addresses, wallet_id, ward_id = await core.pending()
 
     return WARDListPendingEditsAck(
-        addresses=addresses, pending_ids=pending_ids, wallet_id=wallet_id, ward_id=ward_id
+        addresses=[address for address in addresses],
+        pending_ids=pending_ids,
+        wallet_id=wallet_id,
+        ward_id=ward_id,
     )

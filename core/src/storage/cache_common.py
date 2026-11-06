@@ -125,8 +125,8 @@ class SessionlessCache(DataCache):
             32,  # APP_MISC_COSI_NONCE
             32,  # APP_MISC_COSI_COMMITMENT
             0,  # APP_RECOVERY_REPEATED_BACKUP_UNLOCKED
-            89,  # APP_WARD_SYNC_RECORD
-            52,  # APP_WARD_ROOT_RECORD
+            129,  # APP_WARD_SYNC_RECORD, including signed timestamp and WM nonce
+            92,  # APP_WARD_ROOT_RECORD, including durable freshness metadata
         )
         super().__init__()
 

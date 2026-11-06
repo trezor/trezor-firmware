@@ -11,6 +11,7 @@ crate-type = ["rlib", "cdylib"]
 [features]
 default = []
 python = ["dep:pyo3"]
+node = ["dep:napi", "dep:napi-derive", "dep:napi-build"]
 
 [dependencies]
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
@@ -18,3 +19,8 @@ serde_json = "1"
 thiserror = "2"
 tungstenite = "0.24"
 pyo3 = { version = "0.25", optional = true, features = ["extension-module"] }
+napi = { version = "3", optional = true, default-features = false, features = ["napi8"] }
+napi-derive = { version = "3", optional = true }
+
+[build-dependencies]
+napi-build = { version = "2", optional = true }

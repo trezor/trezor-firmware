@@ -127,7 +127,7 @@ class WardHostHarness:
         assert wallet_id is not None
         mac_for_sig = root_mac if root_mac is not None else ward.ZERO_MAC
         sig = self.wm.sign_attestation(ward_id, nonce, counter, mac_for_sig)
-        ward.ingest_attestation(session, counter, root_mac, sig)
+        ward.ingest_attestation(session, counter, root_mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
         out_counter, out_root, out_root_mac = ward.reconcile(session, root)
         return out_counter, out_root, wallet_id, out_root_mac
 
@@ -168,7 +168,9 @@ class WardHostHarness:
             is not None
             else b""
         )
-        pending_id = _queue_update(session, address, old_value, value or b"")
+        pending_id = _queue_update(
+            session, address, old_value, value or b"", delete=value is None
+        )
 
         res = _perform(session, self.tree, pending_id)
         c_counter, _root_t, mac_t, ward_id = res[:4]
@@ -189,13 +191,13 @@ class WardHostHarness:
         return counter
 
     def enqueue_set(self, address: bytes, value: bytes | None) -> None:
-        self.queue.append((address, value or b""))
+        self.queue.append((address, value))
 
     def drain_queue(self, session: Session) -> int:
         applied = 0
         while self.queue:
             address, value = self.queue.pop(0)
-            self.set_value(session, address, value or None)
+            self.set_value(session, address, value)
             applied += 1
         return applied
 
@@ -226,7 +228,7 @@ def _sync_device(
     assert wallet_id is not None
     mac_for_sig = root_mac if root_mac is not None else ward.ZERO_MAC
     sig = sign_wm_attestation(nonce, counter, mac_for_sig, ward_id)
-    ward.ingest_attestation(session, counter, root_mac, sig)
+    ward.ingest_attestation(session, counter, root_mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
     out_counter, out_root, out_root_mac = ward.reconcile(session, root)
     return out_counter, out_root, wallet_id, out_root_mac
 
@@ -236,15 +238,18 @@ def _queue_update(
     address: bytes,
     old_value: bytes,
     new_value: bytes,
+    delete: bool = False,
 ) -> int:
     """Queue an edit INTENT through the trusted confirm screen (approve it via the
     debuglink). Returns pending_id. Strict model: NO candidate counter is derived
-    at queue time."""
+    at queue time. A delete is explicit and carries an empty value."""
     with session.test_ctx as client:
         with BackgroundDeviceHandler(client) as dev:
             dev.run_with_provided_session(
                 session,
-                lambda s: ward.queue_update(s, _APP, address, old_value, new_value),
+                lambda s: ward.queue_update(
+                    s, _APP, address, old_value, new_value, delete=delete
+                ),
             )
             dev.debuglink().press_yes()
             pending_id = dev.result()
@@ -291,10 +296,11 @@ def _edit(
     address: bytes,
     old_value: bytes,
     new_value: bytes,
+    delete: bool = False,
 ) -> tuple[int, bytes | None, bytes | None, int]:
     """Full pull update round for one edit. Returns
     (counter, new_root, root_mac, pending_id)."""
-    pending_id = _queue_update(session, address, old_value, new_value)
+    pending_id = _queue_update(session, address, old_value, new_value, delete)
     counter, new_root, root_mac = _perform_and_finalize(session, tree, pending_id)
     return counter, new_root, root_mac, pending_id
 
@@ -346,7 +352,7 @@ def test_ward_delete(session: Session) -> None:
 
     new_counter = counter0 + 1
     counter, new_root, _mac, _pid = _edit(
-        session, tree, b"alice", ENTRIES[b"alice"], b""
+        session, tree, b"alice", ENTRIES[b"alice"], b"", delete=True
     )
 
     assert counter == new_counter
@@ -380,7 +386,7 @@ def test_ward_delete(session: Session) -> None:
 def test_ward_delete_shows_a_dedicated_delete_screen(session: Session) -> None:
     """A delete is destructive and irreversible (the leaf leaves the trie), so it gets
     its own confirm screen -- titled "Delete WARD entry", carrying a warning, and NOT
-    showing a "New value" row. An empty new_value is what selects it."""
+    showing a "New value" row. The explicit delete flag is what selects it."""
     tree = _make_tree()
     _seed_device(session, tree)
 
@@ -388,7 +394,9 @@ def test_ward_delete_shows_a_dedicated_delete_screen(session: Session) -> None:
         with BackgroundDeviceHandler(client) as dev:
             dev.run_with_provided_session(
                 session,
-                lambda s: ward.queue_update(s, _APP, b"alice", ENTRIES[b"alice"], b""),
+                lambda s: ward.queue_update(
+                    s, _APP, b"alice", ENTRIES[b"alice"], b"", delete=True
+                ),
             )
             layout = dev.debuglink().read_layout()
             title = layout.title().lower()
@@ -424,6 +432,50 @@ def test_ward_delete_shows_a_dedicated_delete_screen(session: Session) -> None:
 
 
 @pytest.mark.models("core")
+def test_ward_delete_with_a_value_is_rejected(session: Session) -> None:
+    """The delete flag decides both the screen and what perform does, so a delete
+    that also carries a value is refused outright -- before any screen. Otherwise a
+    host could show the user an update and have the device perform a delete."""
+    tree = _make_tree()
+    _seed_device(session, tree)
+
+    with pytest.raises(TrezorFailure, match="carries no new value"):
+        ward.queue_update(
+            session,
+            _APP,
+            b"alice",
+            ENTRIES[b"alice"],
+            b"looks_like_an_update",
+            delete=True,
+        )
+    assert _pending_addresses(session) == []
+
+
+@pytest.mark.models("core")
+def test_ward_empty_value_without_delete_is_an_update(session: Session) -> None:
+    """An empty value is a valid value. Without the delete flag the user sees the
+    update screen, and the entry survives with that value: it is never a delete."""
+    tree = _make_tree()
+    _seed_device(session, tree)
+
+    with session.test_ctx as client:
+        with BackgroundDeviceHandler(client) as dev:
+            dev.run_with_provided_session(
+                session,
+                lambda s: ward.queue_update(s, _APP, b"alice", ENTRIES[b"alice"], b""),
+            )
+            title = dev.debuglink().read_layout().title().lower()
+            assert "delete" not in title, f"update shown as a delete: {title!r}"
+            dev.debuglink().press_yes()
+            pending_id = dev.result()
+
+    _perform_and_finalize(session, tree, pending_id)
+    assert tree.get_leaf(tree._ek(_APP, b"alice", "address", 0)) is not None
+    valid, membership, _c = _lookup_membership(session, tree, b"alice")
+    assert valid and membership
+
+
+@pytest.mark.models("core")
 def test_ward_delete_returns_no_leaf_parts(session: Session) -> None:
     """The device's WARDPerformUpdateAck for a delete carries BOTH leaf parts empty.
     A populated identity part would be a tombstone — but the leaf is removed from the
@@ -431,7 +483,7 @@ def test_ward_delete_returns_no_leaf_parts(session: Session) -> None:
     tree = _make_tree()
     _seed_device(session, tree)
 
-    pending_id = _queue_update(session, b"alice", ENTRIES[b"alice"], b"")
+    pending_id = _queue_update(session, b"alice", ENTRIES[b"alice"], b"", delete=True)
     res = _perform(session, tree, pending_id)
     ek, leaf = res[4:6]
 
@@ -572,7 +624,7 @@ def test_ward_ingest_bad_signature_rejected(session: Session) -> None:
     valid_sig = sign_wm_attestation(nonce, counter, mac, ward_id)
     bad_sig = bytes([valid_sig[0] ^ 0x01]) + valid_sig[1:]
     with pytest.raises(TrezorFailure):
-        ward.ingest_attestation(session, counter, mac, bad_sig)
+        ward.ingest_attestation(session, counter, mac, bad_sig, timestamp=1700000000, head_nonce=b"h" * 32)
 
 
 @pytest.mark.models("core")
@@ -589,7 +641,7 @@ def test_ward_ingest_rollback_rejected(session: Session) -> None:
     assert ward_id is not None
     sig = sign_wm_attestation(nonce, 1, mac, ward_id)
     with pytest.raises(TrezorFailure):
-        ward.ingest_attestation(session, 1, mac, sig)
+        ward.ingest_attestation(session, 1, mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
 
 
 @pytest.mark.models("core")
@@ -638,7 +690,7 @@ def test_ward_catchup_rejects_unreconstructable_root(session: Session) -> None:
     nonce, ward_id = ward.sync(session)
     assert ward_id is not None
     sig = sign_wm_attestation(nonce, counter, mac, ward_id)
-    ward.ingest_attestation(session, counter, mac, sig)
+    ward.ingest_attestation(session, counter, mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
 
     # The host serves a root the attested mac does not commit to: it cannot be
     # reconstructed against the attestation, so reconcile must reject it.
@@ -669,7 +721,7 @@ def _verify_chain_setup(session: Session, n: int):
     mac_head = wm.root_mac(wallet_id, c_head, r_head)
     ward.ingest_attestation(
         session, c_head, mac_head, wm.sign_attestation(ward_id, nonce, c_head, mac_head)
-    )
+    , timestamp=1700000000, head_nonce=b"h" * 32)
 
     links = [
         (
@@ -700,6 +752,21 @@ def test_ward_verify_chain_adopts(session: Session) -> None:
     assert counter == c_head
     assert new_root == r_head
     assert root_mac == mac_head
+
+
+@pytest.mark.models("core")
+def test_ward_reconcile_cannot_advance_an_anchored_device(session: Session) -> None:
+    """An anchored device moves forward only through WARDVerifyChain. A root that
+    matches the attested MAC proves that some device of this wallet computed it, not
+    that it descends from this device's anchor -- so reconcile refuses it, and the
+    same attested round then succeeds through the chain."""
+    _wm, _ward_id, c_head, r_head, mac_head, links = _verify_chain_setup(session, 2)
+
+    with pytest.raises(TrezorFailure, match="WARDVerifyChain"):
+        ward.reconcile(session, r_head)
+
+    counter, new_root, _ward_id, root_mac = ward.verify_chain(session, links)
+    assert (counter, new_root, root_mac) == (c_head, r_head, mac_head)
 
 
 @pytest.mark.models("core")
@@ -828,7 +895,7 @@ def test_ward_pending_queue_cleared_after_delete(session: Session) -> None:
     _seed_device(session, tree)
 
     assert _pending_addresses(session) == []
-    pid = _queue_update(session, b"alice", ENTRIES[b"alice"], b"")
+    pid = _queue_update(session, b"alice", ENTRIES[b"alice"], b"", delete=True)
     assert _pending_addresses(session) == [b"alice"]
 
     _perform_and_finalize(session, tree, pid)

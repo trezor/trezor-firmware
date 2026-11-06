@@ -382,7 +382,7 @@ def test_frozen_vectors():
     assert kd.hex() == "9ae3bc6866b853cffc237fa11437e68d41ed91c9b8811e2b50a3f4f1cd0aa3e5"
 
     mac = wc.leaf_identity_mac(kp, "bitcoin", b"alice", "address", 7)
-    assert mac.hex() == "20f3088c1a70e4749e21b2f1969b6f982ced4f8d1983cdda856b292bbb51750a"
+    assert mac.hex() == "4ba4b47a90a9d965e98d7da123e283f676d1edc043913dc36e307deabf0a1069"
 
     nonce = b"\x5a" * 12
     leaf = wc.LeafBlob(
@@ -391,10 +391,10 @@ def test_frozen_vectors():
         wc.encode_content(kd, mac, "address", 5, b"data_alice", nonce=nonce),
     )
     commit = wc.commit_of(leaf)
-    assert commit.hex() == "4e2f5c55548a63a56e10eed9b00b4eaebe7b27ece484aefe319ffdd5b8c3e534"
+    assert commit.hex() == "ab827bd1868d6159f46bcde95ca634bf1c8e75c7b732547e0ee585d46bb00843"
     assert (
         wc.leaf_hash_of(mac, commit).hex()
-        == "ff2d92fe3997f4c2201aa3060c3b2f2fa8bf7e72f463caa63489c95122c57400"
+        == "6b418f74c764aacb0f7eba47da6daef5c01c872088c7b121673e4c0dcade669b"
     )
 
 

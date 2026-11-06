@@ -13,7 +13,11 @@ async def ingest(msg: WARDIngestAttestation) -> WARDIngestAttestationAck:
     from apps.common import ward as core
 
     counter, _wallet_id = await core.ingest(
-        msg.counter, msg.mac, msg.wm_signature
+        msg.counter,
+        bytes(msg.mac) if msg.mac is not None else None,
+        bytes(msg.wm_signature),
+        msg.timestamp,
+        bytes(msg.head_nonce),
     )
 
     return WARDIngestAttestationAck(counter=counter)

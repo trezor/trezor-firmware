@@ -156,6 +156,16 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.ward.lookup"
     if msg_type == MessageType.WARDExportKeys:
         return "apps.ward.export_keys"
+    if msg_type == MessageType.WARDListEntries:
+        return "apps.ward.list_entries"
+    if msg_type == MessageType.WARDCacheEntry:
+        return "apps.ward.cache_entry"
+    if msg_type == MessageType.WARDCacheExport:
+        return "apps.ward.cache_export"
+    if msg_type == MessageType.WARDCacheImport:
+        return "apps.ward.cache_import"
+    if msg_type == MessageType.WARDValidateCache:
+        return "apps.ward.validate_cache"
     if __debug__ and msg_type == MessageType.WARDDebugSetRoot:
         return "apps.ward.debug_set_root"
 

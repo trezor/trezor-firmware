@@ -353,6 +353,10 @@ def _multiproof_root(items, stored_root):
     sib_seen = {}  # path -> list of boundary sibling hashes recorded for it
 
     for ek, oh, nh, proof in items:
+        # Each proof must be a well-formed walk ON ITS OWN. The overlay below only ever
+        # folds the shared structure, so a malformed proof could otherwise ride along on
+        # the others and never be hashed.
+        _proof_steps_root_to_leaf(proof)
         path = ()
         occupied.add(path)
         for elem in reversed(proof):  # root → leaf order
@@ -364,15 +368,26 @@ def _multiproof_root(items, stored_root):
             else:
                 # The skiplen agreement that used to be checked here compared a
                 # host-supplied number against one derived from the split bits either
-                # side of it; `_proof_steps_root_to_leaf` (via reconstruct) already
+                # side of it; `_proof_steps_root_to_leaf` (checked per item above)
                 # enforces that those bits strictly increase, which is the whole of it.
                 branch[path] = b
             sib_path = path + ((b, 1 - d),)
             sib_seen.setdefault(sib_path, []).append(sib)
             path = path + ((b, d),)
             occupied.add(path)
+        if path in old_leaf:
+            raise ValueError("two batch leaves claim one trie position")
         old_leaf[path] = oh
         new_leaf[path] = nh
+
+    # A position is a leaf OR a branch, never both. `node_hash` reads the leaf first, so
+    # a proof that walks THROUGH another item's leaf (or stops where another item's walk
+    # branches) would have its own leaf silently left out of both folds: the pre-state
+    # still matches `stored_root`, and the new root carries every change but that one.
+    # A host could make an approved update vanish while the device reports it applied.
+    for path in old_leaf:
+        if path in branch:
+            raise ValueError("a batch leaf lies on another leaf's proof path")
 
     # A non-occupied sibling is an EXTERNAL subtree: every proof that named it must
     # agree on its hash (this is the cross-proof consistency / verification step).
@@ -459,3 +474,70 @@ def compute_batch_root(stored_root, ops):
     if stored_root is None:
         raise ValueError("multi-leaf update batch requires a non-empty tree")
     return _multiproof_root(items, stored_root)
+
+
+class TrieWalk:
+    """A verified top-down walk of the whole trie under a trusted root.
+
+    The host serves nodes; the device trusts none of them. It holds a stack of
+    hashes it already trusts -- the root to begin with, then the children each
+    verified branch commits to -- and accepts a node only if it hashes to the hash on
+    top of the stack. Every node is therefore checked exactly once against a parent
+    already checked, all the way up to the root, and the walk is COMPLETE: a host
+    that omits a subtree has to hand over some other preimage of its hash. Memory is
+    O(depth): one pending sibling per level.
+
+    Nodes come in DFS pre-order (node, left subtree, right subtree), which is the
+    order `expected` asks for, so a host can stream a whole subtree per round trip.
+
+    Besides the hash, each node is checked against its POSITION:
+      - a branch splits on a bit strictly below its parent's -- the order the
+        verifier of a single proof (`_proof_steps_root_to_leaf`) also demands;
+      - a leaf's entry_key agrees with every branch decision on the way down to it,
+        so the walk can never place a leaf where a lookup for its key would not go.
+    A device-built trie satisfies both by construction; they are cheap, and they keep
+    the walk sound on its own rather than only for roots this device computed."""
+
+    def __init__(self, root) -> None:
+        # (trusted hash, lowest bit a branch here may split on, branch decisions above)
+        self._stack: list[tuple[bytes, int, tuple[tuple[int, int], ...]]] = (
+            [] if root is None else [(root, 0, ())]
+        )
+
+    def expected(self):
+        """The hash of the next node the walk needs, or None once it is complete."""
+        return self._stack[-1][0] if self._stack else None
+
+    def branch(self, split_bit: int, left: bytes, right: bytes) -> None:
+        """Accept the next node as a branch, or raise ValueError."""
+        if not self._stack:
+            raise ValueError("trie walk is already complete")
+        trusted, min_bit, path = self._stack[-1]
+        if not min_bit <= split_bit < 256:
+            raise ValueError("branch split bit out of order")
+        if len(left) != 32 or len(right) != 32:
+            raise ValueError("branch children must be 32 bytes")
+        if internal_hash(split_bit, left, right) != trusted:
+            raise ValueError("branch does not hash to its parent's commitment")
+        self._stack.pop()
+        # right first, so the left subtree is walked next (pre-order)
+        self._stack.append((right, split_bit + 1, path + ((split_bit, 1),)))
+        self._stack.append((left, split_bit + 1, path + ((split_bit, 0),)))
+
+    def leaf(self, entry_key_: bytes, commit: bytes) -> None:
+        """Accept the next node as the leaf (entry_key, commit), or raise ValueError."""
+        from trezor.wire import DataError
+
+        if not self._stack:
+            raise ValueError("trie walk is already complete")
+        trusted, _min_bit, path = self._stack[-1]
+        try:
+            node = leaf_hash_of(entry_key_, commit)
+        except DataError as e:
+            raise ValueError(str(e))
+        if node != trusted:
+            raise ValueError("leaf does not hash to its parent's commitment")
+        for bit, side in path:
+            if addr_bit(entry_key_, bit) != side:
+                raise ValueError("leaf is off its key's path")
+        self._stack.pop()

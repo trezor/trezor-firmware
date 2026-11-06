@@ -15,10 +15,11 @@ Inserts and deletes must use single-leaf commits.
 
 import pytest
 
-from trezorlib import ward
+from trezorlib import messages, ward
 from trezorlib.authdb_tree import WARDTree
 from trezorlib.debuglink import DebugSession as Session
-from trezorlib.exceptions import TrezorFailure
+from trezorlib.exceptions import Cancelled, TrezorFailure
+from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 from ...ward_mgr_emu import sign_ward_update
 from .test_ward import (
@@ -74,6 +75,24 @@ def _commit_batch(session: Session, tree: WARDTree, pending_ids: list) -> tuple:
     return out_counter, out_root, from_root, auth_commit
 
 
+def _perform_revert(session: Session, *args, approve: bool = True) -> tuple:
+    """WARDPerformRevert through its trusted "Undo WARD change" screen."""
+    with session.test_ctx as client:
+        with BackgroundDeviceHandler(client) as dev:
+            dev.run_with_provided_session(
+                session, lambda s: ward.perform_revert(s, *args)
+            )
+            if approve:
+                dev.debuglink().press_yes()
+            else:
+                dev.debuglink().press_no()
+            return dev.result()
+
+
+def _bit(entry_key: bytes, bit: int) -> int:
+    return (entry_key[bit // 8] >> (7 - bit % 8)) & 1
+
+
 def test_ward_batch_single_commit(session: Session) -> None:
     """A batch of one intent commits as a single transition (counter += 1) and the
     installed root matches the host tree."""
@@ -117,6 +136,53 @@ def test_ward_batch_multi_insert_rejected(session: Session) -> None:
         ward.perform_batch(session, [p1, p2])
 
 
+def test_ward_batch_rejects_an_update_hidden_behind_another_leaf(
+    session: Session,
+) -> None:
+    """A host pairs a genuine update of alice with an "update" of an ABSENT entry,
+    serving a stale sealed leaf it kept from history and a forged proof that walks
+    through alice's leaf. The multiproof used to read alice's leaf at that position,
+    ignore the forged item, match the stored root, and commit only alice's change --
+    an approved write that silently never happened. It must be refused."""
+    tree = _seeded()
+    _seed_device(session, tree)
+
+    def ek(addr: bytes) -> bytes:
+        return tree._ek(_APP, addr, "address", 0)
+
+    alice, bob = ek(b"alice"), ek(b"bob")
+    split = next(b for b in range(256) if _bit(alice, b) != _bit(bob, b))
+    # an absent entry on alice's side of the only branch: its path ends at her leaf
+    victim = next(
+        v
+        for v in (b"victim%d" % i for i in range(64))
+        if _bit(ek(v), split) == _bit(alice, split)
+    )
+    history = _tree()
+    history.insert(_APP, victim, b"victim_old", counter=1)
+    stale = history.leaf_blob(_APP, victim)
+    assert stale is not None
+
+    p1 = _queue_update(session, b"alice", ENTRIES[b"alice"], b"data_alice_v2")
+    p2 = _queue_update(session, victim, b"victim_old", b"victim_new")
+
+    honest = ward.tree_proof_callback(tree)
+
+    def forged(msg: messages.WARDProofRequest) -> messages.WARDProofAck:
+        if msg.entry_key != ek(victim):
+            return honest(msg)
+        return messages.WARDProofAck(
+            proof=[(split + 1).to_bytes(2, "big") + b"\x55" * 32]
+            + tree.get_proof_by_key(alice),
+            content=ward.make_leaf_content(stale.content),
+            identity=ward.make_leaf_identity(stale.key_type, stale.identity),
+        )
+
+    session.client.app.ward_proof_callback = forged
+    with pytest.raises(TrezorFailure, match="another leaf"):
+        ward.perform_batch(session, [p1, p2])
+
+
 def test_ward_rollback_one_step(session: Session) -> None:
     """Two single-leaf batch commits, then a constrained one-step rollback of the
     second: the head returns to the predecessor root with a forward-incremented
@@ -152,7 +218,7 @@ def test_ward_rollback_one_step(session: Session) -> None:
         _hm,
         _ar,
         _sig,
-    ) = ward.perform_revert(session, c2, r2, from_root2, ac2)
+    ) = _perform_revert(session, c2, r2, from_root2, ac2)
     assert to_counter == c2 + 1  # forward-increment
     assert from_root == r2
     mac_for_sig = mac if mac is not None else ward.ZERO_MAC
@@ -168,7 +234,8 @@ def test_ward_rollback_one_step(session: Session) -> None:
 
 def test_ward_rollback_rejects_wrong_predecessor(session: Session) -> None:
     """A rollback whose forward AuthCommit does not authenticate the claimed
-    predecessor is rejected — the host cannot name an arbitrary rewind target."""
+    predecessor is rejected — the host cannot name an arbitrary rewind target. It
+    fails before the confirmation screen, so no input is needed here."""
     tree = _seeded()
     c0 = _seed_device(session, tree)
     p1 = _queue_update(session, b"carol", b"", b"data_carol")
@@ -177,3 +244,18 @@ def test_ward_rollback_rejects_wrong_predecessor(session: Session) -> None:
     bogus_prev = b"\x99" * 32  # not the real predecessor encoded in ac1
     with pytest.raises(TrezorFailure):
         ward.perform_revert(session, c1, r1, bogus_prev, ac1)
+
+
+def test_ward_rollback_requires_user_confirmation(session: Session) -> None:
+    """Undoing a change is the user's decision: the device asks before K_sig signs the
+    revert (the signature the WM accepts). Declining leaves nothing to install."""
+    tree = _seeded()
+    _seed_device(session, tree)
+    p1 = _queue_update(session, b"carol", b"", b"data_carol")
+    c1, r1, from_root1, ac1 = _commit_batch(session, tree, [p1])
+
+    with pytest.raises(Cancelled):
+        _perform_revert(session, c1, r1, from_root1, ac1, approve=False)
+
+    with pytest.raises(TrezorFailure, match="no committed rollback"):
+        ward.confirmed_revert_by_wm(session, c1 + 1, None, b"\x01" * 64)

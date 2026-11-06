@@ -24,7 +24,18 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+    Ed25519PrivateKey,
+    Ed25519PublicKey,
+)
+
+from trezorlib.ward_protocol import (
+    EMPTY_ROOT,
+    attestation_message,
+    genesis_nonce,
+    transition_message,
+)
 
 DEBUG_SEED = b"AUTHDB QM DEBUG KEY SEED v1 ...."
 DEFAULT_PORT = 21330
@@ -63,9 +74,18 @@ def _mac(value: Any) -> str | None:
 class Head:
     counter: int = 0
     mac: str | None = None
+    root: str = ""
+    head_nonce: str = ""
+    timestamp: int = 0
 
     def body(self) -> dict[str, Any]:
-        return {"counter": self.counter, **({"mac": self.mac} if self.mac else {})}
+        return {
+            "counter": self.counter,
+            "root": self.root,
+            "headNonce": self.head_nonce,
+            "timestamp": self.timestamp,
+            **({"mac": self.mac} if self.mac else {}),
+        }
 
 
 class WardManager:
@@ -83,7 +103,20 @@ class WardManager:
                 )
                 self.db.execute(
                     "CREATE TABLE IF NOT EXISTS heads "
-                    "(ward_id TEXT PRIMARY KEY, counter INTEGER NOT NULL, mac TEXT)"
+                    "(ward_id TEXT PRIMARY KEY, counter INTEGER NOT NULL, mac TEXT, root TEXT NOT NULL, "
+                    "head_nonce TEXT NOT NULL, timestamp INTEGER NOT NULL)"
+                )
+                columns = {
+                    row[1] for row in self.db.execute("PRAGMA table_info(heads)")
+                }
+                if not {"root", "head_nonce", "timestamp"} <= columns:
+                    raise ValueError(
+                        "Unsigned legacy WARD database: explicit migration is required"
+                    )
+                self.db.execute(
+                    "CREATE TABLE IF NOT EXISTS transitions "
+                    "(ward_id TEXT NOT NULL, counter INTEGER NOT NULL, body TEXT NOT NULL, "
+                    "PRIMARY KEY (ward_id, counter))"
                 )
                 self.db.execute(
                     "INSERT OR IGNORE INTO metadata VALUES ('public_key', ?)",
@@ -103,9 +136,10 @@ class WardManager:
 
     def _head(self, ward_id: str) -> Head:
         row = self.db.execute(
-            "SELECT counter, mac FROM heads WHERE ward_id = ?", (ward_id,)
+            "SELECT counter, mac, root, head_nonce, timestamp FROM heads WHERE ward_id = ?",
+            (ward_id,),
         ).fetchone()
-        return Head(*row) if row else Head()
+        return Head(*row) if row else Head(head_nonce=genesis_nonce(ward_id))
 
     def head(self, ward_id: str) -> dict[str, Any]:
         ward_id = _hex32(ward_id, "wardId")
@@ -123,32 +157,116 @@ class WardManager:
 
         with self.lock:
             head = self._head(ward_id)
-            if expected is not None and expected != head:
+            if expected is not None and (
+                expected.counter != head.counter or expected.mac != head.mac
+            ):
                 raise ApiError(409, "checkpoint_conflict", **head.body())
-            message = (
-                b"WARD ATTEST v1\x01"
-                + bytes.fromhex(nonce)
-                + bytes.fromhex(ward_id)
-                + head.counter.to_bytes(4, "big")
-                + (bytes.fromhex(head.mac) if head.mac else ZERO_MAC)
+            timestamp = max(int(time.time()), head.timestamp)
+            message = attestation_message(
+                ward_id, nonce, head.counter, head.mac, timestamp, head.head_nonce
             )
-            return {**head.body(), "signature": self.key.sign(message).hex()}
+            return {
+                **head.body(),
+                "timestamp": timestamp,
+                "signature": self.key.sign(message).hex(),
+            }
 
     def commit(self, request: dict[str, Any]) -> dict[str, Any]:
+        # ACCEPTED (trust model): the WM accepts a root without evidence that its leaves
+        # are available. A host that withholds them after the commit freezes the wallet
+        # for every device; the user-confirmed WARDPerformRevert is the way out.
         ward_id = _hex32(request.get("wardId"), "wardId")
-        candidate = Head(_counter(request.get("counter")), _mac(request.get("mac")))
+        counter = _counter(request.get("counter"))
+        from_counter = _counter(request.get("fromCounter"))
+
+        def root(value: Any) -> str:
+            if value == "":
+                return ""
+            result = _hex32(value, "root")
+            return "" if result == EMPTY_ROOT.hex() else result
+
+        to_root, from_root = root(request.get("root")), root(request.get("fromRoot"))
+        mac = _mac(request.get("mac"))
+        if mac is None or counter != from_counter + 1:
+            raise ApiError(
+                400, "A successor transition and nonzero wallet MAC are required"
+            )
+        kind = request.get("kind", "commit")
+        if kind not in ("commit", "revert"):
+            raise ApiError(400, "Invalid transition kind")
+        auth_commit = _hex32(request.get("authCommit"), "authCommit")
+        head_nonce = _hex32(request.get("headNonce"), "headNonce")
+        signature = request.get("signature")
+        if (
+            not isinstance(signature, str)
+            or re.fullmatch(r"[0-9a-fA-F]{128}", signature) is None
+        ):
+            raise ApiError(400, "A wallet transition signature is required")
+        record = {
+            "wardId": ward_id,
+            "fromCounter": from_counter,
+            "fromRoot": from_root,
+            "counter": counter,
+            "root": to_root,
+            "mac": mac,
+            "authCommit": auth_commit,
+            "signature": signature.lower(),
+            "kind": kind,
+            "headNonce": head_nonce,
+        }
+        try:
+            Ed25519PublicKey.from_public_bytes(bytes.fromhex(ward_id)).verify(
+                bytes.fromhex(signature), transition_message(record)
+            )
+        except (ValueError, InvalidSignature):
+            raise ApiError(403, "Invalid wallet transition signature") from None
+        body = json.dumps(record, sort_keys=True, separators=(",", ":"))
         with self.lock, self.db:
             # SQLite serializes this CAS across threads and manager processes.
             self.db.execute("BEGIN IMMEDIATE")
             head = self._head(ward_id)
-            retry = candidate == head and candidate.counter > 0
-            if not retry and candidate.counter != head.counter + 1:
+            previous = self.db.execute(
+                "SELECT body FROM transitions WHERE ward_id = ? AND counter = ?",
+                (ward_id, counter),
+            ).fetchone()
+            retry = (
+                previous is not None
+                and previous[0] == body
+                and (counter, mac, to_root) == (head.counter, head.mac, head.root)
+            )
+            if not retry and (
+                from_counter != head.counter
+                or from_root != head.root
+                or head_nonce != head.head_nonce
+            ):
                 raise ApiError(409, "checkpoint_conflict", **head.body())
+            candidate = (
+                head
+                if retry
+                else Head(
+                    counter,
+                    mac,
+                    to_root,
+                    os.urandom(32).hex(),
+                    max(int(time.time()), head.timestamp),
+                )
+            )
             if not retry:
                 self.db.execute(
-                    "INSERT INTO heads VALUES (?, ?, ?) ON CONFLICT(ward_id) "
-                    "DO UPDATE SET counter = excluded.counter, mac = excluded.mac",
-                    (ward_id, candidate.counter, candidate.mac),
+                    "INSERT INTO transitions VALUES (?, ?, ?)", (ward_id, counter, body)
+                )
+                self.db.execute(
+                    "INSERT INTO heads VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(ward_id) "
+                    "DO UPDATE SET counter = excluded.counter, mac = excluded.mac, root = excluded.root, "
+                    "head_nonce = excluded.head_nonce, timestamp = excluded.timestamp",
+                    (
+                        ward_id,
+                        candidate.counter,
+                        candidate.mac,
+                        candidate.root,
+                        candidate.head_nonce,
+                        candidate.timestamp,
+                    ),
                 )
             message = (
                 b"WARD FINAL v1"
@@ -162,6 +280,19 @@ class WardManager:
             }
         # The durable transaction commits before the signature leaves this method.
         return response
+
+    def history(self, ward_id: str) -> dict[str, Any]:
+        ward_id = _hex32(ward_id, "wardId")
+        with self.lock:
+            rows = self.db.execute(
+                "SELECT body FROM transitions WHERE ward_id = ? ORDER BY counter",
+                (ward_id,),
+            ).fetchall()
+            return {
+                "wardId": ward_id,
+                **self._head(ward_id).body(),
+                "transitions": [json.loads(row[0]) for row in rows],
+            }
 
 
 class WardManagerServer(ThreadingHTTPServer):
@@ -218,6 +349,11 @@ class _Handler(BaseHTTPRequestHandler):
         allowed = {"wardId", "counter", "mac"}
         if self.path == "/ward/attest":
             allowed.add("nonce")
+        else:
+            allowed.add("headNonce")
+            allowed.update(
+                {"fromCounter", "fromRoot", "root", "authCommit", "signature", "kind"}
+            )
         if body.keys() - allowed:
             raise ApiError(400, "Unknown request fields")
         return body
@@ -254,6 +390,14 @@ class _Handler(BaseHTTPRequestHandler):
                     body = self.server.manager.attest(request)
                 else:
                     body = self.server.manager.commit(request)
+            elif (
+                self.command in ("GET", "HEAD")
+                and self.path.startswith("/ward/")
+                and self.path.endswith("/history")
+            ):
+                body = self.server.manager.history(
+                    self.path[len("/ward/") : -len("/history")]
+                )
             elif self.command in ("GET", "HEAD") and self.path.startswith("/ward/"):
                 body = self.server.manager.head(self.path.removeprefix("/ward/"))
             elif self.path == "/health" or self.path.startswith("/ward/"):

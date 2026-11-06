@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Open the WARD development stack in four separate nix-shell terminals."""
+"""Open the WARD development stack with shared-seed devices in nix-shell terminals."""
 
 from __future__ import annotations
 
@@ -69,7 +69,9 @@ def command(
 ) -> tuple[list[str], Path]:
     python = str(FIRMWARE / ".venv/bin/python")
     root = Path(config["run_dir"])
-    if role == "manager":
+    index = int(role.split("-", 1)[1]) - 1 if role.startswith("emulator-") else 0
+    base_role = "emulator" if role.startswith("emulator-") else role
+    if base_role == "manager":
         return [
             python,
             str(FIRMWARE / "tools/ward_manager.py"),
@@ -87,21 +89,42 @@ def command(
             str(root / "evolu"),
             "--verbose",
         ], Path(config["suite"]) / "packages/wardd"
-    if role == "emulator":
+    if base_role == "emulator":
+        profile = (
+            f"emulator-{index + 1}" if config.get("devices", 1) > 1 else "emulator"
+        )
         return [
             python,
             str(FIRMWARE / "core/emu.py"),
             "--executable",
-            str(FIRMWARE / "core/build/artifacts/T3T1/firmware-emu"),
+            str(
+                config.get(
+                    "emulator_executable",
+                    FIRMWARE / "core/build/artifacts/T3T1/firmware-emu",
+                )
+            ),
             *([] if config.get("gui", False) else ["-h"]),
             "-s",
             "-q",
             "-p",
-            str(root / "emulator"),
+            str(root / profile),
+            "-P",
+            str(config["emulator_port"] + 8 * index),
+            "--tropic-emulator-port",
+            str(config["emulator_port"] + 8 * index + 6),
             "-c",
             python,
             str(SCRIPT),
             "--wait",
+            str(config_path),
+            "--device-index",
+            str(index),
+        ], FIRMWARE
+    if config.get("devices", 1) > 1:
+        return [
+            python,
+            str(FIRMWARE / "tools/ward_multi.py"),
+            "--config",
             str(config_path),
         ], FIRMWARE
     return [
@@ -110,6 +133,9 @@ def command(
         "--jade-host",
         "--label",
         config["label"],
+        *(["--long"] if config.get("long", False) else []),
+        *(["--extra_long"] if config.get("extra_long", False) else []),
+        *(["--adversarial"] if config.get("adversarial", False) else []),
     ], FIRMWARE
 
 
@@ -150,6 +176,7 @@ def component(config_path: Path, role: str) -> int:
     for name in ("SIGINT", "SIGTERM", "SIGHUP"):
         if hasattr(signal, name):
             signal.signal(getattr(signal, name), lambda *_: stop(config))
+    emulator_role = role == "emulator" or role.startswith("emulator-")
     process = None
     output = None
     result = 0
@@ -163,11 +190,15 @@ def component(config_path: Path, role: str) -> int:
                 config,
                 lambda: all(
                     (root / f"{name}.ready").exists()
-                    for name in ("manager", "wardd", "emulator")
+                    for name in (
+                        "manager",
+                        "wardd",
+                        *emulator_roles(config.get("devices", 1)),
+                    )
                 ),
             )
         args, directory = command(config, role, config_path)
-        print(f"{ROLES[role]}: {shlex.join(args)}", flush=True)
+        print(f"{role}: {shlex.join(args)}", flush=True)
         print(f"Nix shell: {os.environ.get('IN_NIX_SHELL', 'missing')}", flush=True)
         while not stopped(config):
             process = subprocess.Popen(
@@ -243,7 +274,7 @@ def component(config_path: Path, role: str) -> int:
         stop(config)
     finally:
         if process is not None and process.poll() is None:
-            if role == "emulator":
+            if emulator_role:
                 # emu.py -c exits its waiting command and cleans up its own firmware process.
                 stop(config)
             else:
@@ -253,8 +284,8 @@ def component(config_path: Path, role: str) -> int:
             try:
                 process.wait(timeout=15)
             except subprocess.TimeoutExpired:
-                if role == "emulator":
-                    pidfile = root / "emulator/trezor.pid"
+                if emulator_role:
+                    pidfile = root / role / "trezor.pid"
                     if pidfile.exists():
                         try:
                             os.kill(int(pidfile.read_text()), signal.SIGTERM)
@@ -288,17 +319,49 @@ def component(config_path: Path, role: str) -> int:
     return result
 
 
-def reserve_ports(manager: int, wardd: int, emulator: int) -> None:
-    if not all(1 <= port <= 65535 for port in (manager, wardd)):
+def emulator_roles(devices: int) -> list[str]:
+    return (
+        ["emulator"] if devices == 1 else [f"emulator-{i + 1}" for i in range(devices)]
+    )
+
+
+def reserve_ports(
+    manager: int,
+    wardd: int,
+    emulator: int,
+    devices: int = 1,
+    debug: int | None = None,
+    tropic: bool = False,
+) -> None:
+    if not 1 <= devices <= 8:
+        raise ValueError("devices must be between 1 and 8")
+    if not all(
+        1 <= port <= 65535
+        for port in (manager, wardd, *([] if debug is None else [debug]))
+    ):
         raise ValueError("TCP ports must be between 1 and 65535")
-    if not 30000 < emulator <= 65529:
-        raise ValueError("TREZOR_UDP_PORT must be between 30001 and 65529")
+    maximum = 65537 - 8 * devices
+    if not 30000 < emulator <= maximum:
+        raise ValueError(f"TREZOR_UDP_PORT must be between 30001 and {maximum}")
     sockets = []
     try:
         for kind, port in [
             (socket.SOCK_STREAM, manager),
             (socket.SOCK_STREAM, wardd),
-            *[(socket.SOCK_DGRAM, port) for port in range(emulator, emulator + 7)],
+            *([] if debug is None else [(socket.SOCK_STREAM, debug)]),
+            *(
+                [
+                    (socket.SOCK_STREAM, emulator + 8 * index + 6)
+                    for index in range(devices)
+                ]
+                if tropic
+                else []
+            ),
+            *[
+                (socket.SOCK_DGRAM, emulator + 8 * index + offset)
+                for index in range(devices)
+                for offset in range(7)
+            ],
         ]:
             sock = socket.socket(socket.AF_INET, kind)
             sockets.append(sock)
@@ -321,6 +384,33 @@ def find_suite() -> Path:
     return FIRMWARE.parent / "trezor-suite"
 
 
+def debug_request(
+    config: dict[str, Any], command: str, device_id: str = "device-1", **fields: Any
+) -> dict[str, Any]:
+    token = Path(config["environment"]["WARD_TOKEN_FILE"]).read_text().strip()
+    with socket.create_connection(
+        ("127.0.0.1", config["debug_port"]), timeout=config.get("timeout", 90)
+    ) as connection:
+        connection.sendall(
+            (
+                json.dumps(
+                    {
+                        **fields,
+                        "command": command,
+                        "deviceId": device_id,
+                        "token": token,
+                    }
+                )
+                + "\n"
+            ).encode()
+        )
+        with connection.makefile("rb") as response:
+            result = json.loads(response.readline(4096))
+    if "error" in result:
+        raise RuntimeError(f"wardd debug: {result['error']}")
+    return result
+
+
 def terminal_command(terminal: str, title: str, shell: list[str]) -> list[str]:
     if terminal == "gnome-terminal":
         return [terminal, "--wait", "--window", "--title", title, "--", *shell]
@@ -341,9 +431,60 @@ def main() -> int:
     parser.add_argument(
         "--emulator-port", type=int, default=os.environ.get("TREZOR_UDP_PORT", "37744")
     )
+    parser.add_argument(
+        "--devices",
+        type=int,
+        default=1,
+        help="Number of emulators sharing the SLIP-14 test seed",
+    )
+    parser.add_argument(
+        "--debug-port",
+        type=int,
+        default=os.environ.get("WARDD_DEBUG_PORT", "21331"),
+        help="Loopback wardd PAUSE/CONTINUE control port",
+    )
+    parser.add_argument(
+        "--pause", metavar="DEVICE", help="Pause WM access for DEVICE in --run-dir"
+    )
+    parser.add_argument(
+        "--continue",
+        dest="resume",
+        metavar="DEVICE",
+        help="Restore WM access for DEVICE in --run-dir",
+    )
+    parser.add_argument("--run-dir", type=Path, help="Run directory for PAUSE/CONTINUE")
+    parser.add_argument("--device-index", type=int, default=0, help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--scenario",
+        choices=("all", "races", "recovery"),
+        default="all",
+        help="Select multi-device checks",
+    )
     parser.add_argument("--terminal", choices=("gnome-terminal", "konsole", "xterm"))
     parser.add_argument("--label", default="WARD demo")
+    parser.add_argument("--model", choices=("T3T1", "T3W1"), default="T3T1")
+    parser.add_argument(
+        "--emulator-executable",
+        type=Path,
+        help="Override the emulator selected by --model",
+    )
+    parser.add_argument(
+        "--long",
+        action="store_true",
+        help="Write ten distinct entries and verify each lookup",
+    )
+    parser.add_argument(
+        "--extra_long",
+        "--extra-long",
+        action="store_true",
+        help="Cover every bounded state/operation combination through depth 10",
+    )
     parser.add_argument("--timeout", type=float, default=90)
+    parser.add_argument(
+        "--adversarial",
+        action="store_true",
+        help="Run attack/rejection tests on the disposable emulator",
+    )
     parser.add_argument(
         "--delays",
         action="store_true",
@@ -358,7 +499,7 @@ def main() -> int:
     parser.add_argument(
         "--prepare",
         action="store_true",
-        help="Install Python bindings and build the Safe 5 emulator first",
+        help="Install Python bindings and build the selected model's emulator first",
     )
     parser.add_argument(
         "--once",
@@ -384,22 +525,56 @@ def main() -> int:
     parser.add_argument(
         "--stop", type=Path, metavar="RUN_DIR", help="Stop an existing stack"
     )
-    parser.add_argument("--component", choices=tuple(ROLES), help=argparse.SUPPRESS)
+    parser.add_argument("--component", help=argparse.SUPPRESS)
     parser.add_argument("--config", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--wait", type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.pause or args.resume:
+        if not args.run_dir or (args.pause and args.resume):
+            parser.error("Use exactly one of --pause/--continue with --run-dir")
+        config = load_config(args.run_dir / "config.json")
+        print(
+            json.dumps(
+                debug_request(
+                    config,
+                    "PAUSE" if args.pause else "CONTINUE",
+                    args.pause or args.resume,
+                )
+            )
+        )
+        return 0
+    if not 1 <= args.devices <= 8:
+        parser.error("--devices must be between 1 and 8")
+    if args.scenario != "all" and args.devices < (3 if args.scenario == "races" else 2):
+        parser.error(
+            "--scenario races requires three devices; recovery requires at least two"
+        )
+    if args.devices > 1 and (args.long or args.extra_long or args.adversarial):
+        parser.error(
+            "--devices runs the multi-device scenarios; use stress/adversarial modes separately"
+        )
+    if args.adversarial and (args.long or args.extra_long):
+        parser.error("Run --adversarial separately from --long/--extra_long")
+    if args.emulator_executable is None:
+        args.emulator_executable = (
+            FIRMWARE / f"core/build/artifacts/{args.model}/firmware-emu"
+        )
     if args.stop:
         stop(load_config(args.stop / "config.json"))
         return 0
     if args.wait:
         config = load_config(args.wait)
-        (Path(config["run_dir"]) / "emulator.ready").touch()
+        role = emulator_roles(config.get("devices", 1))[args.device_index]
+        (Path(config["run_dir"]) / f"{role}.ready").touch()
         while not stopped(config):
             time.sleep(0.2)
         return 0
     if args.component:
         if args.config is None:
             parser.error("--component requires --config")
+        config = load_config(args.config)
+        if args.component not in (*ROLES, *emulator_roles(config.get("devices", 1))):
+            parser.error("Unknown component")
         return component(args.config, args.component)
 
     terminal = args.terminal or next(
@@ -425,26 +600,36 @@ def main() -> int:
     if not (args.suite / "packages/wardd/src/cli.ts").is_file():
         parser.error("--suite must point to the encrypted Suite checkout")
     try:
-        reserve_ports(args.manager_port, args.wardd_port, args.emulator_port)
+        reserve_ports(
+            args.manager_port,
+            args.wardd_port,
+            args.emulator_port,
+            args.devices,
+            args.debug_port,
+            args.model == "T3W1",
+        )
     except (OSError, ValueError) as error:
         parser.error(f"Cannot use the requested ports: {error}")
     if args.timeout <= 0:
         parser.error("--timeout must be positive")
-    root = Path(tempfile.mkdtemp(prefix="ward-stack-", dir="/tmp"))
+    root = Path(tempfile.mkdtemp(prefix="ward-stack-"))
     environment = {
         "WARD_DELAYS": "1" if args.delays else "0",
         "WARD_MANAGER_PORT": str(args.manager_port),
         "WARDD_PORT": str(args.wardd_port),
+        "WARDD_DEBUG_PORT": str(args.debug_port),
         "TREZOR_UDP_PORT": str(args.emulator_port),
         "WARD_MANAGER_URL": f"http://127.0.0.1:{args.manager_port}",
         "WARDD_URL": f"ws://127.0.0.1:{args.wardd_port}",
         "TREZOR_PATH": f"udp:127.0.0.1:{args.emulator_port}",
         "WARD_TOKEN_FILE": str(root / "evolu/token"),
         "WARD_DATA_DIR": str(root / "evolu"),
+        "WARDD_SUITE_DIR": str(args.suite.resolve()),
     }
     config = {
         **vars(args),
         "suite": str(args.suite.resolve()),
+        "emulator_executable": str(args.emulator_executable.resolve()),
         "run_dir": str(root),
         "environment": environment,
     }
@@ -481,9 +666,11 @@ def main() -> int:
                 "firmware",
                 "--emulator",
                 "-m",
-                "T3T1",
+                args.model,
                 "-p",
                 "test-live",
+                # the offline cache (sticky entries) is part of the --adversarial run
+                "--ward",
             ],
         ]
         prepare = root / "prepare.sh"
@@ -506,8 +693,10 @@ def main() -> int:
             parser.error(
                 "Create the firmware virtual environment first, or pass --prepare"
             )
-        if not (FIRMWARE / "core/build/artifacts/T3T1/firmware-emu").is_file():
-            parser.error("Build the T3T1 test-live emulator first, or pass --prepare")
+        if not args.emulator_executable.is_file():
+            parser.error(
+                f"Build the {args.model} test-live emulator first, or pass --prepare"
+            )
         check = subprocess.run(
             [
                 str(FIRMWARE / ".venv/bin/python"),
@@ -527,6 +716,11 @@ def main() -> int:
         flush=True,
     )
     print(
+        f"Debug control: 127.0.0.1:{args.debug_port}; devices: "
+        + ", ".join(f"device-{i + 1}" for i in range(args.devices)),
+        flush=True,
+    )
+    print(
         f"Stop from another terminal: {shlex.join([str(SCRIPT), '--stop', str(root)])}",
         flush=True,
     )
@@ -537,7 +731,13 @@ def main() -> int:
             signal.signal(getattr(signal, name), lambda *_: stop(config))
     processes = []
     try:
-        for role, title in ROLES.items():
+        roles = {
+            "manager": ROLES["manager"],
+            "wardd": ROLES["wardd"],
+            **{role: f"Trezor {role}" for role in emulator_roles(args.devices)},
+            "hwi": ROLES["hwi"],
+        }
+        for role, title in roles.items():
             runtime = shlex.join(
                 [
                     str(FIRMWARE / ".venv/bin/python"),

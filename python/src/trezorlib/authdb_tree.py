@@ -154,6 +154,10 @@ def _proof_steps_root_to_leaf(proof: List[bytes]) -> Optional[List[tuple[int, by
     return steps
 
 
+# A node served to a listing walk: (split_bit, left, right, entry_key).
+_ServedNode = Tuple[Optional[int], Optional[bytes], Optional[bytes], Optional[bytes]]
+
+
 class WARDTree:
     """Commit-based, key-first MPT for WARD. Mirrors @trezor/ward proof/index.ts
     and apps.ward.service leaf/commit hashing.
@@ -294,6 +298,35 @@ class WARDTree:
         if not self._leaves:
             return EMPTY_ROOT
         return _hash_mpt(_build_mpt(self._leaf_nodes(), 0))
+
+    def get_nodes(self, node_hash: bytes, max_nodes: int = 16) -> List[_ServedNode]:
+        """Serve a listing walk: the node with `node_hash`, then up to `max_nodes - 1`
+        of its descendants in pre-order. Each is `(split_bit, left, right, entry_key)`:
+        a branch has entry_key None, a leaf has only entry_key (its parts are
+        `get_leaf(entry_key)`). Empty if no node has that hash."""
+
+        def find(node):
+            if _hash_mpt(node) == node_hash:
+                return node
+            if isinstance(node, _BranchNode):
+                return find(node.left) or find(node.right)
+            return None
+
+        if not self._leaves:
+            return []
+        start = find(_build_mpt(self._leaf_nodes(), 0))
+        out: List[_ServedNode] = []
+        stack = [] if start is None else [start]
+        while stack and len(out) < max_nodes:
+            node = stack.pop()
+            if isinstance(node, _LeafNode):
+                out.append((None, None, None, node.addr_hash))
+            else:
+                left, right = _hash_mpt(node.left), _hash_mpt(node.right)
+                out.append((node.bit, left, right, None))
+                stack.append(node.right)
+                stack.append(node.left)
+        return out
 
     def get_proof_by_key(self, entry_key: bytes) -> List[bytes]:
         """Membership proof (sibling hashes, leaf→root)."""

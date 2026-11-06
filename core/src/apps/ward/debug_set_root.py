@@ -12,7 +12,7 @@ async def debug_set_root(msg: WARDDebugSetRoot) -> WARDDebugSetRootAck:
 
     from apps.common import ward as core
 
-    counter, new_root, wallet_id, root_mac = await core.debug_set_root(msg.root)
+    counter, new_root, wallet_id, root_mac = await core.debug_set_root(bytes(msg.root))
 
     return WARDDebugSetRootAck(
         counter=counter, new_root=new_root, wallet_id=wallet_id, root_mac=root_mac

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from ._native import Client
+from .trezor import WardHwi
 
 DEFAULT_URL = "ws://127.0.0.1:21329"
 
@@ -36,7 +37,7 @@ class WardAdapter:
         return json.loads(self._client.resume(name, json.dumps(message)))
 
     def answer_ward_request(self, name: str, message: dict[str, Any]) -> dict[str, Any]:
-        """Return a named WARDProofAck for the HWI to send on its current channel."""
+        """Return a named WARDProofAck or WARDNodeAck for the HWI to send on its channel."""
         return json.loads(self._client.answer_ward_request(name, json.dumps(message)))[
             "deviceCall"
         ]
@@ -67,6 +68,10 @@ class WardAdapter:
         except Exception:
             self.close()
             raise
+
+    def session(self, session: Any) -> WardHwi:
+        """Attach forwarding to the caller's session for the context's lifetime."""
+        return WardHwi(session, self)
 
     def set_logging(self, enabled: bool) -> None:
         self._client.set_logging(enabled)

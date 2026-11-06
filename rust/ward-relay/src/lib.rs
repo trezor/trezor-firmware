@@ -6,13 +6,29 @@ use std::{net::TcpStream, time::Instant};
 use chrono::{SecondsFormat, Utc};
 use serde_json::{json, Value};
 use tungstenite::{stream::MaybeTlsStream, Message, WebSocket};
+pub mod hwi;
+pub use hwi::{
+    call_on_session, forward_on_session, DeviceSession, Hwi, NamedMessage, ProofHandler,
+};
 
+#[cfg(feature = "node")]
+pub mod node;
 #[cfg(feature = "python")]
 mod python;
 
 pub const DEFAULT_URL: &str = "ws://127.0.0.1:21329";
+// KNOWN DEFICIENCY: wardd is untrusted, yet this list is global, not per conversation: during a
+// `lookup` it may still send WARDQueueUpdate (an unrequested confirmation), WARDListEntries, or
+// WARDDiscardPending (silently drops queued intents); unused update/revert messages stay allowed.
+// FIXME(ward): allow per method only the messages that method's flow sends.
 const DEVICE_CALLS: &[&str] = &[
     "WARDSync",
+    "WARDVerifyChain",
+    "WARDPerformBatch",
+    "WARDConfirmBatchByWM",
+    "WARDPerformRevert",
+    "WARDConfirmRevertByWM",
+    "WARDListPendingEdits",
     "WARDIngestAttestation",
     "WARDReconcile",
     "WARDLookup",
@@ -20,6 +36,18 @@ const DEVICE_CALLS: &[&str] = &[
     "WARDPerformUpdate",
     "WARDConfirmedByWM",
     "WARDDiscardPending",
+    "WARDListEntries",
+    "WARDCacheEntry",
+    "WARDCacheExport",
+    "WARDCacheImport",
+    "WARDValidateCache",
+];
+
+/// What the device may pull from wardd in the middle of a call: the request it raises, the wardd
+/// method that answers it, and the message the answer goes back to the device as.
+const PULLS: &[(&str, &str, &str)] = &[
+    ("WARDProofRequest", "answerProofRequest", "WARDProofAck"),
+    ("WARDNodeRequest", "answerNodeRequest", "WARDNodeAck"),
 ];
 
 #[derive(Debug, thiserror::Error)]
@@ -96,13 +124,26 @@ impl Client {
         }
     }
 
-    /// Begin `sync`, `lookup`, `update` or `status`. Returns a `deviceCall` step
+    /// Begin `sync`, `lookup`, `update`, `listEntries`, `cacheEntry`, `exportCache`,
+    /// `importCache`, `validateCache` or `status`. Returns a `deviceCall` step
     /// for the existing HWI session, or a final `result`/`error` step.
     pub fn start(&mut self, method: &str, params: Value) -> Result<Value, Error> {
         if self.pending.is_some() {
             return Err(Error::Busy);
         }
-        if !["sync", "lookup", "update", "status"].contains(&method) {
+        if ![
+            "sync",
+            "lookup",
+            "update",
+            "listEntries",
+            "cacheEntry",
+            "exportCache",
+            "importCache",
+            "validateCache",
+            "status",
+        ]
+        .contains(&method)
+        {
             return Err(Error::Protocol("unsupported WARD method".into()));
         }
         let id = self.next_id;
@@ -113,12 +154,12 @@ impl Client {
         self.next_step()
     }
 
-    /// Hand the device's named protobuf response back to wardd. A mid-call
-    /// WARDProofRequest is answered without ending the original conversation.
+    /// Hand the device's named protobuf response back to wardd. A mid-call pull
+    /// (WARDProofRequest, WARDNodeRequest) is answered without ending the original conversation.
     pub fn resume(&mut self, name: &str, message: Value) -> Result<Value, Error> {
         let id = self.pending.as_ref().ok_or(Error::NoConversation)?.0;
         self.log("device_response", id, json!({"name": name}));
-        if name == "WARDProofRequest" {
+        if PULLS.iter().any(|(request, _, _)| *request == name) {
             return self.answer_ward_request(name, message);
         }
         self.send(json!({"id": id, "deviceReply": {"name": name, "message": message}}))?;
@@ -126,23 +167,24 @@ impl Client {
     }
 
     /// Answer a WARD pull received during an ordinary HWI call (for example
-    /// address display). The HWI sends the returned WARDProofAck on its channel.
+    /// address display). The HWI sends the returned WARDProofAck / WARDNodeAck on its channel.
     pub fn answer_ward_request(&mut self, name: &str, message: Value) -> Result<Value, Error> {
-        if name != "WARDProofRequest" {
-            return Err(Error::Protocol(
-                "only WARDProofRequest can be answered".into(),
-            ));
-        }
-        let ack = self.rpc("answerProofRequest", json!({"request": message}))?;
-        Ok(json!({"deviceCall": {"name": "WARDProofAck", "message": ack}}))
+        let (_, method, reply) = PULLS
+            .iter()
+            .find(|(request, _, _)| *request == name)
+            .ok_or_else(|| Error::Protocol(format!("{name} is not a WARD pull")))?;
+        let ack = self.rpc(method, json!({"request": message}))?;
+        Ok(json!({"deviceCall": {"name": reply, "message": ack}}))
     }
 
     fn next_step(&mut self) -> Result<Value, Error> {
         let id = self.pending.as_ref().ok_or(Error::NoConversation)?.0;
         let frame = match self.receive(id) {
             Ok(frame) => frame,
+            // Close, not just forget the conversation: wardd still holds its lock for it and will
+            // answer it late, and that stray frame would fail every later call on this socket.
             Err(error) => {
-                self.pending = None;
+                self.close();
                 return Err(error);
             }
         };
@@ -198,7 +240,13 @@ impl Client {
         self.log("request", id, json!({"method": method}));
         let result = (|| {
             self.send(json!({"id": id, "method": method, "params": params}))?;
-            let frame = self.receive(id)?;
+            let frame = match self.receive(id) {
+                Ok(frame) => frame,
+                Err(error) => {
+                    self.close();
+                    return Err(error);
+                }
+            };
             if let Some(error) = frame.get("error") {
                 return Err(Error::Remote {
                     code: error

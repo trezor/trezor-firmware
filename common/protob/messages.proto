@@ -454,6 +454,20 @@ enum MessageType {
     // Trezor-authorized canonical path by verifying the AuthCommit chain.
     MessageType_WARDVerifyChain = 2362 [(wire_in) = true];
     MessageType_WARDVerifyChainAck = 2363 [(wire_out) = true];
+    // WARD verified on-device listing: a top-down walk of the trusted root
+    MessageType_WARDListEntries = 2364 [(wire_in) = true];
+    MessageType_WARDListEntriesAck = 2365 [(wire_out) = true];
+    MessageType_WARDNodeRequest = 2366 [(wire_out) = true];
+    MessageType_WARDNodeAck = 2367 [(wire_in) = true];
+    // WARD offline cache: copy a verified trie entry into the app's WARD store
+    MessageType_WARDCacheEntry = 2368 [(wire_in) = true];
+    MessageType_WARDCacheEntryAck = 2369 [(wire_out) = true];
+    MessageType_WARDCacheExport = 2370 [(wire_in) = true];
+    MessageType_WARDCacheExportAck = 2371 [(wire_out) = true];
+    MessageType_WARDCacheImport = 2372 [(wire_in) = true];
+    MessageType_WARDCacheImportAck = 2373 [(wire_out) = true];
+    MessageType_WARDValidateCache = 2374 [(wire_in) = true];
+    MessageType_WARDValidateCacheAck = 2375 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

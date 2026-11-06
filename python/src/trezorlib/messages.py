@@ -883,6 +883,18 @@ class MessageType(IntEnum):
     WARDConfirmRevertByWMAck = 2361
     WARDVerifyChain = 2362
     WARDVerifyChainAck = 2363
+    WARDListEntries = 2364
+    WARDListEntriesAck = 2365
+    WARDNodeRequest = 2366
+    WARDNodeAck = 2367
+    WARDCacheEntry = 2368
+    WARDCacheEntryAck = 2369
+    WARDCacheExport = 2370
+    WARDCacheExportAck = 2371
+    WARDCacheImport = 2372
+    WARDCacheImportAck = 2373
+    WARDValidateCache = 2374
+    WARDValidateCacheAck = 2375
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -5058,6 +5070,7 @@ class WARDQueueUpdate(protobuf.MessageType):
         3: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
         4: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
         5: protobuf.Field("device_id", "uint32", repeated=False, required=False, default=None),
+        6: protobuf.Field("delete", "bool", repeated=False, required=False, default=False),
     }
 
     def __init__(
@@ -5068,12 +5081,14 @@ class WARDQueueUpdate(protobuf.MessageType):
         app_id: str | None = None,
         key_type: str | None = None,
         device_id: int | None = None,
+        delete: bool | None = False,
     ) -> None:
         self.address = address
         self.new_value = new_value
         self.app_id = app_id
         self.key_type = key_type
         self.device_id = device_id
+        self.delete = delete
 
 
 class WARDQueueUpdateAck(protobuf.MessageType):
@@ -5189,6 +5204,9 @@ class WARDSyncAck(protobuf.MessageType):
         1: protobuf.Field("nonce", "bytes", repeated=False, required=True),
         2: protobuf.Field("version", "uint32", repeated=False, required=True),
         4: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        6: protobuf.Field("root", "bytes", repeated=False, required=False, default=None),
+        7: protobuf.Field("root_known", "bool", repeated=False, required=True),
     }
 
     def __init__(
@@ -5196,11 +5214,17 @@ class WARDSyncAck(protobuf.MessageType):
         *,
         nonce: bytes,
         version: int,
+        counter: int,
+        root_known: bool,
         ward_id: bytes | None = None,
+        root: bytes | None = None,
     ) -> None:
         self.nonce = nonce
         self.version = version
+        self.counter = counter
+        self.root_known = root_known
         self.ward_id = ward_id
+        self.root = root
 
 
 class WARDIngestAttestation(protobuf.MessageType):
@@ -5209,6 +5233,8 @@ class WARDIngestAttestation(protobuf.MessageType):
         1: protobuf.Field("counter", "uint32", repeated=False, required=True),
         2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
+        4: protobuf.Field("timestamp", "uint64", repeated=False, required=True),
+        5: protobuf.Field("head_nonce", "bytes", repeated=False, required=True),
     }
 
     def __init__(
@@ -5216,10 +5242,14 @@ class WARDIngestAttestation(protobuf.MessageType):
         *,
         counter: int,
         wm_signature: bytes,
+        timestamp: int,
+        head_nonce: bytes,
         mac: bytes | None = None,
     ) -> None:
         self.counter = counter
         self.wm_signature = wm_signature
+        self.timestamp = timestamp
+        self.head_nonce = head_nonce
         self.mac = mac
 
 
@@ -5401,6 +5431,7 @@ class WARDProofRequest(protobuf.MessageType):
     FIELDS = {
         2: protobuf.Field("pending_id", "uint32", repeated=False, required=False, default=None),
         4: protobuf.Field("entry_key", "bytes", repeated=False, required=True),
+        5: protobuf.Field("freshness_nonce", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5408,9 +5439,37 @@ class WARDProofRequest(protobuf.MessageType):
         *,
         entry_key: bytes,
         pending_id: int | None = None,
+        freshness_nonce: bytes | None = None,
     ) -> None:
         self.entry_key = entry_key
         self.pending_id = pending_id
+        self.freshness_nonce = freshness_nonce
+
+
+class WARDAttestation(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
+        4: protobuf.Field("timestamp", "uint64", repeated=False, required=True),
+        5: protobuf.Field("head_nonce", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: int,
+        wm_signature: bytes,
+        timestamp: int,
+        head_nonce: bytes,
+        mac: bytes | None = None,
+    ) -> None:
+        self.counter = counter
+        self.wm_signature = wm_signature
+        self.timestamp = timestamp
+        self.head_nonce = head_nonce
+        self.mac = mac
 
 
 class WARDProofAck(protobuf.MessageType):
@@ -5421,6 +5480,8 @@ class WARDProofAck(protobuf.MessageType):
         5: protobuf.Field("witness_commit", "bytes", repeated=False, required=False, default=None),
         12: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
         13: protobuf.Field("identity", "LeafIdentity", repeated=False, required=False, default=None),
+        14: protobuf.Field("attestation", "WARDAttestation", repeated=False, required=False, default=None),
+        15: protobuf.Field("unavailable", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5431,12 +5492,16 @@ class WARDProofAck(protobuf.MessageType):
         witness_commit: bytes | None = None,
         content: LeafContent | None = None,
         identity: LeafIdentity | None = None,
+        attestation: WARDAttestation | None = None,
+        unavailable: bool | None = None,
     ) -> None:
         self.proof: Sequence[bytes] = proof if proof is not None else []
         self.witness_entry_key = witness_entry_key
         self.witness_commit = witness_commit
         self.content = content
         self.identity = identity
+        self.attestation = attestation
+        self.unavailable = unavailable
 
 
 class WARDExportKeys(protobuf.MessageType):
@@ -5907,6 +5972,219 @@ class WARDVerifyChainAck(protobuf.MessageType):
         self.new_root = new_root
         self.ward_id = ward_id
         self.root_mac = root_mac
+
+
+class WARDTrieNode(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("split_bit", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("left", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("right", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
+        6: protobuf.Field("identity", "LeafIdentity", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        split_bit: int | None = None,
+        left: bytes | None = None,
+        right: bytes | None = None,
+        entry_key: bytes | None = None,
+        content: LeafContent | None = None,
+        identity: LeafIdentity | None = None,
+    ) -> None:
+        self.split_bit = split_bit
+        self.left = left
+        self.right = right
+        self.entry_key = entry_key
+        self.content = content
+        self.identity = identity
+
+
+class WARDListEntries(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2364
+    FIELDS = {
+        1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("device_id", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        app_id: str | None = None,
+        key_type: str | None = None,
+        device_id: int | None = None,
+    ) -> None:
+        self.app_id = app_id
+        self.key_type = key_type
+        self.device_id = device_id
+
+
+class WARDNodeRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2366
+    FIELDS = {
+        1: protobuf.Field("node_hash", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        node_hash: bytes,
+    ) -> None:
+        self.node_hash = node_hash
+
+
+class WARDNodeAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2367
+    FIELDS = {
+        1: protobuf.Field("nodes", "WARDTrieNode", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        nodes: Sequence[WARDTrieNode] | None = None,
+    ) -> None:
+        self.nodes: Sequence[WARDTrieNode] = nodes if nodes is not None else []
+
+
+class WARDListEntriesAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2365
+    FIELDS = {
+        1: protobuf.Field("shown", "uint32", repeated=False, required=True),
+        2: protobuf.Field("entries", "uint32", repeated=False, required=True),
+        3: protobuf.Field("counter", "uint32", repeated=False, required=True),
+        4: protobuf.Field("complete", "bool", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        shown: int,
+        entries: int,
+        counter: int,
+        complete: bool,
+    ) -> None:
+        self.shown = shown
+        self.entries = entries
+        self.counter = counter
+        self.complete = complete
+
+
+class WARDCacheEntry(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2368
+    FIELDS = {
+        1: protobuf.Field("entry_key", "bytes", repeated=False, required=True),
+        2: protobuf.Field("sticky", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entry_key: bytes,
+        sticky: bool | None = None,
+    ) -> None:
+        self.entry_key = entry_key
+        self.sticky = sticky
+
+
+class WARDCacheEntryAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2369
+    FIELDS = {
+        1: protobuf.Field("replaced", "bool", repeated=False, required=True),
+        2: protobuf.Field("counter", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        replaced: bool,
+        counter: int,
+    ) -> None:
+        self.replaced = replaced
+        self.counter = counter
+
+
+class WARDCacheExport(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2370
+
+
+class WARDCacheExportAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2371
+    FIELDS = {
+        1: protobuf.Field("entries", "bytes", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entries: Sequence[bytes] | None = None,
+    ) -> None:
+        self.entries: Sequence[bytes] = entries if entries is not None else []
+
+
+class WARDCacheImport(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2372
+    FIELDS = {
+        1: protobuf.Field("entries", "bytes", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entries: Sequence[bytes] | None = None,
+    ) -> None:
+        self.entries: Sequence[bytes] = entries if entries is not None else []
+
+
+class WARDCacheImportAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2373
+    FIELDS = {
+        1: protobuf.Field("imported", "uint32", repeated=False, required=True),
+        2: protobuf.Field("skipped", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        imported: int,
+        skipped: int,
+    ) -> None:
+        self.imported = imported
+        self.skipped = skipped
+
+
+class WARDValidateCache(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2374
+
+
+class WARDValidateCacheAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2375
+    FIELDS = {
+        1: protobuf.Field("checked", "uint32", repeated=False, required=True),
+        2: protobuf.Field("unchanged", "uint32", repeated=False, required=True),
+        3: protobuf.Field("updated", "uint32", repeated=False, required=True),
+        4: protobuf.Field("removed", "uint32", repeated=False, required=True),
+        6: protobuf.Field("counter", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        checked: int,
+        unchanged: int,
+        updated: int,
+        removed: int,
+        counter: int,
+    ) -> None:
+        self.checked = checked
+        self.unchanged = unchanged
+        self.updated = updated
+        self.removed = removed
+        self.counter = counter
 
 
 class DisplayAddress(protobuf.MessageType):

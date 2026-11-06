@@ -54,9 +54,17 @@ DEFAULT_TOKEN_FILE = Path.home() / ".trezor-ward" / "token"
 # The only messages wardd may put on the device: its WARD flows. Anything else -- GetPublicKey, a
 # silent GetAddress -- is answered as a Failure without reaching the device, so whatever answers
 # on the wardd port cannot drive the wallet.
+# KNOWN DEFICIENCY: wardd is untrusted, yet this list is global, not per conversation. During a
+# `lookup` it may still send WARDQueueUpdate (a confirmation the user did not ask for),
+# WARDListEntries, or WARDDiscardPending (silently drops queued intents), and the unused
+# WARDPerformUpdate / WARDConfirmedByWM / revert messages stay allowed.
+# FIXME(ward): allow per method only the messages that method's flow sends.
 DEVICE_CALLS = frozenset(
     "WARDSync WARDIngestAttestation WARDReconcile WARDLookup WARDQueueUpdate "
-    "WARDPerformUpdate WARDConfirmedByWM WARDDiscardPending".split()
+    "WARDPerformUpdate WARDConfirmedByWM WARDDiscardPending WARDVerifyChain "
+    "WARDPerformBatch WARDConfirmBatchByWM WARDPerformRevert WARDConfirmRevertByWM "
+    "WARDListPendingEdits WARDListEntries WARDCacheEntry WARDCacheExport WARDCacheImport "
+    "WARDValidateCache".split()
 )
 
 _WS_GUID = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
@@ -273,7 +281,8 @@ class WardAdapter:
     `relay` puts a wardd message on the session and returns the device's final answer;
     `on_proof_request` answers the device's WARDProofRequest through wardd's `answerProofRequest`. While
     the adapter is entered, the second is the client's `ward_proof_callback`, so it also answers the
-    pulls of the caller's own calls (`display_address`, signing).
+    pulls of the caller's own calls (`display_address`, signing). `on_node_request` does the same
+    for a listing walk's WARDNodeRequest (`answerNodeRequest`).
     """
 
     def __init__(self, session: "Session", client: WarddClient) -> None:
@@ -281,14 +290,28 @@ class WardAdapter:
         self.client = client
         self._saved: t.Any = None
 
+    # FIXME(ward): redesign. The proof/node hooks are installed on the CLIENT-WIDE AppManifest, so
+    # they answer pulls from every session on this client, and entering the adapter again (as
+    # `_conversation` does inside a caller's `with adapter:`) overwrites `_saved` with the
+    # adapter's own hooks -- the outer exit then leaves them installed for good, and unrelated
+    # pulls go to wardd. The hooks should be scoped to one call on one session.
+    # Proposed fix: give `client.Session` an optional `ward_hooks` slot (proof, node) that
+    # `TrezorClient._call` consults before the AppManifest callbacks, plus a helper
+    # `ward_scope(session, hooks)` that sets it and restores the PREVIOUS value from a local
+    # variable (so nesting is safe). `relay` and `display_address` then wrap only their own
+    # `session.call` in that scope; nothing is installed on the client, other sessions never see
+    # the hooks, and `__enter__`/`__exit__` become a session-scoped, nest-safe opt-in for the
+    # caller's own calls.
     def __enter__(self) -> "WardAdapter":
         app = self.session.client.app
-        self._saved = app.ward_proof_callback
+        self._saved = (app.ward_proof_callback, app.ward_node_callback)
         app.ward_proof_callback = self.on_proof_request
+        app.ward_node_callback = self.on_node_request
         return self
 
     def __exit__(self, *exc: object) -> None:
-        self.session.client.app.ward_proof_callback = self._saved
+        app = self.session.client.app
+        app.ward_proof_callback, app.ward_node_callback = self._saved
 
     def relay(self, name: str, body: dict) -> tuple[str, dict]:
         message_type = getattr(messages, name, None)
@@ -301,8 +324,23 @@ class WardAdapter:
         return type(res).__name__, protobuf.to_dict(res)
 
     def on_proof_request(self, request: messages.WARDProofRequest) -> messages.WARDProofAck:
-        ack = self.client.call("answerProofRequest", {"request": protobuf.to_dict(request)})
+        try:
+            ack = self.client.call(
+                "answerProofRequest", {"request": protobuf.to_dict(request)}
+            )
+        except (WarddError, OSError):
+            # ACCEPTED: any wardd failure is reported as `unavailable`; the device may then
+            # show a STICKY cached label, possibly stale, marked as cached.
+            return messages.WARDProofAck(unavailable=True)
         return protobuf.dict_to_proto(messages.WARDProofAck, ack)
+
+    def on_node_request(
+        self, request: messages.WARDNodeRequest
+    ) -> messages.WARDNodeAck:
+        ack = self.client.call(
+            "answerNodeRequest", {"request": protobuf.to_dict(request)}
+        )
+        return protobuf.dict_to_proto(messages.WARDNodeAck, ack)
 
     def _conversation(self, method: str, params: dict) -> dict:
         with self:
@@ -365,6 +403,51 @@ class WardAdapter:
         if delete:
             params["delete"] = True
         return self._conversation("update", params)
+
+    def cache_entry(
+        self, entry_key: bytes, sticky: bool = False, ward_id: bytes | None = None
+    ) -> dict:
+        """Copy the entry at `entry_key` into the device's offline cache, STICKY if asked:
+        wardd syncs, then the device pulls and verifies the entry's proof and stores it.
+        Returns `{wardId, replaced, counter}`."""
+        params = {"entryKey": entry_key.hex(), **_ward_id(ward_id)}
+        if sticky:
+            params["sticky"] = True
+        return self._conversation("cacheEntry", params)
+
+    def export_cache(self) -> list[bytes]:
+        """Back up the device's cached entries, each sealed to the wallet."""
+        res = self._conversation("exportCache", {})
+        return [bytes.fromhex(blob) for blob in res["entries"]]
+
+    def import_cache(self, blobs: list[bytes]) -> dict:
+        """Load a backup into the device's cache: `{imported, skipped}`."""
+        return self._conversation(
+            "importCache", {"entries": [blob.hex() for blob in blobs]}
+        )
+
+    def validate_cache(self, ward_id: bytes | None = None) -> dict:
+        """Sync, then check every cached entry by proof: `{wardId, counter, root, cache}`."""
+        return self._conversation("validateCache", _ward_id(ward_id))
+
+    def list_entries(
+        self,
+        app_id: str | None = None,
+        key_type: str | None = None,
+        device_id: int | None = None,
+        ward_id: bytes | None = None,
+    ) -> dict:
+        """Show every matching entry on the device: wardd syncs, then the device walks its
+        trusted root, pulling each node through wardd. Returns counts only:
+        `{wardId, shown, entries, counter, complete}`."""
+        filters = {"appId": app_id, "keyType": key_type, "deviceId": device_id}
+        return self._conversation(
+            "listEntries",
+            {
+                **{k: v for k, v in filters.items() if v is not None},
+                **_ward_id(ward_id),
+            },
+        )
 
     def display_address(
         self, app_id: str, address: str, ward_id: bytes | None = None

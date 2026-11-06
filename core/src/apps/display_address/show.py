@@ -14,6 +14,7 @@ async def show(msg: "DisplayAddress") -> "Success":
     from trezor.ui.layouts import show_address, show_warning
 
     from apps.common import ward as ward_core
+    from apps.ward import service
 
     log.debug(
         __name__,
@@ -26,19 +27,52 @@ async def show(msg: "DisplayAddress") -> "Success":
     label_text: str | None = None
     status = "unverified"
     try:
-        # Principal "display_address" (capability); the queried domain comes from the
-        # request (msg.app_id) so the display can show a label written by any app.
-        status, label = await ward_core.resolve_label(
-            "display_address", msg.address.encode(), domain=msg.app_id
+        from apps.ward.caller import DISPLAY_ADDRESS, host_caller
+
+        # The domain is the WARD service's: DisplayAddress reads the address labels the
+        # host writes. A host asking for another domain is refused (shown as a warning).
+        host_caller(msg.app_id, None, None)
+        status, label, freshness = await ward_core.resolve_label(
+            DISPLAY_ADDRESS, msg.address.encode()
         )
         log.debug(
             __name__,
-            "DisplayAddress: resolve_label -> status=%s label_present=%s",
+            "DisplayAddress: resolve_label -> status=%s label_present=%s freshness=%d",
             status,
             label is not None,
+            freshness,
         )
-        if status == "membership":
-            label_text = bytes(label).decode() if label is not None else None
+        # Freshness is OPTIONAL: only a host that asked the WM attaches it, and an
+        # unchecked or current label is shown as it always was. A verified proof
+        # against a root the WM has since moved past is still a real, but possibly
+        # outdated, answer -- say so before showing it.
+        if status in ("membership", "non-membership"):
+            if freshness == service.FRESH_BEHIND:
+                await show_warning(
+                    "display_address/ward_stale",
+                    "WARD label may be outdated",
+                    "Your WARD entries changed since this device last synced.",
+                )
+            elif freshness == service.FRESH_INVALID:
+                await show_warning(
+                    "display_address/ward_stale",
+                    "WARD label not confirmed",
+                    "The WARD Manager's freshness attestation did not verify.",
+                )
+        # "cached": the host could not serve a proof and a STICKY cached copy is shown
+        # unverified -- the title says so (see service.cached_label).
+        if status in ("membership", "cached"):
+            label_text = (
+                service.display_text(bytes(label)) if label is not None else None
+            )
+            if label is not None and label_text is None:
+                # The subtitle carries no field name to mark a hex form, so a label that is
+                # not plain text is not shown at all rather than shown ambiguously.
+                await show_warning(
+                    "display_address/ward_label_not_text",
+                    "WARD label not shown",
+                    "The verified label is not plain text.",
+                )
         # status == "unknown" (a proof was supplied but did not verify) and
         # "non-membership" both fall through to show the address with `status` as the
         # title and NO label. A wrong/stale proof therefore renders as "unknown" (never

@@ -363,24 +363,32 @@ class TestWardCoreCapability(unittest.TestCase):
 
     def test_capability_map(self):
         from apps.common import ward as ward_core
+        from apps.ward.caller import ADDRESS_LABELS, DISPLAY_ADDRESS, WardCaller
+        from trezor.wire import DataError
 
-        self.assertIn("lookup", ward_core._CAPABILITIES["display_address"])
-        # bitcoin/ethereum were removed from the allowlist: neither app has any WARD
-        # caller (the label flow lives in DisplayAddress/DisplayAddressWithProof).
-        self.assertTrue("bitcoin" not in ward_core._CAPABILITIES)
-        self.assertTrue("ethereum" not in ward_core._CAPABILITIES)
-        # An app with no grant is absent from the map entirely.
-        self.assertTrue("wallet" not in ward_core._CAPABILITIES)
+        # DisplayAddress reads the host-written address labels: a grant the firmware
+        # holds, not a domain the caller names.
+        self.assertIs(ward_core._label_domain(DISPLAY_ADDRESS), ADDRESS_LABELS)
+        # no other app has a grant -- not even one that claims a known name
+        for caller in (
+            ADDRESS_LABELS,
+            WardCaller(b"display_address", core=True),
+            WardCaller(b"bitcoin", core=True),
+        ):
+            with self.assertRaises(DataError):
+                ward_core._label_domain(caller)
 
     def test_unauthorized_app_rejected(self):
         """The capability gate rejects an app with no grant. Checked through
         verify_label -- the gated entry point that survives (the lookup_label wrapper
         was removed: it had no caller, _classify_label calls the service directly)."""
         from apps.common import ward as ward_core
+        from apps.ward.caller import WardCaller, extapp_caller
         from trezor.wire import DataError
 
-        with self.assertRaises(DataError):
-            await_result(ward_core.verify_label("wallet", b"addr", None, None, []))
+        for caller in (WardCaller(b"wallet", core=True), extapp_caller(b"app")):
+            with self.assertRaises(DataError):
+                await_result(ward_core.verify_label(caller, b"addr", None, None, []))
 
 
 class TestWardSyncStorage(unittest.TestCase):
@@ -453,8 +461,8 @@ class TestWardAttestation(unittest.TestCase):
 
     def _preimage(self, nonce, wallet_id, counter, mac):
         return (
-            b"WARD ATTEST v1" + bytes([1]) + nonce + wallet_id
-            + counter.to_bytes(4, "big") + mac
+            b"WARD ATTEST v2" + bytes([2]) + nonce + wallet_id
+            + counter.to_bytes(4, "big") + mac + (1700000000).to_bytes(8, "big") + b"h" * 32
         )
 
     def test_valid_attestation_accepted(self):
@@ -467,7 +475,7 @@ class TestWardAttestation(unittest.TestCase):
         mac = _sha256d(b"mac")
         counter = 5
         sig = ed25519.sign(seed, self._preimage(nonce, wallet_id, counter, mac))
-        self.assertTrue(verify_wm_attestation(wallet_id, nonce, counter, mac, sig))
+        self.assertTrue(verify_wm_attestation(wallet_id, nonce, counter, mac, sig, 1700000000, b"h" * 32))
 
     def test_tampered_counter_rejected(self):
         from trezor.crypto.curve import ed25519
@@ -479,7 +487,7 @@ class TestWardAttestation(unittest.TestCase):
         mac = _sha256d(b"mac")
         sig = ed25519.sign(seed, self._preimage(nonce, wallet_id, 5, mac))
         # verify against a different counter -> preimage mismatch -> rejected
-        self.assertFalse(verify_wm_attestation(wallet_id, nonce, 6, mac, sig))
+        self.assertFalse(verify_wm_attestation(wallet_id, nonce, 6, mac, sig, 1700000000, b"h" * 32))
 
 
 class TestWardProofSoundness(unittest.TestCase):
@@ -556,6 +564,174 @@ class TestWardProofSoundness(unittest.TestCase):
                 witness_entry_key=witness,
                 witness_commit=witness_commit,
             )
+
+    def _two_leaf_batch_tree(self):
+        from apps.ward import leaf, trie
+
+        a = bytes([0x00]) + b"\x00" * 31  # 0... (left)
+        c = bytes([0x80]) + b"\x00" * 31  # 1... (right)
+        b = bytes([0x40]) + b"\x00" * 31  # 01.. -- would sit left with a, but absent
+
+        def leaf_of(tag):
+            part = (leaf.ENC_ENCRYPTED, b"N" * 12, b"G" * 16, tag)
+            return ("address", part, part)
+
+        a_leaf = leaf.leaf_hash(a, *leaf_of(b"a"))
+        c_leaf = leaf.leaf_hash(c, *leaf_of(b"c"))
+        root = trie.internal_hash(0, a_leaf, c_leaf)
+        return a, b, c, a_leaf, c_leaf, root, leaf_of
+
+    def test_batch_rejects_proof_through_another_items_leaf(self):
+        # A host pairs a genuine update of `a` with an "update" of the absent `b`, whose
+        # fabricated proof walks through `a`'s leaf. Before the fix the overlay read
+        # `a`'s leaf at that position, ignored `b` entirely, matched the stored root,
+        # and returned a new root carrying only `a`'s change.
+        from apps.ward import trie
+
+        a, b, _c, _a_leaf, c_leaf, root, leaf_of = self._two_leaf_batch_tree()
+        ops = [
+            (
+                a,
+                leaf_of(b"a"),
+                leaf_of(b"a2"),
+                [self._proof_elem(0, c_leaf)],
+                None,
+                None,
+            ),
+            (
+                b,
+                leaf_of(b"b-old"),
+                leaf_of(b"b-new"),
+                [self._proof_elem(1, b"X" * 32), self._proof_elem(0, c_leaf)],
+                None,
+                None,
+            ),
+        ]
+        with self.assertRaises(ValueError):
+            trie.compute_batch_root(root, ops)
+
+    def test_batch_rejects_two_items_at_one_position(self):
+        from apps.ward import trie
+
+        # `b` first: `a`'s genuine leaf then overwrites it at the shared position, so
+        # the pre-state still matches and `b`'s update would be dropped.
+        a, b, _c, _a_leaf, c_leaf, root, leaf_of = self._two_leaf_batch_tree()
+        ops = [
+            (
+                b,
+                leaf_of(b"b-old"),
+                leaf_of(b"b-new"),
+                [self._proof_elem(0, c_leaf)],
+                None,
+                None,
+            ),
+            (
+                a,
+                leaf_of(b"a"),
+                leaf_of(b"a2"),
+                [self._proof_elem(0, c_leaf)],
+                None,
+                None,
+            ),
+        ]
+        with self.assertRaises(ValueError):
+            trie.compute_batch_root(root, ops)
+
+    def test_batch_honest_updates_still_fold(self):
+        from apps.ward import leaf, trie
+
+        a, _b, c, a_leaf, c_leaf, root, leaf_of = self._two_leaf_batch_tree()
+        ops = [
+            (
+                a,
+                leaf_of(b"a"),
+                leaf_of(b"a2"),
+                [self._proof_elem(0, c_leaf)],
+                None,
+                None,
+            ),
+            (
+                c,
+                leaf_of(b"c"),
+                leaf_of(b"c2"),
+                [self._proof_elem(0, a_leaf)],
+                None,
+                None,
+            ),
+        ]
+        expected = trie.internal_hash(
+            0,
+            leaf.leaf_hash(a, *leaf_of(b"a2")),
+            leaf.leaf_hash(c, *leaf_of(b"c2")),
+        )
+        self.assertEqual(trie.compute_batch_root(root, ops), expected)
+
+    # --- the verified listing walk (TrieWalk) ----------------------------------
+
+    def _three_leaf_tree(self):
+        from apps.ward import leaf, trie
+
+        a = bytes([0x00]) + b"\x00" * 31  # 00..
+        d = bytes([0x20]) + b"\x00" * 31  # 001.
+        c = bytes([0x80]) + b"\x00" * 31  # 1...
+        commits = {k: bytes([k[0] | 1]) * 32 for k in (a, d, c)}
+        leaves = {k: leaf.leaf_hash_of(k, commits[k]) for k in commits}
+        left = trie.internal_hash(2, leaves[a], leaves[d])
+        root = trie.internal_hash(0, left, leaves[c])
+        return a, d, c, commits, leaves, left, root
+
+    def test_walk_visits_every_leaf_in_preorder(self):
+        from apps.ward import trie
+
+        a, d, c, commits, leaves, left, root = self._three_leaf_tree()
+        walk = trie.TrieWalk(root)
+        self.assertEqual(walk.expected(), root)
+        walk.branch(0, left, leaves[c])
+        walk.branch(2, leaves[a], leaves[d])
+        walk.leaf(a, commits[a])
+        walk.leaf(d, commits[d])
+        self.assertEqual(walk.expected(), leaves[c])
+        walk.leaf(c, commits[c])
+        self.assertIsNone(walk.expected())
+        self.assertIsNone(trie.TrieWalk(None).expected())  # empty tree: nothing to walk
+
+    def test_walk_rejects_a_node_its_parent_did_not_commit_to(self):
+        from apps.ward import trie
+
+        a, _d, c, commits, leaves, left, root = self._three_leaf_tree()
+        walk = trie.TrieWalk(root)
+        with self.assertRaises(ValueError):  # a substituted subtree
+            walk.branch(0, b"X" * 32, leaves[c])
+        walk.branch(0, left, leaves[c])
+        with self.assertRaises(ValueError):  # a leaf where a branch is committed
+            walk.leaf(a, commits[a])
+        # a rejected node leaves the walk where it was: the omitted subtree is still owed
+        self.assertEqual(walk.expected(), left)
+
+    def test_walk_rejects_split_bits_out_of_order(self):
+        from apps.ward import leaf, trie
+
+        a, d = bytes([0x00]) + b"\x00" * 31, bytes([0x40]) + b"\x00" * 31
+        la, ld = leaf.leaf_hash_of(a, b"A" * 32), leaf.leaf_hash_of(d, b"D" * 32)
+        inner = trie.internal_hash(0, la, ld)  # splits on bit 0 BELOW a bit-1 branch
+        root = trie.internal_hash(1, inner, b"R" * 32)
+        walk = trie.TrieWalk(root)
+        walk.branch(1, inner, b"R" * 32)
+        with self.assertRaises(ValueError):
+            walk.branch(0, la, ld)
+
+    def test_walk_rejects_a_leaf_off_its_path(self):
+        # A root that commits to a leaf on the wrong side of a branch. Its hashes all
+        # check out, but a lookup for that key would never go there.
+        from apps.ward import leaf, trie
+
+        c = bytes([0x80]) + b"\x00" * 31  # bit 0 = 1, placed on the 0 side
+        a = bytes([0x00]) + b"\x00" * 31
+        lc, la = leaf.leaf_hash_of(c, b"C" * 32), leaf.leaf_hash_of(a, b"A" * 32)
+        walk = trie.TrieWalk(trie.internal_hash(0, lc, la))
+        walk.branch(0, lc, la)
+        with self.assertRaises(ValueError):
+            walk.leaf(c, b"C" * 32)
 
     # --- what dropping skiplen from the node hash bought -----------------------
     #

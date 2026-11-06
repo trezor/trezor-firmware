@@ -68,7 +68,7 @@ def test_ward_handoff_on_hwi_session(
             assert written["counter"] == 1
             found = adapter.call("lookup", params, device_call)
             assert found["valid"] and found["isMember"]
-            assert found["metadata"] == {"label": "shared adapter"}
+            assert "metadata" not in found
             assert pulls
         finally:
             session.client.app.ward_proof_callback = previous
@@ -81,3 +81,37 @@ def test_ward_handoff_on_hwi_session(
         "time" in event and event["service"] == "ward-adapter" for event in logs
     )
     assert "shared adapter" not in json.dumps(logs)
+
+
+def test_jade_hwi_forwards_on_the_callers_existing_session(
+    session, wardd, wardd_port, tmp_path
+):
+    module = pytest.importorskip("jadepy.ward")
+    previous = session.client.app.ward_proof_callback
+    with module.WardAdapter(
+        token=(tmp_path / "token").read_text(), url=f"ws://127.0.0.1:{wardd_port}"
+    ) as adapter:
+        with adapter.session(session) as hwi:
+            assert hwi.session is session
+            assert hwi.call("sync", {})["counter"] == 0
+            params = {
+                "appId": "bitcoin",
+                "address": "bc1qborrowed",
+                "networkSymbol": "btc",
+            }
+            relay._confirmed(
+                session,
+                lambda _: hwi.call(
+                    "update", {**params, "metadata": {"label": "borrowed session"}}
+                ),
+            )
+            assert hwi.call("lookup", params)["isMember"]
+            shown = relay._confirmed(
+                session,
+                lambda _: session.call(
+                    messages.DisplayAddress(address="bc1qborrowed", app_id="bitcoin")
+                ),
+                expected_text="borrowed session",
+            )
+            assert isinstance(shown, messages.Success)
+    assert session.client.app.ward_proof_callback is previous

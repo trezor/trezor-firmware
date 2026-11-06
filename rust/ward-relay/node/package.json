@@ -1,0 +1,28 @@
+{
+  "name": "@trezor/ward-relay",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Node.js and TypeScript bindings for the shared Rust WARD adapter",
+  "license": "LGPL-3.0-only",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "native/ward-relay.node"
+  ],
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test index.test.mjs"
+  },
+  "devDependencies": {
+    "ws": "^8.20.0"
+  }
+}

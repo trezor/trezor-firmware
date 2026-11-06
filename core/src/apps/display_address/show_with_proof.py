@@ -15,21 +15,30 @@ async def show_with_proof(msg: "DisplayAddressWithProof") -> "Success":
     from trezor.wire import DataError
 
     from apps.common import ward as ward_core
+    from apps.ward import service
 
     m_val = ward_core.read_leaf_content(msg.content)
     m_key_type, m_id = ward_core.read_leaf_identity(msg.identity)
     label_text: str | None = None
     try:
+        from apps.ward.caller import DISPLAY_ADDRESS, host_caller
+
+        # Domain and key type are the WARD service's; a host naming others is refused.
+        host_caller(msg.app_id, m_key_type, None)
         status, label = await ward_core.verify_label(
-            "display_address",
+            DISPLAY_ADDRESS,
             msg.address.encode(),
             m_id,
             m_val,
-            msg.proof,
-            key_type=m_key_type or "address",
-            witness_entry_key=msg.witness_entry_key,
-            witness_commit=msg.witness_commit,
-            domain=msg.app_id,
+            [bytes(node) for node in msg.proof],
+            witness_entry_key=(
+                bytes(msg.witness_entry_key)
+                if msg.witness_entry_key is not None
+                else None
+            ),
+            witness_commit=(
+                bytes(msg.witness_commit) if msg.witness_commit is not None else None
+            ),
         )
     except DataError as e:
         # The pushed proof was malformed/incomplete (e.g. a non-membership claim with
@@ -42,7 +51,17 @@ async def show_with_proof(msg: "DisplayAddressWithProof") -> "Success":
         status = "unverified"
     else:
         if status == "membership":
-            label_text = bytes(label).decode() if label is not None else None
+            label_text = (
+                service.display_text(bytes(label)) if label is not None else None
+            )
+            if label is not None and label_text is None:
+                # The subtitle carries no field name to mark a hex form, so a label that is
+                # not plain text is not shown at all rather than shown ambiguously.
+                await show_warning(
+                    "display_address/ward_label_not_text",
+                    "WARD label not shown",
+                    "The verified label is not plain text.",
+                )
         elif status == "unknown":
             await show_warning(
                 "display_address/ward_error",

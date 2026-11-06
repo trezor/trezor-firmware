@@ -49,12 +49,17 @@ env -u PYTHONPATH uv pip install --python .venv/bin/python -e ../wallets/Jade
 Python:
 
 ```python
-from jadepy.ward import WardAdapter  # or: from ward_relay import WardAdapter
+from jadepy.ward import WardAdapter  # a re-export of ward_relay.WardAdapter
 
 with WardAdapter(token=token, url="ws://127.0.0.1:21329") as adapter:
-    step = adapter.start("sync", {})
-    # The HWI forwards each step on its existing session and calls resume().
+    with adapter.session(existing_trezor_session) as ward:
+        ward.call("sync", {})
+        # Existing session.call(...) calls also answer nested WARD proof requests.
 ```
+
+The shared adapter handles protobuf conversion, proof callbacks and forwarding.
+It restores the previous proof callback on exit and never opens or closes the
+borrowed Trezor session. Jade's integration is only an import and re-export.
 
 Liana's optional import is enabled with:
 
@@ -63,7 +68,22 @@ cd ../wallets/liana
 cargo check -p liana-gui --features ward
 ```
 
-It exposes `liana_gui::ward::WardAdapter` with the same step API. The local path
+Liana also only re-exports the shared adapter and its session helpers:
+
+```rust,ignore
+use liana_gui::ward::Hwi;
+let mut ward = Hwi::new(&mut adapter, &mut existing_trezor_session);
+ward.call("sync", serde_json::json!({}))?;
+ward.forward("GetAddress", request)?;
+```
+
+The caller's session implements the shared `DeviceSession` transport interface;
+it retains its existing protobuf I/O, PIN and confirmation handling. All WARD
+conversation steps and proof responses live in `ward-relay`, with no wallet-local
+forwarding implementation. This interface does not implement a native Trezor
+transport for Liana.
+
+The local path
 dependency assumes `trezor-firmware` and `wallets` are siblings in this checkout.
 This provides the handoff library; it does not add Trezor enumeration to async-hwi
 or route ordinary Jade CBOR commands into a Trezor session.
@@ -90,12 +110,176 @@ the sequence can be followed across the terminals:
 ./tools/ward_stack.py --gui --delays
 ```
 
-Add `--full_log` (alias `--full-log`) to merge all four components' stdout and
+Add `--full_log` (alias `--full-log`) to merge all components' stdout and
 stderr into one file while keeping the separate logs and terminal output:
 
 ```sh
 ./tools/ward_stack.py --gui --delays --full_log
 ```
+
+Run two devices with the same SLIP-14 test seed against one wardd/Evolu replica
+and one HTTP manager:
+
+```sh
+./tools/ward_stack.py --devices 2 --model T3T1 --headless --once --full-log
+```
+
+This runs real-device synchronization, per-device offline queues, reconnect
+publication, same-entry collisions, signed rollback and attestation replay tests.
+The launcher supports up to eight devices with distinct profiles and UDP
+port blocks. T3W1 devices also get separate Tropic model TCP ports.
+Multi-device mode runs separately from `--long`, `--extra_long` and `--adversarial`.
+Results are saved as `multi-device-results.json` in the printed run directory.
+Omit `--headless --once` to keep separate terminals open for interactive reruns
+and manual pause controls.
+
+With `--devices 3`, the driver additionally runs three publication races:
+
+```sh
+./tools/ward_stack.py --devices 3 --model T3T1 --headless --once --full-log
+./tools/ward_stack.py --devices 3 --model T3W1 --headless --once --full-log
+```
+
+Device-1 queues A and B without advancing WM; device-2 prepares its own A,
+and device-3 prepares C from the same trusted head. Publication is paused after
+receiving the real device candidate and before wardd sends it to WM. The driver
+cross-delivers genuine WM confirmations in both directions, retargets the MAC,
+substitutes wallet signatures, and replays delayed confirmations. Each rejection
+must preserve the recipient's counter, root and complete pending queue.
+
+A third round submits all three signed successors concurrently to the real HTTP
+manager. Exactly one may be accepted; the others must return conflicts. All
+queued intents are then published against fresh state, including B, and all three
+devices must converge with empty queues. Exact publication retries must not add
+history records. Timestamped `race.*` events and named results are included in the
+HWI and combined logs. These checks bind confirmations to a particular authorized
+transition; devices sharing a seed intentionally share wallet signing authority.
+
+The full multi-device run also tests rollback after deleting the Evolu journal
+row containing the latest published leaf. Run this case alone with:
+
+```sh
+./tools/ward_stack.py --devices 3 --model T3T1 --scenario recovery --headless --once --full-log
+```
+
+The debug channel's `DROP_TRANSITION` fault removes the selected journal row;
+`RECONSTRUCT` starts a fresh walk from the WM head backward to genesis, replays
+forward, and rebuilds the trie from available leaf data. It reports the last
+verified prefix without treating it as the authoritative head. Ordinary sync
+must refuse the damaged head. The authenticated transition metadata remains in WM.
+
+Recovery uses `sync` with `recover: true` and the cached confirmation in
+`cachedConfirmation: { counter, mac, wm_signature }`. The device verifies that
+receipt before establishing the stuck head. It then requires a separate user
+confirmation for the revert. Cancellation must leave WM unchanged; successful
+recovery restores the complete immediate predecessor at a higher counter.
+Deeper data gaps fail closed. Reverted leaf data can remain unavailable: wardd
+uses WM's authenticated commit/revert history to rebuild the restored state,
+and another device verifies both links before catching up. The test also checks
+that new writes work afterward. Fault injection is available only through an
+explicitly enabled, token-protected debug listener.
+
+wardd exposes an opt-in, separate loopback TCP debug channel (`--debug-port`,
+`WARDD_DEBUG_PORT`; the launcher defaults to 21331). Every newline-delimited JSON
+request requires the pairing token, a `deviceId` and `command: "PAUSE"` or
+`command: "CONTINUE"`. The response acknowledges the selected device's state.
+The channel is disabled when wardd is started without a debug port. Debug controls
+are separate from the device's protobuf transport.
+
+Use the run directory printed by the launcher to control one device:
+
+```sh
+./tools/ward_stack.py --run-dir /path/to/ward-stack-run --pause device-1
+./tools/ward_stack.py --run-dir /path/to/ward-stack-run --continue device-1
+```
+
+`PAUSE` prevents subsequent WM requests for that device; other devices keep
+working. It does not stop the emulator or the local Evolu store. Host callers bind
+their endpoint by passing `debugDeviceId` in their conversation parameters; the
+multi-device driver does this automatically. Ordinary single-device callers use
+`device-1`. `CONTINUE` restores WM access; the next sync drains the device's queue
+against fresh proofs. A publication conflict preserves the queued intent for retry.
+When two authorized intents address the same entry, they are applied in publication
+order with increasing counters; unrelated entries remain intact. Pausing does not
+revoke WM requests that were already in flight.
+
+To run the integration test through pytest:
+
+```sh
+WARD_STACK_INTEGRATION=1 pytest tests/test_ward_multidevice.py -v
+```
+
+Add `--long` to write ten distinct demo entries, then verify all ten by lookup:
+
+```sh
+./tools/ward_stack.py --gui --long --full_log
+```
+
+`--long` also works directly on `examples/trezor_hwi.py`. It uses numbered
+addresses and labels and fails on a commit conflict, cache error, or incorrect
+lookup result. Combine it with `--delays` to watch every forwarding step; ten
+complete write/lookup rounds take substantially longer with pacing enabled.
+
+Use `--extra_long` (alias `--extra-long`) for bounded operation-combination
+coverage through depth 10. It takes precedence over `--long` and requires a
+fresh wallet and manager. The model uses two keys, each absent, empty-valued or
+labelled, with nine operations: sync and lookup/write-empty/write-label/delete
+for each key. It exercises insertion, replacement, repeated writes, deletion,
+absent deletion, reinsertion, and membership/non-membership proofs.
+
+Equivalent logical states at the same depth share suffix exploration. This covers
+all 702 reachable state/operation edges, rather than enumerating billions of
+literal histories or all possible byte values. The longest explored operation
+sequence is 10; the real counter continues increasing during authenticated
+restoration writes between branches. Every operation checks the counter; writes
+also check both keys' device proof verdicts, and label writes check the actual
+Trezor display. Restoration operations are logged separately. A successful run
+ends with `extra_long.complete` and matching `coveredEdges`/`expectedEdges`.
+
+Run against either supported test model:
+
+```sh
+./tools/ward_stack.py --model T3T1 --extra_long --headless --once --full_log
+./tools/ward_stack.py --model T3W1 --extra_long --headless --once --full_log
+```
+
+`--model` selects the emulator artifact and the model built by `--prepare`.
+T3W1 uses the Tropic model server. The launcher assigns an independent port to
+each instance; standalone emu.py defaults to 28992 unless --tropic-emulator-port
+is supplied.
+This tests the current daemon operations; batch/revert/recovery workflows not
+exposed by wardd are outside this model's coverage. Expect a substantially longer
+run than `--long`, especially with `--delays`.
+
+Use `--adversarial` for attack/rejection tests, separately from the long modes:
+
+```sh
+./tools/ward_stack.py --model T3T1 --adversarial --headless --once --full_log
+./tools/ward_stack.py --model T3W1 --adversarial --headless --once --full_log
+```
+
+The mode runs on the launcher's disposable emulator and wipes it between device
+tests. It checks modified/replayed attestations, signed timestamp/counter
+regression, positive-counter empty heads, same-counter root substitution,
+incomplete/reordered/forged authorization chains, invalid terminal root MACs,
+WM confirmations without device candidates, malformed pushed proofs, altered
+encrypted leaf parts, wrong namespaces and relabelled non-membership proofs.
+Negative device tests check that the trusted head remains unchanged and honest
+operations still work. Proof-specific tests use debug-only root setup; the normal
+authenticated write path is covered separately by the long modes.
+
+Manager tests cover transition signature operands, CAS races, generation nonces,
+immutable history and SQLite write failure. Host tests cover transition storage
+failure before WM publication, reconstruction/lineage checks, immutable records,
+and rejection of forged cached metadata. Rust adapter protocol tests check the
+single-session forwarding boundary and rejection of non-WARD device commands.
+
+Each group must finish successfully with executed tests. Skipped tests, failures
+and timeouts fail the mode. XML/JSON reports and `summary.json` are saved under
+the run's `adversarial/` directory. Console events include timestamps and group
+results. This is evidence for these specific attacks, not a proof of protocol
+security; unimplemented recovery/backup workflows and remote availability remain
+outside its claims.
 
 The launcher prints the combined file path, `/tmp/ward-stack-*/full.log`.
 Each line has a UTC collection timestamp and a source label (`[manager]`,
@@ -227,3 +411,47 @@ await TrezorConnect.init({ ...existingSettings, wardd });
 ```
 
 This uses the same service, storage and WM code in-process, with the same logs.
+
+## TypeScript / Node.js adapter and Connect
+
+`node/` exposes the same Rust `Client` through a Node-API addon. Its asynchronous
+methods run blocking WebSocket work on Node's worker pool. The HWI still owns the
+only Trezor channel. Rust's timestamped relay logs go to stderr as in Python.
+
+Build the native addon on the machine that will run it:
+
+```sh
+nix-shell --run "node rust/ward-relay/node/build.mjs"
+```
+
+Add the resulting local `rust/ward-relay/node` package to the application's
+dependencies as `@trezor/ward-relay`. It contains JavaScript and TypeScript
+declarations. The `.node` artifact is specific to the build OS and architecture;
+prebuilt binaries are not distributed.
+
+Connect's separate `ward` entry point adapts it to the existing `wardd` setting:
+
+```ts
+import TrezorConnect from '@trezor/connect';
+import { RustWardRelay } from '@trezor/connect/lib/ward.js';
+import { WardAdapter } from '@trezor/ward-relay';
+
+await TrezorConnect.init({
+  ...existingSettings,
+  wardd: new RustWardRelay({
+    connect: () => WardAdapter.connect({ url: 'ws://127.0.0.1:21329', token }),
+  }),
+});
+await TrezorConnect.wardInit({});
+```
+
+The bridge forwards calls and mid-call proof requests using Connect's current
+device session, maps relay errors, and awaits native cleanup. A fresh adapter
+connection is opened per Connect WARD operation. This is an opt-in Node/Electron
+path to a running wardd. The in-process `new Wardd(...)` option above continues
+to work without IPC; it does not load the native addon. Browser and React Native
+bindings are not provided by this Node-API package.
+
+Outside Connect, use `await adapter.call(method, params, deviceCallback)`, or
+`start`/`resume` for explicit protobuf handoff. `answerWardRequest` returns the
+named `WARDProofAck` for a proof pull. Always `await adapter.close()` afterward.

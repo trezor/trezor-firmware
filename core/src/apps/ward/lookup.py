@@ -20,28 +20,39 @@ async def lookup(msg: WARDLookup) -> WARDLookupAck:
     from trezor.messages import WARDLookupAck
 
     from apps.common import ward as core
+    from apps.ward.caller import host_caller
 
-    key_type = msg.key_type or "address"
-    device_id = msg.device_id or 0
-    pull = msg.content is None and msg.witness_entry_key is None
+    # The domain, key type and slot are the WARD service's, not the host's.
+    caller = host_caller(msg.app_id, msg.key_type, msg.device_id)
+    pull = (
+        msg.content is None
+        and msg.identity is None
+        and not msg.proof
+        and msg.witness_entry_key is None
+        and msg.witness_commit is None
+    )
 
     if pull:
         valid, counter, membership, _wallet_id, ward_id = await core.lookup_pull(
-            msg.app_id, msg.address, key_type=key_type, device_id=device_id
+            caller, bytes(msg.address)
         )
     else:
         m_val = core.read_leaf_content(msg.content)
         _m_kt, m_id = core.read_leaf_identity(msg.identity)
         valid, counter, membership, _wallet_id, ward_id = await core.lookup(
-            msg.app_id,
-            msg.address,
+            caller,
+            bytes(msg.address),
             m_id,
             m_val,
-            msg.proof,
-            key_type=key_type,
-            device_id=device_id,
-            witness_entry_key=msg.witness_entry_key,
-            witness_commit=msg.witness_commit,
+            [bytes(node) for node in msg.proof],
+            witness_entry_key=(
+                bytes(msg.witness_entry_key)
+                if msg.witness_entry_key is not None
+                else None
+            ),
+            witness_commit=(
+                bytes(msg.witness_commit) if msg.witness_commit is not None else None
+            ),
         )
 
     return WARDLookupAck(

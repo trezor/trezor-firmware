@@ -71,6 +71,7 @@ def sha256(data: bytes) -> bytes:
 
 # --- SLIP-0021 symmetric key derivation (matches apps.common.seed.Slip21Node) ---
 
+
 def _slip21_master(seed: bytes) -> bytes:
     return _hmac.new(b"Symmetric key seed", seed, hashlib.sha512).digest()
 
@@ -103,13 +104,24 @@ def derive_k_data(seed: bytes, key_type: Union[str, bytes]) -> bytes:
 
 # --- path derivation ---
 
+
 def scope_bytes(
     app_id: Union[str, bytes], key_type: Union[str, bytes], device_id: int = 0
 ) -> bytes:
     """scope = app_id || 0x00 || key_type || 0x00 || device_id(1B). device_id=0 => global."""
     if not 0 <= device_id <= 0xFF:
         raise ValueError("device_id must be a single byte (0 = global)")
-    return _as_bytes(app_id) + b"\x00" + _as_bytes(key_type) + b"\x00" + bytes([device_id])
+    app, kind = _as_bytes(app_id), _as_bytes(key_type)
+    if len(app) > 255 or len(kind) > 255:
+        raise ValueError("WARD scope exceeds canonical encoding bounds")
+    return (
+        b"WARD PATH v2"
+        + bytes([len(app)])
+        + app
+        + bytes([len(kind)])
+        + kind
+        + bytes([device_id])
+    )
 
 
 def leaf_identity_mac(
@@ -120,7 +132,13 @@ def leaf_identity_mac(
     device_id: int = 0,
 ) -> bytes:
     """LeafIdentityMAC = HMAC-SHA256(K_path, scope || identifier) — the 32B trie path."""
-    msg = scope_bytes(app_id, key_type, device_id) + identifier
+    if len(k_path) != 32 or len(identifier) > 65535:
+        raise ValueError("WARD identity exceeds canonical encoding bounds")
+    msg = (
+        scope_bytes(app_id, key_type, device_id)
+        + len(identifier).to_bytes(2, "big")
+        + identifier
+    )
     return _hmac.new(k_path, msg, hashlib.sha256).digest()
 
 
@@ -138,6 +156,7 @@ WARD_PLAINTEXT_CONTENT = False
 
 
 # --- the two parts ---
+
 
 class Part(NamedTuple):
     """One encoded leaf part. `body` is the ciphertext when encoding == ENC_ENCRYPTED,
@@ -236,7 +255,11 @@ def _pad_bucket(pt: bytes) -> bytes:
 
 
 def _seal(
-    key: bytes, domain: bytes, mac: bytes, key_type: Union[str, bytes], pt: bytes,
+    key: bytes,
+    domain: bytes,
+    mac: bytes,
+    key_type: Union[str, bytes],
+    pt: bytes,
     nonce: Optional[bytes] = None,
 ) -> Part:
     if nonce is None:
@@ -261,7 +284,10 @@ def _open(
 
 # --- LeafIdentity part ---
 
-def pack_identity(identifier: bytes, app_id: Union[str, bytes], device_id: int = 0) -> bytes:
+
+def pack_identity(
+    identifier: bytes, app_id: Union[str, bytes], device_id: int = 0
+) -> bytes:
     """Canonical identity plaintext: len16(identifier) || identifier || len8(app_id)
     || app_id || device_id(1B). The single source of canonicalization — both the
     commit and the AEAD go through it."""
@@ -317,6 +343,7 @@ def decode_identity(
 
 # --- LeafContent part ---
 
+
 def pack_content(c_leaf: int, value: bytes) -> bytes:
     """Canonical content plaintext: C_leaf(4B BE) || len32(value) || value. The
     identifier used to live here; it is in the identity part now."""
@@ -355,6 +382,7 @@ def decode_content(
 
 # --- whole-leaf convenience ---
 
+
 def encode_leaf(
     k_ident: bytes,
     k_data: bytes,
@@ -375,12 +403,23 @@ def encode_leaf(
     if len(value) == 0:
         return LeafBlob(key_type, EMPTY_PART, EMPTY_PART)
     identity = encode_identity(
-        k_ident, mac, key_type, identifier, app_id, device_id,
-        plaintext=plaintext_identity, nonce=id_nonce,
+        k_ident,
+        mac,
+        key_type,
+        identifier,
+        app_id,
+        device_id,
+        plaintext=plaintext_identity,
+        nonce=id_nonce,
     )
     content = encode_content(
-        k_data, mac, key_type, c_leaf, value,
-        plaintext=plaintext_content, nonce=val_nonce,
+        k_data,
+        mac,
+        key_type,
+        c_leaf,
+        value,
+        plaintext=plaintext_content,
+        nonce=val_nonce,
     )
     return LeafBlob(key_type, identity, content)
 
@@ -389,7 +428,9 @@ def decode_leaf(
     k_ident: bytes, k_data: bytes, mac: bytes, leaf: LeafBlob
 ) -> Tuple[int, bytes, bytes, int, bytes]:
     """Return (c_leaf, identifier, app_id, device_id, value)."""
-    identifier, app_id, device_id = decode_identity(k_ident, mac, leaf.key_type, leaf.identity)
+    identifier, app_id, device_id = decode_identity(
+        k_ident, mac, leaf.key_type, leaf.identity
+    )
     if leaf.content.is_empty():
         return 0, identifier, app_id, device_id, b""
     c_leaf, value = decode_content(k_data, mac, leaf.key_type, leaf.content)
@@ -399,5 +440,9 @@ def decode_leaf(
 def verify_mac(k_path: bytes, mac: bytes, leaf: LeafBlob, k_ident: bytes) -> bool:
     """Check that a *stored* MAC really is the MAC of its stored identity. This is the
     integrity check the old format made impossible in either direction."""
-    identifier, app_id, device_id = decode_identity(k_ident, mac, leaf.key_type, leaf.identity)
-    return leaf_identity_mac(k_path, app_id, identifier, leaf.key_type, device_id) == mac
+    identifier, app_id, device_id = decode_identity(
+        k_ident, mac, leaf.key_type, leaf.identity
+    )
+    return (
+        leaf_identity_mac(k_path, app_id, identifier, leaf.key_type, device_id) == mac
+    )

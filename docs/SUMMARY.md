@@ -54,6 +54,8 @@
   - [UI Tests](tests/ui-tests.md)
   - [Click Tests](tests/click-tests.md)
 - [Miscellaneous](misc/index.md)
+  - [AuthDB design (historical)](authdb.md)
+  - [AuthDB synchronization proposal (historical)](authdb-sync-proposal.md)
   - [Affected third-parties](misc/third-parties.md)
   - [Changelog](misc/changelog.md)
   - [Coins' BIP-44 Paths](misc/coins-bip44-paths.md)

@@ -12,7 +12,12 @@ from trezorlib import exceptions, ward
 from trezorlib.authdb_tree import WARDTree
 from trezorlib.debuglink import DebugSession as Session
 
-from ...ward_mgr_emu import WMEmulator, device_ward_keys, wm_initial_sync
+from ...ward_mgr_emu import (
+    WMEmulator,
+    device_ward_keys,
+    wm_chain_sync,
+    wm_initial_sync,
+)
 
 # The host tree must use the DEVICE's WARD keys (reproduced from the known test
 # seed) so its entry_keys/leaf commits match what the device computes and its
@@ -101,7 +106,7 @@ def test_ward_initial_sync_rejects_incorrect_wm_signature(session: Session) -> N
     with pytest.raises(
         exceptions.TrezorFailure, match="attestation verification failed"
     ):
-        ward.ingest_attestation(session, 2, mac, bad_sig)
+        ward.ingest_attestation(session, 2, mac, bad_sig, timestamp=1700000000, head_nonce=b"h" * 32)
 
     # Nothing was adopted: there is no authenticated root in the session.
     with pytest.raises(
@@ -124,7 +129,8 @@ def test_ward_initial_sync_empty_tree(session: Session) -> None:
 
 def test_ward_sync_refresh_moves_counter_forward(session: Session) -> None:
     """After adopting one state, a later attestation at a higher counter moves the
-    device forward to the newer tree (refresh, not just initial bootstrap)."""
+    device forward to the newer tree (refresh, not just initial bootstrap). An
+    anchored device refreshes through the AuthCommit chain, never reconcile."""
     wm = WMEmulator()
 
     tree1 = _tree()
@@ -134,7 +140,7 @@ def test_ward_sync_refresh_moves_counter_forward(session: Session) -> None:
     assert root1 == tree1.get_root_hash()
 
     tree2 = _foreign_tree()  # {_ADDRESS@1, _OTHER@2}
-    counter, root2, _mac = wm_initial_sync(session, wm, tree2, counter=2)
+    counter, root2, _mac = wm_chain_sync(session, wm, tree1, 1, tree2, counter=2)
     assert counter == 2
     assert root2 == tree2.get_root_hash()
 
@@ -175,7 +181,7 @@ def test_ward_sync_rejects_wrong_root_mac(session: Session) -> None:
     nonce, ward_id = ward.sync(session)
     assert ward_id is not None
     sig = wm.sign_attestation(ward_id, nonce, 2, bad_mac)
-    ward.ingest_attestation(session, 2, bad_mac, sig)
+    ward.ingest_attestation(session, 2, bad_mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
 
     with pytest.raises(
         exceptions.TrezorFailure, match="root does not match the attested mac"
@@ -205,7 +211,7 @@ def test_ward_sync_rejects_counter_mac_mismatch(session: Session) -> None:
     nonce, ward_id = ward.sync(session)
     assert ward_id is not None
     sig = wm.sign_attestation(ward_id, nonce, signed_counter, mismatched_mac)
-    ward.ingest_attestation(session, signed_counter, mismatched_mac, sig)
+    ward.ingest_attestation(session, signed_counter, mismatched_mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
 
     with pytest.raises(
         exceptions.TrezorFailure, match="root does not match the attested mac"
@@ -233,7 +239,7 @@ def test_ward_sync_rejects_counter_rollback(session: Session) -> None:
     with pytest.raises(
         exceptions.TrezorFailure, match="older than counter_loc"
     ):
-        ward.ingest_attestation(session, stale_counter, mac, sig)
+        ward.ingest_attestation(session, stale_counter, mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
 
 
 def test_ward_sync_rejects_rollback_after_progress(session: Session) -> None:
@@ -244,7 +250,9 @@ def test_ward_sync_rejects_rollback_after_progress(session: Session) -> None:
     tree1 = _tree()
     tree1.insert(_APP, _ADDRESS.encode(), _VALUE, counter=1)
     wm_initial_sync(session, wm, tree1, counter=1)
-    _counter, root2, _mac = wm_initial_sync(session, wm, _foreign_tree(), counter=2)
+    _counter, root2, _mac = wm_chain_sync(
+        session, wm, tree1, 1, _foreign_tree(), counter=2
+    )
     assert root2 is not None
 
     _pending, wallet_id = ward.list_pending(session)
@@ -257,7 +265,7 @@ def test_ward_sync_rejects_rollback_after_progress(session: Session) -> None:
     with pytest.raises(
         exceptions.TrezorFailure, match="older than counter_loc"
     ):
-        ward.ingest_attestation(session, 1, mac, sig)
+        ward.ingest_attestation(session, 1, mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
 
 
 def test_ward_sync_rejects_replayed_attestation(session: Session) -> None:
@@ -279,4 +287,4 @@ def test_ward_sync_rejects_replayed_attestation(session: Session) -> None:
     with pytest.raises(
         exceptions.TrezorFailure, match="attestation verification failed"
     ):
-        ward.ingest_attestation(session, 2, mac, sig)  # replay round-1 attestation
+        ward.ingest_attestation(session, 2, mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)  # replay round-1 attestation

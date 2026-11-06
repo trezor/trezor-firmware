@@ -249,6 +249,7 @@ def _from_env(name: str) -> bool:
 )
 @click.option(
     "--tropic-model-port",
+    "--tropic-emulator-port",
     type=click.IntRange(1, 65535),
     default=None,
     help="Port of the Tropic01 model. Defaults to a free port for the auto-started model, or to 28992 for an externally managed one (--no-tropic-emulator).",
