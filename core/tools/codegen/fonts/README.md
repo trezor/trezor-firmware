@@ -1,2 +1,3 @@
 - Fonts data reside in [trezor-firmware-fonts](https://github.com/trezor/trezor-firmware-fonts) repository.
 - Copy the OTF/TTF files to this directory and run `core/tools/codegen/gen_font.py` to generate font bitmaps.
+- The generated fonts and their adjustments (e.g. hand-drawn glyphs) are listed in `core/tools/codegen/gen_font.toml`.

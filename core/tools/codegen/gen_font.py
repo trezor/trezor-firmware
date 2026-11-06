@@ -1,25 +1,27 @@
 #!/usr/bin/env python3
 # pyright: reportMissingImports=false
 # script used to generate FontInfo in `rust/src/ui/layout_*/fonts/font_*_*.rs`
+# and foreign glyphs in `translations/fonts/*/font_*.json`, see `gen_font.toml`
 
 from __future__ import annotations
 
 import json
+import logging
 import unicodedata
 from collections import defaultdict
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from itertools import groupby
 from pathlib import Path
 
 import click
-
-# pip install freetype-py
 import freetype
-
-# pip install fonttools
+import tomllib
 from fontTools.ttLib import TTFont
 from foreign_chars import all_languages
 from mako.template import Template
+
+LOG = logging.getLogger(__name__)
 
 
 def _normalize(s: str) -> str:
@@ -35,131 +37,136 @@ def _extract_gpos_kerning(font_path: str) -> dict[tuple[int, int], int]:
     try:
         tt = TTFont(font_path)
     except Exception as e:
-        print(f"Warning: failed to open font {font_path}: {e}")
+        LOG.warning(f"Failed to open font {font_path}: {e}")
         return kerning
 
-    if "GPOS" not in tt:
-        tt.close()
-        return kerning
+    with tt:
+        if "GPOS" not in tt:
+            return kerning
 
-    cmap = tt.getBestCmap()
-    if cmap is None:
-        tt.close()
-        return kerning
+        cmap = tt.getBestCmap()
+        if cmap is None:
+            return kerning
 
-    # Reverse map: glyph name -> list of codepoints
-    glyph_to_codepoints: defaultdict[str, list[int]] = defaultdict(list)
-    for cp, glyph_name in cmap.items():
-        glyph_to_codepoints[glyph_name].append(cp)
+        # Reverse map: glyph name -> list of codepoints
+        glyph_to_codepoints: defaultdict[str, list[int]] = defaultdict(list)
+        for cp, glyph_name in cmap.items():
+            glyph_to_codepoints[glyph_name].append(cp)
 
-    gpos = tt["GPOS"].table
-    for lookup in gpos.LookupList.Lookup:
-        for subtable in lookup.SubTable:
-            if subtable.Format == 1 and hasattr(subtable, "PairSet"):
-                # PairPos Format 1
-                for i, pair_set in enumerate(subtable.PairSet):
-                    left_glyph = subtable.Coverage.glyphs[i]
-                    left_cps = glyph_to_codepoints[left_glyph]
-                    for pvr in pair_set.PairValueRecord:
-                        right_glyph = pvr.SecondGlyph
-                        right_cps = glyph_to_codepoints[right_glyph]
-                        val = 0
-                        if pvr.Value1 and hasattr(pvr.Value1, "XAdvance"):
-                            val = pvr.Value1.XAdvance
-                        if val != 0:
-                            for left_cp in left_cps:
-                                for right_cp in right_cps:
-                                    kerning[(left_cp, right_cp)] = val
-            elif subtable.Format == 2 and hasattr(subtable, "ClassDef1"):
-                # PairPos Format 2
-                class1 = subtable.ClassDef1.classDefs
-                class2 = subtable.ClassDef2.classDefs
-                coverage_glyphs = set(subtable.Coverage.glyphs)
-                for c1_idx, class1_record in enumerate(subtable.Class1Record):
-                    for c2_idx, class2_record in enumerate(class1_record.Class2Record):
-                        val = 0
-                        if class2_record.Value1 and hasattr(
-                            class2_record.Value1, "XAdvance"
-                        ):
-                            val = class2_record.Value1.XAdvance
-                        if val == 0:
-                            continue
-                        # Find glyphs in class1 with index c1_idx
-                        if c1_idx == 0:
-                            left_glyphs = [
-                                g for g in coverage_glyphs if class1.get(g, 0) == 0
-                            ]
-                        else:
-                            left_glyphs = [
-                                g
-                                for g, c in class1.items()
-                                if c == c1_idx and g in coverage_glyphs
-                            ]
-                        # Find glyphs in class2 with index c2_idx
-                        if c2_idx == 0:
-                            # Class 0 = all glyphs not explicitly assigned
-                            right_glyphs = [
-                                g for g in glyph_to_codepoints if class2.get(g, 0) == 0
-                            ]
-                        else:
-                            right_glyphs = [g for g, c in class2.items() if c == c2_idx]
-                        for left_glyph in left_glyphs:
-                            for right_glyph in right_glyphs:
-                                for left_cp in glyph_to_codepoints[left_glyph]:
-                                    for right_cp in glyph_to_codepoints[right_glyph]:
+        gpos = tt["GPOS"].table
+        for lookup in gpos.LookupList.Lookup:
+            for subtable in lookup.SubTable:
+                if subtable.Format == 1 and hasattr(subtable, "PairSet"):
+                    # PairPos Format 1
+                    for i, pair_set in enumerate(subtable.PairSet):
+                        left_glyph = subtable.Coverage.glyphs[i]
+                        left_cps = glyph_to_codepoints[left_glyph]
+                        for pvr in pair_set.PairValueRecord:
+                            right_glyph = pvr.SecondGlyph
+                            right_cps = glyph_to_codepoints[right_glyph]
+                            val = 0
+                            if pvr.Value1 and hasattr(pvr.Value1, "XAdvance"):
+                                val = pvr.Value1.XAdvance
+                            if val != 0:
+                                for left_cp in left_cps:
+                                    for right_cp in right_cps:
                                         kerning[(left_cp, right_cp)] = val
+                elif subtable.Format == 2 and hasattr(subtable, "ClassDef1"):
+                    # PairPos Format 2
+                    class1 = subtable.ClassDef1.classDefs
+                    class2 = subtable.ClassDef2.classDefs
+                    coverage_glyphs = set(subtable.Coverage.glyphs)
+                    for c1_idx, class1_record in enumerate(subtable.Class1Record):
+                        for c2_idx, class2_record in enumerate(
+                            class1_record.Class2Record
+                        ):
+                            val = 0
+                            if class2_record.Value1 and hasattr(
+                                class2_record.Value1, "XAdvance"
+                            ):
+                                val = class2_record.Value1.XAdvance
+                            if val == 0:
+                                continue
+                            # Find glyphs in class1 with index c1_idx
+                            if c1_idx == 0:
+                                left_glyphs = [
+                                    g for g in coverage_glyphs if class1.get(g, 0) == 0
+                                ]
+                            else:
+                                left_glyphs = [
+                                    g
+                                    for g, c in class1.items()
+                                    if c == c1_idx and g in coverage_glyphs
+                                ]
+                            # Find glyphs in class2 with index c2_idx
+                            if c2_idx == 0:
+                                # Class 0 = all glyphs not explicitly assigned
+                                right_glyphs = [
+                                    g
+                                    for g in glyph_to_codepoints
+                                    if class2.get(g, 0) == 0
+                                ]
+                            else:
+                                right_glyphs = [
+                                    g for g, c in class2.items() if c == c2_idx
+                                ]
+                            for left_glyph in left_glyphs:
+                                for right_glyph in right_glyphs:
+                                    for left_cp in glyph_to_codepoints[left_glyph]:
+                                        for right_cp in glyph_to_codepoints[
+                                            right_glyph
+                                        ]:
+                                            kerning[(left_cp, right_cp)] = val
 
-    tt.close()
     return kerning
+
+
+def _extract_gsub_substitutions(font_path: str, features: list[str]) -> dict[int, str]:
+    """Map codepoints to the glyph names substituted by the given OpenType features.
+
+    Only single substitutions (e.g. `tnum` for tabular figures) are supported.
+    """
+    if not features:
+        return {}
+    with TTFont(font_path) as tt:
+        gsub = tt["GSUB"].table
+        records = [
+            r for r in gsub.FeatureList.FeatureRecord if r.FeatureTag in features
+        ]
+        missing = set(features) - {r.FeatureTag for r in records}
+        if missing:
+            raise ValueError(f"Features {missing} not found in {font_path}")
+        substitutions: dict[str, str] = {}
+        for idx in {idx for r in records for idx in r.Feature.LookupListIndex}:
+            for subtable in gsub.LookupList.Lookup[idx].SubTable:
+                if subtable.LookupType != 1:
+                    raise ValueError(
+                        f"Unsupported GSUB lookup type {subtable.LookupType}"
+                    )
+                substitutions.update(subtable.mapping)
+        cmap = tt.getBestCmap()
+    assert cmap is not None
+    return {cp: substitutions[g] for cp, g in cmap.items() if g in substitutions}
 
 
 HERE = Path(__file__).parent
 CORE_ROOT = HERE.parent.parent
 FONTS_DIR = HERE / "fonts"
+CONFIG_TOML = HERE / "gen_font.toml"
 RUST_MAKO_TMPL = HERE / "gen_font.mako"
 JSON_FONTS_DEST = CORE_ROOT / "translations" / "fonts"
 RUST_FONTS_DEST = CORE_ROOT / "embed" / "rust" / "src" / "ui"
-LAYOUT_NAME = ""
 
-MIN_GLYPH = ord(" ")
-MAX_GLYPH = ord("~")
+ASCII = "".join(chr(i) for i in range(ord(" "), ord("~") + 1))
 
 WRITE_WIDTHS = False
 
-# characters for which bearingX is negative, but we choose to make it zero and modify
-# advance instead
-MODIFY_BEARING_X = [
-    _normalize(c)
-    for c in (
-        "Ä",
-        "À",
-        "Â",
-        "Ã",
-        "Æ",
-        "Î",
-        "Ï",
-        "Ì",
-        "î",
-        "ï",
-        "ì",
-        "ÿ",
-        "Ý",
-        "Ÿ",
-        "Á",
-        "ý",
-        "A",
-        "X",
-        "Y",
-        "j",
-        "x",
-        "y",
-        "}",
-        ")",
-        ",",
-        "/",
-        "_",
-    )
-]
+# freetype-py defines its enums dynamically, invisible to pyright
+FT_LOAD_FLAGS = (
+    freetype.FT_LOAD_RENDER  # type: ignore ["FT_LOAD_RENDER" is not a known attribute]
+    | freetype.FT_LOAD_TARGET_NORMAL  # type: ignore ["FT_LOAD_TARGET_NORMAL" is not a known attribute]
+)
+FT_KERNING_DEFAULT = freetype.FT_KERNING_DEFAULT  # type: ignore ["FT_KERNING_DEFAULT" is not a known attribute]
 
 # metrics explanation: https://www.freetype.org/freetype2/docs/glyphs/metrics.png
 
@@ -212,12 +219,35 @@ def process_bitmap_buffer(
     return res
 
 
-def drop_left_columns(buf: list[int], width: int, drop: int) -> list[int]:
-    res: list[int] = []
-    for i in range(len(buf)):
-        if i % width >= drop:
-            res.append(buf[i])
-    return res
+@dataclass
+class FontConfig:
+    """One font entry of `gen_font.toml`, see the keys description there."""
+
+    name: str
+    style: str
+    size: int
+    bpp: int = 4
+    shave_x: int = 0
+    kerning: bool = False
+    font_idx: int | None = None
+    font_idx_upper: int | None = None
+    nums_only: bool = False
+    ascii_subset: str | None = None
+    features: list[str] = field(default_factory=list)
+    max_advance: int | None = None
+    min_spacing: int | None = None
+    bitmaps: dict[str, list[str]] = field(default_factory=dict)
+    notes: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        if self.font_idx is None and self.font_idx_upper is None:
+            raise ValueError(f"{self.id}: font_idx or font_idx_upper must be set")
+        if self.nums_only and self.font_idx is None:
+            raise ValueError(f"{self.id}: nums_only requires font_idx")
+
+    @property
+    def id(self) -> str:
+        return f"{self.name}_{self.style}_{self.size}"
 
 
 @dataclass
@@ -234,7 +264,7 @@ class Glyph:
 
     @classmethod
     def from_face(
-        cls, face: freetype.Face, c: str, shaveX: int, inverse_colors: bool = False
+        cls, face: freetype.Face, c: str, shave_x: int, inverse_colors: bool = False
     ) -> Glyph:
         assert len(c) == 1
         bitmap = face.glyph.bitmap
@@ -248,59 +278,47 @@ class Glyph:
         assert metrics.horiBearingY % 64 == 0
         assert bitmap.width == bitmap.pitch
         assert len(bitmap.buffer) == bitmap.pitch * bitmap.rows
-        width = bitmap.width
-        rows = bitmap.rows
         advance = metrics.horiAdvance // 64
         bearingX = metrics.horiBearingX // 64
 
-        remove_left = shaveX
-        # discard space on the left side
-        if shaveX > 0:
-            diff = min(advance, bearingX, shaveX)
+        # discard space on the left side (never the pixels of the glyph)
+        if shave_x > 0:
+            diff = min(advance, bearingX, shave_x)
             advance -= diff
             bearingX -= diff
-            remove_left -= diff
-        # the following code is here just for some letters (listed at start)
         # not using negative bearingX makes life so much easier; add it to advance instead
         if bearingX < 0:
-            if c in MODIFY_BEARING_X:
-                advance += -bearingX
-                bearingX = 0
-            else:
-                raise ValueError(f"Negative bearingX for character '{c}'")
+            advance += -bearingX
+            bearingX = 0
         bearingY = metrics.horiBearingY // 64
         assert 0 <= advance <= 255
         assert 0 <= bearingX <= 255
         if bearingY < 0:  # HACK
-            print(f"normalizing bearingY {bearingY} for '{c}'")
+            LOG.debug(f"Normalizing bearingY {bearingY} for '{c}'")
             bearingY = 0
         assert 0 <= bearingY <= 255
 
-        buf = list(bitmap.buffer)
-        # discard non-space pixels on the left side
-        if remove_left > 0 and width > 0:
-            assert bearingX == 0
-            buf = drop_left_columns(buf, width, remove_left)
-            assert width > remove_left
-            width -= remove_left
-            assert advance > remove_left
-            advance -= remove_left
-            print(f'Glyph "{c}": removed {remove_left} pixel columns from the left')
-
         return Glyph(
             char=c,
-            width=width,
-            rows=rows,
+            width=bitmap.width,
+            rows=bitmap.rows,
             advance=advance,
             bearingX=bearingX,
             bearingY=bearingY,
-            buf=buf,
+            buf=list(bitmap.buffer),
             num_grays=bitmap.num_grays,
             inverse_colors=inverse_colors,
         )
 
-    def print_metrics(self) -> None:
-        print(
+    def replace_bitmap(self, rows: list[str]) -> None:
+        """Replace the rendered bitmap with a hand-drawn one ('#' = pixel on)."""
+        assert rows and all(len(r) == len(rows[0]) for r in rows)
+        self.width = len(rows[0])
+        self.rows = len(rows)
+        self.buf = [0xFF if px == "#" else 0x00 for row in rows for px in row]
+
+    def log_metrics(self) -> None:
+        LOG.debug(
             f'Loaded glyph "{self.char}" ... {self.width} x {self.rows} @ {self.num_grays} grays ({len(self.buf)} bytes, metrics: {self.advance}, {self.bearingX}, {self.bearingY})'
         )
 
@@ -328,44 +346,34 @@ class Glyph:
             return bytes(infos)
 
 
-class FaceProcessor:
-    def __init__(
-        self,
-        name: str,
-        style: str,
-        size: int,
-        bpp: int = 4,
-        shaveX: int = 0,
-        ext: str = "ttf",
-        gen_normal: bool = True,  # generate font with all the letters
-        gen_upper: bool = False,  # generate font with only upper-cased letters
-        gen_kernings: bool = False,  # generate kerning data
-        font_idx: int | None = None,  # idx to UTF-8 foreign chars data
-        font_idx_upper: int | None = None,  # idx to UTF-8 upper-cased foreign chars
-    ) -> None:
-        if gen_normal is False and gen_upper is False:
-            raise ValueError(
-                "At least one must be selected from normal glyphs or only uppercased glyphs."
-            )
-        print(f"Processing ... {name} {style} {size}")
-        self.name = name
-        self.style = style
-        self.size = size
-        self.font_idx = font_idx
-        self.font_idx_upper = font_idx_upper
-        self.bpp = bpp
-        self.shaveX = shaveX
-        self.ext = ext
-        self.gen_normal = gen_normal
-        self.gen_upper = gen_upper
-        self.gen_kernings = gen_kernings
+@dataclass
+class Variant:
+    """One `FontInfo` in the Rust file, with its own array of glyph references."""
 
-        self.font_path = str(FONTS_DIR / f"{name}-{style}.{ext}")
+    suffix: str  # of the `FontInfo` and the glyph array names
+    description: str
+    blob_idx: int
+    # ASCII char -> char of the glyph to show, None for the nonprintable glyph
+    mapping: Callable[[str], str | None]
+
+
+class FaceProcessor:
+    def __init__(self, layout: str, cfg: FontConfig) -> None:
+        LOG.info(f"Processing {cfg.name} {cfg.style} {cfg.size}")
+        self.layout = layout
+        self.cfg = cfg
+        self.fontname = cfg.id.lower()
+        self._unsupported: set[str] = set()  # chars missing in the font
+
+        font_paths = list(FONTS_DIR.glob(f"{cfg.name}-{cfg.style}.[ot]tf"))
+        if len(font_paths) != 1:
+            raise FileNotFoundError(
+                f"Expected one font file {cfg.name}-{cfg.style}.{{otf,ttf}} in {FONTS_DIR}"
+            )
+        self.font_path = str(font_paths[0])
         self.face = freetype.Face(self.font_path)
-        self.face.set_pixel_sizes(0, size)
-        self.fontname = f"{name.lower()}_{style.lower()}_{size}"
-        self.font_ymin = 0
-        self.font_ymax = 0
+        self.face.set_pixel_sizes(0, cfg.size)
+        self._substitutions = _extract_gsub_substitutions(self.font_path, cfg.features)
 
         # Extract GPOS kerning data (preferred over legacy kern table).
         # Values are in font units; convert to pixels using ppem/units_per_em.
@@ -374,21 +382,17 @@ class FaceProcessor:
         if units_per_em:
             raw_gpos = _extract_gpos_kerning(self.font_path)
             for (lcp, rcp), val in raw_gpos.items():
-                px = round(val * size / units_per_em)
+                px = round(val * cfg.size / units_per_em)
                 if px != 0:
                     self._gpos_kerning[(lcp, rcp)] = px
             if self._gpos_kerning:
-                print(f"  Loaded {len(self._gpos_kerning)} GPOS kerning pairs")
-
-    @property
-    def _name_style_size(self) -> str:
-        return f"{self.name}_{self.style}_{self.size}"
+                LOG.info(f"  Loaded {len(self._gpos_kerning)} GPOS kerning pairs")
 
     @property
     def _rs_file_name(self) -> Path:
         return (
             RUST_FONTS_DEST
-            / f"layout_{LAYOUT_NAME.lower()}"
+            / f"layout_{self.layout}"
             / "fonts"
             / f"font_{self.fontname}.rs"
         )
@@ -398,10 +402,18 @@ class FaceProcessor:
 
     def write_files(self) -> None:
         # JSON files:
-        if self.gen_normal:
+        if self.cfg.font_idx is not None:
             self.write_foreign_json(upper_cased=False)
-        if self.gen_upper:
+        if self.cfg.font_idx_upper is not None:
             self.write_foreign_json(upper_cased=True)
+        if "º" in self._unsupported:
+            self._unsupported.remove("º")
+            LOG.warning(f"{self.cfg.id}: 'º' not supported, using fallback glyph 'o'")
+        if self._unsupported:
+            LOG.warning(
+                f"{self.cfg.id}: characters not supported, using unknown glyph: "
+                + " ".join(sorted(self._unsupported))
+            )
         if WRITE_WIDTHS:
             self.write_char_widths_files()
         self.write_rust_file()
@@ -420,25 +432,16 @@ class FaceProcessor:
                 assert len(map_from) == 1
 
                 if not self._char_supported(c):
+                    self._unsupported.add(c)
                     if c == "º":
                         c = "o"
-                        print(
-                            f"Character 'º' not supported ⚠️ in font {self.name} {self.style}, using fallback glyph {c}"
-                        )
-                    else:
-                        print(
-                            f"Character '{c}' not supported ❌ in font {self.name} {self.style}, using unknown glyph"
-                        )
-                self._load_char(c)
-                glyph = Glyph.from_face(self.face, c, self.shaveX)
-                glyph.print_metrics()
-                fontdata["glyphs"][map_from] = glyph.to_bytes(self.bpp).hex()
+                glyph = self.glyph(c)
+                glyph.log_metrics()
+                fontdata["glyphs"][map_from] = glyph.to_bytes(self.cfg.bpp).hex()
 
-            if self.gen_kernings:
+            if self.cfg.kerning:
                 # Find kernings across all language characters and ASCII
-                all_lang_chars = list(language_chars) + [
-                    chr(i) for i in range(MIN_GLYPH, MAX_GLYPH + 1)
-                ]
+                all_lang_chars = list(language_chars) + list(ASCII)
 
                 for left_char in all_lang_chars:
                     left_c = _normalize(left_char)
@@ -459,9 +462,7 @@ class FaceProcessor:
                             continue
 
                         # skip if both are ASCII (handled in .rs file)
-                        if ord(left_c) in range(MIN_GLYPH, MAX_GLYPH + 1) and ord(
-                            right_c
-                        ) in range(MIN_GLYPH, MAX_GLYPH + 1):
+                        if left_c in ASCII and right_c in ASCII:
                             continue
 
                         kern_val = self._get_kerning(ord(left_c), ord(right_c))
@@ -470,12 +471,12 @@ class FaceProcessor:
                                 (left_char, right_char, kern_val)
                             )
                             key = f"{left_char}{right_char}"
-                            print(
+                            LOG.debug(
                                 f"Special {lang} character kerning for '{key}' : {kern_val} pixels"
                             )
 
             file_name = self._foreign_json_name(upper_cased, lang)
-            layout_fonts_dir = JSON_FONTS_DEST / LAYOUT_NAME.lower()
+            layout_fonts_dir = JSON_FONTS_DEST / self.layout
             layout_fonts_dir.mkdir(parents=True, exist_ok=True)
             file = layout_fonts_dir / file_name
             json_content = json.dumps(fontdata, indent=2, ensure_ascii=False)
@@ -486,9 +487,8 @@ class FaceProcessor:
         widths: dict[str, int] = {}
 
         # "normal" ASCII characters
-        for i in range(MIN_GLYPH, MAX_GLYPH + 1):
-            c = chr(i)
-            if c.islower() and not self.gen_normal:
+        for c in ASCII:
+            if c.islower() and self.cfg.font_idx is None:
                 c = c.upper()
             chars.add(c)
         # foreign language data
@@ -497,9 +497,7 @@ class FaceProcessor:
                 chars.add(c)
 
         for c in sorted(chars):
-            self._load_char(c)
-            glyph = Glyph.from_face(self.face, c, self.shaveX)
-            widths[c] = glyph.advance
+            widths[c] = self.glyph(c).advance
 
         filename = f"font_widths_{self.fontname}.json"
         with open(filename, "w", encoding="utf-8") as f:
@@ -509,8 +507,22 @@ class FaceProcessor:
     def _char_supported(self, c: str) -> bool:
         return self.face.get_char_index(ord(c)) != 0
 
-    def _load_char(self, c: str) -> None:
-        self.face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)
+    def glyph(self, c: str, inverse_colors: bool = False) -> Glyph:
+        """Render a glyph, adjusted according to the font config."""
+        if ord(c) in self._substitutions:
+            name = self._substitutions[ord(c)].encode()
+            self.face.load_glyph(self.face.get_name_index(name), FT_LOAD_FLAGS)
+        else:
+            self.face.load_char(c, FT_LOAD_FLAGS)
+        glyph = Glyph.from_face(self.face, c, self.cfg.shave_x, inverse_colors)
+        if c in self.cfg.bitmaps:
+            glyph.replace_bitmap(self.cfg.bitmaps[c])
+        if self.cfg.max_advance is not None:
+            glyph.advance = min(glyph.advance, self.cfg.max_advance)
+        if self.cfg.min_spacing is not None:
+            min_advance = glyph.bearingX + glyph.width + self.cfg.min_spacing
+            glyph.advance = max(glyph.advance, min_advance)
+        return glyph
 
     def _get_kerning(self, left_cp: int, right_cp: int) -> int:
         """Get kerning value in pixels for a pair of codepoints.
@@ -525,8 +537,41 @@ class FaceProcessor:
             # (don't fall back to kern table which may have stale/different data)
             return 0
         # Fallback: legacy kern table via freetype
-        kerning = self.face.get_kerning(left_cp, right_cp, freetype.FT_KERNING_DEFAULT)
+        kerning = self.face.get_kerning(left_cp, right_cp, FT_KERNING_DEFAULT)
         return kerning.x // 64
+
+    def _variants(self) -> list[Variant]:
+        cfg = self.cfg
+        available = cfg.ascii_subset or ASCII
+
+        def show(c: str) -> str | None:
+            if c in available:
+                return c
+            if c.lower() in available:
+                return c.lower()
+            return None
+
+        def show_num(c: str) -> str | None:
+            return show(c) if c.isdigit() or c == " " else None
+
+        variants = []
+        if cfg.font_idx is not None:
+            variants.append(Variant("", "normal ASCII", cfg.font_idx, show))
+        if cfg.font_idx_upper is not None:
+            variants.append(
+                Variant(
+                    "_upper",
+                    "forced uppercase",
+                    cfg.font_idx_upper,
+                    lambda c: show(c.upper()),
+                )
+            )
+        if cfg.nums_only:
+            assert cfg.font_idx is not None
+            variants.append(
+                Variant("_NumsOnly", "numeral-only ASCII", cfg.font_idx, show_num)
+            )
+        return variants
 
     # --------------------------------------------------------------------
     # Rust code generation
@@ -535,83 +580,54 @@ class FaceProcessor:
         """
         Write a Rust source file using a Mako template.
         """
-        # Build a dict with all data needed by the template.
-        # 1) Gather ASCII glyph definitions.
+        # 1) Glyph references of each FontInfo, as (ASCII code or "nonprintable", comment).
+        variants = []
+        shown: set[str] = set()
+        for variant in self._variants():
+            refs = []
+            for c in ASCII:
+                c_to = variant.mapping(c)
+                if c_to is None:
+                    refs.append(("nonprintable", None))
+                else:
+                    shown.add(c_to)
+                    refs.append((ord(c_to), f"{c} -> {c_to}" if c_to != c else None))
+            variants.append({"variant": variant, "refs": refs})
+
+        # 2) Glyphs referenced by any FontInfo.
         glyphs = []
-        for i in range(MIN_GLYPH, MAX_GLYPH + 1):
-            c = chr(i)
-            if c.islower() and not self.gen_normal:
-                continue
-            self._load_char(c)
-            glyph = Glyph.from_face(self.face, c, self.shaveX)
-            arr_bytes = glyph.to_bytes(self.bpp)
+        for c in sorted(shown):
             glyphs.append(
                 {
-                    "ascii": i,
-                    "char": glyph.char,
-                    "var_name": f"Font_{self._name_style_size}_glyph_{i}",
-                    "arr_len": len(arr_bytes),
-                    "arr_content": ", ".join(str(n) for n in arr_bytes),
+                    "char": c,
+                    "data": list(self.glyph(c).to_bytes(self.cfg.bpp)),
+                    "comment": "hand-drawn" if c in self.cfg.bitmaps else None,
                 }
             )
+        nonprintable = list(self.glyph("?", inverse_colors=True).to_bytes(self.cfg.bpp))
 
-        # 2) Nonprintable glyph.
-        self._load_char("?")
-        glyph_np = Glyph.from_face(self.face, "?", self.shaveX, inverse_colors=True)
-        arr_bytes_np = glyph_np.to_bytes(self.bpp)
-        nonprintable = {
-            "var_name": f"Font_{self._name_style_size}_glyph_nonprintable",
-            "arr_len": len(arr_bytes_np),
-            "arr_content": ", ".join(str(n) for n in arr_bytes_np),
-        }
-
-        # 3) Build arrays of glyph references.
-        glyph_array = []
-        glyph_array_upper = []
-        if self.gen_normal:
-            glyph_array = [
-                f"&Font_{self._name_style_size}_glyph_{i}"
-                for i in range(MIN_GLYPH, MAX_GLYPH + 1)
-            ]
-        if self.gen_upper:
-            for i in range(MIN_GLYPH, MAX_GLYPH + 1):
-                if chr(i).islower():
-                    c_to = chr(i).upper()
-                    i_mapped = ord(c_to)
-                    glyph_array_upper.append(
-                        f"&Font_{self._name_style_size}_glyph_{i_mapped}, // {chr(i)} -> {c_to}"
-                    )
-                else:
-                    glyph_array_upper.append(f"&Font_{self._name_style_size}_glyph_{i}")
-
-        # 4) Recompute font_ymin and font_ymax.
-        self.font_ymin = 0
-        self.font_ymax = 0
-        for i in range(MIN_GLYPH, MAX_GLYPH + 1):
-            c = chr(i)
-            if c.islower() and not self.gen_normal:
+        # 3) Vertical metrics from all ASCII glyphs (regardless of `ascii_subset`).
+        font_ymin = 0
+        font_ymax = 0
+        for c in ASCII:
+            if c.islower() and self.cfg.font_idx is None:
                 continue
-            self._load_char(c)
-            glyph = Glyph.from_face(self.face, c, self.shaveX)
-            yMin = glyph.bearingY - glyph.rows
-            yMax = yMin + glyph.rows
-            self.font_ymin = min(self.font_ymin, yMin)
-            self.font_ymax = max(self.font_ymax, yMax)
+            glyph = self.glyph(c)
+            font_ymin = min(font_ymin, glyph.bearingY - glyph.rows)
+            font_ymax = max(font_ymax, glyph.bearingY)
 
+        # 4) Kerning of ASCII pairs.
         kernings = []
-        if self.gen_kernings:
-            for left in range(MIN_GLYPH, MAX_GLYPH + 1):
-                for right in range(MIN_GLYPH, MAX_GLYPH + 1):
-                    kern_val = self._get_kerning(left, right)
+        if self.cfg.kerning:
+            for left in ASCII:
+                for right in ASCII:
+                    kern_val = self._get_kerning(ord(left), ord(right))
                     if kern_val != 0:
-                        kernings.append((left, right, kern_val))
-                        print(
-                            f"left glyph: {chr(left)} right glyph:{chr(right)} kerning {kern_val}"
+                        kernings.append((ord(left), ord(right), kern_val))
+                        LOG.debug(
+                            f"left glyph: {left} right glyph:{right} kerning {kern_val}"
                         )
-
-        print(
-            f"Font: {self._name_style_size} {self.style} {self.size} : Num of kernirngs {len(kernings)}"
-        )
+            LOG.info(f"  Number of ASCII kernings: {len(kernings)}")
 
         # Build two-level kerning structure: index (per left char) + flat pairs.
         # Index stores (left_char, count); start offset is derived as sum of preceding counts.
@@ -623,7 +639,7 @@ class FaceProcessor:
             pairs = list(group)
             assert len(pairs) <= 255, (
                 f"Too many right-char partners ({len(pairs)}) for '{chr(left)}' "
-                f"in {self._name_style_size} — exceeds u8 count limit"
+                f"in {self.cfg.id} — exceeds u8 count limit"
             )
             kern_index.append((left, len(pairs)))
             for _, right, val in pairs:
@@ -636,178 +652,33 @@ class FaceProcessor:
             kern_groups.append((left, kern_pairs[offset : offset + count]))
             offset += count
 
-        # 5) Build FontInfo definitions.
-        font_info = None
-        font_info_upper = None
-        if self.gen_normal:
-            if self.font_idx is None:
-                raise ValueError(
-                    f"font_idx must be set when generating FontInfo for {self._name_style_size}"
-                )
-            font_info = {
-                "variant": "normal",
-                "translation_blob_idx": self.font_idx,
-                "height": self.size,
-                "max_height": self.font_ymax - self.font_ymin,
-                "baseline": -self.font_ymin,
-                "glyph_array": f"Font_{self._name_style_size}",
-                "nonprintable": f"Font_{self._name_style_size}_glyph_nonprintable",
-                "kernings": f"Font_{self._name_style_size}_kernings",
-            }
-        if self.gen_upper:
-            if self.font_idx_upper is None:
-                raise ValueError(
-                    f"font_idx_upper must be set when generating `only_upper` FontInfo for {self._name_style_size}"
-                )
-            font_info_upper = {
-                "variant": "upper",
-                "translation_blob_idx": self.font_idx_upper,
-                "height": self.size,
-                "max_height": self.font_ymax - self.font_ymin,
-                "baseline": -self.font_ymin,
-                "glyph_array": f"Font_{self._name_style_size}_upper",
-                "nonprintable": f"Font_{self._name_style_size}_glyph_nonprintable",
-                "kernings": f"Font_{self._name_style_size}_kernings",
-            }
-
         data = {
-            "bpp": self.bpp,
-            "name": self._name_style_size,
+            "name": self.cfg.id,
+            "bpp": self.cfg.bpp,
+            "notes": self.cfg.notes,
             "glyphs": glyphs,
             "nonprintable": nonprintable,
-            "glyph_array": glyph_array,
-            "glyph_array_upper": glyph_array_upper,
-            "kernings": kernings,
+            "variants": variants,
+            "gen_kernings": self.cfg.kerning,
             "kern_index": kern_index,
             "kern_pairs": kern_pairs,
             "kern_groups": kern_groups,
-            "gen_normal": self.gen_normal,
-            "gen_upper": self.gen_upper,
-            "gen_kernings": self.gen_kernings,
-            "font_info": font_info,
-            "font_info_upper": font_info_upper,
+            "height": self.cfg.size,
+            "max_height": font_ymax - font_ymin,
+            "baseline": -font_ymin,
         }
 
-        # Load the Mako template from the same directory.
-        with open(RUST_MAKO_TMPL, "r") as f:
-            template_content = f.read()
-        template = Template(template_content)
-        rendered = template.render(**data)
-
-        # Write the rendered template into the Rust file.
-        with open(self._rs_file_name, "wt") as f:
-            f.write(rendered)  # type: ignore [Argument of type "bytes | str" cannot be assigned to parameter "s" of type "str" in function "write"]
+        template = Template(RUST_MAKO_TMPL.read_text())
+        self._rs_file_name.write_text(template.render(**data))  # type: ignore [Argument of type "bytes | str" cannot be assigned to parameter "data" of type "str" in function "write_text"]
 
 
-def gen_layout_bolt() -> None:
-    global LAYOUT_NAME
-    LAYOUT_NAME = "Bolt"
-    FaceProcessor("TTHoves", "Regular", 21, ext="otf", font_idx=1).write_files()
-    FaceProcessor("TTHoves", "DemiBold", 21, ext="otf", font_idx=5).write_files()
-    FaceProcessor(
-        "TTHoves",
-        "Bold",
-        17,
-        ext="otf",
-        gen_normal=False,
-        gen_upper=True,
-        font_idx_upper=7,
-    ).write_files()
-    FaceProcessor("RobotoMono", "Medium", 20, font_idx=3).write_files()
-
-
-def gen_layout_caesar() -> None:
-    global LAYOUT_NAME
-    LAYOUT_NAME = "Caesar"
-    FaceProcessor(
-        "PixelOperator",
-        "Regular",
-        8,
-        bpp=1,
-        shaveX=1,
-        gen_normal=True,
-        gen_upper=True,
-        font_idx=1,
-        font_idx_upper=6,
-    ).write_files()
-    FaceProcessor(
-        "PixelOperator",
-        "Bold",
-        8,
-        bpp=1,
-        shaveX=1,
-        gen_normal=True,
-        gen_upper=True,
-        font_idx=2,
-        font_idx_upper=7,
-    ).write_files()
-    FaceProcessor(
-        "PixelOperatorMono", "Regular", 8, bpp=1, shaveX=1, font_idx=3
-    ).write_files()
-    FaceProcessor(
-        "Unifont", "Regular", 16, bpp=1, shaveX=1, ext="otf", font_idx=4
-    ).write_files()
-    # NOTE: Unifont Bold does not seem to have czech characters
-    FaceProcessor(
-        "Unifont", "Bold", 16, bpp=1, shaveX=1, ext="otf", font_idx=5
-    ).write_files()
-
-
-def gen_layout_delizia() -> None:
-    global LAYOUT_NAME
-    LAYOUT_NAME = "Delizia"
-    # FIXME: BIG font idx not needed
-    FaceProcessor(
-        "TTSatoshi", "DemiBold", 42, ext="otf", font_idx=1, gen_kernings=True
-    ).write_files()
-    FaceProcessor(
-        "TTSatoshi", "DemiBold", 21, ext="otf", font_idx=1, gen_kernings=True
-    ).write_files()
-    FaceProcessor(
-        "TTSatoshi", "DemiBold", 18, ext="otf", font_idx=8, gen_kernings=True
-    ).write_files()
-    FaceProcessor("RobotoMono", "Medium", 21, font_idx=3).write_files()
-    FaceProcessor(
-        "TTHoves",
-        "Bold",
-        17,
-        ext="otf",
-        gen_normal=False,
-        gen_upper=True,
-        font_idx_upper=7,
-        gen_kernings=True,
-    ).write_files()
-
-
-def gen_layout_eckhart() -> None:
-    global LAYOUT_NAME
-    LAYOUT_NAME = "eckhart"
-    # FIXME: BIG font idx not needed
-    FaceProcessor(
-        "TTSatoshi", "ExtraLight", 72, ext="otf", font_idx=1, gen_kernings=True
-    ).write_files()
-    FaceProcessor(
-        "TTSatoshi", "ExtraLight", 46, ext="otf", font_idx=1, gen_kernings=True
-    ).write_files()
-    FaceProcessor(
-        "TTSatoshi", "Regular", 38, ext="otf", font_idx=2, gen_kernings=True
-    ).write_files()
-    FaceProcessor(
-        "TTSatoshi", "Medium", 26, ext="otf", font_idx=3, gen_kernings=True
-    ).write_files()
-    FaceProcessor(
-        "TTSatoshi", "Regular", 22, ext="otf", font_idx=4, gen_kernings=True
-    ).write_files()
-    FaceProcessor("RobotoMono", "Medium", 38, font_idx=5).write_files()
-    FaceProcessor("RobotoMono", "Light", 30, font_idx=6).write_files()
-
-
-LAYOUTS = {
-    "Bolt": gen_layout_bolt,
-    "Caesar": gen_layout_caesar,
-    "Delizia": gen_layout_delizia,
-    "Eckhart": gen_layout_eckhart,
-}
+def load_config() -> dict[str, list[FontConfig]]:
+    with open(CONFIG_TOML, "rb") as f:
+        config = tomllib.load(f)
+    return {
+        layout: [FontConfig(**font) for font in fonts]
+        for layout, fonts in config.items()
+    }
 
 
 @click.command()
@@ -815,7 +686,7 @@ LAYOUTS = {
     "--layout",
     "-l",
     help="Generate fonts only for specified layout",
-    type=click.Choice(list(LAYOUTS.keys())),
+    type=click.Choice(list(load_config().keys()), case_sensitive=False),
 )
 @click.option(
     "--write-widths",
@@ -824,19 +695,27 @@ LAYOUTS = {
     default=False,
     help="Generate character width files",
 )
-def main(layout: str | None, write_widths: bool) -> None:
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    default=False,
+    help="Print progress and details of the generated glyphs",
+)
+def main(layout: str | None, write_widths: bool, verbose: bool) -> None:
     """Generate font files for Trezor firmware."""
     global WRITE_WIDTHS
     WRITE_WIDTHS = write_widths
+    logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
+    if verbose:
+        LOG.setLevel(logging.DEBUG)
 
-    if layout:
-        click.echo(f"Generating fonts for layout: {layout}")
-        LAYOUTS[layout]()
-    else:
-        click.echo("Generating all fonts")
-        for layout_name, layout_func in LAYOUTS.items():
-            click.echo(f"\nGenerating {layout_name} layout:")
-            layout_func()
+    for layout_name, fonts in load_config().items():
+        if layout is not None and layout.lower() != layout_name:
+            continue
+        LOG.info(f"Generating {layout_name} layout")
+        for font in fonts:
+            FaceProcessor(layout_name, font).write_files()
 
 
 if __name__ == "__main__":
