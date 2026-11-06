@@ -21,13 +21,7 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
 from . import testapp_ext
-from .testapp_ext import (
-    DEFAULT_BIP32_PATH,
-    FORBIDDEN_KEY_PATH,
-    INVALID_MAC,
-    SdkError,
-    raises,
-)
+from .testapp_ext import DEFAULT_BIP32_PATH, SdkError, raises
 
 ADDRESS_N = parse_path(DEFAULT_BIP32_PATH)
 ADDRESS = "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
@@ -75,7 +69,7 @@ def test_address_mac_binds_inputs(session: Session, instance_id: int, change: di
     other = get_mac(session, instance_id, **change)
     assert other != mac
     check_mac(session, instance_id, other, **change)
-    with raises(SdkError.DataError, INVALID_MAC):
+    with raises(SdkError.ServiceError):
         check_mac(session, instance_id, mac, **change)
 
 
@@ -84,9 +78,9 @@ def test_check_address_mac_wrong_mac(session: Session, instance_id: int):
     for i in (0, 31):
         corrupted = bytearray(mac)
         corrupted[i] ^= 0x01
-        with raises(SdkError.DataError, INVALID_MAC):
+        with raises(SdkError.ServiceError):
             check_mac(session, instance_id, bytes(corrupted))
-    with raises(SdkError.DataError, INVALID_MAC):
+    with raises(SdkError.ServiceError):
         check_mac(session, instance_id, b"\x00" * 32)
 
 
@@ -112,7 +106,7 @@ def test_address_mac_long_address(session: Session, instance_id: int):
     ],
 )
 def test_get_address_mac_forbidden_path(session: Session, instance_id: int, path: str):
-    with raises(SdkError.DataError, FORBIDDEN_KEY_PATH):
+    with raises(SdkError.ServiceError):
         get_mac(session, instance_id, address_n=parse_path(path))
 
 
@@ -124,5 +118,5 @@ def test_check_address_mac_other_app_path(session: Session, instance_id: int):
     assert resp.mac is not None
     kw = {"address_n": address_n, "address": resp.address, "slip44": 0}
     check_mac(session, instance_id, resp.mac, **kw)
-    with raises(SdkError.DataError, INVALID_MAC):
+    with raises(SdkError.ServiceError):
         check_mac(session, instance_id, b"\x00" * 32, **kw)

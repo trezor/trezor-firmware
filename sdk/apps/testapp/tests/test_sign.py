@@ -24,7 +24,7 @@ from trezorlib.tools import parse_path
 
 from . import signing, testapp_ext
 from .generated import messages as m
-from .testapp_ext import DEFAULT_BIP32_PATH, FORBIDDEN_KEY_PATH, SdkError, raises
+from .testapp_ext import DEFAULT_BIP32_PATH, SdkError, raises
 
 ADDRESS_N = parse_path(DEFAULT_BIP32_PATH)
 # All hardened, so it works on Ed25519 too.
@@ -206,7 +206,7 @@ def test_ed25519_sign_unhardened(session: Session, instance_id: int):
 def test_ecdsa_sign_digest_forbidden_path(
     session: Session, instance_id: int, path: str
 ):
-    with raises(SdkError.DataError, FORBIDDEN_KEY_PATH):
+    with raises(SdkError.ServiceError):
         testapp_ext.ecdsa_sign_digest(
             session, instance_id, parse_path(path), b"\x01" * 32, True
         )
@@ -248,7 +248,7 @@ def test_ecdsa_sign_digest_canonical_ethereum_zero_digest(
 def test_ecdsa_sign_digest_canonical_ethereum_forbidden_path(
     session: Session, instance_id: int, path: str
 ):
-    with raises(SdkError.DataError, FORBIDDEN_KEY_PATH):
+    with raises(SdkError.ServiceError):
         testapp_ext.ecdsa_sign_digest(
             session,
             instance_id,

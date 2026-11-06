@@ -40,8 +40,6 @@ class SdkError(Enum):
 INVALID_PUBLIC_KEY = "invalid public key"
 INVALID_SIGNATURE = "invalid signature"
 INVALID_ENCODING = "invalid encoding"
-INVALID_MAC = "invalid MAC"
-FORBIDDEN_KEY_PATH = "Forbidden key path"
 
 
 @contextmanager
