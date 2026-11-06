@@ -408,6 +408,9 @@ jobs:
       TEST_LANG: ${{ matrix.lang }}
       TESTOPTS: "--durations 10 --session-timeout ${{ matrix.model == 'T3W1' && '3000' || '1800' }}"  # pytest global timeout
     timeout-minutes: ${{ matrix.model == 'T3W1' && 60 || 40 }}  # CI job timeout
+    permissions:
+      id-token: write  # for fetching the OIDC token for AWS
+      contents: read   # for actions/checkout
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -463,6 +466,9 @@ jobs:
       TEST_LANG: ${{ matrix.lang }}
       TESTOPTS: "--durations 10 --session-timeout '1800'"  # pytest global timeout (30m)
     timeout-minutes: 40
+    permissions:
+      id-token: write  # for fetching the OIDC token for AWS
+      contents: read   # for actions/checkout
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
@@ -550,6 +556,9 @@ jobs:
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
+    permissions:
+      id-token: write  # for fetching the OIDC token for AWS
+      contents: read   # for actions/checkout
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
