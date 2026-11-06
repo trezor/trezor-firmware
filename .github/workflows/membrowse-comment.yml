@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 5
     # Skip cancelled runs, e.g. superseded by a newer push to the same PR
     if: >
+      env.MEMBROWSE_API_KEY != '' &&
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion != 'cancelled'
     permissions:
@@ -26,8 +27,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           persist-credentials: false
-      - uses: membrowse/membrowse-action/comment-action@v1
-        if: env.MEMBROWSE_API_KEY != ''
+      - uses: membrowse/membrowse-action/comment-action@14677ae592be153b43eb7dbe4f542cf0c7d098ed  # membrowse/membrowse-action@v1.2.18
         with:
           api_key: ${{ secrets.MEMBROWSE_API_KEY }}
           commit: ${{ github.event.workflow_run.head_sha }}
