@@ -133,6 +133,7 @@ impl crate::trace::Trace for RegulatoryScreen {
         t.child("Header", &self.header);
         t.child("Content", &self.content);
         t.child("ActionBar", &self.action_bar);
+        t.int("active_page", i64::from(self.content.pager().current()));
         t.int("page_count", i64::from(self.content.pager().total()));
     }
 }

@@ -353,10 +353,7 @@ impl<'a> crate::trace::Trace for Hint<'a> {
             HintContent::Instruction(i) => {
                 t.child("instruction", &i.label);
             }
-            HintContent::PageCounter(counter) => {
-                t.int("page curr", counter.pager.current().into());
-                t.int("page max", counter.pager.total().into());
-            }
+            HintContent::PageCounter(_) => {}
         }
     }
 }

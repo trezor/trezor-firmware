@@ -118,7 +118,5 @@ impl Paginate for ScrollBar {
 impl crate::trace::Trace for ScrollBar {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ScrollBar");
-        t.int("scrollbar_page_count", i64::from(self.pager.total()));
-        t.int("scrollbar_active_page", i64::from(self.pager.current()));
     }
 }

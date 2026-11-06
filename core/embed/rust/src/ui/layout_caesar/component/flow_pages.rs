@@ -189,8 +189,6 @@ impl crate::trace::Trace for Page {
             // Not calling it "title" as that is already traced by FlowPage
             t.string("page_title", *title);
         }
-        t.int("active_page", i64::from(self.pager().current()));
-        t.int("page_count", i64::from(self.pager().total()));
         t.in_list("text", &|l| {
             let result = self.formatted.trace_lines_as_list(l);
             fit.set(Some(result));

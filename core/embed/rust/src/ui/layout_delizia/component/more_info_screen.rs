@@ -159,6 +159,7 @@ where
         if self.paginated == Some(true) {
             t.child("action_bar", &self.action_bar);
         }
+        t.int("active_page", i64::from(self.pager().current()));
         t.int("page_count", i64::from(self.pager().total()));
     }
 }

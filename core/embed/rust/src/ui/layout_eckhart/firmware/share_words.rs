@@ -326,7 +326,8 @@ impl<'a> crate::trace::Trace for ShareWords<'a> {
         let word = &self.share_words[self.pager().current() as usize];
         let content = word.map(|w| uformat!("{}. {}\n", self.pager().current() + 1, w));
         t.string("screen_content", content.as_str().into());
-        t.int("page_count", self.share_words.len() as i64)
+        t.int("active_page", i64::from(self.pager().current()));
+        t.int("page_count", self.share_words.len() as i64);
     }
 }
 

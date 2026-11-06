@@ -103,9 +103,11 @@ impl<T: Paginate> Paginate for SwipePage<T> {
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for SwipePage<T>
 where
-    T: crate::trace::Trace,
+    T: crate::trace::Trace + Paginate,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        self.inner.trace(t)
+        self.inner.trace(t);
+        t.int("active_page", self.pager().current().into());
+        t.int("page_count", self.pager().total().into());
     }
 }
