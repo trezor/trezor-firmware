@@ -1,0 +1,86 @@
+name: Onboard to MemBrowse
+
+on:
+  workflow_dispatch:
+    inputs:
+      num_commits:
+        description: 'Number of commits to process'
+        required: true
+        default: '200'
+        type: string
+      targets:
+        description: 'Space-separated target names to onboard (empty = all)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  load-targets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Load target matrix
+        id: set-matrix
+        env:
+          TARGETS: ${{ github.event.inputs.targets }}
+        run: |
+          matrix=$(jq -c --arg t "$TARGETS" \
+            '($t | split(" ") | map(select(. != ""))) as $sel
+             | map(select(($sel | length) == 0 or (.target_name | IN($sel[]))))' \
+            .github/membrowse-targets.json)
+          echo "$matrix" | jq -r '.[].target_name'
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  onboard:
+    name: Onboard (${{ matrix.target_name }})
+    needs: load-targets
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.load-targets.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          # Onboard iterates through historical commits, so it needs full history
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # actions/setup-python@v6.3.0
+        with:
+          python-version: '3.13'
+
+      # Pre-download nix + uv deps; build_cmd runs through nix-shell, which (unlike
+      # the flake used by $UV_RUN) works on commits older than flake.nix
+      - uses: ./.github/actions/environment
+
+      - name: Run MemBrowse Onboard Action
+        uses: membrowse/membrowse-action/onboard-action@14677ae592be153b43eb7dbe4f542cf0c7d098ed  # membrowse/membrowse-action@v1.2.18
+        with:
+          target_name: ${{ matrix.target_name }}
+          num_commits: ${{ github.event.inputs.num_commits }}
+          # Submodule pins change across history, so sync them for every commit
+          build_script: git submodule update --init --recursive && ${{ matrix.build_cmd }}
+          elf: ${{ matrix.elf }}
+          ld: ${{ matrix.ld }}
+          map_file: ${{ matrix.map_file }}
+          linker_vars: ${{ matrix.linker_vars }}
+          # Sections that fill their regions by design, e.g. the MicroPython .heap
+          skip_sections: ${{ matrix.skip_sections }}
+          exclude_alignment: 'true'
+          binary_search: 'true'
+          api_key: ${{ secrets.MEMBROWSE_API_KEY }}
+          api_url: ${{ vars.MEMBROWSE_API_URL }}
