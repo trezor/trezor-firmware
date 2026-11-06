@@ -533,7 +533,7 @@ def authenticate(
             ) from e
 
     try:
-        authentication.authenticate_device(
+        root = authentication.authenticate_device(
             session,
             challenge,
             p256_root_pubkey=p256_root_bytes,
@@ -543,8 +543,18 @@ def authenticate(
             allow_development_devices=devel,
         )
     except authentication.DeviceNotAuthentic:
-        click.echo("Device is not authentic.")
+        click.echo(f"Device is {click.style('NOT authentic', bold=True)}.")
         sys.exit(5)
+    else:
+        if root is None:
+            result = "authentic (custom root)"
+        elif root.devel:
+            result = "DEVEL"
+        else:
+            result = "authentic"
+
+        model_name = click.style(f"Trezor {session.model.name}", bold=True)
+        click.echo(f"Device {model_name} is {click.style(result, bold=True)}.")
 
 
 @cli.command()
