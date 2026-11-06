@@ -37,6 +37,14 @@
 
 #ifdef KERNEL_MODE
 
+// The board's battery pack maximum must be something this charger can be
+// programmed with; both numbers are known here, so check it once at compile
+// time instead of discovering it as a refused limit at runtime.
+_Static_assert(BATTERY_CHARGING_CURRENT_MAX_MA >= NPM1300_CHARGING_LIMIT_MIN &&
+                   BATTERY_CHARGING_CURRENT_MAX_MA <=
+                       NPM1300_CHARGING_LIMIT_MAX,
+               "BATTERY_CHARGING_CURRENT_MAX_MA outside the npm1300 range");
+
 // Default timeout for all I2C operations
 #define NPM1300_I2C_TIMEOUT 10
 
@@ -372,8 +380,9 @@ bool pmic_init(void) {
 
   memset(drv, 0, sizeof(npm1300_driver_t));
 
-  drv->i_charge = PMIC_CHARGING_LIMIT_DEFAULT;  // mA
-  drv->i_limit = 500;                           // mA  (268mA-1340mA)
+  // Start at the pack's maximum; the power-manager policy lowers it as needed.
+  drv->i_charge = BATTERY_CHARGING_CURRENT_MAX_MA;  // mA
+  drv->i_limit = 500;                               // mA  (268mA-1340mA)
 
   drv->i_charge_set = drv->i_charge;
   drv->i_charge_requested = drv->i_charge;
@@ -506,6 +515,8 @@ bool pmic_enter_shipmode(void) {
   return true;
 }
 
+int pmic_charging_limit_min(void) { return NPM1300_CHARGING_LIMIT_MIN; }
+
 int pmic_get_charging_limit(void) {
   npm1300_driver_t* drv = &g_npm1300_driver;
 
@@ -523,8 +534,8 @@ bool pmic_set_charging_limit(int i_charge) {
     return false;
   }
 
-  if (i_charge < PMIC_CHARGING_LIMIT_MIN ||
-      i_charge > PMIC_CHARGING_LIMIT_MAX) {
+  if (i_charge < NPM1300_CHARGING_LIMIT_MIN ||
+      i_charge > NPM1300_CHARGING_LIMIT_MAX) {
     // The value is out of range
     return false;
   }
@@ -725,16 +736,25 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
   report->vsys = (vsys_adc * 6.375f) / 1023.0f;
 
   // Populate measurement and status flags from the raw data
-  report->ibat_meas_status = r->adc_ibat_meas_status;
-  report->buck_status = r->buck_status;
-  report->usb_status = r->usb_status;
-  report->charge_status = r->charging_status;
-  // Decode and expose charging phase flags
-  // Bit 3 -> Constant-Current phase, Bit 4 -> Constant-Voltage phase
+  // The npm1300 senses battery current and has the board NTC wired to it.
+  report->ibat_valid = true;
+  report->ntc_present = true;
+
+  // Decode the status registers into the chip-neutral report. The register
+  // layouts are an npm1300 detail and stop here.
+  //
+  // USBCDETECTSTATUS: any non-zero value means VBUS is present (the value
+  // encodes the detected charger type, which the policy does not need).
+  report->vbus_present = (r->usb_status != 0);
+
+  // BCHGCHARGESTATUS bits: 1 COMPLETED, 3 CONSTANTCURRENT, 4 CONSTANTVOLTAGE.
+  report->charge_complete = (r->charging_status & 0x02) != 0;
   report->cc_phase = (r->charging_status & 0x08) != 0;
   report->cv_phase = (r->charging_status & 0x10) != 0;
-  report->charge_err = r->charging_err;
-  report->charge_sensor_err = r->charging_sensor_err;
+
+  // Any latched BCHGERRREASON / BCHGERRSENSOR bit is a charger fault.
+  report->charger_fault =
+      (r->charging_err != 0) || (r->charging_sensor_err != 0);
 }
 
 // I2C operation for writing constant value to the npm1300 register

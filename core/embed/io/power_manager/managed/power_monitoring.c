@@ -30,7 +30,6 @@
 #endif
 
 #include "../fuel_gauge/battery.h"
-#include "../wireless/stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
 #ifdef USE_CHARGER
@@ -46,16 +45,12 @@ static void pm_parse_power_source_state(pm_driver_t* drv);
 
 #ifdef PM_ENABLE_TEMP_CONTROL
 
-// Temperature controller LUT
+// Temperature controller LUT: the battery pack's charging-current derating
+// bands, supplied by the board header.
 static const struct {
   float max_temp;
   float current_limit_factor;
-} temp_bands[] = {
-    {PM_TEMP_CONTROL_BAND_1_MAX_TEMP, 1.0f},
-    {PM_TEMP_CONTROL_BAND_2_MAX_TEMP, 0.7f},
-    {PM_TEMP_CONTROL_BAND_3_MAX_TEMP, 0.5f},
-    {PM_TEMP_CONTROL_BAND_4_MAX_TEMP, 0.3f},
-};
+} temp_bands[] = BATTERY_CHARGE_TEMP_BANDS;
 
 #endif
 
@@ -88,7 +83,7 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
 
 #ifdef USE_TELEMETRY
   // Update telemetry with the current battery temperature
-  if (!drv->pmic_data.ntc_disconnected) {
+  if (drv->pmic_data.ntc_present && !drv->pmic_data.ntc_disconnected) {
     telemetry_update_battery_temp(drv->pmic_data.ntc_temp);
   }
 #endif
@@ -126,7 +121,7 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
 
       bat_fg_get_state(&fg_state);
       bat_fg_compensate_soc(&fg_state.soc, drv->time_in_suspend_s,
-                            PM_SELF_DISG_RATE_SUSPEND_MA, 25.0f);
+                            PM_SUSPEND_CURRENT_MA, 25.0f);
 
       // TODO: Currently in suspend mode we use single self-discharge rate
       // but in practice the discharge rate may change in case some components
@@ -146,8 +141,8 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
                     drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
     }
 
-    // Charging completed flag from PMIC controller
-    if (drv->pmic_data.charge_status & 0x2) {
+    // Charger reports termination: the battery is full.
+    if (drv->pmic_data.charge_complete) {
       // Force fuel gauge to 100%, keep the covariance
       drv->fully_charged = true;
       bat_fg_get_state(&fg_state);
@@ -163,10 +158,9 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
     drv->soc_ceiled = (uint8_t)(fg_state.soc_latched * 100 + 0.999f);
 
     // Check battery voltage for low threshold
-    if (drv->soc_ceiled <= PM_BATTERY_LOW_THRESHOLD_SOC && !drv->battery_low) {
+    if (drv->soc_ceiled <= BATTERY_LOW_SOC_PERCENT && !drv->battery_low) {
       drv->battery_low = true;
-    } else if (drv->soc_ceiled > PM_BATTERY_LOW_THRESHOLD_SOC &&
-               drv->battery_low) {
+    } else if (drv->soc_ceiled > BATTERY_LOW_SOC_PERCENT && drv->battery_low) {
       drv->battery_low = false;
     }
 
@@ -205,10 +199,10 @@ void pm_charging_controller(pm_driver_t* drv) {
       return;
     }
   } else if (drv->usb_connected) {
-    drv->i_chg_target_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
+    drv->i_chg_target_ma = BATTERY_CHARGING_CURRENT_MAX_MA;
 
   } else if (drv->wireless_connected) {
-    drv->i_chg_target_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
+    drv->i_chg_target_ma = BATTERY_CHARGING_CURRENT_MAX_MA;
 
   } else {
     // Charging enabled but no external power source, clear charging target
@@ -224,7 +218,8 @@ void pm_charging_controller(pm_driver_t* drv) {
   pm_temperature_controller(drv);
 #endif
 
-  if (drv->pmic_data.ntc_disconnected) {
+  if (pm_ntc_fault(drv)) {
+    // Never charge a cell whose temperature we cannot see.
     drv->i_chg_target_ma = 0;
   }
 
@@ -272,7 +267,7 @@ void pm_charging_controller(pm_driver_t* drv) {
     pmic_set_charging(false);
   } else {
     // Clear and release charger if it has any errors
-    if (drv->pmic_data.charge_err || drv->pmic_data.charge_sensor_err) {
+    if (drv->pmic_data.charger_fault) {
       pmic_clear_charger_errors();
     }
 
@@ -290,7 +285,7 @@ static void pm_temperature_controller(pm_driver_t* drv) {
     i_chg_temp_limit_ma = 0;  // Default to safety limit
     for (size_t i = 0; i < sizeof(temp_bands) / sizeof(temp_bands[0]); ++i) {
       if (drv->pmic_data.ntc_temp < temp_bands[i].max_temp) {
-        i_chg_temp_limit_ma = (uint16_t)(PM_BATTERY_CHARGING_CURRENT_MAX *
+        i_chg_temp_limit_ma = (uint16_t)(BATTERY_CHARGING_CURRENT_MAX_MA *
                                          temp_bands[i].current_limit_factor);
         break;
       }
@@ -317,7 +312,7 @@ static void pm_temperature_controller(pm_driver_t* drv) {
 
 static void pm_parse_power_source_state(pm_driver_t* drv) {
   // Check USB power source status
-  if (drv->pmic_data.usb_status != 0x0) {
+  if (drv->pmic_data.vbus_present) {
     if (!drv->usb_connected) {
       drv->usb_connected = true;
       notify_send(NOTIFY_POWER_STATUS_CHANGE);
@@ -330,16 +325,14 @@ static void pm_parse_power_source_state(pm_driver_t* drv) {
   }
 
   // Check wireless charger status
-  if (drv->wireless_data.vout_ready) {
-    if (!drv->wireless_connected) {
-      drv->wireless_connected = true;
-      notify_send(NOTIFY_POWER_STATUS_CHANGE);
-    }
-  } else {
-    if (drv->wireless_connected) {
-      drv->wireless_connected = false;
-      notify_send(NOTIFY_POWER_STATUS_CHANGE);
-    }
+#ifdef USE_WIRELESS_CHARGER
+  bool wireless_connected = drv->wireless_data.vout_ready;
+#else
+  bool wireless_connected = false;
+#endif
+  if (wireless_connected != drv->wireless_connected) {
+    drv->wireless_connected = wireless_connected;
+    notify_send(NOTIFY_POWER_STATUS_CHANGE);
   }
 
   // Battery-critical (brownout) evaluation.

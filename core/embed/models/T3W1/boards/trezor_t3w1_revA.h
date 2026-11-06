@@ -28,6 +28,29 @@
 #define TPS61062_EN_PORT GPIOB
 #define TPS61062_EN_CLK_ENA __HAL_RCC_GPIOB_CLK_ENABLE
 
+// Power-management tunables consumed by the power-manager policy
+// (io/power_manager/managed). These describe this board and its battery pack;
+// the policy itself carries no board-specific numbers.
+
+// Battery pack (LiFePO4; HCF343837NCZ or JYHPFL333838 by unit variant).
+// Maximum charging current the pack accepts [mA].
+#define BATTERY_CHARGING_CURRENT_MAX_MA 180
+// Charging-current derating by battery temperature: ascending bands of
+// {max_temp_C, fraction of BATTERY_CHARGING_CURRENT_MAX_MA}. Above the last
+// band charging stops.
+#define BATTERY_CHARGE_TEMP_BANDS \
+  {{39.0f, 1.0f}, {43.0f, 0.7f}, {45.0f, 0.5f}, {47.0f, 0.3f}}
+// State of charge [%] at or below which the device enters power-save mode.
+#define BATTERY_LOW_SOC_PERCENT 15
+
+// Average battery drain of the whole board in each low-power mode [mA]; used
+// to compensate the fuel gauge for the time spent there.
+#define PM_SUSPEND_CURRENT_MA 0.032f
+#define PM_HIBERNATION_CURRENT_MA 0.004f
+
+// Backlight level cap while in power-save mode (0-255).
+#define PM_POWER_SAVE_BACKLIGHT_LIMIT 130
+
 #define NPM1300_I2C_INSTANCE 0
 #define NPM1300_INT_PIN GPIO_PIN_13
 #define NPM1300_INT_PORT GPIOH

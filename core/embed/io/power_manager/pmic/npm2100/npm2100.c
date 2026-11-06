@@ -520,8 +520,13 @@ static void npm2100_calculate_report(npm2100_driver_t* drv,
   report->vbat = NPM2100_ADC_VBAT_V(r->adc_vbat_result);
   report->battery_disconnected = false;
 
-  // NTC is diconnected.
-  report->ntc_disconnected = true;
+  // The npm2100 is a boost regulator for primary cells: it has no battery
+  // current sense, no NTC input and no charger. Say so explicitly rather than
+  // reporting zero current or an "NTC disconnected" fault for a thermistor
+  // that was never there. Every charger flag stays false from the memset.
+  report->ibat_valid = false;
+  report->ntc_present = false;
+  report->vbus_present = false;
 
   // Calculate the die temperature from the die ADC reading.
   report->die_temp = NPM2100_ADC_DIETEMP_C(r->adc_temp_result);

@@ -28,40 +28,52 @@
 // mode) lives in pmic/pmic_charger.h and is implemented only by charger-capable
 // PMICs. See that header.
 
+// Chip-neutral measurement report.
+//
+// Every field has one meaning for every PMIC. A driver that cannot provide a
+// measurement says so through the `*_valid` / `*_present` flags instead of
+// leaving a zero the policy might mistake for a reading; a driver without a
+// charger leaves every charger flag false. No raw register values appear here -
+// decoding register bits is the driver's job, so the power-manager policy never
+// has to know which chip it is talking to.
 typedef struct {
+  // --- Measurements ---------------------------------------------------------
   // Battery voltage [V]
   float vbat;
   // System voltage [V]
   float vsys;
-  // Battery current [mA]
-  // - positive value means discharging
-  // - negative value means charging
+  // Battery current [mA], positive = discharging, negative = charging.
+  // Meaningful only when `ibat_valid` is set.
   float ibat;
-  // NTC temperature [°C]
+  // Battery (NTC) temperature [°C].
+  // Meaningful only when `ntc_present` is set and `ntc_disconnected` is not.
   float ntc_temp;
   // Die temperature [°C]
   float die_temp;
-  // --- Charger-specific fields ---------------------------------------------
-  // Populated only by charger-capable PMICs (npm1300); other drivers leave
-  // them zero. (A future cleanup may split these into a separate report; kept
-  // inline for now to avoid churning every consumer.)
-  // IBAT_MEAS_STATUS register value
-  // (for debugging purposes, see the datasheet)
-  uint8_t ibat_meas_status;
-  // BCHGCHARGESTATUS register value
-  // (for debugging purposes, see the datasheet)
-  uint8_t charge_status;
-  uint8_t charge_err;
-  uint8_t charge_sensor_err;
-  uint8_t buck_status;
-  uint8_t usb_status;
-  // NTC disconnection flag
+
+  // --- What this PMIC can measure -------------------------------------------
+  // Set when `ibat` is a real measurement (the chip has a battery current
+  // sense). A boost regulator for primary cells typically does not.
+  bool ibat_valid;
+  // Set when the board has a battery thermistor wired to this PMIC. When clear,
+  // `ntc_temp` is meaningless and `ntc_disconnected` is never a fault.
+  bool ntc_present;
+
+  // --- Decoded status -------------------------------------------------------
+  // External power is present on the USB/VBUS input.
+  bool vbus_present;
+  // The NTC is present but reads open/shorted (a fault, not an absence).
   bool ntc_disconnected;
-  // battery disconnected flag
+  // The battery is not connected (voltage below the chip's valid minimum).
   bool battery_disconnected;
-  // Charging phase flags decoded from charge_status
-  // - cc_phase: Constant-Current phase (charge_status bit 3)
-  // - cv_phase: Constant-Voltage phase (charge_status bit 5)
+
+  // --- Charger status (false on PMICs without a charger) --------------------
+  // The charger has terminated: the battery is full.
+  bool charge_complete;
+  // The charger latched an error (charger or sensor); it needs its errors
+  // cleared before it charges again.
+  bool charger_fault;
+  // Constant-current / constant-voltage charging phase.
   bool cc_phase;
   bool cv_phase;
 } pmic_report_t;

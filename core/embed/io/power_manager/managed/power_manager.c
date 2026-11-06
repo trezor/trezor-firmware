@@ -38,7 +38,6 @@
 
 #include "../fuel_gauge/battery.h"
 #include "../power_manager_poll.h"
-#include "../wireless/stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
 // Global driver instance
@@ -131,7 +130,7 @@ pm_status_t pm_init(bool inherit_state) {
         if (rtc_timestamp >= recovery.last_capture_timestamp) {
           bat_fg_compensate_soc(&recovery.soc,
                                 rtc_timestamp - recovery.last_capture_timestamp,
-                                PM_SELF_DISG_RATE_HIBERNATION_MA, 25.0f);
+                                PM_HIBERNATION_CURRENT_MA, 25.0f);
         }
       }
     }
@@ -170,11 +169,11 @@ pm_status_t pm_init(bool inherit_state) {
   // Set default SOC target and max charging current limit
   drv->soc_target = 100;
 #ifdef USE_CHARGER
-  drv->i_chg_max_limit_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
+  drv->i_chg_max_limit_ma = BATTERY_CHARGING_CURRENT_MAX_MA;
 #endif
 
 #ifdef PM_ENABLE_TEMP_CONTROL
-  drv->i_chg_temp_limit_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
+  drv->i_chg_temp_limit_ma = BATTERY_CHARGING_CURRENT_MAX_MA;
 #endif
 
   irq_unlock(irq_key);
@@ -229,7 +228,8 @@ pm_status_t pm_get_state(pm_state_t* state) {
 
   state->usb_connected = drv->usb_connected;
   state->wireless_connected = drv->wireless_connected;
-  state->ntc_connected = !drv->pmic_data.ntc_disconnected;
+  // A board without a thermistor has nothing to be disconnected.
+  state->ntc_connected = !pm_ntc_fault(drv);
 
 #ifdef USE_CHARGER
   if (pm_is_charging()) {
@@ -320,6 +320,12 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
     return PM_NOT_INITIALIZED;
   }
 
+#ifndef USE_SUSPEND
+  // This board has no low-power suspend path (no `suspend` feature), so there
+  // is nothing to put the CPU into. Reject before touching the state machine
+  // rather than parking it in PM_STATE_SUSPEND with the core still running.
+  return PM_REQUEST_REJECTED;
+#else
   irq_key_t irq_key = irq_lock();
   drv->request_suspend = true;
 
@@ -372,6 +378,7 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
   }
 
   return PM_OK;
+#endif /* USE_SUSPEND */
 }
 
 pm_status_t pm_hibernate(void) {
@@ -453,10 +460,17 @@ pm_status_t pm_get_report(pm_report_t* report) {
   report->battery_soc_latched = fg_state.soc_latched;
 
   report->pmic_temp_c = drv->pmic_data.die_temp;
+#ifdef USE_WIRELESS_CHARGER
   report->wireless_rectifier_voltage_v = drv->wireless_data.vrect;
   report->wireless_output_voltage_v = drv->wireless_data.vout;
   report->wireless_current_ma = drv->wireless_data.icur;
   report->wireless_temp_c = drv->wireless_data.tmeas;
+#else
+  report->wireless_rectifier_voltage_v = 0.0f;
+  report->wireless_output_voltage_v = 0.0f;
+  report->wireless_current_ma = 0.0f;
+  report->wireless_temp_c = 0.0f;
+#endif
 
   irq_unlock(irq_key);
 
@@ -516,11 +530,11 @@ pm_status_t pm_charging_set_max_current(uint16_t current_ma) {
   (void)current_ma;
   return PM_REQUEST_REJECTED;
 #else
-  if (current_ma > PM_BATTERY_CHARGING_CURRENT_MAX) {
+  if (current_ma > BATTERY_CHARGING_CURRENT_MAX_MA) {
     return PM_REQUEST_REJECTED;
   }
 
-  if (current_ma < PM_BATTERY_CHARGING_CURRENT_MIN) {
+  if (current_ma < pmic_charging_limit_min()) {
     return PM_REQUEST_REJECTED;
   }
 
