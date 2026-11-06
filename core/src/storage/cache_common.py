@@ -49,23 +49,21 @@ class DataCache:
     if TYPE_CHECKING:
 
         @overload
-        def get(self, key: int) -> bytes | None:  # noqa: F811
-            ...
+        def get(self, key: int) -> bytes | None: ...
 
         @overload
-        def get(self, key: int, default: T) -> bytes | T:  # noqa: F811
-            ...
+        def get(self, key: int, default: bytes | None = None) -> bytes | None: ...
 
-    def get(self, key: int, default: T | None = None) -> bytes | T | None:  # noqa: F811
+    def get(self, key: int, default: bytes | None = None) -> bytes | None:
         utils.ensure(key < len(self.fields))
         if self.data[key][0] != 1:
             return default
         return bytes(self.data[key][1:])
 
-    def get_bool(self, key: int) -> bool:  # noqa: F811
+    def get_bool(self, key: int) -> bool:
         return self.get(key) is not None
 
-    def get_int(self, key: int, default: T | None = None) -> int | T | None:  # noqa: F811
+    def get_int(self, key: int, default: int | None = None) -> int | None:
         encoded = self.get(key)
         if encoded is None:
             return default
@@ -128,13 +126,13 @@ class SessionlessCache(DataCache):
         )
         super().__init__()
 
-    def get(self, key: int, default: T | None = None) -> bytes | T | None:  # noqa: F811
+    def get(self, key: int, default: bytes | None = None) -> bytes | None:
         return super().get(key & ~SESSIONLESS_FLAG, default)
 
-    def get_bool(self, key: int) -> bool:  # noqa: F811
+    def get_bool(self, key: int) -> bool:
         return super().get_bool(key & ~SESSIONLESS_FLAG)
 
-    def get_int(self, key: int, default: T | None = None) -> int | T | None:  # noqa: F811
+    def get_int(self, key: int, default: int | None = None) -> int | None:
         return super().get_int(key & ~SESSIONLESS_FLAG, default)
 
     def is_set(self, key: int) -> bool:
