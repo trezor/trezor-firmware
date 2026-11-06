@@ -87,9 +87,6 @@ pub(crate) enum CoreIpcService {
 /// Message id of a Core reply reporting a failed request.
 pub(crate) const MSG_ID_ERROR: u16 = 0xFFFF;
 
-/// Message id of a Core reply refusing a key path outside the app's manifest.
-pub(crate) const MSG_ID_FORBIDDEN_PATH: u16 = 0xFFFE;
-
 impl From<CoreIpcService> for u16 {
     fn from(service: CoreIpcService) -> Self {
         service as u16
