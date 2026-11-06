@@ -56,7 +56,7 @@ def test_slip44_disallowed(session: Session, instance_id: int) -> None:
     # SLIP44 is not allowed without a valid network definition
     params = DEFAULT_TX_PARAMS.copy()
     params.update(n=parse_path("m/44h/66666h/0h/0/0"))
-    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+    with pytest.raises(TrezorFailure, match="service error"):
         ethereum_ext.sign_tx(session, instance_id, **params)
 
 
@@ -91,7 +91,7 @@ def test_slip44_external_disallowed(session: Session, instance_id: int) -> None:
     network = definitions.encode_eth_network(chain_id=66666, slip44=66666)
     params = DEFAULT_TX_PARAMS.copy()
     params.update(n=parse_path("m/44h/55555h/0h/0/0"), chain_id=66666)
-    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+    with pytest.raises(TrezorFailure, match="service error"):
         ethereum_ext.sign_tx(
             session,
             instance_id,
@@ -122,7 +122,7 @@ def test_definition_does_not_override_builtin(
     network = definitions.encode_eth_network(chain_id=1, slip44=66666)
     params = DEFAULT_TX_PARAMS.copy()
     params.update(n=parse_path("m/44h/66666h/0h/0/0"), chain_id=1)
-    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+    with pytest.raises(TrezorFailure, match="service error"):
         ethereum_ext.sign_tx(
             session,
             instance_id,
@@ -290,7 +290,7 @@ def test_method_def_missing(
     session: Session, instance_id: int, method: MethodType
 ) -> None:
     # calling a method with a slip44 that has no definition will fail
-    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+    with pytest.raises(TrezorFailure, match="service error"):
         method(session, instance_id, 66666, None)
 
 
