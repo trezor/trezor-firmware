@@ -9,7 +9,7 @@ from trezor.messages import ExtAppMessage
 from trezor.ui import Shutdown as ui_shutdown
 from trezor.ui.layouts import error_popup, interact_simple
 from trezor.wire import context
-from trezor.wire.errors import AppError, DataError, Error
+from trezor.wire.errors import DataError, Error
 
 from apps.common import paths
 
@@ -158,7 +158,7 @@ async def _stop_app(session: Session) -> None:
             try:
                 await loop.wait(_APP_EXIT_EVENT, timeout_ms=_STOP_TIMEOUT_MS)
             except loop.Timeout:
-                session.die("App did not stop", AppError("Application not responding"))
+                session.die("App did not stop")
 
     if not image.exited_normally():
         session.die("App crashed")
@@ -216,8 +216,7 @@ async def _serve(session: Session, request: ExtAppMessage) -> ExtAppResponse | N
             msg = await _next_message(session)
         except loop.Timeout:
             session.die(
-                f"No message from app within {_IPC_TIMEOUT_MS} ms after service {last_service}",
-                AppError("Application not responding"),
+                f"No message from app within {_IPC_TIMEOUT_MS} ms after service {last_service}"
             )
 
         if msg is None:
