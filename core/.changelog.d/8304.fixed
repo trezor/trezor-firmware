@@ -1,0 +1,1 @@
+Fixed a crash on every boot after setting the auto-lock delay to its maximum value.

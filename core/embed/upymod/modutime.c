@@ -25,6 +25,7 @@
  */
 
 #include "extmod/modtime.h"
+#include "py/smallint.h"
 #include "shared/timeutils/timeutils.h"
 
 // 32-bit signed integer will overflow at 2038.
@@ -34,6 +35,10 @@ _Static_assert(sizeof(mp_timestamp_t) >= 8, "mp_timestamp_t is too small");
 _Static_assert(
     sizeof(mp_timestamp_t) == sizeof(timeutils_timestamp_t),
     "mp_timestamp_t and timeutils_timestamp_t have different widths");
+
+// The largest value of the `delta` argument that does not make `ticks_add()`
+// raise `OverflowError`
+#define UTIME_MAX_DELTA_MS (MICROPY_PY_TIME_TICKS_PERIOD / 2 - 1)
 
 // copy of ports/stm32/modutime.c:time_localtime, without support
 // for getting current clock time (i.e., timestamp must always be provided)
@@ -68,6 +73,8 @@ static const mp_rom_map_elem_t time_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_ticks_cpu), MP_ROM_PTR(&mp_time_ticks_cpu_obj)},
     {MP_ROM_QSTR(MP_QSTR_ticks_add), MP_ROM_PTR(&mp_time_ticks_add_obj)},
     {MP_ROM_QSTR(MP_QSTR_ticks_diff), MP_ROM_PTR(&mp_time_ticks_diff_obj)},
+
+    {MP_ROM_QSTR(MP_QSTR_MAX_DELTA_MS), MP_ROM_INT(UTIME_MAX_DELTA_MS)},
 };
 
 static MP_DEFINE_CONST_DICT(time_module_globals, time_module_globals_table);

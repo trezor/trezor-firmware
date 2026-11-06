@@ -1,3 +1,4 @@
+import utime
 from micropython import const
 from typing import TYPE_CHECKING
 
@@ -71,8 +72,10 @@ else:
     AUTOLOCK_DELAY_USB_MIN_MS = 60 * 1000  # 1 minute
 
 AUTOLOCK_DELAY_USB_DEFAULT_MS = const(10 * 60 * 1000)  # 10 minutes
-# autolock intervals larger than AUTOLOCK_DELAY_MAXIMUM cause issues in the scheduler
-AUTOLOCK_DELAY_USB_MAX_MS = const(0x2000_0000)  # ~6 days
+AUTOLOCK_DELAY_USB_MAX_MS = const(149 * 60 * 60 * 1000)  # 149 hours
+# Delays over `utime.MAX_DELTA_MS` make the scheduler raise `OverflowError`
+# in `IdleTimer.touch()`
+utils.ensure(AUTOLOCK_DELAY_USB_MAX_MS <= utime.MAX_DELTA_MS)
 
 if utils.USE_POWER_MANAGER:
     AUTODIM_DELAY_MS = 30 * 1000  # 30 seconds
