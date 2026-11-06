@@ -120,9 +120,6 @@ impl CryptoError {
             Self::InvalidPublicKey => "invalid public key",
             Self::InvalidSignature => "invalid signature",
             Self::InvalidEncoding => "invalid encoding",
-            Self::InvalidMac => "invalid MAC",
-            // same text as Core's own `ForbiddenKeyPath`
-            Self::ForbiddenKeyPath => "Forbidden key path",
         }
     }
 }
@@ -142,9 +139,9 @@ impl<E> CoreServiceError<E> {
 /// system errors, so the caller can match on the former and `?` the latter.
 ///
 /// ```rust,ignore
-/// match crypto.check_address_mac(...).split_service_error()? {
+/// match crypto.ecdsa_verify_digest(...).split_service_error()? {
 ///     Ok(()) => { ... }
-///     Err(CryptoError::InvalidMac) => { ... }
+///     Err(CryptoError::InvalidSignature) => { ... }
 ///     Err(_) => { ... }
 /// }
 /// ```
@@ -342,9 +339,11 @@ mod tests {
 
     #[test]
     fn service_errors_convert() {
-        let error = Error::from(CoreServiceError::ServiceError(CryptoError::InvalidMac));
+        let error = Error::from(CoreServiceError::ServiceError(
+            CryptoError::InvalidSignature,
+        ));
         assert_eq!(error.code(), FAILURE_DATA_ERROR);
-        assert_eq!(error.message(), "invalid MAC");
+        assert_eq!(error.message(), "invalid signature");
         let error = Error::from(CoreServiceError::<CryptoError>::Timeout);
         assert_eq!(error.code(), FAILURE_PROCESS_ERROR);
     }
