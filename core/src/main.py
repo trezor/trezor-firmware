@@ -14,7 +14,8 @@ from trezor import utils
 utils.presize_module(trezor, 30)
 
 # storage imports storage.common, storage.cache and storage.device.
-# These import trezor, trezor.config (which is a C module), trezor.utils, and each other.
+# These import trezor, trezor.config and utime (which are C modules),
+# trezor.utils, and each other.
 import storage
 # we will need space for XX items in the storage module
 utils.presize_module(storage, 20)
