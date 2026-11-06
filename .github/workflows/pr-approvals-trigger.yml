@@ -1,0 +1,20 @@
+name: "PR approvals trigger"
+
+# Starts pr-approvals.yml via `workflow_run` when reviews change. Review events run the PR's
+# own version of this file, so it must not do anything else.
+
+on:
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions: {}
+
+jobs:
+  trigger:
+    name: Trigger approvals check
+    # PRs of public org members and bots always pass, no need to re-evaluate
+    if: github.repository == 'trezor/trezor-firmware' && !contains(fromJSON('["OWNER", "MEMBER"]'), github.event.pull_request.author_association) && !endsWith(github.event.pull_request.user.login, '[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: echo "Reviews changed, pr-approvals.yml will re-evaluate."

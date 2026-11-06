@@ -1,0 +1,131 @@
+name: "PR approvals"
+
+# Posts the `External contributor approvals` commit status as trezor-bot. PRs of bots and authors
+# with write access pass, others need approvals from two reviewers with write access.
+
+# both events run this file from the base/default branch, never the PR's version
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+  # re-evaluate after reviews, see pr-approvals-trigger.yml
+  workflow_run:
+    workflows: ["PR approvals trigger"]  # must match its `name:`
+    types: [completed]
+
+permissions:
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.sha || github.event.workflow_run.head_sha }}
+  cancel-in-progress: true
+
+jobs:
+  approvals:
+    # must differ from the status name, a same-named check from another source blocks merging
+    name: Count approvals
+    if: github.repository == 'trezor/trezor-firmware' && (github.event_name == 'pull_request_target' || github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Generate GitHub App token
+        id: trezor-bot-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3  # actions/create-github-app-token@v3.1.1
+        with:
+          client-id: ${{ secrets.TREZOR_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
+          permission-statuses: write
+
+      - name: Require two approvals for external contributors
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd  # actions/github-script@v8.0.0
+        env:
+          BOT_TOKEN: ${{ steps.trezor-bot-token.outputs.token }}
+        with:
+          script: |
+            const STATUS_CONTEXT = "External contributor approvals";
+            const REQUIRED_APPROVALS = 2;
+            const { owner, repo } = context.repo;
+            const bot = getOctokit(process.env.BOT_TOKEN);
+
+            // same condition as for an approval to count towards branch protection
+            async function hasWriteAccess(username) {
+              try {
+                const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner,
+                  repo,
+                  username,
+                });
+                // the "maintain" role is reported as "write"
+                return ["admin", "write"].includes(data.permission);
+              } catch (e) {
+                if (e.status === 404) return false;
+                throw e;
+              }
+            }
+
+            // returns [passed, description]
+            async function evaluate(pr) {
+              // only apps installed by an admin can open PRs as bots
+              if (pr.user.type === "Bot") {
+                return [true, `${pr.user.login} is a bot`];
+              }
+              if (await hasWriteAccess(pr.user.login)) {
+                return [true, `${pr.user.login} has write access`];
+              }
+
+              const reviews = await github.paginate(github.rest.pulls.listReviews, {
+                owner,
+                repo,
+                pull_number: pr.number,
+                per_page: 100,
+              });
+
+              // latest approval-relevant review of each reviewer (reviews are chronological)
+              const latest = new Map();
+              for (const review of reviews) {
+                if (review.user && ["APPROVED", "CHANGES_REQUESTED", "DISMISSED"].includes(review.state)) {
+                  latest.set(review.user.login, review);
+                }
+              }
+
+              const approvers = [];
+              for (const [login, review] of latest) {
+                if (review.state === "APPROVED" && (await hasWriteAccess(login))) {
+                  approvers.push(login);
+                }
+              }
+
+              const result =
+                `${approvers.length}/${REQUIRED_APPROVALS} approvals` +
+                (approvers.length ? ` (${approvers.join(", ")})` : "");
+              return [approvers.length >= REQUIRED_APPROVALS, `external contributor: ${result}`];
+            }
+
+            // the status is stored per commit, so it is shared by all open PRs with this head;
+            // they contain the same code, so it passes if any of them passes
+            const eventPr = context.payload.pull_request;
+            const sha = eventPr?.head.sha ?? context.payload.workflow_run.head_sha;
+            const openPrs = await github.paginate(github.rest.pulls.list, {
+              owner,
+              repo,
+              state: "open",
+              per_page: 100,
+            });
+            const prs = openPrs.filter((pr) => pr.head.sha === sha && pr.number !== eventPr?.number);
+            if (eventPr) prs.unshift(eventPr);
+            if (!prs.length) return;
+
+            let passed, description;
+            for (const pr of prs) {
+              [passed, description] = await evaluate(pr);
+              core.info(`#${pr.number}: ${description}`);
+              if (passed) break;
+            }
+            await bot.rest.repos.createCommitStatus({
+              owner,
+              repo,
+              sha,
+              state: passed ? "success" : "failure",
+              context: STATUS_CONTEXT,
+              description: description.slice(0, 140),
+              target_url: `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`,
+            });
