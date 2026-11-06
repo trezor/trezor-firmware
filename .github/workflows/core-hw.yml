@@ -226,7 +226,7 @@ jobs:
         run: |
           JOBS=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs?per_page=100")
           # cancelled also covers jobs that hit timeout-minutes
-          FAILED=$(jq -r '.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled") | "• <\(.html_url)|\(.name)>"' <<< "$JOBS")
+          FAILED=$(jq -r '.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled") | "• <\(.html_url)|\(.name)>"' <<< "$JOBS" | sort)
           # count only test jobs; must match the name of the `param` job
           COUNTS=$(jq -r '[.jobs[] | select(.name != "Determine pipeline parameters" and .conclusion != null and .conclusion != "skipped")]
             | "\(map(select(.conclusion != "success")) | length) of \(length) jobs failed"' <<< "$JOBS")
