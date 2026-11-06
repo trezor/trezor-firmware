@@ -1,0 +1,1 @@
+Fix a crash when a USB host sends unexpected data in the status stage of a control transfer.
