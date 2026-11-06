@@ -47,7 +47,7 @@ runs:
         cat "$GITHUB_OUTPUT"
 
     - name: MemBrowse firmware
-      uses: membrowse/membrowse-action@v1
+      uses: membrowse/membrowse-action@14677ae592be153b43eb7dbe4f542cf0c7d098ed  # membrowse/membrowse-action@v1.2.18
       with:
         target_name: ${{ inputs.model }}-firmware${{ steps.cfg.outputs.suffix }}
         elf: ${{ steps.cfg.outputs.artifacts }}/firmware.elf
@@ -60,7 +60,7 @@ runs:
 
     - name: MemBrowse kernel
       if: steps.cfg.outputs.has_kernel == 'true'
-      uses: membrowse/membrowse-action@v1
+      uses: membrowse/membrowse-action@14677ae592be153b43eb7dbe4f542cf0c7d098ed  # membrowse/membrowse-action@v1.2.18
       with:
         target_name: ${{ inputs.model }}-kernel
         elf: ${{ steps.cfg.outputs.artifacts }}/kernel.elf
@@ -71,7 +71,7 @@ runs:
 
     - name: MemBrowse secmon
       if: steps.cfg.outputs.has_secmon == 'true'
-      uses: membrowse/membrowse-action@v1
+      uses: membrowse/membrowse-action@14677ae592be153b43eb7dbe4f542cf0c7d098ed  # membrowse/membrowse-action@v1.2.18
       with:
         target_name: ${{ inputs.model }}-secmon
         elf: ${{ steps.cfg.outputs.artifacts }}/secmon.elf
@@ -82,7 +82,7 @@ runs:
 
     - name: MemBrowse bootloader
       if: steps.cfg.outputs.has_bootloader == 'true'
-      uses: membrowse/membrowse-action@v1
+      uses: membrowse/membrowse-action@14677ae592be153b43eb7dbe4f542cf0c7d098ed  # membrowse/membrowse-action@v1.2.18
       with:
         target_name: ${{ inputs.model }}-bootloader
         elf: ${{ steps.cfg.outputs.artifacts }}/bootloader.elf
