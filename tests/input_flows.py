@@ -425,7 +425,7 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
         # Using a helper debuglink function to assemble the final text.
         layouts: list[LayoutContent] = []
 
-        br = yield  # confirm address
+        yield  # confirm address
         self.debug.read_layout()
         self.debug.press_yes()
 
@@ -433,10 +433,9 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
         self.debug.synchronize_at("VerticalMenu")
         self.debug.button_actions.navigate_to_menu_item(0)
 
-        br = yield
-        self.debug.read_layout()
-        assert br.pages is not None
+        # all the data, opened from the menu (sends no ButtonRequest)
         layout = self.debug.read_layout()
+        assert "VerticalMenu" not in layout.all_components()
         while "PromptScreen" not in layout.all_components():
             layouts.append(layout)
             self.debug.swipe_up()
@@ -446,36 +445,37 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
         self.message_read = multipage_content(layouts)
 
         self.debug.press_yes()
-        br = yield
+        yield
 
         if self.verify:
             # "The signature is valid!" screen
             self.debug.press_yes()
-            br = yield
+            yield
 
     def input_flow_eckhart(self) -> BRGeneratorType:
         # collect screen contents into `message_read`.
         # Using a helper debuglink function to assemble the final text.
         layouts: list[LayoutContent] = []
 
-        br = yield  # confirm address
+        yield  # confirm address
         self.debug.read_layout()
         self.debug.press_yes()
 
-        br = yield  # confirm address intro
+        yield  # confirm address intro
 
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
         self.debug.button_actions.navigate_to_menu_item(0)
 
-        br = yield  # confirm address long
-        self.debug.read_layout()
-        assert br.pages is not None
-        for i in range(br.pages):
+        # all the data, opened from the menu (sends no ButtonRequest)
+        layout = self.debug.read_layout()
+        assert "VerticalMenu" not in layout.all_components()
+        pages = layout.page_count()
+        for i in range(pages):
             layout = self.debug.read_layout()
             layouts.append(layout)
 
-            if i < br.pages - 1:
+            if i < pages - 1:
                 self.debug.click(self.debug.screen_buttons.ok())
 
         self.message_read = multipage_content(layouts)
@@ -485,7 +485,7 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
         if self.verify:
             # "The signature is valid!" screen
             self.debug.press_yes()
-            br = yield
+            yield
 
 
 class InputFlowSignMessageInfo(InputFlowBase):
@@ -1596,6 +1596,12 @@ class InputFlowSignTxInformationCancel(InputFlowBase):
 
 
 class InputFlowSignTxInformationReplacement(InputFlowBase):
+    """Show the fee information on the modify fee screen, then sign or cancel."""
+
+    def __init__(self, client: Client | DebugSession, cancel: bool = False):
+        super().__init__(client)
+        self.cancel = cancel
+
     def input_flow_bolt(self) -> BRGeneratorType:
         yield  # confirm txid
         self.debug.press_yes()
@@ -1609,10 +1615,13 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
         # confirm amount
         self.debug.press_yes()
 
-        yield  # transaction summary, press info
+        yield  # modify fee, show fee info
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.press_yes()
+        if self.cancel:
+            self.debug.press_no()
+        else:
+            self.debug.press_yes()
 
     def input_flow_caesar(self) -> BRGeneratorType:
         yield  # confirm txid
@@ -1624,8 +1633,12 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
         yield  # modify amount - amount
         self.debug.press_right()
         yield  # modify fee
-        for _ in range(self.debug.read_layout().page_count()):
-            self.debug.press_right()
+        if self.cancel:
+            self.debug.press_left()
+            self.debug.button_actions.navigate_to_menu_item(1)
+        else:
+            for _ in range(self.debug.read_layout().page_count()):
+                self.debug.press_right()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield  # confirm txid
@@ -1640,12 +1653,14 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
         # confirm amount
         self.debug.press_yes()
 
-        yield  # transaction summary, press info
-        self.debug.click(self.client.debug.screen_buttons.menu())
-        self.debug.button_actions.navigate_to_menu_item(0)
-        # close menu
-        self.debug.click(self.client.debug.screen_buttons.menu())
-        self.debug.press_yes()
+        yield  # modify fee, show fee info (visits "Information", skips "Cancel")
+        self.client.ui.visit_menu_items()
+        if self.cancel:
+            self.debug.click(self.debug.screen_buttons.menu())
+            self.debug.synchronize_at("VerticalMenu")
+            self.debug.button_actions.navigate_to_menu_item(1)
+        else:
+            self.debug.press_yes()
 
     def input_flow_eckhart(self) -> BRGeneratorType:
         yield  # confirm txid
@@ -1660,10 +1675,14 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
         # confirm amount
         self.debug.click(self.debug.screen_buttons.ok())
 
-        yield  # transaction summary, press info
-        self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.press_yes()
+        yield  # modify fee, show fee info (visits "Fee", skips "Cancel")
+        self.client.ui.visit_menu_items()
+        if self.cancel:
+            self.debug.click(self.debug.screen_buttons.menu())
+            self.debug.synchronize_at("VerticalMenu")
+            self.debug.button_actions.navigate_to_menu_item(1)
+        else:
+            self.debug.press_yes()
 
 
 def lock_time_input_flow_bolt(

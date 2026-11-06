@@ -4,6 +4,7 @@ use super::super::firmware::{
     VerticalMenuScreen, VerticalMenuScreenMsg,
 };
 use super::super::theme;
+use super::util::single_page;
 use crate::micropython::{Error, Obj};
 use crate::strutil::TString;
 use crate::translations::TR;
@@ -54,6 +55,7 @@ pub fn new_confirm_value_intro(
     confirm_button_label: Option<TString<'static>>,
     hold: bool,
     chunkify: bool,
+    external_menu: bool,
 ) -> Result<SwipeFlow, Error> {
     let cancel_menu_label = cancel_menu_label.unwrap_or(TR::buttons__cancel.into());
 
@@ -89,11 +91,16 @@ pub fn new_confirm_value_intro(
         Some(theme::ICON_INFO),
     ))
     .with_action_bar(ActionBar::new_single(confirm_button))
+    .with_external_menu(external_menu)
     .map(|msg| match msg {
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
         TextScreenMsg::Menu => Some(FlowMsg::Info),
         TextScreenMsg::Cancelled => None, // cancellation is done via menu
     });
+
+    if external_menu {
+        return single_page(content_intro);
+    }
 
     let menu_items = VerticalMenu::<ShortMenuVec>::empty()
         .with_item(Button::new_menu_item(

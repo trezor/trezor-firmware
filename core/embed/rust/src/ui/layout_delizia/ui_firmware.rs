@@ -162,6 +162,7 @@ impl FirmwareUI for UIDelizia {
         verb_view_all: Option<TString<'static>>,
         hold: bool,
         chunkify: bool,
+        external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         const CONFIRM_VALUE_INTRO_MARGIN: u8 = 24;
         ConfirmValue::new(
@@ -179,6 +180,7 @@ impl FirmwareUI for UIDelizia {
         .with_footer_description(verb)
         .with_chunkify(chunkify)
         .with_classic_ellipsis(true)
+        .with_external_menu(external_menu)
         .with_options(
             ConfirmActionOptions::new()
                 .with_page_limit(Some(1))
@@ -331,10 +333,7 @@ impl FirmwareUI for UIDelizia {
 
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            ConfirmActionExtra::Menu(
-                ConfirmActionMenuStrings::new()
-                    .with_verb_info(Some(TR::words__title_information.into())),
-            ),
+            ConfirmActionExtra::ExternalMenu,
             ConfirmActionStrings::new(title, None, None, Some(title)),
             ConfirmActionOptions::new().with_hold(true),
         )?;
@@ -473,7 +472,7 @@ impl FirmwareUI for UIDelizia {
         verb: TString<'static>,
         verb_info: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
-        _external_menu: bool,
+        external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
@@ -499,7 +498,11 @@ impl FirmwareUI for UIDelizia {
         }
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new().with_verb_info(verb_info)),
+            if external_menu {
+                ConfirmActionExtra::ExternalMenu
+            } else {
+                ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new().with_verb_info(verb_info))
+            },
             strings,
             ConfirmActionOptions::new(),
         )?;
