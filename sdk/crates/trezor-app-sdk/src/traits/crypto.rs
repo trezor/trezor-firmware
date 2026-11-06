@@ -11,10 +11,6 @@ pub enum CryptoError {
     InvalidPublicKey,
     InvalidSignature,
     InvalidEncoding,
-    /// The address MAC does not match.
-    InvalidMac,
-    /// The key path is outside the app's manifest.
-    ForbiddenKeyPath,
 }
 
 #[stabby::stabby(checked)]
@@ -120,8 +116,7 @@ pub trait CryptoV1: Send + Sync {
     ) -> ServiceResult<[u8; 64], CryptoError>;
     /// Verifies a MAC previously produced by [`Self::get_address_mac`] for
     /// `address_n`, `address` and the coin type `slip44`, confirming the
-    /// pairing hasn't been tampered with. Fails with
-    /// [`CryptoError::InvalidMac`] on a wrong MAC.
+    /// pairing hasn't been tampered with. Fails on a wrong MAC.
     extern "C" fn check_address_mac<'a>(
         &self,
         address_n: Slice<'a, u32>,
