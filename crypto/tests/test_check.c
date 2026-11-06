@@ -11330,6 +11330,39 @@ START_TEST(test_der_reencode_int) {
 }
 END_TEST
 
+START_TEST(test_buffer_bounds) {
+  uint8_t data[20] = {0};
+  uint8_t src[10] = {0};
+
+  // Test buffer_read_buffer().
+  BUFFER_READER reader = {0};
+  buffer_reader_init(&reader, data, sizeof(data));
+  ck_assert_int_eq(buffer_seek(&reader, 10), true);
+  BUFFER_READER dest = {0};
+  ck_assert_int_eq(buffer_read_buffer(&reader, &dest, SIZE_MAX - 5), false);
+  ck_assert_uint_eq(reader.pos, 10);
+
+  // Test buffer_write_array().
+  BUFFER_WRITER writer = {0};
+  buffer_writer_init(&writer, data, sizeof(data));
+  ck_assert_int_eq(buffer_write_array(&writer, src, sizeof(src)), true);
+  ck_assert_int_eq(buffer_write_array(&writer, src, SIZE_MAX - 5), false);
+  ck_assert_uint_eq(buffer_written_size(&writer), 10);
+}
+END_TEST
+
+START_TEST(test_der_read_item_overflow) {
+  // INTEGER with length SIZE_MAX, so header_size + len wraps.
+  uint8_t input[2 + sizeof(size_t)] = {DER_INTEGER, 0x80 | sizeof(size_t)};
+  memset(&input[2], 0xff, sizeof(size_t));
+
+  BUFFER_READER reader = {0};
+  buffer_reader_init(&reader, input, sizeof(input));
+  DER_ITEM item = {0};
+  ck_assert_int_eq(der_read_item(&reader, &item), false);
+}
+END_TEST
+
 START_TEST(test_elligator2) {
   static struct {
     const char *input;
@@ -12974,6 +13007,8 @@ Suite *test_suite(void) {
   tc = tcase_create("der");
   tcase_add_test(tc, test_der_length);
   tcase_add_test(tc, test_der_reencode_int);
+  tcase_add_test(tc, test_buffer_bounds);
+  tcase_add_test(tc, test_der_read_item_overflow);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("elligator2");
