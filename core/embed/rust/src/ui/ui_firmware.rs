@@ -9,6 +9,7 @@ use crate::micropython::dict::Dict;
 use crate::micropython::gc::Gc;
 use crate::micropython::iter::IterBuf;
 use crate::micropython::list::List;
+use crate::micropython::py_object::GcObject;
 use crate::micropython::qstr::Qstr;
 use crate::micropython::{util, Error, Obj};
 use crate::strutil::TString;
@@ -156,7 +157,7 @@ pub trait FirmwareUI {
         verb: Option<TString<'static>>,
         info_button: bool,
         chunkify: bool,
-    ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
+    ) -> Result<GcObject<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn confirm_trade(
         title: TString<'static>,
@@ -197,7 +198,7 @@ pub trait FirmwareUI {
         verb_view_all: Option<TString<'static>>,
         hold: bool,
         chunkify: bool,
-    ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
+    ) -> Result<GcObject<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn confirm_homescreen(
         title: TString<'static>,
@@ -286,7 +287,7 @@ pub trait FirmwareUI {
         verb_info: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
         external_menu: bool,
-    ) -> Result<Gc<LayoutObj>, Error>;
+    ) -> Result<GcObject<LayoutObj>, Error>;
 
     fn continue_recovery_homepage(
         text: TString<'static>,
@@ -295,7 +296,7 @@ pub trait FirmwareUI {
         recovery_type: RecoveryType,
         show_instructions: bool,
         remaining_shares: Option<Obj>, // TODO: replace Obj
-    ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
+    ) -> Result<GcObject<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn check_homescreen_format(image: BinaryData, accept_toif: bool) -> bool;
 
@@ -437,7 +438,7 @@ pub trait FirmwareUI {
         description: TString<'static>,
         allow_cancel: bool,
         time_ms: u32,
-    ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
+    ) -> Result<GcObject<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn show_group_share_success(
         lines: [TString<'static>; MAX_GROUP_SHARE_LINES],
@@ -483,7 +484,7 @@ pub trait FirmwareUI {
         button: Option<(TString<'static>, bool)>,
         time_ms: u32,
         external_menu: bool, // TODO: will eventually replace the internal menu
-    ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
+    ) -> Result<GcObject<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn show_info_with_cancel(
         title: TString<'static>,
@@ -512,7 +513,7 @@ pub trait FirmwareUI {
         indeterminate: bool,
         time_ms: u32,
         skip_first_paint: bool,
-    ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
+    ) -> Result<GcObject<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn show_properties(
         _title: TString<'static>,
@@ -545,7 +546,7 @@ pub trait FirmwareUI {
         text: TString<'static>,
         title: Option<TString<'static>>,
         button: Option<TString<'static>>,
-    ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
+    ) -> Result<GcObject<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn show_success(
         title: TString<'static>,
@@ -553,7 +554,7 @@ pub trait FirmwareUI {
         description: TString<'static>,
         allow_cancel: bool,
         time_ms: u32,
-    ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
+    ) -> Result<GcObject<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn show_warning(
         title: Option<TString<'static>>,
@@ -562,7 +563,7 @@ pub trait FirmwareUI {
         description: TString<'static>,
         allow_cancel: bool,
         danger: bool,
-    ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
+    ) -> Result<GcObject<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn confirm_cancel() -> Result<impl LayoutMaybeTrace, Error>;
 
