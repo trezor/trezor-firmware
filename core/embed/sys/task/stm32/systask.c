@@ -100,6 +100,7 @@ void systask_scheduler_init(systask_error_handler_t error_handler) {
   // generally a blocking operation
   NVIC_SetPriority(SVCall_IRQn, IRQ_PRI_LOWEST);
   NVIC_SetPriority(PendSV_IRQn, IRQ_PRI_LOWEST);
+  NVIC_SetPriority(DebugMonitor_IRQn, IRQ_PRI_LOWEST);
 
   // Enable BusFault and UsageFault handlers
   SCB->SHCSR |= (SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk);
@@ -108,6 +109,10 @@ void systask_scheduler_init(systask_error_handler_t error_handler) {
   // Enable SecureFault handler
   SCB->SHCSR |= SCB_SHCSR_SECUREFAULTENA_Msk;
 #endif
+
+  // Enable DebugMonitor exception (to properly handle BKPT instructions
+  // in unprivileged mode that would otherwise trigger a hard fault.
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_MON_EN_Msk;
 
 #ifdef USE_APPLETS
   scheduler->watchdog = systimer_create(systask_watchdog_callback, NULL);
@@ -1062,6 +1067,14 @@ __attribute__((naked, no_stack_protector)) void NMI_Handler(void) {
       "MRS      R0, MSP               \n"  // R0 = MSP
       "MOV      R1, LR                \n"  // R1 = EXC_RETURN code
       "B        nmi_handler           \n"  // nmi_handler in C
+  );
+}
+
+__attribute__((naked, no_stack_protector)) void DebugMon_Handler(void) {
+  __asm__ volatile(
+      "MRS      R0, MSP               \n"  // R0 = MSP
+      "MOV      R1, LR                \n"  // R1 = EXC_RETURN code
+      "B        systask_exit_fault    \n"  // Exit task with fault
   );
 }
 

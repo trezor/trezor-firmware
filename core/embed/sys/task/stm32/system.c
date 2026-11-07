@@ -191,6 +191,9 @@ const char* system_fault_message(const system_fault_t* fault) {
     case GTZC_IRQn:
       fault_type = "IA";
       break;
+    case DebugMonitor_IRQn:
+      fault_type = "DM";
+      break;
     case NonMaskableInt_IRQn:
       fault_type = "CS";
       break;
@@ -218,6 +221,9 @@ const char* system_fault_message(const system_fault_t* fault) {
       break;
     case UsageFault_IRQn:
       fault_type = "UF";
+      break;
+    case DebugMonitor_IRQn:
+      fault_type = "DM";
       break;
     case NonMaskableInt_IRQn:
       fault_type = "CS";
