@@ -72,9 +72,9 @@ def perform_update(
 
     The device is the encoder, so it also returns the new leaf it produced — the host
     cannot compute a sealed leaf and must store it keyed by entry_key (an empty content
-    part => DELETE; the identity part survives it). Returns
-    (counter_T, root_T, mac_T, ward_id, entry_key, LeafBlob); root_T/mac_T
-    are None if the candidate empties the tree.
+    part => DELETE; both parts are empty and the leaf is removed). Returns
+    (counter_T, root_T, mac_T, ward_id, entry_key, LeafBlob). root_T is None
+    if the candidate empties the tree; mac_T authenticates the canonical empty root.
     """
     from .ward_crypto import EMPTY_PART, LeafBlob
 

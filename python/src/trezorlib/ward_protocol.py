@@ -6,7 +6,7 @@ import hashlib
 from collections.abc import Mapping
 from typing import Any
 
-EMPTY_ROOT = hashlib.sha256(b"\x03").digest()
+EMPTY_ROOT = hashlib.sha256(b"\x02").digest()
 TRANSITION_DOMAIN = b"WARD WM TRANSITION v2"
 
 

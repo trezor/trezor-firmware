@@ -2,7 +2,7 @@
 
     part(p)   = encoding(1B) || len8(nonce) || nonce || len8(tag) || tag
                              || len32(body) || body
-    commit    = sha256(0x02 || len8(key_type) || key_type
+    commit    = sha256(0x03 || len8(key_type) || key_type
                             || len32(id_part) || id_part || len32(val_part) || val_part)
     leaf      = sha256(0x00 || entry_key || commit)
 
@@ -67,8 +67,9 @@ if (WARD_PLAINTEXT_IDENTITY or WARD_PLAINTEXT_CONTENT) and not __debug__:
 ENC_ENCRYPTED = const(0)
 ENC_PLAINTEXT = const(1)
 
-# An absent/empty part: (encoding, nonce, tag, body). An empty CONTENT body is a
-# delete; the identity part survives it, so a tombstone stays self-describing.
+# An absent/empty part: (encoding, nonce, tag, body). An explicit delete returns
+# both parts empty and removes the leaf. An empty application value still has
+# encoded content framing and is stored as a present leaf.
 EMPTY_PART = (ENC_PLAINTEXT, b"", b"", b"")
 
 
@@ -90,22 +91,24 @@ def _part_bytes(part) -> bytes:
     )
 
 
-def commit_of(key_type: str, id_part, val_part) -> bytes:
-    """Keyless leaf commitment (§2.2) over both parts and the clear key_type. A host
-    with no keys can still recompute it whatever each part's encoding is; an empty
-    val_part body is a delete."""
+def leaf_value_bytes(key_type: str, id_part, val_part) -> bytes:
+    """Canonical leaf bytes hashed by the Rust trie's default value implementation."""
     kt = key_type.encode()
     id_bytes = _part_bytes(id_part)
     val_bytes = _part_bytes(val_part)
-    return _sha256d(
-        b"\x02"
-        + bytes([len(kt)])
+    return (
+        bytes([len(kt)])
         + kt
         + len(id_bytes).to_bytes(4, "big")
         + id_bytes
         + len(val_bytes).to_bytes(4, "big")
         + val_bytes
     )
+
+
+def commit_of(key_type: str, id_part, val_part) -> bytes:
+    """Keyless commitment using the Rust trie's value domain (0x03)."""
+    return _sha256d(b"\x03" + leaf_value_bytes(key_type, id_part, val_part))
 
 
 def leaf_hash_of(entry_key_: bytes, commit: bytes) -> bytes:

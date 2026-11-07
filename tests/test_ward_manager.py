@@ -68,6 +68,19 @@ def service(tmp_path: Path) -> Iterator[tuple[WardManager, str]]:
         manager.close()
 
 
+def test_canonical_empty_root_is_used_in_signed_transitions(
+    service: tuple[WardManager, str],
+) -> None:
+    from trezorlib.ward_protocol import EMPTY_ROOT
+
+    _, url = service
+    implicit = signed()
+    explicit = signed(from_root=EMPTY_ROOT.hex())
+    assert transition_message(implicit) == transition_message(explicit)
+    accepted = requests.post(f"{url}/ward/commit", json=explicit, timeout=3)
+    assert accepted.status_code == 200
+
+
 def test_attest_commit_and_empty_tree(service: tuple[WardManager, str]) -> None:
     manager, url = service
     public_key = Ed25519PublicKey.from_public_bytes(bytes.fromhex(manager.public_key))

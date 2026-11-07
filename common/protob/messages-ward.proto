@@ -37,9 +37,9 @@ option java_outer_classname = "TrezorMessageWard";
  * WARDPerformUpdate, from a proof the device pulls itself.
  *
  * Supported operations (classified at perform time from the pulled proof):
- *   UPDATE  : new_value non-empty
- *   DELETE  : new_value empty
- *   INSERT  : new_value non-empty
+ *   UPDATE  : delete=false and the leaf is present (new_value may be empty)
+ *   DELETE  : delete=true; new_value must be empty; the leaf is fully removed
+ *   INSERT  : delete=false and the leaf is absent (new_value may be empty)
  * The authoritative current state is the proof the device pulls at
  * WARDPerformUpdate.
  * @start
@@ -48,7 +48,7 @@ option java_outer_classname = "TrezorMessageWard";
  */
 message WARDQueueUpdate {
     required bytes  address   = 1;  // identifier to update (== the AEAD-hidden identifier)
-    required bytes  new_value = 2;  // plaintext new value; empty is a valid existing value
+    required bytes  new_value = 2;  // plaintext new value; empty is valid for both inserts and updates
     optional string app_id    = 3;  // chosen by the WARD service, not the host: absent or "bitcoin" (the host-label domain), else refused
     optional string key_type  = 4;  // chosen by the WARD service: absent or "address", else refused
     optional uint32 device_id = 5;  // chosen by the WARD service: absent or 0, else refused (device slots are for core apps)
@@ -93,7 +93,7 @@ message WARDPerformUpdate {
 message WARDPerformUpdateAck {
     required uint32 counter    = 1;  // candidate counter_T, derived on-device here (= current attested counter + 1)
     optional bytes  new_root   = 2;  // candidate root_T; absent if the tree becomes empty (DELETE to empty)
-    optional bytes  mac        = 3;  // mac_T = HMAC(root_mac_key, wallet_id||counter_T||root_T); absent if empty
+    optional bytes  mac        = 3;  // mac_T = HMAC(root_mac_key, wallet_id||counter_T||root_T); includes the canonical empty root after deletion
     reserved 4;  // was wallet_id; write-only (no reader) -- removed
     optional bytes  ward_id    = 5;  // SLIP21-derived WM-facing anchor; the host forwards it to the WM for /commit
     // The device is the encryptor; the host cannot compute the encrypted leaf, so
@@ -103,7 +103,7 @@ message WARDPerformUpdateAck {
     reserved 7;                      // was entry_type; key_type now lives on LeafIdentity
     reserved 8, 9, 10;               // were flat nonce/tag/ct; now inside content
     optional LeafContent  content  = 11;  // encrypted or plaintext new leaf value (empty = delete)
-    optional LeafIdentity identity = 12;  // the MAC preimage; survives a delete
+    optional LeafIdentity identity = 12;  // the MAC preimage; empty on explicit deletion
 }
 
 /**
@@ -123,7 +123,7 @@ message WARDPerformUpdateAck {
  */
 message WARDConfirmedByWM {
     required uint32 counter      = 1;  // counter_T; must equal the device-derived committed candidate
-    optional bytes  mac          = 2;  // mac_T; must equal the committed candidate (absent iff the candidate is empty)
+    optional bytes  mac          = 2;  // mac_T; must equal the committed candidate (including an empty-tree candidate)
     required bytes  wm_signature = 3;  // WM Ed25519 sig over b"WARD FINAL v1"||ward_id||counter(4B BE)||mac
     optional uint32 pending_id   = 4;  // which committed candidate to install; omit to target the single queued one
 }
@@ -136,7 +136,7 @@ message WARDConfirmedByWMAck {
     required uint32 counter   = 1;  // counter after install (== counter_T)
     optional bytes  new_root  = 2;  // installed root; absent if the tree is now empty
     reserved 3;  // was wallet_id; write-only (no reader) -- removed
-    optional bytes  root_mac  = 4;  // HMAC(root_mac_key, wallet_id||counter||new_root); absent if empty
+    optional bytes  root_mac  = 4;  // HMAC(root_mac_key, wallet_id||counter||new_root); includes the canonical empty root after deletion
 }
 
 // ===========================================================================
@@ -188,7 +188,7 @@ message WARDSyncAck {
  */
 message WARDIngestAttestation {
     required uint32 counter      = 1;  // counter_ext the WM claims is current
-    optional bytes  mac          = 2;  // mac_ext = MAC(mac_key, root||counter_ext); absent if the tree is empty
+    optional bytes  mac          = 2;  // mac_ext = MAC(mac_key, root||counter_ext); absent only for genesis, not later empty heads
     required bytes  wm_signature = 3;  // Ed25519 sig over the attestation preimage (see above)
     required uint64 timestamp = 4; // signed UTC seconds, checked against the durable floor
     required bytes head_nonce = 5; // signed WM generation nonce, rotated after every accepted change
@@ -248,7 +248,7 @@ message WARDReconcileAck {
     required uint32 counter   = 1;  // installed counter (== attested counter_ext)
     optional bytes  new_root  = 2;  // installed root; absent if the tree is empty
     reserved 3;  // was wallet_id; write-only (no reader) -- removed
-    optional bytes  root_mac  = 4;  // HMAC(root_mac_key, wallet_id||counter||new_root); absent if empty
+    optional bytes  root_mac  = 4;  // HMAC(root_mac_key, wallet_id||counter||new_root); includes the canonical empty root after deletion
 }
 
 /**
@@ -267,7 +267,7 @@ message WARDLookup {
     reserved 2;                              // was plaintext value; membership now carries (nonce,tag,ct)
     repeated bytes  proof              = 3;  // leaf-to-root; 34B each: u16be(split_bit) || sibling(32B)
     optional bytes  witness_entry_key  = 4;  // non-membership: witness leaf entry_key (32B; reveals no plaintext)
-    optional bytes  witness_commit     = 5;  // non-membership: witness leaf commit = sha256(0x02||nonce||tag||len32(ct)||ct)
+    optional bytes  witness_commit     = 5;  // non-membership: witness leaf commitment over key_type and both encoded parts (value tag 0x03)
     reserved 6;                              // was counter; C_leaf now lives inside ct
     reserved 7;                              // was witness_counter
     optional string app_id             = 8;  // chosen by the WARD service: absent or "bitcoin", else refused
@@ -359,7 +359,7 @@ message WARDProofAck {
     repeated bytes  proof             = 2;   // leaf-to-root; 34B each: u16be(split_bit) || sibling(32B)
     reserved 3;                              // was counter; C_leaf now lives inside ct
     optional bytes  witness_entry_key = 4;   // non-membership: witness leaf entry_key (32B; reveals no plaintext)
-    optional bytes  witness_commit    = 5;   // non-membership: witness leaf commit = sha256(0x02||nonce||tag||len32(ct)||ct)
+    optional bytes  witness_commit    = 5;   // non-membership: witness leaf commitment over key_type and both encoded parts (value tag 0x03)
     reserved 6;                              // was witness_counter
     reserved 7;                              // was app_id; the host no longer knows the domain (opaque entry_key)
     reserved 8;                              // was entry_type; key_type now lives on LeafIdentity
@@ -436,13 +436,14 @@ message WARDDiscardPendingAck {
  * an encrypted and a plaintext part can never collide:
  *
  *   part(p) = encoding(1B)||len8(nonce)||nonce||len8(tag)||tag||len32(body)||body
- *   commit  = sha256(0x02 || len8(key_type)||key_type
+ *   commit  = sha256(0x03 || len8(key_type)||key_type
  *                         || len32(id_part)||id_part || len32(val_part)||val_part)
  *   leaf    = sha256(0x00 || entry_key || commit)      // entry_key == LeafIdentityMAC
  *
- * An empty LeafContent body is a DELETE. Note the identity part SURVIVES a delete,
- * so a tombstone is still self-describing. See core apps/ward/service.py
- * WARD_PLAINTEXT_IDENTITY / WARD_PLAINTEXT_CONTENT + commit_of.
+ * An explicit DELETE returns both encoded parts empty as a removal marker;
+ * the leaf is removed from the trie, with no retained tombstone. An empty
+ * application value remains a present leaf: its content includes a counter and
+ * length framing, even before encryption. See core apps/ward/service.py.
  */
 message EncryptedLeaf {
     optional bytes nonce = 1;  // 12B AEAD nonce
@@ -490,7 +491,7 @@ message WARDBatchLeaf {
     reserved 2;                      // was entry_type; key_type now lives on LeafIdentity
     reserved 3, 4, 5;                // were flat nonce/tag/ct; now inside content
     optional LeafContent  content  = 6;  // encrypted or plaintext leaf value (empty = delete)
-    optional LeafIdentity identity = 7;  // the MAC preimage; survives a delete
+    optional LeafIdentity identity = 7;  // the MAC preimage; empty on explicit deletion
 }
 
 /**
@@ -520,7 +521,7 @@ message WARDPerformBatchAck {
     required uint32 counter      = 1;  // to_counter (= from_counter + 1)
     optional bytes  from_root    = 2;  // root the batch transitions FROM (empty-tree sentinel if empty)
     optional bytes  new_root     = 3;  // to_root; absent if the tree becomes empty
-    optional bytes  mac          = 4;  // root MAC the WM co-signs; absent if empty
+    optional bytes  mac          = 4;  // root MAC the WM co-signs; includes the canonical empty root after deletion
     optional bytes  ward_id      = 5;  // SLIP21 WM-facing anchor; host forwards to the WM (the only id the host needs)
     required bytes  head_mac     = 6;  // MAC(K_head, TAG_HEAD||ward_id||to_counter||to_root)
     required bytes  auth_commit  = 7;  // MAC(K_auth, TAG_COMMIT||ward_id||from_c||from_root||to_c||to_root)
@@ -539,7 +540,7 @@ message WARDPerformBatchAck {
  */
 message WARDConfirmBatchByWM {
     required uint32 counter      = 1;  // to_counter; must equal the committed batch
-    optional bytes  mac          = 2;  // root MAC; must equal the committed batch (absent iff empty)
+    optional bytes  mac          = 2;  // root MAC; must equal the committed batch (including an empty-tree candidate)
     required bytes  wm_signature = 3;  // WM Ed25519 over b"WARD FINAL v1"||ward_id||counter(4B BE)||mac
 }
 
@@ -551,7 +552,7 @@ message WARDConfirmBatchByWMAck {
     required uint32 counter   = 1;  // counter after install (== to_counter)
     optional bytes  new_root  = 2;  // installed root; absent if the tree is now empty
     optional bytes  ward_id   = 3;  // SLIP21 WM-facing anchor
-    optional bytes  root_mac  = 4;  // root MAC; absent if empty
+    optional bytes  root_mac  = 4;  // root MAC; includes the canonical empty root after deletion
 }
 
 /**
@@ -582,7 +583,7 @@ message WARDPerformRevertAck {
     required uint32 counter      = 1;  // to_counter (= stuck_counter + 1)
     optional bytes  from_root    = 2;  // the stuck root being demoted FROM
     optional bytes  new_root     = 3;  // restored predecessor root; absent if it is the empty tree
-    optional bytes  mac          = 4;  // root MAC the WM co-signs; absent if empty
+    optional bytes  mac          = 4;  // root MAC the WM co-signs; includes the canonical empty root after deletion
     optional bytes  ward_id      = 5;  // SLIP21 WM-facing anchor; host forwards to the WM (the only id the host needs)
     required bytes  head_mac     = 6;  // MAC(K_head, TAG_HEAD||ward_id||to_counter||prev_root)
     required bytes  auth_revert  = 7;  // MAC(K_auth, TAG_REVERT||ward_id||stuck_c||stuck_root||to_c||prev_root)
@@ -599,7 +600,7 @@ message WARDPerformRevertAck {
  */
 message WARDConfirmRevertByWM {
     required uint32 counter      = 1;  // to_counter; must equal the committed rollback
-    optional bytes  mac          = 2;  // root MAC; must equal the committed rollback (absent iff empty)
+    optional bytes  mac          = 2;  // root MAC; must equal the committed rollback (including an empty-tree candidate)
     required bytes  wm_signature = 3;  // WM Ed25519 over b"WARD FINAL v1"||ward_id||counter(4B BE)||mac
 }
 
@@ -611,7 +612,7 @@ message WARDConfirmRevertByWMAck {
     required uint32 counter   = 1;  // counter after install (== to_counter)
     optional bytes  new_root  = 2;  // installed predecessor root; absent if empty
     optional bytes  ward_id   = 3;  // SLIP21 WM-facing anchor
-    optional bytes  root_mac  = 4;  // root MAC; absent if empty
+    optional bytes  root_mac  = 4;  // root MAC; includes the canonical empty root after deletion
 }
 
 /**
@@ -652,7 +653,7 @@ message WARDVerifyChainAck {
     required uint32 counter   = 1;  // installed head counter (== attested)
     optional bytes  new_root  = 2;  // installed root; absent if the tree is empty
     optional bytes  ward_id   = 3;  // SLIP21 WM-facing anchor
-    optional bytes  root_mac  = 4;  // root MAC; absent if empty
+    optional bytes  root_mac  = 4;  // root MAC; includes the canonical empty root after deletion
 }
 
 /**

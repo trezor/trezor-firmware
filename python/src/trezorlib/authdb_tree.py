@@ -6,7 +6,7 @@ two-part ``LeafBlob`` (clear ``key_type`` plus the LeafIdentity and LeafContent
 parts); the trie hashes only the keyless commitment, so a host holding no keys
 can still reconstruct and prove (ward-design.md §2.2):
 
-  commit   = SHA-256(0x02 || len8(key_type) || key_type
+  commit   = SHA-256(0x03 || len8(key_type) || key_type
                           || len32(id_part) || id_part || len32(val_part) || val_part)
   leaf     = SHA-256(0x00 || LeafIdentityMAC || commit)
   internal = SHA-256(0x01 || split_bit_u16 || left || right)
@@ -27,7 +27,7 @@ of the split bits either side of it, so committing to it bound nothing — and i
 a node's hash depend on its DEPTH, which broke every re-parenting operation. See
 ``apps.ward.service.internal_hash`` for the two bugs that cost.
 
-Empty tree: ``get_root_hash()`` returns ``EMPTY_ROOT`` (all-zero); test
+Empty tree: ``get_root_hash()`` returns ``EMPTY_ROOT`` (SHA-256 of 0x02); test
 ``is_empty()`` rather than comparing against it.
 """
 
@@ -36,8 +36,7 @@ from __future__ import annotations
 from typing import Dict, List, Optional, Tuple
 
 from . import ward_crypto
-
-EMPTY_ROOT: bytes = b"\x00" * 32
+from .ward_protocol import EMPTY_ROOT
 
 # stored leaf: ward_crypto.LeafBlob(key_type, identity: Part, content: Part).
 LeafBlob = ward_crypto.LeafBlob
@@ -218,11 +217,9 @@ class WARDTree:
         device_id: int = 0,
     ) -> int:
         """Insert/update (app_id, identifier)->value, encrypting the leaf with the
-        tree's k_data. Empty value deletes. counter: explicit (global model) or None
-        (per-entry: prev+1). Returns the new counter (0 on delete)."""
-        if len(value) == 0:
-            self.delete(app_id, identifier, key_type, device_id)
-            return 0
+        tree's k_data, including an empty value. Use delete() for removal.
+        counter: explicit (global model) or None (per-entry: prev+1).
+        Returns the new counter."""
         if counter is None:
             counter = self.get_counter(app_id, identifier, key_type, device_id) + 1
         ek = self._ek(app_id, identifier, key_type, device_id)

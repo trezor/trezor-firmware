@@ -120,7 +120,10 @@ return node == stored_root
 
 ### Empty tree
 
-An empty tree has no root.  `get_root_hash()` returns `EMPTY_ROOT` (32 zero bytes) to signal this; the firmware stores `None`.
+The canonical empty root is `SHA-256(0x02)`, matching the Rust WARD trie.
+`get_root_hash()` returns this digest; the firmware represents an authenticated empty tree internally as `None`.
+Leaf values use `SHA-256(0x03 || encoded_leaf)`, where `encoded_leaf` contains the key type and both length-prefixed encoded parts.
+These tags replace the earlier WARD hashes; existing roots and signed history require fresh state.
 
 ---
 
@@ -268,6 +271,10 @@ valid, membership, counter = authdb.lookup(
 **Empty tree**: `get_nonmembership_proof()` returns `([], None, None, None)`.  Pass these directly to `authdb.lookup()`; the firmware checks that no root is stored.
 
 ### `AuthDbUpdateLeaf` operations
+
+This table describes the legacy AuthDB API. Current WARD uses an explicit
+`delete` flag: empty application values are valid inserts and updates. Deletion
+returns both encoded leaf parts empty and removes the leaf, without a tombstone.
 
 | Operation | `old_value` | `new_value` | `old_counter` | `new_counter` | `proof` | `witness_*` |
 |---|---|---|---|---|---|---|

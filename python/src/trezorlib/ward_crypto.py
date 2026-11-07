@@ -28,7 +28,7 @@ the commit, so the two are domain-separated by construction:
 
     part(p)   = encoding(1B) || len8(nonce) || nonce || len8(tag) || tag
                              || len32(body) || body
-    commit    = SHA-256(0x02 || len8(key_type) || key_type
+    commit    = SHA-256(0x03 || len8(key_type) || key_type
                              || len32(id_part) || id_part
                              || len32(val_part) || val_part)
     leaf      = SHA-256(0x00 || LeafIdentityMAC || commit)
@@ -38,7 +38,8 @@ the commit, so the two are domain-separated by construction:
     content  plaintext = C_leaf(4B BE) || len32(value) || value
     AAD: identity 0x03 || mac || key_type,  content 0x02 || mac || key_type
 
-An empty content body is a delete. `LeafIdentityMAC` is a PRF-derived path, NOT an
+An empty encoded content body marks an explicit delete; an empty application
+value still has authenticated framing. `LeafIdentityMAC` is a PRF-derived path, NOT an
 authenticator (§2.5): it hides the identifier from a keyless host and makes the path
 host-unforgeable. Note the MAC is *stored* alongside the leaf, so locating a leaf
 never requires a key; K_path is needed only to check that a stored MAC matches its
@@ -198,21 +199,24 @@ def _part_bytes(p: Part) -> bytes:
     )
 
 
-def commit_of(leaf: LeafBlob) -> bytes:
-    """Keyless leaf commitment (§2.2) over both parts and the clear key_type. A host
-    holding no keys can still recompute it, whatever each part's encoding is."""
+def leaf_value_bytes(leaf: LeafBlob) -> bytes:
+    """Canonical leaf bytes hashed by the Rust trie's default value implementation."""
     kt = _as_bytes(leaf.key_type)
     id_part = _part_bytes(leaf.identity)
     val_part = _part_bytes(leaf.content)
-    return sha256(
-        b"\x02"
-        + bytes([len(kt)])
+    return (
+        bytes([len(kt)])
         + kt
         + len(id_part).to_bytes(4, "big")
         + id_part
         + len(val_part).to_bytes(4, "big")
         + val_part
     )
+
+
+def commit_of(leaf: LeafBlob) -> bytes:
+    """Keyless commitment using the Rust trie's value domain (0x03)."""
+    return sha256(b"\x03" + leaf_value_bytes(leaf))
 
 
 def leaf_hash_of(mac: bytes, commit: bytes) -> bytes:
@@ -397,10 +401,17 @@ def encode_leaf(
     plaintext_content: Optional[bool] = None,
     id_nonce: Optional[bytes] = None,
     val_nonce: Optional[bytes] = None,
+    *,
+    delete: bool = False,
 ) -> LeafBlob:
-    """Build a whole LeafBlob. An empty `value` produces a FULL DELETE: both parts are
-    empty, because the leaf ceases to exist -- there is no tombstone to describe."""
-    if len(value) == 0:
+    """Encode a stored leaf, including an empty application value.
+
+    Explicit deletion (`delete=True`) requires an empty value and returns both
+    parts empty as a removal marker. The marker is not stored as a trie leaf.
+    """
+    if delete:
+        if value:
+            raise ValueError("a WARD delete carries no new value")
         return LeafBlob(key_type, EMPTY_PART, EMPTY_PART)
     identity = encode_identity(
         k_ident,

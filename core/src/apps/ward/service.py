@@ -109,7 +109,7 @@ _WARD_FINAL_DOMAIN = b"WARD FINAL v1"
 
 # WARD protocol version echoed in the sync round (WARDSyncAck).
 _WARD_VERSION = const(2)
-# All-zero MAC == the candidate/attested state that empties the tree.
+# An absent MAC is encoded as all-zero for genesis. Later empty heads carry a MAC.
 _ZERO_MAC = b"\x00" * 32
 
 
@@ -271,10 +271,10 @@ _TAG_HEAD = b"WARD HEAD v1"
 _TAG_COMMIT = b"WARD COMMIT v1"
 _TAG_REVERT = b"WARD REVERT v1"
 
-# Canonical 32-byte stand-in for the empty tree in MAC preimages: empty = H(0x03)
+# Canonical 32-byte stand-in for the empty tree in MAC preimages: empty = H(0x02)
 # (ward-design.md §2.2). The proof/root machine uses `root is None` for empty; the
 # transition MACs need a fixed-width value, so None maps to this sentinel here.
-EMPTY_ROOT_HASH = sha256d(b"\x03")
+EMPTY_ROOT_HASH = sha256d(b"\x02")
 
 
 def _root_or_empty(root) -> bytes:
@@ -1155,7 +1155,7 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
     except ValueError as e:
         raise DataError(str(e))
 
-    # Root MAC the WM co-signs at finalize (None root => empty tree => all-zero MAC).
+    # Root MAC the WM co-signs at finalize, including the canonical empty-root digest.
     mac_key = await derive_mac_key(b"root_mac")
     mac_t = compute_mac(
         mac_key, wallet_id, to_counter.to_bytes(4, "big"), _root_or_empty(to_root)

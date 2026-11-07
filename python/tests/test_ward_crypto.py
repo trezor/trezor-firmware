@@ -173,13 +173,66 @@ def test_plaintext_parts_are_keyless_readable(keys):
     )
 
 
+@pytest.mark.parametrize("plaintext_identity", [False, True])
+@pytest.mark.parametrize("plaintext_content", [False, True])
+def test_empty_value_is_present_until_explicitly_deleted(
+    keys, plaintext_identity, plaintext_content
+):
+    kp, ki, kd = keys
+    mac = wc.leaf_identity_mac(kp, "bitcoin", b"empty")
+    leaf = _leaf(
+        ki,
+        kd,
+        mac,
+        b"empty",
+        b"",
+        1,
+        plaintext_identity=plaintext_identity,
+        plaintext_content=plaintext_content,
+    )
+    assert not leaf.is_delete()
+    assert wc.decode_leaf(ki, kd, mac, leaf) == (1, b"empty", b"bitcoin", 0, b"")
+    tree = WARDTree(kp, kd, ki)
+    tree.set_leaf(mac, leaf)
+    assert tree.get_leaf(mac) == leaf
+    assert WARDTree.verify_proof_by_key(
+        mac, leaf, tree.get_proof_by_key(mac), tree.get_root_hash()
+    )
+    tree.set_leaf(mac, _leaf(ki, kd, mac, b"empty", b"", 2, delete=True))
+    assert tree.is_empty()
+    assert WARDTree.verify_nonmembership_by_key(
+        mac, None, None, [], tree.get_root_hash()
+    )
+
+
+def test_delete_rejects_a_nonempty_application_value(keys):
+    kp, ki, kd = keys
+    mac = wc.leaf_identity_mac(kp, "bitcoin", b"entry")
+    with pytest.raises(ValueError, match="delete carries no new value"):
+        _leaf(ki, kd, mac, b"entry", b"value", 1, delete=True)
+
+
+def test_tree_convenience_insert_preserves_empty_values(keys):
+    kp, ki, kd = keys
+    tree = WARDTree(kp, kd, ki)
+    counter = tree.insert("bitcoin", b"empty", b"")
+    mac = wc.leaf_identity_mac(kp, "bitcoin", b"empty")
+    assert counter == tree.get_counter("bitcoin", b"empty") == 1
+    assert tree.get_leaf(mac) is not None
+    assert tree.get_value("bitcoin", b"empty") == b""
+    assert tree.insert("bitcoin", b"empty", b"") == 2
+    tree.delete("bitcoin", b"empty")
+    assert tree.get_leaf(mac) is None
+    assert tree.is_empty()
+
+
 def test_delete_is_a_full_delete(keys):
     """A delete REMOVES the leaf; it is not an update to an empty value. So both parts
     are empty (nothing left to describe — no tombstone), the leaf is gone from the
     trie, and its absence is provable."""
     kp, ki, kd = keys
     mac = wc.leaf_identity_mac(kp, "bitcoin", b"gone")
-    leaf = _leaf(ki, kd, mac, b"gone", b"", 3)
+    leaf = _leaf(ki, kd, mac, b"gone", b"", 3, delete=True)
 
     assert leaf.is_delete()
     assert leaf.content.is_empty(), "content part empty"
@@ -203,7 +256,7 @@ def test_delete_is_a_full_delete(keys):
     assert WARDTree.verify_nonmembership_by_key(mac, w_key, w_commit, proof, root)
 
     # deleting the last leaf empties the tree entirely
-    t.set_leaf(other, _leaf(ki, kd, other, b"stays", b"", 2))
+    t.set_leaf(other, _leaf(ki, kd, other, b"stays", b"", 2, delete=True))
     assert t.is_empty()
 
 
@@ -391,10 +444,10 @@ def test_frozen_vectors():
         wc.encode_content(kd, mac, "address", 5, b"data_alice", nonce=nonce),
     )
     commit = wc.commit_of(leaf)
-    assert commit.hex() == "ab827bd1868d6159f46bcde95ca634bf1c8e75c7b732547e0ee585d46bb00843"
+    assert commit.hex() == "65a45740707f55fef4b385f2042de9742050af54f69cbba3e3f0e0d63e116151"
     assert (
         wc.leaf_hash_of(mac, commit).hex()
-        == "6b418f74c764aacb0f7eba47da6daef5c01c872088c7b121673e4c0dcade669b"
+        == "d17bc2cf0a167e09e65f45354b14350a6271659a32fb2d2ae7eab41277e6e29a"
     )
 
 
@@ -424,7 +477,7 @@ def test_nonmembership_verifies_after_delete(keys):
         t.get_nonmembership_proof_by_key(target)
 
     # full delete (both parts empty)
-    t.set_leaf(target, _leaf(ki, kd, target, b"deleteMe", b"", 2))
+    t.set_leaf(target, _leaf(ki, kd, target, b"deleteMe", b"", 2, delete=True))
     root_after = t.get_root_hash()
     assert root_after != root_before, "the delete must move the root"
     assert t.get_leaf(target) is None
@@ -455,7 +508,7 @@ def test_nonmembership_after_deleting_last_leaf(keys):
     t.set_leaf(mac, _leaf(ki, kd, mac, b"only", b"v", 1))
     assert not t.is_empty()
 
-    t.set_leaf(mac, _leaf(ki, kd, mac, b"only", b"", 2))
+    t.set_leaf(mac, _leaf(ki, kd, mac, b"only", b"", 2, delete=True))
     assert t.is_empty() and t.get_root_hash() == EMPTY_ROOT
 
     proof, w_key, w_commit = t.get_nonmembership_proof_by_key(mac)
@@ -475,7 +528,7 @@ def test_deleted_leaf_cannot_be_revived_by_replaying_its_proof(keys):
     t.set_leaf(mac, leaf)
 
     stale_proof = t.get_proof_by_key(mac)
-    t.set_leaf(mac, _leaf(ki, kd, mac, b"gone", b"", 2))
+    t.set_leaf(mac, _leaf(ki, kd, mac, b"gone", b"", 2, delete=True))
     root_after = t.get_root_hash()
 
     assert not WARDTree.verify_proof_by_key(mac, leaf, stale_proof, root_after)

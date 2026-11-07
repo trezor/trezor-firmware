@@ -40,6 +40,35 @@ class TestWardSecurity(TestCaseWithSeed):
             service.ingest(counter, mac, signature, timestamp, head_nonce)
         )
 
+    def test_rust_trie_hash_domains(self):
+        from apps.ward.leaf import commit_of, leaf_value_bytes
+
+        identity = (1, b"", b"", b"identity")
+        content = (1, b"", b"", b"content")
+        self.assertEqual(
+            leaf_value_bytes("address", identity, content).hex(),
+            "07616464726573730000000f010000000000086964656e746974790000000e01000000000007636f6e74656e74",
+        )
+        self.assertEqual(
+            commit_of("address", identity, content).hex(),
+            "d88beea6160625541876160d58dd0925f8e96397fad1af4d921fcb2c9f6a647a",
+        )
+        self.assertEqual(
+            service.EMPTY_ROOT_HASH.hex(),
+            "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986",
+        )
+
+    def test_old_empty_hash_is_not_an_authenticated_empty_head(self):
+        wallet = await_result(service.get_wallet_id())
+        key = await_result(service.derive_mac_key(b"root_mac"))
+        mac = service.compute_mac(
+            key, wallet, (1).to_bytes(4, "big"), service.sha256d(b"\x03")
+        )
+        self.attest(1, mac)
+        with self.assertRaises(wire.DataError):
+            await_result(service.reconcile(None))
+        self.assertEqual(ward_store.get_counter(wallet), 0)
+
     def test_positive_empty_head_requires_wallet_mac(self):
         with self.assertRaises(wire.DataError):
             self.attest(1, bytes(32))

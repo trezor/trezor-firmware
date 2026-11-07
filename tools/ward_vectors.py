@@ -11,6 +11,7 @@ from pathlib import Path
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from trezorlib import ward_crypto as wc
+from trezorlib.authdb_tree import WARDTree
 from trezorlib.ward_protocol import (
     EMPTY_ROOT,
     attestation_message,
@@ -96,6 +97,7 @@ def vectors() -> dict:
             "identity": part(leaf.identity),
             "content": part(leaf.content),
         },
+        "leafValueHex": wc.leaf_value_bytes(leaf).hex(),
         "commit": commit.hex(),
         "leafHash": wc.leaf_hash_of(entry_key, commit).hex(),
         "transition": record,
@@ -107,16 +109,78 @@ def vectors() -> dict:
     }
 
 
+def trie_vectors() -> dict:
+    """Pin the default Rust value encoding, roots and legacy wire proof steps."""
+    tree = WARDTree()
+    rows = []
+    for i in range(4):
+        key = wc.sha256(f"key-{i}".encode())
+        leaf = wc.LeafBlob(
+            "address",
+            wc.Part(
+                0,
+                bytes([0x10 + i]) * 12,
+                bytes([0x20 + i]) * 16,
+                f"identity-{i}".encode(),
+            ),
+            wc.Part(
+                0,
+                bytes([0x30 + i]) * 12,
+                bytes([0x40 + i]) * 16,
+                f"ciphertext-{i}".encode(),
+            ),
+        )
+        tree.set_leaf(key, leaf)
+
+        def part(value):
+            return dict(
+                encoding=value.encoding,
+                nonceHex=value.nonce.hex(),
+                tagHex=value.tag.hex(),
+                bodyHex=value.body.hex(),
+            )
+
+        rows.append(
+            dict(
+                entryKeyHex=key.hex(),
+                keyType=leaf.key_type,
+                identity=part(leaf.identity),
+                content=part(leaf.content),
+                valueHex=wc.leaf_value_bytes(leaf).hex(),
+            )
+        )
+    member = bytes.fromhex(rows[1]["entryKeyHex"])
+    absent = wc.sha256(b"missing")
+    proof, witness, commit = tree.get_nonmembership_proof_by_key(absent)
+    assert witness is not None and commit is not None
+    return dict(
+        generatedBy="tools/ward_vectors.py",
+        emptyRoot=EMPTY_ROOT.hex(),
+        leaves=rows,
+        root=tree.get_root_hash().hex(),
+        memberKey=member.hex(),
+        memberProof=[step.hex() for step in tree.get_proof_by_key(member)],
+        absentKey=absent.hex(),
+        witnessKey=witness.hex(),
+        witnessCommit=commit.hex(),
+        nonMemberProof=[step.hex() for step in proof],
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--suite", type=Path)
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
-    files = [ROOT / "common/tests/fixtures/ward/protocol_v2.json"]
+    outputs = {
+        ROOT / "common/tests/fixtures/ward/protocol_v2.json": vectors(),
+        ROOT / "common/tests/fixtures/ward/trie.json": trie_vectors(),
+    }
     if args.suite:
-        files.append(args.suite / "packages/wardd/mocks/mockProtocolV2.json")
-    content = json.dumps(vectors(), indent=4) + "\n"
-    for path in files:
+        outputs[args.suite / "packages/wardd/mocks/mockProtocolV2.json"] = vectors()
+        outputs[args.suite / "packages/ward/mocks/mockTrie.json"] = trie_vectors()
+    for path, value in outputs.items():
+        content = json.dumps(value, indent=4) + "\n"
         if args.check:
             if not path.exists() or path.read_text() != content:
                 return 1

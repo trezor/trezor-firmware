@@ -127,7 +127,7 @@ def main():
     KA, KH = b"A" * 32, b"H" * 32
 
     # --- 1. keys / preimages ------------------------------------------------
-    assert svc.EMPTY_ROOT_HASH == hashlib.sha256(b"\x03").digest()
+    assert svc.EMPTY_ROOT_HASH == hashlib.sha256(b"\x02").digest()
     R0, R1 = bytes([1]) * 32, bytes([2]) * 32
     assert svc.head_mac(KH, WID, 5, R0) == _hmac.new(
         KH, svc._TAG_HEAD + WID + (5).to_bytes(4, "big") + R0, hashlib.sha256

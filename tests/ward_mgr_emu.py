@@ -55,7 +55,7 @@ _WARD_ATTEST_VERSION = 2
 # by the WM CAS to verify a batch-update SigCommit at ingest.
 _TAG_COMMIT = b"WARD COMMIT v1"
 _TAG_REVERT = b"WARD REVERT v1"
-_EMPTY_ROOT_HASH = hashlib.sha256(b"\x03").digest()
+_EMPTY_ROOT_HASH = hashlib.sha256(b"\x02").digest()
 
 
 class WMConflict(Exception):
