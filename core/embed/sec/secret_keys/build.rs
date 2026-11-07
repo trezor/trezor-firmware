@@ -15,7 +15,10 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         lib.add_source("secret_keys/unix/secret_keys.c");
     } else if cfg!(feature = "mcu_stm32f4") {
         lib.add_source("secret_keys/stm32f4/secret_keys.c");
-    } else if cfg!(feature = "mcu_stm32u5") {
+    } else if cfg!(feature = "mcu_stm32u5") || cfg!(feature = "mcu_stm32h5") {
+        // The STM32U5 implementation is MCU-agnostic (it uses only the secret_,
+        // flash_otp and hmac abstractions, no raw registers) and applies to all
+        // M33 secret-flash based targets (STM32U5, STM32H5).
         lib.add_source("secret_keys/stm32u5/secret_keys.c");
     } else {
         bail_unsupported!();

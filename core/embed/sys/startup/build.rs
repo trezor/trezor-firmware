@@ -17,6 +17,10 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
             lib.add_source("startup/stm32u5/startup_init.c");
             lib.add_source("startup/stm32u5/reset_flags.c");
             lib.add_source("startup/stm32u5/vectortable.S");
+        } else if cfg!(feature = "mcu_stm32h5") {
+            lib.add_source("startup/stm32h5/startup_init.c");
+            lib.add_source("startup/stm32h5/reset_flags.c");
+            lib.add_source("startup/stm32h5/vectortable.S");
         } else if cfg!(feature = "mcu_stm32f4") {
             lib.add_source("startup/stm32f4/startup_init.c");
             lib.add_source("startup/stm32f4/reset_flags.c");
