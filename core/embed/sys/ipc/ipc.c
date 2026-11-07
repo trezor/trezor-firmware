@@ -245,13 +245,16 @@ bool ipc_send(systask_id_t remote, uint16_t service, uint16_t message_id,
     return false;
   }
 
-  ipc_queue_item_t item_hdr = {
-      .free = false,
-      .remote = origin,
-      .service = service,
-      .message_id = message_id,
-      .size = data_size,
-  };
+  ipc_queue_item_t item_hdr;
+
+  // Clear the entire structure, including padding bytes between fields
+  memset(&item_hdr, 0, sizeof(item_hdr));
+
+  item_hdr.free = false;
+  item_hdr.remote = origin;
+  item_hdr.service = service;
+  item_hdr.message_id = message_id;
+  item_hdr.size = data_size;
 
   ipc_queue_item_t *item = (ipc_queue_item_t *)queue->wptr;
   ipc_memcpy(item, &item_hdr, sizeof(item_hdr));
