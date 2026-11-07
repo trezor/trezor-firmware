@@ -1,0 +1,1 @@
+Show the error screen instead of freezing when the bootloader crashes inside an interrupt handler.
