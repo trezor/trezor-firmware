@@ -2,9 +2,10 @@ use xbuild::{CLibrary, Result, bail_unsupported};
 
 pub fn def_module(lib: &mut CLibrary) -> Result<()> {
     lib.add_include("nrf/inc");
-    lib.add_rust_bindings(add_rust_bindings)?;
 
     lib.add_define("USE_NRF", Some("1"));
+
+    lib.add_rust_bindings(add_rust_bindings)?;
 
     if cfg!(feature = "emulator") {
         lib.add_sources(["nrf/unix/nrf.c"]);
@@ -18,6 +19,14 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 
         if cfg!(feature = "smp") {
             lib.add_define("USE_SMP", Some("1"));
+
+            lib.add_include("src/smp/inc");
+
+            lib.add_c_bindings("ffi/io/smp.h", |builder| {
+                Ok(builder
+                    .with_src("src/smp/api.rs")
+                    .rename_item("NrfAppVersion", "nrf_app_version_t"))
+            })?;
 
             lib.add_sources(["nrf/stm32u5/nrf_uart.c", "nrf/stm32u5/nrf_test.c"]);
         }
