@@ -29,7 +29,6 @@ import xdist
 from _pytest.python import IdMaker
 from _pytest.reports import TestReport
 
-from trezorlib import client as client_module
 from trezorlib import debuglink, log, messages, models
 from trezorlib._internal.emulator import TropicModel
 from trezorlib.debuglink import TrezorTestContext
@@ -208,10 +207,6 @@ def _raw_test_ctx(request: pytest.FixtureRequest) -> TrezorTestContext:
         BleTransport._DEBUG_TRANSPORT = "webusb:"
 
         interact = os.environ.get("INTERACT") == "1"
-        if not interact:
-            # prevent tests from getting stuck in case there is an USB packet loss
-            client_module._DEFAULT_READ_TIMEOUT = 50.0
-
         path = os.environ.get("TREZOR_PATH")
         try:
             if path:
