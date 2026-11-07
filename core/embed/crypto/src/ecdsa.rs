@@ -81,6 +81,51 @@ impl Curve {
     }
 }
 
+/// Alignment of the buffer [`init_task_context`] needs (covers `max_align_t`
+/// on both the target and the emulator).
+pub const TASK_CONTEXT_ALIGN: usize = 16;
+
+/// Size of the buffer [`init_task_context`] needs, or 0 without the
+/// `secp256k1_zkp` feature.
+pub fn task_context_size() -> usize {
+    #[cfg(feature = "secp256k1_zkp")]
+    {
+        // SAFETY: just returns a constant.
+        unsafe { ffi::zkp_context_size() }
+    }
+    #[cfg(not(feature = "secp256k1_zkp"))]
+    0
+}
+
+/// Gives the current task its own secp256k1-zkp context in `buffer`, unless
+/// it already has one.
+///
+/// Only the pointer to the context lives in task-local storage; the context
+/// itself is too big for it and lives in `buffer`, so that tasks other than
+/// the coreapp, e.g. loaded apps, which the MPU keeps out of the coreapp's
+/// RAM, can keep it in their own memory and verify and recover secp256k1
+/// signatures. The context is not randomized, so the task must not sign with
+/// it. Does nothing without the `secp256k1_zkp` feature.
+///
+/// # Safety
+///
+/// `buffer` must be valid for writes of `size` bytes, aligned to
+/// [`TASK_CONTEXT_ALIGN`], and stay valid and unused otherwise for as long as
+/// the task uses the context.
+pub unsafe fn init_task_context(buffer: *mut u8, size: usize) -> Result<(), Error> {
+    #[cfg(feature = "secp256k1_zkp")]
+    {
+        // SAFETY: guaranteed by the caller; only touches the current task's
+        // own context.
+        if unsafe { ffi::zkp_context_init_unrandomized(buffer.cast(), size) } != 0 {
+            return Err(Error::InvalidContext);
+        }
+    }
+    #[cfg(not(feature = "secp256k1_zkp"))]
+    let _ = (buffer, size);
+    Ok(())
+}
+
 /// Check that `pubkey` is a compressed (`0x02`/`0x03`) or uncompressed (`0x04`)
 /// SEC1 encoding of the expected length.
 fn verify_pubkey_slice(pubkey: &[u8]) -> Result<(), Error> {
