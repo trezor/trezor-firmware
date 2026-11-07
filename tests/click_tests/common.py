@@ -42,20 +42,21 @@ class CommonPass:
 
     EMPTY_ADDRESS = "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
 
-    # use "W" since it's the widest character.
-    WWW_LIMIT = 128 * "W"
-    WWW_LIMIT_ADDRESS = "n2bv39bhmi6yUJzC8W1Dz8xzYGbqBMqN2v"
+    # "AD..AD" is used sequence to avoid waiting for same-button timeout.
+    # However we avoid non-stop sequence of events, to avoid `loop._queue` overflow.
+    ADAD_LIMIT = "".join("AD" * 15 + str(i) * 2 for i in range(4))
+    ADAD_LIMIT_ADDRESS = "mskGTtM8g2ZvWzn2S4BBkm223aHTDQ5hJ9"
 
-    WWW_SHORTER = WWW_LIMIT[:-1]
-    WWW_SHORTER_ADDRESS = "mmrU5B11nheuzhErtnKMK8R1EpDJqsfqoS"
+    ADAD_SHORTER = ADAD_LIMIT[:-1]
+    ADAD_SHORTER_ADDRESS = "mvPu4mQYBY5JfPZo4K85oXf1uedyWJKuk7"
 
-    WWW_LONGER = WWW_LIMIT + "W"
+    ADAD_LONGER = ADAD_LIMIT + "W"
 
 
-assert len(CommonPass.WWW_LIMIT) == 128
-assert len(CommonPass.WWW_SHORTER) == 127
-assert len(CommonPass.WWW_LONGER) == 129
-assert CommonPass.WWW_SHORTER_ADDRESS != CommonPass.WWW_LIMIT_ADDRESS
+assert len(CommonPass.ADAD_LIMIT) == 128
+assert len(CommonPass.ADAD_SHORTER) == 127
+assert len(CommonPass.ADAD_LONGER) == 129
+assert CommonPass.ADAD_SHORTER_ADDRESS != CommonPass.ADAD_LIMIT_ADDRESS
 
 
 # Passphrase/Label keyboard layouts

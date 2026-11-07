@@ -105,9 +105,9 @@ VECTORS = (  # passphrase, address
     pytest.param(CommonPass.WITH_SPACE, CommonPass.WITH_SPACE_ADDRESS, id="with_space"),
     pytest.param(CommonPass.RANDOM_25, CommonPass.RANDOM_25_ADDRESS, id="random_25"),
     pytest.param(
-        CommonPass.WWW_SHORTER, CommonPass.WWW_SHORTER_ADDRESS, id="www_shorter"
+        CommonPass.ADAD_SHORTER, CommonPass.ADAD_SHORTER_ADDRESS, id="adad_shorter"
     ),
-    pytest.param(CommonPass.WWW_LIMIT, CommonPass.WWW_LIMIT_ADDRESS, id="www_limit"),
+    pytest.param(CommonPass.ADAD_LIMIT, CommonPass.ADAD_LIMIT_ADDRESS, id="adad_limit"),
 )
 
 
@@ -124,10 +124,10 @@ def test_passphrase_input(
 @pytest.mark.setup_client(passphrase=True)
 def test_passphrase_input_over_limit(device_handler: "BackgroundDeviceHandler"):
     with prepare_passphrase_dialogue(
-        device_handler, CommonPass.WWW_LIMIT_ADDRESS
+        device_handler, CommonPass.ADAD_LIMIT_ADDRESS
     ) as debug:  # type: ignore
-        input_passphrase(debug, CommonPass.WWW_LONGER, check=False, reveal=True)
-        assert debug.read_layout().passphrase() == CommonPass.WWW_LIMIT
+        input_passphrase(debug, CommonPass.ADAD_LONGER, check=False, reveal=True)
+        assert debug.read_layout().passphrase() == CommonPass.ADAD_LIMIT
         enter_passphrase(debug)
 
 
@@ -249,6 +249,6 @@ def test_cycle_through_last_character(
     # (was a bug previously)
     with prepare_passphrase_dialogue(device_handler) as debug:
         # for i we need to cycle through "ghi" three times
-        passphrase = CommonPass.WWW_SHORTER + "i"
+        passphrase = CommonPass.ADAD_SHORTER + "i"
         input_passphrase(debug, passphrase)
         enter_passphrase(debug)

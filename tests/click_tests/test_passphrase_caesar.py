@@ -194,9 +194,9 @@ VECTORS = (  # passphrase, address
     pytest.param(CommonPass.WITH_SPACE, CommonPass.WITH_SPACE_ADDRESS, id="with_space"),
     pytest.param(CommonPass.RANDOM_25, CommonPass.RANDOM_25_ADDRESS, id="random_25"),
     pytest.param(
-        CommonPass.WWW_SHORTER, CommonPass.WWW_SHORTER_ADDRESS, id="www_shorter"
+        CommonPass.ADAD_SHORTER, CommonPass.ADAD_SHORTER_ADDRESS, id="www_shorter"
     ),
-    pytest.param(CommonPass.WWW_LIMIT, CommonPass.WWW_LIMIT_ADDRESS, id="www_limit"),
+    pytest.param(CommonPass.ADAD_LIMIT, CommonPass.ADAD_LIMIT_ADDRESS, id="www_limit"),
 )
 
 
@@ -214,22 +214,22 @@ def test_passphrase_input(
 @pytest.mark.setup_client(passphrase=True)
 def test_passphrase_input_over_limit(device_handler: "BackgroundDeviceHandler"):
     with prepare_passphrase_dialogue(
-        device_handler, CommonPass.WWW_LIMIT_ADDRESS
+        device_handler, CommonPass.ADAD_LIMIT_ADDRESS
     ) as debug:  # type: ignore
-        # First `len(CommonPass.WWW_LIMIT)` chars
-        input_passphrase(debug, CommonPass.WWW_LONGER[:-1])
+        # First `len(CommonPass.ADAD_LIMIT)` chars
+        input_passphrase(debug, CommonPass.ADAD_LONGER[:-1])
         layout = debug.read_layout()
-        assert CommonPass.WWW_LONGER[:-1] == layout.passphrase()
+        assert CommonPass.ADAD_LONGER[:-1] == layout.passphrase()
 
         show_passphrase(debug)
 
         # Over-limit character
-        press_char(debug, CommonPass.WWW_LONGER[-1])
+        press_char(debug, CommonPass.ADAD_LONGER[-1])
 
         # No change
         layout = debug.read_layout()
-        assert CommonPass.WWW_LONGER[:-1] == layout.passphrase()
-        assert CommonPass.WWW_LONGER != layout.passphrase()
+        assert CommonPass.ADAD_LONGER[:-1] == layout.passphrase()
+        assert CommonPass.ADAD_LONGER != layout.passphrase()
 
         show_passphrase(debug)
         enter_passphrase(debug)
