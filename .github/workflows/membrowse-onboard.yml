@@ -1,6 +1,9 @@
 name: Onboard to MemBrowse
 
 on:
+  pull_request:
+    branches:
+      - mmilata/membrowse
   workflow_dispatch:
     inputs:
       num_commits:
