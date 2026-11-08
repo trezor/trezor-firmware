@@ -2,22 +2,6 @@ name: Onboard to MemBrowse
 
 on:
   pull_request:
-    branches:
-      - mmilata/membrowse
-    types:
-      - synchronize
-  workflow_dispatch:
-    inputs:
-      num_commits:
-        description: 'Number of commits to process'
-        required: true
-        default: '200'
-        type: string
-      targets:
-        description: 'Space-separated target names to onboard (empty = all)'
-        required: false
-        default: ''
-        type: string
 
 permissions:
   contents: read
@@ -36,7 +20,7 @@ jobs:
       - name: Load target matrix
         id: set-matrix
         env:
-          TARGETS: ${{ github.event.inputs.targets }}
+          TARGETS: ''
         run: |
           matrix=$(jq -c --arg t "$TARGETS" \
             '($t | split(" ") | map(select(. != ""))) as $sel
@@ -76,7 +60,7 @@ jobs:
         uses: membrowse/membrowse-action/onboard-action@14677ae592be153b43eb7dbe4f542cf0c7d098ed  # membrowse/membrowse-action@v1.2.18
         with:
           target_name: ${{ matrix.target_name }}
-          num_commits: ${{ github.event.inputs.num_commits }}
+          num_commits: 200
           # Submodule pins change across history, so sync them for every commit
           build_script: git submodule update --init --recursive && ${{ matrix.build_cmd }}
           elf: ${{ matrix.elf }}
