@@ -170,6 +170,54 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
             &bytes[Leaf::<K, H>::LEN..]
         })
     }
+
+    /// The wire width of a non-empty proof with `steps` steps.
+    pub(crate) const fn len_with(steps: usize) -> usize {
+        Leaf::<K, H>::LEN + steps * Step::<H>::LEN
+    }
+
+    /// The part of the path below the branch at `c`: the leaf and the steps whose crit bit is
+    /// above `c`. The steps are leaf-to-root, so this is a prefix of the bytes, and it is what
+    /// a host sends for the entry after one that parts from it at `c`, since a walk holds the
+    /// rest (see [`Walk`](crate::trie::Walk)). The empty proof is its own part.
+    pub fn below(&self, c: BitPos) -> Proof<&[u8], K, H> {
+        let bytes = self.as_bytes();
+        if bytes.is_empty() {
+            return self.view();
+        }
+        let steps = self.steps().take_while(|step| step.crit_bit > c).count();
+        // The retained steps are the deepest ones, so their crit bits still strictly
+        // increase root-to-leaf: a prefix of a well-formed proof is well formed.
+        Proof {
+            bytes: &bytes[..Self::len_with(steps)],
+            _marker: PhantomData,
+        }
+    }
+}
+
+/// Writes a proof, `leaf` then `steps` leaf-to-root, into `out`, which must be exactly
+/// [`Proof::len_with`] of the number of steps; the callers, the prover's `build` and the
+/// walk, size it so. The bytes are not parsed here, the caller does that, so that a `Proof`
+/// value is well formed whatever its origin.
+pub(crate) fn write_into<K: Key, H: HashFn>(
+    out: &mut [u8],
+    leaf: &Leaf<K, H>,
+    steps: impl IntoIterator<Item = Step<H>>,
+) {
+    fn put(out: &mut &mut [u8], bytes: &[u8]) {
+        let (head, tail) = core::mem::take(out).split_at_mut(bytes.len());
+        head.copy_from_slice(bytes);
+        *out = tail;
+    }
+
+    let mut out = out;
+    put(&mut out, leaf.key.as_bytes().as_ref());
+    put(&mut out, leaf.value.as_ref());
+    for step in steps {
+        put(&mut out, &step.crit_bit.to_bytes());
+        put(&mut out, step.sibling.as_ref());
+    }
+    assert!(out.is_empty(), "the proof is shorter than the buffer");
 }
 
 #[cfg(feature = "use_std")]
@@ -186,15 +234,11 @@ impl<K: Key, H: HashFn> Proof<Vec<u8>, K, H> {
     /// a path no tree has is [`Error::Shape`], not the caller's word.
     pub(crate) fn build(
         leaf: &Leaf<K, H>,
-        steps: impl IntoIterator<Item = Step<H>>,
+        steps: impl IntoIterator<Item = Step<H>, IntoIter: ExactSizeIterator>,
     ) -> Result<Self, Error> {
-        let mut bytes = Vec::with_capacity(Leaf::<K, H>::LEN + 8 * Step::<H>::LEN);
-        bytes.extend_from_slice(leaf.key.as_bytes().as_ref());
-        bytes.extend_from_slice(leaf.value.as_ref());
-        for step in steps {
-            bytes.extend_from_slice(&step.crit_bit.to_bytes());
-            bytes.extend_from_slice(step.sibling.as_ref());
-        }
+        let steps = steps.into_iter();
+        let mut bytes = vec![0; Self::len_with(steps.len())];
+        write_into(&mut bytes, leaf, steps);
         Self::parse(bytes)
     }
 }
@@ -461,6 +505,32 @@ mod tests {
         assert_eq!(parsed.leaf(), Some(leaf));
         assert!(parsed.steps().eq(steps));
         assert_eq!(P::empty(), P::parse(Vec::new()).unwrap());
+    }
+
+    #[test]
+    fn below_is_a_prefix_of_the_steps() {
+        let raw = bytes(0b0000_0000, &[7, 4, 1, 0]);
+        let proof = P::parse(raw.as_slice()).unwrap();
+        let steps = |p: &Proof<&[u8], [u8; 1], Sha256>| -> Vec<u16> {
+            p.steps().map(|s| s.crit_bit.index() as u16).collect()
+        };
+        // Below the branch at 1: the steps at 7 and 4, which are deeper in the tree.
+        let below = proof.below(BitPos::new(1));
+        assert_eq!(steps(&below), [7, 4]);
+        assert_eq!(below.as_bytes(), &raw[..LEAF + 2 * STEP]);
+        assert_eq!(below.leaf(), proof.leaf());
+        // At a bit no branch tests, the cut falls between the branches around it.
+        assert_eq!(steps(&proof.below(BitPos::new(5))), [7]);
+        // Below the deepest branch there is only the leaf; above the root, the whole path.
+        assert_eq!(steps(&proof.below(BitPos::new(7))), []);
+        assert_eq!(proof.below(BitPos::new(7)).as_bytes(), &raw[..LEAF]);
+        assert_eq!(proof.below(BitPos::MAX).as_bytes(), &raw[..LEAF]);
+        assert_eq!(steps(&proof.below(BitPos::new(0))), [7, 4, 1]);
+        assert_eq!(
+            P::parse(&[][..]).unwrap().below(BitPos::new(0)),
+            P::parse(&[][..]).unwrap()
+        );
+        assert_eq!(P::<&[u8]>::len_with(4), raw.len());
     }
 
     #[test]

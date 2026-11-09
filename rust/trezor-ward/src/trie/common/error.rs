@@ -2,7 +2,8 @@
 ///
 /// `Length` and `Shape` are raised by [`Proof::parse`](super::Proof::parse): the bytes are not
 /// a proof at all, a malformed message. The rest are raised when a well-formed proof is held
-/// against a root and a key: a claim that does not hold.
+/// against a root, by [`Proof::verify`](super::Proof::verify) or by a walk: a claim that does
+/// not hold.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// The bytes do not fit the proof layout: neither empty, nor a terminal leaf followed by
@@ -18,6 +19,10 @@ pub enum Error {
     RootMismatch,
     /// The claimed value does not hash to the digest the proof commits to.
     ValueMismatch,
+    /// The proof holds against the root, but it is not the entry the walk expects: an entry
+    /// was skipped, repeated or reordered, the walk did not start at the first entry, or it
+    /// is over.
+    OutOfOrder,
 }
 
 impl core::fmt::Display for Error {
@@ -28,6 +33,7 @@ impl core::fmt::Display for Error {
             Self::OffPath => "proof is not the key's lookup path",
             Self::RootMismatch => "proof does not fold to the root",
             Self::ValueMismatch => "value does not match the proof",
+            Self::OutOfOrder => "proof is not of the next entry in key order",
         })
     }
 }

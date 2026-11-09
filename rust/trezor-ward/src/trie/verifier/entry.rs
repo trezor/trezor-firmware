@@ -92,7 +92,7 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
 }
 
 /// `start` hashed up `steps` (leaf-to-root) along `key`'s path: the root this path implies.
-fn fold<K: Key, H: HashFn>(
+pub(super) fn fold<K: Key, H: HashFn>(
     start: H::Output,
     steps: impl Iterator<Item = Step<H>>,
     key: &K,
@@ -117,6 +117,22 @@ impl<K: Key, H: HashFn> Entry<'_, K, H> {
         match self {
             Self::Occupied(entry) => entry.replace(new),
             Self::Vacant(entry) => entry.insert(new),
+        }
+    }
+}
+
+impl<'a, K: Key, H: HashFn> OccupiedEntry<'a, K, H> {
+    /// The entry over a proof already held against the root and found occupied, as a walk
+    /// keeps one: the key and the digest are read off its leaf, which the proof has, since
+    /// only the empty proof has none and the empty map holds no entry. Only the verifier may
+    /// make this claim, hence `pub(super)`.
+    pub(super) fn from_verified(proof: Proof<&'a [u8], K, H>) -> Self {
+        // An occupied entry's proof ends at a leaf.
+        let leaf = proof.leaf().unwrap();
+        Self {
+            proof,
+            key: leaf.key,
+            value: leaf.value,
         }
     }
 }
