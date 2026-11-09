@@ -59,8 +59,42 @@ derived from an unverified proof, and an insert is only reachable from a vacant 
 the host supplies is obtained through `OccupiedEntry::value`, which hands it back only if it
 hashes to the digest the proof commits to.
 
-The verifier is `no_std`, allocates nothing, and keeps no state: which root to trust, and
-whether one is held at all, is the caller's concern.
+The verifier is `no_std`, allocates nothing, and keeps no state of its own: which root to
+trust, and whether one is held at all, is the caller's concern.
+
+### Walk
+
+`Walk` enumerates the entries of the tree with one root in key order, one proof per entry, so
+that the host can neither hide, repeat nor reorder an entry. Keys are ordered as byte strings,
+which is the order the tree's leaves have from left to right, so the first entry is the leaf
+whose path turns left at every branch, the entry after a given one parts from it at the lowest
+branch where it turned left and then turns left all the way down, and the last entry turns left
+nowhere, which is how the walk knows it is done without any word from the host.
+
+The walk holds the current entry's full proof. For the next entry the host sends either its
+full proof or only the part of its path below the branch where the two entries part
+(`Proof::below`), which is a prefix of the full proof's bytes; the walk splices that onto the
+steps it already holds, folds the one sibling that changes itself, and holds the result against
+the root with `Proof::verify` like any other proof, so every entry comes out as an
+`OccupiedEntry`. Over a whole walk the truncated form sends each branch's step once. The walk
+allocates nothing: the caller provides the storage for each proof, sized by `Walk::next_len`,
+and `Tree::walk` produces exactly what a `Walk` accepts.
+
+```rust
+use trezor_ward::trie::{Sha256, Tree, Walk};
+
+let tree: Tree<[u8; 32], Vec<u8>, Sha256> =
+    Tree::from_entries([([1; 32], b"one".to_vec()), ([2; 32], b"two".to_vec())]);
+
+// The device holds the root and walks; the host serves one proof per entry.
+let mut walk = Walk::new(tree.root());
+for (key, value, proof) in tree.walk() {
+    let entry = walk.next(&proof).unwrap();
+    assert_eq!(entry.key(), key);
+    assert_eq!(entry.value(value).unwrap(), value);
+}
+assert!(walk.is_done());
+```
 
 ### Prover
 

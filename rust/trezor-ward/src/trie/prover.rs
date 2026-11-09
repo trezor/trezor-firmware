@@ -267,12 +267,31 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Tree<K, V, H> {
             key: *key,
             value: value.digest(),
         };
-        steps.reverse();
-        Proof::build(&leaf, steps).expect("a lookup path in a canonical tree is well formed")
+        Proof::build(&leaf, steps.into_iter().rev())
+            .expect("a lookup path in a canonical tree is well formed")
     }
 
-    /// The entries in key order.
-    // TODO(ward): iteration with proofs (see the trie design note).
+    /// The entries in key order, each with the proof a [`Walk`](crate::trie::Walk) accepts for
+    /// it: the first entry's whole lookup path, then for every entry the part of its path
+    /// below the branch where it parts from the previous one, which is all the walk needs
+    /// since it holds the rest. The sum of these is one step per branch of the tree.
+    pub fn walk(&self) -> impl Iterator<Item = (&K, &V, Proof<Vec<u8>, K, H>)> {
+        let mut previous: Option<K> = None;
+        self.iter().map(move |(key, value)| {
+            let proof = self.prove(key);
+            let proof = match previous.replace(*key) {
+                None => proof,
+                Some(previous) => {
+                    let c = crit_bit(&previous, key).expect("the entries have distinct keys");
+                    Proof::parse(proof.below(c).as_bytes().to_vec())
+                        .expect("a prefix of a well-formed proof is well formed")
+                }
+            };
+            (key, value, proof)
+        })
+    }
+
+    /// The entries in key order; [`walk`](Self::walk) adds the proofs.
     pub fn iter(&self) -> Iter<'_, K, V, H> {
         // The stack starts with the root, if there is one.
         Iter {
