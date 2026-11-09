@@ -229,11 +229,7 @@ impl WireV1 for WireV1Impl {
         send(CoreIpcService::Wire.into(), id, data.as_slice()).into()
     }
 
-    extern "C" fn wire_error<'a>(
-        &self,
-        kind: FailureKind,
-        message: Str<'a>,
-    ) -> ServiceResult<()> {
+    extern "C" fn wire_error<'a>(&self, kind: FailureKind, message: Str<'a>) -> ServiceResult<()> {
         send(
             CoreIpcService::WireError.into(),
             kind as u16,
