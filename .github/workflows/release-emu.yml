@@ -25,8 +25,8 @@ on:
         default: "[\"T2B1\",\"T2T1\",\"T3B1\",\"T3T1\",\"T3W1\"]"
 
 permissions:
-  id-token: write       # for fetching the OIDC token
-  contents: read        # for actions/checkout
+  id-token: write  # zizmor: ignore[excessive-permissions] no point in copying this to every step
+  contents: read
 
 jobs:
   get_models:
