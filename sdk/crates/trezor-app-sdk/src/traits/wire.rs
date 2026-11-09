@@ -11,6 +11,19 @@ pub struct WireMessage {
     pub data: BoxedSlice<u8>,
 }
 
+/// Failure types an app may report; Core maps them to `FailureType` by
+/// position, keep the order in sync with `_APP_FAILURE_CODES`.
+#[stabby::stabby]
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(test, derive(Debug))]
+pub enum FailureKind {
+    UnexpectedMessage,
+    DataError,
+    ActionCancelled,
+    ProcessError,
+}
+
 /// Talks to the host through Core.
 ///
 /// Apps never see raw IPC primitives — this trait *is* the transport, hiding
@@ -24,7 +37,7 @@ pub trait WireV1: Send + Sync {
     extern "C" fn wire_send<'a>(&self, id: u16, data: Slice<'a, u8>) -> ServiceResult<()>;
 
     /// Sends an error to the host, ending the app's run.
-    extern "C" fn wire_error<'a>(&self, code: u16, message: Str<'a>) -> ServiceResult<()>;
+    extern "C" fn wire_error<'a>(&self, kind: FailureKind, message: Str<'a>) -> ServiceResult<()>;
 }
 
 pub type WireV1Vtable = stabby::vtable!(WireV1 + Send + Sync);

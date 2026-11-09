@@ -2,6 +2,7 @@
 use crate::alloc_types::Box;
 use crate::traits::crypto::CryptoError;
 use crate::traits::util::{CoreServiceError, FastResult, ServiceResult};
+use crate::traits::wire::FailureKind;
 
 /// A wrapper which aligns its inner value to 8 bytes.
 #[doc(hidden)]
@@ -29,27 +30,21 @@ pub enum Error {
     },
 }
 
-// `FailureType` values (messages-common.proto) that Core accepts from apps
-const FAILURE_UNEXPECTED_MESSAGE: u16 = 1;
-const FAILURE_DATA_ERROR: u16 = 3;
-const FAILURE_ACTION_CANCELLED: u16 = 4;
-const FAILURE_PROCESS_ERROR: u16 = 9;
-
 impl Error {
-    /// The `FailureType` Core reports to the host.
-    pub fn code(&self) -> u16 {
+    /// The failure type Core reports to the host.
+    pub fn kind(&self) -> FailureKind {
         match self {
-            Self::ServiceError => FAILURE_PROCESS_ERROR,
-            Self::DataError(_) => FAILURE_DATA_ERROR,
-            Self::Cancelled => FAILURE_ACTION_CANCELLED,
-            Self::InvalidFunction => FAILURE_UNEXPECTED_MESSAGE,
-            Self::InvalidMessage => FAILURE_DATA_ERROR,
-            Self::InvalidArgument => FAILURE_DATA_ERROR,
-            Self::ValueError(_) => FAILURE_DATA_ERROR,
+            Self::ServiceError => FailureKind::ProcessError,
+            Self::DataError(_) => FailureKind::DataError,
+            Self::Cancelled => FailureKind::ActionCancelled,
+            Self::InvalidFunction => FailureKind::UnexpectedMessage,
+            Self::InvalidMessage => FailureKind::DataError,
+            Self::InvalidArgument => FailureKind::DataError,
+            Self::ValueError(_) => FailureKind::DataError,
             // never reaches the host: the app exits instead
-            Self::Stopped => FAILURE_PROCESS_ERROR,
+            Self::Stopped => FailureKind::ProcessError,
             #[cfg(feature = "debug")]
-            Self::Context { source, .. } => source.code(),
+            Self::Context { source, .. } => source.kind(),
         }
     }
 
@@ -342,10 +337,10 @@ mod tests {
         let error = Error::from(CoreServiceError::ServiceError(
             CryptoError::InvalidSignature,
         ));
-        assert_eq!(error.code(), FAILURE_DATA_ERROR);
+        assert_eq!(error.kind(), FailureKind::DataError);
         assert_eq!(error.message(), "invalid signature");
         let error = Error::from(CoreServiceError::<CryptoError>::Timeout);
-        assert_eq!(error.code(), FAILURE_PROCESS_ERROR);
+        assert_eq!(error.kind(), FailureKind::ProcessError);
     }
 
     #[cfg(feature = "debug")]
