@@ -878,6 +878,8 @@ jobs:
     timeout-minutes: 10
     needs:
       - param
+    env:
+      TEST_LANG: ${{ needs.param.outputs.test_lang }}
     permissions:
       id-token: write       # for fetching the OIDC token for AWS
       contents: read        # for actions/checkout
@@ -888,8 +890,8 @@ jobs:
           persist-credentials: false
       - run: sleep 1m  # try avoiding github api rate limit
       - run: |
-          python ci/make_pull_comment.py "${{ github.run_id }}" '${{ needs.param.outputs.test_lang }}' > ${{ env.PULL_COMMENT_PATH }}
-          cat ${{ env.PULL_COMMENT_PATH }} >> $GITHUB_STEP_SUMMARY
+          python ci/make_pull_comment.py "${{ github.run_id }}" "${TEST_LANG}" > ${PULL_COMMENT_PATH}
+          cat ${PULL_COMMENT_PATH} >> $GITHUB_STEP_SUMMARY
       - uses: $/.github/actions/ui-comment
         if: github.event_name == 'pull_request'
       - name: Configure aws credentials
@@ -897,8 +899,8 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1
-      - run: python ci/make_summary_htmls.py "index" '${{ needs.param.outputs.test_lang }}' "tests/ui_tests/reporting/"
-      - run: python ci/make_summary_htmls.py "diff" '${{ needs.param.outputs.test_lang }}' "tests/ui_tests/reporting/"
+      - run: python ci/make_summary_htmls.py "index" "${TEST_LANG}" "tests/ui_tests/reporting/"
+      - run: python ci/make_summary_htmls.py "diff" "${TEST_LANG}" "tests/ui_tests/reporting/"
       - name: Upload per-language HTML summaries to S3
         run: |
           cd tests/ui_tests/reporting/
@@ -967,9 +969,9 @@ jobs:
       - name: Determine branch name
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            branch_name=${{ github.head_ref }}
+            branch_name=${GITHUB_HEAD_REF}
           else
-            branch_name=${{ github.ref_name }}
+            branch_name=${GITHUB_REF_NAME}
           fi
           echo "branch_name=$branch_name" >> $GITHUB_ENV
       - name: Upload artifacts to branch directory

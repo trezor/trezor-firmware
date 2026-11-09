@@ -162,7 +162,7 @@ jobs:
           status: ${{ job.status }}
         continue-on-error: true
         if: ${{ always() && matrix.coins == 'universal' }}
-      - run: echo "${{ env.PULL_COMMENT }}" >> $GITHUB_STEP_SUMMARY
+      - run: echo "${PULL_COMMENT}" >> $GITHUB_STEP_SUMMARY
         if: ${{ always() && matrix.coins == 'universal' }}
 
   legacy_upgrade_test:

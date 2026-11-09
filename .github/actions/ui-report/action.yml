@@ -20,7 +20,6 @@ runs:
         role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
         aws-region: eu-central-1
     - run: |
-        MODELJOB=${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}
         OUTDIR=${{ github.run_id }}
         mkdir -p $OUTDIR
         $UV_RUN ci/prepare_ui_artifacts.py || true
@@ -39,12 +38,15 @@ runs:
         done
         cd ..
 
-        if [ "${{ inputs.status }}" = "success" ]; then
+        if [ "${INPUTS_STATUS}" = "success" ]; then
           cp .github/actions/ui-report/success.png $OUTDIR/$MODELJOB-status.png
         else
           cp .github/actions/ui-report/failure.png $OUTDIR/$MODELJOB-status.png
         fi
       shell: sh
+      env:
+        MODELJOB: "${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}"
+        INPUTS_STATUS: ${{ inputs.status }}
     - name: Upload test results
       run: |
         # Cache s5cmd package (to be reused by the next calls)

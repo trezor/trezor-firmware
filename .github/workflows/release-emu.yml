@@ -50,12 +50,15 @@ jobs:
             VERSION=${GITHUB_REF#refs/tags/legacy/v}
             MODELS=$(jq -cr --arg version "$VERSION" '.firmware[$version]' ./common/releases.json)
           else
-            VERSION="${{ inputs.version }}"
-            MODELS='${{ inputs.models_json }}'
+            VERSION="${INPUTS_VERSION}"
+            MODELS="${INPUTS_MODELS_JSON}"
           fi
           echo "models=$MODELS" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
+        env:
+          INPUTS_VERSION: ${{ inputs.version }}
+          INPUTS_MODELS_JSON: ${{ inputs.models_json }}
 
   core_emu:
     if: startsWith(github.ref, 'refs/tags/core/v') || inputs.project == 'core'
