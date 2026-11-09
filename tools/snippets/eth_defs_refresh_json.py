@@ -69,6 +69,38 @@ def verify_dev(definition: definitions.Definition) -> None:
     )
 
 
+def check_known_fields(data: bytes, msg_type: type[protobuf.MessageType]) -> None:
+    """Raise if the encoded message `data` contains a field (at any nesting
+    level) that is not defined in trezorlib's `msg_type`.
+
+    Re-encoding the decoded message and comparing bytes is not an option:
+    trezorlib fills in absent optional fields with their defaults on load and
+    then writes them out on dump."""
+    reader = io.BytesIO(data)
+    while True:
+        try:
+            fkey = protobuf.load_uvarint(reader)
+        except EOFError:
+            return
+        ftag, wtype = fkey >> 3, fkey & 7
+        field = msg_type.FIELDS.get(ftag)
+        if field is None:
+            raise ValueError(
+                f"definition has field {ftag} of {msg_type.__name__} unknown to trezorlib"
+            )
+        if wtype == protobuf.WIRE_TYPE_INT:
+            protobuf.load_uvarint(reader)
+        elif wtype == protobuf.WIRE_TYPE_LENGTH:
+            length = protobuf.load_uvarint(reader)
+            value = reader.read(length)
+            if len(value) != length:
+                raise ValueError(f"truncated field {field.name}")
+            if issubclass(field.py_type, protobuf.MessageType):
+                check_known_fields(value, field.py_type)
+        else:
+            raise ValueError(f"unsupported wire type {wtype} in field {field.name}")
+
+
 def dat_to_dict(dat: bytes, dev: bool = False) -> dict:
     """Verify a signed definition (production keys unless `dev`) and decode it
     into the JSON fixture format (definition type and message)."""
@@ -81,13 +113,9 @@ def dat_to_dict(dat: bytes, dev: bool = False) -> dict:
         definition.verify()
     payload = definition.payload
     msg_type = MESSAGE_TYPES[payload.data_type]
+    # unknown fields are silently skipped when loading, so reject them up front
+    check_known_fields(payload.data, msg_type)
     msg = protobuf.load_message(io.BytesIO(payload.data), msg_type)
-    # unknown fields are silently skipped when loading, so make sure that
-    # re-encoding yields the signed bytes, i.e. nothing was left unread
-    reencoded = io.BytesIO()
-    protobuf.dump_message(reencoded, msg)
-    if reencoded.getvalue() != payload.data:
-        raise ValueError("definition has fields unknown to trezorlib")
     return {"data_type": payload.data_type.name, "message": protobuf.to_dict(msg)}
 
 
