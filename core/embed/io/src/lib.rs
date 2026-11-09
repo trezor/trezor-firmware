@@ -22,10 +22,9 @@ pub mod smp;
 ///   app asked for: rounded up to the MPU alignment on hardware, and the rest
 ///   of the app's data area on the emulator.
 /// - `ipc_buffer_size`: the IPC inbox size, in bytes, the app declared in its
-///   manifest (`ipc-buffer-size` under `[package.metadata.trezor]`). Validated
-///   on the way in: the app header is rejected at load unless this is a
-///   multiple of 8 in `8..=IPC_MAX_BUFFER_SIZE` that fits inside the app's
-///   heap, so callers can size an allocation from it directly.
+///   manifest (`ipc-buffer-size` under `[package.metadata.trezor]`). The
+///   loader rejects the app unless this is in `1..=IPC_MAX_BUFFER_SIZE` and,
+///   on hardware, fits inside the app's heap.
 #[cfg(feature = "app_loading")]
 pub use ffi::app_args_t as AppArgs;
 
