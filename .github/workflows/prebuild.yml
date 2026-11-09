@@ -113,3 +113,18 @@ jobs:
           persist-credentials: false
       - name: "Run changelog check"
         run: ./ci/check_changelog.sh
+
+  actions_check:
+    name: GitHub Actions check
+    runs-on: ubuntu-slim
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
