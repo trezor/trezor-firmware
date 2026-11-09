@@ -24,7 +24,7 @@ import typing as t
 import click
 import requests
 
-from .. import authentication, debuglink, device, exceptions, messages
+from .. import authentication, debuglink, device, exceptions, messages, models
 from ..tools import format_path
 from . import ChoiceType, ui, with_session
 
@@ -465,6 +465,24 @@ def authenticate(
 
     Development devices are rejected unless the --devel option is given.
     """
+    # Models which do not support authentication.
+    UNSUPPORTED_MODELS = (
+        models.T1B1,
+        models.T2T1,
+        models.D001,
+        models.D002,
+        models.D003,
+    )
+    if session.model in UNSUPPORTED_MODELS:
+        raise click.ClickException(
+            f"Device authentication is not supported on Trezor {session.model.name}."
+        )
+    if not authentication.roots_for_model(session.model):
+        raise click.ClickException(
+            f"This version of trezorlib cannot authenticate Trezor {session.model.name}. "
+            "Please update trezorlib."
+        )
+
     if hex_challenge is None:
         hex_challenge = secrets.token_hex(32)
 
