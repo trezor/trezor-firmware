@@ -23,6 +23,7 @@ cmd("id")
 dirs = " ".join(str(d) for d in Path("/dev/bus/usb").parents)
 cmd(f"ls -ld /dev/bus/usb/* {dirs}")
 cmd("ls -l /dev/bus/usb/*")
+cmd("grep . /sys/bus/usb/devices/usb*/serial | sort")
 cmd("ls -vl `find /sys/bus/usb/devices/usb*/ -name disable`")
 cmd(
     'for F in `find /sys/bus/usb/devices/usb*/ -name disable | sort -V`; do echo -n "$F "; cat $F; done'
