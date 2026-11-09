@@ -1,20 +1,13 @@
-//! The verifier: holds a proof against a trusted root and a key, and derives the root a change
-//! produces, from the root and the proof alone. It needs no storage and no allocation.
-//!
-//! [`Proof::verify`] answers where the key sits in the tree with that root, as an [`Entry`]:
-//! occupied by a value, or vacant. The entry is the only way to derive a new root, so nothing
-//! is ever derived from an unverified proof. The three changes are reachable only from the
-//! variant where they make sense: a vacant entry can be inserted into, an occupied one can be
-//! replaced or removed.
-//!
-//! The root the verifier is given is trusted by assumption. Whether the verifier holds a root
-//! at all, and whether the root is current, is the caller's concern.
-//!
-//! TODO(ward): iteration with proofs (see the trie design note).
+//! One lookup, held against the root: [`Proof::verify`] answers where a key sits in the tree
+//! with that root, as an [`Entry`], occupied by a value or vacant, and derives the root a
+//! change produces from the root and the proof alone. The entry is the only way to derive a
+//! new root, so nothing is ever derived from an unverified proof. The three changes are
+//! reachable only from the variant where they make sense: a vacant entry can be inserted
+//! into, an occupied one can be replaced or removed.
 
 use core::fmt;
 
-use super::common::{
+use crate::trie::common::{
     BitPos, Error, HashFn, Hashable, Key, Leaf, Proof, Step, bit, crit_bit, empty_root,
     leaf_digest, parent_digest,
 };
@@ -249,8 +242,8 @@ mod tests {
     //! encodings in the crate documentation, and every expected root after a change is the
     //! canonical rebuild of the changed map, not the verifier's own output.
 
-    use super::super::common::Sha256;
     use super::*;
+    use crate::trie::common::Sha256;
 
     type Key1 = [u8; 1];
     type P<'a> = Proof<&'a [u8], Key1, Sha256>;
