@@ -86,7 +86,7 @@ jobs:
         with:
           submodules: recursive
           persist-credentials: false
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
         with:
           nix-dev-shell: default
       - name: uhubctl
@@ -140,7 +140,7 @@ jobs:
         with:
           submodules: recursive
           persist-credentials: false
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
         with:
           nix-dev-shell: everything
       - run: $NIX_RUN uhubctl
@@ -185,7 +185,7 @@ jobs:
         with:
           submodules: recursive
           persist-credentials: false
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
         with:
           nix-dev-shell: default
       - name: uhubctl

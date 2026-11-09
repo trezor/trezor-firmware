@@ -11,7 +11,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - uses: ./.github/actions/environment
+    - uses: $/.github/actions/environment
 
     - run: $UV_RUN legacy/script/cibuild
       shell: sh

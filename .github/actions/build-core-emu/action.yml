@@ -21,7 +21,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - uses: ./.github/actions/environment
+    - uses: $/.github/actions/environment
 
     - run: $UV_RUN make -C core build_bootloader_emu
       if: inputs.build-bootloader == 'true'

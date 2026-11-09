@@ -33,7 +33,7 @@ jobs:
           language: c
       - name: Run Fuzzers (${{ matrix.sanitizer }})
         id: run
-        uses: ./.github/actions/run-fuzzers
+        uses: $/.github/actions/run-fuzzers
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           fuzz-seconds: 400
