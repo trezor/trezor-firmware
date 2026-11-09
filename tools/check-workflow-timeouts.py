@@ -16,7 +16,7 @@ REPO = Path(__file__).resolve().parent.parent
 WORKFLOWS = REPO / ".github" / "workflows"
 
 # Reusable-workflow calls cannot declare `timeout-minutes`.
-REUSABLE_WORKFLOWS = ("./.github/workflows/crowdin-ui-check-reuse.yml",)
+REUSABLE_WORKFLOWS = ("$/.github/workflows/crowdin-ui-check-reuse.yml",)
 
 
 def main() -> int:

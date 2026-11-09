@@ -41,7 +41,7 @@ jobs:
         with:
           submodules: recursive
           persist-credentials: false
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - run: $UV_RUN make -C core build_unix_frozen
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
@@ -59,7 +59,7 @@ jobs:
       id-token: write  # for fetching OIDC token for AWS in reusable workflow jobs
     # A reusable-workflow call cannot declare `timeout-minutes` -- the called
     # workflow's jobs carry them. TODO: pass it as a `workflow_call` input.
-    uses: ./.github/workflows/crowdin-ui-check-reuse.yml
+    uses: $/.github/workflows/crowdin-ui-check-reuse.yml
     with:
       languages: '["en", "${{ inputs.language }}"]'
 
@@ -70,6 +70,6 @@ jobs:
       id-token: write  # for fetching OIDC token for AWS in reusable workflow jobs
     # A reusable-workflow call cannot declare `timeout-minutes` -- the called
     # workflow's jobs carry them. TODO: pass it as a `workflow_call` input.
-    uses: ./.github/workflows/crowdin-ui-check-reuse.yml
+    uses: $/.github/workflows/crowdin-ui-check-reuse.yml
     with:
       languages: '["en", "cs", "fr", "de", "es", "pt"]'
