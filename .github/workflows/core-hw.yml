@@ -101,7 +101,7 @@ jobs:
         if: matrix.model != 'T3W1'  # gets stuck on models with THP
       - run: |
           $NIX_RUN bash -c "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
-          $UV_RUN pytest   "tests/device_tests/bitcoin/test_signtx.py::test_lots_of_inputs"   "tests/device_tests/bitcoin/test_signtx_taproot.py::test_lots_of_foreign_inputs"   -v -o log_cli=true --log-cli-level=DEBUG 2>&1 | grep -E "GC info|PASSED|FAILED|ERROR|tests" --durations=50 --session-timeout 19800
+          $UV_RUN pytest   "tests/device_tests/bitcoin/test_signtx.py::test_lots_of_inputs"   "tests/device_tests/bitcoin/test_signtx_taproot.py::test_lots_of_foreign_inputs"   -v --durations=50 --session-timeout 19800 -o log_cli=true --log-cli-level=DEBUG 2>&1 | grep -E "GC info|PASSED|FAILED|ERROR|tests"
       - run: tail -n50 trezor.log || true
         if: failure()
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
