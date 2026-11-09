@@ -197,9 +197,8 @@ fn send(service: u16, id: u16, data: &[u8]) -> Result<(), CallError> {
 /// out of the app's own heap. The inbox owns the buffer and frees it when the
 /// app's state is dropped (see [`app_state::AppState`]).
 ///
-/// The byte size is a non-zero multiple of 8 (enforced at header
-/// verification), so it always divides evenly into `usize` words on both the
-/// 32-bit target and the 64-bit emulator.
+/// The byte size is rounded down to whole `usize` words; the build tool only
+/// emits multiples of 8, which divide evenly on both targets.
 pub(crate) fn register_inbox(ipc_buffer_size: usize) {
     let inbox_words = ipc_buffer_size / core::mem::size_of::<usize>();
     let buffer = alloc::boxed::Box::<[usize]>::new_zeroed_slice(inbox_words);
