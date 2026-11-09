@@ -33,7 +33,7 @@ jobs:
           submodules: recursive
 
       - name: Setup environment
-        uses: ./.github/actions/environment
+        uses: $/.github/actions/environment
         with:
           nix-dev-shell: default
 

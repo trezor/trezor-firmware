@@ -50,7 +50,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - run: $UV_RUN legacy/script/cibuild
         env:
           PRODUCTION: 1
@@ -86,7 +86,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - run: $UV_RUN legacy/script/cibuild
       - run: cp legacy/firmware/trezor.elf legacy/firmware/trezor-emu-legacy-T1B1-${{ matrix.coins }}
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
@@ -115,7 +115,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - run: $UV_RUN legacy/script/cibuild
       - run: mv legacy/firmware/trezor.elf legacy/firmware/trezor-emu-arm-legacy-T1B1-${{ matrix.coins }}
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
@@ -146,12 +146,12 @@ jobs:
           name: legacy-emu-${{ matrix.coins }}-debuglink-${{ matrix.asan }}
           path: legacy/firmware
       - run: chmod +x legacy/firmware/*.elf
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - run: $UV_RUN make -C legacy test_emu_ui
         if: matrix.coins == 'universal'
       - run: $UV_RUN make -C legacy test_emu
         if: matrix.coins != 'universal'
-      - uses: ./.github/actions/ui-report
+      - uses: $/.github/actions/ui-report
         with:
           model: T1B1
           lang: en
@@ -181,7 +181,7 @@ jobs:
           name: legacy-emu-universal-debuglink-${{ matrix.asan }}
           path: legacy/firmware
       - run: chmod +x legacy/firmware/*.elf
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - run: $NIX_RUN tests/download_emulators.sh T1B1
       - run: $UV_RUN pytest tests/upgrade_tests
 
