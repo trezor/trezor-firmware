@@ -38,7 +38,7 @@ use crate::traits::ui::{
     TrezorUiResult, UiV1, UiV1Vtable,
 };
 use crate::traits::util::{CoreServiceError, FastResult, ServiceResult};
-use crate::traits::wire::{WireMessage, WireV1, WireV1Vtable};
+use crate::traits::wire::{FailureKind, WireMessage, WireV1, WireV1Vtable};
 
 // ============================================================================
 // Dummy implementation of the stable ABI, for host-based unit tests.
@@ -296,7 +296,11 @@ impl WireV1 for DummyWire {
         Err(CoreServiceError::ServiceCallFailed).into()
     }
 
-    extern "C" fn wire_error<'a>(&self, _code: u16, _message: Str<'a>) -> ServiceResult<()> {
+    extern "C" fn wire_error<'a>(
+        &self,
+        _kind: FailureKind,
+        _message: Str<'a>,
+    ) -> ServiceResult<()> {
         Err(CoreServiceError::ServiceCallFailed).into()
     }
 }

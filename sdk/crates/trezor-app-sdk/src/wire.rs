@@ -48,7 +48,7 @@ pub fn wire_send(bytes: &[u8], id: u16) -> Result<()> {
 pub fn wire_error(e: &Error) -> Result<()> {
     crate::error!("{}", e);
     get_wire_or_die()
-        .wire_error(e.code(), e.message().into())
+        .wire_error(e.kind(), e.message().into())
         .into_app_result()
         .c()
 }
