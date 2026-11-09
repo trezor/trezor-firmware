@@ -15,8 +15,7 @@ on:
         default: 'Thalarion'
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: crowdin-pull
@@ -66,6 +65,8 @@ jobs:
         with:
           client-id: ${{ secrets.TREZOR_BOT_CLIENT_ID }}
           private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
 
       - name: Create PR
         uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0  # peter-evans/create-pull-request@v8.1.0

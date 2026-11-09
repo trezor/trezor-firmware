@@ -21,6 +21,9 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 jobs:
   core_emu:
     name: Build emulator (${{ matrix.model }}, universal, debuglink, noasan)
