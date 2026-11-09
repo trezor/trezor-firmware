@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 8453,
+    "address": "e931f1ac6b00400e1dad153e184afee164d2d88b",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "Threshold Network: L2BitcoinRedeemer"
+  }
+}

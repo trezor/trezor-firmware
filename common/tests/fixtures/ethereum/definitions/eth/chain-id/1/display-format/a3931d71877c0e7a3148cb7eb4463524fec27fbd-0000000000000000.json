@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "a3931d71877c0e7a3148cb7eb4463524fec27fbd",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "Sky: sUSDS"
+  }
+}

@@ -30,7 +30,8 @@
           ]
         },
         "label": "GM Token",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       },
       {
         "path": {
@@ -44,7 +45,8 @@
           "path": [
             1
           ]
-        }
+        },
+        "lookup_address": false
       },
       {
         "path": {
@@ -55,7 +57,8 @@
         "label": "Max Price",
         "formatter": "FORMATTER_UNIT",
         "decimals": 18,
-        "base": "USD"
+        "base": "USD",
+        "lookup_address": false
       },
       {
         "path": {
@@ -64,9 +67,10 @@
           ]
         },
         "label": "Order Expires",
-        "formatter": "FORMATTER_DATE"
+        "formatter": "FORMATTER_DATE",
+        "lookup_address": false
       }
     ],
-    "provider_name": "Ondo Finance"
+    "provider_name": "Ondo Finance: GM Token Limit Order"
   }
 }

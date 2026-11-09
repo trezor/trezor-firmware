@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "1e2aaadcf528b9cc08f43d4fd7db488ce89f5741",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "9Summits"
+  }
+}

@@ -19,7 +19,8 @@
           "const_value": "USDC"
         },
         "label": "Deposit asset",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
@@ -31,7 +32,8 @@
         "formatter": "FORMATTER_TOKEN_AMOUNT",
         "token_path": {
           "container_path": "TO"
-        }
+        },
+        "lookup_address": false
       },
       {
         "path": {
@@ -40,7 +42,8 @@
           ]
         },
         "label": "Mint shares to",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       }
     ],
     "provider_name": "9Summits"

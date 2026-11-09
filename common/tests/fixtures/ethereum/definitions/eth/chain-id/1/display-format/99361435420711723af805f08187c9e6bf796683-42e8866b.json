@@ -30,7 +30,8 @@
           ]
         },
         "label": "You pay with",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       },
       {
         "path": {
@@ -42,7 +43,8 @@
         "formatter": "FORMATTER_UNIT",
         "decimals": 18,
         "base": " ",
-        "prefix": false
+        "prefix": false,
+        "lookup_address": false
       },
       {
         "path": {
@@ -54,7 +56,8 @@
         "formatter": "FORMATTER_UNIT",
         "decimals": 18,
         "base": " ",
-        "prefix": false
+        "prefix": false,
+        "lookup_address": false
       },
       {
         "path": {
@@ -63,9 +66,10 @@
           ]
         },
         "label": "Receiver",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": false
       }
     ],
-    "provider_name": "Midas"
+    "provider_name": "Midas: Minter Vault"
   }
 }

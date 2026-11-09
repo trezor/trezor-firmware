@@ -27,7 +27,8 @@
           ]
         },
         "label": "Operator",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       },
       {
         "path": {
@@ -36,7 +37,8 @@
           ]
         },
         "label": "Salt",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
@@ -45,7 +47,8 @@
           ]
         },
         "label": "Call Address",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       },
       {
         "path": {
@@ -59,9 +62,10 @@
           "path": [
             2
           ]
-        }
+        },
+        "lookup_address": false
       }
     ],
-    "provider_name": "Kiln"
+    "provider_name": "Kiln Staking - Fee Splitter"
   }
 }

@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 42161,
+    "address": "84e5c854a7ff9f49c888d69deca578d406c26800",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "Bedrock uniBTC Vault(Wrapped BTC)"
+  }
+}

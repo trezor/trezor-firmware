@@ -31,7 +31,8 @@
           "container_path": "VALUE"
         },
         "label": "Amount to Send",
-        "formatter": "FORMATTER_AMOUNT"
+        "formatter": "FORMATTER_AMOUNT",
+        "lookup_address": false
       },
       {
         "path": {
@@ -45,7 +46,8 @@
           "path": [
             0
           ]
-        }
+        },
+        "lookup_address": false
       },
       {
         "path": {
@@ -59,7 +61,8 @@
           "path": [
             0
           ]
-        }
+        },
+        "lookup_address": false
       },
       {
         "path": {
@@ -68,7 +71,8 @@
           ]
         },
         "label": "Minimum amount",
-        "formatter": "FORMATTER_AMOUNT"
+        "formatter": "FORMATTER_AMOUNT",
+        "lookup_address": false
       },
       {
         "path": {
@@ -77,7 +81,8 @@
           ]
         },
         "label": "Beneficiary",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": false
       },
       {
         "path": {
@@ -86,7 +91,8 @@
           ]
         },
         "label": "Deadline",
-        "formatter": "FORMATTER_DATE"
+        "formatter": "FORMATTER_DATE",
+        "lookup_address": false
       }
     ],
     "provider_name": "QuickSwap"

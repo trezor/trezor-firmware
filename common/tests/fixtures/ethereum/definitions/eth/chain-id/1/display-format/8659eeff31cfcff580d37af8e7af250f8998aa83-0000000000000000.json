@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "8659eeff31cfcff580d37af8e7af250f8998aa83",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "Kiln Staking - Fee Splitter"
+  }
+}

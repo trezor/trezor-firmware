@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "ce5485cfb26914c5dce00b9baf0580364dafc7a4",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "StarkWare: L1StarkGateSTRKbridge"
+  }
+}

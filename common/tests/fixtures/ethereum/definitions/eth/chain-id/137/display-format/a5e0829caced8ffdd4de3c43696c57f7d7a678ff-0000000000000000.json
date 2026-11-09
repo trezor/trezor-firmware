@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 137,
+    "address": "a5e0829caced8ffdd4de3c43696c57f7d7a678ff",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "QuickSwap"
+  }
+}

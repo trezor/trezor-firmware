@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "66a28b080918184851774a89ab94850a41f6a1e5",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "SwissBorg: BORG Bridge (Outbound)"
+  }
+}

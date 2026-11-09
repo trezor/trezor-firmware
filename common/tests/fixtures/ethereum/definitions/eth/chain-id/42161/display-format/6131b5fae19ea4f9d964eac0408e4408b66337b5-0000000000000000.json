@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 42161,
+    "address": "6131b5fae19ea4f9d964eac0408e4408b66337b5",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "KyberSwap: MetaAggregationRouterV2"
+  }
+}

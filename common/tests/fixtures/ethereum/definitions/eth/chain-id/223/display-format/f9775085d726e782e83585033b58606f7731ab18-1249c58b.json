@@ -14,9 +14,10 @@
         "formatter": "FORMATTER_UNIT",
         "decimals": 18,
         "base": "BTC",
-        "prefix": false
+        "prefix": false,
+        "lookup_address": false
       }
     ],
-    "provider_name": "Bedrock"
+    "provider_name": "Bedrock uniBTC Vault(Native BTC)"
   }
 }

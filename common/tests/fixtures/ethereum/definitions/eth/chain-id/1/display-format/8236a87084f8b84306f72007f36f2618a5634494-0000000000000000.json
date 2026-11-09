@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "8236a87084f8b84306f72007f36f2618a5634494",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "Lombard Finance: LBTC"
+  }
+}

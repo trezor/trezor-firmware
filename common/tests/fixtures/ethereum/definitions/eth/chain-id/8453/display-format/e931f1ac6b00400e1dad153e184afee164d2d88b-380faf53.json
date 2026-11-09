@@ -30,7 +30,8 @@
         "formatter": "FORMATTER_UNIT",
         "decimals": 18,
         "base": "tBTC",
-        "prefix": false
+        "prefix": false,
+        "lookup_address": false
       },
       {
         "path": {
@@ -45,7 +46,8 @@
             "key": 2,
             "value": "Ethereum"
           }
-        ]
+        ],
+        "lookup_address": false
       },
       {
         "path": {
@@ -54,7 +56,8 @@
           ]
         },
         "label": "BTC output script",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
@@ -63,16 +66,18 @@
           ]
         },
         "label": "Nonce",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
           "container_path": "VALUE"
         },
         "label": "Wormhole message fee",
-        "formatter": "FORMATTER_AMOUNT"
+        "formatter": "FORMATTER_AMOUNT",
+        "lookup_address": false
       }
     ],
-    "provider_name": "Threshold Network"
+    "provider_name": "Threshold Network: L2BitcoinRedeemer"
   }
 }
