@@ -1,6 +1,7 @@
 //! The differential test: after every change, the root the verifier derives from the proof,
-//! the incremental prover's root and the root of a tree rebuilt from scratch must agree, and
-//! every stored key must still verify.
+//! the incremental prover's root and the root of a tree rebuilt from scratch must agree, every
+//! stored key must still verify, and a walk through the prover's proofs must visit exactly the
+//! model's entries in order.
 //!
 //! The rebuild is the definition of the canonical form, so any disagreement is a bug in the
 //! incremental prover or the verifier, and checking after every operation names the operation.
@@ -13,7 +14,7 @@ use rand::seq::{IndexedRandom as _, IteratorRandom as _};
 use rand::{Rng as _, SeedableRng as _};
 // Seeded, so a failure reproduces from the seed; the stream is stable across patch releases.
 use rand_xorshift::XorShiftRng as Rng;
-use trezor_ward::trie::{Entry, Sha256, empty_root};
+use trezor_ward::trie::{Entry, Sha256, Walk, empty_root};
 
 use crate::{T, Val};
 
@@ -152,7 +153,8 @@ fn change<const N: usize>(
     check(tree, model, *root);
 }
 
-/// The tree holds what the model holds, the three roots agree, and so do all proofs.
+/// The tree holds what the model holds, the three roots agree, and so do all proofs; and a
+/// walk through the prover's proofs is the model, in order.
 fn check<const N: usize>(tree: &T<N>, model: &Model<N>, derived: Digest) {
     assert_eq!(tree.root(), derived, "incremental prover vs verifier");
     let rebuilt = T::<N>::from_entries(model.iter().map(|(key, value)| (*key, value.clone())));
@@ -172,6 +174,31 @@ fn check<const N: usize>(tree: &T<N>, model: &Model<N>, derived: Digest) {
             Entry::Vacant(_) => panic!("{key:?} is stored but proves absent"),
         }
     }
+    walk(tree, model, derived);
+}
+
+/// The prover's walk, one truncated proof per entry, is accepted by the verifier's walk and
+/// visits the model's entries in the model's order; after every step the walk's proof is the
+/// entry's own full proof, and the step is also made again from the kept proof alone, as a
+/// device that keeps nothing between messages makes it; the walk is done where the model ends.
+fn walk<const N: usize>(tree: &T<N>, model: &Model<N>, derived: Digest) {
+    let mut walk = Walk::new(derived);
+    let mut expected = model.iter();
+    for (key, value, proof) in tree.walk() {
+        assert_eq!(expected.next(), Some((key, value)), "walk order");
+        let entry = walk.next(&proof).expect("the prover's walk is accepted");
+        assert_eq!(entry.key(), key);
+        assert_eq!(entry.value(value).unwrap(), value);
+        let kept = walk.proof().expect("a proof after a step");
+        assert_eq!(kept, &tree.prove(key), "the walk's proof is {key:?}'s own");
+        walk = Walk::at(derived, kept.clone()).expect("the kept proof resumes the walk");
+    }
+    assert_eq!(
+        expected.next(),
+        None,
+        "the walk stopped before the model's end"
+    );
+    assert!(walk.is_done(), "the walk is not done where the model ends");
 }
 
 const SEED: u64 = 0;
