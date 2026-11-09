@@ -24,7 +24,7 @@ use sys::sysevent::{self, SysEvents};
 use sys::task::TaskId;
 use sys::time::{Instant, Timeout};
 use trezor_app_sdk::traits::util::{CoreServiceError, ServiceResult, TIMEOUT_MAX};
-use trezor_app_sdk::traits::wire::{WireMessage, WireV1};
+use trezor_app_sdk::traits::wire::{FailureKind, WireMessage, WireV1};
 
 use crate::app_state;
 
@@ -229,10 +229,14 @@ impl WireV1 for WireV1Impl {
         send(CoreIpcService::Wire.into(), id, data.as_slice()).into()
     }
 
-    extern "C" fn wire_error<'a>(&self, code: u16, message: Str<'a>) -> ServiceResult<()> {
+    extern "C" fn wire_error<'a>(
+        &self,
+        kind: FailureKind,
+        message: Str<'a>,
+    ) -> ServiceResult<()> {
         send(
             CoreIpcService::WireError.into(),
-            code,
+            kind as u16,
             message.as_str().as_bytes(),
         )
         .into()
