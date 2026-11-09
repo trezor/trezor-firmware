@@ -50,6 +50,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/environment
       - run: $UV_RUN legacy/script/cibuild
         env:
@@ -86,6 +87,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/environment
       - run: $UV_RUN legacy/script/cibuild
       - run: cp legacy/firmware/trezor.elf legacy/firmware/trezor-emu-legacy-T1B1-${{ matrix.coins }}
@@ -115,6 +117,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/environment
       - run: $UV_RUN legacy/script/cibuild
       - run: mv legacy/firmware/trezor.elf legacy/firmware/trezor-emu-arm-legacy-T1B1-${{ matrix.coins }}
@@ -141,6 +144,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: legacy-emu-${{ matrix.coins }}-debuglink-${{ matrix.asan }}
@@ -176,6 +180,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: legacy-emu-universal-debuglink-${{ matrix.asan }}
