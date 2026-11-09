@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
     from .session import Session
 
-# failure codes an app may report (`Error::code()` in the SDK)
+# failure codes an app may report, indexed by the SDK's `FailureKind`
 _APP_FAILURE_CODES = (
     FailureType.UnexpectedMessage,
     FailureType.DataError,
@@ -70,7 +70,6 @@ def handle_error(session: Session, msg: IpcMessage) -> NoReturn:
     )
     if __debug__:
         log.debug(__name__, f"Received wire error message: {err_message}")
-    for code in _APP_FAILURE_CODES:
-        if code == msg.message_id:
-            raise Error(code, err_message)
-    session.die(f"Invalid failure code {msg.message_id}")
+    if msg.message_id >= len(_APP_FAILURE_CODES):
+        session.die(f"Invalid failure kind {msg.message_id}")
+    raise Error(_APP_FAILURE_CODES[msg.message_id], err_message)
