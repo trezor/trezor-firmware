@@ -213,7 +213,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     53,  # address_type
                     55,  # address_type_p2sh
-                    320000000000,  # maxfee_kb
+                    18000000000,  # maxfee_kb
                     "Actinium Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -241,7 +241,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     55,  # address_type
                     16,  # address_type_p2sh
-                    21000000000,  # maxfee_kb
+                    4800000000000,  # maxfee_kb
                     "DarkCoin Signed Message:\n",  # signed_message_header
                     0x02fe52cc,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -269,7 +269,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     0,  # address_type
                     5,  # address_type_p2sh
-                    14000000,  # maxfee_kb
+                    17000000,  # maxfee_kb
                     "Bitcoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -353,7 +353,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     3,  # address_type
                     125,  # address_type_p2sh
-                    14000000000,  # maxfee_kb
+                    20000000000,  # maxfee_kb
                     "BitCore Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -437,7 +437,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     30,  # address_type
                     22,  # address_type_p2sh
-                    1200000000000,  # maxfee_kb
+                    9500000000000,  # maxfee_kb
                     "Dogecoin Signed Message:\n",  # signed_message_header
                     0x02facafd,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -493,7 +493,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     14,  # address_type
                     5,  # address_type_p2sh
-                    390000000000,  # maxfee_kb
+                    5400000000000,  # maxfee_kb
                     "Feathercoin Signed Message:\n",  # signed_message_header
                     0x0488bc26,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -521,7 +521,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     82,  # address_type
                     7,  # address_type_p2sh
-                    640000000,  # maxfee_kb
+                    5700000000,  # maxfee_kb
                     "Zcoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -633,7 +633,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     36,  # address_type
                     5,  # address_type_p2sh
-                    16000000000,  # maxfee_kb
+                    44000000000,  # maxfee_kb
                     "GroestlCoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -689,7 +689,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     60,  # address_type
                     85,  # address_type_p2sh
-                    4800000000,  # maxfee_kb
+                    75000000000,  # maxfee_kb
                     "Komodo Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -745,7 +745,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     48,  # address_type
                     50,  # address_type_p2sh
-                    67000000,  # maxfee_kb
+                    79000000,  # maxfee_kb
                     "Litecoin Signed Message:\n",  # signed_message_header
                     0x019da462,  # xpub_magic
                     0x01b26ef6,  # xpub_magic_segwit_p2sh
@@ -801,7 +801,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     50,  # address_type
                     55,  # address_type_p2sh
-                    2100000000,  # maxfee_kb
+                    990000000,  # maxfee_kb
                     "Monacoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -829,7 +829,7 @@ def by_name(name: str) -> CoinInfo:
                     6,  # decimals
                     55,  # address_type
                     117,  # address_type_p2sh
-                    13000000000,  # maxfee_kb
+                    15000000000,  # maxfee_kb
                     "Peercoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -885,7 +885,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     23,  # address_type
                     83,  # address_type_p2sh
-                    89000000000,  # maxfee_kb
+                    210000000000,  # maxfee_kb
                     "Primecoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -913,7 +913,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     58,  # address_type
                     50,  # address_type_p2sh
-                    1000000000,  # maxfee_kb
+                    5800000000,  # maxfee_kb
                     "Qtum Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -969,7 +969,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     60,  # address_type
                     122,  # address_type_p2sh
-                    170000000000,  # maxfee_kb
+                    3200000000000,  # maxfee_kb
                     "Raven Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -1053,7 +1053,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     63,  # address_type
                     18,  # address_type_p2sh
-                    780000000000,  # maxfee_kb
+                    990000000000,  # maxfee_kb
                     "SmartCash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -1137,7 +1137,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     63,  # address_type
                     5,  # address_type_p2sh
-                    42000000000,  # maxfee_kb
+                    1600000000000,  # maxfee_kb
                     "Syscoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -1221,7 +1221,7 @@ def by_name(name: str) -> CoinInfo:
                     6,  # decimals
                     30,  # address_type
                     33,  # address_type_p2sh
-                    550000000000,  # maxfee_kb
+                    2000000000000,  # maxfee_kb
                     "Name: Dogecoin Dark\n",  # signed_message_header
                     0x022d2533,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -1305,7 +1305,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     7352,  # address_type
                     7357,  # address_type_p2sh
-                    51000000,  # maxfee_kb
+                    7200000000000,  # maxfee_kb
                     "Zcash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -1361,7 +1361,7 @@ def by_name(name: str) -> CoinInfo:
                     2,  # decimals
                     0,  # address_type
                     5,  # address_type_p2sh
-                    14000000,  # maxfee_kb
+                    710000000000000,  # maxfee_kb
                     "eCash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -1532,7 +1532,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     53,  # address_type
                     55,  # address_type_p2sh
-                    320000000000,  # maxfee_kb
+                    18000000000,  # maxfee_kb
                     "Actinium Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -1560,7 +1560,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     55,  # address_type
                     16,  # address_type_p2sh
-                    21000000000,  # maxfee_kb
+                    4800000000000,  # maxfee_kb
                     "DarkCoin Signed Message:\n",  # signed_message_header
                     0x02fe52cc,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -1588,7 +1588,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     0,  # address_type
                     5,  # address_type_p2sh
-                    14000000,  # maxfee_kb
+                    17000000,  # maxfee_kb
                     "Bitcoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -1644,7 +1644,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     38,  # address_type
                     23,  # address_type_p2sh
-                    380000000,  # maxfee_kb
+                    5900000000,  # maxfee_kb
                     "Bitcoin Gold Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -1728,7 +1728,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     3,  # address_type
                     125,  # address_type_p2sh
-                    14000000000,  # maxfee_kb
+                    20000000000,  # maxfee_kb
                     "BitCore Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -1812,7 +1812,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     76,  # address_type
                     16,  # address_type_p2sh
-                    45000000,  # maxfee_kb
+                    47000000000000,  # maxfee_kb
                     "DarkCoin Signed Message:\n",  # signed_message_header
                     0x02fe52cc,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -1868,7 +1868,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     1855,  # address_type
                     1818,  # address_type_p2sh
-                    220000000,  # maxfee_kb
+                    330000000,  # maxfee_kb
                     "Decred Signed Message:\n",  # signed_message_header
                     0x02fda926,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -1924,7 +1924,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     30,  # address_type
                     63,  # address_type_p2sh
-                    130000000000,  # maxfee_kb
+                    1300000000000,  # maxfee_kb
                     "DigiByte Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -1952,7 +1952,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     30,  # address_type
                     22,  # address_type_p2sh
-                    1200000000000,  # maxfee_kb
+                    9500000000000,  # maxfee_kb
                     "Dogecoin Signed Message:\n",  # signed_message_header
                     0x02facafd,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -2008,7 +2008,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     14,  # address_type
                     5,  # address_type_p2sh
-                    390000000000,  # maxfee_kb
+                    5400000000000,  # maxfee_kb
                     "Feathercoin Signed Message:\n",  # signed_message_header
                     0x0488bc26,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -2036,7 +2036,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     82,  # address_type
                     7,  # address_type_p2sh
-                    640000000,  # maxfee_kb
+                    5700000000,  # maxfee_kb
                     "Zcoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -2148,7 +2148,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     36,  # address_type
                     5,  # address_type_p2sh
-                    16000000000,  # maxfee_kb
+                    44000000000,  # maxfee_kb
                     "GroestlCoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -2204,7 +2204,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     60,  # address_type
                     85,  # address_type_p2sh
-                    4800000000,  # maxfee_kb
+                    75000000000,  # maxfee_kb
                     "Komodo Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -2260,7 +2260,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     48,  # address_type
                     50,  # address_type_p2sh
-                    67000000,  # maxfee_kb
+                    79000000,  # maxfee_kb
                     "Litecoin Signed Message:\n",  # signed_message_header
                     0x019da462,  # xpub_magic
                     0x01b26ef6,  # xpub_magic_segwit_p2sh
@@ -2316,7 +2316,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     50,  # address_type
                     55,  # address_type_p2sh
-                    2100000000,  # maxfee_kb
+                    990000000,  # maxfee_kb
                     "Monacoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -2344,7 +2344,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     52,  # address_type
                     5,  # address_type_p2sh
-                    8700000000,  # maxfee_kb
+                    3100000000,  # maxfee_kb
                     "Namecoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -2372,7 +2372,7 @@ def by_name(name: str) -> CoinInfo:
                     6,  # decimals
                     55,  # address_type
                     117,  # address_type_p2sh
-                    13000000000,  # maxfee_kb
+                    15000000000,  # maxfee_kb
                     "Peercoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -2428,7 +2428,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     23,  # address_type
                     83,  # address_type_p2sh
-                    89000000000,  # maxfee_kb
+                    210000000000,  # maxfee_kb
                     "Primecoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -2456,7 +2456,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     58,  # address_type
                     50,  # address_type_p2sh
-                    1000000000,  # maxfee_kb
+                    5800000000,  # maxfee_kb
                     "Qtum Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -2512,7 +2512,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     60,  # address_type
                     122,  # address_type_p2sh
-                    170000000000,  # maxfee_kb
+                    3200000000000,  # maxfee_kb
                     "Raven Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -2596,7 +2596,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     63,  # address_type
                     18,  # address_type_p2sh
-                    780000000000,  # maxfee_kb
+                    990000000000,  # maxfee_kb
                     "SmartCash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -2680,7 +2680,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     63,  # address_type
                     5,  # address_type_p2sh
-                    42000000000,  # maxfee_kb
+                    1600000000000,  # maxfee_kb
                     "Syscoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -2764,7 +2764,7 @@ def by_name(name: str) -> CoinInfo:
                     6,  # decimals
                     30,  # address_type
                     33,  # address_type_p2sh
-                    550000000000,  # maxfee_kb
+                    2000000000000,  # maxfee_kb
                     "Name: Dogecoin Dark\n",  # signed_message_header
                     0x022d2533,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -2792,7 +2792,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     71,  # address_type
                     5,  # address_type_p2sh
-                    13000000000,  # maxfee_kb
+                    100000000000,  # maxfee_kb
                     "Vertcoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -2876,7 +2876,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     7352,  # address_type
                     7357,  # address_type_p2sh
-                    51000000,  # maxfee_kb
+                    7200000000000,  # maxfee_kb
                     "Zcash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -2932,7 +2932,7 @@ def by_name(name: str) -> CoinInfo:
                     2,  # decimals
                     0,  # address_type
                     5,  # address_type_p2sh
-                    14000000,  # maxfee_kb
+                    710000000000000,  # maxfee_kb
                     "eCash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -3103,7 +3103,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     53,  # address_type
                     55,  # address_type_p2sh
-                    320000000000,  # maxfee_kb
+                    18000000000,  # maxfee_kb
                     "Actinium Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -3131,7 +3131,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     55,  # address_type
                     16,  # address_type_p2sh
-                    21000000000,  # maxfee_kb
+                    4800000000000,  # maxfee_kb
                     "DarkCoin Signed Message:\n",  # signed_message_header
                     0x02fe52cc,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -3159,7 +3159,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     0,  # address_type
                     5,  # address_type_p2sh
-                    14000000,  # maxfee_kb
+                    17000000,  # maxfee_kb
                     "Bitcoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -3243,7 +3243,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     3,  # address_type
                     125,  # address_type_p2sh
-                    14000000000,  # maxfee_kb
+                    20000000000,  # maxfee_kb
                     "BitCore Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -3327,7 +3327,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     30,  # address_type
                     22,  # address_type_p2sh
-                    1200000000000,  # maxfee_kb
+                    9500000000000,  # maxfee_kb
                     "Dogecoin Signed Message:\n",  # signed_message_header
                     0x02facafd,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -3383,7 +3383,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     14,  # address_type
                     5,  # address_type_p2sh
-                    390000000000,  # maxfee_kb
+                    5400000000000,  # maxfee_kb
                     "Feathercoin Signed Message:\n",  # signed_message_header
                     0x0488bc26,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -3411,7 +3411,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     82,  # address_type
                     7,  # address_type_p2sh
-                    640000000,  # maxfee_kb
+                    5700000000,  # maxfee_kb
                     "Zcoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -3523,7 +3523,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     36,  # address_type
                     5,  # address_type_p2sh
-                    16000000000,  # maxfee_kb
+                    44000000000,  # maxfee_kb
                     "GroestlCoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -3579,7 +3579,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     60,  # address_type
                     85,  # address_type_p2sh
-                    4800000000,  # maxfee_kb
+                    75000000000,  # maxfee_kb
                     "Komodo Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -3635,7 +3635,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     48,  # address_type
                     50,  # address_type_p2sh
-                    67000000,  # maxfee_kb
+                    79000000,  # maxfee_kb
                     "Litecoin Signed Message:\n",  # signed_message_header
                     0x019da462,  # xpub_magic
                     0x01b26ef6,  # xpub_magic_segwit_p2sh
@@ -3691,7 +3691,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     50,  # address_type
                     55,  # address_type_p2sh
-                    2100000000,  # maxfee_kb
+                    990000000,  # maxfee_kb
                     "Monacoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -3719,7 +3719,7 @@ def by_name(name: str) -> CoinInfo:
                     6,  # decimals
                     55,  # address_type
                     117,  # address_type_p2sh
-                    13000000000,  # maxfee_kb
+                    15000000000,  # maxfee_kb
                     "Peercoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -3775,7 +3775,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     23,  # address_type
                     83,  # address_type_p2sh
-                    89000000000,  # maxfee_kb
+                    210000000000,  # maxfee_kb
                     "Primecoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -3803,7 +3803,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     58,  # address_type
                     50,  # address_type_p2sh
-                    1000000000,  # maxfee_kb
+                    5800000000,  # maxfee_kb
                     "Qtum Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -3859,7 +3859,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     60,  # address_type
                     122,  # address_type_p2sh
-                    170000000000,  # maxfee_kb
+                    3200000000000,  # maxfee_kb
                     "Raven Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -3943,7 +3943,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     63,  # address_type
                     18,  # address_type_p2sh
-                    780000000000,  # maxfee_kb
+                    990000000000,  # maxfee_kb
                     "SmartCash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -4027,7 +4027,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     63,  # address_type
                     5,  # address_type_p2sh
-                    42000000000,  # maxfee_kb
+                    1600000000000,  # maxfee_kb
                     "Syscoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -4111,7 +4111,7 @@ def by_name(name: str) -> CoinInfo:
                     6,  # decimals
                     30,  # address_type
                     33,  # address_type_p2sh
-                    550000000000,  # maxfee_kb
+                    2000000000000,  # maxfee_kb
                     "Name: Dogecoin Dark\n",  # signed_message_header
                     0x022d2533,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -4195,7 +4195,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     7352,  # address_type
                     7357,  # address_type_p2sh
-                    51000000,  # maxfee_kb
+                    7200000000000,  # maxfee_kb
                     "Zcash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -4251,7 +4251,7 @@ def by_name(name: str) -> CoinInfo:
                     2,  # decimals
                     0,  # address_type
                     5,  # address_type_p2sh
-                    14000000,  # maxfee_kb
+                    710000000000000,  # maxfee_kb
                     "eCash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -4422,7 +4422,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     53,  # address_type
                     55,  # address_type_p2sh
-                    320000000000,  # maxfee_kb
+                    18000000000,  # maxfee_kb
                     "Actinium Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -4450,7 +4450,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     55,  # address_type
                     16,  # address_type_p2sh
-                    21000000000,  # maxfee_kb
+                    4800000000000,  # maxfee_kb
                     "DarkCoin Signed Message:\n",  # signed_message_header
                     0x02fe52cc,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -4478,7 +4478,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     0,  # address_type
                     5,  # address_type_p2sh
-                    14000000,  # maxfee_kb
+                    17000000,  # maxfee_kb
                     "Bitcoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -4562,7 +4562,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     3,  # address_type
                     125,  # address_type_p2sh
-                    14000000000,  # maxfee_kb
+                    20000000000,  # maxfee_kb
                     "BitCore Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -4646,7 +4646,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     30,  # address_type
                     22,  # address_type_p2sh
-                    1200000000000,  # maxfee_kb
+                    9500000000000,  # maxfee_kb
                     "Dogecoin Signed Message:\n",  # signed_message_header
                     0x02facafd,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -4702,7 +4702,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     14,  # address_type
                     5,  # address_type_p2sh
-                    390000000000,  # maxfee_kb
+                    5400000000000,  # maxfee_kb
                     "Feathercoin Signed Message:\n",  # signed_message_header
                     0x0488bc26,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -4730,7 +4730,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     82,  # address_type
                     7,  # address_type_p2sh
-                    640000000,  # maxfee_kb
+                    5700000000,  # maxfee_kb
                     "Zcoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -4842,7 +4842,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     36,  # address_type
                     5,  # address_type_p2sh
-                    16000000000,  # maxfee_kb
+                    44000000000,  # maxfee_kb
                     "GroestlCoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -4898,7 +4898,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     60,  # address_type
                     85,  # address_type_p2sh
-                    4800000000,  # maxfee_kb
+                    75000000000,  # maxfee_kb
                     "Komodo Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -4954,7 +4954,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     48,  # address_type
                     50,  # address_type_p2sh
-                    67000000,  # maxfee_kb
+                    79000000,  # maxfee_kb
                     "Litecoin Signed Message:\n",  # signed_message_header
                     0x019da462,  # xpub_magic
                     0x01b26ef6,  # xpub_magic_segwit_p2sh
@@ -5010,7 +5010,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     50,  # address_type
                     55,  # address_type_p2sh
-                    2100000000,  # maxfee_kb
+                    990000000,  # maxfee_kb
                     "Monacoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -5038,7 +5038,7 @@ def by_name(name: str) -> CoinInfo:
                     6,  # decimals
                     55,  # address_type
                     117,  # address_type_p2sh
-                    13000000000,  # maxfee_kb
+                    15000000000,  # maxfee_kb
                     "Peercoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -5094,7 +5094,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     23,  # address_type
                     83,  # address_type_p2sh
-                    89000000000,  # maxfee_kb
+                    210000000000,  # maxfee_kb
                     "Primecoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -5122,7 +5122,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     58,  # address_type
                     50,  # address_type_p2sh
-                    1000000000,  # maxfee_kb
+                    5800000000,  # maxfee_kb
                     "Qtum Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -5178,7 +5178,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     60,  # address_type
                     122,  # address_type_p2sh
-                    170000000000,  # maxfee_kb
+                    3200000000000,  # maxfee_kb
                     "Raven Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -5262,7 +5262,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     63,  # address_type
                     18,  # address_type_p2sh
-                    780000000000,  # maxfee_kb
+                    990000000000,  # maxfee_kb
                     "SmartCash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -5346,7 +5346,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     63,  # address_type
                     5,  # address_type_p2sh
-                    42000000000,  # maxfee_kb
+                    1600000000000,  # maxfee_kb
                     "Syscoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -5430,7 +5430,7 @@ def by_name(name: str) -> CoinInfo:
                     6,  # decimals
                     30,  # address_type
                     33,  # address_type_p2sh
-                    550000000000,  # maxfee_kb
+                    2000000000000,  # maxfee_kb
                     "Name: Dogecoin Dark\n",  # signed_message_header
                     0x022d2533,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -5514,7 +5514,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     7352,  # address_type
                     7357,  # address_type_p2sh
-                    51000000,  # maxfee_kb
+                    7200000000000,  # maxfee_kb
                     "Zcash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -5570,7 +5570,7 @@ def by_name(name: str) -> CoinInfo:
                     2,  # decimals
                     0,  # address_type
                     5,  # address_type_p2sh
-                    14000000,  # maxfee_kb
+                    710000000000000,  # maxfee_kb
                     "eCash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -5741,7 +5741,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     53,  # address_type
                     55,  # address_type_p2sh
-                    320000000000,  # maxfee_kb
+                    18000000000,  # maxfee_kb
                     "Actinium Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -5769,7 +5769,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     55,  # address_type
                     16,  # address_type_p2sh
-                    21000000000,  # maxfee_kb
+                    4800000000000,  # maxfee_kb
                     "DarkCoin Signed Message:\n",  # signed_message_header
                     0x02fe52cc,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -5797,7 +5797,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     0,  # address_type
                     5,  # address_type_p2sh
-                    14000000,  # maxfee_kb
+                    17000000,  # maxfee_kb
                     "Bitcoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -5881,7 +5881,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     3,  # address_type
                     125,  # address_type_p2sh
-                    14000000000,  # maxfee_kb
+                    20000000000,  # maxfee_kb
                     "BitCore Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -5965,7 +5965,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     30,  # address_type
                     22,  # address_type_p2sh
-                    1200000000000,  # maxfee_kb
+                    9500000000000,  # maxfee_kb
                     "Dogecoin Signed Message:\n",  # signed_message_header
                     0x02facafd,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -6021,7 +6021,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     14,  # address_type
                     5,  # address_type_p2sh
-                    390000000000,  # maxfee_kb
+                    5400000000000,  # maxfee_kb
                     "Feathercoin Signed Message:\n",  # signed_message_header
                     0x0488bc26,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -6049,7 +6049,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     82,  # address_type
                     7,  # address_type_p2sh
-                    640000000,  # maxfee_kb
+                    5700000000,  # maxfee_kb
                     "Zcoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -6161,7 +6161,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     36,  # address_type
                     5,  # address_type_p2sh
-                    16000000000,  # maxfee_kb
+                    44000000000,  # maxfee_kb
                     "GroestlCoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -6217,7 +6217,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     60,  # address_type
                     85,  # address_type_p2sh
-                    4800000000,  # maxfee_kb
+                    75000000000,  # maxfee_kb
                     "Komodo Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -6273,7 +6273,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     48,  # address_type
                     50,  # address_type_p2sh
-                    67000000,  # maxfee_kb
+                    79000000,  # maxfee_kb
                     "Litecoin Signed Message:\n",  # signed_message_header
                     0x019da462,  # xpub_magic
                     0x01b26ef6,  # xpub_magic_segwit_p2sh
@@ -6329,7 +6329,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     50,  # address_type
                     55,  # address_type_p2sh
-                    2100000000,  # maxfee_kb
+                    990000000,  # maxfee_kb
                     "Monacoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -6357,7 +6357,7 @@ def by_name(name: str) -> CoinInfo:
                     6,  # decimals
                     55,  # address_type
                     117,  # address_type_p2sh
-                    13000000000,  # maxfee_kb
+                    15000000000,  # maxfee_kb
                     "Peercoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -6413,7 +6413,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     23,  # address_type
                     83,  # address_type_p2sh
-                    89000000000,  # maxfee_kb
+                    210000000000,  # maxfee_kb
                     "Primecoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -6441,7 +6441,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     58,  # address_type
                     50,  # address_type_p2sh
-                    1000000000,  # maxfee_kb
+                    5800000000,  # maxfee_kb
                     "Qtum Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -6497,7 +6497,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     60,  # address_type
                     122,  # address_type_p2sh
-                    170000000000,  # maxfee_kb
+                    3200000000000,  # maxfee_kb
                     "Raven Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -6581,7 +6581,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     63,  # address_type
                     18,  # address_type_p2sh
-                    780000000000,  # maxfee_kb
+                    990000000000,  # maxfee_kb
                     "SmartCash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -6665,7 +6665,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     63,  # address_type
                     5,  # address_type_p2sh
-                    42000000000,  # maxfee_kb
+                    1600000000000,  # maxfee_kb
                     "Syscoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -6749,7 +6749,7 @@ def by_name(name: str) -> CoinInfo:
                     6,  # decimals
                     30,  # address_type
                     33,  # address_type_p2sh
-                    550000000000,  # maxfee_kb
+                    2000000000000,  # maxfee_kb
                     "Name: Dogecoin Dark\n",  # signed_message_header
                     0x022d2533,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -6833,7 +6833,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     7352,  # address_type
                     7357,  # address_type_p2sh
-                    51000000,  # maxfee_kb
+                    7200000000000,  # maxfee_kb
                     "Zcash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -6889,7 +6889,7 @@ def by_name(name: str) -> CoinInfo:
                     2,  # decimals
                     0,  # address_type
                     5,  # address_type_p2sh
-                    14000000,  # maxfee_kb
+                    710000000000000,  # maxfee_kb
                     "eCash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -7060,7 +7060,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     53,  # address_type
                     55,  # address_type_p2sh
-                    320000000000,  # maxfee_kb
+                    18000000000,  # maxfee_kb
                     "Actinium Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -7088,7 +7088,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     55,  # address_type
                     16,  # address_type_p2sh
-                    21000000000,  # maxfee_kb
+                    4800000000000,  # maxfee_kb
                     "DarkCoin Signed Message:\n",  # signed_message_header
                     0x02fe52cc,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -7116,7 +7116,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     0,  # address_type
                     5,  # address_type_p2sh
-                    14000000,  # maxfee_kb
+                    17000000,  # maxfee_kb
                     "Bitcoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -7200,7 +7200,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     3,  # address_type
                     125,  # address_type_p2sh
-                    14000000000,  # maxfee_kb
+                    20000000000,  # maxfee_kb
                     "BitCore Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -7284,7 +7284,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     30,  # address_type
                     22,  # address_type_p2sh
-                    1200000000000,  # maxfee_kb
+                    9500000000000,  # maxfee_kb
                     "Dogecoin Signed Message:\n",  # signed_message_header
                     0x02facafd,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -7340,7 +7340,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     14,  # address_type
                     5,  # address_type_p2sh
-                    390000000000,  # maxfee_kb
+                    5400000000000,  # maxfee_kb
                     "Feathercoin Signed Message:\n",  # signed_message_header
                     0x0488bc26,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -7368,7 +7368,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     82,  # address_type
                     7,  # address_type_p2sh
-                    640000000,  # maxfee_kb
+                    5700000000,  # maxfee_kb
                     "Zcoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -7480,7 +7480,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     36,  # address_type
                     5,  # address_type_p2sh
-                    16000000000,  # maxfee_kb
+                    44000000000,  # maxfee_kb
                     "GroestlCoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -7536,7 +7536,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     60,  # address_type
                     85,  # address_type_p2sh
-                    4800000000,  # maxfee_kb
+                    75000000000,  # maxfee_kb
                     "Komodo Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -7592,7 +7592,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     48,  # address_type
                     50,  # address_type_p2sh
-                    67000000,  # maxfee_kb
+                    79000000,  # maxfee_kb
                     "Litecoin Signed Message:\n",  # signed_message_header
                     0x019da462,  # xpub_magic
                     0x01b26ef6,  # xpub_magic_segwit_p2sh
@@ -7648,7 +7648,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     50,  # address_type
                     55,  # address_type_p2sh
-                    2100000000,  # maxfee_kb
+                    990000000,  # maxfee_kb
                     "Monacoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -7676,7 +7676,7 @@ def by_name(name: str) -> CoinInfo:
                     6,  # decimals
                     55,  # address_type
                     117,  # address_type_p2sh
-                    13000000000,  # maxfee_kb
+                    15000000000,  # maxfee_kb
                     "Peercoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -7732,7 +7732,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     23,  # address_type
                     83,  # address_type_p2sh
-                    89000000000,  # maxfee_kb
+                    210000000000,  # maxfee_kb
                     "Primecoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -7760,7 +7760,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     58,  # address_type
                     50,  # address_type_p2sh
-                    1000000000,  # maxfee_kb
+                    5800000000,  # maxfee_kb
                     "Qtum Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -7816,7 +7816,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     60,  # address_type
                     122,  # address_type_p2sh
-                    170000000000,  # maxfee_kb
+                    3200000000000,  # maxfee_kb
                     "Raven Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -7900,7 +7900,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     63,  # address_type
                     18,  # address_type_p2sh
-                    780000000000,  # maxfee_kb
+                    990000000000,  # maxfee_kb
                     "SmartCash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -7984,7 +7984,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     63,  # address_type
                     5,  # address_type_p2sh
-                    42000000000,  # maxfee_kb
+                    1600000000000,  # maxfee_kb
                     "Syscoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -8068,7 +8068,7 @@ def by_name(name: str) -> CoinInfo:
                     6,  # decimals
                     30,  # address_type
                     33,  # address_type_p2sh
-                    550000000000,  # maxfee_kb
+                    2000000000000,  # maxfee_kb
                     "Name: Dogecoin Dark\n",  # signed_message_header
                     0x022d2533,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -8152,7 +8152,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     7352,  # address_type
                     7357,  # address_type_p2sh
-                    51000000,  # maxfee_kb
+                    7200000000000,  # maxfee_kb
                     "Zcash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -8208,7 +8208,7 @@ def by_name(name: str) -> CoinInfo:
                     2,  # decimals
                     0,  # address_type
                     5,  # address_type_p2sh
-                    14000000,  # maxfee_kb
+                    710000000000000,  # maxfee_kb
                     "eCash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -8379,7 +8379,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     53,  # address_type
                     55,  # address_type_p2sh
-                    320000000000,  # maxfee_kb
+                    18000000000,  # maxfee_kb
                     "Actinium Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -8407,7 +8407,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     55,  # address_type
                     16,  # address_type_p2sh
-                    21000000000,  # maxfee_kb
+                    4800000000000,  # maxfee_kb
                     "DarkCoin Signed Message:\n",  # signed_message_header
                     0x02fe52cc,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -8435,7 +8435,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     0,  # address_type
                     5,  # address_type_p2sh
-                    14000000,  # maxfee_kb
+                    17000000,  # maxfee_kb
                     "Bitcoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -8519,7 +8519,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     3,  # address_type
                     125,  # address_type_p2sh
-                    14000000000,  # maxfee_kb
+                    20000000000,  # maxfee_kb
                     "BitCore Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -8603,7 +8603,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     30,  # address_type
                     22,  # address_type_p2sh
-                    1200000000000,  # maxfee_kb
+                    9500000000000,  # maxfee_kb
                     "Dogecoin Signed Message:\n",  # signed_message_header
                     0x02facafd,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -8659,7 +8659,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     14,  # address_type
                     5,  # address_type_p2sh
-                    390000000000,  # maxfee_kb
+                    5400000000000,  # maxfee_kb
                     "Feathercoin Signed Message:\n",  # signed_message_header
                     0x0488bc26,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -8687,7 +8687,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     82,  # address_type
                     7,  # address_type_p2sh
-                    640000000,  # maxfee_kb
+                    5700000000,  # maxfee_kb
                     "Zcoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -8799,7 +8799,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     36,  # address_type
                     5,  # address_type_p2sh
-                    16000000000,  # maxfee_kb
+                    44000000000,  # maxfee_kb
                     "GroestlCoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -8855,7 +8855,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     60,  # address_type
                     85,  # address_type_p2sh
-                    4800000000,  # maxfee_kb
+                    75000000000,  # maxfee_kb
                     "Komodo Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -8911,7 +8911,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     48,  # address_type
                     50,  # address_type_p2sh
-                    67000000,  # maxfee_kb
+                    79000000,  # maxfee_kb
                     "Litecoin Signed Message:\n",  # signed_message_header
                     0x019da462,  # xpub_magic
                     0x01b26ef6,  # xpub_magic_segwit_p2sh
@@ -8967,7 +8967,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     50,  # address_type
                     55,  # address_type_p2sh
-                    2100000000,  # maxfee_kb
+                    990000000,  # maxfee_kb
                     "Monacoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -8995,7 +8995,7 @@ def by_name(name: str) -> CoinInfo:
                     6,  # decimals
                     55,  # address_type
                     117,  # address_type_p2sh
-                    13000000000,  # maxfee_kb
+                    15000000000,  # maxfee_kb
                     "Peercoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -9051,7 +9051,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     23,  # address_type
                     83,  # address_type_p2sh
-                    89000000000,  # maxfee_kb
+                    210000000000,  # maxfee_kb
                     "Primecoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -9079,7 +9079,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     58,  # address_type
                     50,  # address_type_p2sh
-                    1000000000,  # maxfee_kb
+                    5800000000,  # maxfee_kb
                     "Qtum Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -9135,7 +9135,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     60,  # address_type
                     122,  # address_type_p2sh
-                    170000000000,  # maxfee_kb
+                    3200000000000,  # maxfee_kb
                     "Raven Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -9219,7 +9219,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     63,  # address_type
                     18,  # address_type_p2sh
-                    780000000000,  # maxfee_kb
+                    990000000000,  # maxfee_kb
                     "SmartCash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -9303,7 +9303,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     63,  # address_type
                     5,  # address_type_p2sh
-                    42000000000,  # maxfee_kb
+                    1600000000000,  # maxfee_kb
                     "Syscoin Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     0x049d7cb2,  # xpub_magic_segwit_p2sh
@@ -9387,7 +9387,7 @@ def by_name(name: str) -> CoinInfo:
                     6,  # decimals
                     30,  # address_type
                     33,  # address_type_p2sh
-                    550000000000,  # maxfee_kb
+                    2000000000000,  # maxfee_kb
                     "Name: Dogecoin Dark\n",  # signed_message_header
                     0x022d2533,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -9471,7 +9471,7 @@ def by_name(name: str) -> CoinInfo:
                     8,  # decimals
                     7352,  # address_type
                     7357,  # address_type_p2sh
-                    51000000,  # maxfee_kb
+                    7200000000000,  # maxfee_kb
                     "Zcash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
@@ -9527,7 +9527,7 @@ def by_name(name: str) -> CoinInfo:
                     2,  # decimals
                     0,  # address_type
                     5,  # address_type_p2sh
-                    14000000,  # maxfee_kb
+                    710000000000000,  # maxfee_kb
                     "eCash Signed Message:\n",  # signed_message_header
                     0x0488b21e,  # xpub_magic
                     None,  # xpub_magic_segwit_p2sh
