@@ -70,8 +70,8 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'btconly' && '1' || '0' }}
       PYTEST_TIMEOUT: 600  # 10m single test timeout
       PYOPT: 0
-      DISABLE_OPTIGA: 1
-      DISABLE_TROPIC: 1
+      DISABLE_OPTIGA: 0
+      DISABLE_TROPIC: 0
       STORAGE_INSECURE_TESTING_MODE: 1
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T2T1' && '0' || '1' }}
       # TODO: enable SD-related tests after fixing #4924
