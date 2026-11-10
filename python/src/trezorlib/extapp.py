@@ -304,8 +304,9 @@ def load_tapp(
     return load(
         session,
         header=header,
-        chunks=[base64.b64decode(chunk) for chunk in app_json["chunks"]],
-        chunk_hashes=[bytes.fromhex(hash) for hash in app_json["chunk_hashes"]],
+        # (hash hex, chunk base64) pairs
+        chunks=[base64.b64decode(chunk) for _, chunk in app_json["chunks"]],
+        chunk_hashes=[bytes.fromhex(hash) for hash, _ in app_json["chunks"]],
         proof=proof,
         root_packet=root_packet,
         min_version=min_version,
