@@ -1,5 +1,5 @@
 import io
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from enum import Enum
 from typing import TYPE_CHECKING, Any
@@ -25,7 +25,7 @@ XPUB_MAGIC = 0x0488B21E
 
 class SdkError(Enum):
     """`trezor_app_sdk::Error` as the host sees it: its Failure code
-    (`Error::code()`) and, for variants without their own text, the message.
+    (`Error::kind()`) and, for variants without their own text, the message.
     A failed Core service call (e.g. a forbidden path) is a `ServiceError`."""
 
     ServiceError = (FailureType.ProcessError, "service error")
@@ -52,6 +52,23 @@ def raises(error: SdkError, message: str | None = None) -> Iterator[None]:
     expected = message or default_message
     if expected is not None:
         assert e.value.message == expected
+
+
+def assert_fails(
+    what: str, call: Callable[[], object], error: SdkError, message: str | None = None
+) -> None:
+    """Like `raises`, for one call out of a batch: names the call that didn't
+    fail as expected."""
+    code, default_message = error.value
+    try:
+        call()
+    except exceptions.TrezorFailure as e:
+        assert e.code == code, what
+        expected = message or default_message
+        if expected is not None:
+            assert e.message == expected, what
+    else:
+        pytest.fail(f"{what} didn't fail")
 
 
 def message_id(msg: type[protobuf.MessageType] | protobuf.MessageType) -> int:

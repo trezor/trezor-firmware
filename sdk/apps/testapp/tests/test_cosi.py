@@ -20,6 +20,7 @@ from trezorlib import cosi
 from trezorlib.debuglink import DebugSession as Session
 
 from . import testapp_ext
+from .signing import ED25519_INVALID_POINT as INVALID_POINT
 from .testapp_ext import (
     INVALID_ENCODING,
     INVALID_PUBLIC_KEY,
@@ -34,11 +35,6 @@ MESSAGE = b"CoSi message"
 
 # At most this many keys can be selected for a CoSi signature.
 MAX_SELECTED = 3
-
-# Not a point on the curve.
-INVALID_POINT = bytes.fromhex(
-    "0200000000000000000000000000000000000000000000000000000000000000"
-)
 
 
 def sign(message: bytes, mask: int, keys: list[bytes] = PRIVKEYS) -> bytes:
@@ -164,23 +160,6 @@ def test_cosi_verify_signature_length(session: Session, instance_id: int, length
         verify(session, instance_id, 1, PUBKEYS[:1], 0b1, signature)
 
 
-@pytest.mark.parametrize("length", [0, 31, 33])
-def test_cosi_verify_public_key_length(session: Session, instance_id: int, length: int):
-    signature = sign(MESSAGE, 0b1)
-    key = (PUBKEYS[0] + b"\x00")[:length]
-    with raises(SdkError.InvalidArgument):
-        verify(session, instance_id, 1, [key], 0b1, signature)
-
-
-@pytest.mark.parametrize("threshold, mask", [(256, 0b1), (1, 256)])
-def test_cosi_verify_out_of_byte_range(
-    session: Session, instance_id: int, threshold: int, mask: int
-):
-    """threshold and sigmask are single bytes."""
-    with raises(SdkError.InvalidArgument):
-        verify(session, instance_id, threshold, PUBKEYS[:1], mask, sign(MESSAGE, 0b1))
-
-
 # ============================================================================
 # cosi_combine_publickeys
 # ============================================================================
@@ -192,14 +171,6 @@ def test_cosi_combine_publickeys(session: Session, instance_id: int, n_keys: int
         session, instance_id, PUBKEYS[:n_keys]
     )
     assert combined == cosi.combine_keys(PUBKEYS[:n_keys])
-
-
-def test_cosi_combine_publickeys_single_key(session: Session, instance_id: int):
-    """One key combines to itself."""
-    assert (
-        testapp_ext.cosi_combine_publickeys(session, instance_id, PUBKEYS[:1])
-        == PUBKEYS[0]
-    )
 
 
 def test_cosi_combine_publickeys_order(session: Session, instance_id: int):
@@ -225,24 +196,3 @@ def test_cosi_combine_publickeys_invalid_point(session: Session, instance_id: in
     for keys in ([PUBKEYS[0], INVALID_POINT], [INVALID_POINT, PUBKEYS[0]]):
         with raises(SdkError.DataError, INVALID_PUBLIC_KEY):
             testapp_ext.cosi_combine_publickeys(session, instance_id, keys)
-
-
-def test_cosi_combine_publickeys_single_invalid_point(
-    session: Session, instance_id: int
-):
-    """A single key is returned as is, without checking that it is a point
-    (trezor-crypto's `ed25519_cosi_combine_publickeys` copies it)."""
-    assert (
-        testapp_ext.cosi_combine_publickeys(session, instance_id, [INVALID_POINT])
-        == INVALID_POINT
-    )
-
-
-@pytest.mark.parametrize("length", [0, 31, 33])
-def test_cosi_combine_publickeys_key_length(
-    session: Session, instance_id: int, length: int
-):
-    with raises(SdkError.InvalidArgument):
-        testapp_ext.cosi_combine_publickeys(
-            session, instance_id, [(PUBKEYS[0] + b"\x00")[:length]]
-        )

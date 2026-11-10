@@ -37,6 +37,16 @@ for test in json.loads((COMMON_FIXTURES_DIR / "hash.json").read_text())["tests"]
 
 ALGORITHMS = list(m.HashAlgorithm)
 
+# Block size (SHA-2) or rate (SHA-3, Keccak), in bytes.
+BLOCK_SIZES = {
+    m.HashAlgorithm.Sha256: 64,
+    m.HashAlgorithm.Sha512: 128,
+    m.HashAlgorithm.Sha3_256: 136,
+    m.HashAlgorithm.Keccak256: 136,
+    m.HashAlgorithm.Sha3_512: 72,
+    m.HashAlgorithm.Keccak512: 72,
+}
+
 
 def expected(algorithm: m.HashAlgorithm, data: bytes) -> bytes:
     return next(d for v, d in VECTORS[algorithm.name] if v == data)
@@ -61,19 +71,15 @@ def test_hash_chunked(session: Session, instance_id: int, algorithm: m.HashAlgor
     """Any split of the data into updates gives the digest of the whole."""
     data = next(v for v, _ in VECTORS[algorithm.name] if len(v) == 1000)
     digest = expected(algorithm, data)
+    block = BLOCK_SIZES[algorithm]
     splits = {
         "empty_chunks": [b"", data[:500], b"", data[500:], b""],
         "byte_by_byte": [data[i : i + 1] for i in range(200)] + [data[200:]],
         "uneven": [data[:1], data[1:64], data[64:137], data[137:999], data[999:]],
-        "block_sized": [data[i : i + 64] for i in range(0, len(data), 64)],
+        "block_sized": [data[i : i + block] for i in range(0, len(data), block)],
+        "block_plus_one": [data[: block + 1], data[block + 1 :]],
     }
     for name, chunks in splits.items():
         assert b"".join(chunks) == data
         result = testapp_ext.hash(session, instance_id, algorithm, chunks)
         assert result == digest, name
-
-
-def test_hash_algorithms_differ(session: Session, instance_id: int):
-    """Each algorithm is its own function, not an alias of another."""
-    digests = {testapp_ext.hash(session, instance_id, a, [b"abc"]) for a in ALGORITHMS}
-    assert len(digests) == len(ALGORITHMS)

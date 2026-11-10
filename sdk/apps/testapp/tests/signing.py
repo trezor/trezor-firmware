@@ -16,6 +16,14 @@ CURVES: dict[m.EcdsaCurve, Curve] = {
     m.EcdsaCurve.Nist256p1: NIST256p,
 }
 
+# 32 bytes that aren't an Ed25519 point (y = 2 has no x).
+ED25519_INVALID_POINT = bytes.fromhex(
+    "0200000000000000000000000000000000000000000000000000000000000000"
+)
+
+# Order of the Ed25519 base point.
+ED25519_L = 2**252 + 27742317777372353535851937790883648493
+
 
 def ecdsa_key(curve: m.EcdsaCurve, secret: int) -> SigningKey:
     return SigningKey.from_secret_exponent(

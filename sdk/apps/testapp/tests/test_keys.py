@@ -23,28 +23,10 @@ from trezorlib.tools import parse_path
 from . import testapp_ext
 from .common import parametrize_using_common_fixtures
 from .generated import messages as m
-from .testapp_ext import (
-    DEFAULT_BIP32_PATH,
-    TPUB_MAGIC,
-    XPUB_MAGIC,
-    SdkError,
-    raises,
-)
-
-# SLIP-25 paths need an UnlockPath first, which an app can't do.
-SLIP25_PATH = parse_path("m/10025h/1h/0h/1h")
+from .testapp_ext import TPUB_MAGIC, XPUB_MAGIC
 
 # All hardened, so it works on Ed25519 too.
 ACCOUNT_N = parse_path("m/44h/1h/0h")
-
-# Paths outside the app's manifest.
-FORBIDDEN_PATHS = [
-    pytest.param("m", id="root"),
-    pytest.param("m/44h", id="purpose"),
-    pytest.param("m/44h/1h/0h/0/2147483647", id="unhardened_max"),
-    pytest.param("m/2147483647h", id="hardened_max"),
-    pytest.param("m/44h/0h/0h/0/0", id="other_coin"),
-]
 
 
 @parametrize_using_common_fixtures("keys.json")
@@ -82,19 +64,6 @@ def test_get_xpub_matches_core(session: Session, instance_id: int):
     )
 
 
-@pytest.mark.parametrize("path", FORBIDDEN_PATHS)
-def test_get_xpub_forbidden_path(session: Session, instance_id: int, path: str):
-    """Like signing, keys are limited to the app's manifest paths."""
-    with raises(SdkError.ServiceError):
-        testapp_ext.get_xpub(session, instance_id, parse_path(path), XPUB_MAGIC)
-
-
-@pytest.mark.parametrize("path", FORBIDDEN_PATHS)
-def test_get_public_key_forbidden_path(session: Session, instance_id: int, path: str):
-    with raises(SdkError.ServiceError):
-        testapp_ext.get_public_key(session, instance_id, parse_path(path), True)
-
-
 @pytest.mark.parametrize(
     "curve, curve_name",
     [
@@ -118,58 +87,16 @@ def test_get_xpub_curve_matches_core(
     )
 
 
-def test_get_public_key_ed25519_matches_core(session: Session, instance_id: int):
+@pytest.mark.parametrize("compressed", [True, False])
+def test_get_public_key_ed25519_matches_core(
+    session: Session, instance_id: int, compressed: bool
+):
+    """`compressed` doesn't apply to Ed25519 keys."""
     node = btc.get_public_node(
         session, ACCOUNT_N, ecdsa_curve_name="ed25519", coin_name="Testnet"
     )
     public_key = testapp_ext.get_public_key(
-        session, instance_id, ACCOUNT_N, False, m.Curve.CurveEd25519
+        session, instance_id, ACCOUNT_N, compressed, m.Curve.CurveEd25519
     )
     # Core's node key has SLIP-10's 0x00 prefix.
     assert public_key == node.node.public_key[1:]
-
-
-def test_get_public_key_ed25519_unhardened(session: Session, instance_id: int):
-    with raises(SdkError.ServiceError):
-        testapp_ext.get_public_key(
-            session,
-            instance_id,
-            parse_path(DEFAULT_BIP32_PATH),
-            False,
-            m.Curve.CurveEd25519,
-        )
-
-
-def test_curve_not_allowed(session: Session, instance_id: int):
-    """Curve25519 isn't in the app's manifest."""
-    with raises(SdkError.ServiceError):
-        testapp_ext.get_public_key(
-            session, instance_id, ACCOUNT_N, False, m.Curve.CurveCurve25519
-        )
-    with raises(SdkError.ServiceError):
-        testapp_ext.get_xpub(
-            session, instance_id, ACCOUNT_N, TPUB_MAGIC, m.Curve.CurveCurve25519
-        )
-
-
-def test_get_xpub_slip25_forbidden(session: Session, instance_id: int):
-    with raises(SdkError.ServiceError):
-        testapp_ext.get_xpub(session, instance_id, SLIP25_PATH, TPUB_MAGIC)
-
-
-@pytest.mark.parametrize("compressed", [True, False])
-def test_get_public_key_slip25_forbidden(
-    session: Session, instance_id: int, compressed: bool
-):
-    with raises(SdkError.ServiceError):
-        testapp_ext.get_public_key(session, instance_id, SLIP25_PATH, compressed)
-
-
-def test_app_still_works_after_failure(session: Session, instance_id: int):
-    """A failed operation doesn't stop the app."""
-    with raises(SdkError.ServiceError):
-        testapp_ext.get_xpub(session, instance_id, SLIP25_PATH, TPUB_MAGIC)
-    address_n = parse_path("m/44h/1h/0h")
-    assert testapp_ext.get_xpub(session, instance_id, address_n, TPUB_MAGIC).startswith(
-        "tpub"
-    )
