@@ -35,6 +35,18 @@ _USDT_ADDRESS = (
 _WETH_ADDRESS = (
     b"\xc0\x2a\xaa\x39\xb2\x23\xfe\x8d\x0a\x0e\x5c\x4f\x27\xea\xd9\x08\x3c\x75\x6c\xc2"
 )
+_BASE_SH_USDC_VAULT_ADDRESS = (
+    b"\x5e\x6f\xc4\x06\x96\x0a\x1c\x2d\x9a\xb6\x81\x3f\xf1\xc9\x14\xc6\x83\x6b\xc5\x3e"
+)
+_BASE_SH_ETH_VAULT_ADDRESS = (
+    b"\x4e\xdc\x6a\xb1\x96\x4e\x25\xeb\x2c\x20\x2a\xb9\xf2\x01\xe9\x54\x8b\xaa\x53\xdf"
+)
+_BASE_USDC_ADDRESS = (
+    b"\x83\x35\x89\xfc\xd6\xed\xb6\xe0\x8f\x4c\x7c\x32\xd4\xf7\x1b\x54\xbd\xa0\x29\x13"
+)
+_BASE_WETH_ADDRESS = (
+    b"\x42\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x06"
+)
 
 
 class EthereumVaultInfo:
@@ -131,6 +143,46 @@ KNOWN_VAULTS = (
             decimals=18,
             address=_SH_ETH_VAULT_ADDRESS,
             chain_id=1,
+            name="Trezor Steakhouse ETH Prime Vault",
+        ),
+    ),
+    # https://basescan.org/address/0x5e6fc406960a1C2d9Ab6813fF1c914c6836bC53E
+    EthereumVaultInfo(
+        address=_BASE_SH_USDC_VAULT_ADDRESS,
+        chain_id=8453,
+        name="Trezor Steakhouse USDC Prime Vault",
+        asset_token=EthereumTokenInfo(
+            symbol="USDC",
+            decimals=6,
+            address=_BASE_USDC_ADDRESS,
+            chain_id=8453,
+            name="USD Coin",
+        ),
+        vault_token=EthereumTokenInfo(
+            symbol="trSHUSDCp",
+            decimals=18,
+            address=_BASE_SH_USDC_VAULT_ADDRESS,
+            chain_id=8453,
+            name="Trezor Steakhouse USDC Prime Vault",
+        ),
+    ),
+    # https://basescan.org/address/0x4EDC6aB1964e25eb2C202AB9F201E9548BAa53dF
+    EthereumVaultInfo(
+        address=_BASE_SH_ETH_VAULT_ADDRESS,
+        chain_id=8453,
+        name="Trezor Steakhouse ETH Prime Vault",
+        asset_token=EthereumTokenInfo(
+            symbol="WETH",
+            decimals=18,
+            address=_BASE_WETH_ADDRESS,
+            chain_id=8453,
+            name="Wrapped Ether",
+        ),
+        vault_token=EthereumTokenInfo(
+            symbol="trSHETHp",
+            decimals=18,
+            address=_BASE_SH_ETH_VAULT_ADDRESS,
+            chain_id=8453,
             name="Trezor Steakhouse ETH Prime Vault",
         ),
     ),

@@ -30,6 +30,16 @@ class TestEthereumYieldingVaults(unittest.TestCase):
             yielding_vaults._SH_ETH_VAULT_ADDRESS,
             bytes.fromhex("704cfb08969048a8dff298b214f959791d8da509"),
         )
+        # https://basescan.org/address/0x5e6fc406960a1C2d9Ab6813fF1c914c6836bC53E
+        self.assertEqual(
+            yielding_vaults._BASE_SH_USDC_VAULT_ADDRESS,
+            bytes.fromhex("5e6fc406960a1c2d9ab6813ff1c914c6836bc53e"),
+        )
+        # https://basescan.org/address/0x4EDC6aB1964e25eb2C202AB9F201E9548BAa53dF
+        self.assertEqual(
+            yielding_vaults._BASE_SH_ETH_VAULT_ADDRESS,
+            bytes.fromhex("4edc6ab1964e25eb2c202ab9f201e9548baa53df"),
+        )
 
     def test_known_token_addresses(self):
         # https://etherscan.io/token/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48
@@ -46,6 +56,16 @@ class TestEthereumYieldingVaults(unittest.TestCase):
         self.assertEqual(
             yielding_vaults._WETH_ADDRESS,
             bytes.fromhex("c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"),
+        )
+        # https://basescan.org/token/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+        self.assertEqual(
+            yielding_vaults._BASE_USDC_ADDRESS,
+            bytes.fromhex("833589fcd6edb6e08f4c7c32d4f71b54bda02913"),
+        )
+        # https://basescan.org/token/0x4200000000000000000000000000000000000006
+        self.assertEqual(
+            yielding_vaults._BASE_WETH_ADDRESS,
+            bytes.fromhex("4200000000000000000000000000000000000006"),
         )
 
 
