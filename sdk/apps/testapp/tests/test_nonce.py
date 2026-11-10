@@ -55,6 +55,14 @@ def test_verify_nonce_cache_wrong_nonce(session: Session, instance_id: int):
     assert testapp_ext.verify_nonce_cache(session, instance_id, nonce) is True
 
 
+def test_verify_nonce_cache_other_session(session: Session, instance_id: int):
+    """The nonce is cached per session: another session doesn't see it."""
+    nonce = get_nonce(session)
+    other = session.test_ctx.get_session()
+    assert testapp_ext.verify_nonce_cache(other, instance_id, nonce) is False
+    assert testapp_ext.verify_nonce_cache(session, instance_id, nonce) is True
+
+
 def test_verify_nonce_cache_latest_only(session: Session, instance_id: int):
     """A new GetNonce replaces the previously cached nonce."""
     old = get_nonce(session)

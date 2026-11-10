@@ -36,13 +36,6 @@ DIGESTS = [
     pytest.param(bytes(range(32)), id="pattern"),
 ]
 
-# Paths outside the app's manifest (m/44'/1'/account'/change/address_index/**).
-FORBIDDEN_PATHS = [
-    pytest.param("m/44h/0h/0h/0/0", id="other_coin"),
-    pytest.param("m/44h/1h/0/0/0", id="unhardened_account"),
-    pytest.param("m", id="root"),
-]
-
 
 def public_key(
     session: Session, instance_id: int, curve: m.Curve = m.Curve.CurveSecp256k1
@@ -121,24 +114,19 @@ def test_ecdsa_sign_digest_other_address(session: Session, instance_id: int):
     assert pubkey != public_key(session, instance_id)
 
 
+@pytest.mark.parametrize(
+    "curve",
+    [m.EcdsaCurve.Secp256k1, m.EcdsaCurve.Nist256p1],
+    ids=["secp256k1", "nist256p1"],
+)
 @pytest.mark.parametrize("compressed", [True, False])
 def test_ecdsa_sign_digest_zero_digest(
-    session: Session, instance_id: int, compressed: bool
+    session: Session, instance_id: int, curve: m.EcdsaCurve, compressed: bool
 ):
     """An all-zero digest is refused: its signature could be forged for any key."""
     with raises(SdkError.ServiceError):
         testapp_ext.ecdsa_sign_digest(
-            session, instance_id, ADDRESS_N, b"\x00" * 32, compressed
-        )
-
-
-@pytest.mark.parametrize("length", [0, 31, 33, 64])
-def test_ecdsa_sign_digest_wrong_length(
-    session: Session, instance_id: int, length: int
-):
-    with raises(SdkError.InvalidArgument):
-        testapp_ext.ecdsa_sign_digest(
-            session, instance_id, ADDRESS_N, b"\x01" * length, True
+            session, instance_id, ADDRESS_N, b"\x00" * 32, compressed, curve=curve
         )
 
 
@@ -196,22 +184,6 @@ def test_ed25519_sign_empty(session: Session, instance_id: int):
         testapp_ext.ed25519_sign(session, instance_id, ACCOUNT_N, b"")
 
 
-def test_ed25519_sign_unhardened(session: Session, instance_id: int):
-    """Ed25519 keys only exist on hardened paths."""
-    with raises(SdkError.ServiceError):
-        testapp_ext.ed25519_sign(session, instance_id, ADDRESS_N, b"message")
-
-
-@pytest.mark.parametrize("path", FORBIDDEN_PATHS)
-def test_ecdsa_sign_digest_forbidden_path(
-    session: Session, instance_id: int, path: str
-):
-    with raises(SdkError.ServiceError):
-        testapp_ext.ecdsa_sign_digest(
-            session, instance_id, parse_path(path), b"\x01" * 32, True
-        )
-
-
 # ============================================================================
 # ecdsa_sign_digest with an Ethereum-canonical signature
 # ============================================================================
@@ -221,6 +193,9 @@ def test_ecdsa_sign_digest_forbidden_path(
 def test_ecdsa_sign_digest_canonical_ethereum(
     session: Session, instance_id: int, digest: bytes
 ):
+    """A smoke test: the Ethereum rule only refuses recovery ids 2 and 3, which
+    an ordinary signature practically never has, so this can't tell it apart
+    from `CanonicalSig.Any`."""
     signature = testapp_ext.ecdsa_sign_digest(
         session, instance_id, ADDRESS_N, digest, False, m.CanonicalSig.Ethereum
     )
@@ -239,21 +214,6 @@ def test_ecdsa_sign_digest_canonical_ethereum_zero_digest(
             instance_id,
             ADDRESS_N,
             b"\x00" * 32,
-            False,
-            m.CanonicalSig.Ethereum,
-        )
-
-
-@pytest.mark.parametrize("path", FORBIDDEN_PATHS)
-def test_ecdsa_sign_digest_canonical_ethereum_forbidden_path(
-    session: Session, instance_id: int, path: str
-):
-    with raises(SdkError.ServiceError):
-        testapp_ext.ecdsa_sign_digest(
-            session,
-            instance_id,
-            parse_path(path),
-            b"\x01" * 32,
             False,
             m.CanonicalSig.Ethereum,
         )

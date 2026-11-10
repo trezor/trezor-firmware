@@ -135,6 +135,16 @@ def test_ecdsa_verify_tampered(session: Session, instance_id: int, curve: m.Ecds
 
 
 @pytest.mark.parametrize("curve", ECDSA_CURVES)
+def test_ecdsa_verify_high_s(session: Session, instance_id: int, curve: m.EcdsaCurve):
+    """A signature with s > n/2 verifies too: low s isn't enforced."""
+    key, digest, rs = ecdsa_case(curve, b"message")
+    n = signing.CURVES[curve].order
+    high_s = rs[:32] + (n - int.from_bytes(rs[32:], "big")).to_bytes(32, "big")
+    pubkey = signing.public_key(key, True)
+    testapp_ext.ecdsa_verify_digest(session, instance_id, curve, pubkey, high_s, digest)
+
+
+@pytest.mark.parametrize("curve", ECDSA_CURVES)
 def test_ecdsa_verify_out_of_range(
     session: Session, instance_id: int, curve: m.EcdsaCurve
 ):
@@ -191,12 +201,17 @@ def test_ecdsa_verify_public_key_format(
         uncompressed[1:],  # raw 64-byte x || y
         compressed[:-1],
         uncompressed + b"\x00",
-        bytes([compressed[0] ^ 1]) + compressed[1:],  # wrong y parity
     ):
-        with raises(SdkError.DataError, INVALID_SIGNATURE):
+        # the message isn't checked: Core reports these as an invalid
+        # signature, Ed25519 as an invalid public key
+        with raises(SdkError.DataError):
             testapp_ext.ecdsa_verify_digest(
                 session, instance_id, curve, bad, rs, digest
             )
+    # a valid key, just not the signer's
+    other = bytes([compressed[0] ^ 1]) + compressed[1:]
+    with raises(SdkError.DataError, INVALID_SIGNATURE):
+        testapp_ext.ecdsa_verify_digest(session, instance_id, curve, other, rs, digest)
 
 
 # ============================================================================
@@ -218,12 +233,30 @@ def test_ed25519_verify_invalid(session: Session, instance_id: int):
     signature = key.sign(b"message")
     for pk, sig, msg in (
         (other, signature, b"message"),
+        (signing.ED25519_INVALID_POINT, signature, b"message"),
         (pubkey, signature, b"messagf"),
         (pubkey, flip(signature, 0), b"message"),
         (pubkey, flip(signature, 63), b"message"),
     ):
         with raises(SdkError.DataError, INVALID_SIGNATURE):
             testapp_ext.ed25519_verify(session, instance_id, pk, sig, msg)
+
+
+def test_ed25519_verify_non_canonical_s(session: Session, instance_id: int):
+    """S + L is the same scalar, but only S < L is accepted, so a signature
+    can't be altered into another valid one."""
+    key = signing.ed25519_key(b"\x01" * 32)
+    signature = key.sign(b"message")
+    s = int.from_bytes(signature[32:], "little") + signing.ED25519_L
+    malleated = signature[:32] + s.to_bytes(32, "little")
+    with raises(SdkError.DataError, INVALID_SIGNATURE):
+        testapp_ext.ed25519_verify(
+            session,
+            instance_id,
+            signing.ed25519_public_key(key),
+            malleated,
+            b"message",
+        )
 
 
 @pytest.mark.parametrize("length", [0, 31, 33])
@@ -292,7 +325,8 @@ def test_ecdsa_recover_pubkey_bad_recid(
 def test_ecdsa_recover_pubkey_overflow_recid(
     session: Session, instance_id: int, curve: m.EcdsaCurve
 ):
-    """Recovery ids 2 and 3 (r >= n - p) don't apply to an ordinary signature."""
+    """Recovery ids 2 and 3 (x = r + n) only exist for r < p - n, which an
+    ordinary signature practically never has."""
     _, digest, rs = ecdsa_case(curve, b"message")
     for recid in (2, 3):
         with raises(SdkError.DataError, INVALID_SIGNATURE):

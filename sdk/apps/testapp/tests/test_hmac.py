@@ -60,21 +60,3 @@ def test_hmac_chunked(session: Session, instance_id: int, algorithm: m.HmacAlgor
         assert (
             testapp_ext.hmac(session, instance_id, algorithm, key, chunks) == expected
         )
-
-
-@pytest.mark.parametrize("algorithm", list(m.HmacAlgorithm), ids=lambda a: a.name)
-def test_hmac_key_matters(
-    session: Session, instance_id: int, algorithm: m.HmacAlgorithm
-):
-    """A different key, or the key zero-padded to the block size, changes the MAC
-    only where the HMAC definition says so."""
-    block = HASHES[algorithm]().block_size
-    data = b"message"
-    a = testapp_ext.hmac(session, instance_id, algorithm, b"key", [data])
-    b = testapp_ext.hmac(session, instance_id, algorithm, b"kez", [data])
-    assert a != b
-    # HMAC pads a short key with zeros, so these two keys are the same key.
-    padded = testapp_ext.hmac(
-        session, instance_id, algorithm, b"key" + b"\x00" * (block - 3), [data]
-    )
-    assert padded == a

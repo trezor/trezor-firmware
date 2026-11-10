@@ -12,7 +12,8 @@ bundle.
 Each wire request names one crypto function and carries its parameters one to
 one (`protob/testapp.proto`). The app calls the function and answers with its
 result. An error the function returns comes back to the host as a `Failure`
-whose code is the SDK's `Error::code()`; the app keeps running.
+whose code is the SDK's `Error::kind()`. Like any app, it handles one request
+per run: Core starts it anew for the next one.
 
 A parameter the function's types can't hold (a digest that isn't 32 bytes, a
 sigmask over 255, ...) is refused with `InvalidArgument` before the function is
@@ -27,7 +28,7 @@ called.
 | `EcdsaSignDigest` | `ecdsa_sign_digest` | `Signature` |
 | `Ed25519Sign` | `ed25519_sign` | `Signature` |
 | `GetAddressMac` | `get_address_mac` | `AddressMac` |
-| `CheckAddressMac` | `check_address_mac` | `Bool` |
+| `CheckAddressMac` | `check_address_mac` | `Success` |
 | `VerifyNonceCache` | `verify_nonce_cache` | `Bool` |
 | `EcdsaVerify` | `ecdsa_verify_digest` of the message's SHA-256 digest | `Success` |
 | `EcdsaVerifyDigest` | `ecdsa_verify_digest` | `Success` |

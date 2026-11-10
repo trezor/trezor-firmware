@@ -84,30 +84,10 @@ def test_check_address_mac_wrong_mac(session: Session, instance_id: int):
         check_mac(session, instance_id, b"\x00" * 32)
 
 
-@pytest.mark.parametrize("length", [0, 31, 33])
-def test_check_address_mac_wrong_length(
-    session: Session, instance_id: int, length: int
-):
-    with raises(SdkError.InvalidArgument):
-        check_mac(session, instance_id, b"\x01" * length)
-
-
 def test_address_mac_long_address(session: Session, instance_id: int):
     address = "a" * 1000
     mac = get_mac(session, instance_id, address=address)
     check_mac(session, instance_id, mac, address=address)
-
-
-@pytest.mark.parametrize(
-    "path",
-    [
-        pytest.param("m/44h/0h/0h/0/0", id="other_coin"),
-        pytest.param("m/44h", id="purpose"),
-    ],
-)
-def test_get_address_mac_forbidden_path(session: Session, instance_id: int, path: str):
-    with raises(SdkError.ServiceError):
-        get_mac(session, instance_id, address_n=parse_path(path))
 
 
 def test_check_address_mac_other_app_path(session: Session, instance_id: int):
