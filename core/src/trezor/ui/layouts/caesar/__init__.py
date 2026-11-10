@@ -2715,8 +2715,15 @@ async def confirm_firmware_update(description: str, fingerprint: str) -> None:
     menu = _menu_with_cancel(
         [create_info_menu_leaf(TR.firmware_update__title_fingerprint, fingerprint)]
     )
-    with trezorui_api.confirm_firmware_update(
-        description=description, fingerprint=fingerprint
+    # Installing is confirmed by holding (pressing both buttons would clash
+    # with "Shift").
+    with trezorui_api.confirm_action(
+        title=TR.firmware_update__title,
+        action=None,
+        description=description,
+        verb=TR.buttons__hold_to_confirm,
+        hold=True,
+        external_menu=True,
     ) as layout:
         await confirm_with_menu(layout, menu, "firmware_update", BR_CODE_OTHER)
 
