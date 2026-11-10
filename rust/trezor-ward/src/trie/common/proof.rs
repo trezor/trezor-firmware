@@ -28,7 +28,9 @@ use super::key::{BitPos, Key, key_bits, key_len};
 
 /// One step of a path: the branch's crit bit and the digest of the child not taken.
 pub struct Step<H: HashFn> {
+    /// The bit the branch splits on.
     pub crit_bit: BitPos,
+    /// The digest of the child the path does not take.
     pub sibling: H::Output,
 }
 
@@ -56,7 +58,9 @@ impl<H: HashFn> TryFrom<&[u8]> for Step<H> {
 
 /// The leaf a lookup ended at: its key and its value digest.
 pub struct Leaf<K, H: HashFn> {
+    /// The leaf's key.
     pub key: K,
+    /// The digest of the leaf's value.
     pub value: H::Output,
 }
 
@@ -511,8 +515,8 @@ mod tests {
     fn below_is_a_prefix_of_the_steps() {
         let raw = bytes(0b0000_0000, &[7, 4, 1, 0]);
         let proof = P::parse(raw.as_slice()).unwrap();
-        let steps = |p: &Proof<&[u8], [u8; 1], Sha256>| -> Vec<u16> {
-            p.steps().map(|s| s.crit_bit.index() as u16).collect()
+        let steps = |p: &Proof<&[u8], [u8; 1], Sha256>| -> Vec<usize> {
+            p.steps().map(|s| s.crit_bit.index()).collect()
         };
         // Below the branch at 1: the steps at 7 and 4, which are deeper in the tree.
         let below = proof.below(BitPos::new(1));

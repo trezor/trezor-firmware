@@ -110,7 +110,7 @@ fn crit_bit_repeated() {
 
 #[test]
 fn crit_bit_beyond_the_key() {
-    let beyond = BitPos::new(key_bits::<[u8; 1]>() as u16).to_bytes();
+    let beyond = BitPos::new(u16::try_from(key_bits::<[u8; 1]>()).unwrap()).to_bytes();
     Lookup::of(A)
         .tampered(|p| p[crit_bit(0)].copy_from_slice(&beyond))
         .refused(Error::Shape);

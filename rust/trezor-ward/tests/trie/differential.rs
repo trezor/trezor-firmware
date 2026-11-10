@@ -44,7 +44,7 @@ mod keys {
     }
 
     /// Independent keys, what HMAC outputs look like: shallow trees.
-    pub fn random<const N: usize>(rng: &mut Rng, n: usize) -> Vec<[u8; N]> {
+    pub(super) fn random<const N: usize>(rng: &mut Rng, n: usize) -> Vec<[u8; N]> {
         distinct(n, || {
             let mut key = [0; N];
             rng.fill(&mut key[..]);
@@ -53,7 +53,7 @@ mod keys {
     }
 
     /// Keys agreeing on their first five eighths: every branch sits deep in the key.
-    pub fn shared_prefix<const N: usize>(rng: &mut Rng, n: usize) -> Vec<[u8; N]> {
+    pub(super) fn shared_prefix<const N: usize>(rng: &mut Rng, n: usize) -> Vec<[u8; N]> {
         distinct(n, || {
             let mut key = [0xab; N];
             rng.fill(&mut key[N * 5 / 8..]);
@@ -64,7 +64,7 @@ mod keys {
     /// Key `i` is `first + i` one-bits then zeros, so the tree is a spine with a branch at every
     /// bit from `first` up and one leaf per level: the longest proofs, and every removal or
     /// re-insertion moves a whole subtree a level down or up.
-    pub fn ladder<const N: usize>(first: usize, n: usize) -> Vec<[u8; N]> {
+    pub(super) fn ladder<const N: usize>(first: usize, n: usize) -> Vec<[u8; N]> {
         (first..(first + n).min(8 * N + 1))
             .map(|ones| {
                 let mut key = [0; N];
@@ -75,7 +75,7 @@ mod keys {
     }
 
     /// All three geometries at once, chosen per key, with the ladder's rungs picked at random.
-    pub fn mixed<const N: usize>(rng: &mut Rng, n: usize) -> Vec<[u8; N]> {
+    pub(super) fn mixed<const N: usize>(rng: &mut Rng, n: usize) -> Vec<[u8; N]> {
         distinct(n, || match rng.random_range(0..3) {
             0 => random(rng, 1)[0],
             1 => shared_prefix(rng, 1)[0],

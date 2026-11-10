@@ -98,7 +98,9 @@ pub fn crit_bit<K: Key>(a: &K, b: &K) -> Option<BitPos> {
         .enumerate()
         .find_map(|(i, (x, y))| {
             let diff = x ^ y;
-            (diff != 0).then(|| BitPos((8 * i + diff.leading_zeros() as usize) as u16))
+            // `Proof::parse` and the prover assert that every position fits a `BitPos`.
+            (diff != 0)
+                .then(|| BitPos(u16::try_from(8 * i + diff.leading_zeros() as usize).unwrap()))
         })
 }
 
