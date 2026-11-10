@@ -40,7 +40,7 @@ impl<const N: usize> Key for [u8; N] {
 
 /// Width of `K` in bytes.
 pub const fn key_len<K: Key>() -> usize {
-    <K::Bytes as ByteArray>::LEN
+    K::Bytes::LEN
 }
 
 /// Width of `K` in bits.
