@@ -93,6 +93,7 @@ impl<K: Key, H: HashFn> TryFrom<&[u8]> for Leaf<K, H> {
 /// proof from untrusted bytes.
 pub struct Proof<B, K, H> {
     bytes: B,
+    /// No `K` or `H` is stored, but they fix the layout the bytes were parsed for.
     _marker: PhantomData<(K, H)>,
 }
 
