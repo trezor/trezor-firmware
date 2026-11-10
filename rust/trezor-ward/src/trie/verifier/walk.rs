@@ -26,7 +26,7 @@ use core::iter;
 
 use super::entry::{OccupiedEntry, fold};
 use crate::trie::common::{
-    BitPos, Error, HashFn, Key, Leaf, Proof, Step, bit, crit_bit, empty_root, leaf_digest,
+    BitPos, Error, HashFn, Key, Leaf, Proof, Side, Step, crit_bit, empty_root, leaf_digest,
     write_into,
 };
 
@@ -220,7 +220,7 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Walk<B, K, H> {
         if new
             .steps()
             .take_while(|step| lower.is_none_or(|c| step.crit_bit > c))
-            .any(|step| bit(&leaf.key, step.crit_bit))
+            .any(|step| Side::of(&leaf.key, step.crit_bit) == Side::Right)
         {
             return Err(Error::OutOfOrder);
         }
@@ -239,7 +239,7 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Walk<B, K, H> {
         let (below, step) = current
             .steps()
             .enumerate()
-            .find(|(_, step)| !bit(&leaf.key, step.crit_bit))?;
+            .find(|(_, step)| Side::of(&leaf.key, step.crit_bit) == Side::Left)?;
         Some(Turn {
             current,
             leaf,

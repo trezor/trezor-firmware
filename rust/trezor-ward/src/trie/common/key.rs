@@ -89,6 +89,42 @@ pub fn bit<K: Key>(key: &K, i: BitPos) -> bool {
     (key.as_bytes().as_ref()[i / 8] >> (7 - i % 8)) & 1 == 1
 }
 
+/// A child of a branch. A key goes right where its bit at the branch's crit bit is 1.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Side {
+    Left,
+    Right,
+}
+
+impl Side {
+    /// The side `key` takes at the branch on `crit_bit`.
+    pub(crate) fn of<K: Key>(key: &K, crit_bit: BitPos) -> Self {
+        if bit(key, crit_bit) {
+            Self::Right
+        } else {
+            Self::Left
+        }
+    }
+
+    /// `[left, right]` from the child on this side and the other one.
+    pub(crate) fn place<T>(self, hit: T, other: T) -> [T; 2] {
+        match self {
+            Self::Left => [hit, other],
+            Self::Right => [other, hit],
+        }
+    }
+
+    /// The child on this side and the other one, from `[left, right]`: the inverse of `place`,
+    /// needed only by the prover.
+    #[cfg(feature = "use_std")]
+    pub(crate) fn pick<T>(self, [left, right]: [T; 2]) -> (T, T) {
+        match self {
+            Self::Left => (left, right),
+            Self::Right => (right, left),
+        }
+    }
+}
+
 /// The first bit on which two keys differ, or `None` if they are equal.
 pub fn crit_bit<K: Key>(a: &K, b: &K) -> Option<BitPos> {
     a.as_bytes()
