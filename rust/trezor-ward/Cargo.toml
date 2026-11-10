@@ -17,3 +17,16 @@ hex = "0.4"
 rand = { version = "0.9", default-features = false }
 rand_xorshift = "0.4"
 trezor-ward = { path = ".", features = ["use_std", "sha2"] }
+
+# rustc lints reach the firmware build (a path dependency), so they only warn; clippy lints
+# never do, so they deny, which CI's plain `cargo clippy` then enforces.
+[lints.rust]
+missing_docs = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+cast_lossless = "deny"
+cast_possible_truncation = "deny"
+cast_possible_wrap = "deny"
+cast_sign_loss = "deny"

@@ -150,7 +150,7 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Walk<B, K, H> {
     /// does but is not the next entry in key order is [`Error::OutOfOrder`], as is any proof
     /// once the walk is done. A refused proof leaves the walk as it was.
     ///
-    /// `buf` must be exactly [`next_len`](Self::next_len) bytes; that is a precondition.
+    /// `buf` must be exactly [`next_len`](Self::next_len) bytes, or this panics.
     pub fn next_into(
         &mut self,
         proof: &Proof<impl AsRef<[u8]>, K, H>,
