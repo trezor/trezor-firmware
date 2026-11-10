@@ -566,6 +566,8 @@ static void systask_exit_fault_ex(uint32_t msp, uint32_t exc_return,
 
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
+  uint32_t cfsr = SCB->CFSR;
+
   // Task that was running when the exception occurred
   systask_t* origin =
       privileged ? &scheduler->kernel_task : scheduler->active_task;
@@ -587,7 +589,7 @@ static void systask_exit_fault_ex(uint32_t msp, uint32_t exc_return,
     pminfo->fault.sp_lim = origin->sp_lim;
 #endif
     pminfo->fault.irqn = (__get_IPSR() & IPSR_ISR_Msk) - 16;
-    pminfo->fault.cfsr = SCB->CFSR;
+    pminfo->fault.cfsr = cfsr;
     pminfo->fault.mmfar = SCB->MMFAR;
     pminfo->fault.bfar = SCB->BFAR;
     pminfo->fault.hfsr = SCB->HFSR;
@@ -601,6 +603,10 @@ static void systask_exit_fault_ex(uint32_t msp, uint32_t exc_return,
 #endif
 #endif
   }
+
+  // Clear the sticky fault status bits (write 1 to clear) so they are
+  // not attributed to a later, unrelated fault
+  SCB->CFSR = cfsr;
 
   systask_kill(task);
 
