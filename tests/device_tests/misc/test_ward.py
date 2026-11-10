@@ -87,10 +87,8 @@ from ...ward_keys import (
 from ...ward_trie import TransitionLog, WardTrie, addr_bit
 from ...ward_wm import NO_HEAD_NONCE, MockWM
 
-# EVERY TEST HERE SPEAKS THE CONNECT-MODE REQUEST SET -- `WardEntryRequest`, `WardSync`,
-# `WardReconcile`, `WardVerifyChain`. Those messages do not exist in a firmware that serves WARD
-# over its own channel: the two transports are mutually exclusive by build, with no runtime
-# fallback, so on such a build these tests are inapplicable rather than failing.
+# These tests exercise the wallet request set, including the runtime fallback on a service build
+# with no daemon bound. Service-enabled builds must support the same reads, writes and sync flow.
 pytestmark = [pytest.mark.ward, pytest.mark.ward_transport("connect")]
 
 _APP = "TEST"

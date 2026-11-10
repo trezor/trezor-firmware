@@ -519,10 +519,8 @@ def _check_ward_transport(
 ) -> None:
     """Skip a test that does not apply to how this firmware serves WARD.
 
-    The two transports are MUTUALLY EXCLUSIVE by build: a firmware serves WARD either over the
-    ordinary connection or over a channel of its own, never both, and there is no runtime
-    fallback. So the connect-mode request set does not exist in a service build and vice versa,
-    and a test written against one of them is not a failure on the other -- it is inapplicable.
+    A service build also supports the connect request set when no service is bound, so wallet
+    tests run on both builds. Service tests additionally require the dedicated interface.
 
     Detected by probing for the service interface rather than by asking the device. There is no
     feature flag for this and deliberately so: a host that has to be told which transport to use
@@ -544,7 +542,7 @@ def _check_ward_transport(
         # `USE_WARD_SERVICE_THP`, so a test about BINDING or SYNCING wants either ("service")
         # while a test about channel displacement or the daemon pin wants one of them by name.
         actual = f"service-{service}"
-        applicable = {"service", actual}
+        applicable = {"connect", "service", actual}
 
     if not applicable.intersection(marker.args):
         pytest.skip(f"Test does not apply to a '{actual}' WARD build.")

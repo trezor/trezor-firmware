@@ -32,8 +32,7 @@ of this document.
 
 **The user-facing app** — DisplayApp today — reaches the device over the **wallet channel**, the
 ordinary interface any host uses. It asks the device to show, write or publish an entry, and that is
-the whole of its part: it never sees a value it did not supply, it holds no key, and on a service
-build it is handed no leaf. It is a proof of concept for functionality a wallet will eventually carry
+the whole of its part: it never sees a value it did not supply, it holds no key, and when a service is selected it is handed no leaf. It is a proof of concept for functionality a wallet will eventually carry
 itself, which is why it belongs on the wallet channel rather than beside it.
 
 **The device** is the only party that holds keys. It derives the keyed path, seals the parts, derives
@@ -57,25 +56,31 @@ them is standing in for a wallet. What avoids it is everything behind them.
 
 ## What differs between the two builds
 
-WARD's transport is chosen at **build time** and a firmware serves it one way only. The connect
-build is the default; a service build is the opt-in (`--enable-ward-service-channel`). Bitcoin-only
+The service interface is enabled at **build time** with `--enable-ward-service-channel`, but
+backend routing is chosen at **runtime**. With no service bound, the wallet host handles WARD
+sync, proofs and publication exactly as on a connect build. With a service bound, backend RPCs
+use that interface. The choice is retained for each operation, including across confirmation
+screens: a service failure aborts the operation instead of switching transports mid-write.
+The wallet fallback requires the host to sync the session before online operations. It also
+supports batched queue flushes. There is no automatic retry of a failed service RPC on the wallet.
+
+The connect build is the default; the service interface is opt-in. Bitcoin-only
 firmware registers no WARD handlers at all, so asking for the channel there is refused rather than
 silently dropped.
 
-| | connect build (default) | service build (`--enable-ward-service-channel`) |
+| | connect build (default) | service build with a bound service |
 |---|---|---|
 | who owns the replica | the calling app, on the wallet channel | the WARD host app + wardd, behind the service channel |
 | how the device reads a leaf | `WardEntryRequest` on the wallet channel, answered by the caller inside the workflow it interrupted | `WardServiceFetch` on the service channel |
 | how a write lands | the device returns `WardLeafAck`; the caller must store it | the device publishes itself and returns `WardMutationApplied`, which carries no leaf |
 | who syncs | the caller drives the sync round | the device drives its own sync when an operation needs one |
 
-The difference is where the replica lives, and therefore how much a caller on the wallet channel has
-to be. On a connect build it has to own the replica as well as invoke the operations; on a service
-build it invokes and nothing more.
+The difference is where the replica lives. With wallet routing, the caller owns the replica as
+well as invoking operations; with a bound service, the caller only invokes operations.
 
-Which of the two a firmware is cannot be asked over the wire, deliberately: a host that could be
-*told* could be lied to about it. Hosts that need to care are told by their operator (connect-cli's
-`--service` flag is exactly such an assertion, and it fails closed when it is wrong).
+Hosts must support the selected protocol. A service-capable build can use either route, depending
+on whether a service is bound when the operation starts. Connect-cli's `--service` asserts that
+operations should use a bound service and fails closed when they instead request wallet proofs.
 
 ### And what differs between the two transports
 
@@ -95,7 +100,8 @@ even when the service channel is.
 
 WHICH BUILD THE TESTS RUN AGAINST. The default emulator is a connect build, so the service request
 set is covered by the `ward: service` legs in `.github/workflows/core.yml`, which build with
-`WARD_SERVICE_CHANNEL=1` and run `-m ward_transport`. Deleting those legs deletes that coverage:
+`WARD_SERVICE_CHANNEL=1` and run `-m ward_transport`. Wallet-flow tests also run on these
+builds, with no service bound, to cover the fallback. Deleting those legs deletes that coverage:
 `tests/conftest.py` probes the device and skips the inapplicable half silently, so the loss would
 not show up as a failure.
 

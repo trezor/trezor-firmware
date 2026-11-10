@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor import utils
-
 if TYPE_CHECKING:
     from trezor.messages import WardDeleteEntry, WardLeafAck, WardMutationApplied
 
@@ -30,6 +28,7 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
         online,
         pull_leaf,
         require_key,
+        service_available,
     )
     from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
     from .leaf import EMPTY_PART, make_leaf_content, make_leaf_identity
@@ -37,17 +36,20 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
-    if not await online():
+    use_service = service_available()
+    if not await online(use_service):
         raise DataError("WARD: connect to delete an entry")
 
     key_type = ENTRY_TYPE_ADDRESS
     entry_key = await entry_key_for(app_id, identifier, key_type)
-    current, old_leaf, material = await pull_leaf(entry_key, key_type)
+    current, old_leaf, material = await pull_leaf(
+        entry_key, key_type, use_service=use_service
+    )
     if current is None:
         # No transition, so no authorisation of either kind: a host branches on the missing
         # `auth_commit`. A service build must not drop the online latch or file a claim either.
         counter = await get_counter()
-        if utils.USE_WARD_SERVICE_CHANNEL:
+        if use_service:
             from trezor.messages import WardMutationApplied
 
             return WardMutationApplied(entry_key=entry_key, counter=counter)
@@ -66,5 +68,12 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
     await confirm_properties("ward_delete_entry", "Delete entry", props, hold=True)
 
     return await commit_change(
-        entry_key, key_type, app_id, identifier, None, old_leaf, material
+        entry_key,
+        key_type,
+        app_id,
+        identifier,
+        None,
+        old_leaf,
+        material,
+        use_service=use_service,
     )

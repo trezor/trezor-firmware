@@ -133,10 +133,9 @@ def test_the_read_is_served_by_the_daemon(client: Client) -> None:
 
 
 def test_without_a_daemon_a_read_fails_closed(client: Client) -> None:
-    """No binding, so no sync, so no read. Refused rather than served from anywhere else: a read
-    that fell back would let a hostile party choose which of two answers the user sees."""
+    """No service binding selects wallet routing, which still requires the host to sync first."""
     session = client.get_session()
-    with pytest.raises(exceptions.TrezorFailure):
+    with pytest.raises(exceptions.TrezorFailure, match="sync first"):
         ward.get_entry(session, _APP, b"anything", _nothing_on_the_wire)
 
 

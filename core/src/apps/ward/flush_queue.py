@@ -1,14 +1,8 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
-from micropython import const
-from trezor import utils
-
 if TYPE_CHECKING:
-    from trezor.messages import (
-        WardFlushQueue,
-        WardFlushQueueAck,
-        WardFlushQueueApplied,
-    )
+    from trezor.messages import WardFlushQueue, WardFlushQueueAck, WardFlushQueueApplied
 
 
 async def _seal(
@@ -34,7 +28,12 @@ async def _seal(
 
 
 def _derive(
-    entry_key: bytes, old_leaf, key_type: str, parts: tuple, material: tuple, root: bytes
+    entry_key: bytes,
+    old_leaf: tuple | None,
+    key_type: str,
+    parts: tuple,
+    material: tuple,
+    root: bytes,
 ) -> bytes:
     """The root after writing `parts` at `entry_key`, from verified pull material."""
     from .trie import compute_new_root
@@ -65,20 +64,21 @@ async def flush_queue(
 
     from . import offline_store
     from .cas import authorise
-    from .common import online, pull_leaf, require_initialized
+    from .common import online, pull_leaf, require_initialized, service_available
     from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
     from .leaf import make_leaf_content, make_leaf_identity
     from .root import get_counter, get_root, root_for_write
 
     require_initialized()
 
-    if not await online():
+    use_service = service_available()
+    if not await online(use_service):
         raise DataError("WARD: sync before publishing queued changes")
 
-    # batching: opt-in, unnamed drain only, connect builds only
+    # batching: opt-in, unnamed drain only, wallet transport only
     max_batch = msg.max_batch or 1
     named = msg.app_id is not None and msg.identifier is not None
-    if max_batch > 1 and not named and not utils.USE_WARD_SERVICE_CHANNEL:
+    if max_batch > 1 and not named and not use_service:
         from .cas import MAX_BATCH
 
         return await _flush_batch(min(max_batch, MAX_BATCH))
@@ -95,7 +95,7 @@ async def flush_queue(
     else:
         entry = await offline_store.next_unsent()
         if entry is None:
-            if utils.USE_WARD_SERVICE_CHANNEL:
+            if use_service:
                 from trezor.messages import WardFlushQueueApplied
 
                 return WardFlushQueueApplied(remaining=0)
@@ -109,7 +109,9 @@ async def flush_queue(
     entry_key = await entry_key_for(app_id, identifier, key_type)
 
     # The pull may sync (service builds), so the head is read only after it.
-    _old_value, old_leaf, material = await pull_leaf(entry_key, key_type)
+    _old_value, old_leaf, material = await pull_leaf(
+        entry_key, key_type, use_service=use_service
+    )
 
     from_root = await get_root()
     counter = await get_counter() + 1
@@ -130,12 +132,14 @@ async def flush_queue(
     identity = make_leaf_identity(key_type, parts[0])
     content = make_leaf_content(parts[1])
 
-    if utils.USE_WARD_SERVICE_CHANNEL:
+    if use_service:
         from trezor.messages import WardFlushQueueApplied
 
         from .service import publish
 
-        await publish(entry_key, identity, content, from_root, counter, new_root, step, advance)
+        await publish(
+            entry_key, identity, content, from_root, counter, new_root, step, advance
+        )
         return WardFlushQueueApplied(
             entry_key=entry_key, counter=counter, remaining=remaining
         )
@@ -192,7 +196,7 @@ async def _flush_batch(limit: int) -> "WardFlushQueueAck":
         key_type = entry.key_type
         entry_key = await entry_key_for(entry.app_id, entry.identifier, key_type)
         _value, old_leaf, material = await pull_leaf(
-            entry_key, key_type, root=running, staged=staged
+            entry_key, key_type, root=running, staged=staged, use_service=False
         )
         parts = await _seal(
             entry_key,
@@ -213,10 +217,10 @@ async def _flush_batch(limit: int) -> "WardFlushQueueAck":
     to_counter = from_counter + len(folded)
     step, advance = await authorise(from_counter, from_root, to_counter, running)
 
-    if not ward_store.claims_fit(
-        await derive_wallet_id(), [e[0].slot for e in folded]
-    ):
-        raise DataError("WARD: cannot record this batch; settle the pending changes first")
+    if not ward_store.claims_fit(await derive_wallet_id(), [e[0].slot for e in folded]):
+        raise DataError(
+            "WARD: cannot record this batch; settle the pending changes first"
+        )
     # every claim names the batch's one authorisation, so one adopted link settles them all
     for entry, *_rest in folded:
         await offline_store.mark_offered(entry, to_counter, step)

@@ -16,7 +16,14 @@ async def pin_cached_entry(msg: WardPinCachedEntry) -> Success:
     from trezor.wire import DataError
 
     from . import offline_store
-    from .common import display_bytes, entry_props, online, pull_leaf, require_key
+    from .common import (
+        display_bytes,
+        entry_props,
+        online,
+        pull_leaf,
+        require_key,
+        service_available,
+    )
     from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
@@ -24,10 +31,15 @@ async def pin_cached_entry(msg: WardPinCachedEntry) -> Success:
     key_type = ENTRY_TYPE_ADDRESS
     entry_key = await entry_key_for(app_id, identifier, key_type)
 
-    if not await online():
-        raise DataError("WARD: sync first; an entry is kept offline only once it is proved")
+    use_service = service_available()
+    if not await online(use_service):
+        raise DataError(
+            "WARD: sync first; an entry is kept offline only once it is proved"
+        )
 
-    value, _leaf, _material = await pull_leaf(entry_key, key_type)
+    value, _leaf, _material = await pull_leaf(
+        entry_key, key_type, use_service=use_service
+    )
     if value is None:
         raise DataError("WARD: no entry to keep offline")
 
@@ -37,7 +49,11 @@ async def pin_cached_entry(msg: WardPinCachedEntry) -> Success:
     status, existing = await offline_store.get(key_type, app_id, identifier)
     props = entry_props(app_id, identifier)
 
-    if status == offline_store.VALID and existing is not None and existing.value == value:
+    if (
+        status == offline_store.VALID
+        and existing is not None
+        and existing.value == value
+    ):
         return Success(message="WARD entry already kept offline")
     replacing = offline_store.existing_value(status, existing)
 
@@ -45,8 +61,7 @@ async def pin_cached_entry(msg: WardPinCachedEntry) -> Success:
         await confirm_properties(
             "ward_replace_cached_entry",
             "Replace offline copy?",
-            props
-            + [("Replacing",) + replacing, ("With", display_bytes(value), True)],
+            props + [("Replacing",) + replacing, ("With", display_bytes(value), True)],
             hold=True,
         )
     else:

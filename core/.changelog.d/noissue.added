@@ -1,0 +1,1 @@
+Added wallet-channel fallback for WARD operations when the service channel is enabled but no service is bound.

@@ -21,6 +21,7 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
         online,
         pull_leaf,
         require_key,
+        service_available,
     )
     from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
 
@@ -34,10 +35,13 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
     key_type = ENTRY_TYPE_ADDRESS
     entry_key = await entry_key_for(app_id, identifier, key_type)
 
-    if not await online():
+    use_service = service_available()
+    if not await online(use_service):
         raise DataError("WARD: sync first, or queue the change with WardQueueSetEntry")
 
-    old, old_leaf, material = await pull_leaf(entry_key, key_type)
+    old, old_leaf, material = await pull_leaf(
+        entry_key, key_type, use_service=use_service
+    )
 
     props = entry_props(app_id, identifier)
     if old is None:
@@ -51,5 +55,12 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
     await confirm_properties("ward_set_entry", title, props)
 
     return await commit_change(
-        entry_key, key_type, app_id, identifier, value, old_leaf, material
+        entry_key,
+        key_type,
+        app_id,
+        identifier,
+        value,
+        old_leaf,
+        material,
+        use_service=use_service,
     )

@@ -71,18 +71,34 @@ def require_key(app_id: str | None, identifier: bytes | None) -> "tuple[str, byt
     return app_id, identifier
 
 
-async def online() -> bool:
+def service_available() -> bool:
+    """Select the service only when compiled in and bound; otherwise use the wallet.
+
+    Callers keep this choice for the operation, including across confirmation screens. A lost
+    service fails that operation rather than switching a partially completed write to the wallet.
+    """
+    if not utils.USE_WARD_SERVICE_CHANNEL:
+        return False
+
+    from .service import get_binding
+
+    return get_binding() is not None
+
+
+async def online(use_service: bool | None = None) -> bool:
     """Whether a WM attestation has been bound to a held tree in THIS session.
 
-    A service build drives one sync attempt itself and raises whatever it failed with; a
-    connect build can only report what the host has already done.
+    A bound service drives one sync attempt itself and raises whatever it failed with;
+    otherwise the wallet host must have synced this session first.
     """
     from . import round as sync_round
 
     if sync_round.is_online():
         return True
 
-    if not utils.USE_WARD_SERVICE_CHANNEL:
+    if use_service is None:
+        use_service = service_available()
+    if not use_service:
         return False
 
     from .service import become_ready
@@ -90,11 +106,11 @@ async def online() -> bool:
     return await become_ready()
 
 
-async def online_or_offline() -> bool:
+async def online_or_offline(use_service: bool | None = None) -> bool:
     """`online`, but a failed sync answers False. Only for `label`, which may fall back to the
     device's own store and says so on screen."""
     try:
-        return await online()
+        return await online(use_service)
     except Exception:
         return False
 
@@ -104,6 +120,7 @@ async def pull_leaf(
     key_type: str,
     root: "bytes | None" = None,
     staged: "tuple | None" = None,
+    use_service: bool | None = None,
 ) -> tuple:
     """Ask the backend for its leaf at `entry_key`, verify it against the trusted root, open it.
 
@@ -122,10 +139,12 @@ async def pull_leaf(
     )
     from .root import get_counter, get_root
 
-    if utils.USE_WARD_SERVICE_CHANNEL:
+    if use_service is None:
+        use_service = service_available()
+    if use_service:
         from .service import fetch
 
-        # A batched flush is connect-only; nothing on a service build stages a leaf.
+        # A batched flush uses the wallet; the service path never stages a leaf.
         assert staged is None
         ack = await fetch(entry_key)
     else:
@@ -171,9 +190,13 @@ async def pull_leaf(
     return value, (key_type, id_part, val_part), material
 
 
-async def pull_entry(entry_key: bytes, key_type: str) -> bytes | None:
+async def pull_entry(
+    entry_key: bytes, key_type: str, use_service: bool | None = None
+) -> bytes | None:
     """Just the value, for the read path -- see `pull_leaf`."""
-    value, _old_leaf, _material = await pull_leaf(entry_key, key_type)
+    value, _old_leaf, _material = await pull_leaf(
+        entry_key, key_type, use_service=use_service
+    )
     return value
 
 
@@ -185,14 +208,15 @@ async def commit_change(
     value: "bytes | None",
     old_leaf: "tuple | None",
     material: tuple,
+    use_service: bool | None = None,
 ) -> "WardLeafAck | WardMutationApplied":
     """Seal `value` (None: delete), derive the new root from the proven pull, authorise
     `(counter - 1, from_root) -> (counter, new_root)` and hand it on. Called after the screen.
 
     The leaf is stamped with the counter it lands at (C_leaf). The device DERIVES its new root
     rather than being told one. NOT COMMITTED HERE: the head moves only when a WM attestation
-    names this transition and the device re-verifies it. A connect build returns the leaf and
-    authorisations; a service build publishes and adopts, returning no leaf -- a replica owner
+    names this transition and the device re-verifies it. Wallet routing returns the leaf and
+    authorisations; service routing publishes and adopts, returning no leaf -- a replica owner
     reads an absent content body as a deletion.
     """
     from .cas import authorise
@@ -236,7 +260,9 @@ async def commit_change(
     content = make_leaf_content(val_part)
     step, advance = await authorise(counter - 1, from_root, counter, new_root)
 
-    if utils.USE_WARD_SERVICE_CHANNEL:
+    if use_service is None:
+        use_service = service_available()
+    if use_service:
         from trezor.messages import WardMutationApplied
 
         from .service import publish
