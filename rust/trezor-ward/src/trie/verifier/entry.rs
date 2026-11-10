@@ -8,7 +8,7 @@
 use core::fmt;
 
 use crate::trie::common::{
-    BitPos, Error, HashFn, Hashable, Key, Leaf, Proof, Step, bit, crit_bit, empty_root,
+    BitPos, Error, HashFn, Hashable, Key, Leaf, Proof, Side, Step, bit, crit_bit, empty_root,
     leaf_digest, parent_digest,
 };
 
@@ -98,7 +98,8 @@ pub(super) fn fold<K: Key, H: HashFn>(
     key: &K,
 ) -> H::Output {
     steps.fold(start, |node, step| {
-        parent_digest::<H>(step.crit_bit, bit(key, step.crit_bit), &node, &step.sibling)
+        let side = Side::of(key, step.crit_bit);
+        parent_digest::<H>(step.crit_bit, side, &node, &step.sibling)
     })
 }
 
@@ -213,7 +214,7 @@ impl<K: Key, H: HashFn> VacantEntry<'_, K, H> {
             core::iter::from_fn(|| steps.next_if(|step| step.crit_bit > c)),
             &terminal.key,
         );
-        let branch = parent_digest::<H>(c, bit(&self.key, c), &new_leaf, &subtree);
+        let branch = parent_digest::<H>(c, Side::of(&self.key, c), &new_leaf, &subtree);
         // Above the branch both keys take the same turns.
         fold(branch, steps, &self.key)
     }

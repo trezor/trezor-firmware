@@ -14,7 +14,7 @@
 //! not part of its digest, so a subtree keeps its digest when a change moves it up or down.
 
 use super::hash::HashFn;
-use super::key::{BitPos, Key};
+use super::key::{BitPos, Key, Side};
 
 pub(crate) const TAG_LEAF: u8 = 0x00;
 pub(crate) const TAG_BRANCH: u8 = 0x01;
@@ -45,18 +45,14 @@ pub fn branch_digest<H: HashFn>(
     ])
 }
 
-/// The digest of the branch above `child`, which sits on `side` (`true` = right, the key's
-/// bit at `crit_bit`) with `sibling` on the other side.
+/// The digest of the branch above `child`, which sits on `side` with `sibling` on the other side.
 pub(crate) fn parent_digest<H: HashFn>(
     crit_bit: BitPos,
-    side: bool,
+    side: Side,
     child: &H::Output,
     sibling: &H::Output,
 ) -> H::Output {
-    let (left, right) = match side {
-        false => (child, sibling),
-        true => (sibling, child),
-    };
+    let [left, right] = side.place(child, sibling);
     branch_digest::<H>(crit_bit, left, right)
 }
 

@@ -10,8 +10,8 @@
 //! a time, agree with a prover that rebuilt from scratch.
 
 use super::common::{
-    BitPos, HashFn, Hashable, Key, Leaf, Proof, Step, bit, branch_digest, crit_bit, empty_root,
-    key_bits, leaf_digest,
+    BitPos, HashFn, Hashable, Key, Leaf, Proof, Side, Step, bit, branch_digest, crit_bit,
+    empty_root, key_bits, leaf_digest,
 };
 
 enum Node<K, V, H: HashFn> {
@@ -43,17 +43,6 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Node<K, V, H> {
         })
     }
 
-    /// The child on `side` (`true` = right) and the other one.
-    fn pick(children: [Box<Self>; 2], side: bool) -> (Box<Self>, Box<Self>) {
-        let [left, right] = children;
-        if side { (right, left) } else { (left, right) }
-    }
-
-    /// `[left, right]` from the child on `side` and the other one: the inverse of `pick`.
-    fn place(side: bool, hit: Box<Self>, other: Box<Self>) -> [Box<Self>; 2] {
-        if side { [other, hit] } else { [hit, other] }
-    }
-
     fn digest(&self) -> &H::Output {
         match self {
             Self::Leaf { digest, .. } | Self::Branch { digest, .. } => digest,
@@ -67,12 +56,12 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Node<K, V, H> {
             crit_bit, children, ..
         } = node
         {
-            let side = usize::from(bit(key, *crit_bit));
+            let (next, other) = Side::of(key, *crit_bit).pick(children.each_ref());
             visit(Step {
                 crit_bit: *crit_bit,
-                sibling: *children[1 - side].digest(),
+                sibling: *other.digest(),
             });
-            node = &children[side];
+            node = next;
         }
         node
     }
@@ -198,10 +187,10 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Tree<K, V, H> {
             Node::Branch {
                 crit_bit, children, ..
             } if c.is_none_or(|c| crit_bit < c) => {
-                let side = bit(&key, crit_bit);
-                let (hit, other) = Node::pick(children, side);
+                let side = Side::of(&key, crit_bit);
+                let (hit, other) = side.pick(children);
                 let (hit, old) = Self::set_at(*hit, key, value, c);
-                (Node::branch(crit_bit, Node::place(side, hit, other)), old)
+                (Node::branch(crit_bit, side.place(hit, other)), old)
             }
             // The key's own leaf: the value is replaced.
             Node::Leaf {
@@ -211,8 +200,7 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Tree<K, V, H> {
             // the new branch unchanged, since a digest does not depend on depth.
             node => {
                 let c = c.expect("an absent key differs from its terminal leaf");
-                let side = bit(&key, c);
-                let children = Node::place(side, Node::leaf(key, value), Box::new(node));
+                let children = Side::of(&key, c).place(Node::leaf(key, value), Box::new(node));
                 (Node::branch(c, children), None)
             }
         }
@@ -238,17 +226,14 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Tree<K, V, H> {
             Node::Branch {
                 crit_bit, children, ..
             } => {
-                let side = bit(key, crit_bit);
-                let (hit, other) = Node::pick(children, side);
+                let side = Side::of(key, crit_bit);
+                let (hit, other) = side.pick(children);
                 match Self::remove_at(*hit, key) {
                     // The child was the leaf: this branch collapses into its other child,
                     // which keeps its digest since a digest does not depend on depth.
                     (None, old) => (Some(other), old),
                     // The leaf was further down: the branch stays, with a new digest.
-                    (Some(hit), old) => (
-                        Some(Node::branch(crit_bit, Node::place(side, hit, other))),
-                        old,
-                    ),
+                    (Some(hit), old) => (Some(Node::branch(crit_bit, side.place(hit, other))), old),
                 }
             }
         }
