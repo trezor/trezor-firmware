@@ -11,17 +11,17 @@
 
 use super::common::{
     BitPos, HashFn, Hashable, Key, Leaf, Proof, Side, Step, bit, branch_digest, crit_bit,
-    empty_root, key_bits, leaf_digest,
+    empty_root, leaf_digest,
 };
 
-enum Node<K, V, H: HashFn> {
+enum Node<K: Key, V, H: HashFn> {
     Leaf {
         key: K,
         value: V,
         digest: H::Output,
     },
     Branch {
-        crit_bit: BitPos,
+        crit_bit: BitPos<K>,
         /// `[left, right]`: indexed by the key's crit bit.
         children: [Box<Node<K, V, H>>; 2],
         digest: H::Output,
@@ -34,8 +34,8 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Node<K, V, H> {
         Box::new(Self::Leaf { key, value, digest })
     }
 
-    fn branch(crit_bit: BitPos, children: [Box<Self>; 2]) -> Box<Self> {
-        let digest = branch_digest::<H>(crit_bit, children[0].digest(), children[1].digest());
+    fn branch(crit_bit: BitPos<K>, children: [Box<Self>; 2]) -> Box<Self> {
+        let digest = branch_digest::<K, H>(crit_bit, children[0].digest(), children[1].digest());
         Box::new(Self::Branch {
             crit_bit,
             children,
@@ -50,7 +50,7 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Node<K, V, H> {
     }
 
     /// The leaf a lookup for `key` ends at, reporting one step per branch passed, root-to-leaf.
-    fn descend<'a>(&'a self, key: &K, mut visit: impl FnMut(Step<H>)) -> &'a Self {
+    fn descend<'a>(&'a self, key: &K, mut visit: impl FnMut(Step<K, H>)) -> &'a Self {
         let mut node = self;
         while let Self::Branch {
             crit_bit, children, ..
@@ -71,7 +71,7 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Node<K, V, H> {
 type Link<K, V, H> = Option<Box<Node<K, V, H>>>;
 
 /// An authenticated crit-bit tree holding the whole map.
-pub struct Tree<K, V, H: HashFn> {
+pub struct Tree<K: Key, V, H: HashFn> {
     top: Link<K, V, H>,
     len: usize,
 }
@@ -85,12 +85,6 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Default for Tree<K, V, H> {
 impl<K: Key, V: Hashable<H>, H: HashFn> Tree<K, V, H> {
     /// The empty map.
     pub fn new() -> Self {
-        const {
-            assert!(
-                key_bits::<K>() <= BitPos::MAX.index() + 1,
-                "a key has more bits than a BitPos can address"
-            )
-        };
         Self { top: None, len: 0 }
     }
 
@@ -180,7 +174,7 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Tree<K, V, H> {
         node: Node<K, V, H>,
         key: K,
         value: V,
-        c: Option<BitPos>,
+        c: Option<BitPos<K>>,
     ) -> (Box<Node<K, V, H>>, Option<V>) {
         match node {
             // A branch on a bit before `c`: the change is further down, on the key's side.
@@ -295,11 +289,11 @@ impl<'a, K: Key, V: Hashable<H>, H: HashFn> IntoIterator for &'a Tree<K, V, H> {
 }
 
 /// The entries of a [`Tree`] in key order.
-pub struct Iter<'a, K, V, H: HashFn> {
+pub struct Iter<'a, K: Key, V, H: HashFn> {
     stack: Vec<&'a Node<K, V, H>>,
 }
 
-impl<'a, K, V, H: HashFn> Iterator for Iter<'a, K, V, H> {
+impl<'a, K: Key, V, H: HashFn> Iterator for Iter<'a, K, V, H> {
     type Item = (&'a K, &'a V);
 
     fn next(&mut self) -> Option<Self::Item> {

@@ -15,15 +15,15 @@ const E: [u8; 1] = [0b0010_0000];
 
 /// Byte offset of step `i` of a proof over one-byte keys, leaf-to-root.
 const fn step(i: usize) -> usize {
-    Leaf::<[u8; 1], Sha256>::LEN + i * Step::<Sha256>::LEN
+    Leaf::<[u8; 1], Sha256>::LEN + i * Step::<[u8; 1], Sha256>::LEN
 }
 
 fn crit_bit(i: usize) -> Range<usize> {
-    step(i)..step(i) + BitPos::LEN
+    step(i)..step(i) + BitPos::<[u8; 1]>::LEN
 }
 
 fn sibling(i: usize) -> Range<usize> {
-    step(i) + BitPos::LEN..step(i + 1)
+    step(i) + BitPos::<[u8; 1]>::LEN..step(i + 1)
 }
 
 /// The host's answer to the device's lookup of `key`: a proof, held against the root of the
@@ -97,7 +97,7 @@ fn padded() {
 #[test]
 fn steps_reordered() {
     Lookup::of(A)
-        .tampered(|p| p[step(0)..step(2)].rotate_left(Step::<Sha256>::LEN))
+        .tampered(|p| p[step(0)..step(2)].rotate_left(Step::<[u8; 1], Sha256>::LEN))
         .refused(Error::Shape);
 }
 
@@ -110,7 +110,8 @@ fn crit_bit_repeated() {
 
 #[test]
 fn crit_bit_beyond_the_key() {
-    let beyond = BitPos::new(u16::try_from(key_bits::<[u8; 1]>()).unwrap()).to_bytes();
+    // No `BitPos` of the key holds this, so the bytes are written by hand.
+    let beyond = u16::try_from(key_bits::<[u8; 1]>()).unwrap().to_be_bytes();
     Lookup::of(A)
         .tampered(|p| p[crit_bit(0)].copy_from_slice(&beyond))
         .refused(Error::Shape);
@@ -136,7 +137,9 @@ fn terminal_leaf_renamed() {
 #[test]
 fn crit_bit_relabelled() {
     Lookup::of(A)
-        .tampered(|p| p[crit_bit(0)].copy_from_slice(&BitPos::new(5).to_bytes()))
+        .tampered(|p| {
+            p[crit_bit(0)].copy_from_slice(&BitPos::<[u8; 1]>::new(5).unwrap().to_bytes())
+        })
         .refused(Error::RootMismatch);
 }
 

@@ -37,7 +37,7 @@ pub struct VacantEntry<'a, K: Key, H: HashFn> {
     key: K,
     /// The leaf the lookup ended at and the first bit on which it differs from `key`; `None`
     /// for the empty map.
-    splice: Option<(Leaf<K, H>, BitPos)>,
+    splice: Option<(Leaf<K, H>, BitPos<K>)>,
 }
 
 impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
@@ -95,12 +95,12 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
 /// `start` hashed up `steps` (leaf-to-root) along `key`'s path: the root this path implies.
 pub(super) fn fold<K: Key, H: HashFn>(
     start: H::Output,
-    steps: impl Iterator<Item = Step<H>>,
+    steps: impl Iterator<Item = Step<K, H>>,
     key: &K,
 ) -> H::Output {
     steps.fold(start, |node, step| {
         let side = Side::of(key, step.crit_bit);
-        parent_digest::<H>(step.crit_bit, side, &node, &step.sibling)
+        parent_digest::<K, H>(step.crit_bit, side, &node, &step.sibling)
     })
 }
 
@@ -215,7 +215,7 @@ impl<K: Key, H: HashFn> VacantEntry<'_, K, H> {
             core::iter::from_fn(|| steps.next_if(|step| step.crit_bit > c)),
             &terminal.key,
         );
-        let branch = parent_digest::<H>(c, Side::of(&self.key, c), &new_leaf, &subtree);
+        let branch = parent_digest::<K, H>(c, Side::of(&self.key, c), &new_leaf, &subtree);
         // Above the branch both keys take the same turns.
         fold(branch, steps, &self.key)
     }

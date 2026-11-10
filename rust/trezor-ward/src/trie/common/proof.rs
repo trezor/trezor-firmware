@@ -25,23 +25,24 @@ use core::slice::ChunksExact;
 use super::array::ByteArray;
 use super::error::Error;
 use super::hash::HashFn;
-use super::key::{BitPos, Key, key_bits, key_len};
+use super::key::{BitPos, Key, key_len};
 
 /// One step of a path: the branch's crit bit and the digest of the child not taken.
-pub struct Step<H: HashFn> {
+pub struct Step<K: Key, H: HashFn> {
     /// The bit the branch splits on.
-    pub crit_bit: BitPos,
+    pub crit_bit: BitPos<K>,
     /// The digest of the child the path does not take.
     pub sibling: H::Output,
 }
 
-impl<H: HashFn> Step<H> {
+impl<K: Key, H: HashFn> Step<K, H> {
     /// Wire width: a position and a digest.
-    pub const LEN: usize = BitPos::LEN + H::Output::LEN;
+    pub const LEN: usize = BitPos::<K>::LEN + H::Output::LEN;
 }
 
-/// A step from exactly [`LEN`](Step::LEN) bytes; any other length is [`Error::Length`].
-impl<H: HashFn> TryFrom<&[u8]> for Step<H> {
+/// A step from exactly [`LEN`](Step::LEN) bytes; any other length is [`Error::Length`], and a
+/// crit bit beyond the key is [`Error::Shape`].
+impl<K: Key, H: HashFn> TryFrom<&[u8]> for Step<K, H> {
     type Error = Error;
 
     fn try_from(bytes: &[u8]) -> Result<Self, Error> {
@@ -49,9 +50,9 @@ impl<H: HashFn> TryFrom<&[u8]> for Step<H> {
             return Err(Error::Length);
         }
         // The length was checked, so both pieces are exactly their widths.
-        let (crit_bit, sibling) = bytes.split_at(BitPos::LEN);
+        let (crit_bit, sibling) = bytes.split_at(BitPos::<K>::LEN);
         Ok(Self {
-            crit_bit: BitPos::from_bytes(crit_bit.try_into().unwrap()),
+            crit_bit: BitPos::from_bytes(crit_bit.try_into().unwrap()).ok_or(Error::Shape)?,
             sibling: sibling.try_into().unwrap(),
         })
     }
@@ -102,16 +103,10 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
     /// A proof from its wire form. Refuses bytes that do not fit the layout
     /// ([`Error::Length`]) and paths that no tree has ([`Error::Shape`]).
     pub fn parse(bytes: B) -> Result<Self, Error> {
-        const {
-            assert!(
-                key_bits::<K>() <= BitPos::MAX.index() + 1,
-                "a key has more bits than a BitPos can address"
-            )
-        };
         let len = bytes.as_ref().len();
         if len != 0
             && (len < Leaf::<K, H>::LEN
-                || !(len - Leaf::<K, H>::LEN).is_multiple_of(Step::<H>::LEN))
+                || !(len - Leaf::<K, H>::LEN).is_multiple_of(Step::<K, H>::LEN))
         {
             return Err(Error::Length);
         }
@@ -127,9 +122,10 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
     /// the work a proof can demand: at most `key_bits::<K>()` steps, however long the bytes are.
     fn check_shape(&self) -> Result<(), Error> {
         let mut prev = None;
-        for step in self.steps().rev() {
-            if step.crit_bit.index() >= key_bits::<K>() || prev.is_some_and(|p| step.crit_bit <= p)
-            {
+        // The raw chunks: this is where the steps are first parsed, and `Steps` unwraps.
+        for chunk in self.steps().chunks.rev() {
+            let step = Step::<K, H>::try_from(chunk)?;
+            if prev.is_some_and(|p| step.crit_bit <= p) {
                 return Err(Error::Shape);
             }
             prev = Some(step.crit_bit);
@@ -168,7 +164,7 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
     }
 
     /// The steps, leaf-to-root.
-    pub fn steps(&self) -> Steps<'_, H> {
+    pub fn steps(&self) -> Steps<'_, K, H> {
         let bytes = self.as_bytes();
         Steps::new(if bytes.is_empty() {
             bytes
@@ -179,14 +175,14 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
 
     /// The wire width of a non-empty proof with `steps` steps.
     pub(crate) const fn len_with(steps: usize) -> usize {
-        Leaf::<K, H>::LEN + steps * Step::<H>::LEN
+        Leaf::<K, H>::LEN + steps * Step::<K, H>::LEN
     }
 
     /// The part of the path below the branch at `c`: the leaf and the steps whose crit bit is
     /// above `c`. The steps are leaf-to-root, so this is a prefix of the bytes, and it is what
     /// a host sends for the entry after one that parts from it at `c`, since a walk holds the
     /// rest (see [`Walk`](crate::trie::Walk)). The empty proof is its own part.
-    pub fn below(&self, c: BitPos) -> Proof<&[u8], K, H> {
+    pub fn below(&self, c: BitPos<K>) -> Proof<&[u8], K, H> {
         let bytes = self.as_bytes();
         if bytes.is_empty() {
             return self.view();
@@ -208,7 +204,7 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
 pub(crate) fn write_into<K: Key, H: HashFn>(
     out: &mut [u8],
     leaf: &Leaf<K, H>,
-    steps: impl IntoIterator<Item = Step<H>>,
+    steps: impl IntoIterator<Item = Step<K, H>>,
 ) {
     fn put(out: &mut &mut [u8], bytes: &[u8]) {
         let (head, tail) = core::mem::take(out).split_at_mut(bytes.len());
@@ -240,7 +236,7 @@ impl<K: Key, H: HashFn> Proof<Vec<u8>, K, H> {
     /// a path no tree has is [`Error::Shape`], not the caller's word.
     pub(crate) fn build(
         leaf: &Leaf<K, H>,
-        steps: impl IntoIterator<Item = Step<H>, IntoIter: ExactSizeIterator>,
+        steps: impl IntoIterator<Item = Step<K, H>, IntoIter: ExactSizeIterator>,
     ) -> Result<Self, Error> {
         let steps = steps.into_iter();
         let mut bytes = vec![0; Self::len_with(steps.len())];
@@ -250,28 +246,28 @@ impl<K: Key, H: HashFn> Proof<Vec<u8>, K, H> {
 }
 
 /// The steps of a proof, leaf-to-root; reversed, root-to-leaf.
-pub struct Steps<'a, H> {
+pub struct Steps<'a, K, H> {
     chunks: ChunksExact<'a, u8>,
-    _marker: PhantomData<H>,
+    _marker: PhantomData<(K, H)>,
 }
 
-impl<'a, H: HashFn> Steps<'a, H> {
-    /// The steps encoded in `bytes`: a whole number of them.
+impl<'a, K: Key, H: HashFn> Steps<'a, K, H> {
+    /// The steps encoded in `bytes`: a whole number of them, as `parse` checked.
     fn new(bytes: &'a [u8]) -> Self {
         Self {
-            chunks: bytes.chunks_exact(Step::<H>::LEN),
+            chunks: bytes.chunks_exact(Step::<K, H>::LEN),
             _marker: PhantomData,
         }
     }
 
-    fn step(chunk: &[u8]) -> Step<H> {
-        // `chunks_exact` yields whole steps only.
+    fn step(chunk: &[u8]) -> Step<K, H> {
+        // `chunks_exact` yields whole steps only, and `parse` checked their crit bits.
         Step::try_from(chunk).unwrap()
     }
 }
 
-impl<H: HashFn> Iterator for Steps<'_, H> {
-    type Item = Step<H>;
+impl<K: Key, H: HashFn> Iterator for Steps<'_, K, H> {
+    type Item = Step<K, H>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.chunks.next().map(Self::step)
@@ -287,7 +283,7 @@ impl<H: HashFn> Iterator for Steps<'_, H> {
     }
 }
 
-impl<H: HashFn> DoubleEndedIterator for Steps<'_, H> {
+impl<K: Key, H: HashFn> DoubleEndedIterator for Steps<'_, K, H> {
     fn next_back(&mut self) -> Option<Self::Item> {
         self.chunks.next_back().map(Self::step)
     }
@@ -297,10 +293,10 @@ impl<H: HashFn> DoubleEndedIterator for Steps<'_, H> {
     }
 }
 
-impl<H: HashFn> ExactSizeIterator for Steps<'_, H> {}
+impl<K: Key, H: HashFn> ExactSizeIterator for Steps<'_, K, H> {}
 
 // Implemented by hand. A derive bounds the type parameters, not the fields: it would make
-// `Step<H>` `Clone` only for `H: Clone`, `Debug` only for `H: Debug`, and so on, although `H`
+// `Step<K, H>` `Clone` only for `H: Clone`, `Debug` only for `H: Debug`, and so on, although `H`
 // is a marker that merely names the hash function and the fields are a `BitPos` and an array.
 // The same goes for the `K` and `H` behind `Proof`'s `PhantomData`. This is the "perfect
 // derive" problem, https://github.com/rust-lang/rust/issues/26925; the alternatives are a
@@ -308,24 +304,24 @@ impl<H: HashFn> ExactSizeIterator for Steps<'_, H> {}
 // `Key`, which would make marker types promise things they do not mean. `Proof` additionally
 // compares across storage types, which no derive gives.
 
-impl<H: HashFn> Clone for Step<H> {
+impl<K: Key, H: HashFn> Clone for Step<K, H> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<H: HashFn> Copy for Step<H> {}
+impl<K: Key, H: HashFn> Copy for Step<K, H> {}
 
-impl<H: HashFn> PartialEq for Step<H> {
+impl<K: Key, H: HashFn> PartialEq for Step<K, H> {
     fn eq(&self, other: &Self) -> bool {
         self.crit_bit == other.crit_bit && self.sibling == other.sibling
     }
 }
 
-impl<H: HashFn> Eq for Step<H> {}
+impl<K: Key, H: HashFn> Eq for Step<K, H> {}
 
 #[cfg(feature = "debug")]
-impl<H: HashFn> fmt::Debug for Step<H> {
+impl<K: Key, H: HashFn> fmt::Debug for Step<K, H> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Step")
             .field("crit_bit", &self.crit_bit)
@@ -397,6 +393,10 @@ mod tests {
     const LEAF: usize = 1 + 32;
     const STEP: usize = 2 + 32;
 
+    fn pos(i: usize) -> BitPos<[u8; 1]> {
+        BitPos::new(i).unwrap()
+    }
+
     /// A leaf for key `key`, then `bits` as steps leaf-to-root, all digests zero.
     fn bytes(key: u8, bits: &[u16]) -> Vec<u8> {
         let mut out = vec![0; LEAF];
@@ -411,13 +411,13 @@ mod tests {
     #[test]
     fn layout_constants() {
         assert_eq!(Leaf::<[u8; 1], Sha256>::LEN, LEAF);
-        assert_eq!(Step::<Sha256>::LEN, STEP);
+        assert_eq!(Step::<[u8; 1], Sha256>::LEN, STEP);
         assert_eq!(
             Leaf::<[u8; 1], Sha256>::try_from(&[0; LEAF - 1][..]).unwrap_err(),
             Error::Length
         );
         assert_eq!(
-            Step::<Sha256>::try_from(&[0; STEP + 1][..]).unwrap_err(),
+            Step::<[u8; 1], Sha256>::try_from(&[0; STEP + 1][..]).unwrap_err(),
             Error::Length
         );
     }
@@ -476,14 +476,14 @@ mod tests {
         assert_eq!(
             steps[0],
             Step {
-                crit_bit: BitPos::new(4),
+                crit_bit: pos(4),
                 sibling: [0xbb; 32]
             }
         );
-        assert_eq!(steps[1].crit_bit, BitPos::new(1));
-        assert_eq!(steps[2].crit_bit, BitPos::new(0));
-        let root_first: Vec<BitPos> = proof.steps().rev().map(|s| s.crit_bit).collect();
-        assert_eq!(root_first, [0, 1, 4].map(BitPos::new));
+        assert_eq!(steps[1].crit_bit, pos(1));
+        assert_eq!(steps[2].crit_bit, pos(0));
+        let root_first: Vec<_> = proof.steps().rev().map(|s| s.crit_bit).collect();
+        assert_eq!(root_first, [0, 1, 4].map(pos));
         assert_eq!(proof.steps().nth(1), Some(steps[1]));
         assert_eq!(proof.steps().nth_back(1), Some(steps[1]));
     }
@@ -496,11 +496,11 @@ mod tests {
         };
         let steps = [
             Step {
-                crit_bit: BitPos::new(4),
+                crit_bit: pos(4),
                 sibling: [1; 32],
             },
             Step {
-                crit_bit: BitPos::new(0),
+                crit_bit: pos(0),
                 sibling: [2; 32],
             },
         ];
@@ -524,19 +524,18 @@ mod tests {
             p.steps().map(|s| s.crit_bit.index()).collect()
         };
         // Below the branch at 1: the steps at 7 and 4, which are deeper in the tree.
-        let below = proof.below(BitPos::new(1));
+        let below = proof.below(pos(1));
         assert_eq!(steps(&below), [7, 4]);
         assert_eq!(below.as_bytes(), &raw[..LEAF + 2 * STEP]);
         assert_eq!(below.leaf(), proof.leaf());
         // At a bit no branch tests, the cut falls between the branches around it.
-        assert_eq!(steps(&proof.below(BitPos::new(5))), [7]);
+        assert_eq!(steps(&proof.below(pos(5))), [7]);
         // Below the deepest branch there is only the leaf; above the root, the whole path.
-        assert_eq!(steps(&proof.below(BitPos::new(7))), []);
-        assert_eq!(proof.below(BitPos::new(7)).as_bytes(), &raw[..LEAF]);
-        assert_eq!(proof.below(BitPos::MAX).as_bytes(), &raw[..LEAF]);
-        assert_eq!(steps(&proof.below(BitPos::new(0))), [7, 4, 1]);
+        assert_eq!(steps(&proof.below(pos(7))), []);
+        assert_eq!(proof.below(pos(7)).as_bytes(), &raw[..LEAF]);
+        assert_eq!(steps(&proof.below(pos(0))), [7, 4, 1]);
         assert_eq!(
-            P::parse(&[][..]).unwrap().below(BitPos::new(0)),
+            P::parse(&[][..]).unwrap().below(pos(0)),
             P::parse(&[][..]).unwrap()
         );
         assert_eq!(P::<&[u8]>::len_with(4), raw.len());
