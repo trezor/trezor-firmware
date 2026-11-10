@@ -111,7 +111,7 @@ fn crit_bit_repeated() {
 #[test]
 fn crit_bit_beyond_the_key() {
     // No `BitPos` of the key holds this, so the bytes are written by hand.
-    let beyond = u16::try_from(key_bits::<[u8; 1]>()).unwrap().to_be_bytes();
+    let beyond = [u8::try_from(key_bits::<[u8; 1]>()).unwrap()];
     Lookup::of(A)
         .tampered(|p| p[crit_bit(0)].copy_from_slice(&beyond))
         .refused(Error::Shape);
@@ -137,9 +137,7 @@ fn terminal_leaf_renamed() {
 #[test]
 fn crit_bit_relabelled() {
     Lookup::of(A)
-        .tampered(|p| {
-            p[crit_bit(0)].copy_from_slice(&BitPos::<[u8; 1]>::new(5).unwrap().to_bytes())
-        })
+        .tampered(|p| p[crit_bit(0)].copy_from_slice(BitPos::<[u8; 1]>::new(5).unwrap().as_bytes()))
         .refused(Error::RootMismatch);
 }
 

@@ -7,7 +7,7 @@
 //! value  = H(0x03 ‖ bytes)        any `AsRef<[u8]>` value, see `Hashable`
 //! ```
 //!
-//! `key` is the key's bytes, `crit_bit` a [`BitPos`] as [`BitPos::to_bytes`] writes it, and the
+//! `key` is the key's bytes, `crit_bit` a [`BitPos`] as [`BitPos::as_bytes`] writes it, and the
 //! rest are digests. Every operand has a fixed width, so the preimages need no separators. The three node tags
 //! make a leaf, a branch and the empty root unforgeable from one another: a leaf can never be
 //! read as a branch or the reverse, and no fold can produce the empty root. A node's depth is
@@ -39,7 +39,7 @@ pub fn branch_digest<K: Key, H: HashFn>(
 ) -> H::Output {
     H::digest(&[
         &[TAG_BRANCH],
-        &crit_bit.to_bytes(),
+        crit_bit.as_bytes(),
         left.as_ref(),
         right.as_ref(),
     ])

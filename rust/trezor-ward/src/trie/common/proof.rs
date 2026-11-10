@@ -52,7 +52,7 @@ impl<K: Key, H: HashFn> TryFrom<&[u8]> for Step<K, H> {
         // The length was checked, so both pieces are exactly their widths.
         let (crit_bit, sibling) = bytes.split_at(BitPos::<K>::LEN);
         Ok(Self {
-            crit_bit: BitPos::from_bytes(crit_bit.try_into().unwrap()).ok_or(Error::Shape)?,
+            crit_bit: BitPos::try_from(crit_bit)?,
             sibling: sibling.try_into().unwrap(),
         })
     }
@@ -216,7 +216,7 @@ pub(crate) fn write_into<K: Key, H: HashFn>(
     put(&mut out, leaf.key.as_bytes().as_ref());
     put(&mut out, leaf.value.as_ref());
     for step in steps {
-        put(&mut out, &step.crit_bit.to_bytes());
+        put(&mut out, step.crit_bit.as_bytes());
         put(&mut out, step.sibling.as_ref());
     }
     assert!(out.is_empty(), "the proof is shorter than the buffer");
@@ -391,18 +391,18 @@ mod tests {
     type P<B> = Proof<B, [u8; 1], Sha256>;
 
     const LEAF: usize = 1 + 32;
-    const STEP: usize = 2 + 32;
+    const STEP: usize = 1 + 32;
 
     fn pos(i: usize) -> BitPos<[u8; 1]> {
         BitPos::new(i).unwrap()
     }
 
     /// A leaf for key `key`, then `bits` as steps leaf-to-root, all digests zero.
-    fn bytes(key: u8, bits: &[u16]) -> Vec<u8> {
+    fn bytes(key: u8, bits: &[u8]) -> Vec<u8> {
         let mut out = vec![0; LEAF];
         out[0] = key;
         for bit in bits {
-            out.extend_from_slice(&bit.to_be_bytes());
+            out.push(*bit);
             out.extend_from_slice(&[0; 32]);
         }
         out
@@ -461,7 +461,7 @@ mod tests {
     fn fields_are_read_where_the_layout_puts_them() {
         let mut raw = bytes(0b0100_0000, &[4, 1, 0]);
         raw[1..LEAF].copy_from_slice(&[0xaa; 32]);
-        raw[LEAF + 2..LEAF + STEP].copy_from_slice(&[0xbb; 32]);
+        raw[LEAF + 1..LEAF + STEP].copy_from_slice(&[0xbb; 32]);
         let proof = P::parse(raw.as_slice()).unwrap();
 
         assert_eq!(
