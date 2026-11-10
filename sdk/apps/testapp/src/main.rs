@@ -23,7 +23,7 @@ pub(crate) mod proto;
 use proto::messages::MessageType;
 use proto::testapp::{
     Base58CheckDecode, Base58CheckEncode, Base58Decode, Base58Encode, CheckAddressMac,
-    CosiCombinePublicKeys, CosiVerify, EcdsaRecoverPubkey, EcdsaSignDigest, EcdsaVerify,
+    CosiCombinePublicKeys, CosiVerify, Crash, EcdsaRecoverPubkey, EcdsaSignDigest, EcdsaVerify,
     EcdsaVerifyDigest, Ed25519Sign, Ed25519Verify, GetAddressMac, GetPublicKey, GetXpub, Hash,
     Hmac, VerifyNonceCache,
 };
@@ -207,7 +207,10 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
         Ok(MessageType::Base58CheckDecode) => handle_base58check_decode(data),
         // an error out of `app()` ends the app as crashed; a panic would abort
         // the whole emulator (`panic = "immediate-abort"`)
-        Ok(MessageType::Crash) => Err(Error::DataError("crash requested")),
+        Ok(MessageType::Crash) => {
+            let _: Crash = ProstCodec::decode(data).c()?;
+            Err(Error::DataError("crash requested"))
+        }
         Ok(_) => {
             error!("Invalid function: {:?}", id);
             Err(Error::InvalidFunction)
