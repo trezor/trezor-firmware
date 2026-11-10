@@ -6,7 +6,7 @@ from trezor.wire.errors import DataError
 
 from apps.common import paths
 
-from .session import MSG_ID_ERROR, SERVICE_CRYPTO, describe
+from .session import _SLIP24_NAMESPACE, MSG_ID_ERROR, SERVICE_CRYPTO, describe
 
 if __debug__:
     from trezor import log
@@ -84,9 +84,18 @@ def _check_not_slip25(address_n: list[int]) -> None:
         raise ForbiddenKeyPath
 
 
+def _check_path(session: Session, address_n: list[int]) -> None:
+    from apps.common.keychain import ForbiddenKeyPath
+
+    # the manifest's paths on any curve; apps only run with strict checks
+    if not any(schema.match(address_n) for schema in session.schemas):
+        raise ForbiddenKeyPath
+
+
 async def _get_xpub(session: Session, obj: Any) -> str:
     curve, address_n, xpub_magic = obj
     _check_not_slip25(address_n)
+    _check_path(session, address_n)
     keychain = await session.keychain(_curve(curve))
     return keychain.derive(address_n).serialize_public(xpub_magic)
 
@@ -94,6 +103,7 @@ async def _get_xpub(session: Session, obj: Any) -> str:
 async def _get_public_key(session: Session, obj: Any) -> bytes:
     curve, address_n, compressed = obj
     _check_not_slip25(address_n)
+    _check_path(session, address_n)
     curve = _curve(curve)
     keychain = await session.keychain(curve)
     private_key = keychain.derive(address_n).private_key()
@@ -120,8 +130,8 @@ async def _get_public_key(session: Session, obj: Any) -> bytes:
 async def _ecdsa_sign_digest(session: Session, obj: Any) -> bytes:
     curve, address_n, digest, compressed, canonical = obj
     curve = _curve(curve, _ECDSA_CURVES)
+    _check_path(session, address_n)
     keychain = await session.keychain(curve)
-    await paths.validate_path(keychain, address_n)
     private_key = keychain.derive(address_n).private_key()
 
     if curve == "secp256k1":
@@ -146,28 +156,25 @@ async def _ed25519_sign(session: Session, obj: Any) -> bytes:
     from trezor.crypto.curve import ed25519
 
     address_n, message = obj
+    _check_path(session, address_n)
     keychain = await session.keychain("ed25519")
-    await paths.validate_path(keychain, address_n)
     private_key = keychain.derive(address_n).private_key()
     return ed25519.sign(private_key, message)
 
 
-async def _address_mac_keychain(session: Session) -> Keychain:
-    # only for the seed: the SLIP-21 MAC key doesn't depend on the curve
-    if not session.curves:
-        raise DataError("No curve allowed")
-    return await session.keychain(session.curves[0])
+async def _address_mac_keychain() -> Keychain:
+    from apps.common.keychain import get_keychain
+
+    # SLIP-21 only: the MAC key depends on no curve and no path
+    return await get_keychain("", [], [_SLIP24_NAMESPACE])
 
 
 async def _get_address_mac(session: Session, obj: Any) -> bytes:
     from apps.common.address_mac import get_address_mac
-    from apps.common.keychain import ForbiddenKeyPath
 
     address_n, address, slip44 = obj
-    keychain = await _address_mac_keychain(session)
-    # the manifest's paths, on no particular curve
-    if not keychain.is_in_keychain(address_n):
-        raise ForbiddenKeyPath
+    _check_path(session, address_n)
+    keychain = await _address_mac_keychain()
     return get_address_mac(address, slip44, address_n, keychain)
 
 
@@ -175,7 +182,7 @@ async def _check_address_mac(session: Session, obj: Any) -> bool:
     from apps.common.address_mac import check_address_mac
 
     address_n, mac, address, slip44 = obj
-    keychain = await _address_mac_keychain(session)
+    keychain = await _address_mac_keychain()
     # raises on a wrong MAC; the path may belong to another app, e.g. in a memo
     check_address_mac(address, mac, slip44, address_n, keychain)
     return True
