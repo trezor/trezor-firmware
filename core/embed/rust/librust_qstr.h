@@ -323,7 +323,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_coinjoin;
   MP_QSTR_confirm_emphasized;
   MP_QSTR_confirm_fido;
-  MP_QSTR_confirm_firmware_update;
   MP_QSTR_confirm_homescreen;
   MP_QSTR_confirm_modify_fee;
   MP_QSTR_confirm_modify_output;
@@ -381,7 +380,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_fee;
   MP_QSTR_fee_label;
   MP_QSTR_fee_rate_amount;
-  MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__restart;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;

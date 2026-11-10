@@ -70,7 +70,7 @@ async def confirm_action(
     ) as flow:
         if prompt_screen or hold:
             # Note: multi-step confirm (prompt_screen/hold)
-            # can't work with external menus yet
+            # keeps the internal menu for now
             return await interact(
                 flow,
                 br_name,
@@ -2626,14 +2626,22 @@ async def success_pin_change(curpin: str | None, newpin: str | None) -> None:
 
 
 async def confirm_firmware_update(description: str, fingerprint: str) -> None:
-    with trezorui_api.confirm_firmware_update(
-        description=description, fingerprint=fingerprint
+    from trezor.ui.layouts.menu import Menu, cancel_leaf, confirm_with_menu
+
+    menu = Menu(
+        [
+            create_info_menu_leaf(TR.firmware_update__title_fingerprint, fingerprint),
+            cancel_leaf(TR.buttons__cancel),
+        ]
+    )
+    with trezorui_api.confirm_action(
+        title=TR.firmware_update__title,
+        action=None,
+        description=description,
+        hold=True,
+        external_menu=True,
     ) as layout:
-        return await raise_if_not_confirmed(
-            layout,
-            "firmware_update",
-            BR_CODE_OTHER,
-        )
+        await confirm_with_menu(layout, menu, "firmware_update", BR_CODE_OTHER)
 
 
 async def set_brightness(current: int | None = None) -> None:

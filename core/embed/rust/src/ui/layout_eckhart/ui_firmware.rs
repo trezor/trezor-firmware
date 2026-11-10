@@ -225,15 +225,6 @@ impl FirmwareUI for UIEckhart {
         flow::confirm_fido::new_confirm_fido(title, app_name, icon, accounts)
     }
 
-    fn confirm_firmware_update(
-        description: TString<'static>,
-        fingerprint: TString<'static>,
-    ) -> Result<impl LayoutMaybeTrace, Error> {
-        let flow =
-            flow::confirm_firmware_update::new_confirm_firmware_update(description, fingerprint)?;
-        Ok(flow)
-    }
-
     fn confirm_modify_fee(
         title: TString<'static>,
         sign: i32,

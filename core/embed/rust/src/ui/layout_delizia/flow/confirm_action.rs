@@ -321,12 +321,6 @@ pub fn new_confirm_action(
         paragraphs.into_paragraphs()
     };
 
-    if external_menu && (prompt_screen || hold) {
-        return Err(Error::ValueError(
-            c"external_menu not supported with a tap prompt, nor with hold and action/description",
-        ));
-    }
-
     new_confirm_action_simple(
         paragraphs,
         if external_menu {
