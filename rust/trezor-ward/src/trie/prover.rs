@@ -328,13 +328,13 @@ mod tests {
         ([0b0100_0000], b"c"),
         ([0b1000_0000], b"d"),
     ];
-    const ROOT: &str = "801c76a17f759146fdc24b4bbc66c1f6fbbe63cf0c5a15121c274e9e7146c54c";
+    const ROOT: &str = "214c01e9e4e7bd3c342de2e12c3251610bd8ef5c63a199c04029234d257b7bbb";
     const PROOF_A: &str = "00c7985a722bc82b44027b3692ec1b79a2e86267e2577b9cc0e09a9dee4515e0f6\
-        000466c808c49e8d051a943939af6530d34afbb3ddb6054d25823313f41a22c4cfad\
-        0001567cd4f15980338f90a766a300b301b7c4ad401dad3b2e327bec281bb76fb983\
-        0000d3fd399d63bafbde1938abcd6a556f7fd546ceb76c352754472f4e0ecf564aa9";
+        0466c808c49e8d051a943939af6530d34afbb3ddb6054d25823313f41a22c4cfad\
+        01567cd4f15980338f90a766a300b301b7c4ad401dad3b2e327bec281bb76fb983\
+        00d3fd399d63bafbde1938abcd6a556f7fd546ceb76c352754472f4e0ecf564aa9";
     const PROOF_D: &str = "80579dcf4b2884b4d6212e2ab4db770ebd5884415869e907457694ddd221973fdf\
-        00008451117f60bd9938110b0b0539e0e7bb42367564f17b55bdfd27cbcbf9aa5568";
+        00325efa106c9af145cc41bf14c06be7a3caaf40ca92b7a0a44bd867b29267fe1d";
 
     fn abcd() -> impl Iterator<Item = (Key1, Vec<u8>)> {
         ABCD.into_iter().map(|(k, v)| (k, val(v)))

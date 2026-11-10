@@ -4,6 +4,7 @@ use core::fmt;
 use core::marker::PhantomData;
 
 use super::array::ByteArray;
+use super::error::Error;
 
 /// A key: a byte array up to naming. Every `[u8; N]` is one, and so is a newtype over one,
 /// which keeps an application's keys apart from its digests at the type level. The width is
@@ -18,8 +19,8 @@ use super::array::ByteArray;
 /// terminal key of a proof comes from the host. Deferred until a caller needs it.
 ///
 /// Bits are numbered MSB-first: bit 0 is the top bit of byte 0. The tree routes by these
-/// bits. A branch names its crit bit as a [`BitPos`], which bounds the key width; a wider key
-/// type fails to compile wherever one of its positions would be made.
+/// bits. A branch names its crit bit as a [`BitPos`], encoded in as many bytes as the key's
+/// width needs, so a key may be of any width.
 pub trait Key: Copy + Eq {
     /// The array the key is.
     type Bytes: ByteArray;
@@ -57,37 +58,35 @@ pub const fn key_bits<K: Key>() -> usize {
 /// inside the key by construction.
 ///
 /// A branch names the bit it splits on, so positions enter the branch preimage and the proof
-/// format. This is the one place that fixes their encoding, a big-endian `u16`, and with it
-/// the widest key: one of 65536 bits.
+/// format. This is the one place that fixes their encoding: big-endian, in the fewest bytes
+/// that hold every position of the key, one for a key of up to 256 bits, two up to 65536,
+/// and so on.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct BitPos<K: Key>(
-    u16,
+    /// The number's big-endian bytes, so that `as_bytes` can lend their tail as the encoding.
+    /// With a `usize` here it would be returned by value, as `[u8; Self::LEN]`, and a length
+    /// that depends on `K` needs the unstable `generic_const_exprs`.
+    [u8; size_of::<usize>()],
     /// No `K` is stored, but it fixes the key width the position lies within.
     PhantomData<K>,
 );
 
 impl<K: Key> BitPos<K> {
-    /// The key's width in bits. Every position is made through it, which is what refuses a
-    /// key too wide for the encoding.
-    const BITS: usize = {
-        assert!(
-            key_bits::<K>() <= 1 << 16,
-            "a key has more bits than a BitPos can address"
-        );
-        key_bits::<K>()
-    };
+    /// The key's width in bits. A constant, so that a width no `usize` holds fails to compile.
+    const BITS: usize = key_bits::<K>();
 
     /// Width in the encodings and on the wire.
-    pub const LEN: usize = 2;
+    pub const LEN: usize = match Self::BITS.checked_sub(1) {
+        // The bytes of the key's last position.
+        Some(last) => (usize::BITS - last.leading_zeros()).div_ceil(8) as usize,
+        // A key without bits has no positions.
+        None => 0,
+    };
 
     /// Position `i`, or `None` if the key has no such bit.
-    #[expect(
-        clippy::cast_possible_truncation,
-        reason = "`i` is below `BITS`, which fits"
-    )]
     pub const fn new(i: usize) -> Option<Self> {
         if i < Self::BITS {
-            Some(Self(i as u16, PhantomData))
+            Some(Self(i.to_be_bytes(), PhantomData))
         } else {
             None
         }
@@ -95,17 +94,27 @@ impl<K: Key> BitPos<K> {
 
     /// The position as a number.
     pub const fn index(self) -> usize {
-        self.0 as usize
+        usize::from_be_bytes(self.0)
     }
 
-    /// The position's encoding.
-    pub fn to_bytes(self) -> [u8; 2] {
-        self.0.to_be_bytes()
+    /// The position's encoding, [`LEN`](Self::LEN) bytes.
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0[size_of::<usize>() - Self::LEN..]
     }
+}
 
-    /// A position from its encoding, or `None` if the key has no such bit.
-    pub fn from_bytes(bytes: [u8; 2]) -> Option<Self> {
-        Self::new(usize::from(u16::from_be_bytes(bytes)))
+/// A position from its encoding, exactly [`LEN`](BitPos::LEN) bytes; any other length is
+/// [`Error::Length`], and a bit beyond the key is [`Error::Shape`].
+impl<K: Key> TryFrom<&[u8]> for BitPos<K> {
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self, Error> {
+        if bytes.len() != Self::LEN {
+            return Err(Error::Length);
+        }
+        let mut buf = [0; size_of::<usize>()];
+        buf[size_of::<usize>() - Self::LEN..].copy_from_slice(bytes);
+        Self::new(usize::from_be_bytes(buf)).ok_or(Error::Shape)
     }
 }
 
@@ -126,7 +135,7 @@ impl<K: Key> Ord for BitPos<K> {
 #[cfg(feature = "debug")]
 impl<K: Key> fmt::Debug for BitPos<K> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("BitPos").field(&self.0).finish()
+        f.debug_tuple("BitPos").field(&self.index()).finish()
     }
 }
 
@@ -222,11 +231,30 @@ mod tests {
         type Pos = BitPos<[u8; 2]>;
         let last = Pos::new(15).unwrap();
         assert_eq!(Pos::new(16), None);
-        assert_eq!(Pos::from_bytes([0, 15]), Some(last));
-        assert_eq!(Pos::from_bytes([0, 16]), None);
-        assert_eq!(Pos::from_bytes([1, 0]), None);
-        assert_eq!((last.index(), last.to_bytes()), (15, [0, 15]));
+        assert_eq!(Pos::try_from(&[15][..]), Ok(last));
+        assert_eq!(Pos::try_from(&[16][..]), Err(Error::Shape));
+        assert_eq!(Pos::try_from(&[0, 15][..]), Err(Error::Length));
+        assert_eq!((last.index(), last.as_bytes()), (15, &[15][..]));
         assert!(Pos::new(3) < Pos::new(4));
+    }
+
+    #[test]
+    fn a_position_is_as_wide_as_its_key_needs() {
+        /// The width of a position of an `N`-byte key, and the encoding of its last bit.
+        fn last<const N: usize>() -> (usize, Vec<u8>) {
+            let last = BitPos::<[u8; N]>::new(8 * N - 1).unwrap();
+            let bytes = last.as_bytes().to_vec();
+            assert_eq!(BitPos::<[u8; N]>::try_from(&bytes[..]), Ok(last));
+            (BitPos::<[u8; N]>::LEN, bytes)
+        }
+        assert_eq!(last::<1>(), (1, vec![0x07]));
+        assert_eq!(last::<32>(), (1, vec![0xff]));
+        assert_eq!(last::<33>(), (2, vec![0x01, 0x07]));
+        assert_eq!(last::<8192>(), (2, vec![0xff, 0xff]));
+        assert_eq!(last::<8193>(), (3, vec![0x01, 0x00, 0x07]));
+        // A key without bits has no position: no width, and nothing to read from no bytes.
+        assert_eq!(BitPos::<[u8; 0]>::LEN, 0);
+        assert_eq!(BitPos::<[u8; 0]>::try_from(&[][..]), Err(Error::Shape));
     }
 
     #[test]

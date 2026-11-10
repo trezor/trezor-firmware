@@ -293,21 +293,21 @@ mod tests {
     const F: Key1 = [0b1111_1111]; // absent: parts from D at bit 1, above D's leaf and below the root
     const G: Key1 = [0b0000_0001]; // absent: parts from A at bit 7, directly above A's leaf
 
-    const ROOT: &str = "801c76a17f759146fdc24b4bbc66c1f6fbbe63cf0c5a15121c274e9e7146c54c";
+    const ROOT: &str = "214c01e9e4e7bd3c342de2e12c3251610bd8ef5c63a199c04029234d257b7bbb";
     const EMPTY: &str = "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986";
 
     /// A's lookup path, which is also E's and G's.
     const PROOF_A: &str = "00c7985a722bc82b44027b3692ec1b79a2e86267e2577b9cc0e09a9dee4515e0f6\
-        000466c808c49e8d051a943939af6530d34afbb3ddb6054d25823313f41a22c4cfad\
-        0001567cd4f15980338f90a766a300b301b7c4ad401dad3b2e327bec281bb76fb983\
-        0000d3fd399d63bafbde1938abcd6a556f7fd546ceb76c352754472f4e0ecf564aa9";
+        0466c808c49e8d051a943939af6530d34afbb3ddb6054d25823313f41a22c4cfad\
+        01567cd4f15980338f90a766a300b301b7c4ad401dad3b2e327bec281bb76fb983\
+        00d3fd399d63bafbde1938abcd6a556f7fd546ceb76c352754472f4e0ecf564aa9";
     const PROOF_B: &str = "0fb3645e94d1f773c429c707715dc51a3178f8b12ef2fcd149a52b5a8f69404435\
-        0004676388dd193dc4fde9a116f42237ef61bd8d4d6f54fca0c80ed8d83ee7f2d871\
-        0001567cd4f15980338f90a766a300b301b7c4ad401dad3b2e327bec281bb76fb983\
-        0000d3fd399d63bafbde1938abcd6a556f7fd546ceb76c352754472f4e0ecf564aa9";
+        04676388dd193dc4fde9a116f42237ef61bd8d4d6f54fca0c80ed8d83ee7f2d871\
+        01567cd4f15980338f90a766a300b301b7c4ad401dad3b2e327bec281bb76fb983\
+        00d3fd399d63bafbde1938abcd6a556f7fd546ceb76c352754472f4e0ecf564aa9";
     /// D's lookup path, which is also F's.
     const PROOF_D: &str = "80579dcf4b2884b4d6212e2ab4db770ebd5884415869e907457694ddd221973fdf\
-        00008451117f60bd9938110b0b0539e0e7bb42367564f17b55bdfd27cbcbf9aa5568";
+        00325efa106c9af145cc41bf14c06be7a3caaf40ca92b7a0a44bd867b29267fe1d";
 
     fn digest(s: &str) -> [u8; 32] {
         hex::decode(s).unwrap().try_into().unwrap()
@@ -432,7 +432,7 @@ mod tests {
         let entry = occupied(proof.verify(&digest(ROOT), &A).unwrap());
         assert_eq!(
             hex::encode(entry.replace(b"a2")),
-            "3baadcdebe3ea5616c2a8eccb82e5c7bdd44568fd898a8d45939bc1174556d49"
+            "4039397b1a045ecba779552c436351f936a3706fc47e3408050a9d537e530c33"
         );
     }
 
@@ -444,7 +444,7 @@ mod tests {
         let entry = occupied(proof_a.verify(&digest(ROOT), &A).unwrap());
         assert_eq!(
             hex::encode(entry.remove()),
-            "0ee5df752cd27d4c46f96139335753da2b93287f0125a9a05d36f93bb0f6462a"
+            "7dbabafa74f085a6a3b1a4f1379bb5bec6fa710f83b52fdb573ab249e1e0cb7c"
         );
         // D's sibling is the branch over A, B and C, which becomes the root as it is: the
         // digest the proof carries for it.
@@ -456,7 +456,7 @@ mod tests {
         assert_eq!(root, sibling);
         assert_eq!(
             hex::encode(root),
-            "8451117f60bd9938110b0b0539e0e7bb42367564f17b55bdfd27cbcbf9aa5568"
+            "325efa106c9af145cc41bf14c06be7a3caaf40ca92b7a0a44bd867b29267fe1d"
         );
     }
 
@@ -479,21 +479,21 @@ mod tests {
                 E,
                 &b"e"[..],
                 PROOF_A,
-                "1bf82b3f829c5f1f403ea66a13b96d7e648072fafd9f621359db3a45e13fa6b2",
+                "1332219b91225b1d87a0256eaa0281869c08625c553ee87f08fe3b836040dc42",
             ),
             // above an existing branch's leaf, below the root
             (
                 F,
                 b"f",
                 PROOF_D,
-                "5df6915caa33b931da5ed17dba221c9f78a5ef935f07cb4be34315cf3aa83431",
+                "b1bd9a9977e6f7d81dc3090870f6fb1dcfe2ba82e45e821e84e09c4fdb4d6e78",
             ),
             // directly above the terminal leaf
             (
                 G,
                 b"g",
                 PROOF_A,
-                "11d96e004a6eb7fede1894989bb54269ae0e9ae24beb9a1ec0420febfbcd46e0",
+                "e03f8a7310bada52e8565a713b1efb36256b174f25852568069704a00ec1ec04",
             ),
         ] {
             let bytes = proof(proof_hex);
@@ -510,11 +510,11 @@ mod tests {
         let root = digest(ROOT);
         assert_eq!(
             hex::encode(proof.verify(&root, &A).unwrap().set(b"a2")),
-            "3baadcdebe3ea5616c2a8eccb82e5c7bdd44568fd898a8d45939bc1174556d49"
+            "4039397b1a045ecba779552c436351f936a3706fc47e3408050a9d537e530c33"
         );
         assert_eq!(
             hex::encode(proof.verify(&root, &E).unwrap().set(b"e")),
-            "1bf82b3f829c5f1f403ea66a13b96d7e648072fafd9f621359db3a45e13fa6b2"
+            "1332219b91225b1d87a0256eaa0281869c08625c553ee87f08fe3b836040dc42"
         );
     }
 }

@@ -203,11 +203,12 @@ fn walk<const N: usize>(tree: &T<N>, model: &Model<N>, derived: Digest) {
 
 const SEED: u64 = 0;
 /// Key widths in bytes. A narrow key space is tiny and its keys read as bit patterns; normal
-/// is WARD's width; wide is the only way to reach crit bits past 255, the second byte of
-/// their encoding.
+/// is WARD's width, the widest whose crit bits take one byte; a wide key's take two, and
+/// huge is the narrowest whose take three.
 const NARROW: usize = 1;
 const NORMAL: usize = 32;
 const WIDE: usize = 64;
+const HUGE: usize = 8193;
 /// Keys per run. Enough for a tree five or six levels deep; more only slows the rebuilds.
 const KEYS: usize = 16;
 /// Random changes per run: each key is changed about a dozen times.
@@ -236,8 +237,11 @@ fn ladder_keys() {
     // Every rung a byte has: a branch at each of its eight bits.
     run::<NARROW>(&keys::ladder(0, 9), &mut rng, STEPS);
     run::<NORMAL>(&keys::ladder(0, KEYS), &mut rng, STEPS);
-    // Starts past the last bit of a normal key, so every branch is encoded in two bytes.
+    // Starts past the last bit of a normal key, so every crit bit needs its second byte.
     run::<WIDE>(&keys::ladder(8 * NORMAL, KEYS), &mut rng, STEPS);
+    // A branch at each bit of the last byte, which only the third byte of a crit bit reaches;
+    // few changes, since every leaf hashes eight kilobytes of key.
+    run::<HUGE>(&keys::ladder(8 * (HUGE - 1), 9), &mut rng, STEPS / 10);
 }
 
 #[test]

@@ -19,8 +19,9 @@ leaf. The key is present exactly when that leaf's key equals it.
 ### Encodings
 
 `H` is the hash function and `‖` is concatenation. `key` is the key's bytes, `crit_bit` is the
-position of the bit the branch splits on, encoded by `BitPos` as a big-endian `u16`, and the
-rest are digests. Every operand has a fixed width, so no length prefixes are needed.
+position of the bit the branch splits on, encoded by `BitPos` big-endian in the fewest bytes
+that hold every position of the key (one byte for keys of up to 256 bits, two up to 65536),
+and the rest are digests. Every operand has a fixed width, so no length prefixes are needed.
 
 ```text
 leaf   = H(0x00 ‖ key ‖ value_digest)
