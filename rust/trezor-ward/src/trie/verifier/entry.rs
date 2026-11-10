@@ -113,6 +113,7 @@ impl<K: Key, H: HashFn> Entry<'_, K, H> {
 
     /// The root after storing `new` under the key: a replacement if the key is present, an
     /// insertion otherwise.
+    #[must_use = "this only computes the new root; the write takes effect when the caller stores it"]
     pub fn set(self, new: &(impl Hashable<H> + ?Sized)) -> H::Output {
         match self {
             Self::Occupied(entry) => entry.replace(new),
@@ -162,6 +163,7 @@ impl<K: Key, H: HashFn> OccupiedEntry<'_, K, H> {
     ///
     /// Only the leaf changes, so the shape of the tree and every sibling on the path stay as
     /// they are; the new leaf folds up the same path.
+    #[must_use = "this only computes the new root; the write takes effect when the caller stores it"]
     pub fn replace(self, new: &(impl Hashable<H> + ?Sized)) -> H::Output {
         let start = leaf_digest::<K, H>(&self.key, &new.digest());
         fold(start, self.proof.steps(), &self.key)
@@ -173,6 +175,7 @@ impl<K: Key, H: HashFn> OccupiedEntry<'_, K, H> {
     /// its other child takes its place. That child keeps its digest, since a digest does not
     /// depend on depth, whether it is a leaf or a whole subtree; and it stays on the removed
     /// key's path above that point, so the fold continues along the same path.
+    #[must_use = "this only computes the new root; the write takes effect when the caller stores it"]
     pub fn remove(self) -> H::Output {
         let mut steps = self.proof.steps();
         match steps.next() {
@@ -196,6 +199,7 @@ impl<K: Key, H: HashFn> VacantEntry<'_, K, H> {
     /// that bit is tested by no existing branch: the new branch goes directly above the
     /// terminal leaf, or inside a run of skipped bits further up, above some existing branches.
     /// Whatever hangs below that point moves under the new branch with its digest unchanged.
+    #[must_use = "this only computes the new root; the write takes effect when the caller stores it"]
     pub fn insert(self, new: &(impl Hashable<H> + ?Sized)) -> H::Output {
         let new_leaf = leaf_digest::<K, H>(&self.key, &new.digest());
         let Some((terminal, c)) = self.splice else {
