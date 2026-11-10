@@ -5,9 +5,11 @@ edition = "2024"
 
 [features]
 # The prover (host side); the rest of the crate is no_std and allocation-free.
-use_std = []
+use_std = ["debug"]
 # A ready `Hash` implementation over the `sha2` crate, for hosts.
 sha2 = ["dep:sha2"]
+# `Debug` for the proof, entry and walk types (`Error` has it regardless); on with `use_std`.
+debug = []
 
 [dependencies]
 sha2 = { version = "0.10", optional = true, default-features = false }

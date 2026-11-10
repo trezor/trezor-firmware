@@ -53,7 +53,8 @@ pub const fn key_bits<K: Key>() -> usize {
 /// A branch names the bit it splits on, so positions enter the branch preimage and the proof
 /// format. This is the one place that fixes their encoding, a big-endian `u16`, and with it
 /// the widest key: [`MAX`](Self::MAX) is its last bit.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct BitPos(u16);
 
 impl BitPos {
