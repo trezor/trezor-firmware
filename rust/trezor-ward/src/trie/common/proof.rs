@@ -34,7 +34,7 @@ pub struct Step<H: HashFn> {
 
 impl<H: HashFn> Step<H> {
     /// Wire width: a position and a digest.
-    pub const LEN: usize = BitPos::LEN + <H::Output as ByteArray>::LEN;
+    pub const LEN: usize = BitPos::LEN + H::Output::LEN;
 }
 
 /// A step from exactly [`LEN`](Step::LEN) bytes; any other length is [`Error::Length`].
@@ -62,7 +62,7 @@ pub struct Leaf<K, H: HashFn> {
 
 impl<K: Key, H: HashFn> Leaf<K, H> {
     /// Wire width: a key and a digest.
-    pub const LEN: usize = key_len::<K>() + <H::Output as ByteArray>::LEN;
+    pub const LEN: usize = key_len::<K>() + H::Output::LEN;
 }
 
 /// A leaf from exactly [`LEN`](Leaf::LEN) bytes; any other length is [`Error::Length`].
