@@ -12,6 +12,8 @@
 "T3W1_en-test_address_mac.py::test_check_address_mac_wrong_mac": "90812f196e8c35dc7f35cb5a9a0e553c8fc6a610812d85b9f166e90b3f1c8b59",
 "T3W1_en-test_app_error.py::test_crashed_app_reports_app_error": "e07844c4e7b24d70dbdda43dc05923c026c396db145d45e91a40c681eeb03de9",
 "T3W1_en-test_app_error.py::test_message_id_out_of_range": "90812f196e8c35dc7f35cb5a9a0e553c8fc6a610812d85b9f166e90b3f1c8b59",
+"T3W1_en-test_app_error.py::test_needs_strict_safety_checks[prompt_always]": "789e2d40e68e9f4c8c320e0265bcc42cb11f59ee474c7562e1f1e73e083597e0",
+"T3W1_en-test_app_error.py::test_needs_strict_safety_checks[prompt_temporarily]": "7f068b9cdf22c608b70cab6e5dc7d5da1d2afac17306836e7f940040385218cb",
 "T3W1_en-test_app_error.py::test_restarted_after_crash": "e07844c4e7b24d70dbdda43dc05923c026c396db145d45e91a40c681eeb03de9",
 "T3W1_en-test_app_error.py::test_unrepresentable_argument": "90812f196e8c35dc7f35cb5a9a0e553c8fc6a610812d85b9f166e90b3f1c8b59",
 "T3W1_en-test_app_error.py::test_wrong_instance_id": "90812f196e8c35dc7f35cb5a9a0e553c8fc6a610812d85b9f166e90b3f1c8b59",
