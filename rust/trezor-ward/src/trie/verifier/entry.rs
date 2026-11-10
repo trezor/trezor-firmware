@@ -5,6 +5,7 @@
 //! reachable only from the variant where they make sense: a vacant entry can be inserted
 //! into, an occupied one can be replaced or removed.
 
+#[cfg(feature = "debug")]
 use core::fmt;
 
 use crate::trie::common::{
@@ -224,6 +225,7 @@ impl<K: Key, H: HashFn> VacantEntry<'_, K, H> {
 // and `H` rather than the fields), and because these show the key and the digest only: the
 // proof and the splice are left out on purpose.
 
+#[cfg(feature = "debug")]
 impl<K: Key, H: HashFn> fmt::Debug for Entry<'_, K, H> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -233,6 +235,7 @@ impl<K: Key, H: HashFn> fmt::Debug for Entry<'_, K, H> {
     }
 }
 
+#[cfg(feature = "debug")]
 impl<K: Key, H: HashFn> fmt::Debug for OccupiedEntry<'_, K, H> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("OccupiedEntry")
@@ -242,6 +245,7 @@ impl<K: Key, H: HashFn> fmt::Debug for OccupiedEntry<'_, K, H> {
     }
 }
 
+#[cfg(feature = "debug")]
 impl<K: Key, H: HashFn> fmt::Debug for VacantEntry<'_, K, H> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("VacantEntry")

@@ -17,6 +17,7 @@
 //! field where it is needed, so the verifier needs no buffer of its own and the prover
 //! produces the wire form directly.
 
+#[cfg(feature = "debug")]
 use core::fmt;
 use core::marker::PhantomData;
 use core::slice::ChunksExact;
@@ -323,6 +324,7 @@ impl<H: HashFn> PartialEq for Step<H> {
 
 impl<H: HashFn> Eq for Step<H> {}
 
+#[cfg(feature = "debug")]
 impl<H: HashFn> fmt::Debug for Step<H> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Step")
@@ -348,6 +350,7 @@ impl<K: Key, H: HashFn> PartialEq for Leaf<K, H> {
 
 impl<K: Key, H: HashFn> Eq for Leaf<K, H> {}
 
+#[cfg(feature = "debug")]
 impl<K: Key, H: HashFn> fmt::Debug for Leaf<K, H> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Leaf")
@@ -375,6 +378,7 @@ impl<B: AsRef<[u8]>, B2: AsRef<[u8]>, K, H> PartialEq<Proof<B2, K, H>> for Proof
 
 impl<B: AsRef<[u8]>, K, H> Eq for Proof<B, K, H> {}
 
+#[cfg(feature = "debug")]
 impl<B: AsRef<[u8]>, K, H> fmt::Debug for Proof<B, K, H> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Proof")

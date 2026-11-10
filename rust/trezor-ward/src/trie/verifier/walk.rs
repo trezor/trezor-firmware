@@ -21,6 +21,7 @@
 //! allocates nothing: the caller hands in the storage for each proof, sized by
 //! [`Walk::next_len`], and may keep the proof between steps and come back with [`Walk::at`].
 
+#[cfg(feature = "debug")]
 use core::fmt;
 use core::iter;
 
@@ -263,6 +264,7 @@ impl<K: Key, H: HashFn> Walk<Vec<u8>, K, H> {
 }
 
 // By hand for the reason given above the impls in `common/proof.rs`.
+#[cfg(feature = "debug")]
 impl<B: AsRef<[u8]>, K: Key, H: HashFn> fmt::Debug for Walk<B, K, H> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Walk")

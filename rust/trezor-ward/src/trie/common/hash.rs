@@ -58,7 +58,8 @@ impl<H: HashFn, T: AsRef<[u8]> + ?Sized> Hashable<H> for T {
 
 /// SHA-256, from the `sha2` crate.
 #[cfg(feature = "sha2")]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct Sha256;
 
 #[cfg(feature = "sha2")]
