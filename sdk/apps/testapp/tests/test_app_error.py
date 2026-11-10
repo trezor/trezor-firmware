@@ -20,7 +20,7 @@ from functools import partial
 
 import pytest
 
-from trezorlib import exceptions, messages, protobuf
+from trezorlib import device, exceptions, messages, protobuf
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
@@ -38,6 +38,30 @@ def hash_request(instance_id: int, message_id: int) -> messages.ExtAppMessage:
     return messages.ExtAppMessage(
         instance_id=instance_id, message_id=message_id, data=buf.getvalue()
     )
+
+
+@pytest.mark.parametrize(
+    "level",
+    [
+        messages.SafetyCheckLevel.PromptTemporarily,
+        messages.SafetyCheckLevel.PromptAlways,
+    ],
+    ids=["prompt_temporarily", "prompt_always"],
+)
+def test_needs_strict_safety_checks(
+    session: Session, instance_id: int, level: messages.SafetyCheckLevel
+):
+    """Apps can't see the safety-check level, so they only run with strict
+    checks."""
+    device.apply_settings(session, safety_checks=level)
+    with pytest.raises(exceptions.TrezorFailure) as e:
+        testapp_ext.hash(session, instance_id, m.HashAlgorithm.Sha256, [b"abc"])
+    assert e.value.code == messages.FailureType.ProcessError
+    assert e.value.message == "Safety checks must be strict"
+
+    device.apply_settings(session, safety_checks=messages.SafetyCheckLevel.Strict)
+    digest = testapp_ext.hash(session, instance_id, m.HashAlgorithm.Sha256, [b"abc"])
+    assert digest == hashlib.sha256(b"abc").digest()
 
 
 def test_crashed_app_reports_app_error(session: Session, instance_id: int):
