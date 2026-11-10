@@ -1,7 +1,7 @@
 extends: default
 
 ignore: |
-  /.venv
+  .venv/
   vendor/
   /common/defs/ethereum/chains/
   /common/defs/ethereum/tokens/
