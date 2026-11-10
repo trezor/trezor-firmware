@@ -949,9 +949,8 @@ __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
   );
 }
 
-__attribute__((no_stack_protector, used)) static uint32_t svc_handler(
-    uint32_t* stack, uint32_t* msp, uint32_t exc_return, uint32_t r4,
-    uint32_t r5, uint32_t r6) {
+__attribute__((no_stack_protector, used)) static void svc_handler(
+    uint32_t* stack, uint32_t r4, uint32_t r5, uint32_t r6) {
   IRQ_LOG_ENTER();
 
   uint8_t svc_number = ((uint8_t*)stack[6])[-2];
@@ -982,8 +981,6 @@ __attribute__((no_stack_protector, used)) static uint32_t svc_handler(
   mpu_restore(mpu_mode);
 
   IRQ_LOG_EXIT();
-
-  return exc_return;
 }
 
 __attribute((naked, no_stack_protector)) void SVC_Handler(void) {
@@ -995,13 +992,12 @@ __attribute((naked, no_stack_protector)) void SVC_Handler(void) {
       "TST      LR, #0x20           \n"
       "IT       EQ                  \n"
       "ADDEQ    R0, R0, #0x40       \n"
-      "MRS      R1, MSP             \n"  // `msp` argument
-      "MOV      R2, LR              \n"  // `exc_return` argument
-      "MOV      R3, R4              \n"  // 'r4' argument
-      "PUSH     {R5, R6}            \n"  // 'r5' and 'r6' arguments on stack
+      "MOV      R1, R4              \n"  // 'r4' argument
+      "MOV      R2, R5              \n"  // 'r5' argument
+      "MOV      R3, R6              \n"  // 'r6' argument
+      "PUSH     {R3, LR}            \n"  // Save EXC_RETURN (R3 is padding)
       "BL       svc_handler         \n"
-      "POP      {R5, R6}            \n"
-      "BX       R0                  \n"  // Branch to the returned value
+      "POP      {R3, PC}            \n"  // Return from the exception
   );
 }
 
