@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from storage.cache_common import (
     SESSIONLESS_FLAG,
-    DataCache,
     SessionlessCache,
     get_cache_encryption_key,
 )
@@ -13,6 +12,8 @@ from trezor import utils
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from collections.abc import Sequence
+
+    from storage.cache_common import DataCache
 
 # Cache initialization
 _SESSIONLESS_CACHE = SessionlessCache()
@@ -94,8 +95,8 @@ def encrypt_cache() -> None:
     """
     try:
         encryption_key = get_cache_encryption_key()
-        for session in _ALL_CACHES:
-            session.encrypt(encryption_key)
+        for cache in _ALL_CACHES:
+            cache.encrypt(encryption_key)
     except Exception as e:
         if __debug__:
             from trezor import log
@@ -110,8 +111,8 @@ def decrypt_cache() -> None:
     """
     try:
         encryption_key = get_cache_encryption_key()
-        for session in _ALL_CACHES:
-            session.decrypt(encryption_key)
+        for cache in _ALL_CACHES:
+            cache.decrypt(encryption_key)
     except Exception as e:
         if __debug__:
             from trezor import log
@@ -124,11 +125,4 @@ if __debug__:
 
     def no_unexpected_plaintext() -> bool:
         """True if every cache that should have been encrypted was."""
-        for session in _ALL_CACHES:
-            if session.has_secrets() and not (
-                session.is_encrypted
-                or session.is_preauthorized()
-                or session.was_preauthorized
-            ):
-                return False
-        return True
+        return all(cache.no_unexpected_plaintext() for cache in _ALL_CACHES)

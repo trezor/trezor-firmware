@@ -3,6 +3,7 @@ from micropython import const
 from trezor import utils
 
 if not utils.USE_THP:
+    # Number of encrypted cache entries (see below)
     CACHE_ENCRYPTED_COUNT_CODEC = const(4)
 
     # Traditional cache keys, encrypted ones first

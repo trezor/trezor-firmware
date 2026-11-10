@@ -3,6 +3,7 @@ from micropython import const
 from trezor import utils
 
 if utils.USE_THP:
+    # Number of encrypted cache entries (see below)
     CACHE_ENCRYPTED_COUNT_THP = const(4)
 
     # Cache keys for THP session, encrypted ones first

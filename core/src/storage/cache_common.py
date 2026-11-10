@@ -14,7 +14,9 @@ else:
 
 # Keys that are valid across sessions
 SESSIONLESS_FLAG = const(128)
+# Fields for the sessionless cache that are encrypted while the device is locked
 APP_COMMON_SEED_WITHOUT_PASSPHRASE = const(0 | SESSIONLESS_FLAG)
+# Fields that remain unencrypted while the device is locked
 APP_COMMON_SAFETY_CHECKS_TEMPORARY = const(1 | SESSIONLESS_FLAG)
 APP_COMMON_REQUEST_PIN_LAST_UNLOCK = const(2 | SESSIONLESS_FLAG)
 APP_COMMON_BUSY_DEADLINE_MS = const(3 | SESSIONLESS_FLAG)
@@ -22,7 +24,7 @@ APP_MISC_COSI_NONCE = const(4 | SESSIONLESS_FLAG)
 APP_MISC_COSI_COMMITMENT = const(5 | SESSIONLESS_FLAG)
 APP_RECOVERY_REPEATED_BACKUP_UNLOCKED = const(6 | SESSIONLESS_FLAG)
 
-# Encrypted fields come first, as in the Codec and THP keys.
+# Number of encrypted cache fields in the sessionless cache
 CACHE_ENCRYPTED_COUNT_SESSIONLESS = const(1)
 
 
@@ -74,7 +76,7 @@ class DataCache:
     def __init__(self) -> None:
         # field_sizes must be defined in the subclass before calling super().__init__()
         self.data = bytearray(sum(self.field_sizes))
-        # 0 if unset, else length + 1
+        # value_lengths[i] = 0 if field #i is unset, else length + 1
         self.value_lengths = bytearray(len(self.field_sizes))
         assert max(self.field_sizes) < 255  # value_lengths stores length + 1 in a byte
         self.nonce = bytearray(_NONCE_LENGTH)
@@ -240,6 +242,17 @@ class DataCache:
             if self.is_set(field):
                 return True
         return False
+
+    if __debug__:
+
+        def no_unexpected_plaintext(self) -> bool:
+            """False if secrets sit in plaintext without a preauthorization."""
+            return (
+                self.is_encrypted
+                or not self.has_secrets()
+                or self.is_preauthorized()
+                or self.was_preauthorized
+            )
 
 
 class SessionlessCache(DataCache):
