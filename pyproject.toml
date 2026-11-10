@@ -75,6 +75,7 @@ package = false
 exclude-newer = "30 days"
 
 [tool.uv.exclude-newer-package]
+pyasn1 = "2026-10-27T06:32:49.126Z"
 fonttools = "2026-10-27T16:30:26.452Z"
 
 [tool.uv.sources]
