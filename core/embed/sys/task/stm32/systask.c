@@ -568,6 +568,41 @@ static void systask_exit_fault_ex(uint32_t msp, uint32_t exc_return,
 
   uint32_t cfsr = SCB->CFSR;
 
+#ifdef USE_APPLETS
+  if (privileged && (cfsr & SCB_CFSR_MLSPERR_Msk) != 0 &&
+      scheduler->active_task != &scheduler->kernel_task) {
+    // Lazy FP state preservation failed. The FP registers are saved to
+    // the exception frame of the unprivileged task when the first FP
+    // instruction is executed in handler mode, so the fault is taken
+    // from a privileged context although it's caused by the invalid
+    // stack of the unprivileged task.
+    //
+    // FPCCR can't be used to identify the owner of the frame. If the
+    // fault was raised with exceptions masked (e.g. inside irq_lock()),
+    // it's just pended, the FP instruction is completed and the fault is
+    // taken later. FPCCR then already describes the frame of this
+    // handler.
+    //
+    // As a consequence, the task is blamed even if the failed frame
+    // belongs to the kernel (nested handlers using FP). This is
+    // acceptable: kernel frames live on the main stack right above the
+    // already pushed basic frame, so they can fail only if the kernel
+    // itself is broken (main stack underflow or inaccessible). Then the
+    // task is killed by mistake, but the kernel faults again right after
+    // that anyway.
+    privileged = false;
+    sp = __get_PSP();
+
+    uint32_t user_lsp = FPU_FPCCR_LSPACT_Msk | FPU_FPCCR_USER_Msk;
+    if ((FPU->FPCCR & user_lsp) == user_lsp) {
+      // The lazy save to the task frame is still pending. Drop it,
+      // otherwise it would be retried (and fault again) when the
+      // interrupted FP instruction is restarted.
+      FPU->FPCCR &= ~FPU_FPCCR_LSPACT_Msk;
+    }
+  }
+#endif
+
   // Task that was running when the exception occurred
   systask_t* origin =
       privileged ? &scheduler->kernel_task : scheduler->active_task;
@@ -628,7 +663,14 @@ __attribute((used)) static void systask_exit_fault(uint32_t msp,
 #ifdef USE_APPLETS
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
-  if (scheduler->active_task->killed) {
+  bool thread_mode = (exc_return & 0x8) != 0;
+
+  // If the fault was taken from handler mode (lazy FP state preservation
+  // fault), we just return to the interrupted handler. The exception return
+  // to the kernel task is not possible while another handler is active and
+  // the killed task is switched out by the pending PendSV.
+
+  if (scheduler->active_task->killed && thread_mode) {
     // The task was killed, so we have to switch to the kernel task.
     //
     // We can't just rely on the PendSV pended by `systask_kill()` and
