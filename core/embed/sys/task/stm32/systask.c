@@ -809,6 +809,35 @@ systask_switch_to_kernel(void) {
   );
 }
 
+// Checks that the context of the active unprivileged task can be saved
+// on its stack.
+//
+// `psp` is fully controlled by the task. The PendSV handler stores
+// R4-R11 and S16-S31 below it with kernel privileges, so the whole area
+// (including the exception frame above `psp`) must lie inside the task
+// stack. If it does not, the task is killed and `false` is returned.
+__attribute__((no_stack_protector, used)) static bool pendsv_check_psp(
+    uint32_t psp, uint32_t exc_return) {
+  systask_t* task = g_systask_scheduler.active_task;
+
+  // Exception frame pushed by the CPU (with/without FP context)
+  uint32_t frame_size = (exc_return & 0x10) == 0 ? 0x68 : 0x20;
+  // R4-R11 and S16-S31 saved by the PendSV handler
+  uint32_t save_size = 0x60;
+
+  if (psp >= task->stack_base + save_size &&
+      psp <= task->stack_end - frame_size) {
+    return true;
+  }
+
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
+  static const char msg[] = "Invalid PSP";
+  systask_exit_fatal(task, msg, sizeof(msg) - 1, NULL, 0, __LINE__);
+  mpu_restore(mpu_mode);
+
+  return false;
+}
+
 __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
   __asm__ volatile(
       "LDR     R0, =%[active_task] \n"
@@ -816,11 +845,22 @@ __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
       "LDR     R1, =%[waiting_task]\n"
       "LDR     R1, [R1]            \n"  // R1 =  waiting_task
       "CMP     R0, R1              \n"
-      "BEQ     1f                  \n"  // No task switch needed
+      "BEQ     2f                  \n"  // No task switch needed
 
       "LDR     R0, [R0, #12]       \n"  // R0 =  active_task->killed
       "CMP     R0, #0              \n"
       "BNE     systask_switch_to_kernel\n"  // Killed => don't save context
+
+      "TST      LR, #0x4           \n"  // Return stack (1=>PSP, 0=>MSP)
+      "BEQ      1f                 \n"  // Kernel task => no check needed
+      "MRS      R0, PSP            \n"  // `psp` argument
+      "MOV      R1, LR             \n"  // `exc_return` argument
+      "PUSH     {R4, LR}           \n"
+      "BL       pendsv_check_psp   \n"  // Is there a space for the context?
+      "POP      {R4, LR}           \n"
+      "CMP      R0, #0             \n"
+      "BEQ      systask_switch_to_kernel\n"  // Killed => don't save context
+      "1:                          \n"
 
       // Save the current task context on its stack before switching
 
@@ -852,7 +892,7 @@ __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
                                         // fp context preservation of S0-S15
       "B        systask_switch_context\n"
 
-      "1:                          \n"
+      "2:                          \n"
       "BX       LR                 \n"
       :                                                        // No output
       : [active_task] "i"(&g_systask_scheduler.active_task),   // Input
