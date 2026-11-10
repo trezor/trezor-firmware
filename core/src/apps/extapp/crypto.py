@@ -153,7 +153,7 @@ async def _ed25519_sign(session: Session, obj: Any) -> bytes:
 
 
 async def _address_mac_keychain(session: Session) -> Keychain:
-    # the SLIP-21 MAC key doesn't depend on the curve, so any allowed one does
+    # only for the seed: the SLIP-21 MAC key doesn't depend on the curve
     if not session.curves:
         raise DataError("No curve allowed")
     return await session.keychain(session.curves[0])
@@ -161,10 +161,13 @@ async def _address_mac_keychain(session: Session) -> Keychain:
 
 async def _get_address_mac(session: Session, obj: Any) -> bytes:
     from apps.common.address_mac import get_address_mac
+    from apps.common.keychain import ForbiddenKeyPath
 
     address_n, address, slip44 = obj
     keychain = await _address_mac_keychain(session)
-    await paths.validate_path(keychain, address_n)
+    # the manifest's paths, on no particular curve
+    if not keychain.is_in_keychain(address_n):
+        raise ForbiddenKeyPath
     return get_address_mac(address, slip44, address_n, keychain)
 
 
