@@ -32,8 +32,8 @@ pub fn leaf_digest<K: Key, H: HashFn>(key: &K, value: &H::Output) -> H::Output {
 }
 
 /// The digest of a branch. Children are positional: `left` holds the keys whose crit bit is 0.
-pub fn branch_digest<H: HashFn>(
-    crit_bit: BitPos,
+pub fn branch_digest<K: Key, H: HashFn>(
+    crit_bit: BitPos<K>,
     left: &H::Output,
     right: &H::Output,
 ) -> H::Output {
@@ -46,14 +46,14 @@ pub fn branch_digest<H: HashFn>(
 }
 
 /// The digest of the branch above `child`, which sits on `side` with `sibling` on the other side.
-pub(crate) fn parent_digest<H: HashFn>(
-    crit_bit: BitPos,
+pub(crate) fn parent_digest<K: Key, H: HashFn>(
+    crit_bit: BitPos<K>,
     side: Side,
     child: &H::Output,
     sibling: &H::Output,
 ) -> H::Output {
     let [left, right] = side.place(child, sibling);
-    branch_digest::<H>(crit_bit, left, right)
+    branch_digest::<K, H>(crit_bit, left, right)
 }
 
 #[cfg(test)]
@@ -70,21 +70,19 @@ mod tests {
         );
     }
 
+    fn branch(crit_bit: usize, left: &[u8; 32], right: &[u8; 32]) -> [u8; 32] {
+        branch_digest::<[u8; 1], Sha256>(BitPos::new(crit_bit).unwrap(), left, right)
+    }
+
     #[test]
     fn children_are_positional() {
         let (a, b) = ([0u8; 32], [1u8; 32]);
-        assert_ne!(
-            branch_digest::<Sha256>(BitPos::new(0), &a, &b),
-            branch_digest::<Sha256>(BitPos::new(0), &b, &a)
-        );
+        assert_ne!(branch(0, &a, &b), branch(0, &b, &a));
     }
 
     #[test]
     fn the_crit_bit_is_in_the_digest() {
         let (a, b) = ([0u8; 32], [1u8; 32]);
-        assert_ne!(
-            branch_digest::<Sha256>(BitPos::new(1), &a, &b),
-            branch_digest::<Sha256>(BitPos::new(2), &a, &b)
-        );
+        assert_ne!(branch(1, &a, &b), branch(2, &a, &b));
     }
 }

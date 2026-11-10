@@ -45,10 +45,10 @@ pub struct Walk<B, K: Key, H: HashFn> {
 
 /// Where the next entry parts from the current one: the current entry's proof and leaf, the
 /// crit bit `C` of its lowest left turn, and how many of its steps lie below `C` and above it.
-struct Turn<'a, B, K, H: HashFn> {
+struct Turn<'a, B, K: Key, H: HashFn> {
     current: &'a Proof<B, K, H>,
     leaf: Leaf<K, H>,
-    crit_bit: BitPos,
+    crit_bit: BitPos<K>,
     below: usize,
     above: usize,
 }
@@ -56,7 +56,7 @@ struct Turn<'a, B, K, H: HashFn> {
 /// Whether every step of `proof` lies below the branch at `c`: the shape of a truncated proof
 /// for the entry after one that turns left at `c`. A full proof of that entry has a step at
 /// `c` itself.
-fn lies_below<K: Key, H: HashFn>(proof: &Proof<impl AsRef<[u8]>, K, H>, c: BitPos) -> bool {
+fn lies_below<K: Key, H: HashFn>(proof: &Proof<impl AsRef<[u8]>, K, H>, c: BitPos<K>) -> bool {
     // Steps are leaf-to-root, so the last one has the smallest crit bit.
     proof
         .steps()
@@ -132,7 +132,7 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Walk<B, K, H> {
     /// length, plus the step at `C` and the steps above it if the proof is a truncated one.
     pub fn next_len(&self, proof: &Proof<impl AsRef<[u8]>, K, H>) -> usize {
         let spliced = match self.turn() {
-            Some(turn) if lies_below(proof, turn.crit_bit) => (1 + turn.above) * Step::<H>::LEN,
+            Some(turn) if lies_below(proof, turn.crit_bit) => (1 + turn.above) * Step::<K, H>::LEN,
             _ => 0,
         };
         proof.as_bytes().len() + spliced
@@ -319,9 +319,9 @@ mod tests {
     }
 
     /// `key`'s proof cut below bit `c`, as a host cuts it.
-    fn cut(tree: &T, key: Key1, c: u16) -> P {
+    fn cut(tree: &T, key: Key1, c: usize) -> P {
         let full = tree.prove(&key);
-        P::parse(full.below(BitPos::new(c)).as_bytes().to_vec()).unwrap()
+        P::parse(full.below(BitPos::new(c).unwrap()).as_bytes().to_vec()).unwrap()
     }
 
     /// The walk at `key`, reached the honest way.
@@ -416,7 +416,7 @@ mod tests {
         assert_eq!(part.steps().len(), 1);
         assert_eq!(
             walk.next_len(&part),
-            part.as_bytes().len() + 2 * Step::<Sha256>::LEN
+            part.as_bytes().len() + 2 * Step::<Key1, Sha256>::LEN
         );
         assert_eq!(walk.next_len(&part), tree.prove(&C).as_bytes().len());
         let full = tree.prove(&C);
