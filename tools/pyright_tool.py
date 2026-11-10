@@ -309,7 +309,9 @@ class PyrightTool:
             if file_or_dir.is_file():
                 yield file_or_dir
             else:
-                yield from file_or_dir.glob("**/*.py")
+                for f in file_or_dir.glob("**/*.py"):
+                    if ".venv" not in f.relative_to(file_or_dir).parts:
+                        yield f
 
         # include all relevant files.
         # use either the entries in `include`, or the current directory
