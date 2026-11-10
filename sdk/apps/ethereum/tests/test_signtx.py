@@ -21,7 +21,7 @@ from itertools import product
 
 import pytest
 
-from trezorlib import device, exceptions
+from trezorlib import exceptions
 from trezorlib import messages as trezor_messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import MessageFilter
@@ -89,9 +89,7 @@ def test_signtx(
     )
 
     if not parameters.get("safety_checks", True):
-        device.apply_settings(
-            session, safety_checks=trezor_messages.SafetyCheckLevel.PromptTemporarily
-        )
+        pytest.skip("apps only run with strict safety checks")
 
     _do_test_signtx(
         session, instance_id, parameters, result, input_flow, chunkify=chunkify
@@ -587,9 +585,7 @@ def test_signtx_error(
         pytest.skip("safety checks are not available to modular apps")
 
     if not parameters.get("safety_checks", True):
-        device.apply_settings(
-            session, safety_checks=trezor_messages.SafetyCheckLevel.PromptTemporarily
-        )
+        pytest.skip("apps only run with strict safety checks")
 
     # result not needed
     with pytest.raises(TrezorFailure, match=r"DataError"):
