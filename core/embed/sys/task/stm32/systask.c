@@ -953,6 +953,21 @@ __attribute__((no_stack_protector, used)) static void svc_handler(
     uint32_t* stack, uint32_t r4, uint32_t r5, uint32_t r6) {
   IRQ_LOG_ENTER();
 
+#ifdef USE_APPLETS
+  // Force the lazy FP state preservation of the calling task now. If its
+  // exception frame is invalid, the fault is taken here and not later in
+  // the middle of the syscall processing, which could not be abandoned.
+  __asm__ volatile("vmov.f32 s0, s0");
+
+  if (systask_active()->killed) {
+    // The calling task was killed by the fault above (or by a fault in
+    // an interrupt handler preempting this one); the pending PendSV
+    // switches to the kernel task.
+    IRQ_LOG_EXIT();
+    return;
+  }
+#endif
+
   uint8_t svc_number = ((uint8_t*)stack[6])[-2];
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
