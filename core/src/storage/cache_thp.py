@@ -27,6 +27,8 @@ _SEEDLESS_STATE = const(2)
 
 
 class SessionThpCache(DataCache):
+    # The first fields in the `field_sizes` tuple are encrypted while the device is
+    # locked. The rest of the fields are kept unencrypted.
     encrypted_count = CACHE_ENCRYPTED_COUNT_THP
 
     def __init__(self) -> None:
@@ -34,10 +36,12 @@ class SessionThpCache(DataCache):
 
         if utils.BITCOIN_ONLY:
             self.field_sizes = (
+                # Fields that are encrypted under soft lock:
                 64,  # APP_COMMON_SEED
                 32,  # APP_COMMON_NONCE
                 0,  # APP_CARDANO_ICARUS_SECRET (unused)
                 0,  # APP_CARDANO_ICARUS_TREZOR_SECRET (unused)
+                # Fields kept in plaintext:
                 2,  # CHANNEL_ID
                 1,  # SESSION_ID
                 1,  # SESSION_STATE
@@ -47,10 +51,12 @@ class SessionThpCache(DataCache):
             )
         else:
             self.field_sizes = (
+                # Fields that are encrypted under soft lock:
                 64,  # APP_COMMON_SEED
                 32,  # APP_COMMON_NONCE
                 96,  # APP_CARDANO_ICARUS_SECRET
                 96,  # APP_CARDANO_ICARUS_TREZOR_SECRET
+                # Fields kept in plaintext:
                 2,  # CHANNEL_ID
                 1,  # SESSION_ID
                 1,  # SESSION_STATE

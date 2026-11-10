@@ -108,7 +108,7 @@ class DataCache:
         if length == 0:
             return default
         start = self._field_start(key)
-        return bytes(self.data[start : start + length - 1])
+        return bytes(memoryview(self.data)[start : start + length - 1])
 
     def get_bool(self, key: int) -> bool:  # noqa: F811
         return self.get(key) is not None
@@ -132,7 +132,7 @@ class DataCache:
         end = start + len(value)
         if len(value) < size:
             # zero the rest of the field
-            self.data[end : start + size] = bytes(size - len(value))
+            utils.memzero(memoryview(self.data)[end : start + size])
         self.data[start:end] = value
         self.value_lengths[key] = len(value) + 1
 
@@ -153,7 +153,7 @@ class DataCache:
     def delete(self, key: int) -> None:
         self.check_key(key)
         start = self._field_start(key)
-        self.data[start : start + self.field_sizes[key]] = bytes(self.field_sizes[key])
+        utils.memzero(memoryview(self.data)[start : start + self.field_sizes[key]])
         self.value_lengths[key] = 0
 
     def clear(self) -> None:
@@ -248,11 +248,15 @@ class SessionlessCache(DataCache):
     passphrase seed derivation and the active session.
     """
 
+    # The first fields in the `field_sizes` tuple are encrypted while the device is
+    # locked. The rest of the fields are kept unencrypted.
     encrypted_count = CACHE_ENCRYPTED_COUNT_SESSIONLESS
 
     def __init__(self) -> None:
         self.field_sizes = (
+            # Fields that are encrypted under soft lock:
             64,  # APP_COMMON_SEED_WITHOUT_PASSPHRASE
+            # Fields kept in plaintext:
             1,  # APP_COMMON_SAFETY_CHECKS_TEMPORARY
             8,  # APP_COMMON_REQUEST_PIN_LAST_UNLOCK
             8,  # APP_COMMON_BUSY_DEADLINE_MS

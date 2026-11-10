@@ -26,6 +26,8 @@ class SessionCache(DataCache):
     or are specific to a `protocol_v1` session.
     """
 
+    # The first fields in the `field_sizes` tuple are encrypted while the device is
+    # locked. The rest of the fields are kept unencrypted.
     encrypted_count = CACHE_ENCRYPTED_COUNT_CODEC
 
     def __init__(self) -> None:
@@ -33,19 +35,23 @@ class SessionCache(DataCache):
         self.session_id[:] = b""  # no id yet; keeps the capacity, allocates nothing
         if utils.BITCOIN_ONLY:
             self.field_sizes = (
+                # Fields that are encrypted under soft lock:
                 64,  # APP_COMMON_SEED
                 32,  # APP_COMMON_NONCE
                 0,  # APP_CARDANO_ICARUS_SECRET (unused)
                 0,  # APP_CARDANO_ICARUS_TREZOR_SECRET (unused)
+                # Fields kept in plaintext:
                 2,  # APP_COMMON_AUTHORIZATION_TYPE
                 128,  # APP_COMMON_AUTHORIZATION_DATA
             )
         else:
             self.field_sizes = (
+                # Fields that are encrypted under soft lock:
                 64,  # APP_COMMON_SEED
                 32,  # APP_COMMON_NONCE
                 96,  # APP_CARDANO_ICARUS_SECRET
                 96,  # APP_CARDANO_ICARUS_TREZOR_SECRET
+                # Fields kept in plaintext:
                 2,  # APP_COMMON_AUTHORIZATION_TYPE
                 128,  # APP_COMMON_AUTHORIZATION_DATA
                 0,  # APP_COMMON_DERIVE_CARDANO
