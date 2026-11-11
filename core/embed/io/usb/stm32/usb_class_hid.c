@@ -23,6 +23,7 @@
 
 #include <io/usb_hid.h>
 #include <sec/random_delays.h>
+#include <sys/irq.h>
 #include <sys/sysevent_source.h>
 
 #ifdef USE_SUSPEND
@@ -367,11 +368,16 @@ static void on_event_poll(void *context, bool read_awaited,
   // assume that only one task is waiting for events and keep the
   // logic simple.
 
-  if (read_awaited && usb_hid_can_read(state)) {
+  irq_key_t irq_key = irq_lock();
+  bool read_ready = usb_hid_can_read(state);
+  bool write_ready = usb_hid_can_write(state);
+  irq_unlock(irq_key);
+
+  if (read_awaited && read_ready) {
     syshandle_signal_read_ready(state->handle, NULL);
   }
 
-  if (write_awaited && usb_hid_can_write(state)) {
+  if (write_awaited && write_ready) {
     syshandle_signal_write_ready(state->handle, NULL);
   }
 }
@@ -383,7 +389,10 @@ static bool on_check_read_ready(void *context, systask_id_t task_id,
   UNUSED(task_id);
   UNUSED(param);
 
-  return usb_hid_can_read(state);
+  irq_key_t irq_key = irq_lock();
+  bool ready = usb_hid_can_read(state);
+  irq_unlock(irq_key);
+  return ready;
 }
 
 static bool on_check_write_ready(void *context, systask_id_t task_id,
@@ -393,20 +402,28 @@ static bool on_check_write_ready(void *context, systask_id_t task_id,
   UNUSED(task_id);
   UNUSED(param);
 
-  return usb_hid_can_write(state);
+  irq_key_t irq_key = irq_lock();
+  bool ready = usb_hid_can_write(state);
+  irq_unlock(irq_key);
+  return ready;
 }
 
 static ssize_t on_read(void *context, void *buffer, size_t buffer_size) {
   usb_hid_state_t *state = (usb_hid_state_t *)context;
 
+  ssize_t retval = -1;
+  irq_key_t irq_key = irq_lock();
+
   if (state->dev_handle == NULL) {
-    return -1;  // Class driver not initialized
+    retval = -1;  // Class driver not initialized
+    goto cleanup;
   }
 
   // Copy maximum possible amount of data
   uint32_t last_read_len = state->last_read_len;
   if (buffer_size < last_read_len) {
-    return 0;  // Not enough data in the read buffer
+    retval = 0;  // Not enough data in the read buffer
+    goto cleanup;
   }
   memcpy(buffer, state->rx_buffer, last_read_len);
 
@@ -416,26 +433,38 @@ static ssize_t on_read(void *context, void *buffer, size_t buffer_size) {
   // Prepare the OUT EP to receive next packet
   USBD_LL_PrepareReceive(state->dev_handle, state->ep_out, state->rx_buffer,
                          state->max_packet_len);
+  retval = last_read_len;
 
-  return last_read_len;
+cleanup:
+  irq_unlock(irq_key);
+  return retval;
 }
 
 static ssize_t on_write(void *context, const void *data, size_t data_size) {
   usb_hid_state_t *state = (usb_hid_state_t *)context;
 
+  ssize_t retval = -1;
+
+  irq_key_t irq_key = irq_lock();
+
   if (state->dev_handle == NULL) {
-    return -1;  // Class driver not initialized
+    retval = -1;  // Class driver not initialized
+    goto cleanup;
   }
 
   if (state->ep_in_is_idle == 0) {
-    return 0;  // Last transmission is not over yet
+    retval = 0;  // Last transmission is not over yet
+    goto cleanup;
   }
 
   state->ep_in_is_idle = 0;
   USBD_LL_Transmit(state->dev_handle, state->ep_in, UNCONST(data),
                    (uint16_t)data_size);
+  retval = data_size;
 
-  return data_size;
+cleanup:
+  irq_unlock(irq_key);
+  return retval;
 }
 
 static const syshandle_vmt_t usb_hid_handle_vmt = {
