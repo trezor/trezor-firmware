@@ -262,17 +262,58 @@ impl Keypad {
         self.pressed.is_some()
     }
 
-    fn render_button<'s>(btn: &'s Maybe<Button>, target: &mut impl Renderer<'s>) {
-        if btn.is_visible() {
+    fn render_button<'s>(btn: &'s Maybe<Button>, target: &mut impl Renderer<'s>, alpha: u8) {
+        if !btn.is_visible() {
+            return;
+        }
+        if alpha == u8::MAX {
             btn.render(target);
+        } else {
+            btn.inner().render_with_alpha(target, alpha);
         }
     }
 
-    /// Render pressed button.
-    fn render_pressed_button<'s>(&'s self, target: &mut impl Renderer<'s>) {
+    /// Grid cell of a button.
+    fn button_grid_cell(button: &KeypadButton) -> usize {
+        match button {
+            KeypadButton::Key(idx) => Self::key_2_grid_cell(*idx),
+            KeypadButton::Erase | KeypadButton::Cancel | KeypadButton::Back => {
+                Self::ERASE_BUTTON_INDEX
+            }
+            KeypadButton::Confirm => Self::CONFIRM_BUTTON_INDEX,
+        }
+    }
+
+    /// Render the keypad with the opacity of each button given by
+    /// `alpha(column, row)` of its grid cell.
+    pub fn render_with_alpha<'s>(
+        &'s self,
+        target: &mut impl Renderer<'s>,
+        alpha: impl Fn(usize, usize) -> u8,
+    ) {
+        let render = |button: KeypadButton, target: &mut _| {
+            let cell = Self::button_grid_cell(&button);
+            let alpha = alpha(cell % COLS, cell / COLS);
+            Self::render_button(self.get_button(&button), target, alpha);
+        };
+
+        // render key buttons
+        for idx in 0..self.keys.len() {
+            render(KeypadButton::Key(idx), target);
+        }
+
+        // render special buttons
+        render(KeypadButton::Cancel, target);
+        render(KeypadButton::Erase, target);
+        render(KeypadButton::Back, target);
+        render(KeypadButton::Confirm, target);
+
+        // render currently pressed button once again because of possible overlap
         // TODO: Render special shape for the edge buttons.
         if let Some(button) = &self.pressed {
-            Self::render_button(self.get_button(button), target);
+            let cell = Self::button_grid_cell(button);
+            let alpha = alpha(cell % COLS, cell / COLS);
+            Self::render_button(self.get_button(button), target, alpha);
         }
     }
 
@@ -390,19 +431,7 @@ impl Component for Keypad {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        // render key buttons
-        for btn in self.keys.iter() {
-            Self::render_button(btn, target);
-        }
-
-        // render special buttons
-        Self::render_button(&self.cancel, target);
-        Self::render_button(&self.erase, target);
-        Self::render_button(&self.back, target);
-        Self::render_button(&self.confirm, target);
-
-        // render currently pressed button once again because of possible overlap
-        self.render_pressed_button(target);
+        self.render_with_alpha(target, |_, _| u8::MAX);
     }
 }
 

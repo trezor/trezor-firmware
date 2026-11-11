@@ -9,6 +9,7 @@ use super::common::{
 };
 use super::keypad::{ButtonState, Keypad, KeypadMsg, KeypadState};
 use crate::strutil::{ShortString, TString};
+use crate::ui::component::attach_anim::{self, AttachAnim};
 use crate::ui::component::text::layout::LayoutFit;
 use crate::ui::component::text::{LineBreaking, TextStyle};
 use crate::ui::component::{Component, Event, EventCtx, Label, TextLayout, Timer};
@@ -32,6 +33,7 @@ pub struct PinKeyboard<'a> {
     keypad: Keypad,
     input: PinInput,
     warning_timer: Timer,
+    attach_anim: AttachAnim,
 }
 
 impl<'a> PinKeyboard<'a> {
@@ -64,6 +66,7 @@ impl<'a> PinKeyboard<'a> {
             input: PinInput::new(),
             keypad: Keypad::new_numeric(true),
             warning_timer: Timer::new(),
+            attach_anim: AttachAnim::new(attach_anim::keypad::DURATION),
         }
     }
 
@@ -171,6 +174,8 @@ impl Component for PinKeyboard<'_> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.attach_anim.event(ctx, event);
+
         match event {
             // Set up timer to switch off warning prompt.
             Event::Attach(_) => {
@@ -248,27 +253,34 @@ impl Component for PinKeyboard<'_> {
 
         // Render prompt when the pin is empty
         if empty {
+            let alpha = attach_anim::keypad::prompt_alpha(&self.attach_anim);
             if let Some(ref w) = self.warning {
-                w.render(target);
+                w.render_with_alpha(target, alpha);
             } else {
-                self.prompt.render(target);
+                self.prompt.render_with_alpha(target, alpha);
             }
-            self.attempts.render(target);
+            self.attempts.render_with_alpha(target, alpha);
         }
+
+        let render_keypad = |target: &mut _| {
+            self.keypad.render_with_alpha(target, |col, row| {
+                attach_anim::keypad::button_alpha(&self.attach_anim, col, row)
+            })
+        };
 
         // When the entire pin is shown, the input area might overlap the keypad so it
         // has to be rendered later
         match self.input.display_style {
             DisplayStyle::Shown if !empty => {
-                self.keypad.render(target);
+                render_keypad(target);
                 self.input.render(target);
             }
             _ if !empty => {
                 self.input.render(target);
-                self.keypad.render(target);
+                render_keypad(target);
             }
             _ => {
-                self.keypad.render(target);
+                render_keypad(target);
             }
         }
     }

@@ -174,6 +174,34 @@ pub fn fade_in(x: f32) -> u8 {
     u8::lerp(0, 255, x.clamp(0.0, 1.0))
 }
 
+/// Attach animation of a keypad screen (PIN keyboard): the buttons fade in
+/// diagonally from the top left corner, then the prompt above the keypad.
+pub mod keypad {
+    use easer::functions::Cubic;
+    use sys::time::Duration;
+
+    use super::{ease_in_out, fade_in, AttachAnim};
+
+    /// Duration of the whole animation.
+    pub const DURATION: Duration = Duration::from_millis(750);
+    /// Delay between neighbouring diagonals of the keypad grid.
+    const BUTTON_DELAY: Duration = Duration::from_millis(50);
+    const BUTTON_FADE: Duration = Duration::from_millis(100);
+    const PROMPT_START: Duration = Duration::from_millis(650);
+    const PROMPT_FADE: Duration = Duration::from_millis(100);
+
+    /// Opacity of the button in grid column `col` and row `row`.
+    pub fn button_alpha(anim: &AttachAnim, col: usize, row: usize) -> u8 {
+        let start = BUTTON_DELAY * (col + row) as f32;
+        fade_in(ease_in_out::<Cubic>(anim.window(start, BUTTON_FADE)))
+    }
+
+    /// Opacity of the prompt above the keypad.
+    pub fn prompt_alpha(anim: &AttachAnim) -> u8 {
+        fade_in(anim.window(PROMPT_START, PROMPT_FADE))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

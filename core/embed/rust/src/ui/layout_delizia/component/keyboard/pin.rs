@@ -1,6 +1,5 @@
 use core::mem;
 
-use easer::functions::Cubic;
 use sys::time::{Duration, Instant};
 
 use super::super::super::component::button::ButtonMsg::{self, Clicked};
@@ -11,7 +10,7 @@ use super::super::super::fonts::FONT_MONO;
 use crate::strutil::{ShortString, TString};
 use crate::time::Stopwatch;
 use crate::trezorhal::random;
-use crate::ui::component::attach_anim::{ease_in_out, fade_in, AttachAnim};
+use crate::ui::component::attach_anim::{self, AttachAnim};
 use crate::ui::component::base::ComponentExt;
 use crate::ui::component::text::TextStyle;
 use crate::ui::component::{Component, Event, EventCtx, Marquee, Never, Pad, Timer};
@@ -41,9 +40,6 @@ const HEADER_PADDING: Insets = Insets::new(
 );
 
 const LAST_DIGIT_TIMEOUT: Duration = Duration::from_secs(1);
-
-/// Duration of the attach animation.
-const ATTACH_DURATION: Duration = Duration::from_millis(750);
 
 #[derive(Default, Clone)]
 struct CloseAnimation {
@@ -190,7 +186,7 @@ impl PinKeyboard {
                 .initially_enabled(false),
             digit_btns: Self::generate_digit_buttons(),
             warning_timer: Timer::new(),
-            attach_anim: AttachAnim::new(ATTACH_DURATION),
+            attach_anim: AttachAnim::new(attach_anim::keypad::DURATION),
             close_animation: CloseAnimation::default(),
             close_confirm: false,
         }
@@ -286,20 +282,13 @@ impl PinKeyboard {
     /// Opacity of the button at grid position `x`, `y`. On attach, the
     /// buttons fade in diagonally from the top left corner.
     fn get_button_alpha(&self, x: usize, y: usize, close_time: f32) -> u8 {
-        let diag = (x + y) as u32;
-        let attach = fade_in(ease_in_out::<Cubic>(
-            self.attach_anim
-                .window(Duration::from_millis(50 * diag), Duration::from_millis(100)),
-        ));
+        let attach = attach_anim::keypad::button_alpha(&self.attach_anim, x, y);
         attach.min(self.close_animation.opacity(close_time, x, y))
     }
 
     /// Opacity of the textbox. On attach, it fades in after the buttons.
     fn get_textbox_alpha(&self, close_time: f32) -> u8 {
-        let attach = fade_in(
-            self.attach_anim
-                .window(Duration::from_millis(650), Duration::from_millis(100)),
-        );
+        let attach = attach_anim::keypad::prompt_alpha(&self.attach_anim);
         attach.min(self.close_animation.header_opacity(close_time))
     }
 }
