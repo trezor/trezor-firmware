@@ -129,6 +129,16 @@ bool ble_init(void) {
     return 0;
   }
 
+  // The auxiliary services start their forwarding threads here but are
+  // registered only when the STM32 asks for them in the advertising-on
+  // command, so a production STM32 firmware never exposes them.
+#if IS_ENABLED(CONFIG_TRZ_CONSOLE)
+  console_init();
+#endif
+#if IS_ENABLED(CONFIG_TRZ_DEBUG_LINK)
+  debug_init();
+#endif
+
   advertising_init();
   ble_management_init();
 
