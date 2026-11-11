@@ -42,8 +42,15 @@ pub fn get_hmac(algorithm: HmacAlgorithm, key: &[u8]) -> BoxedHasher {
 pub trait HasherExt {
     /// Feeds more input into the hash state.
     fn update(&mut self, input: &[u8]);
-    /// Writes the final digest, consuming accumulated state.
-    fn finalize(&mut self) -> BoxedSlice<u8>;
+    /// Returns the digest. Consumes the hasher, so it can't be used again:
+    ///
+    /// ```compile_fail
+    /// # use trezor_app_sdk::crypto::{self, HasherExt, HashingAlgorithm};
+    /// let mut hasher = crypto::get_hasher(HashingAlgorithm::Sha256);
+    /// hasher.finalize();
+    /// hasher.update(b"more");
+    /// ```
+    fn finalize(self) -> BoxedSlice<u8>;
 }
 
 impl HasherExt for BoxedHasher {
@@ -51,8 +58,8 @@ impl HasherExt for BoxedHasher {
         HasherDynMut::update(self, Slice::from(input));
     }
 
-    fn finalize(&mut self) -> BoxedSlice<u8> {
-        HasherDynMut::finalize(self)
+    fn finalize(mut self) -> BoxedSlice<u8> {
+        HasherDynMut::finalize(&mut self)
     }
 }
 
