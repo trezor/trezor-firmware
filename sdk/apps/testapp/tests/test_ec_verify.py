@@ -192,7 +192,7 @@ def test_ecdsa_verify_digest_length(
 def test_ecdsa_verify_public_key_format(
     session: Session, instance_id: int, curve: m.EcdsaCurve
 ):
-    """Only 33- or 65-byte SEC1 keys are accepted."""
+    """Only SEC1 keys are accepted: 33 bytes with 02/03, or 65 bytes with 04."""
     key, digest, rs = ecdsa_case(curve, b"message")
     uncompressed = signing.public_key(key, False)
     compressed = signing.public_key(key, True)
@@ -201,10 +201,11 @@ def test_ecdsa_verify_public_key_format(
         uncompressed[1:],  # raw 64-byte x || y
         compressed[:-1],
         uncompressed + b"\x00",
+        b"\x04" + compressed[1:],  # compressed length, uncompressed prefix
+        b"\x02" + uncompressed[1:],  # uncompressed length, compressed prefix
+        b"\x06" + uncompressed[1:],  # hybrid form
     ):
-        # the message isn't checked: Core reports these as an invalid
-        # signature, Ed25519 as an invalid public key
-        with raises(SdkError.DataError):
+        with raises(SdkError.DataError, INVALID_ENCODING):
             testapp_ext.ecdsa_verify_digest(
                 session, instance_id, curve, bad, rs, digest
             )
