@@ -101,7 +101,9 @@ jobs:
         if: matrix.model != 'T3W1'  # gets stuck on models with THP
       - run: |
           $NIX_RUN bash -c "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
-          $UV_RUN pytest -v --verbose-log-file pytest.log tests/device_tests -m 'not sd_card' -k 'not test_authenticate_device and not evolu and not test_telemetry' --durations=50 --session-timeout 19800
+          $UV_RUN pytest -v --verbose-log-file pytest.log tests/device_tests \
+          -m 'not sd_card' -k 'not test_authenticate_device and not evolu and not test_telemetry' \
+          --durations=50 --session-timeout 19800 --warn-on-gc-leak
       - run: tail -n50 trezor.log || true
         if: failure()
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
