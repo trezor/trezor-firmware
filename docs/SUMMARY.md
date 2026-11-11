@@ -68,6 +68,7 @@
   - [TOIF Image Format](misc/toif.md)
     - [toiftool](misc/toiftool.md)
   - [WARD Manager development service](misc/ward-manager.md)
+  - [WARD service interface](misc/ward-service-channel.md)
 - [Developers guide](developers/index.md)
   - [Libraries](developers/libraries.md)
   - [Hello World in Trezor Core](developers/hello_world_in_core.md)

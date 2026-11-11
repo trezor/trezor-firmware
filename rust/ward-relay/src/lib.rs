@@ -23,6 +23,7 @@ pub const DEFAULT_URL: &str = "ws://127.0.0.1:21329";
 // FIXME(ward): allow per method only the messages that method's flow sends.
 const DEVICE_CALLS: &[&str] = &[
     "WARDSync",
+    "WARDServiceSync",
     "WARDVerifyChain",
     "WARDPerformBatch",
     "WARDConfirmBatchByWM",

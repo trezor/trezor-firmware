@@ -96,6 +96,9 @@ cannot be used bare:
 - `--k1n1` — enable K1N1 support.
 - `--miniscript` — enable experimental Miniscript support.
 - `--ward` — enable experimental WARD support.
+- `--enable-ward-service-channel` — enable the independent streaming WARD USB
+  interface with runtime wallet fallback (universal firmware only). See
+  [WARD service channel](../../misc/ward-service-channel.md).
 - `--unsafe-fw` — enable unsafe firmware features.
 - `--storage-insecure-testing-mode` — insecure storage test mode (forbidden with
   `--production`).
