@@ -9,7 +9,8 @@ extern crate alloc;
 
 use prost::Message;
 use trezor_app_sdk::{
-    Error, Result, ResultExt, WireDecode, WireEncode, error, wire_call, wire_handler, wire_receive,
+    Error, Result, ResultExt, WireDecode, WireEncode, error, wire_call, wire_error, wire_handler,
+    wire_receive,
 };
 
 // Include generated code
@@ -94,11 +95,11 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
         Ok(MessageType::SignTx) => handle_sign_tx(data),
         Ok(_) => {
             error!("Invalid function: {:?}", id);
-            Err(Error::InvalidFunction)
+            wire_error(&Error::InvalidFunction)
         }
         Err(_) => {
             error!("Non existing message type: {:?}", id);
-            Err(Error::InvalidFunction)
+            wire_error(&Error::InvalidFunction)
         }
     }
 }
