@@ -70,9 +70,12 @@ macro_rules! wire_handler {
     ($handler_name:ident, $codec:ty, $request_type:ty, $response_msg:expr, $handler_fn:path) => {
         #[inline(never)]
         fn $handler_name(request_data: &[u8]) -> $crate::Result<()> {
-            let request = $crate::ResultExt::c(
-                <$codec as $crate::WireDecode<$request_type>>::decode(request_data),
-            )?;
+            // a malformed request is the host's error, the app keeps running
+            let decoded = <$codec as $crate::WireDecode<$request_type>>::decode(request_data);
+            let request = match $crate::ResultExt::c(decoded) {
+                Ok(request) => request,
+                Err(e) => return $crate::wire_error(&e),
+            };
 
             match $handler_fn(request) {
                 Ok(resp) => {
