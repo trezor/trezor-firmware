@@ -21,6 +21,8 @@ async def get_public_key(
     from apps.common import coininfo, lock_manager, paths
     from apps.common.keychain import ForbiddenKeyPath, get_keychain
 
+    from .keychain import is_bip48_segwit_account
+
     lock_manager.touch_idle_timer_if_ble()
 
     coin_name = msg.coin_name or "Bitcoin"
@@ -44,6 +46,8 @@ async def get_public_key(
         keychain = await get_keychain(curve_name, [paths.AlwaysMatchingSchema])
 
     node = keychain.derive(address_n)
+    # BIP-48 SegWit account nodes are multisig cosigner keys
+    multisig = is_bip48_segwit_account(coin, address_n, script_type)
 
     if (
         script_type
@@ -76,6 +80,15 @@ async def get_public_key(
     else:
         raise wire.DataError("Invalid combination of coin and script_type")
 
+    if multisig and not ignore_xpub_magic:
+        magic = (
+            coin.xpub_magic_multisig_segwit_native
+            if script_type == InputScriptType.SPENDWITNESS
+            else coin.xpub_magic_multisig_segwit_p2sh
+        )
+        if magic is not None:
+            node_xpub = node.serialize_public(magic)
+
     pubkey = node.public_key()
     # For curve25519 and ed25519, the public key has the prefix 0x00, as specified by SLIP-10. However, since this prefix is non-standard, it may be removed in the future.
     node_type = HDNodeType(
@@ -85,8 +98,13 @@ async def get_public_key(
         chain_code=node.chain_code(),
         public_key=pubkey,
     )
-    descriptor = _xpub_descriptor(
-        node, xpub_magic, address_n, script_type, keychain.root_fingerprint()
+    # a single-key descriptor would misdescribe a cosigner key
+    descriptor = (
+        None
+        if multisig
+        else _xpub_descriptor(
+            node, xpub_magic, address_n, script_type, keychain.root_fingerprint()
+        )
     )
 
     if msg.show_display:

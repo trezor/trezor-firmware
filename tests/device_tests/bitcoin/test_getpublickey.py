@@ -260,3 +260,39 @@ def test_script_type(session: Session, script_type, xpub, xpub_ignored_magic):
         ignore_xpub_magic=True,
     )
     assert res.xpub == xpub_ignored_magic
+
+
+VECTORS_BIP48 = (  # path, script_type, prefix
+    pytest.param(
+        "m/48h/0h/0h/2h",
+        messages.InputScriptType.SPENDWITNESS,
+        "Zpub",
+        id="SPENDWITNESS",
+    ),
+    pytest.param(
+        "m/48h/0h/0h/1h",
+        messages.InputScriptType.SPENDP2SHWITNESS,
+        "Ypub",
+        id="SPENDP2SHWITNESS",
+    ),
+)
+
+
+@pytest.mark.parametrize("path, script_type, prefix", VECTORS_BIP48)
+def test_bip48_multisig_magic(session: Session, path, script_type, prefix):
+    res = btc.get_public_node(
+        session, parse_path(path), coin_name="Bitcoin", script_type=script_type
+    )
+    assert res.xpub.startswith(prefix)
+    assert res.descriptor is None
+
+    plain = btc.get_public_node(
+        session,
+        parse_path(path),
+        coin_name="Bitcoin",
+        script_type=script_type,
+        ignore_xpub_magic=True,
+    )
+    assert plain.xpub.startswith("xpub")
+    assert plain.descriptor is None
+    assert plain.node == res.node
