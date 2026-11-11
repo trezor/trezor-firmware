@@ -5,6 +5,8 @@ import trezorproto
 decode = trezorproto.decode
 encode = trezorproto.encode
 encoded_length = trezorproto.encoded_length
+field_info = trezorproto.field_info
+encode_range = trezorproto.encode_range
 type_for_name = trezorproto.type_for_name
 type_for_wire = trezorproto.type_for_wire
 

@@ -47,3 +47,13 @@ def encoded_length(msg: MessageType) -> int:
 def encode(buffer: AnyBuffer, msg: MessageType) -> int:
     """Encode the message into the specified buffer. Return length of
     encoding."""
+
+
+# rust/src/protobuf/obj.rs
+def field_info(msg_type: type[MessageType], tag: int) -> tuple | None:
+    """Streaming field schema: name, kind, repeated, embedded message type."""
+
+
+# rust/src/protobuf/obj.rs
+def encode_range(buffer: AnyBuffer, msg: MessageType, offset: int) -> int:
+    """Encode only the output window starting at offset. No full wire buffer."""

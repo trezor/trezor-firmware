@@ -4,3 +4,5 @@ mod encode;
 mod error;
 pub(crate) mod obj;
 mod zigzag;
+
+mod streaming;
