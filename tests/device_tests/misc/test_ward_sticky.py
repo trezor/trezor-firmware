@@ -19,6 +19,7 @@ import pytest
 
 from trezorlib import debuglink, messages, ward
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import LayoutType
 from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
@@ -118,6 +119,14 @@ def _label_screens(session: Session, address: bytes, callback) -> list[str]:
                 layout = dev.debuglink().read_layout()
                 title = layout.title().lower()
                 text = title + " " + layout.screen_content()
+                # Smaller screens split a long one into pages (e.g. the four
+                # properties of a changed offline entry on Delizia): read them all.
+                for _page in range(layout.page_count() - 1):
+                    if dev.debuglink().layout_type is LayoutType.Caesar:
+                        dev.debuglink().press_right()
+                    else:
+                        dev.debuglink().swipe_up()
+                    text += " " + dev.debuglink().read_layout().screen_content()
                 seen.append(" ".join(text.lower().split()))
                 dev.debuglink().press_yes()
                 # the address screen is titled with the lookup's status; a warning
