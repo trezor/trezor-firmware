@@ -60,7 +60,7 @@ DEFAULT_TOKEN_FILE = Path.home() / ".trezor-ward" / "token"
 # WARDPerformUpdate / WARDConfirmedByWM / revert messages stay allowed.
 # FIXME(ward): allow per method only the messages that method's flow sends.
 DEVICE_CALLS = frozenset(
-    "WARDSync WARDIngestAttestation WARDReconcile WARDLookup WARDQueueUpdate "
+    "WARDServiceSync WARDSync WARDIngestAttestation WARDReconcile WARDLookup WARDQueueUpdate "
     "WARDPerformUpdate WARDConfirmedByWM WARDDiscardPending WARDVerifyChain "
     "WARDPerformBatch WARDConfirmBatchByWM WARDPerformRevert WARDConfirmRevertByWM "
     "WARDListPendingEdits WARDListEntries WARDCacheEntry WARDCacheExport WARDCacheImport "
