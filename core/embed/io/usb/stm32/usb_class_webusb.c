@@ -128,7 +128,8 @@ secbool usb_webusb_add(const usb_webusb_info_t *info) {
   state->last_read_len = 0;
   state->ep_in_is_idle = 1;
 
-  usb_set_iface_class(info->iface_num, &usb_webusb_class);
+  usb_set_iface_class(info->iface_num, &usb_webusb_class, state->handle,
+                      &usb_webusb_handle_vmt);
 
   return sectrue;
 }
@@ -177,18 +178,12 @@ static uint8_t usb_webusb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_buffer,
                          state->max_packet_len);
 
-  if (!syshandle_register(state->handle, &usb_webusb_handle_vmt, state)) {
-    return USBD_FAIL;
-  }
-
   return USBD_OK;
 }
 
 static uint8_t usb_webusb_class_deinit(USBD_HandleTypeDef *dev,
                                        uint8_t cfg_idx) {
   usb_webusb_state_t *state = (usb_webusb_state_t *)dev->pUserData;
-
-  syshandle_unregister(state->handle);
 
   // Flush endpoints
   USBD_LL_FlushEP(dev, state->ep_in);

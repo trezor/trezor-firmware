@@ -319,11 +319,12 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
 
   state->ep_in_is_idle = 1;
 
-  usb_set_iface_class(info->iface_num, &usb_vcp_class);
+  usb_set_iface_class(info->iface_num, &usb_vcp_class, state->handle,
+                      &usb_vcp_handle_vmt);
 
   // This just make the data interface slot occupied so it can't be reused
   // by another class driver. Data interface dispatch functions are not used.
-  usb_set_iface_class(info->data_iface_num, &usb_vcp_data_class);
+  usb_set_iface_class(info->data_iface_num, &usb_vcp_data_class, 0, NULL);
 
   return sectrue;
 }
@@ -350,17 +351,11 @@ static uint8_t usb_vcp_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
                          state->max_packet_len);
   state->recv_pending = true;
 
-  if (!syshandle_register(state->handle, &usb_vcp_handle_vmt, state)) {
-    return USBD_FAIL;
-  }
-
   return USBD_OK;
 }
 
 static uint8_t usb_vcp_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
-
-  syshandle_unregister(state->handle);
 
   // Flush endpoints
   USBD_LL_FlushEP(dev, state->ep_in);
@@ -495,6 +490,10 @@ static void on_event_poll(void *context, bool read_awaited,
                           bool write_awaited) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)context;
 
+  if (state->dev_handle == NULL) {
+    return;  // Class driver not initialized
+  }
+
   // Only one task can read or write at a time. Therefore, we can
   // assume that only one task is waiting for events and keep the
   // logic simple.
@@ -515,6 +514,10 @@ static bool on_check_read_ready(void *context, systask_id_t task_id,
   UNUSED(task_id);
   UNUSED(param);
 
+  if (state->dev_handle == NULL) {
+    return false;  // Class driver not initialized
+  }
+
   return !usb_rbuf_is_empty(&state->rx_ring);
 }
 
@@ -525,11 +528,19 @@ static bool on_check_write_ready(void *context, systask_id_t task_id,
   UNUSED(task_id);
   UNUSED(param);
 
+  if (state->dev_handle == NULL) {
+    return false;  // Class driver not initialized
+  }
+
   return !usb_rbuf_is_full(&state->tx_ring);
 }
 
 static ssize_t on_read(void *context, void *buffer, size_t buffer_size) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)context;
+
+  if (state->dev_handle == NULL) {
+    return -1;
+  }
 
   ssize_t recved_size = usb_rbuf_read(&state->rx_ring, buffer, buffer_size);
 
@@ -550,6 +561,10 @@ static ssize_t on_read(void *context, void *buffer, size_t buffer_size) {
 
 static ssize_t on_write(void *context, const void *data, size_t data_size) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)context;
+
+  if (state->dev_handle == NULL) {
+    return -1;  // Class driver not initialized
+  }
 
   return usb_rbuf_write(&state->tx_ring, (const uint8_t *)data, data_size);
 }

@@ -168,7 +168,8 @@ secbool usb_hid_add(const usb_hid_info_t *info) {
   state->last_read_len = 0;
   state->ep_in_is_idle = 1;
 
-  usb_set_iface_class(info->iface_num, &usb_hid_class);
+  usb_set_iface_class(info->iface_num, &usb_hid_class, state->handle,
+                      &usb_hid_handle_vmt);
 
   return sectrue;
 }
@@ -219,17 +220,11 @@ static uint8_t usb_hid_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_buffer,
                          state->max_packet_len);
 
-  if (!syshandle_register(state->handle, &usb_hid_handle_vmt, state)) {
-    return USBD_FAIL;
-  }
-
   return USBD_OK;
 }
 
 static uint8_t usb_hid_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   usb_hid_state_t *state = (usb_hid_state_t *)dev->pUserData;
-
-  syshandle_unregister(state->handle);
 
   // Flush endpoints
   USBD_LL_FlushEP(dev, state->ep_in);

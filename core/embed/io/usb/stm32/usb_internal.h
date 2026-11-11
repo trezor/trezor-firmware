@@ -21,6 +21,8 @@
 
 #include <trezor_types.h>
 
+#include <sys/sysevent_source.h>
+
 #include "usbd_core.h"
 
 #define USB_EP_DIR_MASK 0x80
@@ -114,8 +116,10 @@ typedef struct __attribute__((packed)) {
 // and is aligned to 8-byte boundary.
 void *usb_get_iface_state(uint8_t iface_num, const USBD_ClassTypeDef *class);
 
-// Assigns the concrete class to the slot `iface_num`.
-void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class);
+// Assigns the concrete class, system handle and its virtual method table to the
+// slot `iface_num`.
+void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class,
+                         syshandle_t handle, const syshandle_vmt_t *vmt);
 
 // Allocates the buffer for the class driver descriptors
 // (interface, endpoint, ...) inside the USB device structure.
