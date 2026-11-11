@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import fcntl
 import json
+import math
 import os
 import select
 import shlex
@@ -88,6 +89,11 @@ def command(
             "--data-dir",
             str(root / "evolu"),
             "--verbose",
+            *(
+                ["--service-channel", f"udp:127.0.0.1:{config['emulator_port']}"]
+                if config.get("service_channel")
+                else []
+            ),
         ], Path(config["suite"]) / "packages/wardd"
     if base_role == "emulator":
         profile = (
@@ -103,7 +109,7 @@ def command(
                     FIRMWARE / "core/build/artifacts/T3T1/firmware-emu",
                 )
             ),
-            *([] if config.get("gui", False) else ["-h"]),
+            *(["-h"] if config.get("headless", False) else []),
             "-s",
             "-q",
             "-p",
@@ -130,12 +136,13 @@ def command(
     return [
         python,
         str(FIRMWARE / "rust/ward-relay/examples/trezor_hwi.py"),
-        "--jade-host",
+        *([] if config.get("service_channel") else ["--jade-host"]),
         "--label",
         config["label"],
         *(["--long"] if config.get("long", False) else []),
         *(["--extra_long"] if config.get("extra_long", False) else []),
         *(["--adversarial"] if config.get("adversarial", False) else []),
+        *(["--service-channel"] if config.get("service_channel") else []),
     ], FIRMWARE
 
 
@@ -185,6 +192,8 @@ def component(config_path: Path, role: str) -> int:
             return 0
         if role == "wardd":
             wait_for(config, lambda: (root / "manager.ready").exists())
+            if config.get("service_channel"):
+                wait_for(config, lambda: (root / "emulator.ready").exists())
         if role == "hwi":
             wait_for(
                 config,
@@ -235,6 +244,12 @@ def component(config_path: Path, role: str) -> int:
             elif role == "wardd":
 
                 def ready() -> bool:
+                    if config.get("service_channel"):
+                        logfile = root / "wardd.log"
+                        return (
+                            logfile.is_file()
+                            and "wardd service connected" in logfile.read_text()
+                        )
                     if not (root / "evolu/token").is_file():
                         return False
                     with socket.create_connection(
@@ -316,6 +331,8 @@ def component(config_path: Path, role: str) -> int:
                 )
         if output is not None:
             output.join(timeout=2)
+        if role == "wardd":
+            (root / "wardd.stopped").touch()
     return result
 
 
@@ -327,7 +344,7 @@ def emulator_roles(devices: int) -> list[str]:
 
 def reserve_ports(
     manager: int,
-    wardd: int,
+    wardd: int | None,
     emulator: int,
     devices: int = 1,
     debug: int | None = None,
@@ -337,17 +354,21 @@ def reserve_ports(
         raise ValueError("devices must be between 1 and 8")
     if not all(
         1 <= port <= 65535
-        for port in (manager, wardd, *([] if debug is None else [debug]))
+        for port in (
+            manager,
+            *([] if wardd is None else [wardd]),
+            *([] if debug is None else [debug]),
+        )
     ):
         raise ValueError("TCP ports must be between 1 and 65535")
-    maximum = 65537 - 8 * devices
+    maximum = 65536 - 8 * devices
     if not 30000 < emulator <= maximum:
         raise ValueError(f"TREZOR_UDP_PORT must be between 30001 and {maximum}")
     sockets = []
     try:
         for kind, port in [
             (socket.SOCK_STREAM, manager),
-            (socket.SOCK_STREAM, wardd),
+            *([] if wardd is None else [(socket.SOCK_STREAM, wardd)]),
             *([] if debug is None else [(socket.SOCK_STREAM, debug)]),
             *(
                 [
@@ -360,7 +381,7 @@ def reserve_ports(
             *[
                 (socket.SOCK_DGRAM, emulator + 8 * index + offset)
                 for index in range(devices)
-                for offset in range(7)
+                for offset in range(8)
             ],
         ]:
             sock = socket.socket(socket.AF_INET, kind)
@@ -462,6 +483,11 @@ def main() -> int:
     )
     parser.add_argument("--terminal", choices=("gnome-terminal", "konsole", "xterm"))
     parser.add_argument("--label", default="WARD demo")
+    parser.add_argument(
+        "--service-channel",
+        action="store_true",
+        help="Connect wardd directly to the emulator's service interface without an adapter relay port",
+    )
     parser.add_argument("--model", choices=("T3T1", "T3W1"), default="T3T1")
     parser.add_argument(
         "--emulator-executable",
@@ -480,6 +506,13 @@ def main() -> int:
         help="Cover every bounded state/operation combination through depth 10",
     )
     parser.add_argument("--timeout", type=float, default=90)
+    parser.add_argument(
+        "--confirm-delay",
+        type=float,
+        default=2.0,
+        metavar="SECONDS",
+        help="Wait after a confirmation screen appears before automatically responding (default: 2)",
+    )
     parser.add_argument(
         "--adversarial",
         action="store_true",
@@ -506,16 +539,17 @@ def main() -> int:
         action="store_true",
         help="Stop all components after one successful write/lookup",
     )
-    parser.add_argument(
+    display = parser.add_mutually_exclusive_group()
+    display.add_argument(
         "--gui",
         "--emulator-gui",
         action="store_true",
-        help="Show the emulator display (the emulator is headless by default)",
+        help="Show the emulator display (the default)",
     )
-    parser.add_argument(
+    display.add_argument(
         "--headless",
         action="store_true",
-        help="Run the four nix-shell processes without terminal windows",
+        help="Hide the emulator display and run components without terminal windows",
     )
     parser.add_argument(
         "--dry-run",
@@ -529,6 +563,9 @@ def main() -> int:
     parser.add_argument("--config", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--wait", type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args()
+    args.gui = not args.headless
+    if not math.isfinite(args.confirm_delay) or args.confirm_delay < 0:
+        parser.error("--confirm-delay must be a finite, nonnegative number of seconds")
     if args.pause or args.resume:
         if not args.run_dir or (args.pause and args.resume):
             parser.error("Use exactly one of --pause/--continue with --run-dir")
@@ -553,6 +590,10 @@ def main() -> int:
         parser.error(
             "--devices runs the multi-device scenarios; use stress/adversarial modes separately"
         )
+    if args.service_channel and args.devices > 1:
+        parser.error(
+            "--service-channel currently supports one device; multi-device recovery uses the wallet relay"
+        )
     if args.adversarial and (args.long or args.extra_long):
         parser.error("Run --adversarial separately from --long/--extra_long")
     if args.emulator_executable is None:
@@ -568,6 +609,14 @@ def main() -> int:
         (Path(config["run_dir"]) / f"{role}.ready").touch()
         while not stopped(config):
             time.sleep(0.2)
+        if config.get("service_channel"):
+            # Keep the device alive while wardd releases its binding. A lost
+            # terminal still gets a bounded shutdown rather than stranding it.
+            deadline = time.monotonic() + 5
+            while not (Path(config["run_dir"]) / "wardd.stopped").exists():
+                if time.monotonic() >= deadline:
+                    break
+                time.sleep(0.1)
         return 0
     if args.component:
         if args.config is None:
@@ -584,12 +633,6 @@ def main() -> int:
     if not args.headless and terminal is None:
         parser.error("Install gnome-terminal, konsole or xterm, or use --headless")
     if (
-        args.gui
-        and not args.dry_run
-        and not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
-    ):
-        parser.error("--gui requires a graphical display (DISPLAY or WAYLAND_DISPLAY)")
-    if (
         not args.headless
         and not args.dry_run
         and not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
@@ -602,7 +645,7 @@ def main() -> int:
     try:
         reserve_ports(
             args.manager_port,
-            args.wardd_port,
+            None if args.service_channel else args.wardd_port,
             args.emulator_port,
             args.devices,
             args.debug_port,
@@ -615,6 +658,7 @@ def main() -> int:
     root = Path(tempfile.mkdtemp(prefix="ward-stack-"))
     environment = {
         "WARD_DELAYS": "1" if args.delays else "0",
+        "WARD_CONFIRM_DELAY": str(args.confirm_delay),
         "WARD_MANAGER_PORT": str(args.manager_port),
         "WARDD_PORT": str(args.wardd_port),
         "WARDD_DEBUG_PORT": str(args.debug_port),
@@ -669,10 +713,11 @@ def main() -> int:
                 args.model,
                 "-p",
                 "test-live",
-                # the offline cache (sticky entries) is part of the --adversarial run
-                "--ward",
             ],
         ]
+        if args.service_channel:
+            # The direct wallet driver has no Rust adapter or Jade dependency.
+            commands.pop(1)
         prepare = root / "prepare.sh"
         prepare.write_text(
             "set -eu\n" + "\n".join(shlex.join(command) for command in commands) + "\n"
@@ -701,7 +746,9 @@ def main() -> int:
             [
                 str(FIRMWARE / ".venv/bin/python"),
                 "-c",
-                "from jadepy.ward import WardAdapter",
+                "from trezorlib.ward_wallet import WardWalletClient"
+                if args.service_channel
+                else "from jadepy.ward import WardAdapter",
             ],
             capture_output=True,
             text=True,

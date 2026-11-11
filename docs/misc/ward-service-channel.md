@@ -1,7 +1,9 @@
 # WARD service interface and wallet fallback
 
-Build `petrsusil/ward-poc-encrypted` with `--enable-ward-service-channel`. This also
-includes WARD. The option adds a dedicated codec-v1 USB interface on every model,
+Universal emulator builds on `petrsusil/ward-service-channel` include the service
+interface automatically; no emulator parameter or WARD build flag is needed.
+Hardware builds opt in with `--enable-ward-service-channel`, which also includes
+WARD. This adds a dedicated codec-v1 USB interface on every model,
 including THP wallets; it does not add a THP channel or borrow wallet buffers.
 Bitcoin-only builds reject this option. Split kernel/firmware hardware builds
 must enable it in both projects.
@@ -39,7 +41,7 @@ Service synchronization requires a reconstructable replica. Recovery from missin
 replica data remains available through the wallet protocol: close the service
 binding before starting that recovery flow.
 
-The matching Connect/wardd code on `petrsusil/ward-poc-encrypted` recognizes
+The matching Connect/wardd code on `petrsusil/ward-service-channel` recognizes
 `WARDSyncAck.service_bound`, requests `WARDServiceSync`, and honors the
 `service_applied` candidate flag. The wallet receives the result without backend
 leaves. A separate service queue allows a wallet call to wait on a reverse RPC to
@@ -86,11 +88,11 @@ ordinary full-message buffer.
 
 ## Run the components
 
-Use matching firmware and Suite checkouts on `petrsusil/ward-poc-encrypted`.
+Use matching firmware and Suite checkouts on `petrsusil/ward-service-channel`.
 From the firmware checkout, with Nix and uv dependencies active:
 
 ```sh
-uv run xtask build firmware -e -m T3W1 -p test-live --enable-ward-service-channel
+uv run xtask build firmware -e -m T3W1 -p test-live
 uv run python core/emu.py --executable core/build/artifacts/T3W1/firmware-emu \
     -h -t -P 37904
 ```
@@ -109,6 +111,24 @@ yarn workspace @trezor/wardd start --memory --data-dir /tmp/ward-service-demo \
 For hardware use `--service-channel usb` (one attached device) or
 `--service-channel usb:SERIAL`. wardd claims only the dedicated service interface.
 Without this option the daemon retains its existing wallet relay behavior.
+With it, wardd connects directly to the service interface and opens no WebSocket
+adapter relay port. Add `--wallet-relay` explicitly to expose that relay as well.
+Wallet callers can use `trezorlib.ward_wallet.WardWalletClient` to issue ordinary
+wallet requests without connecting to wardd or supplying backend messages.
+
+The multi-terminal launcher selects the direct connection with one runtime flag:
+
+```sh
+uv run python tools/ward_stack.py --suite /path/to/matching/trezor-suite \
+    --model T3W1 --service-channel --extra-long --full-log --once
+```
+
+The launcher waits for the emulator before wardd binds, then starts the wallet
+driver. Shutdown releases the binding before stopping the emulator. This mode
+currently supports one device; multi-device recovery uses the wallet relay.
+The emulator UI is visible by default. Confirmations are approved automatically
+after two seconds; set `--confirm-delay SECONDS` to change this. Use `--headless`
+explicitly to hide the emulator and run all components without terminal windows.
 
 Alternatively, start wardd without `--service-channel` and attach the independent
 backend from the firmware checkout using wardd's generated token:

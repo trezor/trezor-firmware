@@ -354,3 +354,107 @@ def test_tropic_model_port_is_reserved(launch_args) -> None:
         )
     assert result.returncode == 2
     assert "Cannot use the requested ports" in result.stderr
+
+
+def test_service_mode_uses_direct_daemon_and_wallet_driver_without_relay_port(
+    launch_args,
+) -> None:
+    args, env = launch_args
+    with socket.socket() as occupied:
+        occupied.bind(("127.0.0.1", int(env["WARDD_PORT"])))
+        result = subprocess.run(
+            args + ["--service-channel"],
+            env=env,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    match = re.search(r"Run directory: (.+)", result.stdout)
+    assert match is not None
+    root = Path(match.group(1))
+    try:
+        config = json.loads((root / "config.json").read_text())
+        daemon, _ = command(config, "wardd", root / "config.json")
+        driver, _ = command(config, "hwi", root / "config.json")
+        emulator, _ = command(config, "emulator", root / "config.json")
+        assert (
+            daemon[daemon.index("--service-channel") + 1]
+            == f"udp:127.0.0.1:{env['TREZOR_UDP_PORT']}"
+        )
+        assert "--wallet-relay" not in daemon
+        assert "--service-channel" in driver
+        assert "--service-channel" not in emulator
+        assert "--enable-ward-service-channel" not in emulator
+    finally:
+        shutil.rmtree(root)
+
+
+def test_service_udp_port_is_reserved_even_without_host_binding(launch_args) -> None:
+    args, env = launch_args
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as occupied:
+        occupied.bind(("127.0.0.1", int(env["TREZOR_UDP_PORT"]) + 7))
+        result = subprocess.run(args, env=env, capture_output=True, text=True)
+    assert result.returncode != 0
+    assert "Cannot use the requested ports" in result.stderr
+
+
+@pytest.mark.parametrize("headless", [False, True])
+def test_display_is_visible_by_default_and_hidden_only_explicitly(
+    launch_args, headless: bool
+) -> None:
+    args, env = launch_args
+    args = [arg for arg in args if arg != "--headless"]
+    args += ["--headless"] if headless else ["--terminal", "xterm"]
+    result = subprocess.run(args, env=env, capture_output=True, text=True, check=True)
+    match = re.search(r"Run directory: (.+)", result.stdout)
+    assert match is not None
+    root = Path(match.group(1))
+    try:
+        config = json.loads((root / "config.json").read_text())
+        emulator, _ = command(config, "emulator", root / "config.json")
+        assert ("-h" in emulator) is headless
+        assert config["gui"] is not headless
+        assert config["confirm_delay"] == 2.0
+        assert config["environment"]["WARD_CONFIRM_DELAY"] == "2.0"
+    finally:
+        shutil.rmtree(root)
+
+
+@pytest.mark.parametrize("delay", ["0", "0.5", "3"])
+def test_confirmation_delay_reaches_the_driver_and_multi_device_config(
+    launch_args, delay: str
+) -> None:
+    args, env = launch_args
+    result = subprocess.run(
+        args + ["--confirm-delay", delay, "--devices", "2"],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    match = re.search(r"Run directory: (.+)", result.stdout)
+    assert match is not None
+    root = Path(match.group(1))
+    try:
+        config = json.loads((root / "config.json").read_text())
+        assert config["confirm_delay"] == float(delay)
+        assert float(config["environment"]["WARD_CONFIRM_DELAY"]) == float(delay)
+        for role in ("hwi", "emulator-1", "emulator-2"):
+            assert (
+                f"export WARD_CONFIRM_DELAY={float(delay)}"
+                in (root / f"{role}.sh").read_text()
+            )
+    finally:
+        shutil.rmtree(root)
+
+
+@pytest.mark.parametrize("delay", ["-1", "nan", "inf"])
+def test_invalid_confirmation_delays_fail_before_startup(
+    launch_args, delay: str
+) -> None:
+    args, env = launch_args
+    result = subprocess.run(
+        args + ["--confirm-delay", delay], env=env, capture_output=True, text=True
+    )
+    assert result.returncode == 2
+    assert "finite, nonnegative" in result.stderr

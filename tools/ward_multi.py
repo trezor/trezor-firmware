@@ -83,6 +83,7 @@ def run(config: dict[str, Any]) -> list[str]:
                     time.sleep(0.05)
                 if expected_text is not None:
                     assert expected_text in debug.read_layout(wait=False).json_str
+                time.sleep(config.get("confirm_delay", 2.0))
                 if approve:
                     debug.press_yes()
                 else:
