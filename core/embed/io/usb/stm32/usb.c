@@ -57,6 +57,12 @@ typedef struct {
 typedef struct {
   // USB class dispatch table
   const USBD_ClassTypeDef *class;
+  // System handle associated with this interface
+  syshandle_t handle;
+  // Virtual method table for the system handle
+  const syshandle_vmt_t *vmt;
+  // Indicates whether the handle has been registered with the system
+  bool handle_registered;
   // Internal state for USB class driver
   uint8_t state[USBD_CLASS_STATE_MAX_SIZE] __attribute__((aligned(8)));
 } usb_iface_t;
@@ -238,6 +244,17 @@ secbool usb_start(const usb_start_params_t *params) {
     return secfalse;
   }
 
+  for (size_t i = 0; i < ARRAY_LENGTH(drv->ifaces); i++) {
+    if (drv->ifaces[i].vmt != NULL) {
+      if (!syshandle_register(drv->ifaces[i].handle, drv->ifaces[i].vmt,
+                              drv->ifaces[i].state)) {
+        usb_stop();
+        return secfalse;
+      }
+      drv->ifaces[i].handle_registered = true;
+    }
+  }
+
   if (USBD_OK != USBD_Start(&drv->dev_handle)) {
     usb_stop();
     return secfalse;
@@ -260,6 +277,13 @@ void usb_stop(void) {
   }
 
   USBD_DeInit(&drv->dev_handle);
+
+  for (size_t i = 0; i < ARRAY_LENGTH(drv->ifaces); i++) {
+    if (drv->ifaces[i].handle_registered) {
+      syshandle_unregister(drv->ifaces[i].handle);
+      drv->ifaces[i].handle_registered = false;
+    }
+  }
 
   // Set drv->dev_handle.dev_state to USBD_STATE_INITIALIZED
   memset(&drv->dev_handle, 0, sizeof(drv->dev_handle));
@@ -389,7 +413,8 @@ void *usb_get_iface_state(uint8_t iface_num, const USBD_ClassTypeDef *class) {
   return NULL;
 }
 
-void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class) {
+void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class,
+                         syshandle_t handle, const syshandle_vmt_t *vmt) {
   usb_driver_t *drv = &g_usb_driver;
 
   if (iface_num < USBD_MAX_NUM_INTERFACES) {
@@ -398,6 +423,8 @@ void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class) {
     }
 
     drv->ifaces[iface_num].class = class;
+    drv->ifaces[iface_num].handle = handle;
+    drv->ifaces[iface_num].vmt = vmt;
   }
 }
 
