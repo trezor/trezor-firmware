@@ -10,7 +10,27 @@ async def perform(msg: WARDPerformUpdate) -> WARDPerformUpdateAck:
     verifies it and computes the candidate (root_T, mac_T). The counter is not
     advanced here.
     """
+    from trezor import utils
     from trezor.messages import WARDPerformUpdateAck
+
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        from trezor.wire import ward_channel
+
+        if ward_channel.selected() is not None:
+            from trezor.messages import WARDPerformBatch
+
+            from apps.ward import service
+            from apps.ward.perform_batch import perform_batch
+
+            pid, _entry_key = await service.intent(msg.pending_id)
+            result = await perform_batch(WARDPerformBatch(pending_ids=[pid]))
+            return WARDPerformUpdateAck(
+                counter=result.counter,
+                new_root=result.new_root,
+                mac=result.mac,
+                ward_id=result.ward_id,
+                service_applied=True,
+            )
 
     from apps.common import ward as core
 

@@ -1,7 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import loop, protobuf
+from trezor import loop, protobuf, utils
 
 if __debug__:
     from trezor import log
@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
     from storage.cache_common import DataCache
     from trezor.messages import ButtonRequest
+    from trezor.wire.ward_channel import Endpoint
 
     AckCallback = Callable[[], None]
 
@@ -53,6 +54,10 @@ class Context:
         channel_id: int | None = None,
         message_type_enum_name: str = "MessageType",
     ) -> None:
+        if utils.USE_WARD_SERVICE_CHANNEL:
+            self.ward_selected = False
+            self.ward_route: "tuple[Endpoint, int] | None" = None
+            self.ward_ready = False
         self.iface: WireInterface = iface
         self.message_type_enum_name = message_type_enum_name
         if channel_id is not None:

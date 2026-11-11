@@ -25,4 +25,15 @@ async def sync(msg: WARDSync) -> WARDSyncAck:
         counter=counter,
         root=root,
         root_known=present or counter == 0,
+        service_bound=_service_bound(),
     )
+
+
+def _service_bound() -> bool:
+    from trezor import utils
+
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        from trezor.wire.ward_channel import selected
+
+        return selected() is not None
+    return False

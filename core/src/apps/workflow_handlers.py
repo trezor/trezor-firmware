@@ -142,6 +142,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.ward.discard"
 
     # WARD sync round (bootstrap/refresh) + lookup + debug seed
+    if msg_type == MessageType.WARDServiceSync:
+        return "apps.ward.service_sync"
     if msg_type == MessageType.WARDSync:
         return "apps.ward.sync"
     if msg_type == MessageType.WARDIngestAttestation:

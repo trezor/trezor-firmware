@@ -29,7 +29,7 @@ async def perform_batch(msg: WARDPerformBatch) -> WARDPerformBatchAck:
         leaves,
     ) = await core.perform_batch(list(msg.pending_ids))
 
-    return WARDPerformBatchAck(
+    candidate = WARDPerformBatchAck(
         counter=counter,
         from_root=from_root,  # 32B MAC-preimage form (EMPTY_ROOT_HASH if empty)
         new_root=to_root,
@@ -48,3 +48,12 @@ async def perform_batch(msg: WARDPerformBatch) -> WARDPerformBatchAck:
             for (ek, key_type, id_part, val_part) in leaves
         ],
     )
+
+    from trezor import utils
+
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        from trezor.wire import ward_channel
+
+        if ward_channel.selected() is not None:
+            return await ward_channel.publish(candidate)
+    return candidate
