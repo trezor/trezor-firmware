@@ -23,6 +23,7 @@ APP_MISC_COSI_COMMITMENT = const(5 | SESSIONLESS_FLAG)
 APP_RECOVERY_REPEATED_BACKUP_UNLOCKED = const(6 | SESSIONLESS_FLAG)
 APP_WARD_SYNC_RECORD = const(7 | SESSIONLESS_FLAG)
 APP_WARD_ROOT_RECORD = const(8 | SESSIONLESS_FLAG)
+APP_WARD_SERVICE_BINDING = const(9 | SESSIONLESS_FLAG)
 
 
 if TYPE_CHECKING:
@@ -128,6 +129,9 @@ class SessionlessCache(DataCache):
             129,  # APP_WARD_SYNC_RECORD, including signed timestamp and WM nonce
             92,  # APP_WARD_ROOT_RECORD, including durable freshness metadata
         )
+        if utils.USE_WARD_SERVICE_CHANNEL:
+            # Bound flag + generation, surviving event-loop and session resets.
+            self.fields += (5,)
         super().__init__()
 
     def get(self, key: int, default: bytes | None = None) -> bytes | None:

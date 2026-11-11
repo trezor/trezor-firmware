@@ -17,6 +17,15 @@ app or the host passes. Host wire handlers use `caller.host_caller`, which refus
 that tries to pick the domain, key type or device slot.
 """
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import TypeVar
+
+    from trezor import protobuf
+
+    BackendReply = TypeVar("BackendReply", bound=protobuf.MessageType)
+
 
 def _label_domain(caller):
     """The domain `caller` may read labels from -- the firmware's grant, never the
@@ -225,14 +234,13 @@ async def resolve_label(caller, address: bytes) -> tuple[str, bytes | None, int]
     from trezor import log
     from trezor.crypto import random
     from trezor.messages import WARDProofAck, WARDProofRequest
-    from trezor.wire import context
 
     from apps.ward import keys, service
 
     ek = await keys.entry_key_for(domain, address)
     log.debug(__name__, "resolve_label: pulling proof (entry_key computed)")
     nonce = random.bytes(32)
-    ack = await context.call(
+    ack = await backend_call(
         WARDProofRequest(entry_key=ek, freshness_nonce=nonce), WARDProofAck
     )
     if ack.unavailable:
@@ -344,12 +352,11 @@ async def lookup_pull(
     already stores). The wire I/O lives here in the Core gateway, not the trust
     anchor. Mirrors `resolve_label`, but returns the verdict rather than a label."""
     from trezor.messages import WARDProofAck, WARDProofRequest
-    from trezor.wire import context
 
     from apps.ward import keys, service
 
     ek = await keys.entry_key_for(caller, address, key_type, device_id)
-    ack = await context.call(WARDProofRequest(entry_key=ek), WARDProofAck)
+    ack = await backend_call(WARDProofRequest(entry_key=ek), WARDProofAck)
     a_val = read_leaf_content(ack.content)
     _a_kt, a_id = read_leaf_identity(ack.identity)
 
@@ -375,11 +382,10 @@ async def cache_entry(entry_key: bytes, sticky: bool = False) -> tuple[bool, int
     (WARDProofRequest -> WARDProofAck) lives here in the gateway; the trust anchor
     verifies it and stores. Returns (replaced, counter)."""
     from trezor.messages import WARDProofAck, WARDProofRequest
-    from trezor.wire import context
 
     from apps.ward import service
 
-    ack = await context.call(WARDProofRequest(entry_key=entry_key), WARDProofAck)
+    ack = await backend_call(WARDProofRequest(entry_key=entry_key), WARDProofAck)
     kt, id_part = read_leaf_identity(ack.identity)
     return await service.cache_entry(
         entry_key,
@@ -414,9 +420,9 @@ async def _pull_entry(entry_key: bytes) -> tuple:
     witness_entry_key, witness_commit). A host that answers `unavailable` fails the
     check -- these flows act on proofs only, never on their absence."""
     from trezor.messages import WARDProofAck, WARDProofRequest
-    from trezor.wire import DataError, context
+    from trezor.wire import DataError
 
-    ack = await context.call(WARDProofRequest(entry_key=entry_key), WARDProofAck)
+    ack = await backend_call(WARDProofRequest(entry_key=entry_key), WARDProofAck)
     if ack.unavailable:
         raise DataError("WARD cache: the host cannot serve proofs")
     kt, id_part = read_leaf_identity(ack.identity)
@@ -440,12 +446,11 @@ async def list_entries(
     trust anchor verifies each node before it uses it. Returns
     (shown, entries, counter, complete)."""
     from trezor.messages import WARDNodeAck, WARDNodeRequest
-    from trezor.wire import context
 
     from apps.ward import service
 
     async def fetch(node_hash: bytes) -> list:
-        ack = await context.call(WARDNodeRequest(node_hash=node_hash), WARDNodeAck)
+        ack = await backend_call(WARDNodeRequest(node_hash=node_hash), WARDNodeAck)
         return [
             (
                 n.split_bit,
@@ -492,13 +497,12 @@ async def perform(
     id_part, val_part) -- the trailing leaf lets the host store what it cannot
     compute itself."""
     from trezor.messages import WARDProofAck, WARDProofRequest
-    from trezor.wire import context
 
     from apps.ward import service
 
     pid, ek = await service.intent(pending_id)
 
-    ack = await context.call(
+    ack = await backend_call(
         WARDProofRequest(entry_key=ek, pending_id=pid),
         WARDProofAck,
     )
@@ -538,7 +542,6 @@ async def perform_batch(pending_ids: list) -> tuple:
     Returns (to_counter, to_root, mac_t, head_mac, auth_commit, sig, wallet_id,
     ward_id, leaves)."""
     from trezor.messages import WARDProofAck, WARDProofRequest
-    from trezor.wire import context
 
     from apps.ward import service
 
@@ -546,7 +549,7 @@ async def perform_batch(pending_ids: list) -> tuple:
     acks = []  # type: list[tuple]
     for pid in pending_ids:
         rpid, ek = await service.intent(pid)
-        ack = await context.call(
+        ack = await backend_call(
             WARDProofRequest(entry_key=ek, pending_id=rpid),
             WARDProofAck,
         )
@@ -682,3 +685,21 @@ async def export_keys(key_type: str = "address") -> tuple:
     from apps.ward import service
 
     return await service.export_keys(key_type)
+
+
+async def backend_call(
+    request: protobuf.MessageType, expected_type: type[BackendReply]
+) -> BackendReply:
+    from trezor import utils
+    from trezor.wire import context
+
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        from trezor.wire import ward_channel
+
+        if ward_channel.selected() is not None:
+            await ward_channel.ensure_ready()
+            assert expected_type.MESSAGE_WIRE_TYPE is not None
+            reply = await ward_channel.call(request, (expected_type.MESSAGE_WIRE_TYPE,))
+            assert expected_type.is_type_of(reply)
+            return reply
+    return await context.call(request, expected_type)

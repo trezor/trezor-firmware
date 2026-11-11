@@ -11,10 +11,17 @@ async def perform_revert(msg: WARDPerformRevert) -> WARDPerformRevertAck:
     and demotes with a forward-incrementing counter once the user confirms the undo.
     Not advanced here.
     """
+    from trezor import utils
     from trezor.messages import WARDPerformRevertAck
 
     from apps.common import ward as core
     from apps.ward import service
+
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        from trezor.wire import ward_channel
+
+        if ward_channel.selected() is not None:
+            await ward_channel.ensure_ready()
 
     # Absent root fields mean the empty tree — map to the 32-byte MAC-preimage sentinel.
     stuck_root = bytes(msg.stuck_root) if msg.stuck_root else service.EMPTY_ROOT_HASH
@@ -33,7 +40,7 @@ async def perform_revert(msg: WARDPerformRevert) -> WARDPerformRevertAck:
         msg.stuck_counter, stuck_root, prev_root, bytes(msg.forward_auth_commit)
     )
 
-    return WARDPerformRevertAck(
+    candidate = WARDPerformRevertAck(
         counter=counter,
         from_root=from_root,
         new_root=to_root,
@@ -43,3 +50,10 @@ async def perform_revert(msg: WARDPerformRevert) -> WARDPerformRevertAck:
         auth_revert=auth_revert,
         sig_commit=(sig if (sig and service.WARD_KSIG) else None),
     )
+
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        from trezor.wire import ward_channel
+
+        if ward_channel.selected() is not None:
+            return await ward_channel.publish(candidate)
+    return candidate

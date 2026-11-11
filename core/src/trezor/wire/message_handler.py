@@ -90,6 +90,10 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
                 iface=ctx.iface,
             )
 
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        ctx.ward_selected = False
+        ctx.ward_route = None
+        ctx.ward_ready = False
     res_msg: protobuf.MessageType | None = None
 
     # We need to find a handler for this message type.

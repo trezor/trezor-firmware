@@ -33,7 +33,14 @@ def clear_all(excluded: tuple[AnyBytes, AnyBytes] | None = None) -> None:
     """
     global autolock_last_touch
     autolock_last_touch = None
+    binding = None
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        from storage.cache_common import APP_WARD_SERVICE_BINDING
+
+        binding = _SESSIONLESS_CACHE.get(APP_WARD_SERVICE_BINDING)
     _SESSIONLESS_CACHE.clear()
+    if utils.USE_WARD_SERVICE_CHANNEL and binding is not None:
+        _SESSIONLESS_CACHE.set(APP_WARD_SERVICE_BINDING, binding)
 
     if utils.USE_THP and excluded is not None:
         # If we want to keep THP connection alive, we do not clear communication keys

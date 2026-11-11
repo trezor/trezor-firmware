@@ -91,6 +91,15 @@ class _HighSpeed:
 high_speed: "_HighSpeed" = _HighSpeed()
 
 
+def setup_ward() -> None:
+    if utils.USE_WARD_SERVICE_CHANNEL:
+        import usb
+
+        from .ward_channel import serve
+
+        loop.schedule(serve(usb.iface_ward))
+
+
 class Provider(Generic[T]):
     def __init__(self, obj: T) -> None:
         self.obj = obj
@@ -126,6 +135,7 @@ if utils.USE_THP:
 
     def setup(*ifaces: WireInterface) -> None:
         """Initialize the wire stack on the provided interfaces."""
+        setup_ward()
         loop.schedule(handle_session_thp(*ifaces))
 
     async def handle_session_thp(*ifaces: WireInterface) -> None:
@@ -168,6 +178,7 @@ else:
 
     def setup(*ifaces: WireInterface) -> None:
         """Initialize the wire stack on the provided interfaces."""
+        setup_ward()
         for iface in ifaces:
             loop.schedule(handle_session_codec(iface))
 
