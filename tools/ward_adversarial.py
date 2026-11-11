@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Run WARD attack/rejection tests on a caller-provided disposable emulator."""
+"""Run WARD attack/rejection tests on a caller-provided disposable device.
+
+The device is a disposable emulator, or with --hardware a dedicated CI device: the
+tests wipe it.
+"""
 
 from __future__ import annotations
 
 import argparse
 import json
 import os
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -16,7 +21,10 @@ from pathlib import Path
 FIRMWARE = Path(__file__).resolve().parent.parent
 
 
-def plan(suite: Path, report: Path) -> list[tuple[str, Path, list[str]]]:
+def plan(
+    suite: Path, report: Path, yarn: list[str] | None = None
+) -> list[tuple[str, Path, list[str]]]:
+    yarn = yarn or ["yarn"]
     return [
         (
             "manager-crypto-firmware",
@@ -64,7 +72,7 @@ def plan(suite: Path, report: Path) -> list[tuple[str, Path, list[str]]]:
             "host-persistence",
             suite / "packages/wardd",
             [
-                "yarn",
+                *yarn,
                 "test:unit",
                 "--runInBand",
                 "--detectOpenHandles",
@@ -83,7 +91,7 @@ def plan(suite: Path, report: Path) -> list[tuple[str, Path, list[str]]]:
             "history-reconstruction",
             suite / "packages/ward",
             [
-                "yarn",
+                *yarn,
                 "test:unit",
                 "--runInBand",
                 "--coverage=false",
@@ -145,9 +153,17 @@ def main() -> int:
     parser.add_argument("--path", default=os.environ.get("TREZOR_PATH"))
     parser.add_argument("--suite", type=Path, default=os.environ.get("WARDD_SUITE_DIR"))
     parser.add_argument("--report-dir", type=Path)
+    parser.add_argument(
+        "--hardware",
+        action="store_true",
+        help="Accept a USB --path: a dedicated CI device that the tests may wipe",
+    )
     args = parser.parse_args()
-    if not args.path or not args.path.startswith("udp:"):
-        parser.error("--path must identify a disposable UDP emulator; tests wipe it")
+    if not args.path or not (args.path.startswith("udp:") or args.hardware):
+        parser.error(
+            "--path must identify a disposable UDP emulator, or a dedicated device "
+            "with --hardware; tests wipe it"
+        )
     if args.suite is None or not (args.suite / "packages/wardd/package.json").is_file():
         parser.error("--suite must select a prepared Suite checkout")
     report = args.report_dir or (
@@ -155,6 +171,8 @@ def main() -> int:
         if os.environ.get("WARD_DATA_DIR")
         else Path(tempfile.mkdtemp(prefix="ward-adversarial-"))
     )
+    # Children run in other directories (Jest in the Suite packages): pass absolute paths.
+    report = report.resolve()
     report.mkdir(parents=True, exist_ok=True)
     scratch = report / "tmp"
     scratch.mkdir(exist_ok=True)
@@ -168,7 +186,7 @@ def main() -> int:
     # Child tests start private wardd instances, not the stack's debug listener.
     environment.pop("WARDD_DEBUG_PORT", None)
 
-    def log(event: str, **fields) -> None:
+    def log(event: str, **fields: object) -> None:
         print(
             json.dumps(
                 {
@@ -185,7 +203,9 @@ def main() -> int:
 
     log("adversarial.start", reportDir=str(report), path=args.path)
     results = []
-    for name, cwd, command in plan(args.suite, report):
+    # A runner without a yarn binary can name the pinned release: WARD_YARN="node .../yarn.cjs".
+    yarn = shlex.split(os.environ.get("WARD_YARN", "yarn"))
+    for name, cwd, command in plan(args.suite, report, yarn):
         log("adversarial.group.start", group=name)
         try:
             completed = subprocess.run(
