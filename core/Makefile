@@ -83,6 +83,8 @@ XTASK_BUILD_OPTS += --pyopt false
 XTASK_BUILD_OPTS += --disable-animation
 XTASK_BUILD_OPTS += --dbg-console vcp
 XTASK_BUILD_OPTS += --debug-link
+# hardware-only: the emulator keeps its storage across restarts
+XTASK_FIRMWARE_OPTS += --boot-wipe
 endif
 ifeq ($(TREZOR_MEMPERF),1)
 XTASK_BUILD_OPTS += --mem-perf
@@ -283,7 +285,7 @@ build_secmon: ## build security monitor image
 	xtask build secmon $(XTASK_BUILD_OPTS)
 
 build_firmware: ## build firmware with frozen modules
-	xtask build firmware $(XTASK_BUILD_OPTS)
+	xtask build firmware $(XTASK_BUILD_OPTS) $(XTASK_FIRMWARE_OPTS)
 
 build_unix: ## build unix port
 	xtask build firmware --emulator $(XTASK_BUILD_OPTS) --pyopt=false

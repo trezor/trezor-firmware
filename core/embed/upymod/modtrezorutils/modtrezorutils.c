@@ -904,6 +904,8 @@ static const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """UI layout identifier (BOLT/CAESAR/DELIZIA/ECKHART)."""
 /// USE_THP: bool
 /// """Whether the firmware supports Trezor-Host Protocol (version 2)."""
+/// BOOT_WIPE: bool
+/// """Whether the firmware wipes the storage on every boot (test builds)."""
 /// NOTIFY_BOOT: int
 /// """Notification event: boot completed."""
 /// NOTIFY_UNLOCK: int
@@ -1157,6 +1159,11 @@ static const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_THP), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_THP), mp_const_false},
+#endif
+#if BOOT_WIPE
+    {MP_ROM_QSTR(MP_QSTR_BOOT_WIPE), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_BOOT_WIPE), mp_const_false},
 #endif
 #ifdef UI_LAYOUT_BOLT
     {MP_ROM_QSTR(MP_QSTR_UI_LAYOUT), MP_ROM_QSTR(MP_QSTR_BOLT)},
