@@ -10,8 +10,8 @@ extern crate alloc;
 
 use prost::Message;
 use trezor_app_sdk::{
-    Error, Result, ResultExt, WireDecode, WireEncode, error, wire_handler, wire_receive,
-    wire_request_type,
+    Error, Result, ResultExt, WireDecode, WireEncode, error, wire_error, wire_handler,
+    wire_receive, wire_request_type,
 };
 
 // Include generated code
@@ -163,11 +163,11 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
         Ok(MessageType::VerifyMessage) => handle_verify_message(data),
         Ok(_) => {
             error!("Invalid function: {:?}", id);
-            Err(Error::InvalidFunction)?
+            wire_error(&Error::InvalidFunction)
         }
         Err(_) => {
             error!("Non existing message type: {:?}", id);
-            Err(Error::InvalidFunction)?
+            wire_error(&Error::InvalidFunction)
         }
     }
 }
