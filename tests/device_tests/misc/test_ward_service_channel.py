@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import os
+import secrets
+import socket
+import subprocess
 from contextlib import nullcontext
 from pathlib import Path
 
@@ -129,25 +133,14 @@ def test_independent_service_and_wallet_fallback(
         backend.close()
 
 
-@pytest.mark.parametrize(
-    "wallet_relay", [False, True], ids=["standalone", "wallet-relay"]
-)
-def test_wardd_connects_directly_to_service_channel(
+def start_native_wardd(
     session: Session,
-    wardd_port: int,
+    port: int,
     wm_url: str | None,
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    wallet_relay: bool,
-) -> None:
-    import os
-    import secrets
-    import socket
-    import subprocess
-
-    from trezorlib import messages
-    from trezorlib.ward_wallet import WardWalletClient
-
+    wallet_relay: bool = False,
+) -> tuple[subprocess.Popen[str], str]:
+    """Start wardd on the device's service interface; returns it and its token."""
     assert SUITE_DIR is not None
     token = secrets.token_hex(16)
     token_file = tmp_path / "token"
@@ -157,7 +150,7 @@ def test_wardd_connects_directly_to_service_channel(
         for name, value in os.environ.items()
         if name not in ("WARD_MANAGER_URL", "WARD_MANAGER_PORT")
     }
-    process = subprocess.Popen(
+    return subprocess.Popen(
         [
             "node",
             "--import",
@@ -165,7 +158,7 @@ def test_wardd_connects_directly_to_service_channel(
             "src/cli.ts",
             "--memory",
             "--port",
-            str(wardd_port),
+            str(port),
             "--data-dir",
             str(tmp_path / "wardd-native"),
             "--token-file",
@@ -180,6 +173,25 @@ def test_wardd_connects_directly_to_service_channel(
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
+    ), token
+
+
+@pytest.mark.parametrize(
+    "wallet_relay", [False, True], ids=["standalone", "wallet-relay"]
+)
+def test_wardd_connects_directly_to_service_channel(
+    session: Session,
+    wardd_port: int,
+    wm_url: str | None,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    wallet_relay: bool,
+) -> None:
+    from trezorlib import messages
+    from trezorlib.ward_wallet import WardWalletClient
+
+    process, token = start_native_wardd(
+        session, wardd_port, wm_url, tmp_path, wallet_relay
     )
     line = ""
     try:

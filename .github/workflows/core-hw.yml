@@ -147,6 +147,8 @@ jobs:
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       BITCOIN_ONLY: 0
+      # The offline store, for the adversarial offline-cache tests.
+      WARD: 1
       WARD_SERVICE_CHANNEL: 1
       # DebugLink + WebAuthn + WARD fit; adding VCP would exceed the endpoint budget.
       DBG_CONSOLE: swo
@@ -168,15 +170,16 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           repository: trezor/trezor-suite
-          ref: 64405ce6728d27444eb20e99ef0c412edcc8ac16
+          ref: 4d4e01ad6ebc19f8d3a568cb938699951d056d1a
           path: ward-suite
           persist-credentials: false
       - name: Install wardd dependencies
         run: |
           $NIX_RUN node --version
+          # The root workspace provides Jest for the adversarial host suites.
           $NIX_RUN bash -e -c '
             cd ward-suite
-            node .yarn/releases/yarn-4.18.0.cjs workspaces focus @trezor/wardd
+            node .yarn/releases/yarn-4.18.0.cjs workspaces focus trezor-suite @trezor/wardd @trezor/ward
           '
       - name: Check USB permissions
         run: |
@@ -208,11 +211,29 @@ jobs:
         run: |
           $UV_RUN pytest -v --junitxml=ward-native.xml --verbose-log-file=ward-native.log --basetemp=ward-native-tmp \
             tests/device_tests/misc/test_ward_service_channel.py::test_wardd_connects_directly_to_service_channel
+      # tools/ward_stack.py's single-device modes over both channels.
+      - name: WARD stack e2e flows (default, long)
+        if: ${{ !cancelled() && steps.flash_ward.outcome == 'success' }}
+        run: |
+          $UV_RUN pytest -v --junitxml=ward-e2e.xml --verbose-log-file=ward-e2e.log --basetemp=ward-e2e-tmp \
+            tests/device_tests/misc/test_ward_e2e.py
+      - name: WARD adversarial suites
+        if: ${{ !cancelled() && steps.flash_ward.outcome == 'success' }}
+        env:
+          WARD_YARN: node ${{ github.workspace }}/ward-suite/.yarn/releases/yarn-4.18.0.cjs
+        run: |
+          $UV_RUN python tools/ward_adversarial.py --hardware --path webusb \
+            --suite "$WARDD_SUITE_DIR" --report-dir ward-adversarial
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         if: always()
         with:
           name: ward-hardware-channels-${{ matrix.model }}
           path: |
+            ward-e2e.xml
+            ward-e2e.log
+            ward-e2e-tmp/**/wardd-native.log
+            ward-adversarial/*.xml
+            ward-adversarial/*.json
             ward-wallet.xml
             ward-wallet.log
             ward-service.xml

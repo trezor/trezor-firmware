@@ -74,6 +74,8 @@ def test_service_hardware_build_has_debuglink_without_vcp_endpoint_overflow(
     args = shlex.split(command)
     assert args[args.index("--model") + 1] == model
     assert "--enable-ward-service-channel" in args
+    # The adversarial offline-cache tests need the offline store.
+    assert "--ward" in args
     assert "--debug-link" in args
     assert args[args.index("--dbg-console") + 1] == "swo"
     assert "--btc-only" not in args
