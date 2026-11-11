@@ -32,6 +32,7 @@ TREZOR_MODEL ?= T3W1
 PYTEST_TIMEOUT ?= 500
 TEST_LANG ?= "en"
 XTASK_BUILD_OPTS ?=
+DBG_CONSOLE ?= vcp
 
 ifeq ($(PRODUCTION),1)
 ifeq ($(BOOTLOADER_DEVEL),1)
@@ -58,6 +59,9 @@ RANDOM=$(shell python -c 'import random; print(random.randint(0, 1000000))')
 
 # Please only add options used by CI, otherwise just run xtask directly.
 XTASK_BUILD_OPTS += --model $(TREZOR_MODEL)
+ifeq ($(WARD),1)
+XTASK_BUILD_OPTS += --ward
+endif
 ifeq ($(WARD_SERVICE_CHANNEL),1)
 XTASK_BUILD_OPTS += --enable-ward-service-channel
 endif
@@ -84,7 +88,7 @@ XTASK_BUILD_OPTS += --pyopt true
 else ifeq ($(PYOPT),0)
 XTASK_BUILD_OPTS += --pyopt false
 XTASK_BUILD_OPTS += --disable-animation
-XTASK_BUILD_OPTS += --dbg-console vcp
+XTASK_BUILD_OPTS += --dbg-console $(DBG_CONSOLE)
 XTASK_BUILD_OPTS += --debug-link
 endif
 ifeq ($(TREZOR_MEMPERF),1)

@@ -21,6 +21,20 @@ WARD_USB_SUBCLASS = 0x57
 WARD_USB_PROTOCOL = 0x01
 
 
+def ward_service_selector(wire: Transport) -> str:
+    """Select the same device in native wardd without claiming its wallet interface."""
+    if isinstance(wire, UdpTransport):
+        return wire.get_path()
+    from .transport.webusb import WebUsbTransport
+
+    if isinstance(wire, WebUsbTransport):
+        serial = wire.device.getSerialNumber()
+        if serial:
+            return f"usb:{serial}"
+        raise ValueError("WARD service needs the USB serial to select its device")
+    raise ValueError("WARD service requires USB or emulator UDP")
+
+
 def ward_transport(wire: Transport) -> Transport:
     if isinstance(wire, UdpTransport):
         host, port = wire.device

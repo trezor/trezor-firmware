@@ -63,6 +63,34 @@ export WARDD_SUITE_DIR=/path/to/trezor-suite  # checkout containing packages/war
 
 The relay tests also need the Suite checkout's wardd dependencies installed.
 
+### WARD hardware channels
+
+The Hardware tests workflow includes dedicated WARD jobs for T3T1 and T3W1.
+Each job builds one service-enabled image and tests both routes: wallet fallback
+with the service unbound, then the bound USB service channel. Separate results
+also cover wardd connecting directly to USB. The service tests reject proof and
+node responses sent through the wallet channel, and check fallback after service
+disconnect and recovery after reconnect. Both mock and HTTP WARD managers run.
+
+These jobs retain DebugLink for automated confirmations and use SWO instead of
+the VCP console to stay within the USB endpoint budget. Regular hardware jobs
+retain VCP. The workflow checks out a pinned matching Suite revision and installs
+wardd dependencies automatically.
+
+To start both models from the branch being tested:
+
+```sh
+gh workflow run core-hw.yml --ref petrsusil/ward-poc-encrypted \
+    -f 'models_json=["T3T1","T3W1"]' -f ward_only=true
+```
+
+`ward_only=true` skips the regular device, legacy, and Monero jobs. Native
+transport probes first test repeated binding/release, idle timeouts, and wallet
+traffic while the service is bound, without a daemon backend or WARD manager.
+Their phase logs and the native daemon's complete output are uploaded with the
+channel results. The native end-to-end tests report whether sync, write, lookup,
+or shutdown was in progress when a failure occurred.
+
 Print statements from testing files are not shown by default. To enable them, use `-s` flag.
 
 If you would like to interact with the device (i.e. press the buttons yourself), just prefix pytest with `INTERACT=1`:

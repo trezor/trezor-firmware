@@ -90,6 +90,7 @@
           {
             fullDeps ? false,
             devTools ? false,
+            wardTests ? false,
           }:
           with pkgs;
           pkgs.mkShellNoCC ({
@@ -138,6 +139,9 @@
             ++ lib.optionals fullDeps [
               #bitcoind # for HWI tests which are currently disabled
             ]
+            ++ lib.optionals wardTests [
+              nodejs_24
+            ]
             ++ lib.optionals (!isDarwin) [
               procps
               valgrind
@@ -168,7 +172,11 @@
             ];
 
             env = rec {
-              LD_LIBRARY_PATH = lib.makeLibraryPath [ libffi libjpeg libusb1 libressl zlib ];
+              LD_LIBRARY_PATH = lib.makeLibraryPath (
+                [ libffi libjpeg libusb1 libressl zlib ]
+                ++ lib.optionals wardTests [ stdenv.cc.cc.lib ]
+                ++ lib.optionals (wardTests && !isDarwin) [ udev ]
+              );
               DYLD_LIBRARY_PATH = LD_LIBRARY_PATH;
 
               # Fix bdist-wheel problem by setting source date epoch to a more recent date
@@ -189,6 +197,11 @@
               UV_PYTHON_PREFERENCE = "only-system";
               UV_PYTHON_DOWNLOADS = "never";
             }
+            // (lib.optionalAttrs wardTests) {
+              # Compile wardd's native modules for this Nix toolchain.
+              npm_config_build_from_source = "true";
+              npm_config_nodedir = "${lib.getDev nodejs_24}";
+            }
             // (lib.optionalAttrs (fullDeps && !isDarwin)) {
               # ~250MiB binary
               TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
@@ -202,6 +215,11 @@
 
           # Includes various development and testing tools.
           default = mkShellFromParams { devTools = true; };
+
+          ward-hardware = mkShellFromParams {
+            devTools = true;
+            wardTests = true;
+          };
 
           # The default shell with additional large or slow to build dependencies.
           everything = mkShellFromParams {
