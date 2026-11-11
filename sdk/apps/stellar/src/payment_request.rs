@@ -233,9 +233,12 @@ impl PaymentRequestVerifier {
             return Err(Error::DataError("Invalid amount in payment request."));
         }
 
-        let hash_outputs = self.h_outputs.finalize();
-        self.h_pr.update(&hash_outputs);
-        let digest = self.h_pr.finalize();
+        // a second verify hashes nothing, so its signature check fails
+        let fresh = || crypto::get_hasher(HashingAlgorithm::Sha256);
+        let h_outputs = core::mem::replace(&mut self.h_outputs, fresh());
+        let mut h_pr = core::mem::replace(&mut self.h_pr, fresh());
+        h_pr.update(&h_outputs.finalize());
+        let digest = h_pr.finalize();
 
         let mut valid = crypto::ecdsa_verify_digest(
             EcdsaCurve::Nist256p1,
