@@ -80,7 +80,7 @@ wardd dependencies automatically.
 To start both models from the branch being tested:
 
 ```sh
-gh workflow run core-hw.yml --ref petrsusil/ward-poc-encrypted \
+gh workflow run core-hw.yml --ref petrsusil/ward-service-channel \
     -f 'models_json=["T3T1","T3W1"]' -f ward_only=true
 ```
 
@@ -90,6 +90,16 @@ traffic while the service is bound, without a daemon backend or WARD manager.
 Their phase logs and the native daemon's complete output are uploaded with the
 channel results. The native end-to-end tests report whether sync, write, lookup,
 or shutdown was in progress when a failure occurred.
+
+The jobs then run `tools/ward_stack.py`'s single-device modes on the device
+(`tests/device_tests/misc/test_ward_e2e.py`): the default write and lookup and
+`--long`, each over the wallet relay and the service channel against an HTTP WARD
+manager. `--extra_long` takes hours on hardware and is left to the stack. Last,
+`tools/ward_adversarial.py --hardware` runs all attack/rejection groups: the
+firmware, manager and crypto tests and the offline cache on the device, and the
+wardd, history and adapter suites on the runner. The image includes the offline
+store (`--ward`) for the cache tests. Multi-device races and recovery need
+several devices and are not run.
 
 Print statements from testing files are not shown by default. To enable them, use `-s` flag.
 
