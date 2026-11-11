@@ -3561,6 +3561,7 @@ if TYPE_CHECKING:
         entry_key: "AnyBytes | None"
         content: "LeafContent | None"
         identity: "LeafIdentity | None"
+        service_applied: "bool | None"
 
         def __init__(
             self,
@@ -3572,6 +3573,7 @@ if TYPE_CHECKING:
             entry_key: "AnyBytes | None" = None,
             content: "LeafContent | None" = None,
             identity: "LeafIdentity | None" = None,
+            service_applied: "bool | None" = None,
         ) -> None:
             pass
 
@@ -3630,6 +3632,7 @@ if TYPE_CHECKING:
         counter: "int"
         root: "AnyBytes | None"
         root_known: "bool"
+        service_bound: "bool | None"
 
         def __init__(
             self,
@@ -3640,6 +3643,7 @@ if TYPE_CHECKING:
             root_known: "bool",
             ward_id: "AnyBytes | None" = None,
             root: "AnyBytes | None" = None,
+            service_bound: "bool | None" = None,
         ) -> None:
             pass
 
@@ -4105,6 +4109,7 @@ if TYPE_CHECKING:
         auth_commit: "AnyBytes"
         sig_commit: "AnyBytes | None"
         leaves: "list[WARDBatchLeaf]"
+        service_applied: "bool | None"
 
         def __init__(
             self,
@@ -4118,6 +4123,7 @@ if TYPE_CHECKING:
             mac: "AnyBytes | None" = None,
             ward_id: "AnyBytes | None" = None,
             sig_commit: "AnyBytes | None" = None,
+            service_applied: "bool | None" = None,
         ) -> None:
             pass
 
@@ -4192,6 +4198,7 @@ if TYPE_CHECKING:
         head_mac: "AnyBytes"
         auth_revert: "AnyBytes"
         sig_commit: "AnyBytes | None"
+        service_applied: "bool | None"
 
         def __init__(
             self,
@@ -4204,6 +4211,7 @@ if TYPE_CHECKING:
             mac: "AnyBytes | None" = None,
             ward_id: "AnyBytes | None" = None,
             sig_commit: "AnyBytes | None" = None,
+            service_applied: "bool | None" = None,
         ) -> None:
             pass
 
@@ -4505,6 +4513,78 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDValidateCacheAck"]:
+            return isinstance(msg, cls)
+
+    class WARDServiceOpen(protobuf.MessageType):
+        protocol_version: "int"
+        close: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            protocol_version: "int",
+            close: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDServiceOpen"]:
+            return isinstance(msg, cls)
+
+    class WARDServiceOpenAck(protobuf.MessageType):
+        protocol_version: "int"
+        buffer_size: "int"
+
+        def __init__(
+            self,
+            *,
+            protocol_version: "int",
+            buffer_size: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDServiceOpenAck"]:
+            return isinstance(msg, cls)
+
+    class WARDServiceDone(protobuf.MessageType):
+        error: "str | None"
+
+        def __init__(
+            self,
+            *,
+            error: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDServiceDone"]:
+            return isinstance(msg, cls)
+
+    class WARDServiceSync(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDServiceSync"]:
+            return isinstance(msg, cls)
+
+    class WARDServiceSyncAck(protobuf.MessageType):
+        used_service: "bool"
+        counter: "int | None"
+        root: "AnyBytes | None"
+        ward_id: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            used_service: "bool",
+            counter: "int | None" = None,
+            root: "AnyBytes | None" = None,
+            ward_id: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDServiceSyncAck"]:
             return isinstance(msg, cls)
 
     class DisplayAddress(protobuf.MessageType):

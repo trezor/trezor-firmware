@@ -895,6 +895,11 @@ class MessageType(IntEnum):
     WARDCacheImportAck = 2373
     WARDValidateCache = 2374
     WARDValidateCacheAck = 2375
+    WARDServiceOpen = 2380
+    WARDServiceOpenAck = 2381
+    WARDServiceDone = 2382
+    WARDServiceSync = 2383
+    WARDServiceSyncAck = 2384
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -5129,6 +5134,7 @@ class WARDPerformUpdateAck(protobuf.MessageType):
         6: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
         11: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
         12: protobuf.Field("identity", "LeafIdentity", repeated=False, required=False, default=None),
+        80: protobuf.Field("service_applied", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5141,6 +5147,7 @@ class WARDPerformUpdateAck(protobuf.MessageType):
         entry_key: bytes | None = None,
         content: LeafContent | None = None,
         identity: LeafIdentity | None = None,
+        service_applied: bool | None = None,
     ) -> None:
         self.counter = counter
         self.new_root = new_root
@@ -5149,6 +5156,7 @@ class WARDPerformUpdateAck(protobuf.MessageType):
         self.entry_key = entry_key
         self.content = content
         self.identity = identity
+        self.service_applied = service_applied
 
 
 class WARDConfirmedByWM(protobuf.MessageType):
@@ -5207,6 +5215,7 @@ class WARDSyncAck(protobuf.MessageType):
         5: protobuf.Field("counter", "uint32", repeated=False, required=True),
         6: protobuf.Field("root", "bytes", repeated=False, required=False, default=None),
         7: protobuf.Field("root_known", "bool", repeated=False, required=True),
+        80: protobuf.Field("service_bound", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5218,6 +5227,7 @@ class WARDSyncAck(protobuf.MessageType):
         root_known: bool,
         ward_id: bytes | None = None,
         root: bytes | None = None,
+        service_bound: bool | None = None,
     ) -> None:
         self.nonce = nonce
         self.version = version
@@ -5225,6 +5235,7 @@ class WARDSyncAck(protobuf.MessageType):
         self.root_known = root_known
         self.ward_id = ward_id
         self.root = root
+        self.service_bound = service_bound
 
 
 class WARDIngestAttestation(protobuf.MessageType):
@@ -5738,6 +5749,7 @@ class WARDPerformBatchAck(protobuf.MessageType):
         7: protobuf.Field("auth_commit", "bytes", repeated=False, required=True),
         8: protobuf.Field("sig_commit", "bytes", repeated=False, required=False, default=None),
         9: protobuf.Field("leaves", "WARDBatchLeaf", repeated=True, required=False, default=None),
+        80: protobuf.Field("service_applied", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5752,6 +5764,7 @@ class WARDPerformBatchAck(protobuf.MessageType):
         mac: bytes | None = None,
         ward_id: bytes | None = None,
         sig_commit: bytes | None = None,
+        service_applied: bool | None = None,
     ) -> None:
         self.leaves: Sequence[WARDBatchLeaf] = leaves if leaves is not None else []
         self.counter = counter
@@ -5762,6 +5775,7 @@ class WARDPerformBatchAck(protobuf.MessageType):
         self.mac = mac
         self.ward_id = ward_id
         self.sig_commit = sig_commit
+        self.service_applied = service_applied
 
 
 class WARDConfirmBatchByWM(protobuf.MessageType):
@@ -5841,6 +5855,7 @@ class WARDPerformRevertAck(protobuf.MessageType):
         6: protobuf.Field("head_mac", "bytes", repeated=False, required=True),
         7: protobuf.Field("auth_revert", "bytes", repeated=False, required=True),
         8: protobuf.Field("sig_commit", "bytes", repeated=False, required=False, default=None),
+        80: protobuf.Field("service_applied", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5854,6 +5869,7 @@ class WARDPerformRevertAck(protobuf.MessageType):
         mac: bytes | None = None,
         ward_id: bytes | None = None,
         sig_commit: bytes | None = None,
+        service_applied: bool | None = None,
     ) -> None:
         self.counter = counter
         self.head_mac = head_mac
@@ -5863,6 +5879,7 @@ class WARDPerformRevertAck(protobuf.MessageType):
         self.mac = mac
         self.ward_id = ward_id
         self.sig_commit = sig_commit
+        self.service_applied = service_applied
 
 
 class WARDConfirmRevertByWM(protobuf.MessageType):
@@ -6185,6 +6202,81 @@ class WARDValidateCacheAck(protobuf.MessageType):
         self.updated = updated
         self.removed = removed
         self.counter = counter
+
+
+class WARDServiceOpen(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2380
+    FIELDS = {
+        1: protobuf.Field("protocol_version", "uint32", repeated=False, required=True),
+        2: protobuf.Field("close", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        protocol_version: int,
+        close: bool | None = None,
+    ) -> None:
+        self.protocol_version = protocol_version
+        self.close = close
+
+
+class WARDServiceOpenAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2381
+    FIELDS = {
+        1: protobuf.Field("protocol_version", "uint32", repeated=False, required=True),
+        2: protobuf.Field("buffer_size", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        protocol_version: int,
+        buffer_size: int,
+    ) -> None:
+        self.protocol_version = protocol_version
+        self.buffer_size = buffer_size
+
+
+class WARDServiceDone(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2382
+    FIELDS = {
+        1: protobuf.Field("error", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        error: str | None = None,
+    ) -> None:
+        self.error = error
+
+
+class WARDServiceSync(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2383
+
+
+class WARDServiceSyncAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2384
+    FIELDS = {
+        1: protobuf.Field("used_service", "bool", repeated=False, required=True),
+        2: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("root", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        used_service: bool,
+        counter: int | None = None,
+        root: bytes | None = None,
+        ward_id: bytes | None = None,
+    ) -> None:
+        self.used_service = used_service
+        self.counter = counter
+        self.root = root
+        self.ward_id = ward_id
 
 
 class DisplayAddress(protobuf.MessageType):

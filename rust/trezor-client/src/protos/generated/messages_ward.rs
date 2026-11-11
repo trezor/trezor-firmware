@@ -724,6 +724,8 @@ pub struct WARDPerformUpdateAck {
     pub content: ::protobuf::MessageField<LeafContent>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDPerformUpdateAck.identity)
     pub identity: ::protobuf::MessageField<LeafIdentity>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDPerformUpdateAck.service_applied)
+    pub service_applied: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDPerformUpdateAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -903,8 +905,27 @@ impl WARDPerformUpdateAck {
         self.entry_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bool service_applied = 80;
+
+    pub fn service_applied(&self) -> bool {
+        self.service_applied.unwrap_or(false)
+    }
+
+    pub fn clear_service_applied(&mut self) {
+        self.service_applied = ::std::option::Option::None;
+    }
+
+    pub fn has_service_applied(&self) -> bool {
+        self.service_applied.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_service_applied(&mut self, v: bool) {
+        self.service_applied = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(7);
+        let mut fields = ::std::vec::Vec::with_capacity(8);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "counter",
@@ -940,6 +961,11 @@ impl WARDPerformUpdateAck {
             "identity",
             |m: &WARDPerformUpdateAck| { &m.identity },
             |m: &mut WARDPerformUpdateAck| { &mut m.identity },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "service_applied",
+            |m: &WARDPerformUpdateAck| { &m.service_applied },
+            |m: &mut WARDPerformUpdateAck| { &mut m.service_applied },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDPerformUpdateAck>(
             "WARDPerformUpdateAck",
@@ -993,6 +1019,9 @@ impl ::protobuf::Message for WARDPerformUpdateAck {
                 98 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.identity)?;
                 },
+                640 => {
+                    self.service_applied = ::std::option::Option::Some(is.read_bool()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -1028,6 +1057,9 @@ impl ::protobuf::Message for WARDPerformUpdateAck {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
+        if let Some(v) = self.service_applied {
+            my_size += 2 + 1;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1055,6 +1087,9 @@ impl ::protobuf::Message for WARDPerformUpdateAck {
         if let Some(v) = self.identity.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(12, v, os)?;
         }
+        if let Some(v) = self.service_applied {
+            os.write_bool(80, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -1079,6 +1114,7 @@ impl ::protobuf::Message for WARDPerformUpdateAck {
         self.entry_key = ::std::option::Option::None;
         self.content.clear();
         self.identity.clear();
+        self.service_applied = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -1091,6 +1127,7 @@ impl ::protobuf::Message for WARDPerformUpdateAck {
             entry_key: ::std::option::Option::None,
             content: ::protobuf::MessageField::none(),
             identity: ::protobuf::MessageField::none(),
+            service_applied: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1777,6 +1814,8 @@ pub struct WARDSyncAck {
     pub root: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDSyncAck.root_known)
     pub root_known: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDSyncAck.service_bound)
+    pub service_bound: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDSyncAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1958,8 +1997,27 @@ impl WARDSyncAck {
         self.root_known = ::std::option::Option::Some(v);
     }
 
+    // optional bool service_bound = 80;
+
+    pub fn service_bound(&self) -> bool {
+        self.service_bound.unwrap_or(false)
+    }
+
+    pub fn clear_service_bound(&mut self) {
+        self.service_bound = ::std::option::Option::None;
+    }
+
+    pub fn has_service_bound(&self) -> bool {
+        self.service_bound.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_service_bound(&mut self, v: bool) {
+        self.service_bound = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(6);
+        let mut fields = ::std::vec::Vec::with_capacity(7);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "nonce",
@@ -1990,6 +2048,11 @@ impl WARDSyncAck {
             "root_known",
             |m: &WARDSyncAck| { &m.root_known },
             |m: &mut WARDSyncAck| { &mut m.root_known },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "service_bound",
+            |m: &WARDSyncAck| { &m.service_bound },
+            |m: &mut WARDSyncAck| { &mut m.service_bound },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDSyncAck>(
             "WARDSyncAck",
@@ -2039,6 +2102,9 @@ impl ::protobuf::Message for WARDSyncAck {
                 56 => {
                     self.root_known = ::std::option::Option::Some(is.read_bool()?);
                 },
+                640 => {
+                    self.service_bound = ::std::option::Option::Some(is.read_bool()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2069,6 +2135,9 @@ impl ::protobuf::Message for WARDSyncAck {
         if let Some(v) = self.root_known {
             my_size += 1 + 1;
         }
+        if let Some(v) = self.service_bound {
+            my_size += 2 + 1;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2093,6 +2162,9 @@ impl ::protobuf::Message for WARDSyncAck {
         if let Some(v) = self.root_known {
             os.write_bool(7, v)?;
         }
+        if let Some(v) = self.service_bound {
+            os.write_bool(80, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -2116,6 +2188,7 @@ impl ::protobuf::Message for WARDSyncAck {
         self.counter = ::std::option::Option::None;
         self.root = ::std::option::Option::None;
         self.root_known = ::std::option::Option::None;
+        self.service_bound = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2127,6 +2200,7 @@ impl ::protobuf::Message for WARDSyncAck {
             counter: ::std::option::Option::None,
             root: ::std::option::Option::None,
             root_known: ::std::option::Option::None,
+            service_bound: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -8150,6 +8224,8 @@ pub struct WARDPerformBatchAck {
     pub sig_commit: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDPerformBatchAck.leaves)
     pub leaves: ::std::vec::Vec<WARDBatchLeaf>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDPerformBatchAck.service_applied)
+    pub service_applied: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDPerformBatchAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -8437,8 +8513,27 @@ impl WARDPerformBatchAck {
         self.sig_commit.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bool service_applied = 80;
+
+    pub fn service_applied(&self) -> bool {
+        self.service_applied.unwrap_or(false)
+    }
+
+    pub fn clear_service_applied(&mut self) {
+        self.service_applied = ::std::option::Option::None;
+    }
+
+    pub fn has_service_applied(&self) -> bool {
+        self.service_applied.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_service_applied(&mut self, v: bool) {
+        self.service_applied = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(9);
+        let mut fields = ::std::vec::Vec::with_capacity(10);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "counter",
@@ -8484,6 +8579,11 @@ impl WARDPerformBatchAck {
             "leaves",
             |m: &WARDPerformBatchAck| { &m.leaves },
             |m: &mut WARDPerformBatchAck| { &mut m.leaves },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "service_applied",
+            |m: &WARDPerformBatchAck| { &m.service_applied },
+            |m: &mut WARDPerformBatchAck| { &mut m.service_applied },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDPerformBatchAck>(
             "WARDPerformBatchAck",
@@ -8544,6 +8644,9 @@ impl ::protobuf::Message for WARDPerformBatchAck {
                 74 => {
                     self.leaves.push(is.read_message()?);
                 },
+                640 => {
+                    self.service_applied = ::std::option::Option::Some(is.read_bool()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -8584,6 +8687,9 @@ impl ::protobuf::Message for WARDPerformBatchAck {
             let len = value.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         };
+        if let Some(v) = self.service_applied {
+            my_size += 2 + 1;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -8617,6 +8723,9 @@ impl ::protobuf::Message for WARDPerformBatchAck {
         for v in &self.leaves {
             ::protobuf::rt::write_message_field_with_cached_size(9, v, os)?;
         };
+        if let Some(v) = self.service_applied {
+            os.write_bool(80, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -8643,6 +8752,7 @@ impl ::protobuf::Message for WARDPerformBatchAck {
         self.auth_commit = ::std::option::Option::None;
         self.sig_commit = ::std::option::Option::None;
         self.leaves.clear();
+        self.service_applied = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -8657,6 +8767,7 @@ impl ::protobuf::Message for WARDPerformBatchAck {
             auth_commit: ::std::option::Option::None,
             sig_commit: ::std::option::Option::None,
             leaves: ::std::vec::Vec::new(),
+            service_applied: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -9570,6 +9681,8 @@ pub struct WARDPerformRevertAck {
     pub auth_revert: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDPerformRevertAck.sig_commit)
     pub sig_commit: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDPerformRevertAck.service_applied)
+    pub service_applied: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDPerformRevertAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -9857,8 +9970,27 @@ impl WARDPerformRevertAck {
         self.sig_commit.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bool service_applied = 80;
+
+    pub fn service_applied(&self) -> bool {
+        self.service_applied.unwrap_or(false)
+    }
+
+    pub fn clear_service_applied(&mut self) {
+        self.service_applied = ::std::option::Option::None;
+    }
+
+    pub fn has_service_applied(&self) -> bool {
+        self.service_applied.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_service_applied(&mut self, v: bool) {
+        self.service_applied = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(8);
+        let mut fields = ::std::vec::Vec::with_capacity(9);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "counter",
@@ -9899,6 +10031,11 @@ impl WARDPerformRevertAck {
             "sig_commit",
             |m: &WARDPerformRevertAck| { &m.sig_commit },
             |m: &mut WARDPerformRevertAck| { &mut m.sig_commit },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "service_applied",
+            |m: &WARDPerformRevertAck| { &m.service_applied },
+            |m: &mut WARDPerformRevertAck| { &mut m.service_applied },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDPerformRevertAck>(
             "WARDPerformRevertAck",
@@ -9951,6 +10088,9 @@ impl ::protobuf::Message for WARDPerformRevertAck {
                 66 => {
                     self.sig_commit = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                640 => {
+                    self.service_applied = ::std::option::Option::Some(is.read_bool()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -9987,6 +10127,9 @@ impl ::protobuf::Message for WARDPerformRevertAck {
         if let Some(v) = self.sig_commit.as_ref() {
             my_size += ::protobuf::rt::bytes_size(8, &v);
         }
+        if let Some(v) = self.service_applied {
+            my_size += 2 + 1;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -10017,6 +10160,9 @@ impl ::protobuf::Message for WARDPerformRevertAck {
         if let Some(v) = self.sig_commit.as_ref() {
             os.write_bytes(8, v)?;
         }
+        if let Some(v) = self.service_applied {
+            os.write_bool(80, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -10042,6 +10188,7 @@ impl ::protobuf::Message for WARDPerformRevertAck {
         self.head_mac = ::std::option::Option::None;
         self.auth_revert = ::std::option::Option::None;
         self.sig_commit = ::std::option::Option::None;
+        self.service_applied = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -10055,6 +10202,7 @@ impl ::protobuf::Message for WARDPerformRevertAck {
             head_mac: ::std::option::Option::None,
             auth_revert: ::std::option::Option::None,
             sig_commit: ::std::option::Option::None,
+            service_applied: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -13934,6 +14082,921 @@ impl ::protobuf::reflect::ProtobufValue for WARDValidateCacheAck {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WARDServiceOpen)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WARDServiceOpen {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDServiceOpen.protocol_version)
+    pub protocol_version: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDServiceOpen.close)
+    pub close: ::std::option::Option<bool>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDServiceOpen.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WARDServiceOpen {
+    fn default() -> &'a WARDServiceOpen {
+        <WARDServiceOpen as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WARDServiceOpen {
+    pub fn new() -> WARDServiceOpen {
+        ::std::default::Default::default()
+    }
+
+    // required uint32 protocol_version = 1;
+
+    pub fn protocol_version(&self) -> u32 {
+        self.protocol_version.unwrap_or(0)
+    }
+
+    pub fn clear_protocol_version(&mut self) {
+        self.protocol_version = ::std::option::Option::None;
+    }
+
+    pub fn has_protocol_version(&self) -> bool {
+        self.protocol_version.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_protocol_version(&mut self, v: u32) {
+        self.protocol_version = ::std::option::Option::Some(v);
+    }
+
+    // optional bool close = 2;
+
+    pub fn close(&self) -> bool {
+        self.close.unwrap_or(false)
+    }
+
+    pub fn clear_close(&mut self) {
+        self.close = ::std::option::Option::None;
+    }
+
+    pub fn has_close(&self) -> bool {
+        self.close.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_close(&mut self, v: bool) {
+        self.close = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "protocol_version",
+            |m: &WARDServiceOpen| { &m.protocol_version },
+            |m: &mut WARDServiceOpen| { &mut m.protocol_version },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "close",
+            |m: &WARDServiceOpen| { &m.close },
+            |m: &mut WARDServiceOpen| { &mut m.close },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDServiceOpen>(
+            "WARDServiceOpen",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WARDServiceOpen {
+    const NAME: &'static str = "WARDServiceOpen";
+
+    fn is_initialized(&self) -> bool {
+        if self.protocol_version.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.protocol_version = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                16 => {
+                    self.close = ::std::option::Option::Some(is.read_bool()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.protocol_version {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        if let Some(v) = self.close {
+            my_size += 1 + 1;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.protocol_version {
+            os.write_uint32(1, v)?;
+        }
+        if let Some(v) = self.close {
+            os.write_bool(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WARDServiceOpen {
+        WARDServiceOpen::new()
+    }
+
+    fn clear(&mut self) {
+        self.protocol_version = ::std::option::Option::None;
+        self.close = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WARDServiceOpen {
+        static instance: WARDServiceOpen = WARDServiceOpen {
+            protocol_version: ::std::option::Option::None,
+            close: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WARDServiceOpen {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WARDServiceOpen").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WARDServiceOpen {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WARDServiceOpen {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WARDServiceOpenAck)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WARDServiceOpenAck {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDServiceOpenAck.protocol_version)
+    pub protocol_version: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDServiceOpenAck.buffer_size)
+    pub buffer_size: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDServiceOpenAck.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WARDServiceOpenAck {
+    fn default() -> &'a WARDServiceOpenAck {
+        <WARDServiceOpenAck as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WARDServiceOpenAck {
+    pub fn new() -> WARDServiceOpenAck {
+        ::std::default::Default::default()
+    }
+
+    // required uint32 protocol_version = 1;
+
+    pub fn protocol_version(&self) -> u32 {
+        self.protocol_version.unwrap_or(0)
+    }
+
+    pub fn clear_protocol_version(&mut self) {
+        self.protocol_version = ::std::option::Option::None;
+    }
+
+    pub fn has_protocol_version(&self) -> bool {
+        self.protocol_version.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_protocol_version(&mut self, v: u32) {
+        self.protocol_version = ::std::option::Option::Some(v);
+    }
+
+    // required uint32 buffer_size = 2;
+
+    pub fn buffer_size(&self) -> u32 {
+        self.buffer_size.unwrap_or(0)
+    }
+
+    pub fn clear_buffer_size(&mut self) {
+        self.buffer_size = ::std::option::Option::None;
+    }
+
+    pub fn has_buffer_size(&self) -> bool {
+        self.buffer_size.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_buffer_size(&mut self, v: u32) {
+        self.buffer_size = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "protocol_version",
+            |m: &WARDServiceOpenAck| { &m.protocol_version },
+            |m: &mut WARDServiceOpenAck| { &mut m.protocol_version },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "buffer_size",
+            |m: &WARDServiceOpenAck| { &m.buffer_size },
+            |m: &mut WARDServiceOpenAck| { &mut m.buffer_size },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDServiceOpenAck>(
+            "WARDServiceOpenAck",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WARDServiceOpenAck {
+    const NAME: &'static str = "WARDServiceOpenAck";
+
+    fn is_initialized(&self) -> bool {
+        if self.protocol_version.is_none() {
+            return false;
+        }
+        if self.buffer_size.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.protocol_version = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                16 => {
+                    self.buffer_size = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.protocol_version {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        if let Some(v) = self.buffer_size {
+            my_size += ::protobuf::rt::uint32_size(2, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.protocol_version {
+            os.write_uint32(1, v)?;
+        }
+        if let Some(v) = self.buffer_size {
+            os.write_uint32(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WARDServiceOpenAck {
+        WARDServiceOpenAck::new()
+    }
+
+    fn clear(&mut self) {
+        self.protocol_version = ::std::option::Option::None;
+        self.buffer_size = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WARDServiceOpenAck {
+        static instance: WARDServiceOpenAck = WARDServiceOpenAck {
+            protocol_version: ::std::option::Option::None,
+            buffer_size: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WARDServiceOpenAck {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WARDServiceOpenAck").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WARDServiceOpenAck {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WARDServiceOpenAck {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WARDServiceDone)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WARDServiceDone {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDServiceDone.error)
+    pub error: ::std::option::Option<::std::string::String>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDServiceDone.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WARDServiceDone {
+    fn default() -> &'a WARDServiceDone {
+        <WARDServiceDone as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WARDServiceDone {
+    pub fn new() -> WARDServiceDone {
+        ::std::default::Default::default()
+    }
+
+    // optional string error = 1;
+
+    pub fn error(&self) -> &str {
+        match self.error.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_error(&mut self) {
+        self.error = ::std::option::Option::None;
+    }
+
+    pub fn has_error(&self) -> bool {
+        self.error.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_error(&mut self, v: ::std::string::String) {
+        self.error = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_error(&mut self) -> &mut ::std::string::String {
+        if self.error.is_none() {
+            self.error = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.error.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_error(&mut self) -> ::std::string::String {
+        self.error.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "error",
+            |m: &WARDServiceDone| { &m.error },
+            |m: &mut WARDServiceDone| { &mut m.error },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDServiceDone>(
+            "WARDServiceDone",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WARDServiceDone {
+    const NAME: &'static str = "WARDServiceDone";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.error = ::std::option::Option::Some(is.read_string()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.error.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.error.as_ref() {
+            os.write_string(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WARDServiceDone {
+        WARDServiceDone::new()
+    }
+
+    fn clear(&mut self) {
+        self.error = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WARDServiceDone {
+        static instance: WARDServiceDone = WARDServiceDone {
+            error: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WARDServiceDone {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WARDServiceDone").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WARDServiceDone {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WARDServiceDone {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WARDServiceSync)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WARDServiceSync {
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDServiceSync.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WARDServiceSync {
+    fn default() -> &'a WARDServiceSync {
+        <WARDServiceSync as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WARDServiceSync {
+    pub fn new() -> WARDServiceSync {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(0);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDServiceSync>(
+            "WARDServiceSync",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WARDServiceSync {
+    const NAME: &'static str = "WARDServiceSync";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WARDServiceSync {
+        WARDServiceSync::new()
+    }
+
+    fn clear(&mut self) {
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WARDServiceSync {
+        static instance: WARDServiceSync = WARDServiceSync {
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WARDServiceSync {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WARDServiceSync").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WARDServiceSync {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WARDServiceSync {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WARDServiceSyncAck)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WARDServiceSyncAck {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDServiceSyncAck.used_service)
+    pub used_service: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDServiceSyncAck.counter)
+    pub counter: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDServiceSyncAck.root)
+    pub root: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDServiceSyncAck.ward_id)
+    pub ward_id: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDServiceSyncAck.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WARDServiceSyncAck {
+    fn default() -> &'a WARDServiceSyncAck {
+        <WARDServiceSyncAck as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WARDServiceSyncAck {
+    pub fn new() -> WARDServiceSyncAck {
+        ::std::default::Default::default()
+    }
+
+    // required bool used_service = 1;
+
+    pub fn used_service(&self) -> bool {
+        self.used_service.unwrap_or(false)
+    }
+
+    pub fn clear_used_service(&mut self) {
+        self.used_service = ::std::option::Option::None;
+    }
+
+    pub fn has_used_service(&self) -> bool {
+        self.used_service.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_used_service(&mut self, v: bool) {
+        self.used_service = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 counter = 2;
+
+    pub fn counter(&self) -> u32 {
+        self.counter.unwrap_or(0)
+    }
+
+    pub fn clear_counter(&mut self) {
+        self.counter = ::std::option::Option::None;
+    }
+
+    pub fn has_counter(&self) -> bool {
+        self.counter.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_counter(&mut self, v: u32) {
+        self.counter = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes root = 3;
+
+    pub fn root(&self) -> &[u8] {
+        match self.root.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_root(&mut self) {
+        self.root = ::std::option::Option::None;
+    }
+
+    pub fn has_root(&self) -> bool {
+        self.root.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_root(&mut self, v: ::std::vec::Vec<u8>) {
+        self.root = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_root(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.root.is_none() {
+            self.root = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.root.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_root(&mut self) -> ::std::vec::Vec<u8> {
+        self.root.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes ward_id = 4;
+
+    pub fn ward_id(&self) -> &[u8] {
+        match self.ward_id.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_ward_id(&mut self) {
+        self.ward_id = ::std::option::Option::None;
+    }
+
+    pub fn has_ward_id(&self) -> bool {
+        self.ward_id.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_ward_id(&mut self, v: ::std::vec::Vec<u8>) {
+        self.ward_id = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_ward_id(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.ward_id.is_none() {
+            self.ward_id = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.ward_id.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_ward_id(&mut self) -> ::std::vec::Vec<u8> {
+        self.ward_id.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "used_service",
+            |m: &WARDServiceSyncAck| { &m.used_service },
+            |m: &mut WARDServiceSyncAck| { &mut m.used_service },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "counter",
+            |m: &WARDServiceSyncAck| { &m.counter },
+            |m: &mut WARDServiceSyncAck| { &mut m.counter },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "root",
+            |m: &WARDServiceSyncAck| { &m.root },
+            |m: &mut WARDServiceSyncAck| { &mut m.root },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "ward_id",
+            |m: &WARDServiceSyncAck| { &m.ward_id },
+            |m: &mut WARDServiceSyncAck| { &mut m.ward_id },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDServiceSyncAck>(
+            "WARDServiceSyncAck",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WARDServiceSyncAck {
+    const NAME: &'static str = "WARDServiceSyncAck";
+
+    fn is_initialized(&self) -> bool {
+        if self.used_service.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.used_service = ::std::option::Option::Some(is.read_bool()?);
+                },
+                16 => {
+                    self.counter = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                26 => {
+                    self.root = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                34 => {
+                    self.ward_id = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.used_service {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.counter {
+            my_size += ::protobuf::rt::uint32_size(2, v);
+        }
+        if let Some(v) = self.root.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(3, &v);
+        }
+        if let Some(v) = self.ward_id.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(4, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.used_service {
+            os.write_bool(1, v)?;
+        }
+        if let Some(v) = self.counter {
+            os.write_uint32(2, v)?;
+        }
+        if let Some(v) = self.root.as_ref() {
+            os.write_bytes(3, v)?;
+        }
+        if let Some(v) = self.ward_id.as_ref() {
+            os.write_bytes(4, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WARDServiceSyncAck {
+        WARDServiceSyncAck::new()
+    }
+
+    fn clear(&mut self) {
+        self.used_service = ::std::option::Option::None;
+        self.counter = ::std::option::Option::None;
+        self.root = ::std::option::Option::None;
+        self.ward_id = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WARDServiceSyncAck {
+        static instance: WARDServiceSyncAck = WARDServiceSyncAck {
+            used_service: ::std::option::Option::None,
+            counter: ::std::option::Option::None,
+            root: ::std::option::Option::None,
+            ward_id: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WARDServiceSyncAck {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WARDServiceSyncAck").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WARDServiceSyncAck {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WARDServiceSyncAck {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x13messages-ward.proto\x12\x17hw.trezor.messages.ward\"\xb6\x01\n\x0f\
     WARDQueueUpdate\x12\x18\n\x07address\x18\x01\x20\x02(\x0cR\x07address\
@@ -13943,176 +15006,188 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x1d\n\x06delete\x18\x06\x20\x01(\x08:\x05falseR\x06delete\"?\n\x12WARDQ\
     ueueUpdateAck\x12\x1d\n\npending_id\x18\x02\x20\x01(\rR\tpendingIdJ\x04\
     \x08\x01\x10\x02J\x04\x08\x03\x10\x04\"2\n\x11WARDPerformUpdate\x12\x1d\
-    \n\npending_id\x18\x01\x20\x01(\rR\tpendingId\"\xb4\x02\n\x14WARDPerform\
+    \n\npending_id\x18\x01\x20\x01(\rR\tpendingId\"\xdd\x02\n\x14WARDPerform\
     UpdateAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x19\n\
     \x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x10\n\x03mac\x18\x03\
     \x20\x01(\x0cR\x03mac\x12\x17\n\x07ward_id\x18\x05\x20\x01(\x0cR\x06ward\
     Id\x12\x1b\n\tentry_key\x18\x06\x20\x01(\x0cR\x08entryKey\x12>\n\x07cont\
     ent\x18\x0b\x20\x01(\x0b2$.hw.trezor.messages.ward.LeafContentR\x07conte\
     nt\x12A\n\x08identity\x18\x0c\x20\x01(\x0b2%.hw.trezor.messages.ward.Lea\
-    fIdentityR\x08identityJ\x04\x08\x04\x10\x05J\x04\x08\x07\x10\x08J\x04\
-    \x08\x08\x10\tJ\x04\x08\t\x10\nJ\x04\x08\n\x10\x0b\"\x81\x01\n\x11WARDCo\
-    nfirmedByWM\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x10\
-    \n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\
-    \x20\x02(\x0cR\x0bwmSignature\x12\x1d\n\npending_id\x18\x04\x20\x01(\rR\
-    \tpendingId\"l\n\x14WARDConfirmedByWMAck\x12\x18\n\x07counter\x18\x01\
-    \x20\x02(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07n\
-    ewRoot\x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMacJ\x04\x08\
-    \x03\x10\x04\"\n\n\x08WARDSync\"\xa9\x01\n\x0bWARDSyncAck\x12\x14\n\x05n\
-    once\x18\x01\x20\x02(\x0cR\x05nonce\x12\x18\n\x07version\x18\x02\x20\x02\
-    (\rR\x07version\x12\x17\n\x07ward_id\x18\x04\x20\x01(\x0cR\x06wardId\x12\
-    \x18\n\x07counter\x18\x05\x20\x02(\rR\x07counter\x12\x12\n\x04root\x18\
-    \x06\x20\x01(\x0cR\x04root\x12\x1d\n\nroot_known\x18\x07\x20\x02(\x08R\t\
-    rootKnownJ\x04\x08\x03\x10\x04\"\xa3\x01\n\x15WARDIngestAttestation\x12\
-    \x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x10\n\x03mac\x18\
-    \x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x02(\x0cR\
-    \x0bwmSignature\x12\x1c\n\ttimestamp\x18\x04\x20\x02(\x04R\ttimestamp\
-    \x12\x1d\n\nhead_nonce\x18\x05\x20\x02(\x0cR\theadNonce\":\n\x18WARDInge\
-    stAttestationAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07counterJ\
-    \x04\x08\x02\x10\x03\"\x16\n\x14WARDListPendingEdits\"\x8e\x01\n\x17WARD\
-    ListPendingEditsAck\x12\x1c\n\taddresses\x18\x01\x20\x03(\x0cR\taddresse\
-    s\x12\x1b\n\twallet_id\x18\x02\x20\x01(\x0cR\x08walletId\x12\x1f\n\x0bpe\
-    nding_ids\x18\x03\x20\x03(\rR\npendingIds\x12\x17\n\x07ward_id\x18\x04\
-    \x20\x01(\x0cR\x06wardId\"#\n\rWARDReconcile\x12\x12\n\x04root\x18\x01\
-    \x20\x01(\x0cR\x04root\"h\n\x10WARDReconcileAck\x12\x18\n\x07counter\x18\
-    \x01\x20\x02(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\
-    \x07newRoot\x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMacJ\x04\
-    \x08\x03\x10\x04\"\x85\x03\n\nWARDLookup\x12\x18\n\x07address\x18\x01\
-    \x20\x02(\x0cR\x07address\x12\x14\n\x05proof\x18\x03\x20\x03(\x0cR\x05pr\
-    oof\x12*\n\x11witness_entry_key\x18\x04\x20\x01(\x0cR\x0fwitnessEntryKey\
-    \x12%\n\x0ewitness_commit\x18\x05\x20\x01(\x0cR\rwitnessCommit\x12\x15\n\
-    \x06app_id\x18\x08\x20\x01(\tR\x05appId\x12\x19\n\x08key_type\x18\t\x20\
-    \x01(\tR\x07keyType\x12\x1b\n\tdevice_id\x18\n\x20\x01(\rR\x08deviceId\
-    \x12>\n\x07content\x18\x0e\x20\x01(\x0b2$.hw.trezor.messages.ward.LeafCo\
-    ntentR\x07content\x12A\n\x08identity\x18\x0f\x20\x01(\x0b2%.hw.trezor.me\
-    ssages.ward.LeafIdentityR\x08identityJ\x04\x08\x02\x10\x03J\x04\x08\x06\
-    \x10\x07J\x04\x08\x07\x10\x08J\x04\x08\x0b\x10\x0cJ\x04\x08\x0c\x10\rJ\
-    \x04\x08\r\x10\x0e\"~\n\rWARDLookupAck\x12\x14\n\x05valid\x18\x01\x20\
-    \x02(\x08R\x05valid\x12\x18\n\x07counter\x18\x02\x20\x02(\rR\x07counter\
-    \x12\x1e\n\nmembership\x18\x03\x20\x01(\x08R\nmembership\x12\x17\n\x07wa\
-    rd_id\x18\x05\x20\x01(\x0cR\x06wardIdJ\x04\x08\x04\x10\x05\"&\n\x10WARDD\
-    ebugSetRoot\x12\x12\n\x04root\x18\x01\x20\x02(\x0cR\x04root\"\x82\x01\n\
-    \x13WARDDebugSetRootAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07coun\
-    ter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x1b\n\twa\
-    llet_id\x18\x03\x20\x01(\x0cR\x08walletId\x12\x19\n\x08root_mac\x18\x04\
-    \x20\x01(\x0cR\x07rootMac\"\x83\x01\n\x10WARDProofRequest\x12\x1d\n\npen\
-    ding_id\x18\x02\x20\x01(\rR\tpendingId\x12\x1b\n\tentry_key\x18\x04\x20\
-    \x02(\x0cR\x08entryKey\x12'\n\x0ffreshness_nonce\x18\x05\x20\x01(\x0cR\
-    \x0efreshnessNonceJ\x04\x08\x01\x10\x02J\x04\x08\x03\x10\x04\"\x9d\x01\n\
-    \x0fWARDAttestation\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\
-    \x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\
-    \x18\x03\x20\x02(\x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\x04\x20\
-    \x02(\x04R\ttimestamp\x12\x1d\n\nhead_nonce\x18\x05\x20\x02(\x0cR\theadN\
-    once\"\x98\x03\n\x0cWARDProofAck\x12\x14\n\x05proof\x18\x02\x20\x03(\x0c\
-    R\x05proof\x12*\n\x11witness_entry_key\x18\x04\x20\x01(\x0cR\x0fwitnessE\
-    ntryKey\x12%\n\x0ewitness_commit\x18\x05\x20\x01(\x0cR\rwitnessCommit\
-    \x12>\n\x07content\x18\x0c\x20\x01(\x0b2$.hw.trezor.messages.ward.LeafCo\
-    ntentR\x07content\x12A\n\x08identity\x18\r\x20\x01(\x0b2%.hw.trezor.mess\
-    ages.ward.LeafIdentityR\x08identity\x12J\n\x0battestation\x18\x0e\x20\
-    \x01(\x0b2(.hw.trezor.messages.ward.WARDAttestationR\x0battestation\x12\
-    \x20\n\x0bunavailable\x18\x0f\x20\x01(\x08R\x0bunavailableJ\x04\x08\x01\
-    \x10\x02J\x04\x08\x03\x10\x04J\x04\x08\x06\x10\x07J\x04\x08\x07\x10\x08J\
-    \x04\x08\x08\x10\tJ\x04\x08\t\x10\nJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\
-    \x0c\"+\n\x0eWARDExportKeys\x12\x19\n\x08key_type\x18\x01\x20\x01(\tR\
-    \x07keyType\"u\n\x11WARDExportKeysAck\x12\x15\n\x06k_path\x18\x01\x20\
-    \x01(\x0cR\x05kPath\x12\x15\n\x06k_data\x18\x02\x20\x01(\x0cR\x05kData\
-    \x12\x19\n\x08key_type\x18\x03\x20\x01(\tR\x07keyType\x12\x17\n\x07k_ide\
-    nt\x18\x04\x20\x01(\x0cR\x06kIdent\"3\n\x12WARDDiscardPending\x12\x1d\n\
-    \npending_id\x18\x01\x20\x01(\rR\tpendingId\"\x80\x01\n\x15WARDDiscardPe\
-    ndingAck\x12+\n\x11discarded_address\x18\x01\x20\x01(\x0cR\x10discardedA\
-    ddress\x12\x1b\n\twallet_id\x18\x02\x20\x01(\x0cR\x08walletId\x12\x1d\n\
-    \npending_id\x18\x03\x20\x01(\rR\tpendingId\"G\n\rEncryptedLeaf\x12\x14\
-    \n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x10\n\x03tag\x18\x02\x20\
-    \x01(\x0cR\x03tag\x12\x0e\n\x02ct\x18\x03\x20\x01(\x0cR\x02ct\")\n\rPlai\
-    ntextLeaf\x12\x18\n\x07content\x18\x01\x20\x01(\x0cR\x07content\"\xb5\
-    \x01\n\x0bLeafContent\x12\x1a\n\x08encoding\x18\x01\x20\x01(\rR\x08encod\
-    ing\x12D\n\tencrypted\x18\x02\x20\x01(\x0b2&.hw.trezor.messages.ward.Enc\
-    ryptedLeafR\tencrypted\x12D\n\tplaintext\x18\x03\x20\x01(\x0b2&.hw.trezo\
-    r.messages.ward.PlaintextLeafR\tplaintext\"c\n\rPlainIdentity\x12\x1e\n\
-    \nidentifier\x18\x01\x20\x01(\x0cR\nidentifier\x12\x15\n\x06app_id\x18\
-    \x02\x20\x01(\tR\x05appId\x12\x1b\n\tdevice_id\x18\x03\x20\x01(\rR\x08de\
-    viceId\"K\n\x11EncryptedIdentity\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0c\
-    R\x05nonce\x12\x10\n\x03tag\x18\x02\x20\x01(\x0cR\x03tag\x12\x0e\n\x02ct\
-    \x18\x03\x20\x01(\x0cR\x02ct\"\xcd\x01\n\x0cLeafIdentity\x12\x1a\n\x08en\
-    coding\x18\x01\x20\x01(\rR\x08encoding\x12\x19\n\x08key_type\x18\x02\x20\
-    \x01(\tR\x07keyType\x12H\n\tencrypted\x18\x03\x20\x01(\x0b2*.hw.trezor.m\
-    essages.ward.EncryptedIdentityR\tencrypted\x12<\n\x05plain\x18\x04\x20\
-    \x01(\x0b2&.hw.trezor.messages.ward.PlainIdentityR\x05plain\"\xc7\x01\n\
-    \rWARDBatchLeaf\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\
-    \x12>\n\x07content\x18\x06\x20\x01(\x0b2$.hw.trezor.messages.ward.LeafCo\
-    ntentR\x07content\x12A\n\x08identity\x18\x07\x20\x01(\x0b2%.hw.trezor.me\
-    ssages.ward.LeafIdentityR\x08identityJ\x04\x08\x02\x10\x03J\x04\x08\x03\
-    \x10\x04J\x04\x08\x04\x10\x05J\x04\x08\x05\x10\x06\"3\n\x10WARDPerformBa\
-    tch\x12\x1f\n\x0bpending_ids\x18\x01\x20\x03(\rR\npendingIds\"\xad\x02\n\
-    \x13WARDPerformBatchAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07coun\
-    ter\x12\x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fromRoot\x12\x19\n\x08\
-    new_root\x18\x03\x20\x01(\x0cR\x07newRoot\x12\x10\n\x03mac\x18\x04\x20\
-    \x01(\x0cR\x03mac\x12\x17\n\x07ward_id\x18\x05\x20\x01(\x0cR\x06wardId\
-    \x12\x19\n\x08head_mac\x18\x06\x20\x02(\x0cR\x07headMac\x12\x1f\n\x0baut\
-    h_commit\x18\x07\x20\x02(\x0cR\nauthCommit\x12\x1d\n\nsig_commit\x18\x08\
-    \x20\x01(\x0cR\tsigCommit\x12>\n\x06leaves\x18\t\x20\x03(\x0b2&.hw.trezo\
-    r.messages.ward.WARDBatchLeafR\x06leaves\"e\n\x14WARDConfirmBatchByWM\
+    fIdentityR\x08identity\x12'\n\x0fservice_applied\x18P\x20\x01(\x08R\x0es\
+    erviceAppliedJ\x04\x08\x04\x10\x05J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\
+    \tJ\x04\x08\t\x10\nJ\x04\x08\n\x10\x0b\"\x81\x01\n\x11WARDConfirmedByWM\
     \x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x10\n\x03mac\
     \x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x02(\
-    \x0cR\x0bwmSignature\"\x82\x01\n\x17WARDConfirmBatchByWMAck\x12\x18\n\
+    \x0cR\x0bwmSignature\x12\x1d\n\npending_id\x18\x04\x20\x01(\rR\tpendingI\
+    d\"l\n\x14WARDConfirmedByWMAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\
+    \x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\
+    \x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMacJ\x04\x08\x03\x10\x04\
+    \"\n\n\x08WARDSync\"\xce\x01\n\x0bWARDSyncAck\x12\x14\n\x05nonce\x18\x01\
+    \x20\x02(\x0cR\x05nonce\x12\x18\n\x07version\x18\x02\x20\x02(\rR\x07vers\
+    ion\x12\x17\n\x07ward_id\x18\x04\x20\x01(\x0cR\x06wardId\x12\x18\n\x07co\
+    unter\x18\x05\x20\x02(\rR\x07counter\x12\x12\n\x04root\x18\x06\x20\x01(\
+    \x0cR\x04root\x12\x1d\n\nroot_known\x18\x07\x20\x02(\x08R\trootKnown\x12\
+    #\n\rservice_bound\x18P\x20\x01(\x08R\x0cserviceBoundJ\x04\x08\x03\x10\
+    \x04\"\xa3\x01\n\x15WARDIngestAttestation\x12\x18\n\x07counter\x18\x01\
+    \x20\x02(\rR\x07counter\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\
+    \x12!\n\x0cwm_signature\x18\x03\x20\x02(\x0cR\x0bwmSignature\x12\x1c\n\t\
+    timestamp\x18\x04\x20\x02(\x04R\ttimestamp\x12\x1d\n\nhead_nonce\x18\x05\
+    \x20\x02(\x0cR\theadNonce\":\n\x18WARDIngestAttestationAck\x12\x18\n\x07\
+    counter\x18\x01\x20\x02(\rR\x07counterJ\x04\x08\x02\x10\x03\"\x16\n\x14W\
+    ARDListPendingEdits\"\x8e\x01\n\x17WARDListPendingEditsAck\x12\x1c\n\tad\
+    dresses\x18\x01\x20\x03(\x0cR\taddresses\x12\x1b\n\twallet_id\x18\x02\
+    \x20\x01(\x0cR\x08walletId\x12\x1f\n\x0bpending_ids\x18\x03\x20\x03(\rR\
+    \npendingIds\x12\x17\n\x07ward_id\x18\x04\x20\x01(\x0cR\x06wardId\"#\n\r\
+    WARDReconcile\x12\x12\n\x04root\x18\x01\x20\x01(\x0cR\x04root\"h\n\x10WA\
+    RDReconcileAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\
+    \x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x19\n\x08root_ma\
+    c\x18\x04\x20\x01(\x0cR\x07rootMacJ\x04\x08\x03\x10\x04\"\x85\x03\n\nWAR\
+    DLookup\x12\x18\n\x07address\x18\x01\x20\x02(\x0cR\x07address\x12\x14\n\
+    \x05proof\x18\x03\x20\x03(\x0cR\x05proof\x12*\n\x11witness_entry_key\x18\
+    \x04\x20\x01(\x0cR\x0fwitnessEntryKey\x12%\n\x0ewitness_commit\x18\x05\
+    \x20\x01(\x0cR\rwitnessCommit\x12\x15\n\x06app_id\x18\x08\x20\x01(\tR\
+    \x05appId\x12\x19\n\x08key_type\x18\t\x20\x01(\tR\x07keyType\x12\x1b\n\t\
+    device_id\x18\n\x20\x01(\rR\x08deviceId\x12>\n\x07content\x18\x0e\x20\
+    \x01(\x0b2$.hw.trezor.messages.ward.LeafContentR\x07content\x12A\n\x08id\
+    entity\x18\x0f\x20\x01(\x0b2%.hw.trezor.messages.ward.LeafIdentityR\x08i\
+    dentityJ\x04\x08\x02\x10\x03J\x04\x08\x06\x10\x07J\x04\x08\x07\x10\x08J\
+    \x04\x08\x0b\x10\x0cJ\x04\x08\x0c\x10\rJ\x04\x08\r\x10\x0e\"~\n\rWARDLoo\
+    kupAck\x12\x14\n\x05valid\x18\x01\x20\x02(\x08R\x05valid\x12\x18\n\x07co\
+    unter\x18\x02\x20\x02(\rR\x07counter\x12\x1e\n\nmembership\x18\x03\x20\
+    \x01(\x08R\nmembership\x12\x17\n\x07ward_id\x18\x05\x20\x01(\x0cR\x06war\
+    dIdJ\x04\x08\x04\x10\x05\"&\n\x10WARDDebugSetRoot\x12\x12\n\x04root\x18\
+    \x01\x20\x02(\x0cR\x04root\"\x82\x01\n\x13WARDDebugSetRootAck\x12\x18\n\
     \x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\
-    \x20\x01(\x0cR\x07newRoot\x12\x17\n\x07ward_id\x18\x03\x20\x01(\x0cR\x06\
-    wardId\x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMac\"\xa4\x01\
-    \n\x11WARDPerformRevert\x12#\n\rstuck_counter\x18\x01\x20\x02(\rR\x0cstu\
-    ckCounter\x12\x1d\n\nstuck_root\x18\x02\x20\x01(\x0cR\tstuckRoot\x12\x1b\
-    \n\tprev_root\x18\x03\x20\x01(\x0cR\x08prevRoot\x12.\n\x13forward_auth_c\
-    ommit\x18\x04\x20\x02(\x0cR\x11forwardAuthCommit\"\xee\x01\n\x14WARDPerf\
-    ormRevertAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x1b\
-    \n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fromRoot\x12\x19\n\x08new_root\
-    \x18\x03\x20\x01(\x0cR\x07newRoot\x12\x10\n\x03mac\x18\x04\x20\x01(\x0cR\
-    \x03mac\x12\x17\n\x07ward_id\x18\x05\x20\x01(\x0cR\x06wardId\x12\x19\n\
-    \x08head_mac\x18\x06\x20\x02(\x0cR\x07headMac\x12\x1f\n\x0bauth_revert\
-    \x18\x07\x20\x02(\x0cR\nauthRevert\x12\x1d\n\nsig_commit\x18\x08\x20\x01\
-    (\x0cR\tsigCommit\"f\n\x15WARDConfirmRevertByWM\x12\x18\n\x07counter\x18\
-    \x01\x20\x02(\rR\x07counter\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03ma\
-    c\x12!\n\x0cwm_signature\x18\x03\x20\x02(\x0cR\x0bwmSignature\"\x83\x01\
-    \n\x18WARDConfirmRevertByWMAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\
-    \x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\
-    \x17\n\x07ward_id\x18\x03\x20\x01(\x0cR\x06wardId\x12\x19\n\x08root_mac\
-    \x18\x04\x20\x01(\x0cR\x07rootMac\"\xc7\x01\n\rWARDChainLink\x12!\n\x0cf\
-    rom_counter\x18\x01\x20\x02(\rR\x0bfromCounter\x12\x1b\n\tfrom_root\x18\
-    \x02\x20\x01(\x0cR\x08fromRoot\x12\x1d\n\nto_counter\x18\x03\x20\x02(\rR\
-    \ttoCounter\x12\x17\n\x07to_root\x18\x04\x20\x01(\x0cR\x06toRoot\x12\x1f\
-    \n\x0bauth_commit\x18\x05\x20\x02(\x0cR\nauthCommit\x12\x1d\n\nsig_commi\
-    t\x18\x06\x20\x01(\x0cR\tsigCommit\"O\n\x0fWARDVerifyChain\x12<\n\x05lin\
-    ks\x18\x01\x20\x03(\x0b2&.hw.trezor.messages.ward.WARDChainLinkR\x05link\
-    s\"}\n\x12WARDVerifyChainAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\
-    \x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\
-    \x17\n\x07ward_id\x18\x03\x20\x01(\x0cR\x06wardId\x12\x19\n\x08root_mac\
-    \x18\x04\x20\x01(\x0cR\x07rootMac\"\xf5\x01\n\x0cWARDTrieNode\x12\x1b\n\
-    \tsplit_bit\x18\x01\x20\x01(\rR\x08splitBit\x12\x12\n\x04left\x18\x02\
-    \x20\x01(\x0cR\x04left\x12\x14\n\x05right\x18\x03\x20\x01(\x0cR\x05right\
-    \x12\x1b\n\tentry_key\x18\x04\x20\x01(\x0cR\x08entryKey\x12>\n\x07conten\
-    t\x18\x05\x20\x01(\x0b2$.hw.trezor.messages.ward.LeafContentR\x07content\
-    \x12A\n\x08identity\x18\x06\x20\x01(\x0b2%.hw.trezor.messages.ward.LeafI\
-    dentityR\x08identity\"`\n\x0fWARDListEntries\x12\x15\n\x06app_id\x18\x01\
-    \x20\x01(\tR\x05appId\x12\x19\n\x08key_type\x18\x02\x20\x01(\tR\x07keyTy\
-    pe\x12\x1b\n\tdevice_id\x18\x03\x20\x01(\rR\x08deviceId\".\n\x0fWARDNode\
-    Request\x12\x1b\n\tnode_hash\x18\x01\x20\x02(\x0cR\x08nodeHash\"J\n\x0bW\
-    ARDNodeAck\x12;\n\x05nodes\x18\x01\x20\x03(\x0b2%.hw.trezor.messages.war\
-    d.WARDTrieNodeR\x05nodes\"z\n\x12WARDListEntriesAck\x12\x14\n\x05shown\
-    \x18\x01\x20\x02(\rR\x05shown\x12\x18\n\x07entries\x18\x02\x20\x02(\rR\
-    \x07entries\x12\x18\n\x07counter\x18\x03\x20\x02(\rR\x07counter\x12\x1a\
-    \n\x08complete\x18\x04\x20\x02(\x08R\x08complete\"E\n\x0eWARDCacheEntry\
-    \x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12\x16\n\x06sti\
-    cky\x18\x02\x20\x01(\x08R\x06sticky\"I\n\x11WARDCacheEntryAck\x12\x1a\n\
-    \x08replaced\x18\x01\x20\x02(\x08R\x08replaced\x12\x18\n\x07counter\x18\
-    \x02\x20\x02(\rR\x07counter\"\x11\n\x0fWARDCacheExport\".\n\x12WARDCache\
-    ExportAck\x12\x18\n\x07entries\x18\x01\x20\x03(\x0cR\x07entries\"+\n\x0f\
-    WARDCacheImport\x12\x18\n\x07entries\x18\x01\x20\x03(\x0cR\x07entries\"J\
-    \n\x12WARDCacheImportAck\x12\x1a\n\x08imported\x18\x01\x20\x02(\rR\x08im\
-    ported\x12\x18\n\x07skipped\x18\x02\x20\x02(\rR\x07skipped\"\x13\n\x11WA\
-    RDValidateCache\"\xa2\x01\n\x14WARDValidateCacheAck\x12\x18\n\x07checked\
-    \x18\x01\x20\x02(\rR\x07checked\x12\x1c\n\tunchanged\x18\x02\x20\x02(\rR\
-    \tunchanged\x12\x18\n\x07updated\x18\x03\x20\x02(\rR\x07updated\x12\x18\
-    \n\x07removed\x18\x04\x20\x02(\rR\x07removed\x12\x18\n\x07counter\x18\
-    \x06\x20\x02(\rR\x07counterJ\x04\x08\x05\x10\x06B8\n#com.satoshilabs.tre\
-    zor.lib.protobufB\x11TrezorMessageWard\
+    \x20\x01(\x0cR\x07newRoot\x12\x1b\n\twallet_id\x18\x03\x20\x01(\x0cR\x08\
+    walletId\x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMac\"\x83\
+    \x01\n\x10WARDProofRequest\x12\x1d\n\npending_id\x18\x02\x20\x01(\rR\tpe\
+    ndingId\x12\x1b\n\tentry_key\x18\x04\x20\x02(\x0cR\x08entryKey\x12'\n\
+    \x0ffreshness_nonce\x18\x05\x20\x01(\x0cR\x0efreshnessNonceJ\x04\x08\x01\
+    \x10\x02J\x04\x08\x03\x10\x04\"\x9d\x01\n\x0fWARDAttestation\x12\x18\n\
+    \x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x10\n\x03mac\x18\x02\x20\
+    \x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x02(\x0cR\x0bwmSign\
+    ature\x12\x1c\n\ttimestamp\x18\x04\x20\x02(\x04R\ttimestamp\x12\x1d\n\nh\
+    ead_nonce\x18\x05\x20\x02(\x0cR\theadNonce\"\x98\x03\n\x0cWARDProofAck\
+    \x12\x14\n\x05proof\x18\x02\x20\x03(\x0cR\x05proof\x12*\n\x11witness_ent\
+    ry_key\x18\x04\x20\x01(\x0cR\x0fwitnessEntryKey\x12%\n\x0ewitness_commit\
+    \x18\x05\x20\x01(\x0cR\rwitnessCommit\x12>\n\x07content\x18\x0c\x20\x01(\
+    \x0b2$.hw.trezor.messages.ward.LeafContentR\x07content\x12A\n\x08identit\
+    y\x18\r\x20\x01(\x0b2%.hw.trezor.messages.ward.LeafIdentityR\x08identity\
+    \x12J\n\x0battestation\x18\x0e\x20\x01(\x0b2(.hw.trezor.messages.ward.WA\
+    RDAttestationR\x0battestation\x12\x20\n\x0bunavailable\x18\x0f\x20\x01(\
+    \x08R\x0bunavailableJ\x04\x08\x01\x10\x02J\x04\x08\x03\x10\x04J\x04\x08\
+    \x06\x10\x07J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\x08\t\x10\nJ\
+    \x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\x0c\"+\n\x0eWARDExportKeys\x12\x19\n\
+    \x08key_type\x18\x01\x20\x01(\tR\x07keyType\"u\n\x11WARDExportKeysAck\
+    \x12\x15\n\x06k_path\x18\x01\x20\x01(\x0cR\x05kPath\x12\x15\n\x06k_data\
+    \x18\x02\x20\x01(\x0cR\x05kData\x12\x19\n\x08key_type\x18\x03\x20\x01(\t\
+    R\x07keyType\x12\x17\n\x07k_ident\x18\x04\x20\x01(\x0cR\x06kIdent\"3\n\
+    \x12WARDDiscardPending\x12\x1d\n\npending_id\x18\x01\x20\x01(\rR\tpendin\
+    gId\"\x80\x01\n\x15WARDDiscardPendingAck\x12+\n\x11discarded_address\x18\
+    \x01\x20\x01(\x0cR\x10discardedAddress\x12\x1b\n\twallet_id\x18\x02\x20\
+    \x01(\x0cR\x08walletId\x12\x1d\n\npending_id\x18\x03\x20\x01(\rR\tpendin\
+    gId\"G\n\rEncryptedLeaf\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonc\
+    e\x12\x10\n\x03tag\x18\x02\x20\x01(\x0cR\x03tag\x12\x0e\n\x02ct\x18\x03\
+    \x20\x01(\x0cR\x02ct\")\n\rPlaintextLeaf\x12\x18\n\x07content\x18\x01\
+    \x20\x01(\x0cR\x07content\"\xb5\x01\n\x0bLeafContent\x12\x1a\n\x08encodi\
+    ng\x18\x01\x20\x01(\rR\x08encoding\x12D\n\tencrypted\x18\x02\x20\x01(\
+    \x0b2&.hw.trezor.messages.ward.EncryptedLeafR\tencrypted\x12D\n\tplainte\
+    xt\x18\x03\x20\x01(\x0b2&.hw.trezor.messages.ward.PlaintextLeafR\tplaint\
+    ext\"c\n\rPlainIdentity\x12\x1e\n\nidentifier\x18\x01\x20\x01(\x0cR\nide\
+    ntifier\x12\x15\n\x06app_id\x18\x02\x20\x01(\tR\x05appId\x12\x1b\n\tdevi\
+    ce_id\x18\x03\x20\x01(\rR\x08deviceId\"K\n\x11EncryptedIdentity\x12\x14\
+    \n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x10\n\x03tag\x18\x02\x20\
+    \x01(\x0cR\x03tag\x12\x0e\n\x02ct\x18\x03\x20\x01(\x0cR\x02ct\"\xcd\x01\
+    \n\x0cLeafIdentity\x12\x1a\n\x08encoding\x18\x01\x20\x01(\rR\x08encoding\
+    \x12\x19\n\x08key_type\x18\x02\x20\x01(\tR\x07keyType\x12H\n\tencrypted\
+    \x18\x03\x20\x01(\x0b2*.hw.trezor.messages.ward.EncryptedIdentityR\tencr\
+    ypted\x12<\n\x05plain\x18\x04\x20\x01(\x0b2&.hw.trezor.messages.ward.Pla\
+    inIdentityR\x05plain\"\xc7\x01\n\rWARDBatchLeaf\x12\x1b\n\tentry_key\x18\
+    \x01\x20\x02(\x0cR\x08entryKey\x12>\n\x07content\x18\x06\x20\x01(\x0b2$.\
+    hw.trezor.messages.ward.LeafContentR\x07content\x12A\n\x08identity\x18\
+    \x07\x20\x01(\x0b2%.hw.trezor.messages.ward.LeafIdentityR\x08identityJ\
+    \x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\x05J\x04\x08\
+    \x05\x10\x06\"3\n\x10WARDPerformBatch\x12\x1f\n\x0bpending_ids\x18\x01\
+    \x20\x03(\rR\npendingIds\"\xd6\x02\n\x13WARDPerformBatchAck\x12\x18\n\
+    \x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x1b\n\tfrom_root\x18\x02\
+    \x20\x01(\x0cR\x08fromRoot\x12\x19\n\x08new_root\x18\x03\x20\x01(\x0cR\
+    \x07newRoot\x12\x10\n\x03mac\x18\x04\x20\x01(\x0cR\x03mac\x12\x17\n\x07w\
+    ard_id\x18\x05\x20\x01(\x0cR\x06wardId\x12\x19\n\x08head_mac\x18\x06\x20\
+    \x02(\x0cR\x07headMac\x12\x1f\n\x0bauth_commit\x18\x07\x20\x02(\x0cR\nau\
+    thCommit\x12\x1d\n\nsig_commit\x18\x08\x20\x01(\x0cR\tsigCommit\x12>\n\
+    \x06leaves\x18\t\x20\x03(\x0b2&.hw.trezor.messages.ward.WARDBatchLeafR\
+    \x06leaves\x12'\n\x0fservice_applied\x18P\x20\x01(\x08R\x0eserviceApplie\
+    d\"e\n\x14WARDConfirmBatchByWM\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\
+    \x07counter\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_s\
+    ignature\x18\x03\x20\x02(\x0cR\x0bwmSignature\"\x82\x01\n\x17WARDConfirm\
+    BatchByWMAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x19\
+    \n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x17\n\x07ward_id\x18\
+    \x03\x20\x01(\x0cR\x06wardId\x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\
+    \x07rootMac\"\xa4\x01\n\x11WARDPerformRevert\x12#\n\rstuck_counter\x18\
+    \x01\x20\x02(\rR\x0cstuckCounter\x12\x1d\n\nstuck_root\x18\x02\x20\x01(\
+    \x0cR\tstuckRoot\x12\x1b\n\tprev_root\x18\x03\x20\x01(\x0cR\x08prevRoot\
+    \x12.\n\x13forward_auth_commit\x18\x04\x20\x02(\x0cR\x11forwardAuthCommi\
+    t\"\x97\x02\n\x14WARDPerformRevertAck\x12\x18\n\x07counter\x18\x01\x20\
+    \x02(\rR\x07counter\x12\x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fromRo\
+    ot\x12\x19\n\x08new_root\x18\x03\x20\x01(\x0cR\x07newRoot\x12\x10\n\x03m\
+    ac\x18\x04\x20\x01(\x0cR\x03mac\x12\x17\n\x07ward_id\x18\x05\x20\x01(\
+    \x0cR\x06wardId\x12\x19\n\x08head_mac\x18\x06\x20\x02(\x0cR\x07headMac\
+    \x12\x1f\n\x0bauth_revert\x18\x07\x20\x02(\x0cR\nauthRevert\x12\x1d\n\ns\
+    ig_commit\x18\x08\x20\x01(\x0cR\tsigCommit\x12'\n\x0fservice_applied\x18\
+    P\x20\x01(\x08R\x0eserviceApplied\"f\n\x15WARDConfirmRevertByWM\x12\x18\
+    \n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x10\n\x03mac\x18\x02\
+    \x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x02(\x0cR\x0bwm\
+    Signature\"\x83\x01\n\x18WARDConfirmRevertByWMAck\x12\x18\n\x07counter\
+    \x18\x01\x20\x02(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\
+    \x0cR\x07newRoot\x12\x17\n\x07ward_id\x18\x03\x20\x01(\x0cR\x06wardId\
+    \x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMac\"\xc7\x01\n\rWAR\
+    DChainLink\x12!\n\x0cfrom_counter\x18\x01\x20\x02(\rR\x0bfromCounter\x12\
+    \x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fromRoot\x12\x1d\n\nto_counte\
+    r\x18\x03\x20\x02(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x04\x20\x01(\
+    \x0cR\x06toRoot\x12\x1f\n\x0bauth_commit\x18\x05\x20\x02(\x0cR\nauthComm\
+    it\x12\x1d\n\nsig_commit\x18\x06\x20\x01(\x0cR\tsigCommit\"O\n\x0fWARDVe\
+    rifyChain\x12<\n\x05links\x18\x01\x20\x03(\x0b2&.hw.trezor.messages.ward\
+    .WARDChainLinkR\x05links\"}\n\x12WARDVerifyChainAck\x12\x18\n\x07counter\
+    \x18\x01\x20\x02(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\
+    \x0cR\x07newRoot\x12\x17\n\x07ward_id\x18\x03\x20\x01(\x0cR\x06wardId\
+    \x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMac\"\xf5\x01\n\x0cW\
+    ARDTrieNode\x12\x1b\n\tsplit_bit\x18\x01\x20\x01(\rR\x08splitBit\x12\x12\
+    \n\x04left\x18\x02\x20\x01(\x0cR\x04left\x12\x14\n\x05right\x18\x03\x20\
+    \x01(\x0cR\x05right\x12\x1b\n\tentry_key\x18\x04\x20\x01(\x0cR\x08entryK\
+    ey\x12>\n\x07content\x18\x05\x20\x01(\x0b2$.hw.trezor.messages.ward.Leaf\
+    ContentR\x07content\x12A\n\x08identity\x18\x06\x20\x01(\x0b2%.hw.trezor.\
+    messages.ward.LeafIdentityR\x08identity\"`\n\x0fWARDListEntries\x12\x15\
+    \n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x19\n\x08key_type\x18\x02\
+    \x20\x01(\tR\x07keyType\x12\x1b\n\tdevice_id\x18\x03\x20\x01(\rR\x08devi\
+    ceId\".\n\x0fWARDNodeRequest\x12\x1b\n\tnode_hash\x18\x01\x20\x02(\x0cR\
+    \x08nodeHash\"J\n\x0bWARDNodeAck\x12;\n\x05nodes\x18\x01\x20\x03(\x0b2%.\
+    hw.trezor.messages.ward.WARDTrieNodeR\x05nodes\"z\n\x12WARDListEntriesAc\
+    k\x12\x14\n\x05shown\x18\x01\x20\x02(\rR\x05shown\x12\x18\n\x07entries\
+    \x18\x02\x20\x02(\rR\x07entries\x12\x18\n\x07counter\x18\x03\x20\x02(\rR\
+    \x07counter\x12\x1a\n\x08complete\x18\x04\x20\x02(\x08R\x08complete\"E\n\
+    \x0eWARDCacheEntry\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKe\
+    y\x12\x16\n\x06sticky\x18\x02\x20\x01(\x08R\x06sticky\"I\n\x11WARDCacheE\
+    ntryAck\x12\x1a\n\x08replaced\x18\x01\x20\x02(\x08R\x08replaced\x12\x18\
+    \n\x07counter\x18\x02\x20\x02(\rR\x07counter\"\x11\n\x0fWARDCacheExport\
+    \".\n\x12WARDCacheExportAck\x12\x18\n\x07entries\x18\x01\x20\x03(\x0cR\
+    \x07entries\"+\n\x0fWARDCacheImport\x12\x18\n\x07entries\x18\x01\x20\x03\
+    (\x0cR\x07entries\"J\n\x12WARDCacheImportAck\x12\x1a\n\x08imported\x18\
+    \x01\x20\x02(\rR\x08imported\x12\x18\n\x07skipped\x18\x02\x20\x02(\rR\
+    \x07skipped\"\x13\n\x11WARDValidateCache\"\xa2\x01\n\x14WARDValidateCach\
+    eAck\x12\x18\n\x07checked\x18\x01\x20\x02(\rR\x07checked\x12\x1c\n\tunch\
+    anged\x18\x02\x20\x02(\rR\tunchanged\x12\x18\n\x07updated\x18\x03\x20\
+    \x02(\rR\x07updated\x12\x18\n\x07removed\x18\x04\x20\x02(\rR\x07removed\
+    \x12\x18\n\x07counter\x18\x06\x20\x02(\rR\x07counterJ\x04\x08\x05\x10\
+    \x06\"R\n\x0fWARDServiceOpen\x12)\n\x10protocol_version\x18\x01\x20\x02(\
+    \rR\x0fprotocolVersion\x12\x14\n\x05close\x18\x02\x20\x01(\x08R\x05close\
+    \"`\n\x12WARDServiceOpenAck\x12)\n\x10protocol_version\x18\x01\x20\x02(\
+    \rR\x0fprotocolVersion\x12\x1f\n\x0bbuffer_size\x18\x02\x20\x02(\rR\nbuf\
+    ferSize\"'\n\x0fWARDServiceDone\x12\x14\n\x05error\x18\x01\x20\x01(\tR\
+    \x05error\"\x11\n\x0fWARDServiceSync\"~\n\x12WARDServiceSyncAck\x12!\n\
+    \x0cused_service\x18\x01\x20\x02(\x08R\x0busedService\x12\x18\n\x07count\
+    er\x18\x02\x20\x01(\rR\x07counter\x12\x12\n\x04root\x18\x03\x20\x01(\x0c\
+    R\x04root\x12\x17\n\x07ward_id\x18\x04\x20\x01(\x0cR\x06wardIdB8\n#com.s\
+    atoshilabs.trezor.lib.protobufB\x11TrezorMessageWard\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -14130,7 +15205,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(56);
+            let mut messages = ::std::vec::Vec::with_capacity(61);
             messages.push(WARDQueueUpdate::generated_message_descriptor_data());
             messages.push(WARDQueueUpdateAck::generated_message_descriptor_data());
             messages.push(WARDPerformUpdate::generated_message_descriptor_data());
@@ -14187,6 +15262,11 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(WARDCacheImportAck::generated_message_descriptor_data());
             messages.push(WARDValidateCache::generated_message_descriptor_data());
             messages.push(WARDValidateCacheAck::generated_message_descriptor_data());
+            messages.push(WARDServiceOpen::generated_message_descriptor_data());
+            messages.push(WARDServiceOpenAck::generated_message_descriptor_data());
+            messages.push(WARDServiceDone::generated_message_descriptor_data());
+            messages.push(WARDServiceSync::generated_message_descriptor_data());
+            messages.push(WARDServiceSyncAck::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),

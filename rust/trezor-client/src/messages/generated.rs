@@ -402,6 +402,11 @@ trezor_message_impl! {
     WARDCacheImportAck => MessageType_WARDCacheImportAck,
     WARDValidateCache => MessageType_WARDValidateCache,
     WARDValidateCacheAck => MessageType_WARDValidateCacheAck,
+    WARDServiceOpen => MessageType_WARDServiceOpen,
+    WARDServiceOpenAck => MessageType_WARDServiceOpenAck,
+    WARDServiceDone => MessageType_WARDServiceDone,
+    WARDServiceSync => MessageType_WARDServiceSync,
+    WARDServiceSyncAck => MessageType_WARDServiceSyncAck,
 }
 
 #[cfg(feature = "webauthn")]

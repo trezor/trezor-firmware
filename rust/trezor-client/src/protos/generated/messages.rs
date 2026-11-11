@@ -707,6 +707,16 @@ pub enum MessageType {
     MessageType_WARDValidateCache = 2374,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WARDValidateCacheAck)
     MessageType_WARDValidateCacheAck = 2375,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WARDServiceOpen)
+    MessageType_WARDServiceOpen = 2380,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WARDServiceOpenAck)
+    MessageType_WARDServiceOpenAck = 2381,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WARDServiceDone)
+    MessageType_WARDServiceDone = 2382,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WARDServiceSync)
+    MessageType_WARDServiceSync = 2383,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WARDServiceSyncAck)
+    MessageType_WARDServiceSyncAck = 2384,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
     MessageType_BenchmarkListNames = 9100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkNames)
@@ -1090,6 +1100,11 @@ impl ::protobuf::Enum for MessageType {
             2373 => ::std::option::Option::Some(MessageType::MessageType_WARDCacheImportAck),
             2374 => ::std::option::Option::Some(MessageType::MessageType_WARDValidateCache),
             2375 => ::std::option::Option::Some(MessageType::MessageType_WARDValidateCacheAck),
+            2380 => ::std::option::Option::Some(MessageType::MessageType_WARDServiceOpen),
+            2381 => ::std::option::Option::Some(MessageType::MessageType_WARDServiceOpenAck),
+            2382 => ::std::option::Option::Some(MessageType::MessageType_WARDServiceDone),
+            2383 => ::std::option::Option::Some(MessageType::MessageType_WARDServiceSync),
+            2384 => ::std::option::Option::Some(MessageType::MessageType_WARDServiceSyncAck),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             9102 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1452,6 +1467,11 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_WARDCacheImportAck" => ::std::option::Option::Some(MessageType::MessageType_WARDCacheImportAck),
             "MessageType_WARDValidateCache" => ::std::option::Option::Some(MessageType::MessageType_WARDValidateCache),
             "MessageType_WARDValidateCacheAck" => ::std::option::Option::Some(MessageType::MessageType_WARDValidateCacheAck),
+            "MessageType_WARDServiceOpen" => ::std::option::Option::Some(MessageType::MessageType_WARDServiceOpen),
+            "MessageType_WARDServiceOpenAck" => ::std::option::Option::Some(MessageType::MessageType_WARDServiceOpenAck),
+            "MessageType_WARDServiceDone" => ::std::option::Option::Some(MessageType::MessageType_WARDServiceDone),
+            "MessageType_WARDServiceSync" => ::std::option::Option::Some(MessageType::MessageType_WARDServiceSync),
+            "MessageType_WARDServiceSyncAck" => ::std::option::Option::Some(MessageType::MessageType_WARDServiceSyncAck),
             "MessageType_BenchmarkListNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             "MessageType_BenchmarkNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             "MessageType_BenchmarkRun" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1813,6 +1833,11 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_WARDCacheImportAck,
         MessageType::MessageType_WARDValidateCache,
         MessageType::MessageType_WARDValidateCacheAck,
+        MessageType::MessageType_WARDServiceOpen,
+        MessageType::MessageType_WARDServiceOpenAck,
+        MessageType::MessageType_WARDServiceDone,
+        MessageType::MessageType_WARDServiceSync,
+        MessageType::MessageType_WARDServiceSyncAck,
         MessageType::MessageType_BenchmarkListNames,
         MessageType::MessageType_BenchmarkNames,
         MessageType::MessageType_BenchmarkRun,
@@ -2180,22 +2205,27 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_WARDCacheImportAck => 337,
             MessageType::MessageType_WARDValidateCache => 338,
             MessageType::MessageType_WARDValidateCacheAck => 339,
-            MessageType::MessageType_BenchmarkListNames => 340,
-            MessageType::MessageType_BenchmarkNames => 341,
-            MessageType::MessageType_BenchmarkRun => 342,
-            MessageType::MessageType_BenchmarkResult => 343,
-            MessageType::MessageType_TelemetryGet => 344,
-            MessageType::MessageType_Telemetry => 345,
-            MessageType::MessageType_ExtAppLoad => 346,
-            MessageType::MessageType_ExtAppLoaded => 347,
-            MessageType::MessageType_ExtAppHeaderRequest => 348,
-            MessageType::MessageType_ExtAppHeaderAck => 349,
-            MessageType::MessageType_ExtAppRootPacketRequest => 350,
-            MessageType::MessageType_ExtAppRootPacketAck => 351,
-            MessageType::MessageType_ExtAppDataChunkRequest => 352,
-            MessageType::MessageType_ExtAppDataChunkAck => 353,
-            MessageType::MessageType_ExtAppMessage => 354,
-            MessageType::MessageType_ExtAppResponse => 355,
+            MessageType::MessageType_WARDServiceOpen => 340,
+            MessageType::MessageType_WARDServiceOpenAck => 341,
+            MessageType::MessageType_WARDServiceDone => 342,
+            MessageType::MessageType_WARDServiceSync => 343,
+            MessageType::MessageType_WARDServiceSyncAck => 344,
+            MessageType::MessageType_BenchmarkListNames => 345,
+            MessageType::MessageType_BenchmarkNames => 346,
+            MessageType::MessageType_BenchmarkRun => 347,
+            MessageType::MessageType_BenchmarkResult => 348,
+            MessageType::MessageType_TelemetryGet => 349,
+            MessageType::MessageType_Telemetry => 350,
+            MessageType::MessageType_ExtAppLoad => 351,
+            MessageType::MessageType_ExtAppLoaded => 352,
+            MessageType::MessageType_ExtAppHeaderRequest => 353,
+            MessageType::MessageType_ExtAppHeaderAck => 354,
+            MessageType::MessageType_ExtAppRootPacketRequest => 355,
+            MessageType::MessageType_ExtAppRootPacketAck => 356,
+            MessageType::MessageType_ExtAppDataChunkRequest => 357,
+            MessageType::MessageType_ExtAppDataChunkAck => 358,
+            MessageType::MessageType_ExtAppMessage => 359,
+            MessageType::MessageType_ExtAppResponse => 360,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -2214,7 +2244,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xa7}\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xf5~\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\xb0\xb5\
     \x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -2601,38 +2631,43 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     eImport\x10\xc4\x12\x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMessageType_WARDCa\
     cheImportAck\x10\xc5\x12\x1a\x04\x98\xb5\x18\x01\x12(\n\x1dMessageType_W\
     ARDValidateCache\x10\xc6\x12\x1a\x04\x90\xb5\x18\x01\x12+\n\x20MessageTy\
-    pe_WARDValidateCacheAck\x10\xc7\x12\x1a\x04\x98\xb5\x18\x01\x12)\n\x1eMe\
-    ssageType_BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1a\
-    MessageType_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18Me\
-    ssageType_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessag\
-    eType_BenchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x12'\n\x18Message\
-    Type_TelemetryGet\x10\xcc\x08\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\
-    \x12$\n\x15MessageType_Telemetry\x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\
-    \xb5\x18\x01\x12!\n\x16MessageType_ExtAppLoad\x10\xf0G\x1a\x04\x90\xb5\
-    \x18\x01\x12#\n\x18MessageType_ExtAppLoaded\x10\xf1G\x1a\x04\x98\xb5\x18\
-    \x01\x12*\n\x1fMessageType_ExtAppHeaderRequest\x10\xf2G\x1a\x04\x98\xb5\
-    \x18\x01\x12&\n\x1bMessageType_ExtAppHeaderAck\x10\xf3G\x1a\x04\x90\xb5\
-    \x18\x01\x12.\n#MessageType_ExtAppRootPacketRequest\x10\xf4G\x1a\x04\x98\
-    \xb5\x18\x01\x12*\n\x1fMessageType_ExtAppRootPacketAck\x10\xf5G\x1a\x04\
-    \x90\xb5\x18\x01\x12-\n\"MessageType_ExtAppDataChunkRequest\x10\xf6G\x1a\
-    \x04\x98\xb5\x18\x01\x12)\n\x1eMessageType_ExtAppDataChunkAck\x10\xf7G\
-    \x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType_ExtAppMessage\x10\xf8G\
-    \x1a\x04\x90\xb5\x18\x01\x12%\n\x1aMessageType_ExtAppResponse\x10\xf9G\
-    \x1a\x04\x98\xb5\x18\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\x04\
-    \x08Z\x10\\\"\x04\x08M\x10N\"\x04\x08G\x10J\"\x06\x08\xd9\x03\x10\xda\
-    \x03\"\x04\x08r\x10z\"\x05\x08}\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\
-    \x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xe2\x01\x10\xe2\x01\"\x06\
-    \x08\xe3\x01\x10\xe3\x01\"\x06\x08\xe4\x01\x10\xe4\x01\"\x06\x08\xe5\x01\
-    \x10\xe5\x01\"\x06\x08\xe7\x01\x10\xe7\x01\"\x06\x08\xe8\x01\x10\xe8\x01\
-    \"\x06\x08\xe9\x01\x10\xe9\x01\"\x06\x08\xea\x01\x10\xea\x01\"\x06\x08\
-    \xec\x01\x10\xec\x01\"\x06\x08\xed\x01\x10\xed\x01\"\x06\x08\xac\x02\x10\
-    \xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\
-    \x06\x08\xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08\"\x06\x08\xfc\
-    \x11\x10\xfc\x11\"\x06\x08\xfd\x11\x10\xfd\x11\"\x06\x08\xfe\x11\x10\xfe\
-    \x11\"\x06\x08\xff\x11\x10\xff\x11\"\x06\x08\x80\x12\x10\x80\x12\"\x06\
-    \x08\x81\x12\x10\x81\x12\"\x06\x08\x82\x12\x10\x82\x12\"\x06\x08\x83\x12\
-    \x10\x83\x12B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezorMessage\x80\
-    \xa6\x1d\x01\
+    pe_WARDValidateCacheAck\x10\xc7\x12\x1a\x04\x98\xb5\x18\x01\x12&\n\x1bMe\
+    ssageType_WARDServiceOpen\x10\xcc\x12\x1a\x04\x90\xb5\x18\x01\x12)\n\x1e\
+    MessageType_WARDServiceOpenAck\x10\xcd\x12\x1a\x04\x98\xb5\x18\x01\x12&\
+    \n\x1bMessageType_WARDServiceDone\x10\xce\x12\x1a\x04\x90\xb5\x18\x01\
+    \x12&\n\x1bMessageType_WARDServiceSync\x10\xcf\x12\x1a\x04\x90\xb5\x18\
+    \x01\x12)\n\x1eMessageType_WARDServiceSyncAck\x10\xd0\x12\x1a\x04\x98\
+    \xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\x1a\x04\
+    \x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\x10\x8dG\x1a\x04\
+    \x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8eG\x1a\x04\x80\
+    \xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\x1a\x04\x80\
+    \xa6\x1d\x01\x12'\n\x18MessageType_TelemetryGet\x10\xcc\x08\x1a\x08\x80\
+    \xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x15MessageType_Telemetry\x10\xcd\x08\
+    \x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12!\n\x16MessageType_ExtAppLoa\
+    d\x10\xf0G\x1a\x04\x90\xb5\x18\x01\x12#\n\x18MessageType_ExtAppLoaded\
+    \x10\xf1G\x1a\x04\x98\xb5\x18\x01\x12*\n\x1fMessageType_ExtAppHeaderRequ\
+    est\x10\xf2G\x1a\x04\x98\xb5\x18\x01\x12&\n\x1bMessageType_ExtAppHeaderA\
+    ck\x10\xf3G\x1a\x04\x90\xb5\x18\x01\x12.\n#MessageType_ExtAppRootPacketR\
+    equest\x10\xf4G\x1a\x04\x98\xb5\x18\x01\x12*\n\x1fMessageType_ExtAppRoot\
+    PacketAck\x10\xf5G\x1a\x04\x90\xb5\x18\x01\x12-\n\"MessageType_ExtAppDat\
+    aChunkRequest\x10\xf6G\x1a\x04\x98\xb5\x18\x01\x12)\n\x1eMessageType_Ext\
+    AppDataChunkAck\x10\xf7G\x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType_E\
+    xtAppMessage\x10\xf8G\x1a\x04\x90\xb5\x18\x01\x12%\n\x1aMessageType_ExtA\
+    ppResponse\x10\xf9G\x1a\x04\x98\xb5\x18\x01\x1a\x08\xc8\xf3\x18\x01\xd0\
+    \xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08M\x10N\"\x04\x08G\x10J\"\x06\x08\
+    \xd9\x03\x10\xda\x03\"\x04\x08r\x10z\"\x05\x08}\x10\x95\x01\"\x06\x08\
+    \xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xe2\x01\x10\
+    \xe2\x01\"\x06\x08\xe3\x01\x10\xe3\x01\"\x06\x08\xe4\x01\x10\xe4\x01\"\
+    \x06\x08\xe5\x01\x10\xe5\x01\"\x06\x08\xe7\x01\x10\xe7\x01\"\x06\x08\xe8\
+    \x01\x10\xe8\x01\"\x06\x08\xe9\x01\x10\xe9\x01\"\x06\x08\xea\x01\x10\xea\
+    \x01\"\x06\x08\xec\x01\x10\xec\x01\"\x06\x08\xed\x01\x10\xed\x01\"\x06\
+    \x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\
+    \x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08\
+    \"\x06\x08\xfc\x11\x10\xfc\x11\"\x06\x08\xfd\x11\x10\xfd\x11\"\x06\x08\
+    \xfe\x11\x10\xfe\x11\"\x06\x08\xff\x11\x10\xff\x11\"\x06\x08\x80\x12\x10\
+    \x80\x12\"\x06\x08\x81\x12\x10\x81\x12\"\x06\x08\x82\x12\x10\x82\x12\"\
+    \x06\x08\x83\x12\x10\x83\x12B8\n#com.satoshilabs.trezor.lib.protobufB\rT\
+    rezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
