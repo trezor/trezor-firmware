@@ -28,8 +28,7 @@ pub fn hash(m: wire::Hash) -> Result<wire::Digest> {
         Ok(wire::HashAlgorithm::Keccak512) => HashingAlgorithm::Keccak512,
         Err(_) => return Err(Error::InvalidArgument),
     };
-    let mut hasher = sdk::get_hasher(algorithm);
-    Ok(digest(&mut hasher, &m.chunks))
+    Ok(digest(sdk::get_hasher(algorithm), &m.chunks))
 }
 
 pub fn hmac(m: wire::Hmac) -> Result<wire::Digest> {
@@ -38,11 +37,10 @@ pub fn hmac(m: wire::Hmac) -> Result<wire::Digest> {
         Ok(wire::HmacAlgorithm::HmacSha512) => HmacAlgorithm::Sha512,
         Err(_) => return Err(Error::InvalidArgument),
     };
-    let mut hasher = sdk::get_hmac(algorithm, &m.key);
-    Ok(digest(&mut hasher, &m.chunks))
+    Ok(digest(sdk::get_hmac(algorithm, &m.key), &m.chunks))
 }
 
-fn digest(hasher: &mut sdk::BoxedHasher, chunks: &[Vec<u8>]) -> wire::Digest {
+fn digest(mut hasher: sdk::BoxedHasher, chunks: &[Vec<u8>]) -> wire::Digest {
     for chunk in chunks {
         hasher.update(chunk);
     }
