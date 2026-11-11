@@ -70,7 +70,11 @@ async def run(request: ExtAppMessage) -> ExtAppResponse | None:
             session.stop()
             raise
         finally:
-            await _stop_app(session)
+            try:
+                await _stop_app(session)
+            finally:
+                # the app is gone, its unread messages would outlive it
+                _ipc_cleanup()
         if not session.response_sent:
             session.die("App exited without a response")
         return response
@@ -119,7 +123,7 @@ async def _start_app(request: ExtAppMessage) -> Session:
 
     image = app.image_by_handle(image_handle)
     image.stop()
-    await _drop_old_messages()
+    _ipc_cleanup()
 
     curves: list[str] = list(image.allowed_curves())
     patterns: list[str] = list(image.allowed_paths())
@@ -141,9 +145,11 @@ async def _poll_message() -> IpcMessage | None:
         return None
 
 
-async def _drop_old_messages() -> None:
-    """Core's queue outlives the app, so a killed app can leave messages in it."""
-    while await _poll_message() is not None:
+def _ipc_cleanup() -> None:
+    """Core's queue outlives the app, so a killed app can leave messages in it.
+    Doesn't block or await, so it also works in a closed workflow."""
+    msg_entry: list[Any] = [0, 0]
+    while io.poll((_IPC_EVENT,), msg_entry, 0):
         pass
 
 
