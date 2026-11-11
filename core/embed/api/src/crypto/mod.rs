@@ -114,6 +114,13 @@ fn ecdsa_verify_by_recovery(
     signature: &[u8],
     digest: &[u8],
 ) -> Result<(), CryptoError> {
+    // compressed (0x02/0x03) or uncompressed (0x04) SEC1 key
+    match public_key.first() {
+        Some(0x02 | 0x03)
+            if public_key.len() == crypto::ecdsa::ECDSA_PUBLIC_KEY_COMPRESSED_SIZE => {}
+        Some(0x04) if public_key.len() == crypto::ecdsa::ECDSA_PUBLIC_KEY_SIZE => {}
+        _ => return Err(CryptoError::InvalidEncoding),
+    }
     let curve = ecdsa_curve(curve);
     let signature: &crypto::ecdsa::EcdsaSignature = signature
         .try_into()
