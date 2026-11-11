@@ -490,19 +490,21 @@ static void on_event_poll(void *context, bool read_awaited,
                           bool write_awaited) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)context;
 
-  if (state->dev_handle == NULL) {
-    return;  // Class driver not initialized
-  }
-
   // Only one task can read or write at a time. Therefore, we can
   // assume that only one task is waiting for events and keep the
   // logic simple.
 
-  if (read_awaited && !usb_rbuf_is_empty(&state->rx_ring)) {
+  irq_key_t irq_key = irq_lock();
+  bool dev_initialized = (state->dev_handle != NULL);
+  bool read_ready = dev_initialized && !usb_rbuf_is_empty(&state->rx_ring);
+  bool write_ready = dev_initialized && !usb_rbuf_is_full(&state->tx_ring);
+  irq_unlock(irq_key);
+
+  if (read_awaited && read_ready) {
     syshandle_signal_read_ready(state->handle, NULL);
   }
 
-  if (write_awaited && !usb_rbuf_is_full(&state->tx_ring)) {
+  if (write_awaited && write_ready) {
     syshandle_signal_write_ready(state->handle, NULL);
   }
 }
@@ -514,11 +516,11 @@ static bool on_check_read_ready(void *context, systask_id_t task_id,
   UNUSED(task_id);
   UNUSED(param);
 
-  if (state->dev_handle == NULL) {
-    return false;  // Class driver not initialized
-  }
-
-  return !usb_rbuf_is_empty(&state->rx_ring);
+  irq_key_t irq_key = irq_lock();
+  bool ready =
+      (state->dev_handle != NULL) && !usb_rbuf_is_empty(&state->rx_ring);
+  irq_unlock(irq_key);
+  return ready;
 }
 
 static bool on_check_write_ready(void *context, systask_id_t task_id,
@@ -528,23 +530,27 @@ static bool on_check_write_ready(void *context, systask_id_t task_id,
   UNUSED(task_id);
   UNUSED(param);
 
-  if (state->dev_handle == NULL) {
-    return false;  // Class driver not initialized
-  }
+  irq_key_t irq_key = irq_lock();
+  bool ready =
+      (state->dev_handle != NULL) && !usb_rbuf_is_full(&state->tx_ring);
+  irq_unlock(irq_key);
 
-  return !usb_rbuf_is_full(&state->tx_ring);
+  return ready;
 }
 
 static ssize_t on_read(void *context, void *buffer, size_t buffer_size) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)context;
 
-  if (state->dev_handle == NULL) {
-    return -1;
-  }
-
-  ssize_t recved_size = usb_rbuf_read(&state->rx_ring, buffer, buffer_size);
+  ssize_t retval = -1;
 
   irq_key_t irq_key = irq_lock();
+
+  if (state->dev_handle == NULL) {
+    retval = -1;
+    goto cleanup;
+  }
+
+  retval = usb_rbuf_read(&state->rx_ring, buffer, buffer_size);
 
   if (!state->recv_pending &&
       usb_rbuf_unused_bytes(&state->rx_ring) >= state->max_packet_len) {
@@ -554,19 +560,27 @@ static ssize_t on_read(void *context, void *buffer, size_t buffer_size) {
     state->recv_pending = true;
   }
 
+cleanup:
   irq_unlock(irq_key);
-
-  return recved_size;
+  return retval;
 }
 
 static ssize_t on_write(void *context, const void *data, size_t data_size) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)context;
 
+  ssize_t retval = -1;
+  irq_key_t irq_key = irq_lock();
+
   if (state->dev_handle == NULL) {
-    return -1;  // Class driver not initialized
+    retval = -1;  // Class driver not initialized
+    goto cleanup;
   }
 
-  return usb_rbuf_write(&state->tx_ring, (const uint8_t *)data, data_size);
+  retval = usb_rbuf_write(&state->tx_ring, (const uint8_t *)data, data_size);
+
+cleanup:
+  irq_unlock(irq_key);
+  return retval;
 }
 
 static const syshandle_vmt_t usb_vcp_handle_vmt = {
