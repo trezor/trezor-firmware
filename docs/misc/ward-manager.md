@@ -48,7 +48,12 @@ Set `WARD_MANAGER_PORT` to choose a port, or pass `--port` to override it.
 and passes the same port configuration to each. `WARDD_PORT` selects wardd's
 WebSocket port, and `TREZOR_UDP_PORT` is shared by the emulator and HWI.
 
-`tools/ward_stack.py --gui --delays` enables a one-second pause at forwarding
+The emulator UI and separate component terminals are shown by default. Add
+`--headless` to hide both. The wallet test driver automatically responds to each
+confirmation two seconds after it appears; `--confirm-delay SECONDS` changes that
+wait, and `--confirm-delay 0` approves immediately.
+
+`tools/ward_stack.py --delays` additionally enables a one-second pause at forwarding
 boundaries across the stack. For the manager alone, use `--delays` or
 `WARD_DELAYS=1` to pause before every HTTP response. The wait is logged, and
 response timing includes the injected delay.

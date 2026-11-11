@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import subprocess
 import sys
@@ -27,6 +28,13 @@ def main() -> None:
         action="store_true",
         default=os.environ.get("WARD_DELAYS") == "1",
         help="Pause one second at each WARD forwarding step",
+    )
+    parser.add_argument(
+        "--confirm-delay",
+        type=float,
+        default=float(os.environ.get("WARD_CONFIRM_DELAY", "2")),
+        metavar="SECONDS",
+        help="Wait before automatically approving a visible confirmation (default: 2)",
     )
     device_path = os.environ.get("TREZOR_PATH")
     if device_path is None and os.environ.get("TREZOR_UDP_PORT"):
@@ -69,11 +77,18 @@ def main() -> None:
         "--jade-host", action="store_true", help="Import through jadepy.ward"
     )
     parser.add_argument(
+        "--service-channel",
+        action="store_true",
+        help="Send wallet operations directly; wardd owns the service interface",
+    )
+    parser.add_argument(
         "--adversarial",
         action="store_true",
         help="Run protocol attack/rejection tests on this emulator",
     )
     args = parser.parse_args()
+    if not math.isfinite(args.confirm_delay) or args.confirm_delay < 0:
+        parser.error("--confirm-delay must be a finite, nonnegative number of seconds")
     if args.adversarial:
         if args.long or args.extra_long:
             parser.error("Run --adversarial separately from --long/--extra_long")
@@ -107,15 +122,27 @@ def main() -> None:
             )
             time.sleep(1)
 
-    if args.jade_host:
+    if args.service_channel:
+        from trezorlib.ward_wallet import WardWalletClient
+
+        adapter_context = WardWalletClient()
+    elif args.jade_host:
         from jadepy.ward import WardAdapter
+
+        adapter_context = WardAdapter(
+            token=args.token_file.read_text().strip(), url=args.url
+        )
     else:
         from ward_relay import WardAdapter
+
+        adapter_context = WardAdapter(
+            token=args.token_file.read_text().strip(), url=args.url
+        )
 
     handoff("HWI -> wardd", "hello")
     with (
         TrezorTestContext(get_transport(args.path)) as hwi,
-        WardAdapter(token=args.token_file.read_text().strip(), url=args.url) as adapter,
+        adapter_context as adapter,
     ):
         session = hwi.get_session()
 
@@ -165,6 +192,7 @@ def main() -> None:
                             raise AssertionError(
                                 f"Device did not display {expected_label!r}"
                             )
+                        time.sleep(args.confirm_delay)
                         debug.press_yes()
                         return worker.result()
 
@@ -256,6 +284,7 @@ def main() -> None:
                         if time.monotonic() >= deadline:
                             raise TimeoutError("No confirmation appeared")
                         time.sleep(0.1)
+                    time.sleep(args.confirm_delay)
                     debug.press_yes()
                     result = worker.result()
                     if result.get("conflict") or result.get("localCacheError"):
@@ -295,6 +324,7 @@ def main() -> None:
                                 raise RuntimeError(
                                     f"Trezor did not show the expected label for entry {index + 1}"
                                 )
+                            time.sleep(args.confirm_delay)
                             debug.press_yes()
                             worker.result()
                 print(f"lookup {index + 1}/{count}:", json.dumps(result), flush=True)
