@@ -587,6 +587,8 @@ static uint8_t usb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
 static uint8_t usb_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   usb_driver_t *drv = &g_usb_driver;
 
+  irq_key_t irq_key = irq_lock();
+
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
     usb_iface_t *iface = &drv->ifaces[i];
     if (iface->class != NULL && iface->class->DeInit != NULL) {
@@ -596,6 +598,8 @@ static uint8_t usb_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   }
 
   dev->pUserData = NULL;
+
+  irq_unlock(irq_key);
 
   return USBD_OK;
 }
