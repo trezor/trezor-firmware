@@ -24,12 +24,15 @@
 
 #include <sec/tz_periph.h>
 
+// The secure monitor of an MCU without GFXMMU has no setter below.
+#if !defined(SECMON) || defined STM32U5A9xx || defined STM32U5G9xx
 // Once the TZSC configuration is locked (the secure monitor does so at the
 // end of `tz_init()`), writes to it are silently ignored. Fail loudly instead.
 static void tzsc_ensure_unlocked(void) {
   ensure(sectrue * ((GTZC_TZSC1->CR & GTZC_TZSC_CR_LCK_Msk) == 0),
          "TZSC locked");
 }
+#endif
 
 // Not available in the secure monitor: it has no use for them and could only
 // call them before the lock anyway.

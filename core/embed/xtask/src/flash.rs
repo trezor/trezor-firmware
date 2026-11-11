@@ -169,9 +169,11 @@ impl Drop for TempDir {
 fn run_openocd(model: Model, instructions: &str) -> Result<()> {
     let model_config = model.config()?;
 
+    let transport = format!("transport select {}", model_config.openocd_transport());
+
     let status = process::Command::new("openocd")
-        .args(["-f", "interface/stlink.cfg"])
-        .args(["-c", "transport select hla_swd"])
+        .args(["-f", model_config.openocd_interface()])
+        .args(["-c", &transport])
         .args(["-f", model_config.openocd_target()?])
         .arg("-c")
         .arg(instructions)
