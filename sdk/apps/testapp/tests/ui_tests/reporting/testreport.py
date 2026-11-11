@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 
 import dominate.tags as t
+import requests
 from dominate.tags import (
     a,
     div,
@@ -311,6 +312,10 @@ def generate_reports(do_master_diff: bool = False) -> None:
         except download.MasterFixturesMissing as e:
             # shown in pytest's warnings summary and final line
             master_diff_note = f"Master diff skipped: no master fixtures at {e}"
+            warnings.warn(master_diff_note)
+        except requests.RequestException as e:
+            # e.g. offline; the run's own results are still written
+            master_diff_note = f"Master diff skipped: master fixtures unavailable ({e})"
             warnings.warn(master_diff_note)
     index(master_diff_note)
     all_screens()
