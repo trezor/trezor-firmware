@@ -46,11 +46,13 @@ extern const char *const BIP39_WORDLIST_ENGLISH[BIP39_WORD_COUNT];
 const char *mnemonic_from_data(const uint8_t *data, size_t len);
 void mnemonic_clear(void);
 
+// Only 12, 18 and 24 word mnemonics are accepted
 int mnemonic_check(const char *mnemonic);
 
-// Returns the number of bits written to `bits`, or 0 if the mnemonic is
-// invalid.
-size_t mnemonic_to_bits(const char *mnemonic, uint8_t *bits);
+// Returns the number of meaningful bits written to `bits`, or 0 if the mnemonic
+// is invalid. On success always writes all 33 bytes of `bits`, zero-padding the
+// rest.
+size_t mnemonic_to_bits(const char *mnemonic, uint8_t bits[32 + 1]);
 
 // passphrase must be at most 256 characters otherwise it would be truncated
 void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
