@@ -67,6 +67,17 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
     for activated in project_config.options.resolve(args) {
         features.push(activated.feature);
     }
+    // Universal emulators always expose the independent backend interface. The
+    // runtime host selects whether to bind it; hardware keeps the opt-in flag.
+    if args.emulator
+        && !args.btc_only
+        && project_config.options.enable_ward_service_channel.is_some()
+        && !features
+            .iter()
+            .any(|feature| feature == "ward_service_channel")
+    {
+        features.push("ward_service_channel".into());
+    }
 
     let model_config = args.model.config()?;
 

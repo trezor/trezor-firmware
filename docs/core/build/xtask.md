@@ -97,7 +97,8 @@ cannot be used bare:
 - `--miniscript` — enable experimental Miniscript support.
 - `--ward` — enable experimental WARD support.
 - `--enable-ward-service-channel` — enable the independent streaming WARD USB
-  interface with runtime wallet fallback (universal firmware only). See
+  interface with runtime wallet fallback on hardware (universal firmware only).
+  Universal emulators include it automatically. See
   [WARD service channel](../../misc/ward-service-channel.md).
 - `--unsafe-fw` — enable unsafe firmware features.
 - `--storage-insecure-testing-mode` — insecure storage test mode (forbidden with
