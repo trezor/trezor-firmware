@@ -26,7 +26,7 @@ from trezorlib.tools import parse_path
 
 from . import testapp_ext
 from .generated import messages as m
-from .testapp_ext import DEFAULT_BIP32_PATH, SdkError, assert_fails
+from .testapp_ext import DEFAULT_BIP32_PATH, SdkError, assert_fails, raises
 
 
 def hash_request(instance_id: int, message_id: int) -> messages.ExtAppMessage:
@@ -62,6 +62,31 @@ def test_needs_strict_safety_checks(
     device.apply_settings(session, safety_checks=messages.SafetyCheckLevel.Strict)
     digest = testapp_ext.hash(session, instance_id, m.HashAlgorithm.Sha256, [b"abc"])
     assert digest == hashlib.sha256(b"abc").digest()
+
+
+def test_malformed_request(session: Session, instance_id: int):
+    """A request that doesn't decode is the host's error, not a crash."""
+    request = messages.ExtAppMessage(
+        instance_id=instance_id,
+        message_id=testapp_ext.message_id(m.Hash),
+        # a varint longer than 10 bytes
+        data=b"\xff" * 11,
+    )
+    with raises(SdkError.InvalidMessage):
+        session.call(request, expect=messages.ExtAppResponse)
+
+
+@pytest.mark.parametrize(
+    "message_id",
+    [testapp_ext.message_id(m.Digest), 0xFFFF],
+    ids=["response_type", "unknown"],
+)
+def test_unknown_request(session: Session, instance_id: int, message_id: int):
+    """A message id the app doesn't handle is the host's error, not a crash."""
+    with raises(SdkError.InvalidFunction):
+        session.call(
+            hash_request(instance_id, message_id), expect=messages.ExtAppResponse
+        )
 
 
 def test_crashed_app_reports_app_error(session: Session, instance_id: int):
