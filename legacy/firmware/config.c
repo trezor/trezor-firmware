@@ -981,12 +981,14 @@ uint32_t config_getAutoLockDelayMs(void) {
     autoLockDelayMs = autoLockDelayMsDefault;
   }
   autoLockDelayMs = MAX(autoLockDelayMs, MIN_AUTOLOCK_DELAY_MS);
+  autoLockDelayMs = MIN(autoLockDelayMs, MAX_AUTOLOCK_DELAY_MS);
   autoLockDelayMsCached = sectrue;
   return autoLockDelayMs;
 }
 
 void config_setAutoLockDelayMs(uint32_t auto_lock_delay_ms) {
   auto_lock_delay_ms = MAX(auto_lock_delay_ms, MIN_AUTOLOCK_DELAY_MS);
+  auto_lock_delay_ms = MIN(auto_lock_delay_ms, MAX_AUTOLOCK_DELAY_MS);
   if (sectrue == storage_set(KEY_AUTO_LOCK_DELAY_MS, &auto_lock_delay_ms,
                              sizeof(auto_lock_delay_ms))) {
     autoLockDelayMs = auto_lock_delay_ms;
