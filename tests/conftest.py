@@ -442,7 +442,7 @@ def _prepared_test_ctx(
         if ble_marker.kwargs.get("wipe", False):
             pytest.skip("Wipe over BLE not implemented yet")
 
-    fail_on_gc_leak = not request.config.getoption("ignore_gc_leak")
+    fail_on_gc_leak = not request.config.getoption("warn_on_gc_leak")
 
     # First, make sure the device is responsive:
     _raw_test_ctx.reset_debug_features()
@@ -630,7 +630,7 @@ def pytest_addoption(parser: Parser) -> None:
         help="File path for verbose logging",
     )
     parser.addoption(
-        "--ignore-gc-leak",
+        "--warn-on-gc-leak",
         action="store_true",
         default=False,
         help="Issue a warning when GC leak detected (otherwise, fail the test)",
