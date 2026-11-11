@@ -15,7 +15,7 @@ const Font_Unifont_Bold_16_glyph_32: [u8; 5] = [ 0, 0, 8, 0, 0 ];
 const Font_Unifont_Bold_16_glyph_33: [u8; 8] = [ 2, 10, 7, 2, 10, 255, 252, 240 ];
 
 /// '"' (ASCII 34)
-const Font_Unifont_Bold_16_glyph_34: [u8; 9] = [ 6, 4, 7, 0, 12, 207, 60, 209, 0 ];
+const Font_Unifont_Bold_16_glyph_34: [u8; 8] = [ 6, 4, 7, 0, 12, 207, 60, 209 ];
 
 /// '#' (ASCII 35)
 const Font_Unifont_Bold_16_glyph_35: [u8; 14] = [ 7, 10, 8, 0, 10, 54, 108, 223, 246, 205, 191, 236, 217, 176 ];
@@ -27,16 +27,16 @@ const Font_Unifont_Bold_16_glyph_36: [u8; 14] = [ 7, 10, 8, 0, 10, 16, 251, 94, 
 const Font_Unifont_Bold_16_glyph_37: [u8; 14] = [ 7, 10, 8, 0, 10, 97, 102, 211, 65, 2, 11, 43, 150, 24 ];
 
 /// '&' (ASCII 38)
-const Font_Unifont_Bold_16_glyph_38: [u8; 16] = [ 8, 10, 8, 0, 10, 56, 108, 108, 104, 48, 107, 206, 204, 206, 122, 0 ];
+const Font_Unifont_Bold_16_glyph_38: [u8; 15] = [ 8, 10, 8, 0, 10, 56, 108, 108, 104, 48, 107, 206, 204, 206, 122 ];
 
 /// ''' (ASCII 39)
-const Font_Unifont_Bold_16_glyph_39: [u8; 7] = [ 2, 4, 7, 2, 12, 253, 0 ];
+const Font_Unifont_Bold_16_glyph_39: [u8; 6] = [ 2, 4, 7, 2, 12, 253 ];
 
 /// '(' (ASCII 40)
-const Font_Unifont_Bold_16_glyph_40: [u8; 12] = [ 4, 12, 7, 2, 11, 54, 108, 204, 204, 198, 99, 0 ];
+const Font_Unifont_Bold_16_glyph_40: [u8; 11] = [ 4, 12, 7, 2, 11, 54, 108, 204, 204, 198, 99 ];
 
 /// ')' (ASCII 41)
-const Font_Unifont_Bold_16_glyph_41: [u8; 12] = [ 4, 12, 7, 0, 11, 198, 99, 51, 51, 54, 108, 0 ];
+const Font_Unifont_Bold_16_glyph_41: [u8; 11] = [ 4, 12, 7, 0, 11, 198, 99, 51, 51, 54, 108 ];
 
 /// '*' (ASCII 42)
 const Font_Unifont_Bold_16_glyph_42: [u8; 12] = [ 7, 7, 8, 0, 8, 17, 37, 81, 197, 82, 68, 0 ];
@@ -186,7 +186,7 @@ const Font_Unifont_Bold_16_glyph_89: [u8; 13] = [ 6, 10, 7, 0, 10, 207, 60, 243,
 const Font_Unifont_Bold_16_glyph_90: [u8; 14] = [ 7, 10, 8, 0, 10, 254, 12, 56, 225, 135, 28, 112, 193, 252 ];
 
 /// '[' (ASCII 91)
-const Font_Unifont_Bold_16_glyph_91: [u8; 12] = [ 4, 12, 7, 2, 11, 252, 204, 204, 204, 204, 207, 0 ];
+const Font_Unifont_Bold_16_glyph_91: [u8; 11] = [ 4, 12, 7, 2, 11, 252, 204, 204, 204, 204, 207 ];
 
 /// '\' (ASCII 92)
 const Font_Unifont_Bold_16_glyph_92: [u8; 13] = [ 6, 10, 7, 0, 10, 195, 6, 8, 48, 193, 6, 12, 48 ];
@@ -204,19 +204,19 @@ const Font_Unifont_Bold_16_glyph_95: [u8; 6] = [ 7, 1, 7, 0, 0, 254 ];
 const Font_Unifont_Bold_16_glyph_96: [u8; 7] = [ 4, 3, 7, 0, 13, 198, 48 ];
 
 /// 'a' (ASCII 97)
-const Font_Unifont_Bold_16_glyph_97: [u8; 13] = [ 7, 8, 8, 0, 8, 125, 140, 27, 252, 120, 243, 187, 0 ];
+const Font_Unifont_Bold_16_glyph_97: [u8; 12] = [ 7, 8, 8, 0, 8, 125, 140, 27, 252, 120, 243, 187 ];
 
 /// 'b' (ASCII 98)
 const Font_Unifont_Bold_16_glyph_98: [u8; 15] = [ 7, 11, 8, 0, 11, 193, 131, 6, 238, 120, 241, 227, 199, 207, 112 ];
 
 /// 'c' (ASCII 99)
-const Font_Unifont_Bold_16_glyph_99: [u8; 13] = [ 7, 8, 8, 0, 8, 125, 143, 30, 12, 24, 241, 190, 0 ];
+const Font_Unifont_Bold_16_glyph_99: [u8; 12] = [ 7, 8, 8, 0, 8, 125, 143, 30, 12, 24, 241, 190 ];
 
 /// 'd' (ASCII 100)
 const Font_Unifont_Bold_16_glyph_100: [u8; 15] = [ 7, 11, 8, 0, 11, 6, 12, 25, 188, 248, 241, 227, 199, 156, 216 ];
 
 /// 'e' (ASCII 101)
-const Font_Unifont_Bold_16_glyph_101: [u8; 13] = [ 7, 8, 8, 0, 8, 125, 143, 31, 252, 24, 241, 190, 0 ];
+const Font_Unifont_Bold_16_glyph_101: [u8; 12] = [ 7, 8, 8, 0, 8, 125, 143, 31, 252, 24, 241, 190 ];
 
 /// 'f' (ASCII 102)
 const Font_Unifont_Bold_16_glyph_102: [u8; 15] = [ 7, 11, 8, 0, 11, 30, 96, 193, 143, 230, 12, 24, 48, 97, 240 ];
@@ -240,13 +240,13 @@ const Font_Unifont_Bold_16_glyph_107: [u8; 15] = [ 7, 11, 8, 0, 11, 193, 131, 6,
 const Font_Unifont_Bold_16_glyph_108: [u8; 14] = [ 6, 11, 7, 0, 11, 240, 195, 12, 48, 195, 12, 48, 207, 192 ];
 
 /// 'm' (ASCII 109)
-const Font_Unifont_Bold_16_glyph_109: [u8; 13] = [ 7, 8, 8, 0, 8, 237, 175, 94, 189, 122, 245, 235, 0 ];
+const Font_Unifont_Bold_16_glyph_109: [u8; 12] = [ 7, 8, 8, 0, 8, 237, 175, 94, 189, 122, 245, 235 ];
 
 /// 'n' (ASCII 110)
-const Font_Unifont_Bold_16_glyph_110: [u8; 13] = [ 7, 8, 8, 0, 8, 221, 207, 30, 60, 120, 241, 227, 0 ];
+const Font_Unifont_Bold_16_glyph_110: [u8; 12] = [ 7, 8, 8, 0, 8, 221, 207, 30, 60, 120, 241, 227 ];
 
 /// 'o' (ASCII 111)
-const Font_Unifont_Bold_16_glyph_111: [u8; 13] = [ 7, 8, 8, 0, 8, 125, 143, 30, 60, 120, 241, 190, 0 ];
+const Font_Unifont_Bold_16_glyph_111: [u8; 12] = [ 7, 8, 8, 0, 8, 125, 143, 30, 60, 120, 241, 190 ];
 
 /// 'p' (ASCII 112)
 const Font_Unifont_Bold_16_glyph_112: [u8; 14] = [ 7, 10, 8, 0, 8, 221, 207, 30, 60, 120, 249, 238, 193, 128 ];
@@ -255,31 +255,31 @@ const Font_Unifont_Bold_16_glyph_112: [u8; 14] = [ 7, 10, 8, 0, 8, 221, 207, 30,
 const Font_Unifont_Bold_16_glyph_113: [u8; 14] = [ 7, 10, 8, 0, 8, 119, 159, 30, 60, 120, 243, 187, 6, 12 ];
 
 /// 'r' (ASCII 114)
-const Font_Unifont_Bold_16_glyph_114: [u8; 13] = [ 7, 8, 8, 0, 8, 221, 207, 30, 12, 24, 48, 96, 0 ];
+const Font_Unifont_Bold_16_glyph_114: [u8; 12] = [ 7, 8, 8, 0, 8, 221, 207, 30, 12, 24, 48, 96 ];
 
 /// 's' (ASCII 115)
-const Font_Unifont_Bold_16_glyph_115: [u8; 13] = [ 7, 8, 8, 0, 8, 125, 143, 27, 129, 216, 241, 190, 0 ];
+const Font_Unifont_Bold_16_glyph_115: [u8; 12] = [ 7, 8, 8, 0, 8, 125, 143, 27, 129, 216, 241, 190 ];
 
 /// 't' (ASCII 116)
 const Font_Unifont_Bold_16_glyph_116: [u8; 14] = [ 7, 10, 8, 0, 10, 48, 96, 199, 243, 6, 12, 24, 48, 60 ];
 
 /// 'u' (ASCII 117)
-const Font_Unifont_Bold_16_glyph_117: [u8; 13] = [ 7, 8, 8, 0, 8, 199, 143, 30, 60, 120, 243, 187, 0 ];
+const Font_Unifont_Bold_16_glyph_117: [u8; 12] = [ 7, 8, 8, 0, 8, 199, 143, 30, 60, 120, 243, 187 ];
 
 /// 'v' (ASCII 118)
-const Font_Unifont_Bold_16_glyph_118: [u8; 13] = [ 7, 8, 8, 0, 8, 199, 143, 26, 38, 205, 142, 28, 0 ];
+const Font_Unifont_Bold_16_glyph_118: [u8; 12] = [ 7, 8, 8, 0, 8, 199, 143, 26, 38, 205, 142, 28 ];
 
 /// 'w' (ASCII 119)
-const Font_Unifont_Bold_16_glyph_119: [u8; 13] = [ 7, 8, 8, 0, 8, 199, 175, 94, 189, 122, 245, 182, 0 ];
+const Font_Unifont_Bold_16_glyph_119: [u8; 12] = [ 7, 8, 8, 0, 8, 199, 175, 94, 189, 122, 245, 182 ];
 
 /// 'x' (ASCII 120)
-const Font_Unifont_Bold_16_glyph_120: [u8; 13] = [ 7, 8, 8, 0, 8, 199, 141, 177, 195, 141, 177, 227, 0 ];
+const Font_Unifont_Bold_16_glyph_120: [u8; 12] = [ 7, 8, 8, 0, 8, 199, 141, 177, 195, 141, 177, 227 ];
 
 /// 'y' (ASCII 121)
 const Font_Unifont_Bold_16_glyph_121: [u8; 14] = [ 7, 10, 8, 0, 8, 199, 143, 30, 60, 109, 205, 131, 6, 248 ];
 
 /// 'z' (ASCII 122)
-const Font_Unifont_Bold_16_glyph_122: [u8; 13] = [ 7, 8, 8, 0, 8, 254, 12, 56, 227, 142, 56, 127, 0 ];
+const Font_Unifont_Bold_16_glyph_122: [u8; 12] = [ 7, 8, 8, 0, 8, 254, 12, 56, 227, 142, 56, 127 ];
 
 /// '{' (ASCII 123)
 const Font_Unifont_Bold_16_glyph_123: [u8; 14] = [ 5, 13, 7, 1, 11, 59, 24, 99, 51, 12, 49, 152, 195, 128 ];
@@ -294,7 +294,7 @@ const Font_Unifont_Bold_16_glyph_125: [u8; 14] = [ 5, 13, 7, 0, 11, 225, 140, 19
 const Font_Unifont_Bold_16_glyph_126: [u8; 8] = [ 7, 3, 8, 0, 11, 99, 118, 48 ];
 
 /// Nonprintable glyph (inverse colors of '?')
-const Font_Unifont_Bold_16_glyph_nonprintable: [u8; 13] = [ 6, 10, 7, 0, 10, 5, 199, 60, 231, 60, 255, 207, 63 ];
+const Font_Unifont_Bold_16_glyph_nonprintable: [u8; 14] = [ 7, 10, 8, 0, 10, 130, 112, 231, 207, 60, 249, 255, 231, 207 ];
 
 /// Array of references for 'Unifont_Bold_16' normal ASCII glyphs
 const Font_Unifont_Bold_16: [&[u8]; 95] = [

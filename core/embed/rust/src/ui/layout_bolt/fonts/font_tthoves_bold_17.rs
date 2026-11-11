@@ -218,7 +218,7 @@ const Font_TTHoves_Bold_17_glyph_126: [u8; 25] = [ 10, 4, 10, 0, 7, 0, 98, 2, 0,
 /// Nonprintable glyph (inverse colors of '?')
 const Font_TTHoves_Bold_17_glyph_nonprintable: [u8; 65] = [ 9, 12, 9, 0, 12, 255, 40, 32, 230, 255, 63, 0, 0, 16, 254, 10, 32, 39, 0, 248, 90, 213, 207, 0, 246, 255, 255, 95, 0, 249, 255, 223, 2, 96, 255, 255, 95, 0, 250, 255, 255, 47, 64, 255, 255, 255, 239, 238, 255, 255, 255, 63, 99, 255, 255, 255, 15, 48, 255, 255, 255, 15, 48, 255, 255 ];
 
-/// Array of references for 'TTHoves_Bold_17' ASCII glyphs (forced uppercase)
+/// Array of references for 'TTHoves_Bold_17' forced uppercase glyphs
 const Font_TTHoves_Bold_17_upper: [&[u8]; 95] = [
     &Font_TTHoves_Bold_17_glyph_32,
     &Font_TTHoves_Bold_17_glyph_33,
@@ -285,32 +285,32 @@ const Font_TTHoves_Bold_17_upper: [&[u8]; 95] = [
     &Font_TTHoves_Bold_17_glyph_94,
     &Font_TTHoves_Bold_17_glyph_95,
     &Font_TTHoves_Bold_17_glyph_96,
-    &Font_TTHoves_Bold_17_glyph_65, // a -> A,
-    &Font_TTHoves_Bold_17_glyph_66, // b -> B,
-    &Font_TTHoves_Bold_17_glyph_67, // c -> C,
-    &Font_TTHoves_Bold_17_glyph_68, // d -> D,
-    &Font_TTHoves_Bold_17_glyph_69, // e -> E,
-    &Font_TTHoves_Bold_17_glyph_70, // f -> F,
-    &Font_TTHoves_Bold_17_glyph_71, // g -> G,
-    &Font_TTHoves_Bold_17_glyph_72, // h -> H,
-    &Font_TTHoves_Bold_17_glyph_73, // i -> I,
-    &Font_TTHoves_Bold_17_glyph_74, // j -> J,
-    &Font_TTHoves_Bold_17_glyph_75, // k -> K,
-    &Font_TTHoves_Bold_17_glyph_76, // l -> L,
-    &Font_TTHoves_Bold_17_glyph_77, // m -> M,
-    &Font_TTHoves_Bold_17_glyph_78, // n -> N,
-    &Font_TTHoves_Bold_17_glyph_79, // o -> O,
-    &Font_TTHoves_Bold_17_glyph_80, // p -> P,
-    &Font_TTHoves_Bold_17_glyph_81, // q -> Q,
-    &Font_TTHoves_Bold_17_glyph_82, // r -> R,
-    &Font_TTHoves_Bold_17_glyph_83, // s -> S,
-    &Font_TTHoves_Bold_17_glyph_84, // t -> T,
-    &Font_TTHoves_Bold_17_glyph_85, // u -> U,
-    &Font_TTHoves_Bold_17_glyph_86, // v -> V,
-    &Font_TTHoves_Bold_17_glyph_87, // w -> W,
-    &Font_TTHoves_Bold_17_glyph_88, // x -> X,
-    &Font_TTHoves_Bold_17_glyph_89, // y -> Y,
-    &Font_TTHoves_Bold_17_glyph_90, // z -> Z,
+    &Font_TTHoves_Bold_17_glyph_65,  // a -> A
+    &Font_TTHoves_Bold_17_glyph_66,  // b -> B
+    &Font_TTHoves_Bold_17_glyph_67,  // c -> C
+    &Font_TTHoves_Bold_17_glyph_68,  // d -> D
+    &Font_TTHoves_Bold_17_glyph_69,  // e -> E
+    &Font_TTHoves_Bold_17_glyph_70,  // f -> F
+    &Font_TTHoves_Bold_17_glyph_71,  // g -> G
+    &Font_TTHoves_Bold_17_glyph_72,  // h -> H
+    &Font_TTHoves_Bold_17_glyph_73,  // i -> I
+    &Font_TTHoves_Bold_17_glyph_74,  // j -> J
+    &Font_TTHoves_Bold_17_glyph_75,  // k -> K
+    &Font_TTHoves_Bold_17_glyph_76,  // l -> L
+    &Font_TTHoves_Bold_17_glyph_77,  // m -> M
+    &Font_TTHoves_Bold_17_glyph_78,  // n -> N
+    &Font_TTHoves_Bold_17_glyph_79,  // o -> O
+    &Font_TTHoves_Bold_17_glyph_80,  // p -> P
+    &Font_TTHoves_Bold_17_glyph_81,  // q -> Q
+    &Font_TTHoves_Bold_17_glyph_82,  // r -> R
+    &Font_TTHoves_Bold_17_glyph_83,  // s -> S
+    &Font_TTHoves_Bold_17_glyph_84,  // t -> T
+    &Font_TTHoves_Bold_17_glyph_85,  // u -> U
+    &Font_TTHoves_Bold_17_glyph_86,  // v -> V
+    &Font_TTHoves_Bold_17_glyph_87,  // w -> W
+    &Font_TTHoves_Bold_17_glyph_88,  // x -> X
+    &Font_TTHoves_Bold_17_glyph_89,  // y -> Y
+    &Font_TTHoves_Bold_17_glyph_90,  // z -> Z
     &Font_TTHoves_Bold_17_glyph_123,
     &Font_TTHoves_Bold_17_glyph_124,
     &Font_TTHoves_Bold_17_glyph_125,
