@@ -9,6 +9,7 @@ inputs:
     options:
       - "minimal"
       - "default"
+      - "ward-hardware"
       - "everything"
   pre-download:
     description: 'Download shell.nix and uv.lock dependencies upfront?'

@@ -9,7 +9,7 @@ import pytest
 
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.ward_relay import WardAdapter, WarddClient
-from trezorlib.ward_service import WardService, ward_transport
+from trezorlib.ward_service import WardService, ward_service_selector, ward_transport
 
 from . import test_ward_relay as relay_helpers
 from .test_ward_relay import APP, NETWORK, SUITE_DIR, _confirmed
@@ -165,7 +165,7 @@ def test_wardd_connects_directly_to_service_channel(
             "--token-file",
             str(token_file),
             "--service-channel",
-            session.client.transport.get_path(),
+            ward_service_selector(session.client.transport),
             *(["--wm-url", wm_url] if wm_url else []),
         ],
         cwd=Path(SUITE_DIR) / "packages" / "wardd",
@@ -174,10 +174,11 @@ def test_wardd_connects_directly_to_service_channel(
         stderr=subprocess.STDOUT,
         text=True,
     )
+    line = ""
     try:
         assert process.stdout is not None
         line = process.stdout.readline()
-        assert "WARD service connected" in line, line + process.stdout.read()
+        assert "WARD service connected" in line, line
         with WarddClient(token=token, url=f"ws://127.0.0.1:{wardd_port}") as backend:
             original = backend.call
 
@@ -187,7 +188,9 @@ def test_wardd_connects_directly_to_service_channel(
 
             monkeypatch.setattr(backend, "call", wallet_call)
             adapter = WardAdapter(session, backend)
+            print("native phase: sync")
             assert adapter.sync()["counter"] == 0
+            print("native phase: update")
             result = _confirmed(
                 session,
                 lambda current: WardAdapter(current, backend).update(
@@ -195,6 +198,7 @@ def test_wardd_connects_directly_to_service_channel(
                 ),
             )
             assert result["counter"] == 1
+            print("native phase: lookup")
             found = adapter.lookup(APP, "bc1qnative-service", NETWORK)
             assert found["valid"] and found["isMember"]
             _confirmed(
@@ -203,6 +207,7 @@ def test_wardd_connects_directly_to_service_channel(
                     APP, "bc1qnative-service"
                 ),
             )
+            print("native phase: delete")
             deleted = _confirmed(
                 session,
                 lambda current: WardAdapter(current, backend).update(
@@ -210,6 +215,7 @@ def test_wardd_connects_directly_to_service_channel(
                 ),
             )
             assert deleted["counter"] == 2
+        print("native phase: shutdown")
         process.terminate()
         assert process.wait(timeout=10) == 0
         # A clean wardd shutdown releases the binding even though the wallet remains connected.
@@ -218,4 +224,11 @@ def test_wardd_connects_directly_to_service_channel(
     finally:
         if process.poll() is None:
             process.terminate()
-            process.wait(timeout=10)
+        try:
+            output, _ = process.communicate(timeout=10)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            output, _ = process.communicate(timeout=5)
+        output = line + output
+        (tmp_path / "wardd-native.log").write_text(output)
+        print(f"native wardd exit: {process.returncode}\n{output}")

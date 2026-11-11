@@ -11,6 +11,10 @@ on:
         type: string
         required: true
         default: "[\"T1B1\",\"T2B1\",\"T2T1\",\"T3B1\",\"T3T1\",\"T3W1\"]"
+      ward_only:
+        description: Run only WARD channel tests
+        type: boolean
+        default: false
 
 permissions:
   contents: read        # for actions/checkout
@@ -36,17 +40,24 @@ jobs:
     if: github.repository == 'trezor/trezor-firmware' || github.event_name != 'schedule'
     outputs:
       core_models: ${{ steps.set_vars.outputs.core_models }}
+      ward_models: ${{ steps.set_vars.outputs.ward_models }}
       run_legacy: ${{ steps.set_vars.outputs.run_legacy }}
     steps:
       - id: set_vars
         name: Set variables
         env:
           MODELS: ${{ github.event_name == 'workflow_dispatch' && inputs.models_json || '["T1B1","T2B1","T2T1","T3B1","T3T1","T3W1"]' }}
+          WARD_ONLY: ${{ inputs.ward_only && 'true' || 'false' }}
         run: |
           echo "models_json: $MODELS"
           CORE_MODELS=`echo $MODELS | jq -cM '[.[] | select(. != "T1B1")]'`
+          if [ "$WARD_ONLY" = "true" ]; then
+            CORE_MODELS='[]'
+          fi
           echo core_models=$CORE_MODELS >> $GITHUB_OUTPUT
-          if echo $MODELS | grep -q '"T1B1"'; then
+          WARD_MODELS=$(echo "$MODELS" | jq -cM '[.[] | select(. == "T3T1" or . == "T3W1")]')
+          echo ward_models=$WARD_MODELS >> "$GITHUB_OUTPUT"
+          if [ "$WARD_ONLY" != "true" ] && echo $MODELS | grep -q '"T1B1"'; then
             echo run_legacy=1 >> $GITHUB_OUTPUT
           else
             echo run_legacy=0 >> $GITHUB_OUTPUT
@@ -68,6 +79,7 @@ jobs:
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'btconly' && '1' || '0' }}
+      WARD: ${{ matrix.coins == 'universal' && '1' || '0' }}
       PYTEST_TIMEOUT: 600  # 10m single test timeout
       PYOPT: 0
       DISABLE_OPTIGA: 1
@@ -101,8 +113,12 @@ jobs:
         if: matrix.model != 'T3W1'  # gets stuck on models with THP
       - run: |
           $NIX_RUN bash -c "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
+          TEST_FILTER='not test_authenticate_device and not evolu and not test_telemetry'
+          if [ "$BITCOIN_ONLY" = "1" ]; then
+            TEST_FILTER="$TEST_FILTER and not ward and not display_address"
+          fi
           $UV_RUN pytest -v --verbose-log-file pytest.log tests/device_tests \
-          -m 'not sd_card' -k 'not test_authenticate_device and not evolu and not test_telemetry' \
+          -m 'not sd_card' -k "$TEST_FILTER" \
           --durations=50 --session-timeout 19800 --warn-on-gc-leak
       - run: tail -n50 trezor.log || true
         if: failure()
@@ -115,6 +131,100 @@ jobs:
             check-usb-permissions.log
           retention-days: 7
         if: always()
+
+  core_ward_channels:
+    name: WARD wallet and service channels
+    needs: param
+    if: needs.param.outputs.ward_models != '[]'
+    runs-on:
+      - self-hosted
+      - ${{ matrix.model == 'T3T1' && 'hw-t3t1' || 'hw-t3w1' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJSON(needs.param.outputs.ward_models) }}
+    timeout-minutes: 90
+    env:
+      TREZOR_MODEL: ${{ matrix.model }}
+      BITCOIN_ONLY: 0
+      WARD_SERVICE_CHANNEL: 1
+      # DebugLink + WebAuthn + WARD fit; adding VCP would exceed the endpoint budget.
+      DBG_CONSOLE: swo
+      PYOPT: 0
+      STORAGE_INSECURE_TESTING_MODE: 1
+      BOOTLOADER_DEVEL: 1
+      PYTEST_TIMEOUT: 120
+      TT_UHUB_PORT: all
+      WARDD_SUITE_DIR: ${{ github.workspace }}/ward-suite
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: ./.github/actions/environment
+        with:
+          nix-dev-shell: ward-hardware
+      - name: Check out the matching WARD daemon
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          repository: trezor/trezor-suite
+          ref: 64405ce6728d27444eb20e99ef0c412edcc8ac16
+          path: ward-suite
+          persist-credentials: false
+      - name: Install wardd dependencies
+        run: |
+          $NIX_RUN node --version
+          $NIX_RUN bash -e -c '
+            cd ward-suite
+            node .yarn/releases/yarn-4.18.0.cjs workspaces focus @trezor/wardd
+          '
+      - name: Check USB permissions
+        run: |
+          $UV_RUN core/tools/check-usb-permissions.py |& tee check-usb-permissions.log
+          $NIX_RUN uhubctl
+      - name: Build service-enabled firmware
+        run: $UV_RUN make -C core build_firmware
+      - name: Flash the test device
+        id: flash_ward
+        run: $UV_RUN ci/hardware_tests/bootstrap.py "$TREZOR_MODEL" core/build/artifacts/latest/firmware.bin
+      - name: Native transport binding, idle polling and wallet coexistence
+        run: |
+          $UV_RUN pytest -v --junitxml=ward-transport.xml --verbose-log-file=ward-transport.log \
+            --basetemp=ward-transport-tmp tests/device_tests/misc/test_ward_native_transport.py
+      - name: WARD over the wallet channel with service unbound
+        if: ${{ !cancelled() && steps.flash_ward.outcome == 'success' }}
+        run: |
+          $UV_RUN pytest -v --junitxml=ward-wallet.xml --verbose-log-file=ward-wallet.log \
+            'tests/device_tests/misc/test_ward_service_channel.py::test_independent_service_and_wallet_fallback[mock-wallet-fallback]' \
+            'tests/device_tests/misc/test_ward_service_channel.py::test_independent_service_and_wallet_fallback[http-wallet-fallback]'
+      - name: WARD over the bound USB service channel
+        if: ${{ !cancelled() && steps.flash_ward.outcome == 'success' }}
+        run: |
+          $UV_RUN pytest -v --junitxml=ward-service.xml --verbose-log-file=ward-service.log \
+            'tests/device_tests/misc/test_ward_service_channel.py::test_independent_service_and_wallet_fallback[mock-service]' \
+            'tests/device_tests/misc/test_ward_service_channel.py::test_independent_service_and_wallet_fallback[http-service]'
+      - name: Native wardd USB connection
+        if: ${{ !cancelled() && steps.flash_ward.outcome == 'success' }}
+        run: |
+          $UV_RUN pytest -v --junitxml=ward-native.xml --verbose-log-file=ward-native.log --basetemp=ward-native-tmp \
+            tests/device_tests/misc/test_ward_service_channel.py::test_wardd_connects_directly_to_service_channel
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        if: always()
+        with:
+          name: ward-hardware-channels-${{ matrix.model }}
+          path: |
+            ward-wallet.xml
+            ward-wallet.log
+            ward-service.xml
+            ward-service.log
+            ward-native.xml
+            ward-native.log
+            ward-transport.xml
+            ward-transport.log
+            ward-transport-tmp/**/native-transport.log
+            ward-native-tmp/**/wardd-native.log
+            check-usb-permissions.log
+          retention-days: 7
 
   core_monero_test:
     name: Monero tests
@@ -214,7 +324,7 @@ jobs:
     timeout-minutes: 5
     # Only nightly runs; manual runs are watched by whoever started them.
     if: failure() && github.event_name == 'schedule'
-    needs: [core_device_test, core_monero_test, legacy_device_test]
+    needs: [core_device_test, core_ward_channels, core_monero_test, legacy_device_test]
     permissions:
       actions: read     # to list the jobs of this run
     steps:

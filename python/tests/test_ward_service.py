@@ -104,3 +104,27 @@ def test_backend_details_are_not_returned_to_the_wallet() -> None:
     service.write = written.append
     service.serve_one()
     assert written[0].message == "WARD backend unavailable"
+
+
+def test_native_daemon_selector_preserves_the_emulator_wallet_port() -> None:
+    from trezorlib.transport.udp import UdpTransport
+    from trezorlib.ward_service import ward_service_selector
+
+    assert (
+        ward_service_selector(UdpTransport("127.0.0.1:37904")) == "udp:127.0.0.1:37904"
+    )
+
+
+def test_native_daemon_selects_the_same_usb_device_by_serial() -> None:
+    from trezorlib.transport.webusb import WebUsbTransport
+    from trezorlib.ward_service import ward_service_selector
+
+    class Device:
+        def getSerialNumber(self) -> str:
+            return "test-hardware-serial"
+
+    # A trezorlib webusb:BUS:PORT path is not a native wardd selector.
+    # The serial selects the same device while leaving the wallet interface owned by the app.
+    wire = WebUsbTransport(Device())
+    assert ward_service_selector(wire) == "usb:test-hardware-serial"
+    assert wire.handle is None
