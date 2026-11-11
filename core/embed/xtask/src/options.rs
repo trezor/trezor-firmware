@@ -225,6 +225,10 @@ build_options! {
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map ward: bool,
 
+    /// Enable the private, streaming WARD service interface.
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    map enable_ward_service_channel: bool,
+
     /// Disable UI animations
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map disable_animation: bool,

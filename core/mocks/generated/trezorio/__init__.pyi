@@ -133,5 +133,6 @@ BUTTON_RIGHT: int  # button number of right button
 USB_EVENT: int # interface id for USB events
 WireInterface = USBIF | BLEIF
 USBIF_WIRE: int  # interface id of the USB wire interface
+USBIF_WARD: int  # dedicated WARD service interface
 USBIF_DEBUG: int  # interface id of the USB debug interface
 USBIF_WEBAUTHN: int  # interface id of the USB WebAuthn

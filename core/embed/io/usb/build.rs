@@ -5,6 +5,11 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 
     lib.add_define("USE_USB", Some("1"));
 
+    if cfg!(feature = "ward_service_channel") {
+        lib.add_define("USE_WARD_SERVICE_CHANNEL", None);
+        lib.add_define("USE_USB_WINUSB_EXTRA_IFACE", None);
+    }
+
     if cfg!(feature = "usb_iface_wire") {
         lib.add_define("USE_USB_IFACE_WIRE", Some("1"));
     }

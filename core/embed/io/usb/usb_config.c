@@ -39,6 +39,7 @@
 #define USB_IFACE_DEBUG_PORT_OFFSET 1
 #define USB_IFACE_WEBAUTHN_PORT_OFFSET 2
 #define USB_IFACE_VCP_PORT_OFFSET 3
+#define USB_IFACE_WARD_PORT_OFFSET 7
 
 static secbool usb_device_init(void) {
 #if defined(BOOTLOADER)
@@ -254,6 +255,46 @@ static secbool usb_vcp_iface_init(uint8_t *iface_num,
 }
 #endif  // USE_USB_IFACE_VCP
 
+#ifdef USE_WARD_SERVICE_CHANNEL
+static secbool usb_ward_iface_init(uint8_t *iface_num) {
+#ifndef TREZOR_EMULATOR
+  // Endpoint 0 is reserved; the STM32 core is initialized with six endpoints.
+  if (0x01 + *iface_num >= 6) {
+    return secfalse;
+  }
+#endif
+  static uint8_t ward_iface_buffer[USB_PACKET_LEN];
+
+  const usb_webusb_info_t ward_iface = {
+      .handle = SYSHANDLE_USB_WARD,
+      .rx_buffer = ward_iface_buffer,
+      .iface_num = *iface_num,
+#ifdef TREZOR_EMULATOR
+      .emu_port = usb_emu_port(USB_IFACE_WARD_PORT_OFFSET),
+#else
+      .ep_in = 0x01 + *iface_num,
+      .ep_out = 0x01 + *iface_num,
+#endif
+      // Stable identity independent of optional debug, WebAuthn and VCP
+      // interfaces.
+      .subclass = 0x57,  // 'W'
+      .protocol = 0x01,
+      .polling_interval = 1,
+      .max_packet_len = sizeof(ward_iface_buffer),
+      // Bind the Windows in-box WinUSB driver to this vendor interface.
+      .winusb_compatible = sectrue,
+  };
+
+  if (sectrue != usb_webusb_add(&ward_iface)) {
+    return secfalse;
+  }
+
+  *iface_num += 1;
+
+  return sectrue;
+}
+#endif  // USE_WARD_SERVICE_CHANNEL
+
 secbool usb_configure(usb_vcp_intr_callback_t vcp_intr_callback) {
   if (sectrue != usb_device_init()) {
     goto cleanup;
@@ -281,6 +322,12 @@ secbool usb_configure(usb_vcp_intr_callback_t vcp_intr_callback) {
 
 #ifdef USE_USB_IFACE_VCP
   if (sectrue != usb_vcp_iface_init(&iface_num, vcp_intr_callback)) {
+    goto cleanup;
+  }
+#endif
+
+#ifdef USE_WARD_SERVICE_CHANNEL
+  if (sectrue != usb_ward_iface_init(&iface_num)) {
     goto cleanup;
   }
 #endif

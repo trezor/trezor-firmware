@@ -58,6 +58,7 @@ split_part2_sections = [".flash2"]
 
 # xtask build options mapped to the cargo features
 [build-options]
+enable-ward-service-channel = { true = ["ward_service_channel"] }
 asan                          = { true = ["asan"] }
 apps                          = { true = ["app_loading"] }
 benchmark                     = { true = ["benchmark"] }

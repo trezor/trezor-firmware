@@ -117,6 +117,12 @@ void *usb_get_iface_state(uint8_t iface_num, const USBD_ClassTypeDef *class);
 // Assigns the concrete class to the slot `iface_num`.
 void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class);
 
+// Advertise one additional vendor interface in the Windows WinUSB descriptors.
+// The class driver registers its interface number during configuration.
+#ifdef USE_USB_WINUSB_EXTRA_IFACE
+void usb_set_iface_winusb(uint8_t iface_num);
+#endif
+
 // Allocates the buffer for the class driver descriptors
 // (interface, endpoint, ...) inside the USB device structure.
 //

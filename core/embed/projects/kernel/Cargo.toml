@@ -17,6 +17,7 @@ sec.workspace = true
 sys.workspace = true
 
 [features]
+ward_service_channel = ["io/ward_service_channel"]
 
 # --------------------------------------------------------------------------
 # Build options

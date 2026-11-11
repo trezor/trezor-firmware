@@ -902,6 +902,8 @@ static const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether the firmware is Bitcoin-only."""
 /// UI_LAYOUT: str
 /// """UI layout identifier (BOLT/CAESAR/DELIZIA/ECKHART)."""
+/// USE_WARD_SERVICE_CHANNEL: bool
+/// """Whether the private WARD service interface is enabled."""
 /// USE_THP: bool
 /// """Whether the firmware supports Trezor-Host Protocol (version 2)."""
 /// NOTIFY_BOOT: int
@@ -1152,6 +1154,11 @@ static const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_BITCOIN_ONLY), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_BITCOIN_ONLY), mp_const_false},
+#endif
+#ifdef USE_WARD_SERVICE_CHANNEL
+    {MP_ROM_QSTR(MP_QSTR_USE_WARD_SERVICE_CHANNEL), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_WARD_SERVICE_CHANNEL), mp_const_false},
 #endif
 #ifdef USE_THP
     {MP_ROM_QSTR(MP_QSTR_USE_THP), mp_const_true},

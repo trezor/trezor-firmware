@@ -17,6 +17,7 @@ sec.workspace = true
 io.workspace = true
 
 [features]
+ward_service_channel = ["ward"]
 
 # --------------------------------------------------------------------------
 # MCU selection - only enable one of these at a time
