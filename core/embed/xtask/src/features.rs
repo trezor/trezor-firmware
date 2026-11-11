@@ -41,6 +41,28 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
     }
 
     let project_config = config::ProjectConfig::load(args.project)?;
+    if args.enable_ward_service_channel
+        && args.btc_only
+        && project_config.options.enable_ward_service_channel.is_some()
+    {
+        bail!("WARD service requires universal firmware");
+    }
+    if args.enable_ward_service_channel
+        && !args.emulator
+        && project_config.options.enable_ward_service_channel.is_some()
+    {
+        let count = 2
+            + usize::from(args.debug_link)
+            + usize::from(!args.btc_only)
+            + if args.dbg_console == crate::args::ConsoleType::Vcp {
+                2
+            } else {
+                0
+            };
+        if count > 5 {
+            bail!("WARD service exceeds the USB endpoint budget; disable VCP or debuglink");
+        }
+    }
 
     for activated in project_config.options.resolve(args) {
         features.push(activated.feature);

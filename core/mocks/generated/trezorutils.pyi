@@ -314,6 +314,8 @@ BITCOIN_ONLY: bool
 """Whether the firmware is Bitcoin-only."""
 UI_LAYOUT: str
 """UI layout identifier (BOLT/CAESAR/DELIZIA/ECKHART)."""
+USE_WARD_SERVICE_CHANNEL: bool
+"""Whether the private WARD service interface is enabled."""
 USE_THP: bool
 """Whether the firmware supports Trezor-Host Protocol (version 2)."""
 NOTIFY_BOOT: int

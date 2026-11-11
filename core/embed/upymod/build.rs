@@ -84,6 +84,9 @@ fn main() -> Result<()> {
             lib.add_define("USE_NFC", Some("1"));
         }
 
+        if cfg!(feature = "ward_service_channel") {
+            lib.add_define("USE_WARD_SERVICE_CHANNEL", None);
+        }
         if cfg!(feature = "ward") {
             lib.add_define("USE_WARD", Some("1"));
         }
@@ -973,6 +976,7 @@ impl<'a> MpyBuilder<'a> {
         let touch_wakeup = py_bool(cfg!(feature = "touch_wakeup"));
         let tropic = py_bool(cfg!(feature = "tropic"));
         let ward = py_bool(cfg!(feature = "ward"));
+        let ward_channel = py_bool(cfg!(feature = "ward_service_channel"));
         let scm_revision_xor2 = self.scm_revision_xor2;
         let nfc = py_bool(cfg!(feature = "nfc"));
 
@@ -999,6 +1003,7 @@ impl<'a> MpyBuilder<'a> {
             format!(r"s/utils\.USE_TOUCH_WAKEUP/{touch_wakeup}/g"), // must be before USE_TOUCH
             format!(r"s/utils\.USE_TOUCH/{touch}/g"),
             format!(r"s/utils\.USE_TROPIC/{tropic}/g"),
+            format!(r"s/utils\.USE_WARD_SERVICE_CHANNEL/{ward_channel}/g"),
             format!(r"s/utils\.USE_WARD/{ward}/g"),
             format!(r"s/utils\.USE_NFC/{nfc}/g"),
             format!(r"s/utils\.SCM_REVISION_XOR2/{scm_revision_xor2}/g"),
@@ -1082,7 +1087,10 @@ impl<'a> MpyBuilder<'a> {
             files.add(src.join("trezor/wire/thp"), "*.py")?;
         }
 
-        if cfg!(not(feature = "thp")) || cfg!(not(feature = "pyopt")) {
+        if cfg!(not(feature = "thp"))
+            || cfg!(not(feature = "pyopt"))
+            || cfg!(feature = "ward_service_channel")
+        {
             files.add(src.join("trezor/wire/codec"), "*.py")?;
         }
 
@@ -1216,6 +1224,7 @@ impl<'a> MpyBuilder<'a> {
 
         if cfg!(feature = "ward") {
             files.add(src, "apps/ward/*.py")?;
+            files.add(src, "apps/display_address/*.py")?;
         }
 
         if cfg!(feature = "app_loading") {

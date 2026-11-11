@@ -19,6 +19,7 @@ trezor_lib.workspace = true
 upymod.workspace = true
 
 [features]
+ward_service_channel = ["ward", "io/ward_service_channel", "upymod/ward_service_channel"]
 
 # --------------------------------------------------------------------------
 # Build options

@@ -58,6 +58,9 @@ RANDOM=$(shell python -c 'import random; print(random.randint(0, 1000000))')
 
 # Please only add options used by CI, otherwise just run xtask directly.
 XTASK_BUILD_OPTS += --model $(TREZOR_MODEL)
+ifeq ($(WARD_SERVICE_CHANNEL),1)
+XTASK_BUILD_OPTS += --enable-ward-service-channel
+endif
 ifeq ($(ADDRESS_SANITIZER),1)
 XTASK_BUILD_OPTS += --asan
 endif

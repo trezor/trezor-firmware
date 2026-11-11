@@ -19,6 +19,7 @@ sec.workspace = true
 sys.workspace = true
 
 [features]
+ward_service_channel = ["usb"]
 
 # --------------------------------------------------------------------------
 # MCU selection - only enable one of these at a time

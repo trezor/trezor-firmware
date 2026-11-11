@@ -40,6 +40,9 @@ typedef struct {
   uint8_t protocol;          // usb_iface_protocol_t
   uint8_t polling_interval;  // In units of 1ms
   uint8_t max_packet_len;    // Length of the biggest report and of rx_buffer
+  // Include this vendor interface in the Windows WinUSB descriptors.
+  // Interface 0 is always advertised; the emulator ignores this flag.
+  secbool winusb_compatible;
 } usb_webusb_info_t;
 
 secbool __wur usb_webusb_add(const usb_webusb_info_t *webusb_info);

@@ -118,6 +118,7 @@
 
 /// WireInterface = USBIF | BLEIF
 /// USBIF_WIRE: int  # interface id of the USB wire interface
+/// USBIF_WARD: int  # dedicated WARD service interface
 /// USBIF_DEBUG: int  # interface id of the USB debug interface
 /// USBIF_WEBAUTHN: int  # interface id of the USB WebAuthn
 
@@ -172,6 +173,7 @@ static const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USB), MP_ROM_PTR(&mod_trezorio_USB_type)},
     {MP_ROM_QSTR(MP_QSTR_USBIF), MP_ROM_PTR(&mod_trezorio_USBIF_type)},
     {MP_ROM_QSTR(MP_QSTR_USBIF_WIRE), MP_ROM_INT(SYSHANDLE_USB_WIRE)},
+    {MP_ROM_QSTR(MP_QSTR_USBIF_WARD), MP_ROM_INT(SYSHANDLE_USB_WARD)},
     {MP_ROM_QSTR(MP_QSTR_USBIF_DEBUG), MP_ROM_INT(SYSHANDLE_USB_DEBUG)},
     {MP_ROM_QSTR(MP_QSTR_USBIF_WEBAUTHN), MP_ROM_INT(SYSHANDLE_USB_WEBAUTHN)},
 
