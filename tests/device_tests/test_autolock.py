@@ -93,10 +93,17 @@ def test_autolock_default_value(session: Session):
 
 
 @pytest.mark.parametrize(
-    "seconds",
-    [0, 1, 9, 536871, 2**22],
+    "milliseconds",
+    [
+        0,
+        1 * 1000,
+        9 * 1000,
+        149 * 60 * 60 * 1000 + 1,  # one millisecond over the maximum
+        0x2000_0000,  # the maximum before it was lowered
+        2**22 * 1000,
+    ],
 )
-def test_apply_auto_lock_delay_out_of_range(session: Session, seconds):
+def test_apply_auto_lock_delay_out_of_range(session: Session, milliseconds):
 
     with session.test_ctx as client:
         client.use_pin_sequence([PIN4])
@@ -107,9 +114,8 @@ def test_apply_auto_lock_delay_out_of_range(session: Session, seconds):
             ]
         )
 
-        delay = seconds * 1000
         with pytest.raises(TrezorFailure):
-            device.apply_settings(session, auto_lock_delay_ms=delay)
+            device.apply_settings(session, auto_lock_delay_ms=milliseconds)
 
 
 @pytest.mark.models("core")
