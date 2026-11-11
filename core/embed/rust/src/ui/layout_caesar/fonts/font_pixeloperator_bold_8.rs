@@ -8,8 +8,6 @@
 
 use crate::ui::display::font::FontInfo;
 
-// NOTE: hand-changed the width and advance of '_' to 5
-
 /// ' ' (ASCII 32)
 const Font_PixelOperator_Bold_8_glyph_32: [u8; 5] = [ 0, 0, 4, 0, 0 ];
 
@@ -200,7 +198,7 @@ const Font_PixelOperator_Bold_8_glyph_93: [u8; 9] = [ 4, 7, 6, 0, 7, 243, 51, 51
 const Font_PixelOperator_Bold_8_glyph_94: [u8; 8] = [ 6, 4, 7, 0, 7, 49, 236, 225 ];
 
 /// '_' (ASCII 95)
-const Font_PixelOperator_Bold_8_glyph_95: [u8; 6] = [ 5, 1, 5, 0, 0, 248 ];  // width (1st), advance (3rd) changed to 5, last byte to 248
+const Font_PixelOperator_Bold_8_glyph_95: [u8; 6] = [ 5, 1, 5, 0, 0, 248 ];
 
 /// '`' (ASCII 96)
 const Font_PixelOperator_Bold_8_glyph_96: [u8; 6] = [ 3, 2, 5, 0, 7, 204 ];
@@ -397,7 +395,7 @@ const Font_PixelOperator_Bold_8: [&[u8]; 95] = [
     &Font_PixelOperator_Bold_8_glyph_126,
 ];
 
-/// Array of references for 'PixelOperator_Bold_8' ASCII glyphs (forced uppercase)
+/// Array of references for 'PixelOperator_Bold_8' forced uppercase glyphs
 const Font_PixelOperator_Bold_8_upper: [&[u8]; 95] = [
     &Font_PixelOperator_Bold_8_glyph_32,
     &Font_PixelOperator_Bold_8_glyph_33,
@@ -464,32 +462,32 @@ const Font_PixelOperator_Bold_8_upper: [&[u8]; 95] = [
     &Font_PixelOperator_Bold_8_glyph_94,
     &Font_PixelOperator_Bold_8_glyph_95,
     &Font_PixelOperator_Bold_8_glyph_96,
-    &Font_PixelOperator_Bold_8_glyph_65, // a -> A,
-    &Font_PixelOperator_Bold_8_glyph_66, // b -> B,
-    &Font_PixelOperator_Bold_8_glyph_67, // c -> C,
-    &Font_PixelOperator_Bold_8_glyph_68, // d -> D,
-    &Font_PixelOperator_Bold_8_glyph_69, // e -> E,
-    &Font_PixelOperator_Bold_8_glyph_70, // f -> F,
-    &Font_PixelOperator_Bold_8_glyph_71, // g -> G,
-    &Font_PixelOperator_Bold_8_glyph_72, // h -> H,
-    &Font_PixelOperator_Bold_8_glyph_73, // i -> I,
-    &Font_PixelOperator_Bold_8_glyph_74, // j -> J,
-    &Font_PixelOperator_Bold_8_glyph_75, // k -> K,
-    &Font_PixelOperator_Bold_8_glyph_76, // l -> L,
-    &Font_PixelOperator_Bold_8_glyph_77, // m -> M,
-    &Font_PixelOperator_Bold_8_glyph_78, // n -> N,
-    &Font_PixelOperator_Bold_8_glyph_79, // o -> O,
-    &Font_PixelOperator_Bold_8_glyph_80, // p -> P,
-    &Font_PixelOperator_Bold_8_glyph_81, // q -> Q,
-    &Font_PixelOperator_Bold_8_glyph_82, // r -> R,
-    &Font_PixelOperator_Bold_8_glyph_83, // s -> S,
-    &Font_PixelOperator_Bold_8_glyph_84, // t -> T,
-    &Font_PixelOperator_Bold_8_glyph_85, // u -> U,
-    &Font_PixelOperator_Bold_8_glyph_86, // v -> V,
-    &Font_PixelOperator_Bold_8_glyph_87, // w -> W,
-    &Font_PixelOperator_Bold_8_glyph_88, // x -> X,
-    &Font_PixelOperator_Bold_8_glyph_89, // y -> Y,
-    &Font_PixelOperator_Bold_8_glyph_90, // z -> Z,
+    &Font_PixelOperator_Bold_8_glyph_65,  // a -> A
+    &Font_PixelOperator_Bold_8_glyph_66,  // b -> B
+    &Font_PixelOperator_Bold_8_glyph_67,  // c -> C
+    &Font_PixelOperator_Bold_8_glyph_68,  // d -> D
+    &Font_PixelOperator_Bold_8_glyph_69,  // e -> E
+    &Font_PixelOperator_Bold_8_glyph_70,  // f -> F
+    &Font_PixelOperator_Bold_8_glyph_71,  // g -> G
+    &Font_PixelOperator_Bold_8_glyph_72,  // h -> H
+    &Font_PixelOperator_Bold_8_glyph_73,  // i -> I
+    &Font_PixelOperator_Bold_8_glyph_74,  // j -> J
+    &Font_PixelOperator_Bold_8_glyph_75,  // k -> K
+    &Font_PixelOperator_Bold_8_glyph_76,  // l -> L
+    &Font_PixelOperator_Bold_8_glyph_77,  // m -> M
+    &Font_PixelOperator_Bold_8_glyph_78,  // n -> N
+    &Font_PixelOperator_Bold_8_glyph_79,  // o -> O
+    &Font_PixelOperator_Bold_8_glyph_80,  // p -> P
+    &Font_PixelOperator_Bold_8_glyph_81,  // q -> Q
+    &Font_PixelOperator_Bold_8_glyph_82,  // r -> R
+    &Font_PixelOperator_Bold_8_glyph_83,  // s -> S
+    &Font_PixelOperator_Bold_8_glyph_84,  // t -> T
+    &Font_PixelOperator_Bold_8_glyph_85,  // u -> U
+    &Font_PixelOperator_Bold_8_glyph_86,  // v -> V
+    &Font_PixelOperator_Bold_8_glyph_87,  // w -> W
+    &Font_PixelOperator_Bold_8_glyph_88,  // x -> X
+    &Font_PixelOperator_Bold_8_glyph_89,  // y -> Y
+    &Font_PixelOperator_Bold_8_glyph_90,  // z -> Z
     &Font_PixelOperator_Bold_8_glyph_123,
     &Font_PixelOperator_Bold_8_glyph_124,
     &Font_PixelOperator_Bold_8_glyph_125,

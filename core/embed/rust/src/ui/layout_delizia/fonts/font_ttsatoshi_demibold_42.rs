@@ -10,7 +10,7 @@ use crate::ui::display::font::FontInfo;
 #[cfg(feature = "ui_font_kerning")]
 use crate::ui::display::font::KerningTable;
 
-// NOTE: glyphs of uppercase and special characters removed to save space as they are not used
+// NOTE: only space and lowercase glyphs included to save space, uppercase letters are mapped to lowercase
 
 /// ' ' (ASCII 32)
 const Font_TTSatoshi_DemiBold_42_glyph_32: [u8; 5] = [ 0, 0, 11, 0, 0 ];
@@ -131,32 +131,32 @@ const Font_TTSatoshi_DemiBold_42: [&[u8]; 95] = [
     &Font_TTSatoshi_DemiBold_42_glyph_nonprintable,
     &Font_TTSatoshi_DemiBold_42_glyph_nonprintable,
     &Font_TTSatoshi_DemiBold_42_glyph_nonprintable,
-    &Font_TTSatoshi_DemiBold_42_glyph_97,
-    &Font_TTSatoshi_DemiBold_42_glyph_98,
-    &Font_TTSatoshi_DemiBold_42_glyph_99,
-    &Font_TTSatoshi_DemiBold_42_glyph_100,
-    &Font_TTSatoshi_DemiBold_42_glyph_101,
-    &Font_TTSatoshi_DemiBold_42_glyph_102,
-    &Font_TTSatoshi_DemiBold_42_glyph_103,
-    &Font_TTSatoshi_DemiBold_42_glyph_104,
-    &Font_TTSatoshi_DemiBold_42_glyph_105,
-    &Font_TTSatoshi_DemiBold_42_glyph_106,
-    &Font_TTSatoshi_DemiBold_42_glyph_107,
-    &Font_TTSatoshi_DemiBold_42_glyph_108,
-    &Font_TTSatoshi_DemiBold_42_glyph_109,
-    &Font_TTSatoshi_DemiBold_42_glyph_110,
-    &Font_TTSatoshi_DemiBold_42_glyph_111,
-    &Font_TTSatoshi_DemiBold_42_glyph_112,
-    &Font_TTSatoshi_DemiBold_42_glyph_113,
-    &Font_TTSatoshi_DemiBold_42_glyph_114,
-    &Font_TTSatoshi_DemiBold_42_glyph_115,
-    &Font_TTSatoshi_DemiBold_42_glyph_116,
-    &Font_TTSatoshi_DemiBold_42_glyph_117,
-    &Font_TTSatoshi_DemiBold_42_glyph_118,
-    &Font_TTSatoshi_DemiBold_42_glyph_119,
-    &Font_TTSatoshi_DemiBold_42_glyph_120,
-    &Font_TTSatoshi_DemiBold_42_glyph_121,
-    &Font_TTSatoshi_DemiBold_42_glyph_122,
+    &Font_TTSatoshi_DemiBold_42_glyph_97,  // A -> a
+    &Font_TTSatoshi_DemiBold_42_glyph_98,  // B -> b
+    &Font_TTSatoshi_DemiBold_42_glyph_99,  // C -> c
+    &Font_TTSatoshi_DemiBold_42_glyph_100,  // D -> d
+    &Font_TTSatoshi_DemiBold_42_glyph_101,  // E -> e
+    &Font_TTSatoshi_DemiBold_42_glyph_102,  // F -> f
+    &Font_TTSatoshi_DemiBold_42_glyph_103,  // G -> g
+    &Font_TTSatoshi_DemiBold_42_glyph_104,  // H -> h
+    &Font_TTSatoshi_DemiBold_42_glyph_105,  // I -> i
+    &Font_TTSatoshi_DemiBold_42_glyph_106,  // J -> j
+    &Font_TTSatoshi_DemiBold_42_glyph_107,  // K -> k
+    &Font_TTSatoshi_DemiBold_42_glyph_108,  // L -> l
+    &Font_TTSatoshi_DemiBold_42_glyph_109,  // M -> m
+    &Font_TTSatoshi_DemiBold_42_glyph_110,  // N -> n
+    &Font_TTSatoshi_DemiBold_42_glyph_111,  // O -> o
+    &Font_TTSatoshi_DemiBold_42_glyph_112,  // P -> p
+    &Font_TTSatoshi_DemiBold_42_glyph_113,  // Q -> q
+    &Font_TTSatoshi_DemiBold_42_glyph_114,  // R -> r
+    &Font_TTSatoshi_DemiBold_42_glyph_115,  // S -> s
+    &Font_TTSatoshi_DemiBold_42_glyph_116,  // T -> t
+    &Font_TTSatoshi_DemiBold_42_glyph_117,  // U -> u
+    &Font_TTSatoshi_DemiBold_42_glyph_118,  // V -> v
+    &Font_TTSatoshi_DemiBold_42_glyph_119,  // W -> w
+    &Font_TTSatoshi_DemiBold_42_glyph_120,  // X -> x
+    &Font_TTSatoshi_DemiBold_42_glyph_121,  // Y -> y
+    &Font_TTSatoshi_DemiBold_42_glyph_122,  // Z -> z
     &Font_TTSatoshi_DemiBold_42_glyph_nonprintable,
     &Font_TTSatoshi_DemiBold_42_glyph_nonprintable,
     &Font_TTSatoshi_DemiBold_42_glyph_nonprintable,

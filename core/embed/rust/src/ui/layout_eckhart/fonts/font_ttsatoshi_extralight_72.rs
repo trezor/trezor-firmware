@@ -10,7 +10,7 @@ use crate::ui::display::font::FontInfo;
 #[cfg(feature = "ui_font_kerning")]
 use crate::ui::display::font::KerningTable;
 
-// NOTE: manually added Font_TTSatoshi_ExtraLight_72_nums and Font_TTSatoshi_ExtraLight_72_NumsOnly_info for the usage in Eckhart Bootloader, see https://github.com/trezor/trezor-firmware/issues/5522
+// NOTE: Font_TTSatoshi_ExtraLight_72_NumsOnly_info used in Eckhart bootloader, see https://github.com/trezor/trezor-firmware/issues/5522
 
 /// ' ' (ASCII 32)
 const Font_TTSatoshi_ExtraLight_72_glyph_32: [u8; 5] = [ 0, 0, 16, 0, 0 ];
@@ -399,9 +399,8 @@ const Font_TTSatoshi_ExtraLight_72: [&[u8]; 95] = [
     &Font_TTSatoshi_ExtraLight_72_glyph_126,
 ];
 
-
 /// Array of references for 'TTSatoshi_ExtraLight_72' numeral-only ASCII glyphs
-const Font_TTSatoshi_ExtraLight_72_nums: [&[u8]; 95] = [
+const Font_TTSatoshi_ExtraLight_72_NumsOnly: [&[u8]; 95] = [
     &Font_TTSatoshi_ExtraLight_72_glyph_32,
     &Font_TTSatoshi_ExtraLight_72_glyph_nonprintable,
     &Font_TTSatoshi_ExtraLight_72_glyph_nonprintable,
@@ -1514,7 +1513,7 @@ pub const Font_TTSatoshi_ExtraLight_72_NumsOnly_info: FontInfo = FontInfo {
     height: 72,
     max_height: 74,
     baseline: 15,
-    glyph_data: &Font_TTSatoshi_ExtraLight_72_nums,
+    glyph_data: &Font_TTSatoshi_ExtraLight_72_NumsOnly,
     glyph_nonprintable: &Font_TTSatoshi_ExtraLight_72_glyph_nonprintable,
     #[cfg(feature = "ui_font_kerning")]
     kernings: Some(&Font_TTSatoshi_ExtraLight_72_kernings),
