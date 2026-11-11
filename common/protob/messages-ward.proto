@@ -104,6 +104,7 @@ message WARDPerformUpdateAck {
     reserved 8, 9, 10;               // were flat nonce/tag/ct; now inside content
     optional LeafContent  content  = 11;  // encrypted or plaintext new leaf value (empty = delete)
     optional LeafIdentity identity = 12;  // the MAC preimage; empty on explicit deletion
+    optional bool service_applied = 80;
 }
 
 /**
@@ -171,6 +172,7 @@ message WARDSyncAck {
     required uint32 counter   = 5;  // durable device trust anchor
     optional bytes root       = 6;  // absent for an authenticated empty anchor
     required bool root_known  = 7;  // distinguishes an empty anchor from a legacy counter-only record
+    optional bool service_bound = 80;
 }
 
 /**
@@ -527,6 +529,7 @@ message WARDPerformBatchAck {
     required bytes  auth_commit  = 7;  // MAC(K_auth, TAG_COMMIT||ward_id||from_c||from_root||to_c||to_root)
     optional bytes  sig_commit   = 8;  // Ed25519(K_sig, <AuthCommit preimage>); present only when WARD_KSIG is on
     repeated WARDBatchLeaf leaves = 9;  // device-encrypted leaves for the host to store
+    optional bool service_applied = 80;
 }
 
 /**
@@ -588,6 +591,7 @@ message WARDPerformRevertAck {
     required bytes  head_mac     = 6;  // MAC(K_head, TAG_HEAD||ward_id||to_counter||prev_root)
     required bytes  auth_revert  = 7;  // MAC(K_auth, TAG_REVERT||ward_id||stuck_c||stuck_root||to_c||prev_root)
     optional bytes  sig_commit   = 8;  // Ed25519(K_sig, <AuthRevert preimage>); present only when WARD_KSIG is on
+    optional bool service_applied = 80;
 }
 
 /**
@@ -813,4 +817,28 @@ message WARDValidateCacheAck {
     required uint32 removed       = 4;
     reserved 5;                         // was sticky_absent: sticky entries are removed too
     required uint32 counter       = 6;  // device counter of the root they were checked against
+}
+
+// Dedicated codec-v1 interface. After Open, every exchange is initiated by the
+// device. Sync and publication use the existing authenticated WARD messages;
+// Done closes the conversation and never authorizes a state change itself.
+message WARDServiceOpen {
+    required uint32 protocol_version = 1;
+    optional bool close = 2;  // release the binding for immediate wallet fallback
+}
+message WARDServiceOpenAck {
+    required uint32 protocol_version = 1;
+    required uint32 buffer_size = 2;
+}
+message WARDServiceDone {
+    optional string error = 1;
+}
+// Wallet-side entry point: synchronize through a bound service, or report that
+// the caller must use the ordinary wallet protocol. There is no mid-RPC fallback.
+message WARDServiceSync {}
+message WARDServiceSyncAck {
+    required bool used_service = 1;
+    optional uint32 counter = 2;
+    optional bytes root = 3;
+    optional bytes ward_id = 4;
 }

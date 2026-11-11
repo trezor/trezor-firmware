@@ -826,6 +826,11 @@ if TYPE_CHECKING:
         WARDCacheImportAck = 2373
         WARDValidateCache = 2374
         WARDValidateCacheAck = 2375
+        WARDServiceOpen = 2380
+        WARDServiceOpenAck = 2381
+        WARDServiceDone = 2382
+        WARDServiceSync = 2383
+        WARDServiceSyncAck = 2384
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

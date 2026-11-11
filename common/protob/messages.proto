@@ -468,6 +468,11 @@ enum MessageType {
     MessageType_WARDCacheImportAck = 2373 [(wire_out) = true];
     MessageType_WARDValidateCache = 2374 [(wire_in) = true];
     MessageType_WARDValidateCacheAck = 2375 [(wire_out) = true];
+    MessageType_WARDServiceOpen = 2380 [(wire_in) = true];
+    MessageType_WARDServiceOpenAck = 2381 [(wire_out) = true];
+    MessageType_WARDServiceDone = 2382 [(wire_in) = true];
+    MessageType_WARDServiceSync = 2383 [(wire_in) = true];
+    MessageType_WARDServiceSyncAck = 2384 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
