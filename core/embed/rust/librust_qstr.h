@@ -365,6 +365,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_disconnect;
   MP_QSTR_duration_ms;
   MP_QSTR_encode;
+  MP_QSTR_encode_range;
   MP_QSTR_encoded_length;
   MP_QSTR_entropy__send;
   MP_QSTR_entropy__title_confirm;
@@ -382,6 +383,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_fee;
   MP_QSTR_fee_label;
   MP_QSTR_fee_rate_amount;
+  MP_QSTR_field_info;
   MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__restart;
   MP_QSTR_firmware_update__title;

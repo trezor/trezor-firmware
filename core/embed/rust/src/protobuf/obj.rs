@@ -353,5 +353,13 @@ pub static mp_module_trezorproto: Module = obj_module! {
     /// def encode(buffer: AnyBuffer, msg: MessageType) -> int:
     ///     """Encode the message into the specified buffer. Return length of
     ///     encoding."""
-    Qstr::MP_QSTR_encode => obj_fn_2!(protobuf_encode).as_obj()
+    Qstr::MP_QSTR_encode => obj_fn_2!(protobuf_encode).as_obj(),
+
+    /// def field_info(msg_type: type[MessageType], tag: int) -> tuple | None:
+    ///     """Streaming field schema: name, kind, repeated, embedded message type."""
+    Qstr::MP_QSTR_field_info => obj_fn_2!(super::streaming::field_info).as_obj(),
+
+    /// def encode_range(buffer: AnyBuffer, msg: MessageType, offset: int) -> int:
+    ///     """Encode only the output window starting at offset. No full wire buffer."""
+    Qstr::MP_QSTR_encode_range => obj_fn_3!(super::streaming::encode_range).as_obj()
 };
