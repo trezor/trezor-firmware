@@ -129,18 +129,24 @@ def test_independent_service_and_wallet_fallback(
         backend.close()
 
 
+@pytest.mark.parametrize(
+    "wallet_relay", [False, True], ids=["standalone", "wallet-relay"]
+)
 def test_wardd_connects_directly_to_service_channel(
     session: Session,
     wardd_port: int,
     wm_url: str | None,
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    wallet_relay: bool,
 ) -> None:
     import os
     import secrets
+    import socket
     import subprocess
 
     from trezorlib import messages
+    from trezorlib.ward_wallet import WardWalletClient
 
     assert SUITE_DIR is not None
     token = secrets.token_hex(16)
@@ -166,6 +172,7 @@ def test_wardd_connects_directly_to_service_channel(
             str(token_file),
             "--service-channel",
             ward_service_selector(session.client.transport),
+            *(["--wallet-relay"] if wallet_relay else []),
             *(["--wm-url", wm_url] if wm_url else []),
         ],
         cwd=Path(SUITE_DIR) / "packages" / "wardd",
@@ -178,8 +185,17 @@ def test_wardd_connects_directly_to_service_channel(
     try:
         assert process.stdout is not None
         line = process.stdout.readline()
-        assert "WARD service connected" in line, line
-        with WarddClient(token=token, url=f"ws://127.0.0.1:{wardd_port}") as backend:
+        assert "service connected" in line, line
+        if not wallet_relay:
+            # The configured relay port remains available: service mode opens no listener.
+            with socket.socket() as probe:
+                probe.bind(("127.0.0.1", wardd_port))
+        wallet = (
+            WarddClient(token=token, url=f"ws://127.0.0.1:{wardd_port}")
+            if wallet_relay
+            else WardWalletClient()
+        )
+        with wallet as backend:
             original = backend.call
 
             def wallet_call(method, params=None, device=None):

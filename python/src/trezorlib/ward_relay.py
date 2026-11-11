@@ -198,6 +198,17 @@ class _WebSocket:
 DeviceCall = t.Callable[[str, dict], t.Tuple[str, dict]]
 
 
+class WardBackend(t.Protocol):
+    """What WardAdapter calls: wardd over its relay, or the service-mode wallet client."""
+
+    def call(
+        self,
+        method: str,
+        params: dict | None = None,
+        device: DeviceCall | None = None,
+    ) -> dict: ...
+
+
 class WarddClient:
     """One authenticated socket to wardd: one relay endpoint.
 
@@ -285,7 +296,7 @@ class WardAdapter:
     for a listing walk's WARDNodeRequest (`answerNodeRequest`).
     """
 
-    def __init__(self, session: "Session", client: WarddClient) -> None:
+    def __init__(self, session: "Session", client: WardBackend) -> None:
         self.session = session
         self.client = client
         self._saved: t.Any = None
@@ -323,7 +334,9 @@ class WardAdapter:
         res = self.session.call(protobuf.dict_to_proto(message_type, body))
         return type(res).__name__, protobuf.to_dict(res)
 
-    def on_proof_request(self, request: messages.WARDProofRequest) -> messages.WARDProofAck:
+    def on_proof_request(
+        self, request: messages.WARDProofRequest
+    ) -> messages.WARDProofAck:
         try:
             ack = self.client.call(
                 "answerProofRequest", {"request": protobuf.to_dict(request)}
