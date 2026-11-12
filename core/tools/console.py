@@ -6,8 +6,8 @@
 """Console of a Trezor device: the prodtest CLI or the firmware's debug log.
 
 Talks to the device over BLE (the BLE console service), a USB VCP serial port
-or the prodtest emulator's UDP. Needs only bleak (which brings dbus-fast on
-Linux) and, for --serial, pyserial. No trezorlib.
+or the prodtest emulator's UDP. Needs only click and bleak (which brings
+dbus-fast on Linux) and, for --serial, pyserial. No trezorlib.
 
 BLE is the default; without a name or address the tool takes any unit in
 range that announces the console service, preferring the one used last. Over
@@ -67,7 +67,6 @@ works for a BLE device and for the emulator, where it replaces the socat step:
     provision_device.py --device /tmp/ttyVCP0
 """
 
-import argparse
 import asyncio
 import json
 import logging
@@ -78,7 +77,9 @@ import sys
 import termios
 import tty
 from pathlib import Path
+from types import SimpleNamespace
 
+import click
 from bleak import BleakClient, BleakScanner
 from bleak.backends.device import BLEDevice
 
@@ -796,7 +797,7 @@ async def bridge(link, sinks: list) -> None:
         await asyncio.gather(*tasks, return_exceptions=True)
 
 
-async def open_link(args: argparse.Namespace):
+async def open_link(args: SimpleNamespace):
     if args.serial:
         return SerialLink(args.serial)
     if args.udp:
@@ -804,7 +805,7 @@ async def open_link(args: argparse.Namespace):
     return await open_ble(args.ble, args.forget_bond)
 
 
-async def serve(args: argparse.Namespace) -> int:
+async def serve(args: SimpleNamespace) -> int:
     print(f"serving {args.pty}; Ctrl-C to stop", file=sys.stderr)
     while True:
         try:
@@ -833,7 +834,7 @@ async def serve(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 
 
-async def amain(args: argparse.Namespace) -> int:
+async def amain(args: SimpleNamespace) -> int:
     if args.serve:
         if args.serial:
             print(
@@ -858,67 +859,98 @@ async def amain(args: argparse.Namespace) -> int:
         await link.close()
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description=(__doc__ or "").split("\n\n")[0])
-    target = parser.add_mutually_exclusive_group()
-    target.add_argument(
-        "--ble",
-        nargs="?",
-        const=None,
-        metavar="ADDRESS|NAME",
-        help="BLE console service of the device; the default, and without a value "
-        "any unit with the service (the last one used, if in range). The value is "
-        "optional, so a bare word right after this option is taken as the "
-        "address or name: put a command before it, or after --",
-    )
-    target.add_argument("--serial", metavar="PORT", help="USB VCP serial port")
-    target.add_argument(
-        "--udp",
-        nargs="?",
-        const=str(EMULATOR_VCP_PORT),
-        metavar="[HOST:]PORT",
-        help=f"the prodtest emulator's VCP: TREZOR_UDP_PORT + 3, "
-        f"{EMULATOR_VCP_PORT} when omitted. A bare word right after this option "
-        "is taken as the port: put a command before it, or after --",
-    )
-    parser.add_argument(
-        "--forget-bond",
-        action="store_true",
-        help="forget the host's bond first and pair fresh",
-    )
-    parser.add_argument(
-        "--line",
-        action="store_true",
-        help="host-side line prompt instead of the terminal passthrough",
-    )
-    parser.add_argument(
-        "--serve",
-        action="store_true",
-        help="keep the connection up and expose the console as a pseudo-terminal",
-    )
-    parser.add_argument(
-        "--pty",
-        default=SERVE_PTY,
-        metavar="PATH",
-        help=f"with --serve, link the pseudo-terminal at PATH (default {SERVE_PTY})",
-    )
-    parser.add_argument(
-        "--timeout", type=float, default=RESPONSE_TIMEOUT, help="response timeout"
-    )
-    parser.add_argument("-v", "--verbose", action="store_true")
-    parser.add_argument("command", nargs="*", help="run this command and exit")
-    args = parser.parse_args()
+@click.command(
+    help=(__doc__ or "").split("\n\n")[0],
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
+@click.option(
+    "--ble",
+    is_flag=False,
+    flag_value="auto",
+    default=None,
+    metavar="ADDRESS|NAME",
+    help="BLE console service of the device; the default, and without a value "
+    "any unit with the service (the last one used, if in range). The value is "
+    "optional, so a bare word right after this option is taken as the "
+    "address or name: put a command before it, or after --",
+)
+@click.option("--serial", metavar="PORT", help="USB VCP serial port")
+@click.option(
+    "--udp",
+    is_flag=False,
+    flag_value=str(EMULATOR_VCP_PORT),
+    default=None,
+    metavar="[HOST:]PORT",
+    help=f"the prodtest emulator's VCP: TREZOR_UDP_PORT + 3, "
+    f"{EMULATOR_VCP_PORT} when omitted. A bare word right after this option "
+    "is taken as the port: put a command before it, or after --",
+)
+@click.option(
+    "--forget-bond", is_flag=True, help="forget the host's bond first and pair fresh"
+)
+@click.option(
+    "--line",
+    is_flag=True,
+    help="host-side line prompt instead of the terminal passthrough",
+)
+@click.option(
+    "--serve",
+    is_flag=True,
+    help="keep the connection up and expose the console as a pseudo-terminal",
+)
+@click.option(
+    "--pty",
+    default=SERVE_PTY,
+    show_default=True,
+    metavar="PATH",
+    help="with --serve, link the pseudo-terminal at PATH",
+)
+@click.option(
+    "--timeout",
+    type=float,
+    default=RESPONSE_TIMEOUT,
+    show_default=True,
+    help="response timeout in seconds",
+)
+@click.option("-v", "--verbose", is_flag=True)
+@click.argument("command", nargs=-1)
+def main(
+    ble: str | None,
+    serial: str | None,
+    udp: str | None,
+    forget_bond: bool,
+    line: bool,
+    serve: bool,
+    pty: str,
+    timeout: float,
+    verbose: bool,
+    command: tuple[str, ...],
+) -> None:
+    if sum(x is not None for x in (ble, serial, udp)) > 1:
+        raise click.UsageError("--ble, --serial and --udp are mutually exclusive")
 
-    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.WARNING)
-    if not args.verbose:
+    logging.basicConfig(level=logging.DEBUG if verbose else logging.WARNING)
+    if not verbose:
         logging.getLogger("bleak").setLevel(logging.WARNING)
 
+    args = SimpleNamespace(
+        ble=ble,
+        serial=serial,
+        udp=udp,
+        forget_bond=forget_bond,
+        line=line,
+        serve=serve,
+        pty=pty,
+        timeout=timeout,
+        command=list(command),
+    )
     try:
-        return asyncio.run(amain(args))
+        code = asyncio.run(amain(args))
     except KeyboardInterrupt:
         print(file=sys.stderr)
-        return 130
+        code = 130
+    sys.exit(code)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()  # pyright: ignore[reportCallIssue]  (click fills the arguments)

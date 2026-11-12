@@ -19,7 +19,8 @@ To exit from interactive mode type `.+ENTER`.
 The CLI runs over USB VCP; the emulator keeps its console on a UDP-backed VCP
 (port `TREZOR_UDP_PORT + 3`, 21327 by default). `core/tools/console.py` is a
 standalone terminal for it (`--serial` for the USB VCP, `--udp` for the
-emulator; needs only `bleak`, plus `pyserial` for `--serial`; no trezorlib).
+emulator; needs only `click` and `bleak`, plus `pyserial` for `--serial`; no
+trezorlib).
 Its `--serve` mode keeps the connection up, reconnecting across device reboots,
 and exposes the console as a pseudo-terminal at `/tmp/ttyVCP0` for any terminal
 or serial tool; for the emulator this replaces the former socat step. The tool

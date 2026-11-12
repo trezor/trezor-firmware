@@ -61,7 +61,7 @@ Code generation tool for fonts, the loader graphic (deprecated) and cryptographi
 Terminal for a device's console: the prodtest CLI, or the firmware's debug log when
 the firmware routes it to the BLE console. Reaches the device over BLE, a USB VCP
 serial port or the prodtest emulator's UDP; `--serve` exposes the console as a
-pseudo-terminal for other tools. Standalone (needs only `bleak`).
+pseudo-terminal for other tools. Standalone (needs only `click` and `bleak`).
 
 ### `dialog-designer`
 
