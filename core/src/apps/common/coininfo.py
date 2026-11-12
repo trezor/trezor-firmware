@@ -7,7 +7,7 @@
 from typing import Any
 
 from trezor import utils
-from trezor.crypto.base58 import blake256d_32, groestl512d_32, keccak_32, sha256d_32
+from trezor.crypto.base58 import blake256d_32, keccak_32, sha256d_32
 from trezor.crypto.scripts import blake256_ripemd160, sha256_ripemd160
 
 # flake8: noqa
@@ -67,14 +67,10 @@ class CoinInfo:
         self.extra_data = extra_data
         self.timestamp = timestamp
         self.overwintered = overwintered
-        if curve_name == "secp256k1-groestl":
-            self.b58_hash = groestl512d_32
-            self.sign_hash_double = False
-            self.script_hash: type[utils.HashContextInitable] = sha256_ripemd160
-        elif curve_name == "secp256k1-decred":
+        if curve_name == "secp256k1-decred":
             self.b58_hash = blake256d_32
             self.sign_hash_double = False
-            self.script_hash = blake256_ripemd160
+            self.script_hash: type[utils.HashContextInitable] = blake256_ripemd160
         elif curve_name == "secp256k1-smart":
             self.b58_hash = keccak_32
             self.sign_hash_double = False
@@ -622,62 +618,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # decred
                     False,  # negative_fee
                     'secp256k1',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "Groestlcoin":
-                return CoinInfo(
-                    name,  # coin_name
-                    "GRS",  # coin_shortcut
-                    8,  # decimals
-                    36,  # address_type
-                    5,  # address_type_p2sh
-                    16000000000,  # maxfee_kb
-                    "GroestlCoin Signed Message:\n",  # signed_message_header
-                    0x0488b21e,  # xpub_magic
-                    0x049d7cb2,  # xpub_magic_segwit_p2sh
-                    0x04b24746,  # xpub_magic_segwit_native
-                    0x0488b21e,  # xpub_magic_multisig_segwit_p2sh
-                    0x0488b21e,  # xpub_magic_multisig_segwit_native
-                    "grs",  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    17,  # slip44
-                    True,  # segwit
-                    True,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-groestl',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "Groestlcoin Testnet":
-                return CoinInfo(
-                    name,  # coin_name
-                    "tGRS",  # coin_shortcut
-                    8,  # decimals
-                    111,  # address_type
-                    196,  # address_type_p2sh
-                    100000,  # maxfee_kb
-                    "GroestlCoin Signed Message:\n",  # signed_message_header
-                    0x043587cf,  # xpub_magic
-                    0x044a5262,  # xpub_magic_segwit_p2sh
-                    0x045f1cf6,  # xpub_magic_segwit_native
-                    0x043587cf,  # xpub_magic_multisig_segwit_p2sh
-                    0x043587cf,  # xpub_magic_multisig_segwit_native
-                    "tgrs",  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    1,  # slip44
-                    True,  # segwit
-                    True,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-groestl',  # curve_name
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
@@ -2141,62 +2081,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # timestamp
                     False,  # overwintered
                 )
-            if name == "Groestlcoin":
-                return CoinInfo(
-                    name,  # coin_name
-                    "GRS",  # coin_shortcut
-                    8,  # decimals
-                    36,  # address_type
-                    5,  # address_type_p2sh
-                    16000000000,  # maxfee_kb
-                    "GroestlCoin Signed Message:\n",  # signed_message_header
-                    0x0488b21e,  # xpub_magic
-                    0x049d7cb2,  # xpub_magic_segwit_p2sh
-                    0x04b24746,  # xpub_magic_segwit_native
-                    0x0488b21e,  # xpub_magic_multisig_segwit_p2sh
-                    0x0488b21e,  # xpub_magic_multisig_segwit_native
-                    "grs",  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    17,  # slip44
-                    True,  # segwit
-                    True,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-groestl',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "Groestlcoin Testnet":
-                return CoinInfo(
-                    name,  # coin_name
-                    "tGRS",  # coin_shortcut
-                    8,  # decimals
-                    111,  # address_type
-                    196,  # address_type_p2sh
-                    100000,  # maxfee_kb
-                    "GroestlCoin Signed Message:\n",  # signed_message_header
-                    0x043587cf,  # xpub_magic
-                    0x044a5262,  # xpub_magic_segwit_p2sh
-                    0x045f1cf6,  # xpub_magic_segwit_native
-                    0x043587cf,  # xpub_magic_multisig_segwit_p2sh
-                    0x043587cf,  # xpub_magic_multisig_segwit_native
-                    "tgrs",  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    1,  # slip44
-                    True,  # segwit
-                    True,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-groestl',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
             if name == "Komodo":
                 return CoinInfo(
                     name,  # coin_name
@@ -3516,62 +3400,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # timestamp
                     False,  # overwintered
                 )
-            if name == "Groestlcoin":
-                return CoinInfo(
-                    name,  # coin_name
-                    "GRS",  # coin_shortcut
-                    8,  # decimals
-                    36,  # address_type
-                    5,  # address_type_p2sh
-                    16000000000,  # maxfee_kb
-                    "GroestlCoin Signed Message:\n",  # signed_message_header
-                    0x0488b21e,  # xpub_magic
-                    0x049d7cb2,  # xpub_magic_segwit_p2sh
-                    0x04b24746,  # xpub_magic_segwit_native
-                    0x0488b21e,  # xpub_magic_multisig_segwit_p2sh
-                    0x0488b21e,  # xpub_magic_multisig_segwit_native
-                    "grs",  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    17,  # slip44
-                    True,  # segwit
-                    True,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-groestl',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "Groestlcoin Testnet":
-                return CoinInfo(
-                    name,  # coin_name
-                    "tGRS",  # coin_shortcut
-                    8,  # decimals
-                    111,  # address_type
-                    196,  # address_type_p2sh
-                    100000,  # maxfee_kb
-                    "GroestlCoin Signed Message:\n",  # signed_message_header
-                    0x043587cf,  # xpub_magic
-                    0x044a5262,  # xpub_magic_segwit_p2sh
-                    0x045f1cf6,  # xpub_magic_segwit_native
-                    0x043587cf,  # xpub_magic_multisig_segwit_p2sh
-                    0x043587cf,  # xpub_magic_multisig_segwit_native
-                    "tgrs",  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    1,  # slip44
-                    True,  # segwit
-                    True,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-groestl',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
             if name == "Komodo":
                 return CoinInfo(
                     name,  # coin_name
@@ -4831,62 +4659,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # decred
                     False,  # negative_fee
                     'secp256k1',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "Groestlcoin":
-                return CoinInfo(
-                    name,  # coin_name
-                    "GRS",  # coin_shortcut
-                    8,  # decimals
-                    36,  # address_type
-                    5,  # address_type_p2sh
-                    16000000000,  # maxfee_kb
-                    "GroestlCoin Signed Message:\n",  # signed_message_header
-                    0x0488b21e,  # xpub_magic
-                    0x049d7cb2,  # xpub_magic_segwit_p2sh
-                    0x04b24746,  # xpub_magic_segwit_native
-                    0x0488b21e,  # xpub_magic_multisig_segwit_p2sh
-                    0x0488b21e,  # xpub_magic_multisig_segwit_native
-                    "grs",  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    17,  # slip44
-                    True,  # segwit
-                    True,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-groestl',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "Groestlcoin Testnet":
-                return CoinInfo(
-                    name,  # coin_name
-                    "tGRS",  # coin_shortcut
-                    8,  # decimals
-                    111,  # address_type
-                    196,  # address_type_p2sh
-                    100000,  # maxfee_kb
-                    "GroestlCoin Signed Message:\n",  # signed_message_header
-                    0x043587cf,  # xpub_magic
-                    0x044a5262,  # xpub_magic_segwit_p2sh
-                    0x045f1cf6,  # xpub_magic_segwit_native
-                    0x043587cf,  # xpub_magic_multisig_segwit_p2sh
-                    0x043587cf,  # xpub_magic_multisig_segwit_native
-                    "tgrs",  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    1,  # slip44
-                    True,  # segwit
-                    True,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-groestl',  # curve_name
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
@@ -6154,62 +5926,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # timestamp
                     False,  # overwintered
                 )
-            if name == "Groestlcoin":
-                return CoinInfo(
-                    name,  # coin_name
-                    "GRS",  # coin_shortcut
-                    8,  # decimals
-                    36,  # address_type
-                    5,  # address_type_p2sh
-                    16000000000,  # maxfee_kb
-                    "GroestlCoin Signed Message:\n",  # signed_message_header
-                    0x0488b21e,  # xpub_magic
-                    0x049d7cb2,  # xpub_magic_segwit_p2sh
-                    0x04b24746,  # xpub_magic_segwit_native
-                    0x0488b21e,  # xpub_magic_multisig_segwit_p2sh
-                    0x0488b21e,  # xpub_magic_multisig_segwit_native
-                    "grs",  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    17,  # slip44
-                    True,  # segwit
-                    True,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-groestl',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "Groestlcoin Testnet":
-                return CoinInfo(
-                    name,  # coin_name
-                    "tGRS",  # coin_shortcut
-                    8,  # decimals
-                    111,  # address_type
-                    196,  # address_type_p2sh
-                    100000,  # maxfee_kb
-                    "GroestlCoin Signed Message:\n",  # signed_message_header
-                    0x043587cf,  # xpub_magic
-                    0x044a5262,  # xpub_magic_segwit_p2sh
-                    0x045f1cf6,  # xpub_magic_segwit_native
-                    0x043587cf,  # xpub_magic_multisig_segwit_p2sh
-                    0x043587cf,  # xpub_magic_multisig_segwit_native
-                    "tgrs",  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    1,  # slip44
-                    True,  # segwit
-                    True,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-groestl',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
             if name == "Komodo":
                 return CoinInfo(
                     name,  # coin_name
@@ -7473,62 +7189,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # timestamp
                     False,  # overwintered
                 )
-            if name == "Groestlcoin":
-                return CoinInfo(
-                    name,  # coin_name
-                    "GRS",  # coin_shortcut
-                    8,  # decimals
-                    36,  # address_type
-                    5,  # address_type_p2sh
-                    16000000000,  # maxfee_kb
-                    "GroestlCoin Signed Message:\n",  # signed_message_header
-                    0x0488b21e,  # xpub_magic
-                    0x049d7cb2,  # xpub_magic_segwit_p2sh
-                    0x04b24746,  # xpub_magic_segwit_native
-                    0x0488b21e,  # xpub_magic_multisig_segwit_p2sh
-                    0x0488b21e,  # xpub_magic_multisig_segwit_native
-                    "grs",  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    17,  # slip44
-                    True,  # segwit
-                    True,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-groestl',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "Groestlcoin Testnet":
-                return CoinInfo(
-                    name,  # coin_name
-                    "tGRS",  # coin_shortcut
-                    8,  # decimals
-                    111,  # address_type
-                    196,  # address_type_p2sh
-                    100000,  # maxfee_kb
-                    "GroestlCoin Signed Message:\n",  # signed_message_header
-                    0x043587cf,  # xpub_magic
-                    0x044a5262,  # xpub_magic_segwit_p2sh
-                    0x045f1cf6,  # xpub_magic_segwit_native
-                    0x043587cf,  # xpub_magic_multisig_segwit_p2sh
-                    0x043587cf,  # xpub_magic_multisig_segwit_native
-                    "tgrs",  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    1,  # slip44
-                    True,  # segwit
-                    True,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-groestl',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
             if name == "Komodo":
                 return CoinInfo(
                     name,  # coin_name
@@ -8788,62 +8448,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # decred
                     False,  # negative_fee
                     'secp256k1',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "Groestlcoin":
-                return CoinInfo(
-                    name,  # coin_name
-                    "GRS",  # coin_shortcut
-                    8,  # decimals
-                    36,  # address_type
-                    5,  # address_type_p2sh
-                    16000000000,  # maxfee_kb
-                    "GroestlCoin Signed Message:\n",  # signed_message_header
-                    0x0488b21e,  # xpub_magic
-                    0x049d7cb2,  # xpub_magic_segwit_p2sh
-                    0x04b24746,  # xpub_magic_segwit_native
-                    0x0488b21e,  # xpub_magic_multisig_segwit_p2sh
-                    0x0488b21e,  # xpub_magic_multisig_segwit_native
-                    "grs",  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    17,  # slip44
-                    True,  # segwit
-                    True,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-groestl',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "Groestlcoin Testnet":
-                return CoinInfo(
-                    name,  # coin_name
-                    "tGRS",  # coin_shortcut
-                    8,  # decimals
-                    111,  # address_type
-                    196,  # address_type_p2sh
-                    100000,  # maxfee_kb
-                    "GroestlCoin Signed Message:\n",  # signed_message_header
-                    0x043587cf,  # xpub_magic
-                    0x044a5262,  # xpub_magic_segwit_p2sh
-                    0x045f1cf6,  # xpub_magic_segwit_native
-                    0x043587cf,  # xpub_magic_multisig_segwit_p2sh
-                    0x043587cf,  # xpub_magic_multisig_segwit_native
-                    "tgrs",  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    1,  # slip44
-                    True,  # segwit
-                    True,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-groestl',  # curve_name
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered

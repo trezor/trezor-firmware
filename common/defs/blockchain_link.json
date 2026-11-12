@@ -75,12 +75,6 @@
       "https://explorer.fujicoin.org"
     ]
   },
-  "bitcoin:GRS": {
-    "type": "blockbook",
-    "url": [
-      "https://blockbook.groestlcoin.org"
-    ]
-  },
   "bitcoin:LTC": {
     "type": "blockbook",
     "url": [
@@ -170,12 +164,6 @@
     "type": "blockbook",
     "url": [
       "https://zny.blockbook.ovh"
-    ]
-  },
-  "bitcoin:tGRS": {
-    "type": "blockbook",
-    "url": [
-      "https://blockbook-test.groestlcoin.org"
     ]
   },
   "bitcoin:tPIVX": {

@@ -54,9 +54,6 @@ void hasher_InitParam(Hasher *hasher, HasherType type, const void *param,
     case HASHER_BLAKE_RIPEMD:
       blake256_Init(&hasher->ctx.blake);
       break;
-    case HASHER_GROESTLD_TRUNC:
-      groestl512_Init(&hasher->ctx.groestl);
-      break;
     case HASHER_BLAKE2B:
       blake2b_Init(&hasher->ctx.blake2b, 32);
       break;
@@ -93,9 +90,6 @@ void hasher_Update(Hasher *hasher, const uint8_t *data, size_t length) {
     case HASHER_BLAKED:
     case HASHER_BLAKE_RIPEMD:
       blake256_Update(&hasher->ctx.blake, data, length);
-      break;
-    case HASHER_GROESTLD_TRUNC:
-      groestl512_Update(&hasher->ctx.groestl, data, length);
       break;
     case HASHER_BLAKE2B:
     case HASHER_BLAKE2B_PERSONAL:
@@ -136,9 +130,6 @@ void hasher_Final(Hasher *hasher, uint8_t hash[HASHER_DIGEST_LENGTH]) {
     case HASHER_BLAKE_RIPEMD:
       blake256_Final(&hasher->ctx.blake, hash);
       ripemd160(hash, HASHER_DIGEST_LENGTH, hash);
-      break;
-    case HASHER_GROESTLD_TRUNC:
-      groestl512_DoubleTrunc(&hasher->ctx.groestl, hash);
       break;
     case HASHER_BLAKE2B:
     case HASHER_BLAKE2B_PERSONAL:

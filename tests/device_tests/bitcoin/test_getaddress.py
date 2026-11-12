@@ -100,38 +100,6 @@ def test_bch(session: Session):
 
 
 @pytest.mark.altcoin
-def test_grs(session: Session):
-    assert (
-        btc.get_address(session, "Groestlcoin", parse_path("m/44h/17h/0h/0/0"))
-        == "Fj62rBJi8LvbmWu2jzkaUX1NFXLEqDLoZM"
-    )
-    assert (
-        btc.get_address(session, "Groestlcoin", parse_path("m/44h/17h/0h/1/0"))
-        == "FmRaqvVBRrAp2Umfqx9V1ectZy8gw54QDN"
-    )
-    assert (
-        btc.get_address(session, "Groestlcoin", parse_path("m/44h/17h/0h/1/1"))
-        == "Fmhtxeh7YdCBkyQF7AQG4QnY8y3rJg89di"
-    )
-
-
-@pytest.mark.altcoin
-def test_tgrs(session: Session):
-    assert (
-        btc.get_address(session, "Groestlcoin Testnet", parse_path("m/44h/1h/0h/0/0"))
-        == "mvbu1Gdy8SUjTenqerxUaZyYjmvedc787y"
-    )
-    assert (
-        btc.get_address(session, "Groestlcoin Testnet", parse_path("m/44h/1h/0h/1/0"))
-        == "mm6kLYbGEL1tGe4ZA8xacfgRPdW1LMq8cN"
-    )
-    assert (
-        btc.get_address(session, "Groestlcoin Testnet", parse_path("m/44h/1h/0h/1/1"))
-        == "mjXZwmEi1z1MzveZrKUAo4DBgbdq6ZhGD6"
-    )
-
-
-@pytest.mark.altcoin
 def test_elements(session: Session):
     assert (
         btc.get_address(session, "Elements", parse_path("m/44h/1h/0h/0/0"))
@@ -185,15 +153,6 @@ def test_altcoin_address_mac(session: Session):
     assert (
         resp.mac.hex()
         == "d5f54aea2200f50d1a0419d2faae62a82198f27df63ae4eac56d0e625de174f5"
-    )
-
-    resp = btc.get_authenticated_address(
-        session, "Groestlcoin", parse_path("m/44h/17h/0h/1/1")
-    )
-    assert resp.address == "Fmhtxeh7YdCBkyQF7AQG4QnY8y3rJg89di"
-    assert (
-        resp.mac.hex()
-        == "c988b6f968a55b5be918d97f0f672acfd3bdbc91c148bc1a04a0ae4e8753464c"
     )
 
 

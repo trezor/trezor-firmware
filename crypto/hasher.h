@@ -28,7 +28,6 @@
 
 #include "blake256.h"
 #include "blake2b.h"
-#include "groestl.h"
 #include "sha2.h"
 #include "sha3.h"
 
@@ -49,8 +48,6 @@ typedef enum {
   HASHER_BLAKED,
   HASHER_BLAKE_RIPEMD,
 
-  HASHER_GROESTLD_TRUNC, /* Double Groestl512 hasher truncated to 256 bits */
-
   HASHER_BLAKE2B,
   HASHER_BLAKE2B_PERSONAL,
 } HasherType;
@@ -59,11 +56,10 @@ typedef struct {
   HasherType type;
 
   union {
-    SHA256_CTX sha2;         // for HASHER_SHA2{,D}
-    SHA3_CTX sha3;           // for HASHER_SHA3{,K}
-    BLAKE256_CTX blake;      // for HASHER_BLAKE{,D}
-    GROESTL512_CTX groestl;  // for HASHER_GROESTLD_TRUNC
-    BLAKE2B_CTX blake2b;     // for HASHER_BLAKE2B{,_PERSONAL}
+    SHA256_CTX sha2;      // for HASHER_SHA2{,D}
+    SHA3_CTX sha3;        // for HASHER_SHA3{,K}
+    BLAKE256_CTX blake;   // for HASHER_BLAKE{,D}
+    BLAKE2B_CTX blake2b;  // for HASHER_BLAKE2B{,_PERSONAL}
   } ctx;
 
   const void *param;

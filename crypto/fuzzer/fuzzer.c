@@ -345,8 +345,6 @@ int fuzz_base58_encode_check(void) {
   // run multiple hasher variants for the same input
   base58_encode_check(in_buffer, raw_inlen, HASHER_SHA2D, out_buffer, outlen);
   base58_encode_check(in_buffer, raw_inlen, HASHER_BLAKED, out_buffer, outlen);
-  base58_encode_check(in_buffer, raw_inlen, HASHER_GROESTLD_TRUNC, out_buffer,
-                      outlen);
   ret = base58_encode_check(in_buffer, raw_inlen, HASHER_SHA3K, out_buffer,
                             outlen);
 
@@ -382,8 +380,6 @@ int fuzz_base58_decode_check(void) {
   // run multiple hasher variants for the same input
   base58_decode_check(in_char, HASHER_SHA2D, out_buffer, MAX_ADDR_RAW_SIZE);
   base58_decode_check(in_char, HASHER_BLAKED, out_buffer, MAX_ADDR_RAW_SIZE);
-  base58_decode_check(in_char, HASHER_GROESTLD_TRUNC, out_buffer,
-                      MAX_ADDR_RAW_SIZE);
   base58_decode_check(in_char, HASHER_SHA3K, out_buffer, MAX_ADDR_RAW_SIZE);
 
   check_msan(out_buffer, MAX_ADDR_RAW_SIZE);

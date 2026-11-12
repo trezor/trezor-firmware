@@ -72,12 +72,6 @@ def sha256d_32(data: AnyBytes) -> bytes:
     return sha256(sha256(data).digest()).digest()[:4]
 
 
-def groestl512d_32(data: AnyBytes) -> bytes:
-    from .hashlib import groestl512
-
-    return groestl512(groestl512(data).digest()).digest()[:4]
-
-
 def blake256d_32(data: AnyBytes) -> bytes:
     from .hashlib import blake256
 
