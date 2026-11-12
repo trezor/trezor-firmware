@@ -874,9 +874,6 @@ pub enum TrezorCryptoEnum<'a> {
         address: StrSlice<'a>,
         slip44: u32,
     },
-    VerifyNonceCache {
-        nonce: Slice<'a, u8>,
-    },
 }
 
 impl<'a> TrezorCryptoEnum<'a> {
@@ -888,7 +885,6 @@ impl<'a> TrezorCryptoEnum<'a> {
             Self::Ed25519Sign { .. } => 3,
             Self::GetAddressMac { .. } => 4,
             Self::CheckAddressMac { .. } => 5,
-            Self::VerifyNonceCache { .. } => 6,
         }
     }
 }
@@ -1003,19 +999,12 @@ mod tests {
                 .id(),
                 "CheckAddressMac",
             ),
-            (
-                VerifyNonceCache {
-                    nonce: empty_u8.into(),
-                }
-                .id(),
-                "VerifyNonceCache",
-            ),
         ];
         let mut seen = std::collections::HashSet::new();
         for (id, name) in variants {
             assert!(seen.insert(id), "duplicate id {} for variant {}", id, name);
         }
-        assert_eq!(variants.len(), 7, "new variant added but test not updated");
+        assert_eq!(variants.len(), 6, "new variant added but test not updated");
     }
 
     /// Ensures every variant of TrezorProgressEnum has a unique id()
