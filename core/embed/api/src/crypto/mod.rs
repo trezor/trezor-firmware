@@ -278,19 +278,6 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         .into()
     }
 
-    extern "C" fn verify_nonce_cache<'a>(
-        &self,
-        nonce: Slice<'a, u8>,
-    ) -> ServiceResult<bool, CryptoError> {
-        (|| {
-            let data = ipc_crypto_call(&TrezorCryptoEnum::VerifyNonceCache {
-                nonce: nonce.as_slice().into(),
-            })?;
-            expect_bool(&data)
-        })()
-        .into()
-    }
-
     extern "C" fn ecdsa_verify_digest<'a>(
         &self,
         curve: EcdsaCurve,
@@ -353,39 +340,6 @@ impl CryptoV1 for TrezorCryptoV1Impl {
                 .map_err(|_| CryptoError::InvalidSignature)
         })()
         .into()
-    }
-
-    extern "C" fn cosi_verify<'a>(
-        &self,
-        threshold: u8,
-        message: Slice<'a, u8>,
-        public_keys: Slice<'a, [u8; 32]>,
-        sigmask: u8,
-        signature: Slice<'a, u8>,
-    ) -> FastResult<(), CryptoError> {
-        (|| {
-            let sig: &crypto::ed25519::Signature = signature
-                .as_slice()
-                .try_into()
-                .map_err(|_| CryptoError::InvalidEncoding)?;
-            let cosi_sig = crypto::cosi::Signature::new(sigmask, *sig);
-
-            // `ed25519::PublicKey` is `[u8; 32]`, the keys need no conversion.
-            crypto::cosi::verify(threshold, message.as_slice(), &public_keys, &cosi_sig)
-                .map_err(|_| CryptoError::InvalidSignature)?;
-            Ok(())
-        })()
-        .into()
-    }
-
-    extern "C" fn cosi_combine_publickeys<'a>(
-        &self,
-        public_keys: Slice<'a, [u8; 32]>,
-    ) -> FastResult<[u8; 32], CryptoError> {
-        // Fails on no keys or a key that isn't a curve point.
-        crypto::cosi::combine_publickeys(&public_keys)
-            .map_err(|_| CryptoError::InvalidPublicKey)
-            .into()
     }
 
     extern "C" fn base58_encode<'a>(&self, data: Slice<'a, u8>) -> String {
