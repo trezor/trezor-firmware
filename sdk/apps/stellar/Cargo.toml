@@ -16,7 +16,7 @@ heap-size = 65536
 # heap-size. Omit or set 0 to take the SDK default, which only covers
 # fixed API replies -- this app also receives host wire messages.
 ipc-buffer-size = 8192
-app-ring = 0
+app-ring = 2
 curves = ["ed25519"]
 paths = [
     # SEP-0005 for non-UTXO-based currencies, defined by Stellar:
