@@ -142,8 +142,8 @@ wire_handler!(
 );
 
 // Application entry point - receives raw bytes, returns raw bytes
-#[unsafe(no_mangle)]
-pub fn app() -> Result<()> {
+#[trezor_app_sdk::app]
+fn app() -> Result<()> {
     let (id, data) = wire_receive().c()?;
     handle_wire_message(id as i32, &data).c()
 }
