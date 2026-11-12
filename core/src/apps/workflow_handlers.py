@@ -217,14 +217,6 @@ def _find_message_handler_module(msg_type: int) -> str:
         if msg_type == MessageType.CardanoSignMessageInit:
             return "apps.cardano.sign_message"
 
-        # tezos
-        if msg_type == MessageType.TezosGetAddress:
-            return "apps.tezos.get_address"
-        if msg_type == MessageType.TezosSignTx:
-            return "apps.tezos.sign_tx"
-        if msg_type == MessageType.TezosGetPublicKey:
-            return "apps.tezos.get_public_key"
-
         # solana
         if msg_type == MessageType.SolanaGetPublicKey:
             return "apps.solana.get_public_key"

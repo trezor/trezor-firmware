@@ -27,7 +27,6 @@ algorithm, extended to work on other curves.
 | Stellar  | ed25519   | `44'/148'/a'`      |             |                |
 | NEM      | ed25519   | `44'/43'/a'`       |             | [5](#NEM)      |
 | Monero   | ed25519   | `44'/128'/a'`      |             |                |
-| Tezos    | ed25519   | `44'/1729'/a'`     |             | [6](#Tezos)    |
 
 `c` stands for the [SLIP-44 id] of the currency, when multiple currencies are handled
 by the same code. `a` is an account number, `y` is change address indicator (must be
@@ -80,9 +79,6 @@ sends `44'/60'/0'/0` for getPublicKey.
 
 5. <a name="NEM"></a> NEM's path should be `44'/43'/a'` as per SEP-0005, but we allow
    `44'/43'/a'/0'/0'` as well for compatibility reasons with NanoWallet.
-
-6. <a name="Tezos"></a> Tezos supports multiple curves, but Trezor currently supports
-   ed25519 only.
 
 Sign message paths are validated in the same way as the sign tx paths are.
 

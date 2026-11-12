@@ -417,15 +417,6 @@ if TYPE_CHECKING:
     class StellarSorobanAuthorizationEnvelopeType(IntEnum):
         ENVELOPE_TYPE_SOROBAN_AUTHORIZATION_WITH_ADDRESS = 10
 
-    class TezosContractType(IntEnum):
-        Implicit = 0
-        Originated = 1
-
-    class TezosBallotType(IntEnum):
-        Yay = 0
-        Nay = 1
-        Pass = 2
-
     class ThpMessageType(IntEnum):
         Cancel = 20
         ButtonRequest = 26
@@ -604,12 +595,6 @@ if TYPE_CHECKING:
         EthereumSignTypedHash = 470
         EthereumDefinitionRequest = 471
         EthereumDefinitionAck = 472
-        TezosGetAddress = 150
-        TezosAddress = 151
-        TezosSignTx = 152
-        TezosSignedTx = 153
-        TezosGetPublicKey = 154
-        TezosPublicKey = 155
         StellarSignTx = 202
         StellarTxOpRequest = 203
         StellarGetAddress = 207

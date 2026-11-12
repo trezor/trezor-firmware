@@ -308,16 +308,6 @@ trezor_message_impl! {
     StellarSorobanAuthorizationSignature => MessageType_StellarSorobanAuthorizationSignature,
 }
 
-#[cfg(feature = "tezos")]
-trezor_message_impl! {
-    TezosGetAddress => MessageType_TezosGetAddress,
-    TezosAddress => MessageType_TezosAddress,
-    TezosSignTx => MessageType_TezosSignTx,
-    TezosSignedTx => MessageType_TezosSignedTx,
-    TezosGetPublicKey => MessageType_TezosGetPublicKey,
-    TezosPublicKey => MessageType_TezosPublicKey,
-}
-
 #[cfg(feature = "tron")]
 trezor_message_impl! {
     TronGetAddress => MessageType_TronGetAddress,

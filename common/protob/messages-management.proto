@@ -178,7 +178,7 @@ message Features {
         Capability_NEM = 10 [deprecated = true];
         Capability_Ripple = 11;
         Capability_Stellar = 12;
-        Capability_Tezos = 13;
+        Capability_Tezos = 13 [deprecated = true];
         Capability_U2F = 14;
         Capability_Shamir = 15 [(bitcoin_only) = true];
         Capability_ShamirGroups = 16 [(bitcoin_only) = true];

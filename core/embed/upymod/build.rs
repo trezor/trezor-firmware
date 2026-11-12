@@ -1126,7 +1126,6 @@ impl<'a> MpyBuilder<'a> {
         files.remove(enums, "Ripple*.py");
         files.remove(enums, "Solana*.py");
         files.remove(enums, "Stellar*.py");
-        files.remove(enums, "Tezos*.py");
         files.remove(enums, "Zcash*.py");
         files.remove(enums, "Tron*.py");
 
@@ -1256,9 +1255,6 @@ impl<'a> MpyBuilder<'a> {
             files.add(src, "apps/stellar/*.py")?;
             files.add(src, "apps/stellar/*/*.py")?;
             files.add(src, "trezor/enums/Stellar*.py")?;
-
-            files.add(src, "apps/tezos/*.py")?;
-            files.add(src, "trezor/enums/Tezos*.py")?;
 
             files.add(src, "apps/zcash/*.py")?;
 

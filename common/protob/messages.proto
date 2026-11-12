@@ -206,12 +206,15 @@ enum MessageType {
     reserved 123 to 149;  // reserved for internal use
 
     // Tezos
+    /*
     MessageType_TezosGetAddress = 150 [(wire_in) = true];
     MessageType_TezosAddress = 151 [(wire_out) = true];
     MessageType_TezosSignTx = 152 [(wire_in) = true];
     MessageType_TezosSignedTx = 153 [(wire_out) = true];
     MessageType_TezosGetPublicKey = 154 [(wire_in) = true];
     MessageType_TezosPublicKey = 155 [(wire_out) = true];
+    */
+    reserved 150 to 155;
 
     // Stellar
     MessageType_StellarSignTx = 202 [(wire_in) = true];

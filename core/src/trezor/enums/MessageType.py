@@ -158,12 +158,6 @@ if not utils.BITCOIN_ONLY:
     EthereumSignTypedHash = 470
     EthereumDefinitionRequest = 471
     EthereumDefinitionAck = 472
-    TezosGetAddress = 150
-    TezosAddress = 151
-    TezosSignTx = 152
-    TezosSignedTx = 153
-    TezosGetPublicKey = 154
-    TezosPublicKey = 155
     StellarSignTx = 202
     StellarTxOpRequest = 203
     StellarGetAddress = 207

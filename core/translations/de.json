@@ -2745,23 +2745,6 @@
     "suite_sync__delegated_identity_key_thp": "{0} auf {1} erlauben, Suite Sync mit diesem Trezor zu verwenden?",
     "suite_sync__header": "Suite Sync",
     "suite_sync__rotate_key": "Du bist dabei, den delegierten Identitätsschlüssel für Suite Sync zu rotieren. Dadurch werden vorherige Schlüssel ungültig. Möchtest du fortfahren?",
-    "tezos__baker_address": "Baker-Adresse",
-    "tezos__balance": "Guthaben",
-    "tezos__ballot": "Abstimmung",
-    "tezos__confirm_delegation": "Delegierung bestätigen",
-    "tezos__confirm_origination": "Herkunft bestätigen",
-    "tezos__delegator": {
-      "Bolt": "Delegierer",
-      "Caesar": "Delegierter",
-      "Delizia": "Delegierer",
-      "Eckhart": "Delegierter"
-    },
-    "tezos__proposal": "Vorschlag",
-    "tezos__register_delegate": "Delegierten registrieren",
-    "tezos__remove_delegation": "Delegierung entfernen",
-    "tezos__submit_ballot": "Abstimmung senden",
-    "tezos__submit_proposal": "Vorschlag senden",
-    "tezos__submit_proposals": "Vorschläge senden",
     "thp__autoconnect": {
       "Bolt": "",
       "Caesar": "",

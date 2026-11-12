@@ -1495,18 +1495,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__value_sha256;
   MP_QSTR_stellar__wanna_clean_value_key_template;
   MP_QSTR_stellar__wasm_hash;
-  MP_QSTR_tezos__baker_address;
-  MP_QSTR_tezos__balance;
-  MP_QSTR_tezos__ballot;
-  MP_QSTR_tezos__confirm_delegation;
-  MP_QSTR_tezos__confirm_origination;
-  MP_QSTR_tezos__delegator;
-  MP_QSTR_tezos__proposal;
-  MP_QSTR_tezos__register_delegate;
-  MP_QSTR_tezos__remove_delegation;
-  MP_QSTR_tezos__submit_ballot;
-  MP_QSTR_tezos__submit_proposal;
-  MP_QSTR_tezos__submit_proposals;
   MP_QSTR_tron__claim_unfrozen_balance;
   MP_QSTR_tron__claim_voting_rewards;
   MP_QSTR_tron__delegate_resource;
