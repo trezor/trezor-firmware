@@ -78,12 +78,6 @@ def blake256d_32(data: AnyBytes) -> bytes:
     return blake256(blake256(data).digest()).digest()[:4]
 
 
-def keccak_32(data: AnyBytes) -> bytes:
-    from .hashlib import sha3_256
-
-    return sha3_256(data, keccak=True).digest()[:4]
-
-
 def ripemd160_32(data: AnyBytes) -> bytes:
     from .hashlib import ripemd160
 

@@ -2,9 +2,11 @@
 from common import *  # isort:skip
 
 if not utils.BITCOIN_ONLY:
-    from trezor.crypto import base58
-
     from apps.ethereum import yielding
+    from apps.ethereum.helpers import keccak256
+
+    def keccak_32(data: bytes) -> bytes:
+        return keccak256(data).get_digest()[:4]
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -15,19 +17,19 @@ class TestEthereumYielding(unittest.TestCase):
         # the wrong contract method.
         self.assertEqual(
             yielding.FUNC_SIG_DEPOSIT,
-            base58.keccak_32(b"deposit(uint256,address)"),
+            keccak_32(b"deposit(uint256,address)"),
         )
         self.assertEqual(
             yielding.FUNC_SIG_WITHDRAW,
-            base58.keccak_32(b"withdraw(uint256,address,address)"),
+            keccak_32(b"withdraw(uint256,address,address)"),
         )
         self.assertEqual(
             yielding.FUNC_SIG_REDEEM,
-            base58.keccak_32(b"redeem(uint256,address,address)"),
+            keccak_32(b"redeem(uint256,address,address)"),
         )
         self.assertEqual(
             yielding.FUNC_SIG_CLAIM,
-            base58.keccak_32(b"claim(address[],address[],uint256[],bytes32[][])"),
+            keccak_32(b"claim(address[],address[],uint256[],bytes32[][])"),
         )
 
     def test_known_address(self):
