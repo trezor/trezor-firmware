@@ -101,9 +101,6 @@ extern "C" fn new_deserialize_crypto_message(
                 Obj::try_from(slip44.to_native())?,
             )
                 .try_into()?,
-            Archived::<TrezorCryptoEnum>::VerifyNonceCache { nonce } => {
-                Obj::try_from(nonce.as_ref())?
-            }
         };
 
         Ok(result)
