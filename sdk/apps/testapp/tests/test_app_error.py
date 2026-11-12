@@ -135,19 +135,6 @@ def test_unrepresentable_argument(session: Session, instance_id: int):
             b"\x01" * 31,
             True,
         ),
-        "CoSi key of 33 bytes": partial(
-            testapp_ext.cosi_combine_publickeys, session, instance_id, [b"\x01" * 33]
-        ),
-        "CoSi threshold over 255": partial(
-            testapp_ext.cosi_verify,
-            session,
-            instance_id,
-            256,
-            b"message",
-            [b"\x01" * 32],
-            0b1,
-            b"\x00" * 64,
-        ),
     }
     for what, call in calls.items():
         assert_fails(what, call, SdkError.InvalidArgument)

@@ -275,16 +275,6 @@ def check_address_mac(
     )
 
 
-def verify_nonce_cache(session: "Session", instance_id: int, nonce: bytes) -> bool:
-    res = call_ext(
-        session,
-        instance_id,
-        msg_data=m.VerifyNonceCache(nonce=nonce),
-        expect=[m.Bool],
-    )
-    return res.value
-
-
 # ============================================================================
 # Signature verification and key recovery
 # ============================================================================
@@ -357,46 +347,6 @@ def ed25519_verify(
         ),
         expect=[m.Success],
     )
-
-
-# ============================================================================
-# CoSi
-# ============================================================================
-
-
-def cosi_verify(
-    session: "Session",
-    instance_id: int,
-    threshold: int,
-    message: bytes,
-    public_keys: Sequence[bytes],
-    sigmask: int,
-    signature: bytes,
-) -> None:
-    call_ext(
-        session,
-        instance_id,
-        msg_data=m.CosiVerify(
-            threshold=threshold,
-            message=message,
-            public_keys=list(public_keys),
-            sigmask=sigmask,
-            signature=signature,
-        ),
-        expect=[m.Success],
-    )
-
-
-def cosi_combine_publickeys(
-    session: "Session", instance_id: int, public_keys: Sequence[bytes]
-) -> bytes:
-    res = call_ext(
-        session,
-        instance_id,
-        msg_data=m.CosiCombinePublicKeys(public_keys=list(public_keys)),
-        expect=[m.PublicKey],
-    )
-    return res.public_key
 
 
 # ============================================================================

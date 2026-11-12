@@ -22,15 +22,11 @@ enum MessageType {
     MessageType_GetAddressMac = 10;
     MessageType_AddressMac = 11;
     MessageType_CheckAddressMac = 12;
-    MessageType_VerifyNonceCache = 13;
-    MessageType_Bool = 14;
     MessageType_EcdsaVerify = 15;
     MessageType_EcdsaVerifyDigest = 16;
     MessageType_EcdsaRecoverPubkey = 17;
     MessageType_Ed25519Verify = 18;
-    MessageType_CosiVerify = 19;
     MessageType_Success = 20;
-    MessageType_CosiCombinePublicKeys = 21;
     MessageType_Base58Encode = 22;
     MessageType_Base58Decode = 23;
     MessageType_Base58CheckEncode = 24;
