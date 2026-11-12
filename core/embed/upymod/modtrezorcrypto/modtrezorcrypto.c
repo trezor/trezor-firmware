@@ -54,7 +54,6 @@ extern const mp_obj_type_t mp_type_AuthenticationError;
 #if USE_THP
 #include "modtrezorcrypto-elligator2.h"
 #endif
-#include "modtrezorcrypto-groestl.h"
 #include "modtrezorcrypto-hmac.h"
 #include "modtrezorcrypto-nist256p1.h"
 #include "modtrezorcrypto-pbkdf2.h"
@@ -123,8 +122,6 @@ static const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
 #endif
     {MP_ROM_QSTR(MP_QSTR_nist256p1),
      MP_ROM_PTR(&mod_trezorcrypto_nist256p1_module)},
-    {MP_ROM_QSTR(MP_QSTR_groestl512),
-     MP_ROM_PTR(&mod_trezorcrypto_Groestl512_type)},
     {MP_ROM_QSTR(MP_QSTR_hmac), MP_ROM_PTR(&mod_trezorcrypto_Hmac_type)},
     {MP_ROM_QSTR(MP_QSTR_pbkdf2), MP_ROM_PTR(&mod_trezorcrypto_Pbkdf2_type)},
     {MP_ROM_QSTR(MP_QSTR_random), MP_ROM_PTR(&mod_trezorcrypto_random_module)},

@@ -97,7 +97,6 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
             "ed25519-donna/ed25519.c",
             "ed25519-donna/modm-donna-32bit.c",
             "elligator2.c",
-            "groestl.c",
             "hash_to_curve.c",
             "hasher.c",
             "hmac.c",

@@ -235,7 +235,6 @@ BTC_CHECKS = [
         choice=[
             "secp256k1",
             "secp256k1_decred",
-            "secp256k1_groestl",
             "secp256k1_smart",
         ],
     ),

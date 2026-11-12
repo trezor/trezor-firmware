@@ -81,50 +81,6 @@ def test_show_segwit_altcoin(session: Session):
         assert (
             btc.get_address(
                 session,
-                "Groestlcoin Testnet",
-                parse_path("m/49h/1h/0h/1/0"),
-                True,
-                None,
-                script_type=messages.InputScriptType.SPENDP2SHWITNESS,
-            )
-            == "2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7"
-        )
-        assert (
-            btc.get_address(
-                session,
-                "Groestlcoin Testnet",
-                parse_path("m/49h/1h/0h/0/0"),
-                True,
-                None,
-                script_type=messages.InputScriptType.SPENDP2SHWITNESS,
-            )
-            == "2N4Q5FhU2497BryFfUgbqkAJE87aKDv3V3e"
-        )
-        assert (
-            btc.get_address(
-                session,
-                "Groestlcoin Testnet",
-                parse_path("m/44h/1h/0h/0/0"),
-                True,
-                None,
-                script_type=messages.InputScriptType.SPENDP2SHWITNESS,
-            )
-            == "2N6UeBoqYEEnybg4cReFYDammpsyDzLXvCT"
-        )
-        assert (
-            btc.get_address(
-                session,
-                "Groestlcoin Testnet",
-                parse_path("m/44h/1h/0h/0/0"),
-                True,
-                None,
-                script_type=messages.InputScriptType.SPENDADDRESS,
-            )
-            == "mvbu1Gdy8SUjTenqerxUaZyYjmvedc787y"
-        )
-        assert (
-            btc.get_address(
-                session,
                 "Elements",
                 parse_path("m/49h/1h/0h/0/0"),
                 True,

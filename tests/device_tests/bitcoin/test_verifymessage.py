@@ -14,8 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import base64
-
 import pytest
 
 from trezorlib import btc
@@ -64,20 +62,6 @@ def test_message_testnet(session: Session):
             "209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80"
         ),
         "This is an example of a signed message.",
-    )
-    assert ret is True
-
-
-@pytest.mark.altcoin
-def test_message_grs(session: Session):
-    ret = btc.verify_message(
-        session,
-        "Groestlcoin",
-        "Fj62rBJi8LvbmWu2jzkaUX1NFXLEqDLoZM",
-        base64.b64decode(
-            "INOYaa/jj8Yxz3mD5k+bZfUmjkjB9VzoV4dNG7+RsBUyK30xL7I9yMgWWVvsL46C5yQtxtZY0cRRk7q9N6b+YTM="
-        ),
-        "test",
     )
     assert ret is True
 

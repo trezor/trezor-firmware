@@ -7,7 +7,7 @@
 from typing import Any
 
 from trezor import utils
-from trezor.crypto.base58 import blake256d_32, groestl512d_32, keccak_32, sha256d_32
+from trezor.crypto.base58 import blake256d_32, keccak_32, sha256d_32
 from trezor.crypto.scripts import blake256_ripemd160, sha256_ripemd160
 
 # flake8: noqa
@@ -67,14 +67,10 @@ class CoinInfo:
         self.extra_data = extra_data
         self.timestamp = timestamp
         self.overwintered = overwintered
-        if curve_name == "secp256k1-groestl":
-            self.b58_hash = groestl512d_32
-            self.sign_hash_double = False
-            self.script_hash: type[utils.HashContextInitable] = sha256_ripemd160
-        elif curve_name == "secp256k1-decred":
+        if curve_name == "secp256k1-decred":
             self.b58_hash = blake256d_32
             self.sign_hash_double = False
-            self.script_hash = blake256_ripemd160
+            self.script_hash: type[utils.HashContextInitable] = blake256_ripemd160
         elif curve_name == "secp256k1-smart":
             self.b58_hash = keccak_32
             self.sign_hash_double = False

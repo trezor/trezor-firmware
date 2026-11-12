@@ -273,30 +273,6 @@ class AuthenticationError(Exception):
     """
 
 
-# upymod/modtrezorcrypto/modtrezorcrypto-groestl.h
-class groestl512:
-    """
-    GROESTL512 context.
-    """
-    block_size: int
-    digest_size: int
-
-    def __init__(self, __data: StrOrBytes | None = None) -> None:
-        """
-        Creates a hash context object.
-        """
-
-    def update(self, __data: StrOrBytes) -> None:
-        """
-        Update the hash context with hashed data.
-        """
-
-    def digest(self) -> bytes:
-        """
-        Returns the digest of hashed data.
-        """
-
-
 # upymod/modtrezorcrypto/modtrezorcrypto-hmac.h
 class hmac:
     """
