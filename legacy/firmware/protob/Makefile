@@ -4,7 +4,7 @@ ifneq ($(V),1)
 Q := @
 endif
 
-SKIPPED_MESSAGES := Cardano DebugMonero Monero Ontology Ripple SdProtect Tezos Tron WebAuthn \
+SKIPPED_MESSAGES := Cardano DebugMonero Monero Ontology Ripple SdProtect Tron WebAuthn \
 	DebugLinkGetPairingInfo DebugLinkPairingInfo DebugLinkGetGcInfo DebugLinkGcInfoItem \
 	DebugLinkGcInfo DebugLinkRecordScreen DebugLinkEraseSdCard DebugLinkWatchLayout \
 	DebugLinkLayout DebugLinkResetDebugEvents  DebugLinkSetBatteryState \

@@ -61,7 +61,6 @@ on one page here.
     solana             Solana commands.
     stellar            Stellar commands.
     telemetry          Telemetry commands.
-    tezos              Tezos commands.
     tron               Tron commands.
     usb-reset          Perform USB reset on stuck devices.
     version            Show version of trezorctl/trezorlib.
@@ -489,27 +488,6 @@ Telemetry commands.
 
   Commands:
     get  Read telemetry data from the device.
-
-Tezos commands.
-~~~~~~~~~~~~~~~
-
-.. code::
-
-  trezorctl tezos --help
-
-.. code::
-
-  Usage: trezorctl tezos [OPTIONS] COMMAND [ARGS]...
-
-    Tezos commands.
-
-  Options:
-    --help  Show this message and exit.
-
-  Commands:
-    get-address     Get Tezos address for specified path.
-    get-public-key  Get Tezos public key.
-    sign-tx         Sign Tezos transaction.
 
 Tron commands.
 ~~~~~~~~~~~~~~

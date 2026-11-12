@@ -23,7 +23,6 @@ ALTCOINS = (
     "ripple",
     "solana",
     "stellar",
-    "tezos",
     "tron",
     "webauthn",
     "zcash",

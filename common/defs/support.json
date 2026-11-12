@@ -105,7 +105,6 @@
       "misc:SOL": "not implemented for T1",
       "misc:XMR": "not implemented",
       "misc:XRP": "not implemented",
-      "misc:XTZ": "not implemented",
       "misc:tADA": "not implemented",
       "misc:tXRP": "not implemented",
       "eth:tHOL:17000": "Deprecated testnet",
@@ -203,7 +202,6 @@
       "misc:XLM": "2.6.1",
       "misc:XMR": "2.6.1",
       "misc:XRP": "2.6.1",
-      "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
       "misc:tXRP": "2.6.1",
       "misc:TRX": "2.10.1"
@@ -325,7 +323,6 @@
       "misc:XLM": "2.0.8",
       "misc:XMR": "2.0.8",
       "misc:XRP": "2.0.8",
-      "misc:XTZ": "2.0.8",
       "misc:tADA": "2.0.8",
       "misc:tXRP": "2.0.8",
       "misc:TRX": "2.10.1"
@@ -429,7 +426,6 @@
       "misc:XLM": "2.8.1",
       "misc:XMR": "2.8.1",
       "misc:XRP": "2.8.1",
-      "misc:XTZ": "2.8.1",
       "misc:tADA": "2.8.1",
       "misc:tXRP": "2.8.1",
       "misc:TRX": "2.10.1"
@@ -542,7 +538,6 @@
       "misc:XLM": "2.6.1",
       "misc:XMR": "2.6.1",
       "misc:XRP": "2.6.1",
-      "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
       "misc:tXRP": "2.6.1",
       "misc:TRX": "2.10.1"
@@ -655,7 +650,6 @@
       "misc:XLM": "2.6.1",
       "misc:XMR": "2.6.1",
       "misc:XRP": "2.6.1",
-      "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
       "misc:tXRP": "2.6.1",
       "misc:TRX": "2.10.1"
@@ -769,7 +763,6 @@
       "misc:XLM": "2.6.1",
       "misc:XMR": "2.6.1",
       "misc:XRP": "2.6.1",
-      "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
       "misc:tXRP": "2.6.1",
       "misc:TRX": "2.10.1"
@@ -883,7 +876,6 @@
       "misc:XLM": "2.6.1",
       "misc:XMR": "2.6.1",
       "misc:XRP": "2.6.1",
-      "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
       "misc:tXRP": "2.6.1",
       "misc:TRX": "2.10.1"

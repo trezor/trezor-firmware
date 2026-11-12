@@ -25,7 +25,6 @@ if not utils.BITCOIN_ONLY:
     Monero = 9
     Ripple = 11
     Stellar = 12
-    Tezos = 13
     U2F = 14
     Solana = 18
     Tron = 24

@@ -26,7 +26,6 @@ FEATURES = {
     "Ripple": "ripple",
     "Solana": "solana",
     "Stellar": "stellar",
-    "Tezos": "tezos",
     "Tron": "tron",
     "WebAuthn": "webauthn",
 }

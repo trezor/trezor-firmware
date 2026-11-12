@@ -64,7 +64,6 @@ def _categories_func(row: DataRow) -> str | None:
         "Altcoin apps": lambda row: row.source_definition.startswith(
             (
                 "src/apps/stellar/",
-                "src/apps/tezos/",
                 "src/apps/tron/",
                 "src/apps/ripple/",
                 "src/apps/zcash/",

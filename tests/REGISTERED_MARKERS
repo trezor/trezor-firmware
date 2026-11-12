@@ -16,7 +16,6 @@ sd_card
 slow
 solana
 stellar
-tezos
 tron
 xfail_if_no_optiga
 zcash

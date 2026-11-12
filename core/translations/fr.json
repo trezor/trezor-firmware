@@ -2645,18 +2645,6 @@
       "Delizia": "Voulez-vous vraiment renouveler la clé d'identité déléguée utilisée pour Suite Sync ? Cela invalidera les clés précédentes.",
       "Eckhart": "Vous êtes sur le point de renouveler la clé d'identité déléguée utilisée pour Suite Sync. Cela invalidera les clés précédentes. Voulez-vous continuer ?"
     },
-    "tezos__baker_address": "Adresse du Baker",
-    "tezos__balance": "Solde",
-    "tezos__ballot": "Vote",
-    "tezos__confirm_delegation": "Confirmer la délégation",
-    "tezos__confirm_origination": "Confirmer l'origine",
-    "tezos__delegator": "Délégateur",
-    "tezos__proposal": "Proposition",
-    "tezos__register_delegate": "Enregistrer le délégué",
-    "tezos__remove_delegation": "Révoquer la délégation",
-    "tezos__submit_ballot": "Soumettre le vote",
-    "tezos__submit_proposal": "Soumettre une proposition",
-    "tezos__submit_proposals": "Soumettre des propositions",
     "thp__autoconnect": {
       "Bolt": "",
       "Caesar": "",

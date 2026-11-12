@@ -49,13 +49,6 @@
         "decimals": 6
     },
     {
-        "name": "Tezos",
-        "shortcut": "XTZ",
-        "slip44": 1729,
-        "curve": "ed25519",
-        "decimals": 6
-    },
-    {
         "name": "MaidSafeCoin",
         "shortcut": "MAID",
         "slip44": 0,
