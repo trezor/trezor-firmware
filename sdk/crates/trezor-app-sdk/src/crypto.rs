@@ -66,11 +66,12 @@ impl HasherExt for BoxedHasher {
 /// Derives the extended public key (xpub) for `address_n` on `curve`,
 /// base58check-encoded with `xpub_magic` as its version bytes (e.g. the
 /// "xpub"/"ypub"/"zpub" prefix bytes for the coin/script type in use).
-pub fn get_xpub(curve: Curve, address_n: &[u32], xpub_magic: u32) -> Result<[u8; 111]> {
+pub fn get_xpub(curve: Curve, address_n: &[u32], xpub_magic: u32) -> Result<String> {
     get_crypto_or_die()
         .get_xpub(curve, address_n.into(), xpub_magic)
         .into_app_result()
         .c()
+        .map(|xpub| String::from(xpub.as_str()))
 }
 
 /// Derives the public key for `address_n` on `curve`.
