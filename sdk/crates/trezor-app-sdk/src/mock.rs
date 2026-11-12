@@ -189,13 +189,6 @@ impl CryptoV1 for DummyCrypto {
         unimplemented!("not exercised by the current test suite")
     }
 
-    extern "C" fn verify_nonce_cache<'a>(
-        &self,
-        _nonce: Slice<'a, u8>,
-    ) -> ServiceResult<bool, CryptoError> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
     extern "C" fn ecdsa_verify_digest<'a>(
         &self,
         _curve: EcdsaCurve,
@@ -221,24 +214,6 @@ impl CryptoV1 for DummyCrypto {
         _signature: Slice<'a, u8>,
         _message: Slice<'a, u8>,
     ) -> FastResult<(), CryptoError> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn cosi_verify<'a>(
-        &self,
-        _threshold: u8,
-        _message: Slice<'a, u8>,
-        _public_keys: Slice<'a, [u8; 32]>,
-        _sigmask: u8,
-        _signature: Slice<'a, u8>,
-    ) -> FastResult<(), CryptoError> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn cosi_combine_publickeys<'a>(
-        &self,
-        _public_keys: Slice<'a, [u8; 32]>,
-    ) -> FastResult<[u8; 32], CryptoError> {
         unimplemented!("not exercised by the current test suite")
     }
 

@@ -142,13 +142,6 @@ pub trait CryptoV1: Send + Sync {
         slip44: u32,
     ) -> ServiceResult<[u8; 32], CryptoError>;
 
-    /// Checks `nonce` against Core's cached-nonce store, returning whether
-    /// it's still valid.
-    extern "C" fn verify_nonce_cache<'a>(
-        &self,
-        nonce: Slice<'a, u8>,
-    ) -> ServiceResult<bool, CryptoError>;
-
     /// Verifies a 64-byte `r||s` ECDSA `signature` of `digest` against
     /// `public_key`, given in compressed or uncompressed SEC1 form.
     extern "C" fn ecdsa_verify_digest<'a>(
@@ -181,30 +174,6 @@ pub trait CryptoV1: Send + Sync {
         signature: Slice<'a, u8>,
         message: Slice<'a, u8>,
     ) -> FastResult<(), CryptoError>;
-
-    /// Verifies a CoSi (collective Ed25519) `signature` of `message` against
-    /// `public_keys`, combining the ones selected by `sigmask` (bit 0 =
-    /// first key) and requiring at least `threshold` of them to have
-    /// participated. `signature` is the raw 64-byte Ed25519 signature over
-    /// the combined key.
-    extern "C" fn cosi_verify<'a>(
-        &self,
-        threshold: u8,
-        message: Slice<'a, u8>,
-        public_keys: Slice<'a, [u8; 32]>,
-        sigmask: u8,
-        signature: Slice<'a, u8>,
-    ) -> FastResult<(), CryptoError>;
-
-    /// Combines `public_keys` into the single Ed25519 public key that a CoSi
-    /// signature over their combination would verify against — the same
-    /// combining step [`Self::cosi_verify`] performs internally, exposed
-    /// standalone for callers that need the combined key itself (e.g. to
-    /// cache it) rather than an immediate verify.
-    extern "C" fn cosi_combine_publickeys<'a>(
-        &self,
-        public_keys: Slice<'a, [u8; 32]>,
-    ) -> FastResult<[u8; 32], CryptoError>;
 
     /// Base58-encodes `data`.
     extern "C" fn base58_encode<'a>(&self, data: Slice<'a, u8>) -> String;
