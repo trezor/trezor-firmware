@@ -456,10 +456,7 @@ extern "C" fn dummy_api_getter(version: u32) -> ApiVariant {
 /// "API not initialized" in unit tests. Idempotent: call it as many times as
 /// you like, from as many tests as you like — only the first call matters.
 pub fn sdk_init() {
-    // SAFETY: `dummy_api_getter` is a valid `ApiGetter`.
-    unsafe {
-        crate::app_runtime::applet_main(dummy_api_getter);
-    }
+    crate::app_runtime::init(dummy_api_getter);
 }
 
 // ============================================================================

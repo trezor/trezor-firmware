@@ -5,7 +5,8 @@
 //! ## Features
 //!
 //! - `app`: Enables full app runtime (heap allocation, IPC, UI, crypto, etc.)
-//!          Required for extapps / standalone app binaries.
+//!          Required for extapps / standalone app binaries. Needs a nightly
+//!          toolchain (`extern_item_impls`, for the [`app`] entry point).
 //! - `debug`: Enables debug logging and richer error context
 //! - `test`: Enables std-based testing utilities
 //! - `nightly`: Enables unstable (nightly-only) language/library features
@@ -23,6 +24,7 @@
     all(feature = "debug", not(feature = "test"), feature = "nightly"),
     feature(lang_items)
 )]
+#![cfg_attr(feature = "app", feature(extern_item_impls))]
 // #![warn(missing_docs)]
 
 extern crate alloc;
@@ -75,6 +77,8 @@ mod wire;
 #[cfg(feature = "test")]
 pub mod mock;
 
+#[cfg(feature = "app")]
+pub use app_runtime::app;
 #[cfg(feature = "app")]
 pub use error::{Align, Error, IntoAppResult, Result, ResultExt, ServiceResultExt};
 #[cfg(feature = "app")]
