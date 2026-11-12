@@ -68,6 +68,8 @@
 // Python internal features
 #define MICROPY_READER_VFS          (0)
 #define MICROPY_ENABLE_GC           (1)
+#define MICROPY_GC_CLEAR_ON_SWEEP   (1)
+#define MICROPY_GC_CLEAR_ON_FREE    (1)
 #define MICROPY_ENABLE_FINALISER    (1)
 #define MICROPY_STACK_CHECK         (1)
 #define MICROPY_ENABLE_EMERGENCY_EXCEPTION_BUF (1)
