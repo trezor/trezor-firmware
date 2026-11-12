@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 import trezorcrypto_api
-from trezor.wire import context
 from trezor.wire.errors import DataError
 
 from apps.common import paths
@@ -28,7 +27,6 @@ _ECDSA_SIGN_DIGEST = 2
 _ED25519_SIGN = 3
 _GET_ADDRESS_MAC = 4
 _CHECK_ADDRESS_MAC = 5
-_VERIFY_NONCE_CACHE = 6
 
 # `CanonicalSig` values in the SDK.
 _CANONICAL_ANY = 0
@@ -188,15 +186,6 @@ async def _check_address_mac(session: Session, obj: Any) -> bool:
     return True
 
 
-async def _verify_nonce_cache(session: Session, obj: Any) -> bool:
-    from storage.cache_common import APP_COMMON_NONCE
-
-    result = context.cache_get(APP_COMMON_NONCE) == bytes(obj)
-    if result:
-        context.cache_delete(APP_COMMON_NONCE)
-    return result
-
-
 _HANDLERS: dict[int, CryptoHandler] = {
     _GET_XPUB: _get_xpub,
     _GET_PUBLIC_KEY: _get_public_key,
@@ -204,5 +193,4 @@ _HANDLERS: dict[int, CryptoHandler] = {
     _ED25519_SIGN: _ed25519_sign,
     _GET_ADDRESS_MAC: _get_address_mac,
     _CHECK_ADDRESS_MAC: _check_address_mac,
-    _VERIFY_NONCE_CACHE: _verify_nonce_cache,
 }
