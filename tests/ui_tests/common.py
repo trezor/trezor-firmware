@@ -175,6 +175,9 @@ def get_last_call_test_result(request: pytest.FixtureRequest) -> bool | None:
     return request.node.rep_call.passed  # type: ignore
 
 
+MAX_PATH_LENGTH = 128
+
+
 def _get_test_name_and_group(node_id: str) -> tuple[str, str]:
     test_path, func_id = node_id.split("::", maxsplit=1)
     assert test_path.endswith(".py")
@@ -191,12 +194,12 @@ def _get_test_name_and_group(node_id: str) -> tuple[str, str]:
     # Test item name is usually function name, but when parametrization is used,
     # parameters are also part of the name. Some functions have very long parameter
     # names (tx hashes etc) that run out of maximum allowable filename length, so
-    # we limit the name to first 100 chars. This is not a problem with txhashes.
-    if len(new_name) <= 100:
+    # we limit the name to first MAX_PATH_LENGTH chars. This is not a problem with txhashes.
+    if len(new_name) <= MAX_PATH_LENGTH:
         return new_name, group_name
 
     differentiator = hashlib.sha256(new_name.encode()).hexdigest()
-    shortened_name = new_name[:91] + "-" + differentiator[:8]
+    shortened_name = new_name[: MAX_PATH_LENGTH - 9] + "-" + differentiator[:8]
     return shortened_name, group_name
 
 
