@@ -7,7 +7,7 @@
 from typing import Any
 
 from trezor import utils
-from trezor.crypto.base58 import blake256d_32, keccak_32, sha256d_32
+from trezor.crypto.base58 import blake256d_32, sha256d_32
 from trezor.crypto.scripts import blake256_ripemd160, sha256_ripemd160
 
 # flake8: noqa
@@ -71,10 +71,6 @@ class CoinInfo:
             self.b58_hash = blake256d_32
             self.sign_hash_double = False
             self.script_hash: type[utils.HashContextInitable] = blake256_ripemd160
-        elif curve_name == "secp256k1-smart":
-            self.b58_hash = keccak_32
-            self.sign_hash_double = False
-            self.script_hash = sha256_ripemd160
         else:
             self.b58_hash = sha256d_32
             self.sign_hash_double = True
@@ -982,62 +978,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # decred
                     False,  # negative_fee
                     'secp256k1',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "SmartCash":
-                return CoinInfo(
-                    name,  # coin_name
-                    "SMART",  # coin_shortcut
-                    8,  # decimals
-                    63,  # address_type
-                    18,  # address_type_p2sh
-                    780000000000,  # maxfee_kb
-                    "SmartCash Signed Message:\n",  # signed_message_header
-                    0x0488b21e,  # xpub_magic
-                    None,  # xpub_magic_segwit_p2sh
-                    None,  # xpub_magic_segwit_native
-                    None,  # xpub_magic_multisig_segwit_p2sh
-                    None,  # xpub_magic_multisig_segwit_native
-                    None,  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    224,  # slip44
-                    False,  # segwit
-                    False,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-smart',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "SmartCash Testnet":
-                return CoinInfo(
-                    name,  # coin_name
-                    "tSMART",  # coin_shortcut
-                    8,  # decimals
-                    65,  # address_type
-                    21,  # address_type_p2sh
-                    1000000,  # maxfee_kb
-                    "SmartCash Signed Message:\n",  # signed_message_header
-                    0x043587cf,  # xpub_magic
-                    None,  # xpub_magic_segwit_p2sh
-                    None,  # xpub_magic_segwit_native
-                    None,  # xpub_magic_multisig_segwit_p2sh
-                    None,  # xpub_magic_multisig_segwit_native
-                    None,  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    1,  # slip44
-                    False,  # segwit
-                    False,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-smart',  # curve_name
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
@@ -2473,62 +2413,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # timestamp
                     False,  # overwintered
                 )
-            if name == "SmartCash":
-                return CoinInfo(
-                    name,  # coin_name
-                    "SMART",  # coin_shortcut
-                    8,  # decimals
-                    63,  # address_type
-                    18,  # address_type_p2sh
-                    780000000000,  # maxfee_kb
-                    "SmartCash Signed Message:\n",  # signed_message_header
-                    0x0488b21e,  # xpub_magic
-                    None,  # xpub_magic_segwit_p2sh
-                    None,  # xpub_magic_segwit_native
-                    None,  # xpub_magic_multisig_segwit_p2sh
-                    None,  # xpub_magic_multisig_segwit_native
-                    None,  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    224,  # slip44
-                    False,  # segwit
-                    False,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-smart',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "SmartCash Testnet":
-                return CoinInfo(
-                    name,  # coin_name
-                    "tSMART",  # coin_shortcut
-                    8,  # decimals
-                    65,  # address_type
-                    21,  # address_type_p2sh
-                    1000000,  # maxfee_kb
-                    "SmartCash Signed Message:\n",  # signed_message_header
-                    0x043587cf,  # xpub_magic
-                    None,  # xpub_magic_segwit_p2sh
-                    None,  # xpub_magic_segwit_native
-                    None,  # xpub_magic_multisig_segwit_p2sh
-                    None,  # xpub_magic_multisig_segwit_native
-                    None,  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    1,  # slip44
-                    False,  # segwit
-                    False,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-smart',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
             if name == "Stakenet":
                 return CoinInfo(
                     name,  # coin_name
@@ -3764,62 +3648,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # timestamp
                     False,  # overwintered
                 )
-            if name == "SmartCash":
-                return CoinInfo(
-                    name,  # coin_name
-                    "SMART",  # coin_shortcut
-                    8,  # decimals
-                    63,  # address_type
-                    18,  # address_type_p2sh
-                    780000000000,  # maxfee_kb
-                    "SmartCash Signed Message:\n",  # signed_message_header
-                    0x0488b21e,  # xpub_magic
-                    None,  # xpub_magic_segwit_p2sh
-                    None,  # xpub_magic_segwit_native
-                    None,  # xpub_magic_multisig_segwit_p2sh
-                    None,  # xpub_magic_multisig_segwit_native
-                    None,  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    224,  # slip44
-                    False,  # segwit
-                    False,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-smart',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "SmartCash Testnet":
-                return CoinInfo(
-                    name,  # coin_name
-                    "tSMART",  # coin_shortcut
-                    8,  # decimals
-                    65,  # address_type
-                    21,  # address_type_p2sh
-                    1000000,  # maxfee_kb
-                    "SmartCash Signed Message:\n",  # signed_message_header
-                    0x043587cf,  # xpub_magic
-                    None,  # xpub_magic_segwit_p2sh
-                    None,  # xpub_magic_segwit_native
-                    None,  # xpub_magic_multisig_segwit_p2sh
-                    None,  # xpub_magic_multisig_segwit_native
-                    None,  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    1,  # slip44
-                    False,  # segwit
-                    False,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-smart',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
             if name == "Stakenet":
                 return CoinInfo(
                     name,  # coin_name
@@ -5023,62 +4851,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # decred
                     False,  # negative_fee
                     'secp256k1',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "SmartCash":
-                return CoinInfo(
-                    name,  # coin_name
-                    "SMART",  # coin_shortcut
-                    8,  # decimals
-                    63,  # address_type
-                    18,  # address_type_p2sh
-                    780000000000,  # maxfee_kb
-                    "SmartCash Signed Message:\n",  # signed_message_header
-                    0x0488b21e,  # xpub_magic
-                    None,  # xpub_magic_segwit_p2sh
-                    None,  # xpub_magic_segwit_native
-                    None,  # xpub_magic_multisig_segwit_p2sh
-                    None,  # xpub_magic_multisig_segwit_native
-                    None,  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    224,  # slip44
-                    False,  # segwit
-                    False,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-smart',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "SmartCash Testnet":
-                return CoinInfo(
-                    name,  # coin_name
-                    "tSMART",  # coin_shortcut
-                    8,  # decimals
-                    65,  # address_type
-                    21,  # address_type_p2sh
-                    1000000,  # maxfee_kb
-                    "SmartCash Signed Message:\n",  # signed_message_header
-                    0x043587cf,  # xpub_magic
-                    None,  # xpub_magic_segwit_p2sh
-                    None,  # xpub_magic_segwit_native
-                    None,  # xpub_magic_multisig_segwit_p2sh
-                    None,  # xpub_magic_multisig_segwit_native
-                    None,  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    1,  # slip44
-                    False,  # segwit
-                    False,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-smart',  # curve_name
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
@@ -6290,62 +6062,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # timestamp
                     False,  # overwintered
                 )
-            if name == "SmartCash":
-                return CoinInfo(
-                    name,  # coin_name
-                    "SMART",  # coin_shortcut
-                    8,  # decimals
-                    63,  # address_type
-                    18,  # address_type_p2sh
-                    780000000000,  # maxfee_kb
-                    "SmartCash Signed Message:\n",  # signed_message_header
-                    0x0488b21e,  # xpub_magic
-                    None,  # xpub_magic_segwit_p2sh
-                    None,  # xpub_magic_segwit_native
-                    None,  # xpub_magic_multisig_segwit_p2sh
-                    None,  # xpub_magic_multisig_segwit_native
-                    None,  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    224,  # slip44
-                    False,  # segwit
-                    False,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-smart',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "SmartCash Testnet":
-                return CoinInfo(
-                    name,  # coin_name
-                    "tSMART",  # coin_shortcut
-                    8,  # decimals
-                    65,  # address_type
-                    21,  # address_type_p2sh
-                    1000000,  # maxfee_kb
-                    "SmartCash Signed Message:\n",  # signed_message_header
-                    0x043587cf,  # xpub_magic
-                    None,  # xpub_magic_segwit_p2sh
-                    None,  # xpub_magic_segwit_native
-                    None,  # xpub_magic_multisig_segwit_p2sh
-                    None,  # xpub_magic_multisig_segwit_native
-                    None,  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    1,  # slip44
-                    False,  # segwit
-                    False,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-smart',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
             if name == "Stakenet":
                 return CoinInfo(
                     name,  # coin_name
@@ -7553,62 +7269,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # timestamp
                     False,  # overwintered
                 )
-            if name == "SmartCash":
-                return CoinInfo(
-                    name,  # coin_name
-                    "SMART",  # coin_shortcut
-                    8,  # decimals
-                    63,  # address_type
-                    18,  # address_type_p2sh
-                    780000000000,  # maxfee_kb
-                    "SmartCash Signed Message:\n",  # signed_message_header
-                    0x0488b21e,  # xpub_magic
-                    None,  # xpub_magic_segwit_p2sh
-                    None,  # xpub_magic_segwit_native
-                    None,  # xpub_magic_multisig_segwit_p2sh
-                    None,  # xpub_magic_multisig_segwit_native
-                    None,  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    224,  # slip44
-                    False,  # segwit
-                    False,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-smart',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "SmartCash Testnet":
-                return CoinInfo(
-                    name,  # coin_name
-                    "tSMART",  # coin_shortcut
-                    8,  # decimals
-                    65,  # address_type
-                    21,  # address_type_p2sh
-                    1000000,  # maxfee_kb
-                    "SmartCash Signed Message:\n",  # signed_message_header
-                    0x043587cf,  # xpub_magic
-                    None,  # xpub_magic_segwit_p2sh
-                    None,  # xpub_magic_segwit_native
-                    None,  # xpub_magic_multisig_segwit_p2sh
-                    None,  # xpub_magic_multisig_segwit_native
-                    None,  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    1,  # slip44
-                    False,  # segwit
-                    False,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-smart',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
             if name == "Stakenet":
                 return CoinInfo(
                     name,  # coin_name
@@ -8812,62 +8472,6 @@ def by_name(name: str) -> CoinInfo:
                     False,  # decred
                     False,  # negative_fee
                     'secp256k1',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "SmartCash":
-                return CoinInfo(
-                    name,  # coin_name
-                    "SMART",  # coin_shortcut
-                    8,  # decimals
-                    63,  # address_type
-                    18,  # address_type_p2sh
-                    780000000000,  # maxfee_kb
-                    "SmartCash Signed Message:\n",  # signed_message_header
-                    0x0488b21e,  # xpub_magic
-                    None,  # xpub_magic_segwit_p2sh
-                    None,  # xpub_magic_segwit_native
-                    None,  # xpub_magic_multisig_segwit_p2sh
-                    None,  # xpub_magic_multisig_segwit_native
-                    None,  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    224,  # slip44
-                    False,  # segwit
-                    False,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-smart',  # curve_name
-                    False,  # extra_data
-                    False,  # timestamp
-                    False,  # overwintered
-                )
-            if name == "SmartCash Testnet":
-                return CoinInfo(
-                    name,  # coin_name
-                    "tSMART",  # coin_shortcut
-                    8,  # decimals
-                    65,  # address_type
-                    21,  # address_type_p2sh
-                    1000000,  # maxfee_kb
-                    "SmartCash Signed Message:\n",  # signed_message_header
-                    0x043587cf,  # xpub_magic
-                    None,  # xpub_magic_segwit_p2sh
-                    None,  # xpub_magic_segwit_native
-                    None,  # xpub_magic_multisig_segwit_p2sh
-                    None,  # xpub_magic_multisig_segwit_native
-                    None,  # bech32_prefix
-                    None,  # cashaddr_prefix
-                    1,  # slip44
-                    False,  # segwit
-                    False,  # taproot
-                    None,  # fork_id
-                    False,  # force_bip143
-                    False,  # decred
-                    False,  # negative_fee
-                    'secp256k1-smart',  # curve_name
                     False,  # extra_data
                     False,  # timestamp
                     False,  # overwintered
