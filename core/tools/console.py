@@ -255,7 +255,7 @@ class PairingAgent:
     this agent has to be registered as the default one.
     """
 
-    PATH = "/com/trezor/console/agent"
+    PATH = "/io/trezor/console/agent"
 
     def __init__(self) -> None:
         self.bus = None
