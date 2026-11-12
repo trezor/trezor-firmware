@@ -130,7 +130,8 @@ FINAL_PREFIXES = ("OK", "ERROR")
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 PROMPT = "> "
 
-CACHE_DIR = Path.home() / ".cache" / "trezor"
+# Developer tooling state, kept apart from anything wallet-related.
+CACHE_DIR = Path.home() / ".cache" / "trezor-dev"
 LAST_UNIT_FILE = CACHE_DIR / "console_last.json"
 HISTORY_FILE = CACHE_DIR / "console_history"
 
