@@ -662,7 +662,11 @@ async def terminal(link) -> int:
         while not done.is_set():
             if link.lost.is_set():
                 # A BLE read only waits on its queue; the disconnect callback
-                # is the signal that nothing more is coming.
+                # is the signal that nothing more is coming. Show what had
+                # already arrived before saying so.
+                while data := await link.read(0.2):
+                    out.write(data)
+                    out.flush()
                 connection_lost("")
                 return
             try:
