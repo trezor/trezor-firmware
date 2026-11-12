@@ -136,14 +136,6 @@ pub fn get_address_mac(address_n: &[u32], address: &str, slip44: u32) -> Result<
         .c()
 }
 
-/// Checks `nonce` against Core's cached-nonce store, returning whether it's still valid.
-pub fn verify_nonce_cache(nonce: &[u8]) -> Result<bool> {
-    get_crypto_or_die()
-        .verify_nonce_cache(nonce.into())
-        .into_app_result()
-        .c()
-}
-
 /// Verifies a 64-byte `r||s` ECDSA `signature` of `digest` against
 /// `public_key` (compressed or uncompressed SEC1).
 pub fn ecdsa_verify_digest(
@@ -175,40 +167,6 @@ pub fn ecdsa_recover_pubkey(curve: EcdsaCurve, signature: &[u8], digest: &[u8]) 
 pub fn ed25519_verify(public_key: &[u8], signature: &[u8], message: &[u8]) -> Result<()> {
     get_crypto_or_die()
         .ed25519_verify(public_key.into(), signature.into(), message.into())
-        .into_app_result()
-        .c()
-}
-
-/// Verifies a CoSi (collective Ed25519) `signature` of `message` against
-/// `public_keys`, combining the ones selected by `sigmask` (bit 0 = first
-/// key) and requiring at least `threshold` of them to have participated.
-pub fn cosi_verify(
-    threshold: u8,
-    message: &[u8],
-    public_keys: &[[u8; 32]],
-    sigmask: u8,
-    signature: &[u8],
-) -> Result<()> {
-    get_crypto_or_die()
-        .cosi_verify(
-            threshold,
-            message.into(),
-            public_keys.into(),
-            sigmask,
-            signature.into(),
-        )
-        .into_app_result()
-        .c()
-}
-
-/// Combines `public_keys` into the single Ed25519 public key that a CoSi
-/// signature over their combination would verify against — the same
-/// combining step [`cosi_verify`] performs internally, exposed standalone for
-/// callers that need the combined key itself (e.g. to cache it) rather than
-/// an immediate verify.
-pub fn cosi_combine_publickeys(public_keys: &[[u8; 32]]) -> Result<[u8; 32]> {
-    get_crypto_or_die()
-        .cosi_combine_publickeys(public_keys.into())
         .into_app_result()
         .c()
 }
