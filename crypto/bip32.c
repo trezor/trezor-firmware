@@ -694,9 +694,6 @@ const curve_info *get_curve_by_name(const char *curve_name) {
   if (strcmp(curve_name, SECP256K1_DECRED_NAME) == 0) {
     return &secp256k1_decred_info;
   }
-  if (strcmp(curve_name, SECP256K1_SMART_NAME) == 0) {
-    return &secp256k1_smart_info;
-  }
   if (strcmp(curve_name, NIST256P1_NAME) == 0) {
     return &nist256p1_info;
   }
