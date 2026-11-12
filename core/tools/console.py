@@ -674,23 +674,24 @@ async def terminal(link) -> int:
 
     async def pump_device() -> None:
         while not done.is_set():
-            if link.lost.is_set():
-                # A BLE read only waits on its queue; the disconnect callback
-                # is the signal that nothing more is coming. Show what had
-                # already arrived before saying so.
-                while data := await link.read(0.2):
+            try:
+                if link.lost.is_set():
+                    # A BLE read only waits on its queue; the disconnect
+                    # callback is the signal that nothing more is coming. Show
+                    # what had already arrived before saying so.
+                    while data := await link.read(0.2):
+                        out.write(data)
+                        out.flush()
+                    connection_lost("")
+                    return
+                data = await link.read(0.2)
+                if data:
                     out.write(data)
                     out.flush()
-                connection_lost("")
-                return
-            try:
-                data = await link.read(0.2)
             except Exception as e:
+                # A failed read, or stdout gone (e.g. a closed pipe).
                 connection_lost(f": {e}")
                 return
-            if data:
-                out.write(data)
-                out.flush()
 
     print(
         "terminal mode; Enter twice for the device's interactive mode, Ctrl-D to leave",
