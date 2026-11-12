@@ -2002,7 +2002,7 @@
     },
     "reset__write_down_words_template": {
       "Bolt": "",
-      "Caesar": "Escribe en orden las siguientes {0} palabras en tu tarjeta de respaldo de la billetera.",
+      "Caesar": "Escribe en orden estas {0} palabras en tu tarjeta de respaldo de la billetera.",
       "Delizia": "Escribe en orden las siguientes {0} palabras en tu tarjeta de respaldo de la billetera.",
       "Eckhart": "Escribe en orden las siguientes {0} palabras en tu tarjeta de respaldo de la billetera."
     },

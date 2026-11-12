@@ -1804,7 +1804,12 @@
       "Delizia": "Vérifier le fragm. {0}",
       "Eckhart": ""
     },
-    "reset__check_wallet_backup_title": "Vérifier la sauvegarde du portefeuille",
+    "reset__check_wallet_backup_title": {
+      "Bolt": "Vérifier la sauvegarde",
+      "Caesar": "Vérifier la sauvegarde du portefeuille",
+      "Delizia": "Vérifier la sauvegarde",
+      "Eckhart": "Vérifier la sauvegarde du portefeuille"
+    },
     "reset__continue_with_next_share": {
       "Bolt": "Continuez avec le fragment suivant.",
       "Caesar": "Continuez avec le fragment suivant.",
