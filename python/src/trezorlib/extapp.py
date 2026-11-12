@@ -129,7 +129,8 @@ class AppImage(SanityCheckedStruct):
 
     SUBCON = c.Struct(
         "header" / AppHeader.SUBCON,
-        "payload" / c.GreedyBytes,
+        "payload" / c.Bytes(c.this.header.code_size),
+        c.Terminated,
     )
 
     def header_bytes(self) -> bytes:
