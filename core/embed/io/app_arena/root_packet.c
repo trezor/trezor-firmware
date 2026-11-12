@@ -33,13 +33,21 @@
 // higher-level root packet.
 #define ROOT_PACKET_MAX_DRIFT (90 * 86400)  // 90 days
 
-static const mldsa44_public_key_t * const ROOT_PACKET_KEYS[] = {
-#if defined(BOOTLOADER_DEVEL) || defined(TREZOR_EMULATOR)
-  ROOT_PACKET_MLDSA44_KEYS_DEV
-#else
-  ROOT_PACKET_MLDSA44_KEYS
-#endif
+// Production keys
+static const mldsa44_public_key_t* const ROOT_PACKET_KEYS[] = {
+    ROOT_PACKET_MLDSA44_KEYS,
 };
+
+#if !PRODUCTION && (BOOTLOADER_DEVEL || TREZOR_EMULATOR)
+// Development keys
+static const mldsa44_public_key_t* const ROOT_PACKET_DEV_KEYS[] = {
+    ROOT_PACKET_MLDSA44_KEYS_DEV,
+};
+
+_Static_assert(ARRAY_LENGTH(ROOT_PACKET_DEV_KEYS) <=
+                   ARRAY_LENGTH(ROOT_PACKET_KEYS),
+               "more dev keys than production keys");
+#endif
 
 // Returns the number of set bits in the given value.
 static int popcount(uint8_t value) {
@@ -132,6 +140,16 @@ ts_t root_packet_verify(const void* data, size_t size,
     status =
         mldsa44_verify(&unauth->signature[sig_idx], &auth_hash,
                        sizeof(auth_hash), ROOT_PACKET_KEYS[key_idx], &valid);
+
+#if !PRODUCTION && (BOOTLOADER_DEVEL || TREZOR_EMULATOR)
+    if ((ts_error(status) || valid != sectrue) &&
+        key_idx < ARRAY_LENGTH(ROOT_PACKET_DEV_KEYS)) {
+      status = mldsa44_verify(&unauth->signature[sig_idx], &auth_hash,
+                              sizeof(auth_hash), ROOT_PACKET_DEV_KEYS[key_idx],
+                              &valid);
+    }
+#endif
+
     TSH_CHECK_OK(status);
     TSH_CHECK(valid == sectrue, TS_EBADMSG);
 
