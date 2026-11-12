@@ -291,51 +291,67 @@ pub trait UiV1: Send + Sync {
         &self,
         value: ConfirmValue<'a>,
     ) -> ServiceResult<TrezorUiResult>;
+
     extern "C" fn confirm_value_intro<'a>(
         &self,
         value: ConfirmValueIntro<'a>,
     ) -> ServiceResult<TrezorUiResult>;
+
     extern "C" fn confirm_summary<'a>(
         &self,
         value: ConfirmSummary<'a>,
     ) -> ServiceResult<TrezorUiResult>;
+
     extern "C" fn confirm_action<'a>(
         &self,
         value: ConfirmAction<'a>,
     ) -> ServiceResult<TrezorUiResult>;
+
     extern "C" fn select_menu<'a>(&self, value: SelectMenu<'a>) -> ServiceResult<TrezorUiResult>;
+
     extern "C" fn confirm_properties<'a>(
         &self,
         value: ConfirmProperties<'a>,
     ) -> ServiceResult<TrezorUiResult>;
+
     extern "C" fn show_properties<'a>(&self, value: ShowProperties<'a>) -> ServiceResult<()>;
+
     extern "C" fn show_warning<'a>(&self, value: ShowWarning<'a>) -> ServiceResult<()>;
+
     extern "C" fn show_info_with_cancel<'a>(
         &self,
         value: ShowInfoWithCancel<'a>,
     ) -> ServiceResult<TrezorUiResult>;
+
     extern "C" fn show_mismatch<'a>(
         &self,
         value: ShowMismatch<'a>,
     ) -> ServiceResult<TrezorUiResult>;
+
     extern "C" fn confirm_trade<'a>(
         &self,
         value: ConfirmTrade<'a>,
     ) -> ServiceResult<TrezorUiResult>;
+
     extern "C" fn show_danger<'a>(&self, value: ShowDanger<'a>) -> ServiceResult<TrezorUiResult>;
+
     extern "C" fn show_success<'a>(&self, value: ShowSuccess<'a>) -> ServiceResult<()>;
+
     extern "C" fn request_number<'a>(
         &self,
         value: RequestNumber<'a>,
     ) -> ServiceResult<TrezorUiResult>;
+
     extern "C" fn show_public_key<'a>(
         &self,
         value: ShowPublicKey<'a>,
     ) -> ServiceResult<TrezorUiResult>;
+
     extern "C" fn confirm_with_info<'a>(
         &self,
         value: ConfirmWithInfo<'a>,
     ) -> ServiceResult<TrezorUiResult>;
+
     extern "C" fn show_address<'a>(&self, value: ShowAddress<'a>) -> ServiceResult<TrezorUiResult>;
 
     extern "C" fn init_progress<'a>(
@@ -345,11 +361,13 @@ pub trait UiV1: Send + Sync {
         indeterminate: bool,
         danger: bool,
     ) -> ServiceResult<()>;
+
     extern "C" fn update_progress<'a>(
         &self,
         description: StabbyOption<Slice<'a, u8>>,
         value: u32,
     ) -> ServiceResult<()>;
+
     extern "C" fn end_progress(&self) -> ServiceResult<()>;
 }
 

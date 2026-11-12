@@ -9,15 +9,18 @@ use super::wire::WireV1Ref;
 #[stabby::stabby(checked)]
 pub trait TrezorApiV1: Send + Sync {
     extern "C" fn system_exit(&self) -> !;
+
     extern "C" fn system_exit_error<'a>(
         &self,
         title: Str<'a>,
         message: Str<'a>,
         footer: Str<'a>,
     ) -> !;
+
     extern "C" fn system_exit_fatal<'a>(&self, message: Str<'a>, file: Str<'a>, line: u32) -> !;
 
     extern "C" fn systick_ms(&self) -> u32;
+
     extern "C" fn sleep(&self, timeout_ms: u32);
 }
 
