@@ -3,6 +3,7 @@ import pytest
 from trezorlib import messages, ward
 from trezorlib.authdb_tree import WARDTree
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import LayoutContent
 from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 from ...ward_mgr_emu import (
@@ -37,6 +38,16 @@ def _apply_device_leaf(tree: WARDTree, perform_result: tuple) -> None:
         tree.del_leaf(ek)
     else:
         tree.set_leaf(ek, leaf)
+
+
+def _shows_label(layout: LayoutContent, label: str) -> bool:
+    """Delizia and Eckhart show the label as the subtitle, Bolt and Caesar on the
+    line above the address."""
+    return (
+        label in layout.title().lower()
+        or layout.subtitle() == label
+        or layout.screen_content().splitlines()[0] == label
+    )
 
 
 def _with_proof(
@@ -195,7 +206,7 @@ def test_display_address_more_labels(session: Session) -> None:
             )
             layout = dev.debuglink().read_layout()
             assert layout.title().splitlines()[0].lower() == "membership"
-            assert "label1" in layout.title().lower() or layout.subtitle() == "label1"
+            assert _shows_label(layout, "label1")
             content = layout.screen_content()
             assert address in content.replace("\n", "").replace(" ", "")
             dev.debuglink().press_yes()
@@ -235,7 +246,7 @@ def test_display_address_more_labels_via_device(session: Session) -> None:
             )
             layout = dev.debuglink().read_layout()
             assert layout.title().splitlines()[0].lower() == "membership"
-            assert "label1" in layout.title().lower() or layout.subtitle() == "label1"
+            assert _shows_label(layout, "label1")
             content = layout.screen_content()
             assert address in content.replace("\n", "").replace(" ", "")
             dev.debuglink().press_yes()
@@ -299,7 +310,7 @@ def test_display_address_single_label(session: Session) -> None:
             )
             layout = dev.debuglink().read_layout()
             assert layout.title().splitlines()[0].lower() == "membership"
-            assert "label1" in layout.title().lower() or layout.subtitle() == "label1"
+            assert _shows_label(layout, "label1")
             content = layout.screen_content()
             assert address in content.replace("\n", "").replace(" ", "")
             dev.debuglink().press_yes()
@@ -376,7 +387,7 @@ def test_display_address_more_labels_pull(session: Session) -> None:
             )
             layout = dev.debuglink().read_layout()
             assert layout.title().splitlines()[0].lower() == "membership"
-            assert "label1" in layout.title().lower() or layout.subtitle() == "label1"
+            assert _shows_label(layout, "label1")
             content = layout.screen_content()
             assert address in content.replace("\n", "").replace(" ", "")
             dev.debuglink().press_yes()

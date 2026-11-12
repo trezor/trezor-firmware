@@ -9,7 +9,7 @@ async def show(msg: "DisplayAddress") -> "Success":
     host answers (WARDProofAck), and the label is verified against the device's
     authenticated WARD root. The PUSH variant is apps.display_address.show_with_proof.
     """
-    from trezor import log
+    from trezor import log, utils
     from trezor.messages import Success
     from trezor.ui.layouts import show_address, show_warning
 
@@ -98,10 +98,13 @@ async def show(msg: "DisplayAddress") -> "Success":
         status = "unverified"
 
     log.debug(__name__, "DisplayAddress: showing address, title=%s", status)
+    # Bolt and Caesar show no subtitle: there the label goes above the address.
+    label_above = utils.UI_LAYOUT in ("BOLT", "CAESAR")
     await show_address(
         msg.address,
         title=status,
-        subtitle=label_text,
+        subtitle=None if label_above else label_text,
+        network=label_text if label_above else None,
         case_sensitive=bool(msg.case_sensitive),
         chunkify=bool(msg.chunkify),
         br_name="display_address/show",

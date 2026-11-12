@@ -10,6 +10,7 @@ async def show_with_proof(msg: "DisplayAddressWithProof") -> "Success":
     against its authenticated WARD root and shows the verified label. The PULL
     variant is apps.display_address.show.
     """
+    from trezor import utils
     from trezor.messages import Success
     from trezor.ui.layouts import show_address, show_warning
     from trezor.wire import DataError
@@ -69,10 +70,13 @@ async def show_with_proof(msg: "DisplayAddressWithProof") -> "Success":
                 "The proof did not match the device's authenticated root.",
             )
 
+    # Bolt and Caesar show no subtitle: there the label goes above the address.
+    label_above = utils.UI_LAYOUT in ("BOLT", "CAESAR")
     await show_address(
         msg.address,
         title=status,
-        subtitle=label_text,
+        subtitle=None if label_above else label_text,
+        network=label_text if label_above else None,
         case_sensitive=bool(msg.case_sensitive),
         chunkify=bool(msg.chunkify),
         br_name="display_address/show",
