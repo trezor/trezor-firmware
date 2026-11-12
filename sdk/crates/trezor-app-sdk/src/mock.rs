@@ -138,7 +138,7 @@ impl CryptoV1 for DummyCrypto {
         _curve: Curve,
         _address_n: Slice<'a, u32>,
         _xpub_magic: u32,
-    ) -> ServiceResult<[u8; 111], CryptoError> {
+    ) -> ServiceResult<stabby::string::String, CryptoError> {
         unimplemented!("not exercised by the current test suite")
     }
 

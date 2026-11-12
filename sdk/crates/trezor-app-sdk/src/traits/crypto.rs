@@ -81,13 +81,14 @@ pub trait CryptoV1: Send + Sync {
     /// the HMAC context's internal state); Core never retains it afterward.
     extern "C" fn get_hmac<'a>(&self, algorithm: HmacAlgorithm, key: Slice<'a, u8>) -> BoxedHasher;
 
-    /// Derives the extended public key (xpub) for `address_n` on `curve`.
+    /// Derives the extended public key (xpub) for `address_n` on `curve`, as a
+    /// base58check string; its length depends on `xpub_magic`.
     extern "C" fn get_xpub<'a>(
         &self,
         curve: Curve,
         address_n: Slice<'a, u32>,
         xpub_magic: u32,
-    ) -> ServiceResult<[u8; 111], CryptoError>;
+    ) -> ServiceResult<String, CryptoError>;
     /// Derives the public key for `address_n` on `curve`.
     extern "C" fn get_public_key<'a>(
         &self,
