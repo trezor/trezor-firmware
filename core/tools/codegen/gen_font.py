@@ -616,12 +616,17 @@ class FaceProcessor:
             font_ymin = min(font_ymin, glyph.bearingY - glyph.rows)
             font_ymax = max(font_ymax, glyph.bearingY)
 
-        # 4) Kerning of ASCII pairs.
+        # 4) Kerning of ASCII pairs, between the glyphs actually shown. All FontInfos
+        # share one kerning table, so it follows the mapping of the first one.
         kernings = []
         if self.cfg.kerning:
+            show = self._variants()[0].mapping
             for left in ASCII:
                 for right in ASCII:
-                    kern_val = self._get_kerning(ord(left), ord(right))
+                    left_to, right_to = show(left), show(right)
+                    if left_to is None or right_to is None:
+                        continue  # nonprintable glyph
+                    kern_val = self._get_kerning(ord(left_to), ord(right_to))
                     if kern_val != 0:
                         kernings.append((ord(left), ord(right), kern_val))
                         LOG.debug(
