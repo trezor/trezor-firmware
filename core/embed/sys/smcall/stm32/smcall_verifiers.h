@@ -127,12 +127,12 @@ void rng_fill_buffer_strong__verified(void *buffer, size_t buffer_size);
 // ---------------------------------------------------------------------
 #include <sec/fwutils.h>
 
-int firmware_hash_start__verified(const uint8_t *challenge,
-                                  size_t challenge_len);
+ts_t firmware_hash_start__verified(const uint8_t *challenge,
+                                   size_t challenge_len);
 
-int firmware_hash_continue__verified(uint8_t *hash, size_t hash_len);
+ts_t firmware_hash_continue__verified(firmware_hash_t *hash, int32_t *progress);
 
-secbool firmware_get_vendor__verified(char *buff, size_t buff_size);
+ts_t firmware_get_vendor__verified(char *buff, size_t buff_size);
 
 // ---------------------------------------------------------------------
 #ifdef USE_TROPIC

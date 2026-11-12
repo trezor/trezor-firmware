@@ -354,18 +354,19 @@ void rng_fill_buffer_strong(void *buffer, size_t buffer_size) {
 
 #include <sec/fwutils.h>
 
-secbool firmware_get_vendor(char *buff, size_t buff_size) {
-  return smcall_invoke2((uint32_t)buff, buff_size, SMCALL_FIRMWARE_GET_VENDOR);
+ts_t firmware_get_vendor(char *buff, size_t buff_size) {
+  return ts_make(
+      smcall_invoke2((uint32_t)buff, buff_size, SMCALL_FIRMWARE_GET_VENDOR));
 }
 
-int firmware_hash_start(const uint8_t *challenge, size_t challenge_len) {
-  return (int)smcall_invoke2((uint32_t)challenge, challenge_len,
-                             SMCALL_FIRMWARE_HASH_START);
+ts_t firmware_hash_start(const uint8_t *challenge, size_t challenge_len) {
+  return ts_make(smcall_invoke2((uint32_t)challenge, challenge_len,
+                                SMCALL_FIRMWARE_HASH_START));
 }
 
-int firmware_hash_continue(uint8_t *hash, size_t hash_len) {
-  return (int)smcall_invoke2((uint32_t)hash, hash_len,
-                             SMCALL_FIRMWARE_HASH_CONTINUE);
+ts_t firmware_hash_continue(firmware_hash_t *hash, int32_t *progress) {
+  return ts_make(smcall_invoke2((uint32_t)hash, (uint32_t)progress,
+                                SMCALL_FIRMWARE_HASH_CONTINUE));
 }
 
 #ifdef USE_TROPIC
