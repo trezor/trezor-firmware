@@ -27,6 +27,7 @@ pub type LogCallbackRef<'a> = stabby::dynptr!(&'a dyn LogCallback);
 #[stabby::stabby(checked)]
 pub trait SyslogV1: Send + Sync {
     extern "C" fn log_simple<'a>(&self, level: LogLevel, message: Str<'a>);
+
     extern "C" fn log<'a>(&self, level: LogLevel, callback: LogCallbackRef<'a>);
 }
 
