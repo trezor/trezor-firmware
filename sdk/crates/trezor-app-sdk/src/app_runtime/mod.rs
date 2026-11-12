@@ -37,7 +37,7 @@ pub fn app() -> crate::error::Result<()> {
 /// on entry and the wire is already usable; an app may allocate as soon as
 /// `API` below is populated — the very first statement.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn applet_main(api_get: crate::traits::ApiGetter) -> core::ffi::c_int {
+pub extern "C" fn applet_main(api_get: crate::traits::ApiGetter) -> core::ffi::c_int {
     init(api_get);
 
     match app() {
