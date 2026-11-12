@@ -68,7 +68,7 @@ pub(crate) fn init(api_get: crate::traits::ApiGetter) {
     );
 }
 
-fn get_api_or_die() -> &'static TrezorApiV1Struct {
+pub(crate) fn get_api_or_die() -> &'static TrezorApiV1Struct {
     API.get().expect("API not initialized")
 }
 
@@ -85,9 +85,8 @@ pub(crate) fn try_get_syslog() -> Option<StaticSyslogV1> {
 }
 
 /// Local, no-IPC crypto vtable (hashing, signature verification, `base58*`) —
-/// see [`crate::traits::crypto::CryptoV1`]. Public: apps call this directly
-/// (see e.g. `trezor_app_sdk::hasher`), not just SDK-internal code.
-pub fn get_crypto_or_die() -> StaticCryptoV1 {
+/// see [`crate::traits::crypto::CryptoV1`].
+pub(crate) fn get_crypto_or_die() -> StaticCryptoV1 {
     get_api_or_die().crypto
 }
 
@@ -95,9 +94,8 @@ pub(crate) fn get_wire_or_die() -> StaticWireV1 {
     get_api_or_die().wire
 }
 
-/// UI/progress vtable — see [`crate::traits::ui::UiV1`]. Public: apps call
-/// this directly to show screens.
-pub fn get_ui_or_die() -> StaticUiV1 {
+/// UI/progress vtable — see [`crate::traits::ui::UiV1`].
+pub(crate) fn get_ui_or_die() -> StaticUiV1 {
     get_api_or_die().ui
 }
 
