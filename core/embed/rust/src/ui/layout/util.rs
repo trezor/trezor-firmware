@@ -1,6 +1,6 @@
 use crate::io::BinaryData;
 use crate::micropython::buffer::{hexlify_bytes, StrBuffer};
-use crate::micropython::gc::Gc;
+use crate::micropython::gc::{Gc, GcBox};
 use crate::micropython::list::List;
 use crate::micropython::util::{iter_into_array, try_or_raise};
 use crate::micropython::{Error, Obj};
