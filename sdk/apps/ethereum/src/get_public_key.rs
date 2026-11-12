@@ -19,8 +19,6 @@ pub(crate) fn get_public_key(msg: GetPublicKey) -> Result<PublicKey> {
 
     let dp = Bip32Path::from_slice(&msg.address_n);
     let xpub = get_xpub(dp.as_slice(), VERSION).c()?;
-    let xpub =
-        String::from(core::str::from_utf8(&xpub).map_err(|_| Error::DataError("Invalid xpub"))?);
 
     let hdnode = HdNodeData::deserialize_public(&xpub, VERSION).c()?;
 
