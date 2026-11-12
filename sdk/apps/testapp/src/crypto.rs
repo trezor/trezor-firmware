@@ -93,11 +93,6 @@ pub fn check_address_mac(m: wire::CheckAddressMac) -> Result<wire::Success> {
     Ok(wire::Success {})
 }
 
-pub fn verify_nonce_cache(m: wire::VerifyNonceCache) -> Result<wire::Bool> {
-    let value = sdk::verify_nonce_cache(&m.nonce)?;
-    Ok(wire::Bool { value })
-}
-
 // ============================================================================
 // Signature verification and key recovery
 // ============================================================================
@@ -150,29 +145,6 @@ fn key_curve(value: i32) -> Result<Curve> {
         Ok(wire::Curve::Curve25519) => Ok(Curve::Curve25519),
         Err(_) => Err(Error::InvalidArgument),
     }
-}
-
-// ============================================================================
-// CoSi
-// ============================================================================
-
-pub fn cosi_verify(m: wire::CosiVerify) -> Result<wire::Success> {
-    let threshold = u8::try_from(m.threshold).map_err(|_| Error::InvalidArgument)?;
-    let sigmask = u8::try_from(m.sigmask).map_err(|_| Error::InvalidArgument)?;
-    let public_keys = public_keys(&m.public_keys)?;
-    sdk::cosi_verify(threshold, &m.message, &public_keys, sigmask, &m.signature)?;
-    Ok(wire::Success {})
-}
-
-pub fn cosi_combine_publickeys(m: wire::CosiCombinePublicKeys) -> Result<wire::PublicKey> {
-    let public_key = sdk::cosi_combine_publickeys(&public_keys(&m.public_keys)?)?;
-    Ok(wire::PublicKey {
-        public_key: public_key.to_vec(),
-    })
-}
-
-fn public_keys(keys: &[Vec<u8>]) -> Result<Vec<[u8; 32]>> {
-    keys.iter().map(|key| array(key).copied()).collect()
 }
 
 // ============================================================================

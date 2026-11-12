@@ -22,10 +22,9 @@ pub(crate) mod proto;
 
 use proto::messages::MessageType;
 use proto::testapp::{
-    Base58CheckDecode, Base58CheckEncode, Base58Decode, Base58Encode, CheckAddressMac,
-    CosiCombinePublicKeys, CosiVerify, Crash, EcdsaRecoverPubkey, EcdsaSignDigest, EcdsaVerify,
-    EcdsaVerifyDigest, Ed25519Sign, Ed25519Verify, GetAddressMac, GetPublicKey, GetXpub, Hash,
-    Hmac, VerifyNonceCache,
+    Base58CheckDecode, Base58CheckEncode, Base58Decode, Base58Encode, CheckAddressMac, Crash,
+    EcdsaRecoverPubkey, EcdsaSignDigest, EcdsaVerify, EcdsaVerifyDigest, Ed25519Sign,
+    Ed25519Verify, GetAddressMac, GetPublicKey, GetXpub, Hash, Hmac,
 };
 
 /// Wire codec for [`wire_handler!`] — encodes/decodes messages via [`prost`].
@@ -100,13 +99,6 @@ wire_handler!(
     crypto::check_address_mac
 );
 wire_handler!(
-    handle_verify_nonce_cache,
-    ProstCodec,
-    VerifyNonceCache,
-    MessageType::Bool,
-    crypto::verify_nonce_cache
-);
-wire_handler!(
     handle_ecdsa_verify,
     ProstCodec,
     EcdsaVerify,
@@ -133,20 +125,6 @@ wire_handler!(
     Ed25519Verify,
     MessageType::Success,
     crypto::ed25519_verify
-);
-wire_handler!(
-    handle_cosi_verify,
-    ProstCodec,
-    CosiVerify,
-    MessageType::Success,
-    crypto::cosi_verify
-);
-wire_handler!(
-    handle_cosi_combine_publickeys,
-    ProstCodec,
-    CosiCombinePublicKeys,
-    MessageType::PublicKey,
-    crypto::cosi_combine_publickeys
 );
 wire_handler!(
     handle_base58_encode,
@@ -194,13 +172,10 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
         Ok(MessageType::Ed25519Sign) => handle_ed25519_sign(data),
         Ok(MessageType::GetAddressMac) => handle_get_address_mac(data),
         Ok(MessageType::CheckAddressMac) => handle_check_address_mac(data),
-        Ok(MessageType::VerifyNonceCache) => handle_verify_nonce_cache(data),
         Ok(MessageType::EcdsaVerify) => handle_ecdsa_verify(data),
         Ok(MessageType::EcdsaVerifyDigest) => handle_ecdsa_verify_digest(data),
         Ok(MessageType::EcdsaRecoverPubkey) => handle_ecdsa_recover_pubkey(data),
         Ok(MessageType::Ed25519Verify) => handle_ed25519_verify(data),
-        Ok(MessageType::CosiVerify) => handle_cosi_verify(data),
-        Ok(MessageType::CosiCombinePublicKeys) => handle_cosi_combine_publickeys(data),
         Ok(MessageType::Base58Encode) => handle_base58_encode(data),
         Ok(MessageType::Base58Decode) => handle_base58_decode(data),
         Ok(MessageType::Base58CheckEncode) => handle_base58check_encode(data),

@@ -161,22 +161,6 @@ message CheckAddressMac {
 }
 
 /**
- * Request: crypto::verify_nonce_cache
- * @next Bool
- */
-message VerifyNonceCache {
-    required bytes nonce = 1;
-}
-
-/**
- * Response: a boolean result
- * @end
- */
-message Bool {
-    required bool value = 1;
-}
-
-/**
  * Request: crypto::ecdsa_verify_digest of the message's SHA-256 digest
  * @next Success
  */
@@ -219,31 +203,10 @@ message Ed25519Verify {
 }
 
 /**
- * Request: crypto::cosi_verify; `threshold` and `sigmask` must fit in a
- * byte, every public key must be 32 bytes
- * @next Success
- */
-message CosiVerify {
-    required uint32 threshold = 1;
-    required bytes message = 2;
-    repeated bytes public_keys = 3;
-    required uint32 sigmask = 4;
-    required bytes signature = 5;
-}
-
-/**
  * Response: the function succeeded
  * @end
  */
 message Success {}
-
-/**
- * Request: crypto::cosi_combine_publickeys; every public key must be 32 bytes
- * @next PublicKey
- */
-message CosiCombinePublicKeys {
-    repeated bytes public_keys = 1;
-}
 
 /**
  * Request: crypto::base58_encode

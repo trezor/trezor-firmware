@@ -29,13 +29,10 @@ called.
 | `Ed25519Sign` | `ed25519_sign` | `Signature` |
 | `GetAddressMac` | `get_address_mac` | `AddressMac` |
 | `CheckAddressMac` | `check_address_mac` | `Success` |
-| `VerifyNonceCache` | `verify_nonce_cache` | `Bool` |
 | `EcdsaVerify` | `ecdsa_verify_digest` of the message's SHA-256 digest | `Success` |
 | `EcdsaVerifyDigest` | `ecdsa_verify_digest` | `Success` |
 | `EcdsaRecoverPubkey` | `ecdsa_recover_pubkey` | `PublicKey` |
 | `Ed25519Verify` | `ed25519_verify` | `Success` |
-| `CosiVerify` | `cosi_verify` | `Success` |
-| `CosiCombinePublicKeys` | `cosi_combine_publickeys` | `PublicKey` |
 | `Base58Encode` / `Base58Decode` | `base58_encode` / `base58_decode` | `Base58` / `Data` |
 | `Base58CheckEncode` / `Base58CheckDecode` | `base58check_encode` / `base58check_decode` | `Base58` / `Data` |
 
@@ -51,8 +48,7 @@ device:
 - `tests/fixtures/*.json` hold static vectors computed with independent
   implementations: `hashlib`/`hmac`, pycryptodome (Keccak), trezorlib's base58,
   and BIP-32 derivation of the `all all ... all` seed.
-- Signatures to verify are made on the host (`ecdsa`, `cryptography`,
-  trezorlib's CoSi); signatures the device makes are checked with `ecdsa`.
+- Signatures to verify are made on the host (`ecdsa`, `cryptography`); signatures the device makes are checked with `ecdsa`.
 
 Build an emulator with app loading and debuglink, build the app, start the
 emulator, then run the tests:
