@@ -435,6 +435,17 @@ async def open_ble(target: str | None, forget_bond: bool) -> BleLink:
             device = await find_by_address(remembered["address"])
             if device is None:
                 LOG.info("last unit %s not in range, scanning", remembered["address"])
+            else:
+                try:
+                    link = await connect(device, forget_bond)
+                except NoConsoleService:
+                    # Still in range but no longer routes a console (e.g.
+                    # reflashed); another unit in range may.
+                    LOG.info("last unit %s has no console, scanning", device.address)
+                    device = None
+                    remembered = None
+                else:
+                    return _connected(link, device, remembered)
         if device is None:
             device = await scan_for_unit(None)
     elif ":" in target:
@@ -445,7 +456,10 @@ async def open_ble(target: str | None, forget_bond: bool) -> BleLink:
         device = await scan_for_unit(target)
     assert device is not None
 
-    link = await connect(device, forget_bond)
+    return _connected(await connect(device, forget_bond), device, remembered)
+
+
+def _connected(link: BleLink, device: BLEDevice, remembered: dict | None) -> BleLink:
     name = device.name or (remembered or {}).get("name")
     save_last_unit(device.address, name)
     print(f"connected to {name or device.address}", file=sys.stderr)
