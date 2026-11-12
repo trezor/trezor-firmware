@@ -21,7 +21,7 @@
 
 // Development keys for verifying the root packet signatures
 #define ROOT_PACKET_MLDSA44_KEYS_DEV \
-    (const mldsa44_public_key_t*) \
+  (const mldsa44_public_key_t*) \
     "\x9c\x2c\x88\x0b\xf1\xb7\x73\xc1\xfc\x7f\x68\xe8\x58\x89\x7e\x18" \
     "\x47\xd6\xbe\x83\xf0\x7f\xfc\xfa\xa1\x0e\xe3\x5e\x5b\x44\xff\x58" \
     "\xa4\x3b\x45\x95\x0b\x84\x1b\x91\xdc\x13\x3f\x96\xee\x14\x4e\x2c" \
@@ -188,7 +188,14 @@
     "\xfe\xdf\x83\x9e\x00\x14\x3c\x9c\x13\xa6\xfb\x16\x4c\xfd\x16\x0f" \
     "\x4b\x72\x91\xb2\x01\x0e\xba\xbd\xb4\xc6\x04\x7d\xb2\x94\x71\x96"
 
-
 // Production keys for verifying the root packet signatures
-#define ROOT_PACKET_MLDSA44_KEYS \
-    #pragma error "ROOT_PACKET_MLDSA44_KEY is missing"
+// TODO: Replace these placeholder keys when the production keys are available.
+#define ROOT_PACKET_MLDSA44_KEYS                        \
+  &(const mldsa44_public_key_t){.bytes = {[0] = 0x55}}, \
+      &(const mldsa44_public_key_t) {                   \
+    .bytes = {[0] = 0x55}                               \
+  }
+
+#if PRODUCTION
+#error "Production root packet keys are placeholders"
+#endif
