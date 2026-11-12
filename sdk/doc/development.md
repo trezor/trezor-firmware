@@ -240,11 +240,11 @@ pub(crate) use std::{
 
 ## App Entry Point
 
-Every app must export an `app()` function as its entry point:
+Every app must implement the SDK's `app()` entry point with the `#[trezor_app_sdk::app]` attribute; a missing one is a compile error:
 
 ```rust
-#[unsafe(no_mangle)]
-pub fn app() -> Result<()> {
+#[trezor_app_sdk::app]
+fn app() -> Result<()> {
     let (id, data) = wire_receive().c()?;
     handle_wire_message(id as i32, &data).c()
 }
