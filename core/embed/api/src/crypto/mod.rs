@@ -169,17 +169,14 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         curve: Curve,
         address_n: Slice<'a, u32>,
         xpub_magic: u32,
-    ) -> ServiceResult<[u8; 111], CryptoError> {
+    ) -> ServiceResult<String, CryptoError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::GetXpub {
                 curve: curve as u8,
                 address_n: address_n.as_slice().into(),
                 xpub_magic,
             })?;
-            expect_str(&data)?
-                .as_bytes()
-                .try_into()
-                .map_err(|_| unexpected_response())
+            Ok(String::from(expect_str(&data)?))
         })()
         .into()
     }
