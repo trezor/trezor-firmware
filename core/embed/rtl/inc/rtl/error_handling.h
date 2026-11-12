@@ -308,22 +308,6 @@ void __attribute__((noreturn)) __fatal_error(const char *msg, const char *file,
   } while (0)
 
 /**
- * Checks the (secbool) condition, if it is not `sectrue`, set
- * status variable and jumps to `cleanup` label.
- *
- * @param seccond Security condition to check
- * @param status status value to set if condition is not sectrue
- */
-#define TSH_CHECK_SEC(seccond, status) \
-  do {                                 \
-    if ((seccond) != sectrue) {        \
-      __status = status;               \
-      TSH_LOG_((__status));            \
-      goto cleanup;                    \
-    }                                  \
-  } while (0)
-
-/**
  * Raises an error by setting the status variable and jumping to `cleanup`
  * label.
  *
