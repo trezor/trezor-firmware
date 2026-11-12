@@ -16,6 +16,7 @@ pub enum CryptoError {
 #[stabby::stabby(checked)]
 pub trait Hasher {
     extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>);
+
     extern "C" fn finalize(&mut self) -> BoxedSlice<u8>;
 }
 
@@ -76,6 +77,7 @@ pub enum CanonicalSig {
 #[stabby::stabby(checked)]
 pub trait CryptoV1: Send + Sync {
     extern "C" fn get_hasher(&self, algorithm: HashingAlgorithm) -> BoxedHasher;
+
     /// Starts an HMAC computation (over `algorithm`, one of the SHA-2
     /// family) under `key`. `key` is only read during this call (copied into
     /// the HMAC context's internal state); Core never retains it afterward.
@@ -89,6 +91,7 @@ pub trait CryptoV1: Send + Sync {
         address_n: Slice<'a, u32>,
         xpub_magic: u32,
     ) -> ServiceResult<String, CryptoError>;
+
     /// Derives the public key for `address_n` on `curve`.
     extern "C" fn get_public_key<'a>(
         &self,
@@ -96,6 +99,7 @@ pub trait CryptoV1: Send + Sync {
         address_n: Slice<'a, u32>,
         compressed: bool,
     ) -> ServiceResult<BoxedSlice<u8>, CryptoError>;
+
     /// Signs a raw 32-byte digest with the ECDSA key at `address_n`; Ed25519
     /// has no digest signing, see [`Self::ed25519_sign`].
     ///
@@ -109,12 +113,14 @@ pub trait CryptoV1: Send + Sync {
         compressed: bool,
         canonical: CanonicalSig,
     ) -> ServiceResult<[u8; 65], CryptoError>;
+
     /// Signs `message` with the Ed25519 key at `address_n`.
     extern "C" fn ed25519_sign<'a>(
         &self,
         address_n: Slice<'a, u32>,
         message: Slice<'a, u8>,
     ) -> ServiceResult<[u8; 64], CryptoError>;
+
     /// Verifies a MAC previously produced by [`Self::get_address_mac`] for
     /// `address_n`, `address` and the coin type `slip44`, confirming the
     /// pairing hasn't been tampered with. Fails on a wrong MAC.
@@ -125,6 +131,7 @@ pub trait CryptoV1: Send + Sync {
         address: Str<'a>,
         slip44: u32,
     ) -> ServiceResult<(), CryptoError>;
+
     /// Computes a MAC binding `address_n` to `address` of the coin type
     /// `slip44`, so a cached `address` can later be re-authenticated via
     /// [`Self::check_address_mac`] without a full re-derivation.
@@ -134,6 +141,7 @@ pub trait CryptoV1: Send + Sync {
         address: Str<'a>,
         slip44: u32,
     ) -> ServiceResult<[u8; 32], CryptoError>;
+
     /// Checks `nonce` against Core's cached-nonce store, returning whether
     /// it's still valid.
     extern "C" fn verify_nonce_cache<'a>(
@@ -150,6 +158,7 @@ pub trait CryptoV1: Send + Sync {
         signature: Slice<'a, u8>,
         digest: Slice<'a, u8>,
     ) -> FastResult<(), CryptoError>;
+
     /// Recovers the uncompressed public key from an ECDSA `signature` over
     /// `digest`, with no candidate public key to check against (unlike
     /// [`Self::ecdsa_verify_digest`], which confirms `signature` matches a
@@ -163,6 +172,7 @@ pub trait CryptoV1: Send + Sync {
         signature: Slice<'a, u8>,
         digest: Slice<'a, u8>,
     ) -> FastResult<BoxedSlice<u8>, CryptoError>;
+
     /// Verifies a 64-byte Ed25519 `signature` of `message` against the
     /// 32-byte `public_key`.
     extern "C" fn ed25519_verify<'a>(
@@ -198,11 +208,14 @@ pub trait CryptoV1: Send + Sync {
 
     /// Base58-encodes `data`.
     extern "C" fn base58_encode<'a>(&self, data: Slice<'a, u8>) -> String;
+
     extern "C" fn base58_decode<'a>(
         &self,
         data: Str<'a>,
     ) -> FastResult<BoxedSlice<u8>, CryptoError>;
+
     extern "C" fn base58check_encode<'a>(&self, data: Slice<'a, u8>) -> String;
+
     extern "C" fn base58check_decode<'a>(
         &self,
         data: Str<'a>,

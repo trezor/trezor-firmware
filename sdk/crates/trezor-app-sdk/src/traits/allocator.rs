@@ -25,8 +25,11 @@ impl From<FfiLayout> for Layout {
 #[stabby::stabby(checked)]
 pub unsafe trait GlobalAllocatorV1: Send + Sync {
     unsafe extern "C" fn alloc(&self, layout: FfiLayout) -> *mut u8;
+
     unsafe extern "C" fn dealloc(&self, ptr: *mut u8, layout: FfiLayout);
+
     unsafe extern "C" fn alloc_zeroed(&self, layout: FfiLayout) -> *mut u8;
+
     unsafe extern "C" fn realloc(
         &self,
         ptr: *mut u8,
