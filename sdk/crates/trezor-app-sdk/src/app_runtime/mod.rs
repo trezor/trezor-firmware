@@ -14,9 +14,17 @@ static API: spin::Once<&'static TrezorApiV1Struct> = spin::Once::new();
 
 const API_VERSION: u32 = 1;
 
-#[cfg(not(feature = "test"))]
-unsafe extern "Rust" {
-    unsafe fn app() -> crate::error::Result<()>;
+/// The app's entry point, implemented by the app as
+/// `#[trezor_app_sdk::app] fn app() -> Result<()>`.
+#[cfg(not(test))]
+#[eii]
+pub fn app() -> crate::error::Result<()>;
+
+// the SDK's own unit tests link no app
+#[cfg(test)]
+#[eii]
+pub fn app() -> crate::error::Result<()> {
+    Ok(())
 }
 
 /// This app's entry point — but not the first thing to run on its task.
@@ -30,6 +38,24 @@ unsafe extern "Rust" {
 /// `API` below is populated — the very first statement.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn applet_main(api_get: crate::traits::ApiGetter) -> core::ffi::c_int {
+    init(api_get);
+
+    match app() {
+        Ok(()) => system_exit(),
+        // a stop requested by Core is a normal exit
+        Err(e) if e.is_stopped() => system_exit(),
+        Err(e) => {
+            let mut error_buf = [0u8; 256];
+            let mut writer = crate::util::SliceWriter::new(&mut error_buf);
+            _ = ufmt::uwrite!(writer, "{}", e);
+            crate::error!("{}", writer.as_ref());
+            system_exit_error("Error", writer.as_ref(), "");
+        }
+    }
+}
+
+/// Stores the API Core hands to the app. Only the first call counts.
+pub(crate) fn init(api_get: crate::traits::ApiGetter) {
     match api_get(API_VERSION) {
         ApiVersion::V1(api) => {
             API.call_once(|| api);
@@ -40,25 +66,6 @@ pub unsafe extern "C" fn applet_main(api_get: crate::traits::ApiGetter) -> core:
         "Applet main entry point called, API version: {}",
         API_VERSION
     );
-
-    #[cfg(not(feature = "test"))]
-    {
-        match unsafe { app() } {
-            Ok(()) => system_exit(),
-            // a stop requested by Core is a normal exit
-            Err(e) if e.is_stopped() => system_exit(),
-            Err(e) => {
-                let mut error_buf = [0u8; 256];
-                let mut writer = crate::util::SliceWriter::new(&mut error_buf);
-                _ = ufmt::uwrite!(writer, "{}", e);
-                crate::error!("{}", writer.as_ref());
-                system_exit_error("Error", writer.as_ref(), "");
-            }
-        }
-    }
-
-    #[cfg(feature = "test")]
-    0
 }
 
 fn get_api_or_die() -> &'static TrezorApiV1Struct {
