@@ -28,13 +28,14 @@ The wire functions (`wire_receive`, `wire_send`, `wire_call`, ...) and the
 
 ## Entry Point
 
-An app exports an `app()` function. The SDK's `applet_main` calls it once the
-runtime is set up. Core starts the app anew for every host request, so it
-handles one request and returns:
+An app implements the SDK's `app` entry point with the `#[trezor_app_sdk::app]`
+attribute; a missing one is a compile error. The SDK's `applet_main` calls it
+once the runtime is set up. Core starts the app anew for every host request, so
+it handles one request and returns:
 
 ```rust
-#[unsafe(no_mangle)]
-pub fn app() -> Result<()> {
+#[trezor_app_sdk::app]
+fn app() -> Result<()> {
     let (id, data) = wire_receive().c()?;
     handle_wire_message(id as i32, &data).c()
 }
