@@ -400,7 +400,7 @@ pub(crate) fn confirm_data_and_summary<'a>(
 }
 
 /// [`crypto::get_xpub`] on Ethereum's curve.
-pub(crate) fn get_xpub(address_n: &[u32], xpub_magic: u32) -> Result<[u8; 111]> {
+pub(crate) fn get_xpub(address_n: &[u32], xpub_magic: u32) -> Result<String> {
     crypto::get_xpub(crypto::Curve::Secp256k1, address_n, xpub_magic)
 }
 
