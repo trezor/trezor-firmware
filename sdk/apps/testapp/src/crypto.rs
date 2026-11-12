@@ -11,7 +11,7 @@ use trezor_app_sdk::crypto::{
 };
 use trezor_app_sdk::{Error, Result};
 
-use crate::alloc_types::{String, Vec};
+use crate::alloc_types::Vec;
 use crate::proto::testapp as wire;
 
 // ============================================================================
@@ -55,7 +55,6 @@ fn digest(mut hasher: sdk::BoxedHasher, chunks: &[Vec<u8>]) -> wire::Digest {
 
 pub fn get_xpub(m: wire::GetXpub) -> Result<wire::Xpub> {
     let xpub = sdk::get_xpub(key_curve(m.curve)?, &m.address_n, m.xpub_magic)?;
-    let xpub = String::from_utf8(xpub.to_vec()).map_err(|_| Error::InvalidMessage)?;
     Ok(wire::Xpub { xpub })
 }
 

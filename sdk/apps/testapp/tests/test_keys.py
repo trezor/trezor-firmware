@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc
+from trezorlib import btc, tools
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
@@ -27,6 +27,9 @@ from .testapp_ext import TPUB_MAGIC, XPUB_MAGIC
 
 # All hardened, so it works on Ed25519 too.
 ACCOUNT_N = parse_path("m/44h/1h/0h")
+
+# keys.json's tpub of ACCOUNT_N.
+ACCOUNT_TPUB = "tpubDDKn3FtHc74CaRrRbi1WFdJNaaenZkDWqq9NsEhcafnDZ4VuKeuLG2aKHm5SuwuLgAhRkkfHqcCxpnVNSrs5kJYZXwa6Ud431VnevzzzK3U"
 
 
 @parametrize_using_common_fixtures("keys.json")
@@ -100,3 +103,15 @@ def test_get_public_key_ed25519_matches_core(
     )
     # Core's node key has SLIP-10's 0x00 prefix.
     assert public_key == node.node.public_key[1:]
+
+
+@pytest.mark.parametrize(
+    "xpub_magic",
+    [0x00000000, 0x0488B21E, 0x00174921, 0x8F1DAEB8, 0xFFFFFFFF],
+    ids=["zero_110", "xpub_111", "florincoin_112", "particl_112", "max_112"],
+)
+def test_get_xpub_any_version(session: Session, instance_id: int, xpub_magic: int):
+    """The version bytes set the xpub's length, from 110 to 112 characters."""
+    node = tools.b58check_decode(ACCOUNT_TPUB)[4:]
+    expected = tools.b58check_encode(xpub_magic.to_bytes(4, "big") + node)
+    assert testapp_ext.get_xpub(session, instance_id, ACCOUNT_N, xpub_magic) == expected
