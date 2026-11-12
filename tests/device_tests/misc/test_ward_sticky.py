@@ -19,7 +19,6 @@ import pytest
 
 from trezorlib import debuglink, messages, ward
 from trezorlib.debuglink import DebugSession as Session
-from trezorlib.debuglink import LayoutType
 from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
@@ -29,7 +28,13 @@ from ...ward_mgr_emu import (
     wm_chain_sync,
     wm_initial_sync,
 )
-from .test_ward import _APP, _perform_and_finalize, _queue_update, _tree
+from .test_ward import (
+    _APP,
+    _perform_and_finalize,
+    _queue_update,
+    _screen_text,
+    _tree,
+)
 
 pytestmark = pytest.mark.models("core")
 
@@ -116,18 +121,8 @@ def _label_screens(session: Session, address: bytes, callback) -> list[str]:
                 ),
             )
             for _screen in range(4):
-                layout = dev.debuglink().read_layout()
-                title = layout.title().lower()
-                text = title + " " + layout.screen_content()
-                # Smaller screens split a long one into pages (e.g. the four
-                # properties of a changed offline entry on Delizia): read them all.
-                for _page in range(layout.page_count() - 1):
-                    if dev.debuglink().layout_type is LayoutType.Caesar:
-                        dev.debuglink().press_right()
-                    else:
-                        dev.debuglink().swipe_up()
-                    text += " " + dev.debuglink().read_layout().screen_content()
-                seen.append(" ".join(text.lower().split()))
+                title = dev.debuglink().read_layout().title().lower()
+                seen.append(_screen_text(dev.debuglink()).lower())
                 dev.debuglink().press_yes()
                 # the address screen is titled with the lookup's status; a warning
                 # before it may name the address too

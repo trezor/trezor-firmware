@@ -15,6 +15,7 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 from ...ward_mgr_emu import WMEmulator, device_ward_keys, wm_initial_sync
+from .test_ward import _screen_text
 
 pytestmark = pytest.mark.models("core")
 
@@ -49,10 +50,7 @@ def _list(
                 session, lambda s: ward.list_entries(s, **filters)
             )
             for index in range(screens):
-                layout = dev.debuglink().read_layout()
-                seen.append(
-                    " ".join((layout.title() + " " + layout.screen_content()).split())
-                )
+                seen.append(_screen_text(dev.debuglink()))
                 if index == approve:
                     dev.debuglink().press_no()
                 else:

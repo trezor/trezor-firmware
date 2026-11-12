@@ -12,6 +12,7 @@ import pytest
 
 from trezorlib import btc, models, ward
 from trezorlib.authdb_tree import WARDTree
+from trezorlib.debuglink import DebugLink, LayoutType
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.testing.device_handler import BackgroundDeviceHandler
@@ -34,6 +35,21 @@ _K_PATH, _K_DATA, _K_IDENT = device_ward_keys()
 def _tree() -> WARDTree:
     """Host WARDTree keyed by the device's K_index/K_data."""
     return WARDTree(_K_PATH, _K_DATA, _K_IDENT)
+
+
+def _screen_text(debug: DebugLink) -> str:
+    """The current screen's title and the content of all its pages, ending on the
+    last page. Smaller screens split one screen into pages (Caesar shows a single
+    property per page), so the first page alone may miss what the test looks for."""
+    layout = debug.read_layout()
+    text = layout.title() + " " + layout.screen_content()
+    for _page in range(layout.page_count() - 1):
+        if debug.layout_type is LayoutType.Caesar:
+            debug.press_right()
+        else:
+            debug.swipe_up()
+        text += " " + debug.read_layout().screen_content()
+    return " ".join(text.split())
 
 
 def _apply_device_leaf(tree: WARDTree, perform_result: tuple) -> None:
@@ -405,8 +421,6 @@ def test_ward_delete_shows_a_dedicated_delete_screen(session: Session) -> None:
             assert "delete" in title, f"delete screen must say so, got title={title!r}"
             # the update-only row must be absent: there is no new value in a delete
             assert "new value" not in content
-            # the entry being deleted is still identified
-            assert "alice" in content
 
             while "permanently removed" not in content:
                 assert "PromptScreen" not in layout.all_components(), (
@@ -425,6 +439,8 @@ def test_ward_delete_shows_a_dedicated_delete_screen(session: Session) -> None:
                 )
                 content += " " + layout.screen_content().lower().replace("\n", " ")
             assert "new value" not in content
+            # the entry being deleted is still identified
+            assert "alice" in content
 
             dev.debuglink().press_yes()
             pending_id = dev.result()
