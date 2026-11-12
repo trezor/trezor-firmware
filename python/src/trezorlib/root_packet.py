@@ -84,25 +84,28 @@ class RootPacketAuth(SanityCheckedStruct):
         """
         return sha256(self.build()).digest()
 
-    def sanity_check(self, image: bytes, errors: t.Sequence[str] = ()) -> None:
-        _errors: list[str] = list(errors)
+    def _mask_errors(self) -> list[str]:
+        errors: list[str] = []
 
         # `root_rings` length must equal the number of set mask bits
         expected = bin(self.ring_mask).count("1")
         if len(self.root_rings) != expected:
-            _errors.append(
+            errors.append(
                 f"root_rings length {len(self.root_rings)} does not match "
                 f"mask popcount {expected} (mask {self.ring_mask:#04x})"
             )
 
         # no bits set above MAX_RINGS
         if self.ring_mask >> self.MAX_RINGS:
-            _errors.append(
+            errors.append(
                 f"ring_mask {self.ring_mask:#04x} has bits set above "
                 f"MAX_RINGS={self.MAX_RINGS}"
             )
 
-        super().sanity_check(image, _errors)
+        return errors
+
+    def sanity_check(self, image: bytes, errors: t.Sequence[str] = ()) -> None:
+        super().sanity_check(image, [*errors, *self._mask_errors()])
 
 
 class RootPacket(SanityCheckedStruct):
@@ -130,7 +133,8 @@ class RootPacket(SanityCheckedStruct):
         return self.auth.digest()
 
     def sanity_check(self, image: bytes, errors: t.Sequence[str] = ()) -> None:
-        _errors: list[str] = list(errors)
+        # the base class doesn't run nested structs' own checks
+        _errors: list[str] = [*errors, *self.auth._mask_errors()]
 
         # `sigmask` must select exactly as many keys as there are signatures
         selected = bin(self.sigmask).count("1")
