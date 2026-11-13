@@ -90,12 +90,20 @@ def _check_path(session: Session, address_n: list[int]) -> None:
         raise ForbiddenKeyPath
 
 
-async def _get_xpub(session: Session, obj: Any) -> str:
-    curve, address_n, xpub_magic = obj
+async def _get_xpub(session: Session, obj: Any) -> bytes:
+    # a serialized xpub without its version, the app adds it
+    curve, address_n = obj
     _check_not_slip25(address_n)
     _check_path(session, address_n)
     keychain = await session.keychain(_curve(curve))
-    return keychain.derive(address_n).serialize_public(xpub_magic)
+    node = keychain.derive(address_n)
+    return (
+        node.depth().to_bytes(1, "big")
+        + node.fingerprint().to_bytes(4, "big")
+        + node.child_num().to_bytes(4, "big")
+        + node.chain_code()
+        + node.public_key()
+    )
 
 
 async def _get_public_key(session: Session, obj: Any) -> bytes:
