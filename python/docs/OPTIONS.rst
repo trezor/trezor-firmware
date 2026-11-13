@@ -48,6 +48,7 @@ on one page here.
     device             Device management commands - setup, recover seed, wipe, etc.
     ethereum           Ethereum commands.
     evolu              Evolu commands.
+    extapp             External application commands - load and run external apps.
     fido               FIDO2, U2F and WebAuthN management commands.
     firmware           Firmware commands.
     get-features       Retrieve device features and settings.
@@ -292,6 +293,25 @@ Evolu commands.
     get-node                    Return the SLIP-21 node for Evolu.
     index-management            Read the rotation index for the delegated identity key.
     sign-registration-request   Sign a registration request for this device to be registered at...
+
+External application commands - load and run external apps.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code::
+
+  trezorctl extapp --help
+
+.. code::
+
+  Usage: trezorctl extapp [OPTIONS] COMMAND [ARGS]...
+
+    External application commands - load and run external apps.
+
+  Options:
+    --help  Show this message and exit.
+
+  Commands:
+    load  Load an external application onto the device.
 
 FIDO2, U2F and WebAuthN management commands.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
