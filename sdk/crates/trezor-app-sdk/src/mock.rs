@@ -25,7 +25,7 @@ use crate::traits::ApiVariant;
 use crate::traits::allocator::{FfiLayout, GlobalAllocatorV1, GlobalAllocatorV1Vtable};
 use crate::traits::crypto::{
     BoxedHasher, CanonicalSig, CryptoError, CryptoV1, CryptoV1Vtable, Curve, EcdsaCurve, Hasher,
-    HashingAlgorithm, HmacAlgorithm,
+    HashingAlgorithm, HmacAlgorithm, XPUB_RAW_LEN,
 };
 use crate::traits::syslog::{
     LogCallbackDyn as _, LogCallbackRef, LogLevel, LogRecord, SyslogV1, SyslogV1Vtable,
@@ -137,8 +137,7 @@ impl CryptoV1 for DummyCrypto {
         &self,
         _curve: Curve,
         _address_n: Slice<'a, u32>,
-        _xpub_magic: u32,
-    ) -> ServiceResult<stabby::string::String, CryptoError> {
+    ) -> ServiceResult<[u8; XPUB_RAW_LEN], CryptoError> {
         unimplemented!("not exercised by the current test suite")
     }
 
