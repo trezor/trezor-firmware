@@ -373,7 +373,7 @@ pub(crate) fn request_contract() -> Result<(RawContractType, Vec<u8>)> {
         _ => return Err(Error::InvalidMessage),
     };
 
-    Ok((contract_type, data))
+    Ok((contract_type, data.as_ref().to_vec()))
 }
 
 fn process_smart_contract(
