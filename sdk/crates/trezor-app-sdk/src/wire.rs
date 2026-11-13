@@ -7,7 +7,8 @@
 //! request's response type and wire id once via the `wire_request_type!`
 //! macro instead of repeating both at every call site.
 
-use crate::alloc_types::Vec;
+use alloc::vec::Vec;
+
 use crate::app_runtime::get_wire_or_die;
 use crate::traits::wire::WireV1Dyn as _;
 use crate::util::Timeout;
