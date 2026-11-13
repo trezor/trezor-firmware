@@ -340,6 +340,7 @@ void pmic_deinit(void) {
   HAL_EXTI_ClearConfigLine(&drv->exti_handle);
 #endif
 
+  i2c_bus_abort(drv->i2c_bus, &drv->pending_i2c_packet);
   i2c_bus_close(drv->i2c_bus);
   systimer_delete(drv->timer);
 
