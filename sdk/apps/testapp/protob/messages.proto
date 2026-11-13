@@ -34,4 +34,5 @@ enum MessageType {
     MessageType_Base58 = 26;
     MessageType_Data = 27;
     MessageType_Crash = 28;
+    MessageType_Failure = 29;
 }

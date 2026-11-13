@@ -13,7 +13,7 @@ extern crate alloc;
 
 use prost::Message;
 use trezor_app_sdk::{
-    Error, Result, ResultExt, WireDecode, WireEncode, error, wire_error, wire_handler, wire_receive,
+    Error, Result, ResultExt, WireDecode, WireEncode, error, wire_handler, wire_receive, wire_send,
 };
 
 pub(crate) mod alloc_types;
@@ -24,7 +24,7 @@ use proto::messages::MessageType;
 use proto::testapp::{
     Base58CheckDecode, Base58CheckEncode, Base58Decode, Base58Encode, CheckAddressMac, Crash,
     EcdsaRecoverPubkey, EcdsaSignDigest, EcdsaVerify, EcdsaVerifyDigest, Ed25519Sign,
-    Ed25519Verify, GetAddressMac, GetPublicKey, GetXpub, Hash, Hmac,
+    Ed25519Verify, Failure, GetAddressMac, GetPublicKey, GetXpub, Hash, Hmac, failure::FailureType,
 };
 
 /// Wire codec for [`wire_handler!`] — encodes/decodes messages via [`prost`].
@@ -161,6 +161,16 @@ fn app() -> Result<()> {
     handle_wire_message(id as i32, &data).c()
 }
 
+/// Answers a request this app doesn't handle with its own `Failure`; it's the
+/// host's mistake, so the app neither fails nor crashes.
+fn unexpected_message() -> Result<()> {
+    let failure = Failure {
+        code: Some(FailureType::UnexpectedMessage as i32),
+        message: Some("Unexpected message".into()),
+    };
+    wire_send(&failure.encode_to_vec(), MessageType::Failure as u16)
+}
+
 /// Dispatches one wire request to its handler.
 pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
     match id.try_into() {
@@ -186,13 +196,9 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
             let _: Crash = ProstCodec::decode(data).c()?;
             Err(Error::DataError("crash requested"))
         }
-        Ok(_) => {
-            error!("Invalid function: {:?}", id);
-            wire_error(&Error::InvalidFunction)
-        }
-        Err(_) => {
-            error!("Non existing message type: {:?}", id);
-            wire_error(&Error::InvalidFunction)
+        _ => {
+            error!("Unexpected message: {:?}", id);
+            unexpected_message()
         }
     }
 }
