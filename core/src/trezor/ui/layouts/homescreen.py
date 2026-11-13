@@ -38,23 +38,27 @@ async def _wait_before_redraw() -> None:
     homescreen is closed before it is drawn."""
     from trezor import loop
 
-    unlocked = storage_cache.host_unlocked_ms
-    if unlocked is None:
-        return
-    now = utime.ticks_ms()
-    if utime.ticks_diff(now, unlocked) >= _AFTER_HOST_UNLOCK_MAX_MS:
-        return
+    # Re-check after each sleep: a request that doesn't restart the main loop (e.g.
+    # `GetFeatures`) can end while the homescreen sleeps, which moves the deadline.
+    while True:
+        unlocked = storage_cache.host_unlocked_ms
+        if unlocked is None:
+            return
+        now = utime.ticks_ms()
+        if utime.ticks_diff(now, unlocked) >= _AFTER_HOST_UNLOCK_MAX_MS:
+            return
 
-    ended = storage_cache.workflow_ended_ms
-    if ended is None or utime.ticks_diff(ended, unlocked) < 0:
-        ended = unlocked
-    due = utime.ticks_add(ended, _AFTER_HOST_STEP_MS)
-    latest = utime.ticks_add(unlocked, _AFTER_HOST_UNLOCK_MAX_MS)
-    if utime.ticks_diff(due, latest) > 0:
-        due = latest
+        ended = storage_cache.workflow_ended_ms
+        if ended is None or utime.ticks_diff(ended, unlocked) < 0:
+            ended = unlocked
+        due = utime.ticks_add(ended, _AFTER_HOST_STEP_MS)
+        latest = utime.ticks_add(unlocked, _AFTER_HOST_UNLOCK_MAX_MS)
+        if utime.ticks_diff(due, latest) > 0:
+            due = latest
 
-    remaining = utime.ticks_diff(due, now)
-    if remaining > 0:
+        remaining = utime.ticks_diff(due, now)
+        if remaining <= 0:
+            return
         await loop.sleep(remaining)
 
 
