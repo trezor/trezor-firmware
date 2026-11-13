@@ -25,18 +25,21 @@
     feature(lang_items)
 )]
 #![cfg_attr(feature = "app", feature(extern_item_impls))]
-// #![warn(missing_docs)]
+#![warn(missing_docs)]
 
 extern crate alloc;
 
 #[cfg(feature = "app")]
+/// The SDK's [`Error`] type and helpers to add context to results.
 pub mod error;
 // Always available: shared API structs used by both core app and extapps
 pub mod structs;
 
 #[cfg(feature = "app")]
+/// The app runtime: the entry point, access to Core's API and the heap allocator.
 pub mod app_runtime;
 
+/// The stable-ABI traits and types shared with Core.
 pub mod traits;
 
 #[cfg(feature = "app")]
@@ -53,6 +56,7 @@ pub mod log;
 pub mod print;
 
 #[cfg(feature = "app")]
+/// Small helpers, such as [`util::Timeout`].
 pub mod util;
 
 #[cfg(feature = "app")]

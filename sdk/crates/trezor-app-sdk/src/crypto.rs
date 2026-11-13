@@ -68,10 +68,13 @@ impl HasherExt for BoxedHasher {
 /// A derived public node: the fields of a serialized xpub.
 #[derive(Clone, PartialEq, Eq)]
 pub struct PublicNode {
+    /// Depth in the derivation tree, 0 for the master node.
     pub depth: u8,
     /// Fingerprint of the parent node.
     pub fingerprint: u32,
+    /// Index within the parent; hardened indices have the top bit set.
     pub child_num: u32,
+    /// Chain code, needed to derive child public keys.
     pub chain_code: [u8; 32],
     /// Compressed public key.
     pub public_key: [u8; 33],
