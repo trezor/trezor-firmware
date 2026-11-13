@@ -281,9 +281,9 @@ if utils.USE_THP:
         try:
             was_locked = not config.is_unlocked()
             await lock_manager.unlock_device()
-            await derive_and_store_roots(new_session, message)
             if was_locked:
                 lock_manager.mark_host_unlock()
+            await derive_and_store_roots(new_session, message)
         except DataError as e:
             return Failure(code=FailureType.DataError, message=e.message)
         except ActionCancelled as e:
