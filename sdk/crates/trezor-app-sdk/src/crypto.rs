@@ -15,10 +15,12 @@
 //! their own dependency on `stabby` (the SDK crate is the only dependency
 //! apps should need).
 
+use alloc::string::String;
+use alloc::vec::Vec;
+
 use stabby::boxed::BoxedSlice;
 use stabby::slice::Slice;
 
-use crate::alloc_types::{String, Vec};
 use crate::app_runtime::get_crypto_or_die;
 pub use crate::traits::crypto::{
     BoxedHasher, CanonicalSig, Curve, EcdsaCurve, HashingAlgorithm, HmacAlgorithm,

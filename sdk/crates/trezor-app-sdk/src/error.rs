@@ -1,5 +1,6 @@
 #[cfg(feature = "debug")]
-use crate::alloc_types::Box;
+use alloc::boxed::Box;
+
 use crate::traits::crypto::CryptoError;
 use crate::traits::util::{CoreServiceError, FastResult, ServiceResult};
 use crate::traits::wire::FailureKind;
