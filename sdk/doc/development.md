@@ -246,7 +246,7 @@ Every app must implement the SDK's `app()` entry point with the `#[trezor_app_sd
 #[trezor_app_sdk::app]
 fn app() -> Result<()> {
     let (id, data) = wire_receive().c()?;
-    handle_wire_message(id as i32, &data).c()
+    handle_wire_message(id as i32, data.as_ref()).c()
 }
 ```
 
