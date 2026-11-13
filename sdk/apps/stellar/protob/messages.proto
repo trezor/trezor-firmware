@@ -42,4 +42,5 @@ enum MessageType {
     MessageType_TxExt = 33;
     MessageType_SignSorobanAuthorization = 34;
     MessageType_SorobanAuthorizationSignature = 35;
+    MessageType_Failure = 36;
 }
