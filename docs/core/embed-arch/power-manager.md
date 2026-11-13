@@ -2,7 +2,7 @@
 
 This document describes how the power-management module (`core/embed/io/power_manager/`) is composed: the axes along which it varies per board, how a board selects an implementation, and the design rules that keep the pieces separable.
 
-The module is built only for models with a battery — currently Trezor Safe 7 (`T3W1`). Models without one do not enable it.
+The module is built for boards whose `[power_manager]` section selects a PMIC driver and whose project enables the`power_manager` feature. This includes the T3T2 devkit and Trezor Safe 7 (`T3W1`).
 
 ## 1. Composition axes
 
@@ -10,7 +10,7 @@ The module is organized by *capability*, not by chip. A board's power hardware i
 
 | Axis | Interface | Implementations |
 | ---- | --------- | --------------- |
-| PMIC driver | `<io/pmic.h>` | `pmic/npm1300/` |
+| PMIC driver | `<io/pmic.h>` | `pmic/npm1300/`, `pmic/npm2100/` |
 | Fuel gauge (state-of-charge estimator) | `fuel_gauge/battery.h` | `fuel_gauge/lifepo4/`, `fuel_gauge/mock/` |
 | Wireless charger | `wireless/stwlc38/stwlc38.h` | `wireless/stwlc38/`, or none |
 | Charger present | `pmic/pmic_charger.h` | capability flag, derived from the PMIC |
@@ -66,7 +66,7 @@ Two build shapes exist. The boardloader is *PMIC-only*: it maps `power_manager` 
 
 ## 4. The charger capability
 
-With `USE_CHARGER` off, the policy does not reference the charger extension at all: `pmic_charger.h` is not included, its charging-current bounds are not defined, the charging controller compiles to a no-op, the thermal controller compiles out entirely (it exists only to limit *charging* current by temperature), and `pm_charging_set_max_current()` rejects the request rather than reporting success for a limit that would never be applied. The rest of the public charging API still exists and does nothing. A chargerless PMIC therefore simply does not implement the extension, and nothing in `managed/` looks for it.
+With `USE_CHARGER` off, the policy does not reference the charger extension at all: `pmic_charger.h` is not included, its charging-current bounds are not defined, the charging controller compiles to a no-op, the thermal controller compiles out entirely (it exists only to limit *charging* current by temperature), and the public charging calls (`pm_charging_enable()`, `pm_charging_disable()`, `pm_charging_set_max_current()`, `pm_set_soc_target()`) still exist but return `PM_REQUEST_REJECTED` rather than reporting success for a setting that would never be applied. The charging queries `pm_is_charging()` and `pm_usb_is_connected()` always report `false`. A chargerless PMIC therefore simply does not implement the extension, and nothing in `managed/` looks for it.
 
 Regulator and buck-mode control are deliberately *not* part of this extension. The npm1300's buck-mode control has no cross-chip consumer, so it lives as an npm1300-private detail in `pmic/npm1300/npm1300_defs.h`. Should a policy ever need regulator control, it should get an agnostic interface with generic modes (auto / low-noise / high-efficiency), which apply to switching regulators in general, rather than exposing buck-specific names through `pmic.h`.
 
@@ -82,7 +82,7 @@ The estimator's internal state `P` is opaque to the policy: it is persisted to b
 
 Brownout protection is a *voltage-domain* concern and is deliberately kept out of the fuel gauge's precision budget, since not every chemistry can support a precise state-of-charge threshold.
 
-The policy keeps only the chemistry-agnostic part: if external power is present, the device is not brownout-critical. Everything else — the set and clear thresholds, and the hysteresis between them — is delegated to the gauge through `bat_eval_critical()`, which knows what its cell and its own precision can actually support.
+The policy keeps only the chemistry-agnostic part: if USB is connected, the device is not brownout-critical. Everything else — the set and clear thresholds, and the hysteresis between them — is delegated to the gauge through `bat_eval_critical()`, which knows what its cell and its own precision can actually support.
 
 For LiFePO4, undervoltage sets the condition and snaps the state-of-charge estimate to empty, and recovery is state-of-charge based: the flat discharge curve and large voltage relaxation make raw voltage misleading at rest, so only a genuine charge clears the latch, and the persisted state-of-charge is what prevents a false boot after hibernation. A low-precision primary-cell gauge would instead use voltage hysteresis with a sustained-time debounce, where "recovery" means the dip was a transient load sag rather than a recharge — which needs no state-of-charge precision at all.
 
