@@ -762,8 +762,18 @@ Writes up to 31 decimal values, each representing device variant options, to dev
 
 This command should be called after the `optiga-lock` command was successfully completed.
 
-Currently, three values are required during production:
-`otp-variant-write <unit_color> <unit_btconly> <unit_packaging>`.
+The values are written in this order:
+`otp-variant-write <unit_color> <unit_btconly> <unit_packaging> <battery_type> [<manufacturing_lock_present>]`.
+
+| Value | Description |
+|-------|-------------|
+| `unit_color` | Color code of the unit; opaque to the firmware, interpreted by Trezor Suite. |
+| `unit_btconly` | `1` for a Bitcoin-only unit, `0` otherwise. |
+| `unit_packaging` | Packaging variant code; opaque to the firmware, interpreted by Trezor Suite. |
+| `battery_type` | Battery type, model-specific. On T3W1: `0` = JYHPFL333838, `1` = HCF343837NCZ. Write `0` on models without a battery. |
+| `manufacturing_lock_present` | T3W1 only. Newer units must write `1`: manufacturing then ends with the separate manufacturing lock OTP block (see `manufacturing-lock-write`). `0` is only for early units, where the locked variant block marks the end of manufacturing. |
+
+Values left out are written as `0`. Do not omit `manufacturing_lock_present` on newer T3W1 units, as `0` would make them leave manufacturing mode as soon as the variant block is locked.
 
 In non-production firmware, you must include `--execute` as the last parameter to write the data to the OTP memory. Conversely, in production firmware, you can use `--dry-run` as the last parameter to simulate the command without actually writing to the OTP memory.
 You can also use `--rework` to fix an incorrectly written value. This is only usable once.
