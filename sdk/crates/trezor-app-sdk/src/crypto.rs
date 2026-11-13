@@ -11,7 +11,7 @@
 //! `CryptoV1::get_hasher`/`get_hmac` vtable, returning a [`BoxedHasher`]:
 //! update it and read the digest via [`HasherExt`], which — unlike the
 //! underlying stable-ABI [`Hasher`](crate::traits::crypto::Hasher) trait —
-//! takes/returns plain `&[u8]`/[`BoxedSlice<u8>`], so call sites don't need
+//! takes and returns plain bytes (`&[u8]`, `impl AsRef<[u8]>`), so call sites don't need
 //! their own dependency on `stabby` (the SDK crate is the only dependency
 //! apps should need).
 
@@ -52,7 +52,7 @@ pub trait HasherExt {
     /// hasher.finalize();
     /// hasher.update(b"more");
     /// ```
-    fn finalize(self) -> BoxedSlice<u8>;
+    fn finalize(self) -> impl AsRef<[u8]>;
 }
 
 impl HasherExt for BoxedHasher {
@@ -60,8 +60,18 @@ impl HasherExt for BoxedHasher {
         HasherDynMut::update(self, Slice::from(input));
     }
 
-    fn finalize(mut self) -> BoxedSlice<u8> {
-        HasherDynMut::finalize(&mut self)
+    fn finalize(mut self) -> impl AsRef<[u8]> {
+        Digest(HasherDynMut::finalize(&mut self))
+    }
+}
+
+/// The digest [`HasherExt::finalize`] returns, without copying it out of
+/// the [`BoxedSlice`].
+struct Digest(BoxedSlice<u8>);
+
+impl AsRef<[u8]> for Digest {
+    fn as_ref(&self) -> &[u8] {
+        &self.0
     }
 }
 
