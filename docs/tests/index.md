@@ -39,6 +39,12 @@ See the [upgrade-tests.md](upgrade-tests.md) for instructions how to run it.
 
 These tests test the Persistence mode, which is currently used in the device recovery. These tests launch the emulator themselves and they are capable of restarting or stopping it simulating user's plugging in or plugging out the device.
 
+## Bootloader tests
+
+These tests run the bootloader emulator, one run per test, with explicit startup parameters, and check both the screens and how the run ended. They are located in `bootloader_tests/` and have their own `conftest.py`.
+
+See [bootloader-tests.md](bootloader-tests.md) for instructions how to run it.
+
 ## Prodtest tests
 
 These tests test the production test firmware (prodtest) CLI against the prodtest emulator. The tests are located in `prodtest_tests/` and have their own `conftest.py`, isolated from the device-test suite.
