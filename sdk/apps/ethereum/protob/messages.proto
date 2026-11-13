@@ -31,4 +31,5 @@ enum MessageType {
     MessageType_Success = 18;
     MessageType_DefinitionRequest = 19;
     MessageType_DefinitionAck = 20;
+    MessageType_Failure = 21;
 }

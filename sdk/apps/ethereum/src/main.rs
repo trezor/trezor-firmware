@@ -10,8 +10,8 @@ extern crate alloc;
 
 use prost::Message;
 use trezor_app_sdk::{
-    Error, Result, ResultExt, WireDecode, WireEncode, error, wire_error, wire_handler,
-    wire_receive, wire_request_type,
+    Error, Result, ResultExt, WireDecode, WireEncode, error, wire_handler, wire_receive,
+    wire_request_type, wire_send,
 };
 
 // Include generated code
@@ -45,6 +45,7 @@ mod verify_message;
 mod yielding;
 mod yielding_vaults;
 
+use proto::common::{Failure, failure::FailureType};
 use proto::{
     ethereum::{
         DefinitionAck, DefinitionRequest, GetAddress, GetPublicKey, SignMessage, SignTx,
@@ -148,6 +149,16 @@ fn app() -> Result<()> {
     handle_wire_message(id as i32, &data).c()
 }
 
+/// Answers a request this app doesn't handle with its own `Failure`; it's the
+/// host's mistake, so the app neither fails nor crashes.
+fn unexpected_message() -> Result<()> {
+    let failure = Failure {
+        code: Some(FailureType::UnexpectedMessage as i32),
+        message: Some("Unexpected message".into()),
+    };
+    wire_send(&failure.encode_to_vec(), MessageType::Failure as u16)
+}
+
 /// Entry point for handling protobuf function calls
 /// fn_id: function identifier
 /// data: serialized protobuf request
@@ -161,13 +172,9 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
         Ok(MessageType::SignTxEip1559) => handle_sign_tx_eip1559(data),
         Ok(MessageType::SignTypedData) => handle_sign_typed_data(data),
         Ok(MessageType::VerifyMessage) => handle_verify_message(data),
-        Ok(_) => {
-            error!("Invalid function: {:?}", id);
-            wire_error(&Error::InvalidFunction)
-        }
-        Err(_) => {
-            error!("Non existing message type: {:?}", id);
-            wire_error(&Error::InvalidFunction)
+        _ => {
+            error!("Unexpected message: {:?}", id);
+            unexpected_message()
         }
     }
 }
