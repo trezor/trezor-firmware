@@ -41,11 +41,9 @@ async def do_unset_language(
     await _require_confirm_change_language(None, silent_install, show_display)
 
     if current_header is not None:
-        report(0)
         translations.deinit()
         translations.erase()
         # translations.init() would be a no-op here
-        report(1000)
 
     await _show_success(silent_install, show_display)
 
