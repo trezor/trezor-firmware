@@ -36,7 +36,7 @@ pub(crate) fn get_pubkey_hash(dp: &Bip32Path) -> Result<[u8; 20]> {
     let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
     hasher.update(&public_key[1..]);
     let hash = hasher.finalize();
-    Ok(hash[12..].try_into().unwrap())
+    Ok(hash.as_ref()[12..].try_into().unwrap())
 }
 
 pub(crate) fn get_encoded_address(address_bytes: &[u8]) -> Result<String> {

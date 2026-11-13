@@ -92,7 +92,7 @@ pub fn sign_tx(msg: SignTx) -> Result<Signature> {
 
     let mut hasher = crypto::get_hasher(HashingAlgorithm::Sha256);
     hasher.update(raw_tx_serialized.as_slice());
-    let w_hash: [u8; 32] = hasher.finalize().as_slice().try_into().unwrap();
+    let w_hash: [u8; 32] = hasher.finalize().as_ref().try_into().unwrap();
 
     // https://tronprotocol.github.io/documentation-en/mechanism-algorithm/account/#algorithm
     let sig = ecdsa_sign_digest(
