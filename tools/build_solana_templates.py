@@ -56,6 +56,11 @@ def build_templates(check: bool) -> None:
     programs = munchify(json.loads(PROGRAMS_JSON.read_text()))
     assert isinstance(programs, Munch)
     prog_stat = PROGRAMS_JSON.stat()
+    instructions = sum(len(p.instructions) for p in programs.programs)
+    print(
+        f"{PROGRAMS_JSON.relative_to(ROOT)}: {len(programs.programs)} programs,"
+        f" {instructions} instructions"
+    )
 
     all_ok = True
     for template_path in TEMPLATES:
@@ -78,6 +83,7 @@ def build_templates(check: bool) -> None:
                     max(tmpl_stat.st_mtime_ns, prog_stat.st_mtime_ns),
                 ),
             )
+            print(f"Rendered {dest_path.relative_to(ROOT)}")
 
     if not all_ok:
         raise click.ClickException("Some templates are out of date")

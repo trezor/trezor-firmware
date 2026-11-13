@@ -27,10 +27,6 @@ Generate `.pyi` stubs from C and Rust source files.
 
 Regenerate sources from Mako templates.
 
-### `build_vendorheader`
-
-Generate a vendor header binary from a json description.
-
 ### `combine_firmware`
 
 Combine a flashable image from a boardloader, bootloader, and firmware.
@@ -116,9 +112,12 @@ Combine coverage reports from multiple CI jobs and generate a report.
 
 Translate bytecode instructions in frozen_mpy.c to human readable form.
 
-### `generate_vendorheader.sh`
+### `generate_vendorheader.py`
 
-Uses `build_vendorheader` to rebuild all vendor headers for all models.
+Builds vendor headers from their JSON specs. Without arguments, rebuilds the vendor
+headers of all models, including the copies signed with development keys. Pass spec
+files to build only those, and `-o` (or `-i`) to build a single unsigned header with
+a custom output (or image) path.
 
 ### `jpg_to_h.py`
 

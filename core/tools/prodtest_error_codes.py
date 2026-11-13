@@ -201,6 +201,11 @@ def main() -> None:
                 file=sys.stderr,
             )
             sys.exit(1)
+        print(
+            f"{len(errors)} error codes across {len(modules)} modules"
+            f" in {args.output} are up to date",
+            file=sys.stderr,
+        )
         return
 
     if args.stdout:
