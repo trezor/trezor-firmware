@@ -156,10 +156,12 @@ impl PaymentRequestVerifier {
             .c()?;
 
         let nonce = payment_request.nonce.as_deref().unwrap_or(&[]);
+        // only Core can check the nonce; until it verifies payment requests
+        // itself, ones with a nonce are rejected
         if !nonce.is_empty() {
-            if !crypto::verify_nonce_cache(nonce).c()? {
-                return Err(Error::DataError("Invalid nonce in payment request."));
-            }
+            return Err(Error::DataError(
+                "Payment request nonces are not supported.",
+            ));
         } else if !payment_request.memos.is_empty() {
             return Err(Error::DataError("Missing nonce in payment request."));
         }
