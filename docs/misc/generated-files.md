@@ -5,6 +5,12 @@ content is stored in Git. The command `make gen_check`, run from CI, ensures tha
 generated content matches its sources. The command `make gen` regenerates all relevant
 files.
 
+Both commands run `tools/gen.py`, which runs independent generators in parallel,
+shows the output of a generator only when it fails, and lists the files that `make gen`
+changed. Pass step names to run only some of them (`tools/gen.py protobuf mocks`), `-v`
+(or `make gen V=1`) to see details from every step, `-vv` to also see the commands, and
+`--help` for the list of steps.
+
 In general, generated files are not compatible between branches. After rebasing or
 merging a different branch, you should immediately run `make gen` and make sure the
 result is committed.
