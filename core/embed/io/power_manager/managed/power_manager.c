@@ -504,18 +504,18 @@ pm_status_t pm_charging_disable(void) {
 }
 
 pm_status_t pm_charging_set_max_current(uint16_t current_ma) {
-  pm_driver_t* drv = &g_pm;
-
-  if (!drv->initialized) {
-    return PM_NOT_INITIALIZED;
-  }
-
 #ifndef USE_CHARGER
   // No charger on this PMIC, so there is no charging current to limit. Reject
   // rather than report success for a limit that would never be applied.
   (void)current_ma;
   return PM_REQUEST_REJECTED;
 #else
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return PM_NOT_INITIALIZED;
+  }
+
   if (current_ma > PM_BATTERY_CHARGING_CURRENT_MAX) {
     return PM_REQUEST_REJECTED;
   }
@@ -619,6 +619,7 @@ static bool pm_load_recovery_data(pm_recovery_data_t* recovery) {
 pm_status_t pm_set_soc_target(uint8_t target) {
 #ifndef USE_CHARGER
   // No charger on this PMIC.
+  (void)target;
   return PM_REQUEST_REJECTED;
 #else
   pm_driver_t* drv = &g_pm;

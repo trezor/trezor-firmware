@@ -489,6 +489,13 @@ PRODTEST_CLI_CMD(
     .info = "Disable battery charging",
     .args = ""
 );
+
+PRODTEST_CLI_CMD(
+  .name = "pm-set-soc-target",
+  .func = prodtest_pm_set_soc_target,
+  .info = "Set battery SoC charging target",
+  .args = "<target>"
+);
 #endif /* USE_CHARGER */
 
 PRODTEST_CLI_CMD(
@@ -511,15 +518,6 @@ PRODTEST_CLI_CMD(
   .info = "Get power manager report",
   .args = ""
 );
-
-#ifdef USE_CHARGER
-PRODTEST_CLI_CMD(
-  .name = "pm-set-soc-target",
-  .func = prodtest_pm_set_soc_target,
-  .info = "Set battery SoC charging target",
-  .args = "<target>"
-);
-#endif /* USE_CHARGER */
 
 PRODTEST_CLI_CMD(
   .name = "pm-new-soc-estimate",
