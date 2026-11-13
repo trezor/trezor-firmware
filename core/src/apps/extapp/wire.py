@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 
 # failure codes an app may report, indexed by the SDK's `FailureKind`
 _APP_FAILURE_CODES = (
-    FailureType.UnexpectedMessage,
     FailureType.DataError,
     FailureType.ActionCancelled,
     FailureType.ProcessError,
