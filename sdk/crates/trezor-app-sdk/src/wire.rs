@@ -48,7 +48,7 @@ pub fn wire_error(e: &Error) -> Result<()> {
 /// case; use this directly only when you need that dispatch, or need to
 /// bypass [`WireRequest`](crate::WireRequest)/[`WireEncode`](crate::WireEncode)/
 /// [`WireDecode`](crate::WireDecode) entirely.
-pub fn wire_call(req_bytes: &[u8], id: u16) -> Result<(u16, impl AsRef<[u8]>)> {
+pub fn wire_call(req_bytes: &[u8], id: u16) -> Result<(u16, impl AsRef<[u8]> + use<>)> {
     wire_send(req_bytes, id)?;
     wire_receive()
 }
