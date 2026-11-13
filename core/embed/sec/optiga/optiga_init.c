@@ -119,7 +119,11 @@ void optiga_suspend() {
 
 #else
 
-  optiga_deinit();
+  // Without an RTC there is nothing to schedule: close the channel and power
+  // the chip down right away. This is what optiga_deinit() does, but that one
+  // is secure-only and has no secure-monitor call, while these two do.
+  optiga_close_channel();
+  optiga_power_down();
 
 #endif  // USE_RTC
 }
