@@ -130,6 +130,4 @@ message ExtAppResponse {
     required uint32 message_id = 1;
     /// Data returned by the external application.
     required bytes data = 2;
-    /// Indicator whether the workflow is finished.
-    optional bool finished = 3 [default = false];
 }
