@@ -98,7 +98,7 @@ if ((error != 0)); then
 elif ((attempt > 1)); then
   RESULT="PASS (attempt $attempt/$TREZOR_MONERO_TESTS_ATTEMPTS, earlier attempts failed)"
 else
-  RESULT=PASS
+  RESULT="PASS"
 fi
 
 echo "[$RESULT] Monero test in $TIME_TESTS_ELAPSED sec. "

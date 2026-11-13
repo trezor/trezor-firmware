@@ -42,11 +42,25 @@ log.
 
 ## Changing the suite
 
-To add a patch, check out the base commit, `git am` the existing patches, commit the change and
-regenerate the series with `git format-patch` into `core/tests/monero/patches/`.
+`vendor/monero` has `update = none`, so `git submodule update` skips it. Check it out with:
 
-To move the base, point the submodule at the new commit (`git -C vendor/monero checkout <tag>`,
-`git add vendor/monero`) and delete the patches it contains.
+```sh
+git submodule update --init --checkout vendor/monero
+```
+
+To add a patch, `git am` the existing patches in `vendor/monero`, commit the change and regenerate
+the series with `git format-patch` into `core/tests/monero/patches/`. Then reset the submodule with
+`git submodule update --checkout vendor/monero`, so that the local commits are not recorded:
+`build.sh` fetches the recorded commit from `ph4r05/monero`.
+
+To move the base, check out the new commit in the submodule, record it and delete the patches it
+contains:
+
+```sh
+git -C vendor/monero fetch --depth 1 origin <tag or commit>
+git -C vendor/monero checkout FETCH_HEAD
+git add vendor/monero
+```
 
 ## Security fixes
 
