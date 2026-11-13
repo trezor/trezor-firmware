@@ -32,7 +32,8 @@ Without a terminal, set the choice in `TREZOR_MONERO_TESTS_GET=download|build|ke
 `TREZOR_MONERO_TESTS_GET=download make -C core test_emu_monero`.
 
 On its first run, the binary generates a test chain and keeps it next to itself as
-`<binary>.chain`. Building or downloading a new binary deletes it.
+`<binary>.chain`. Building or downloading a new binary deletes it. `make -C core clean_monero` deletes
+the binary with its test chain and logs, `docker rmi monero-trezor-tests` the image of a local build.
 
 `make` starts a temporary headless emulator on the default UDP port 21324, so do not run it while
 another emulator uses that port. The output goes to `core/tests/trezor_monero_tests.log`. A failing

@@ -18,7 +18,7 @@
 	build_bootloader_emu build_bootloader_emu_debug \
 	build_prodtest build_prodtest_emu build_secmon build_firmware \
 	build_unix build_unix_frozen build_unix_debug \
-	clean \
+	clean clean_monero \
 	flash flash_boardloader flash_bootloader flash_bootloader_ci \
 	flash_prodtest flash_firmware \
 	flash_erase flash_erase_bootloader flash_erase_firmware flash_erase_storage \
@@ -299,6 +299,10 @@ build_unix_debug: ## build unix port
 
 clean: ## clean all
 	xtask clean
+
+clean_monero: ## delete the monero tests binary with its test chain and logs
+	rm -f tests/trezor_monero_tests*
+	$(if $(TREZOR_MONERO_TESTS_PATH),rm -f "$(TREZOR_MONERO_TESTS_PATH)"*)
 
 ## flash commands:
 
