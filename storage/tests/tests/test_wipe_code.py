@@ -42,3 +42,23 @@ def test_wipe_code_wipes_storage(nc_class):
             s.get(0x0202)
 
     assert common.memory_equals(sc, sp)
+
+
+@pytest.mark.parametrize("nc_class", NC_CLASSES)
+def test_wipe_code_zero_byte(nc_class):
+    sc, sp = common.init(nc_class, unlock=True)
+    for s in (sc, sp):
+        assert s.change_pin("1234")
+        assert not s.change_wipe_code("1234", "56\x0078")  # invalid wipe code
+        assert not s.has_wipe_code()
+
+        assert s.change_wipe_code("1234", "5678")
+        rem = s.get_pin_rem()
+        assert not s.unlock("1234\x00")  # invalid PIN
+        assert s.get_pin_rem() == rem
+        assert not s.unlock("5678\x00")  # zero-byte variant of the wipe code
+        assert s.get_pin_rem() == rem
+        assert s.unlock("1234")
+        assert s.has_wipe_code()
+
+    assert common.memory_equals(sc, sp)

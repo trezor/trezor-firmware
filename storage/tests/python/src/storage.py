@@ -80,7 +80,14 @@ class Storage:
         self.nc.wipe()
         self._init_pin()
 
+    @staticmethod
+    def _pin_format_is_valid(pin: str) -> bool:
+        return "\x00" not in pin
+
     def check_pin(self, pin: str) -> bool:
+        if not self._pin_format_is_valid(pin):
+            return False
+
         self.pin_log.write_attempt()
 
         data = self.nc.get(consts.EDEK_ESEK_PVC_KEY)
@@ -104,7 +111,7 @@ class Storage:
         self.unlocked = False
 
     def unlock(self, pin: str) -> bool:
-        if not self.initialized:
+        if not self.initialized or not self._pin_format_is_valid(pin):
             return False
 
         if pin.encode() == self._get_wipe_code():
@@ -130,6 +137,8 @@ class Storage:
     def change_pin(self, newpin: str, oldpin: str | None = None) -> bool:
         if not self.initialized or not self.unlocked:
             return False
+        if not self._pin_format_is_valid(newpin):
+            return False
         if newpin.encode() == self._get_wipe_code():
             return False
         if oldpin is not None:
@@ -144,7 +153,7 @@ class Storage:
         return self._get_wipe_code() != consts.WIPE_CODE_EMPTY.encode()
 
     def change_wipe_code(self, pin: str, wipe_code: str) -> bool:
-        if not self.initialized:
+        if not self.initialized or not self._pin_format_is_valid(wipe_code):
             return False
         if pin != consts.PIN_EMPTY and pin == wipe_code:
             return False
