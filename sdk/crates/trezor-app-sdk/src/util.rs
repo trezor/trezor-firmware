@@ -1,3 +1,4 @@
+use stabby::boxed::BoxedSlice;
 use ufmt::derive::uDebug;
 
 use crate::app_runtime;
@@ -92,5 +93,15 @@ impl<'a> AsRef<str> for SliceWriter<'a> {
         // SAFETY: The only way to write is by invoking the ufmt::uWrite impl,
         // which appends valid Rust &strs.
         unsafe { core::str::from_utf8_unchecked(&self.slice[..self.pos]) }
+    }
+}
+
+/// Bytes handed over by Core, exposed as `impl AsRef<[u8]>` without copying
+/// them out of the [`BoxedSlice`].
+pub(crate) struct Bytes(pub(crate) BoxedSlice<u8>);
+
+impl AsRef<[u8]> for Bytes {
+    fn as_ref(&self) -> &[u8] {
+        &self.0
     }
 }
