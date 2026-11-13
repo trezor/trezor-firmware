@@ -14,6 +14,8 @@ pub struct Frame<T> {
     subtitle: Option<Child<Label<'static>>>,
     button: Option<Child<Button>>,
     button_msg: CancelInfoConfirmMsg,
+    #[cfg(feature = "ui_debug")]
+    has_menu: bool,
     content: Child<T>,
 }
 
@@ -39,6 +41,8 @@ where
             border: theme::borders(),
             button: None,
             button_msg: CancelInfoConfirmMsg::Cancelled,
+            #[cfg(feature = "ui_debug")]
+            has_menu: false,
             content: Child::new(content),
         }
     }
@@ -89,7 +93,19 @@ where
     }
 
     pub fn with_info_button(self) -> Self {
-        self.with_button(theme::ICON_CORNER_INFO, CancelInfoConfirmMsg::Info)
+        #[cfg(feature = "ui_debug")]
+        let mut this = self;
+        #[cfg(not(feature = "ui_debug"))]
+        let this = self;
+        #[cfg(feature = "ui_debug")]
+        {
+            // `has_menu` marks the corner button as a detour the tests should visit,
+            // in line with the other layouts (see #5189). Bolt has an info page
+            // rather than a multi-item menu; when real menus arrive, this flag will
+            // cover them too.
+            this.has_menu = true;
+        }
+        this.with_button(theme::ICON_CORNER_INFO, CancelInfoConfirmMsg::Info)
     }
 
     pub fn with_menu_button(self) -> Self {
@@ -210,6 +226,9 @@ where
         }
         if let Some(button) = &self.button {
             t.child("button", button);
+        }
+        if self.has_menu {
+            t.bool("has_menu", true);
         }
     }
 }
