@@ -53,6 +53,7 @@
   - [Upgrade Tests](tests/upgrade-tests.md)
   - [UI Tests](tests/ui-tests.md)
   - [Click Tests](tests/click-tests.md)
+  - [Monero Tests](tests/monero-tests.md)
 - [Miscellaneous](misc/index.md)
   - [Affected third-parties](misc/third-parties.md)
   - [Changelog](misc/changelog.md)

@@ -34,18 +34,6 @@
         "type": "github"
       }
     },
-    "monero-tests": {
-      "flake": false,
-      "locked": {
-        "narHash": "sha256-xIRDvVslHmyF5GqpyRQUjd6p6G48/082P0kgufELhW4=",
-        "type": "file",
-        "url": "https://github.com/ph4r05/monero/releases/download/v0.18.3.1-dev-tests-u18.04-01/trezor_tests"
-      },
-      "original": {
-        "type": "file",
-        "url": "https://github.com/ph4r05/monero/releases/download/v0.18.3.1-dev-tests-u18.04-01/trezor_tests"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1791734076,
@@ -66,7 +54,6 @@
       "inputs": {
         "flake-compat": "flake-compat",
         "flake-utils": "flake-utils",
-        "monero-tests": "monero-tests",
         "nixpkgs": "nixpkgs",
         "rust-overlay": "rust-overlay"
       }

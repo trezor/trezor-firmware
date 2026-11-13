@@ -12,10 +12,6 @@
       url = "github:NixOS/flake-compat";
       flake = false;
     };
-    monero-tests = {
-      url = "https://github.com/ph4r05/monero/releases/download/v0.18.3.1-dev-tests-u18.04-01/trezor_tests";
-      flake = false;
-    };
   };
 
   outputs =
@@ -24,7 +20,6 @@
       nixpkgs,
       rust-overlay,
       flake-utils,
-      monero-tests,
       ...
     }:
     flake-utils.lib.eachDefaultSystem (system:
@@ -76,15 +71,6 @@
           version = "stm-cubeide-v1.13.0";
           nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ pkgs.autoreconfHook ];
         });
-        moneroTestsPatched = pkgs.runCommandCC "monero_trezor_tests" { } ''
-          cp ${monero-tests} $out
-          chmod +wx $out
-          ${pkgs.patchelf}/bin/patchelf \
-          --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-          --add-rpath "${pkgs.udev}/lib" \
-          "$out"
-          chmod -w $out
-        '';
 
         mkShellFromParams =
           {
@@ -139,6 +125,7 @@
               #bitcoind # for HWI tests which are currently disabled
             ]
             ++ lib.optionals (!isDarwin) [
+              patchelf # for Monero tests on NixOS
               procps
               valgrind
             ]
@@ -188,10 +175,6 @@
               # silently downloading/reusing its own interpreter and ignoring python3 on PATH.
               UV_PYTHON_PREFERENCE = "only-system";
               UV_PYTHON_DOWNLOADS = "never";
-            }
-            // (lib.optionalAttrs (fullDeps && !isDarwin)) {
-              # ~250MiB binary
-              TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
             };
           });
       in

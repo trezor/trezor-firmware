@@ -18,7 +18,7 @@
 	build_bootloader_emu build_bootloader_emu_debug \
 	build_prodtest build_prodtest_emu build_secmon build_firmware \
 	build_unix build_unix_frozen build_unix_debug \
-	clean \
+	clean clean_monero \
 	flash flash_boardloader flash_bootloader flash_bootloader_ci \
 	flash_prodtest flash_firmware \
 	flash_erase flash_erase_bootloader flash_erase_firmware flash_erase_storage \
@@ -148,6 +148,7 @@ test_emu_multicore: ## run device tests using multiple cores
 		--lang=$(TEST_LANG)
 
 test_emu_monero: ## run selected monero device tests from monero-agent
+	./tests/monero/prepare.sh
 	cd tests ; $(EMU_TEST) ./run_tests_device_emu_monero.sh $(TESTOPTS)
 
 test_emu_u2f: ## run selected u2f device tests from u2f-tests-hid
@@ -298,6 +299,10 @@ build_unix_debug: ## build unix port
 
 clean: ## clean all
 	xtask clean
+
+clean_monero: ## delete the monero tests binary with its test chain and logs
+	rm -f tests/trezor_monero_tests*
+	$(if $(TREZOR_MONERO_TESTS_PATH),rm -f "$(TREZOR_MONERO_TESTS_PATH)"*)
 
 ## flash commands:
 
