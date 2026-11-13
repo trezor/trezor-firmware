@@ -74,6 +74,13 @@ LOCKSCREEN_ON = object()
 BUSYSCREEN_ON = object()
 homescreen_shown: object | None = None
 
+# Ticks (ms) when the device was unlocked because a host request needed it (the host is
+# then about to continue with its own screens), and when the last workflow finished.
+# Used by `trezor.ui.layouts.homescreen`. Here to persist across the main loop restart
+# that follows each host request.
+host_unlocked_ms: int | None = None
+workflow_ended_ms: int | None = None
+
 # Timestamp of last autolock activity.
 # Here to persist across main loop restart between workflows.
 autolock_last_touch: int | None = None

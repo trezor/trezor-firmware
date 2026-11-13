@@ -432,11 +432,12 @@ class InterfaceContext:
         try:
             from trezor import workflow
 
-            from apps.common.lock_manager import unlock_device
+            from apps.common.lock_manager import mark_host_unlock, unlock_device
 
             # Register the unlock prompt with the workflow management system
             # (in order to avoid immediately respawning the lockscreen task)
             await workflow.spawn(unlock_device())
+            mark_host_unlock()
             trezor_static_privkey = get_trezor_static_private_key()
         except Exception as e:
             if __debug__:
