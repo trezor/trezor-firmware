@@ -93,7 +93,8 @@ extern Storage configUpdate;
 #else
 #define MIN_AUTOLOCK_DELAY_MS (60 * 1000U)  // 1 minute
 #endif
-#define MAX_AUTOLOCK_DELAY_MS 0x20000000U  // ~6 days
+// The value matches the core firmware
+#define MAX_AUTOLOCK_DELAY_MS (149 * 60 * 60 * 1000U)  // 149 hours
 
 void config_init(void);
 void session_clear(bool lock);
