@@ -65,17 +65,22 @@ def init(api_key, refresh=None):
         slug = coin["slug"]
         symbol = coin["symbol"]
         platform = coin["meta"]["platform"]
+        # sorted by popularity, more popular wins non-unique symbol
+        if slug in data_searchable or symbol in data_searchable:
+            continue
         data_searchable[slug] = data_searchable[symbol] = coin
         if platform is not None and platform["name"] == "Ethereum":
             address = platform["token_address"].lower()
-            data_searchable[address] = coin
+            if address not in data_searchable:
+                data_searchable[address] = coin
         for explorer in coin["meta"]["urls"]["explorer"]:
             # some tokens exist in multiple places, such as BNB and ETH
             # then the "platform" field might list the wrong thing
             # to be sure, walk the list of explorers and look for etherscan.io
             if explorer.startswith("https://etherscan.io/token/"):
                 address = explorer.rsplit("/", 1)[-1].lower()
-                data_searchable[address] = coin
+                if address not in data_searchable:
+                    data_searchable[address] = coin
 
     COINS_SEARCHABLE = data_searchable
 
