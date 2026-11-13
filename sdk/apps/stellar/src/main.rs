@@ -45,7 +45,7 @@ where
     Req: Message,
     Resp: Message + Default,
 {
-    let (_id, resp_bytes) = wire_call(&req.encode_to_vec(), id as u16).c()?;
+    let (_id, resp_bytes) = wire_call(id as u16, &req.encode_to_vec()).c()?;
     Resp::decode(resp_bytes.as_ref()).map_err(|_| Error::InvalidMessage)
 }
 
@@ -104,7 +104,7 @@ fn unexpected_message() -> Result<()> {
         code: Some(FailureType::UnexpectedMessage as i32),
         message: Some("Unexpected message".into()),
     };
-    wire_send(&failure.encode_to_vec(), MessageType::Failure as u16)
+    wire_send(MessageType::Failure as u16, &failure.encode_to_vec())
 }
 
 /// Entry point for handling protobuf function calls

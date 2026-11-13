@@ -27,7 +27,7 @@ use trezor_app_sdk::{Error, Result, ResultExt, WireEncode, crypto, ui, wire_call
 /// Requests the next operation of the transaction from the host.
 fn request_operation() -> Result<Operation> {
     let req_bytes = ProstCodec::encode(&TxOpRequest {});
-    let (id, data) = wire_call(&req_bytes, MessageType::TxOpRequest as u16).c()?;
+    let (id, data) = wire_call(MessageType::TxOpRequest as u16, &req_bytes).c()?;
     let message_type = MessageType::try_from(id as i32).map_err(|_| Error::InvalidMessage)?;
     Operation::decode(message_type, data.as_ref())
 }
@@ -35,7 +35,7 @@ fn request_operation() -> Result<Operation> {
 /// Requests the transaction extension of a Soroban transaction.
 fn request_tx_ext() -> Result<TxExt> {
     let req_bytes = ProstCodec::encode(&TxExtRequest {});
-    let (id, data) = wire_call(&req_bytes, MessageType::TxExtRequest as u16).c()?;
+    let (id, data) = wire_call(MessageType::TxExtRequest as u16, &req_bytes).c()?;
     if id as i32 != MessageType::TxExt as i32 {
         return Err(Error::InvalidMessage);
     }
