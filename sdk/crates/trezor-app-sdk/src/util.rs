@@ -49,11 +49,6 @@ impl Timeout {
         self.0
     }
 
-    /// Converts this timeout to an absolute deadline by adding it to the current systick.
-    pub fn as_deadline(&self) -> u32 {
-        app_runtime::systick_ms().wrapping_add(self.0)
-    }
-
     /// Blocks until this timeout elapses.
     pub fn sleep(&self) {
         app_runtime::sleep(self.0);
