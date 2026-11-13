@@ -5,6 +5,10 @@ use stabby::str::Str;
 
 use super::util::{FastResult, ServiceResult};
 
+/// Length of [`CryptoV1::get_xpub`]'s result: a serialized xpub without its
+/// 4-byte version.
+pub const XPUB_RAW_LEN: usize = 74;
+
 #[stabby::stabby]
 #[repr(u8)]
 pub enum CryptoError {
@@ -83,14 +87,14 @@ pub trait CryptoV1: Send + Sync {
     /// the HMAC context's internal state); Core never retains it afterward.
     extern "C" fn get_hmac<'a>(&self, algorithm: HmacAlgorithm, key: Slice<'a, u8>) -> BoxedHasher;
 
-    /// Derives the extended public key (xpub) for `address_n` on `curve`, as a
-    /// base58check string; its length depends on `xpub_magic`.
+    /// Derives the public node for `address_n` on `curve`, as a serialized
+    /// xpub without its version: depth (1), parent fingerprint (4), child
+    /// number (4), chain code (32) and compressed public key (33).
     extern "C" fn get_xpub<'a>(
         &self,
         curve: Curve,
         address_n: Slice<'a, u32>,
-        xpub_magic: u32,
-    ) -> ServiceResult<String, CryptoError>;
+    ) -> ServiceResult<[u8; XPUB_RAW_LEN], CryptoError>;
 
     /// Derives the public key for `address_n` on `curve`.
     extern "C" fn get_public_key<'a>(
