@@ -63,15 +63,17 @@ pub mod macros;
 #[cfg(feature = "app")]
 mod wire;
 
+#[cfg(feature = "app")]
+mod codec;
+
 #[cfg(feature = "test")]
 pub mod mock;
 
 #[cfg(feature = "app")]
 pub use app_runtime::app;
 #[cfg(feature = "app")]
+pub use codec::{WireDecode, WireEncode, WireRequest, wire_request};
+#[cfg(feature = "app")]
 pub use error::{Error, IntoAppResult, Result, ResultExt, ServiceResultExt};
 #[cfg(feature = "app")]
-pub use wire::{
-    WireDecode, WireEncode, WireRequest, wire_call, wire_error, wire_receive, wire_request,
-    wire_send,
-};
+pub use wire::{wire_call, wire_error, wire_receive, wire_send};

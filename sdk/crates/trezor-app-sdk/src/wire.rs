@@ -1,28 +1,10 @@
-//! Serializer-agnostic wire primitives used by the `wire_handler!` macro and
-//! by [`wire_request`].
-//!
-//! This module has no dependency on any particular message encoding (e.g.
-//! prost). Apps select their serializer by implementing [`WireDecode`] and
-//! [`WireEncode`] for a codec marker type of their own, and declare each
-//! request's response type and wire id once via the `wire_request_type!`
-//! macro instead of repeating both at every call site.
-
-use alloc::vec::Vec;
+//! Talking to the host through Core: receive, send, call and error. The
+//! message encoding on top lives in [`crate::codec`].
 
 use crate::app_runtime::get_wire_or_die;
 use crate::traits::wire::WireV1Dyn as _;
 use crate::util::{Bytes, Timeout};
 use crate::{Error, IntoAppResult, Result, ResultExt, debug};
-
-/// Decodes a wire message body into `T` using the implementing codec.
-pub trait WireDecode<T> {
-    fn decode(data: &[u8]) -> Result<T>;
-}
-
-/// Encodes `T` into a wire message body using the implementing codec.
-pub trait WireEncode<T> {
-    fn encode(val: &T) -> Vec<u8>;
-}
 
 /// Waits for the next message from the host and returns its id and raw bytes.
 pub fn wire_receive() -> Result<(u16, impl AsRef<[u8]>)> {
@@ -62,35 +44,11 @@ pub fn wire_error(e: &Error) -> Result<()> {
 /// bytes (rather than assuming a single fixed response type) lets a request
 /// with more than one possible response dispatch on it — see e.g. Tron's
 /// `request_contract`, which can get back any one of several contract
-/// message types. Prefer [`wire_request`] for the common single-response
+/// message types. Prefer [`wire_request`](crate::wire_request) for the common single-response
 /// case; use this directly only when you need that dispatch, or need to
-/// bypass [`WireRequest`]/[`WireEncode`]/[`WireDecode`] entirely.
+/// bypass [`WireRequest`](crate::WireRequest)/[`WireEncode`](crate::WireEncode)/
+/// [`WireDecode`](crate::WireDecode) entirely.
 pub fn wire_call(req_bytes: &[u8], id: u16) -> Result<(u16, impl AsRef<[u8]>)> {
     wire_send(req_bytes, id)?;
     wire_receive()
-}
-
-/// Associates a request type with its response type and wire id.
-///
-/// Implemented once per request type via the `wire_request_type!` macro, so
-/// [`wire_request`] call sites don't need to repeat the response type
-/// annotation and the message id in lockstep — a common source of copy-paste
-/// mismatches when they're passed as two independent arguments/annotations.
-pub trait WireRequest {
-    type Response;
-    const ID: u16;
-}
-
-/// Sends `req` to the host using `Codec` and decodes the response.
-///
-/// `Req`'s response type and wire id come from its [`WireRequest`] impl
-/// rather than being repeated at the call site.
-pub fn wire_request<Codec, Req>(req: &Req) -> Result<Req::Response>
-where
-    Req: WireRequest,
-    Codec: WireEncode<Req> + WireDecode<Req::Response>,
-{
-    let req_bytes = Codec::encode(req);
-    let (_id, resp_bytes) = wire_call(&req_bytes, Req::ID)?;
-    Codec::decode(resp_bytes.as_ref())
 }
