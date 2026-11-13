@@ -197,6 +197,7 @@ pub trait FirmwareUI {
         verb_view_all: Option<TString<'static>>,
         hold: bool,
         chunkify: bool,
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn confirm_homescreen(

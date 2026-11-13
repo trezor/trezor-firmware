@@ -231,6 +231,7 @@ def confirm_value_intro(
     hold: bool = False,
     chunkify: bool = False,
     verb_view_all: str | None = None,
+    external_menu: bool = False,
 ) -> LayoutContext[UiResult]:
     """Similar to `confirm_value`, but only the first page is shown.
     This function is intended as a building block for a higher level `confirm_blob`
