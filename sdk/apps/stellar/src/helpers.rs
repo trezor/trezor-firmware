@@ -159,7 +159,7 @@ pub fn sha256(data: &[u8]) -> [u8; 32] {
     let mut hasher = crypto::get_hasher(HashingAlgorithm::Sha256);
     hasher.update(data);
     let mut digest = [0u8; 32];
-    digest.copy_from_slice(hasher.finalize().as_slice());
+    digest.copy_from_slice(hasher.finalize().as_ref());
     digest
 }
 

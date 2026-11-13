@@ -256,7 +256,7 @@ pub fn sign_tx(msg: SignTx) -> Result<SignedTx> {
     let digest: [u8; 32] = {
         use trezor_app_sdk::crypto::HasherExt as _;
         w.finalize()
-            .as_slice()
+            .as_ref()
             .try_into()
             .map_err(|_| Error::DataError("Stellar: invalid digest"))?
     };

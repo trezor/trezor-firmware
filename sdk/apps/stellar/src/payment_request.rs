@@ -239,14 +239,14 @@ impl PaymentRequestVerifier {
         let fresh = || crypto::get_hasher(HashingAlgorithm::Sha256);
         let h_outputs = core::mem::replace(&mut self.h_outputs, fresh());
         let mut h_pr = core::mem::replace(&mut self.h_pr, fresh());
-        h_pr.update(&h_outputs.finalize());
+        h_pr.update(h_outputs.finalize().as_ref());
         let digest = h_pr.finalize();
 
         let mut valid = crypto::ecdsa_verify_digest(
             EcdsaCurve::Nist256p1,
             &PUBLIC_KEY,
             &self.signature,
-            &digest,
+            digest.as_ref(),
         )
         .is_ok();
 
@@ -256,7 +256,7 @@ impl PaymentRequestVerifier {
                 EcdsaCurve::Nist256p1,
                 &DEBUG_PUBLIC_KEY,
                 &self.signature,
-                &digest,
+                digest.as_ref(),
             )
             .is_ok();
         }

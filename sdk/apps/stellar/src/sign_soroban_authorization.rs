@@ -65,7 +65,7 @@ pub fn sign_soroban_authorization(
 
     let payload: [u8; 32] = w
         .finalize()
-        .as_slice()
+        .as_ref()
         .try_into()
         .map_err(|_| Error::DataError("Stellar: invalid digest"))?;
     let signature = sign_digest(&msg.address_n, &payload).c()?;
