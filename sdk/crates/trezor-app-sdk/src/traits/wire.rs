@@ -18,7 +18,6 @@ pub struct WireMessage {
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(test, derive(Debug))]
 pub enum FailureKind {
-    UnexpectedMessage,
     DataError,
     ActionCancelled,
     ProcessError,
