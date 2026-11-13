@@ -18,7 +18,6 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 
-use stabby::boxed::BoxedSlice;
 use stabby::slice::Slice;
 
 use crate::app_runtime::get_crypto_or_die;
@@ -26,6 +25,7 @@ pub use crate::traits::crypto::{
     BoxedHasher, CanonicalSig, Curve, EcdsaCurve, HashingAlgorithm, HmacAlgorithm,
 };
 use crate::traits::crypto::{CryptoV1Dyn as _, HasherDynMut};
+use crate::util::Bytes;
 use crate::{IntoAppResult, Result, ResultExt};
 
 /// A local (non-IPC) streaming hasher for `algorithm` — see the module docs.
@@ -61,17 +61,7 @@ impl HasherExt for BoxedHasher {
     }
 
     fn finalize(mut self) -> impl AsRef<[u8]> {
-        Digest(HasherDynMut::finalize(&mut self))
-    }
-}
-
-/// The digest [`HasherExt::finalize`] returns, without copying it out of
-/// the [`BoxedSlice`].
-struct Digest(BoxedSlice<u8>);
-
-impl AsRef<[u8]> for Digest {
-    fn as_ref(&self) -> &[u8] {
-        &self.0
+        Bytes(HasherDynMut::finalize(&mut self))
     }
 }
 
