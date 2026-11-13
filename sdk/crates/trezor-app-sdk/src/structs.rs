@@ -840,7 +840,6 @@ pub enum TrezorCryptoEnum<'a> {
         /// A [`Curve`](crate::traits::crypto::Curve), as its `u8` value.
         curve: u8,
         address_n: Slice<'a, u32>,
-        xpub_magic: u32,
     },
     GetPublicKey {
         /// A [`Curve`](crate::traits::crypto::Curve), as its `u8` value.
@@ -947,7 +946,6 @@ mod tests {
                 GetXpub {
                     curve: 0,
                     address_n: empty_u32.into(),
-                    xpub_magic: 0,
                 }
                 .id(),
                 "GetXpub",

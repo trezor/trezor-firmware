@@ -22,7 +22,7 @@ use stabby::slice::Slice;
 
 use crate::app_runtime::get_crypto_or_die;
 pub use crate::traits::crypto::{
-    BoxedHasher, CanonicalSig, Curve, EcdsaCurve, HashingAlgorithm, HmacAlgorithm,
+    BoxedHasher, CanonicalSig, Curve, EcdsaCurve, HashingAlgorithm, HmacAlgorithm, XPUB_RAW_LEN,
 };
 use crate::traits::crypto::{CryptoV1Dyn as _, HasherDynMut};
 use crate::util::Bytes;
@@ -65,15 +65,67 @@ impl HasherExt for BoxedHasher {
     }
 }
 
-/// Derives the extended public key (xpub) for `address_n` on `curve`,
-/// base58check-encoded with `xpub_magic` as its version bytes (e.g. the
-/// "xpub"/"ypub"/"zpub" prefix bytes for the coin/script type in use).
-pub fn get_xpub(curve: Curve, address_n: &[u32], xpub_magic: u32) -> Result<String> {
+/// A derived public node: the fields of a serialized xpub.
+#[derive(Clone, PartialEq, Eq)]
+pub struct PublicNode {
+    pub depth: u8,
+    /// Fingerprint of the parent node.
+    pub fingerprint: u32,
+    pub child_num: u32,
+    pub chain_code: [u8; 32],
+    /// Compressed public key.
+    pub public_key: [u8; 33],
+}
+
+impl PublicNode {
+    fn from_raw(raw: &[u8; XPUB_RAW_LEN]) -> Self {
+        let (depth, rest) = raw.split_at(1);
+        let (fingerprint, rest) = rest.split_at(4);
+        let (child_num, rest) = rest.split_at(4);
+        let (chain_code, public_key) = rest.split_at(32);
+        Self {
+            depth: depth[0],
+            fingerprint: u32::from_be_bytes(fingerprint.try_into().unwrap_or_default()),
+            child_num: u32::from_be_bytes(child_num.try_into().unwrap_or_default()),
+            chain_code: chain_code.try_into().unwrap_or_default(),
+            public_key: public_key.try_into().unwrap_or([0; 33]),
+        }
+    }
+
+    /// The node serialized as an xpub with `version` as its version bytes,
+    /// before base58check encoding.
+    pub fn serialize(&self, version: u32) -> [u8; 4 + XPUB_RAW_LEN] {
+        let mut data = [0u8; 4 + XPUB_RAW_LEN];
+        data[..4].copy_from_slice(&version.to_be_bytes());
+        data[4] = self.depth;
+        data[5..9].copy_from_slice(&self.fingerprint.to_be_bytes());
+        data[9..13].copy_from_slice(&self.child_num.to_be_bytes());
+        data[13..45].copy_from_slice(&self.chain_code);
+        data[45..].copy_from_slice(&self.public_key);
+        data
+    }
+
+    /// The node as a base58check xpub with `version` as its version bytes
+    /// (e.g. the "xpub"/"ypub"/"zpub" prefix for the coin/script type in use).
+    pub fn to_xpub(&self, version: u32) -> String {
+        base58check_encode(&self.serialize(version))
+    }
+}
+
+/// Derives the public node for `address_n` on `curve`.
+pub fn get_public_node(curve: Curve, address_n: &[u32]) -> Result<PublicNode> {
     get_crypto_or_die()
-        .get_xpub(curve, address_n.into(), xpub_magic)
+        .get_xpub(curve, address_n.into())
         .into_app_result()
         .c()
-        .map(|xpub| String::from(xpub.as_str()))
+        .map(|raw| PublicNode::from_raw(&raw))
+}
+
+/// Derives the extended public key (xpub) for `address_n` on `curve`,
+/// base58check-encoded with `version` as its version bytes (e.g. the
+/// "xpub"/"ypub"/"zpub" prefix bytes for the coin/script type in use).
+pub fn get_xpub(curve: Curve, address_n: &[u32], version: u32) -> Result<String> {
+    Ok(get_public_node(curve, address_n)?.to_xpub(version))
 }
 
 /// Derives the public key for `address_n` on `curve`.
@@ -199,4 +251,32 @@ pub fn base58check_decode(data: &str) -> Result<Vec<u8>> {
         .into_app_result()
         .c()
         .map(|b| b.as_ref().to_vec())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn public_node_layout() {
+        let mut raw = [0u8; XPUB_RAW_LEN];
+        raw[0] = 3;
+        raw[1..5].copy_from_slice(&0x0102_0304u32.to_be_bytes());
+        raw[5..9].copy_from_slice(&0x8000_002cu32.to_be_bytes());
+        raw[9..41].fill(0xcc);
+        raw[41] = 0x02;
+        raw[42..].fill(0xaa);
+
+        let node = PublicNode::from_raw(&raw);
+        assert_eq!(node.depth, 3);
+        assert_eq!(node.fingerprint, 0x0102_0304);
+        assert_eq!(node.child_num, 0x8000_002c);
+        assert_eq!(node.chain_code, [0xcc; 32]);
+        assert_eq!(node.public_key[0], 0x02);
+        assert_eq!(node.public_key[1..], [0xaa; 32]);
+
+        let serialized = node.serialize(0x0488_b21e);
+        assert_eq!(serialized[..4], 0x0488_b21eu32.to_be_bytes());
+        assert_eq!(serialized[4..], raw);
+    }
 }
