@@ -20,6 +20,7 @@ pub use crate::traits::ui::{
 };
 use crate::{Error, IntoAppResult, Result};
 
+/// The user's answer to a screen, or an error.
 pub type UiResult = Result<TrezorUiResult>;
 
 /// Converts a [`TrezorUiResult`] into `Ok(())` if confirmed, or [`Error::Cancelled`] otherwise.
@@ -168,6 +169,8 @@ pub struct Details<'a> {
 }
 
 impl<'a> Details<'a> {
+    /// An entry named `name` that shows `props`, with an optional `title` and
+    /// `subtitle`.
     pub fn new(
         name: &'a str,
         props: &'a [Property<'a>],
@@ -202,6 +205,7 @@ pub struct Cancel<'a> {
 }
 
 impl<'a> Cancel<'a> {
+    /// A cancel entry labelled `title`.
     pub fn new(title: &'a str) -> Self {
         Self { title }
     }
@@ -218,10 +222,12 @@ pub struct Menu<'a> {
 impl<'a> Menu<'a> {
     const MAX_MENU_ITEMS: usize = 5;
 
+    /// A menu of `children`, with an optional `cancel` entry.
     pub fn new(children: &'a [Details<'a>], cancel: Option<Cancel<'a>>) -> Self {
         Self { children, cancel }
     }
 
+    /// Shows the menu until the user cancels, opening the selected entries.
     pub fn interact(&self) -> UiResult {
         if self.children.is_empty() && self.cancel.is_none() {
             // TODO: maybe raise error instead
@@ -271,24 +277,28 @@ impl<'a> Menu<'a> {
     }
 }
 
+/// Shows a [`ConfirmValue`] screen and returns the user's answer.
 pub fn confirm_value<'a>(confirm_value: ConfirmValue<'a>) -> UiResult {
     get_ui_or_die()
         .confirm_value(confirm_value)
         .into_app_result()
 }
 
+/// Shows a [`ConfirmValueIntro`] screen and returns the user's answer.
 pub fn confirm_value_intro<'a>(confirm_value_intro: ConfirmValueIntro<'a>) -> UiResult {
     get_ui_or_die()
         .confirm_value_intro(confirm_value_intro)
         .into_app_result()
 }
 
+/// Shows a [`ConfirmSummary`] screen and returns the user's answer.
 pub fn confirm_summary<'a>(confirm_summary: ConfirmSummary<'a>) -> UiResult {
     get_ui_or_die()
         .confirm_summary(confirm_summary)
         .into_app_result()
 }
 
+/// Shows a [`ConfirmAction`] screen and returns the user's answer.
 pub fn confirm_action<'a>(confirm_action: ConfirmAction<'a>) -> UiResult {
     get_ui_or_die()
         .confirm_action(confirm_action)
@@ -306,66 +316,78 @@ fn select_menu<'a>(select_menu: SelectMenu<'a>, len: usize) -> UiResult {
     }
 }
 
+/// Shows a [`ConfirmProperties`] screen and returns the user's answer.
 pub fn confirm_properties<'a>(confirm_properties: ConfirmProperties<'a>) -> UiResult {
     get_ui_or_die()
         .confirm_properties(confirm_properties)
         .into_app_result()
 }
 
+/// Shows a [`ShowProperties`] screen.
 pub fn show_properties<'a>(show_properties: ShowProperties<'a>) -> Result<()> {
     get_ui_or_die()
         .show_properties(show_properties)
         .into_app_result()
 }
 
+/// Shows a [`ShowWarning`] screen.
 pub fn show_warning<'a>(show_warning: ShowWarning<'a>) -> Result<()> {
     get_ui_or_die().show_warning(show_warning).into_app_result()
 }
 
+/// Shows a [`ShowInfoWithCancel`] screen and returns the user's answer.
 pub fn show_info_with_cancel<'a>(show_info_with_cancel: ShowInfoWithCancel<'a>) -> UiResult {
     get_ui_or_die()
         .show_info_with_cancel(show_info_with_cancel)
         .into_app_result()
 }
 
+/// Shows a [`ShowMismatch`] screen and returns the user's answer.
 pub fn show_mismatch<'a>(show_mismatch: ShowMismatch<'a>) -> UiResult {
     get_ui_or_die()
         .show_mismatch(show_mismatch)
         .into_app_result()
 }
 
+/// Shows a [`ConfirmTrade`] screen and returns the user's answer.
 pub fn confirm_trade<'a>(confirm_trade: ConfirmTrade<'a>) -> UiResult {
     get_ui_or_die()
         .confirm_trade(confirm_trade)
         .into_app_result()
 }
 
+/// Shows a [`ShowDanger`] screen and returns the user's answer.
 pub fn show_danger<'a>(show_danger: ShowDanger<'a>) -> UiResult {
     get_ui_or_die().show_danger(show_danger).into_app_result()
 }
 
+/// Shows a [`ShowSuccess`] screen.
 pub fn show_success<'a>(show_success: ShowSuccess<'a>) -> Result<()> {
     get_ui_or_die().show_success(show_success).into_app_result()
 }
 
+/// Shows a [`RequestNumber`] screen and returns the user's answer.
 pub fn request_number<'a>(request_number: RequestNumber<'a>) -> UiResult {
     get_ui_or_die()
         .request_number(request_number)
         .into_app_result()
 }
 
+/// Shows a [`ShowPublicKey`] screen and returns the user's answer.
 pub fn show_public_key<'a>(show_public_key: ShowPublicKey<'a>) -> UiResult {
     get_ui_or_die()
         .show_public_key(show_public_key)
         .into_app_result()
 }
 
+/// Shows a [`ConfirmWithInfo`] screen and returns the user's answer.
 pub fn confirm_with_info<'a>(confirm_with_info: ConfirmWithInfo<'a>) -> UiResult {
     get_ui_or_die()
         .confirm_with_info(confirm_with_info)
         .into_app_result()
 }
 
+/// Shows a [`ShowAddress`] screen and returns the user's answer.
 pub fn show_address<'a>(show_address: ShowAddress<'a>) -> UiResult {
     get_ui_or_die().show_address(show_address).into_app_result()
 }

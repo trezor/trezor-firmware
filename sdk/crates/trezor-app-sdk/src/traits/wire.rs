@@ -7,7 +7,9 @@ use super::util::ServiceResult;
 /// An owned wire message: a numeric id paired with its body bytes.
 #[stabby::stabby]
 pub struct WireMessage {
+    /// Message id, from the app's own message numbering.
     pub id: u16,
+    /// Message body.
     pub data: BoxedSlice<u8>,
 }
 
@@ -18,8 +20,11 @@ pub struct WireMessage {
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(test, derive(Debug))]
 pub enum FailureKind {
+    /// The request's data is invalid.
     DataError,
+    /// The user cancelled the action.
     ActionCancelled,
+    /// Processing failed for another reason.
     ProcessError,
 }
 
@@ -39,6 +44,9 @@ pub trait WireV1: Send + Sync {
     extern "C" fn wire_error<'a>(&self, kind: FailureKind, message: Str<'a>) -> ServiceResult<()>;
 }
 
+/// The stabby vtable of [`WireV1`].
 pub type WireV1Vtable = stabby::vtable!(WireV1 + Send + Sync);
+/// A borrowed `dyn WireV1`.
 pub type WireV1Ref<'a> = stabby::DynRef<'a, WireV1Vtable>;
+/// A `dyn WireV1` that lives as long as the app.
 pub type StaticWireV1 = WireV1Ref<'static>;

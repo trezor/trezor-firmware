@@ -45,6 +45,7 @@ impl Timeout {
         Self::ms(TIMEOUT_MAX)
     }
 
+    /// Returns the timeout in milliseconds.
     pub fn as_ms(&self) -> u32 {
         self.0
     }

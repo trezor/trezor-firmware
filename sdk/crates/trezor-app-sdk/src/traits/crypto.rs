@@ -9,31 +9,46 @@ use super::util::{FastResult, ServiceResult};
 /// 4-byte version.
 pub const XPUB_RAW_LEN: usize = 74;
 
+/// Errors of the cryptographic functions.
 #[stabby::stabby]
 #[repr(u8)]
 pub enum CryptoError {
+    /// The public key is invalid or in an unsupported form.
     InvalidPublicKey,
+    /// The signature does not verify.
     InvalidSignature,
+    /// The input is not valid in the expected encoding.
     InvalidEncoding,
 }
 
 #[stabby::stabby(checked)]
+/// A streaming hash or HMAC computation, see [`CryptoV1::get_hasher`].
 pub trait Hasher {
+    /// Feeds more input into the hash state.
     extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>);
 
+    /// Returns the digest. Call it once; Core panics on any later use.
     extern "C" fn finalize(&mut self) -> BoxedSlice<u8>;
 }
 
+/// An owned `dyn Hasher`.
 pub type BoxedHasher = stabby::dynptr!(Box<dyn Hasher>);
 
+/// Hash functions for [`CryptoV1::get_hasher`].
 #[stabby::stabby]
 #[repr(u8)]
 pub enum HashingAlgorithm {
+    /// SHA-256.
     Sha256,
+    /// SHA3-256.
     Sha3_256,
+    /// SHA-512.
     Sha512,
+    /// Keccak-256, as used by Ethereum.
     Keccak256,
+    /// SHA3-512.
     Sha3_512,
+    /// Keccak-512.
     Keccak512,
 }
 
@@ -43,7 +58,9 @@ pub enum HashingAlgorithm {
 #[stabby::stabby]
 #[repr(u8)]
 pub enum HmacAlgorithm {
+    /// HMAC-SHA256.
     Sha256,
+    /// HMAC-SHA512.
     Sha512,
 }
 
@@ -51,7 +68,9 @@ pub enum HmacAlgorithm {
 #[stabby::stabby]
 #[repr(u8)]
 pub enum EcdsaCurve {
+    /// secp256k1.
     Secp256k1 = 0,
+    /// NIST P-256.
     Nist256p1 = 1,
 }
 
@@ -59,9 +78,13 @@ pub enum EcdsaCurve {
 #[stabby::stabby]
 #[repr(u8)]
 pub enum Curve {
+    /// secp256k1.
     Secp256k1 = 0,
+    /// NIST P-256.
     Nist256p1 = 1,
+    /// Ed25519.
     Ed25519 = 2,
+    /// Curve25519.
     Curve25519 = 3,
 }
 
@@ -79,7 +102,10 @@ pub enum CanonicalSig {
 }
 
 #[stabby::stabby(checked)]
+/// Cryptography: key derivation and signing through Core, and local hashing,
+/// verification and encodings.
 pub trait CryptoV1: Send + Sync {
+    /// Starts a hash computation with `algorithm`.
     extern "C" fn get_hasher(&self, algorithm: HashingAlgorithm) -> BoxedHasher;
 
     /// Starts an HMAC computation (over `algorithm`, one of the SHA-2
@@ -182,19 +208,25 @@ pub trait CryptoV1: Send + Sync {
     /// Base58-encodes `data`.
     extern "C" fn base58_encode<'a>(&self, data: Slice<'a, u8>) -> String;
 
+    /// Decodes a base58 string.
     extern "C" fn base58_decode<'a>(
         &self,
         data: Str<'a>,
     ) -> FastResult<BoxedSlice<u8>, CryptoError>;
 
+    /// Base58Check-encodes `data` (base58 plus a 4-byte checksum).
     extern "C" fn base58check_encode<'a>(&self, data: Slice<'a, u8>) -> String;
 
+    /// Decodes a base58Check string, verifying its checksum.
     extern "C" fn base58check_decode<'a>(
         &self,
         data: Str<'a>,
     ) -> FastResult<BoxedSlice<u8>, CryptoError>;
 }
 
+/// The stabby vtable of [`CryptoV1`].
 pub type CryptoV1Vtable = stabby::vtable!(CryptoV1 + Send + Sync);
+/// A borrowed `dyn CryptoV1`.
 pub type CryptoV1Ref<'a> = stabby::DynRef<'a, CryptoV1Vtable>;
+/// A `dyn CryptoV1` that lives as long as the app.
 pub type StaticCryptoV1 = CryptoV1Ref<'static>;

@@ -18,12 +18,16 @@ use ufmt::derive::uDebug;
 /// A key-value pair with an optional monospace flag, used in UI detail views.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub struct Property<'a> {
+    /// Name of the property.
     pub key: StrSlice<'a>,
+    /// Value of the property.
     pub value: StrSlice<'a>,
+    /// Shows the value in a monospace font.
     pub mono: bool,
 }
 
 impl<'a> Property<'a> {
+    /// A property `key`: `value`, the value in a monospace font if `mono`.
     pub fn new(key: &'a str, value: &'a str, mono: bool) -> Self {
         Self {
             key: key.into(),
@@ -32,10 +36,12 @@ impl<'a> Property<'a> {
         }
     }
 
+    /// A property with its value in a monospace font.
     pub fn mono(key: &'a str, value: &'a str) -> Self {
         Self::new(key, value, true)
     }
 
+    /// A property with its value in the regular font.
     pub fn plain(key: &'a str, value: &'a str) -> Self {
         Self::new(key, value, false)
     }
@@ -44,11 +50,14 @@ impl<'a> Property<'a> {
 /// A string with an optional monospace flag, used in UI list views.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub struct StrExt<'a> {
+    /// The text.
     pub key: StrSlice<'a>,
+    /// Shows the text in a monospace font.
     pub mono: bool,
 }
 
 impl<'a> StrExt<'a> {
+    /// A text, in a monospace font if `mono`.
     pub fn new(key: &'a str, mono: bool) -> Self {
         Self {
             key: key.into(),
@@ -56,10 +65,12 @@ impl<'a> StrExt<'a> {
         }
     }
 
+    /// A text in a monospace font.
     pub fn mono(key: &'a str) -> Self {
         Self::new(key, true)
     }
 
+    /// A text in the regular font.
     pub fn plain(key: &'a str) -> Self {
         Self::new(key, false)
     }
@@ -73,10 +84,12 @@ pub struct StrSlice<'a> {
 }
 
 impl<'a> StrSlice<'a> {
+    /// Borrows `s`.
     pub fn new(s: &'a str) -> Self {
         Self { inner: s }
     }
 
+    /// The borrowed string.
     pub fn as_str(&self) -> &'a str {
         self.inner
     }
@@ -157,22 +170,27 @@ impl<'a, T: Archive + PartialEq> PartialEq for Slice<'a, T> {
 impl<'a, T: Archive + Eq> Eq for Slice<'a, T> {}
 
 impl<'a, T: Archive> Slice<'a, T> {
+    /// Borrows `s`.
     pub fn new(s: &'a [T]) -> Self {
         Self { inner: s }
     }
 
+    /// The borrowed slice.
     pub fn as_slice(&self) -> &'a [T] {
         self.inner
     }
 
+    /// Number of elements.
     pub fn len(&self) -> usize {
         self.inner.len()
     }
 
+    /// Whether there are no elements.
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
     }
 
+    /// The element at `index`, if any.
     pub fn get(&self, index: usize) -> Option<&T> {
         self.inner.get(index)
     }
@@ -208,12 +226,16 @@ where
 /// A menu of selectable string items.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct SelectMenu<'a> {
+    /// Entries shown on the screen.
     pub items: Slice<'a, StrSlice<'a>>,
+    /// Label of the cancel entry, if any.
     pub cancel: Option<StrSlice<'a>>,
+    /// Button request code sent to the host.
     pub br_code: i32,
 }
 
 impl<'a> SelectMenu<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(items: &'a [StrSlice<'a>], cancel: Option<&'a str>, br_code: i32) -> SelectMenu<'a> {
         SelectMenu {
             items: items.into(),
@@ -226,16 +248,24 @@ impl<'a> SelectMenu<'a> {
 /// A trade confirmation screen, shown via [`crate::ui::confirm_trade`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmTrade<'a> {
+    /// Screen title.
     pub title: StrSlice<'a>,
+    /// Subtitle under the title.
     pub subtitle: StrSlice<'a>,
+    /// What the user gets.
     pub buy: StrSlice<'a>,
+    /// What the user gives.
     pub sell: Option<StrSlice<'a>>,
+    /// The left button returns `Back` instead of cancelling.
     pub back_button: bool,
+    /// Button request name sent to the host.
     pub br_name: Option<StrSlice<'a>>,
+    /// Button request code sent to the host.
     pub br_code: i32,
 }
 
 impl<'a> ConfirmTrade<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         subtitle: &'a str,
@@ -260,19 +290,30 @@ impl<'a> ConfirmTrade<'a> {
 /// An action confirmation screen, shown via [`crate::ui::confirm_action`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmAction<'a> {
+    /// Screen title.
     pub title: StrSlice<'a>,
+    /// The action to confirm.
     pub action: StrSlice<'a>,
+    /// Description text.
     pub description: Option<StrSlice<'a>>,
+    /// Subtitle under the title.
     pub subtitle: Option<StrSlice<'a>>,
+    /// The user confirms by holding the button.
     pub hold: bool,
+    /// Shows a cancel button.
     pub cancel: bool,
+    /// Text of the confirm button.
     pub verb: Option<StrSlice<'a>>,
+    /// Button request name sent to the host.
     pub br_name: Option<StrSlice<'a>>,
+    /// Button request code sent to the host.
     pub br_code: i32,
+    /// The menu button returns `Info` to the app instead of opening Core's menu.
     pub external_menu: bool,
 }
 
 impl<'a> ConfirmAction<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         action: &'a str,
@@ -303,21 +344,34 @@ impl<'a> ConfirmAction<'a> {
 /// A transaction summary confirmation screen, shown via [`crate::ui::confirm_summary`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmSummary<'a> {
+    /// Screen title.
     pub title: StrSlice<'a>,
+    /// The amount.
     pub amount: Option<StrSlice<'a>>,
+    /// Label of the amount.
     pub amount_label: Option<StrSlice<'a>>,
+    /// The fee.
     pub fee: StrSlice<'a>,
+    /// Label of the fee.
     pub fee_label: StrSlice<'a>,
+    /// Title of the account information.
     pub account_title: Option<StrSlice<'a>>,
+    /// Account information as key-value pairs.
     pub account_items: Option<Slice<'a, Property<'a>>>,
+    /// Title of the extra information.
     pub extra_title: Option<StrSlice<'a>>,
+    /// Extra information as key-value pairs.
     pub extra_items: Option<Slice<'a, Property<'a>>>,
+    /// The left button returns `Back` instead of cancelling.
     pub back_button: bool,
+    /// Button request name sent to the host.
     pub br_name: Option<StrSlice<'a>>,
+    /// Button request code sent to the host.
     pub br_code: i32,
 }
 
 impl<'a> ConfirmSummary<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         amount: Option<&'a str>,
@@ -352,24 +406,40 @@ impl<'a> ConfirmSummary<'a> {
 /// A value confirmation screen, shown via [`crate::ui::confirm_value`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmValue<'a> {
+    /// Screen title.
     pub title: StrSlice<'a>,
+    /// The value to confirm.
     pub value: StrSlice<'a>,
+    /// Description text.
     pub description: Option<StrSlice<'a>>,
+    /// The value is data, shown in a data font.
     pub is_data: bool,
+    /// Subtitle under the title.
     pub subtitle: Option<StrSlice<'a>>,
+    /// Text of the confirm button.
     pub verb: Option<StrSlice<'a>>,
+    /// Shows an info button in the header.
     pub info: bool,
+    /// The user confirms by holding the button.
     pub hold: bool,
+    /// Shows the value in monospace chunks, for easier comparison.
     pub chunkify: bool,
+    /// Shows a page counter.
     pub page_counter: bool,
+    /// Shows a cancel button.
     pub cancel: bool,
+    /// Button request name sent to the host.
     pub br_name: Option<StrSlice<'a>>,
+    /// Button request code sent to the host.
     pub br_code: i32,
+    /// The menu button returns `Info` to the app instead of opening Core's menu.
     pub external_menu: bool,
+    /// Footer text, and whether it is bold.
     pub footer: Option<(StrSlice<'a>, bool)>,
 }
 
 impl<'a> ConfirmValue<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         content: &'a str,
@@ -410,19 +480,30 @@ impl<'a> ConfirmValue<'a> {
 /// An intro screen shown before [`ConfirmValue`], via [`crate::ui::confirm_value_intro`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmValueIntro<'a> {
+    /// Screen title.
     pub title: StrSlice<'a>,
+    /// The value to confirm.
     pub value: StrSlice<'a>,
+    /// Subtitle under the title.
     pub subtitle: Option<StrSlice<'a>>,
+    /// Text of the confirm button.
     pub verb: Option<StrSlice<'a>>,
+    /// Text of the cancel button.
     pub verb_cancel: Option<StrSlice<'a>>,
+    /// Text of the button that shows the whole value.
     pub verb_view_all: Option<StrSlice<'a>>,
+    /// The user confirms by holding the button.
     pub hold: bool,
+    /// Shows the value in monospace chunks, for easier comparison.
     pub chunkify: bool,
+    /// Button request name sent to the host.
     pub br_name: Option<StrSlice<'a>>,
+    /// Button request code sent to the host.
     pub br_code: i32,
 }
 
 impl<'a> ConfirmValueIntro<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         value: &'a str,
@@ -453,16 +534,24 @@ impl<'a> ConfirmValueIntro<'a> {
 /// A warning screen, shown via [`crate::ui::show_warning`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowWarning<'a> {
+    /// Screen title.
     pub title: StrSlice<'a>,
+    /// Body text.
     pub content: StrSlice<'a>,
+    /// Text of the confirm button.
     pub verb: StrSlice<'a>,
+    /// Button request name sent to the host.
     pub br_name: Option<StrSlice<'a>>,
+    /// Button request code sent to the host.
     pub br_code: i32,
+    /// Lets the user cancel.
     pub allow_cancel: bool,
+    /// Shows the screen as dangerous.
     pub danger: bool,
 }
 
 impl<'a> ShowWarning<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         content: &'a str,
@@ -487,11 +576,14 @@ impl<'a> ShowWarning<'a> {
 /// A mismatch warning screen, shown via [`crate::ui::show_mismatch`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowMismatch<'a> {
+    /// Screen title.
     pub title: StrSlice<'a>,
+    /// Button request code sent to the host.
     pub br_code: i32,
 }
 
 impl<'a> ShowMismatch<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(title: &'a str, br_code: i32) -> Self {
         Self {
             title: title.into(),
@@ -503,15 +595,22 @@ impl<'a> ShowMismatch<'a> {
 /// A danger warning screen, shown via [`crate::ui::show_danger`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowDanger<'a> {
+    /// Screen title.
     pub title: StrSlice<'a>,
+    /// Body text.
     pub content: StrSlice<'a>,
+    /// Button request name sent to the host.
     pub br_name: Option<StrSlice<'a>>,
+    /// Button request code sent to the host.
     pub br_code: i32,
+    /// Text of the cancel button.
     pub verb_cancel: Option<StrSlice<'a>>,
+    /// Title of the menu.
     pub menu_title: Option<StrSlice<'a>>,
 }
 
 impl<'a> ShowDanger<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         content: &'a str,
@@ -534,15 +633,22 @@ impl<'a> ShowDanger<'a> {
 /// A success screen, shown via [`crate::ui::show_success`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowSuccess<'a> {
+    /// Screen title.
     pub title: StrSlice<'a>,
+    /// Body text.
     pub content: StrSlice<'a>,
+    /// Text of the button.
     pub button: StrSlice<'a>,
+    /// Closes the screen after this many milliseconds.
     pub duration_ms: Option<u32>,
+    /// Button request name sent to the host.
     pub br_name: Option<StrSlice<'a>>,
+    /// Button request code sent to the host.
     pub br_code: i32,
 }
 
 impl<'a> ShowSuccess<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         content: &'a str,
@@ -565,15 +671,22 @@ impl<'a> ShowSuccess<'a> {
 /// A number-entry screen, shown via [`crate::ui::request_number`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct RequestNumber<'a> {
+    /// Screen title.
     pub title: StrSlice<'a>,
+    /// Body text.
     pub content: StrSlice<'a>,
+    /// Number shown at first.
     pub initial: u32,
+    /// Smallest allowed number.
     pub min: u32,
+    /// Largest allowed number.
     pub max: u32,
+    /// Button request code sent to the host.
     pub br_code: i32,
 }
 
 impl<'a> RequestNumber<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         content: &'a str,
@@ -596,17 +709,26 @@ impl<'a> RequestNumber<'a> {
 /// A property-list confirmation screen, shown via [`crate::ui::confirm_properties`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmProperties<'a> {
+    /// Screen title.
     pub title: StrSlice<'a>,
+    /// Properties shown as key-value pairs.
     pub props: Slice<'a, Property<'a>>,
+    /// Subtitle under the title.
     pub subtitle: Option<StrSlice<'a>>,
+    /// Text of the confirm button.
     pub verb: Option<StrSlice<'a>>,
+    /// The user confirms by holding the button.
     pub hold: bool,
+    /// Button request name sent to the host.
     pub br_name: Option<StrSlice<'a>>,
+    /// Button request code sent to the host.
     pub br_code: i32,
+    /// The menu button returns `Info` to the app instead of opening Core's menu.
     pub external_menu: bool,
 }
 
 impl<'a> ConfirmProperties<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         props: &'a [Property<'a>],
@@ -633,14 +755,20 @@ impl<'a> ConfirmProperties<'a> {
 /// A property-list display screen (no confirmation), shown via [`crate::ui::show_properties`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowProperties<'a> {
+    /// Screen title.
     pub title: StrSlice<'a>,
+    /// Properties shown as key-value pairs.
     pub props: Slice<'a, Property<'a>>,
+    /// Subtitle under the title.
     pub subtitle: Option<StrSlice<'a>>,
+    /// Button request name sent to the host.
     pub br_name: Option<StrSlice<'a>>,
+    /// Button request code sent to the host.
     pub br_code: i32,
 }
 
 impl<'a> ShowProperties<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         props: &'a [Property<'a>],
@@ -661,16 +789,24 @@ impl<'a> ShowProperties<'a> {
 /// A public key display screen, shown via [`crate::ui::show_public_key`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowPublicKey<'a> {
+    /// The public key.
     pub pubkey: StrSlice<'a>,
+    /// Screen title.
     pub title: StrSlice<'a>,
+    /// Account name shown with the key.
     pub account: Option<StrSlice<'a>>,
+    /// Derivation path shown with the key.
     pub path: Option<StrSlice<'a>>,
+    /// Warning text.
     pub warning: Option<StrSlice<'a>>,
+    /// Button request name sent to the host.
     pub br_name: StrSlice<'a>,
+    /// Button request code sent to the host.
     pub br_code: i32,
 }
 
 impl<'a> ShowPublicKey<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         pubkey: &'a str,
         title: &'a str,
@@ -695,14 +831,20 @@ impl<'a> ShowPublicKey<'a> {
 /// An info screen with a cancel option, shown via [`crate::ui::show_info_with_cancel`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowInfoWithCancel<'a> {
+    /// Screen title.
     pub title: StrSlice<'a>,
+    /// Entries shown on the screen.
     pub items: Slice<'a, Property<'a>>,
+    /// Shows the value in monospace chunks, for easier comparison.
     pub chunkify: bool,
+    /// Button request name sent to the host.
     pub br_name: Option<StrSlice<'a>>,
+    /// Button request code sent to the host.
     pub br_code: i32,
 }
 
 impl<'a> ShowInfoWithCancel<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         items: &'a [Property<'a>],
@@ -722,16 +864,24 @@ impl<'a> ShowInfoWithCancel<'a> {
 /// A confirmation screen with an extra info button, shown via [`crate::ui::confirm_with_info`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ConfirmWithInfo<'a> {
+    /// Screen title.
     pub title: StrSlice<'a>,
+    /// Subtitle under the title.
     pub subtitle: Option<StrSlice<'a>>,
+    /// Entries shown on the screen.
     pub items: Slice<'a, StrExt<'a>>,
+    /// Text of the confirm button.
     pub verb: StrSlice<'a>,
+    /// Text of the info button.
     pub verb_info: Option<StrSlice<'a>>,
+    /// Button request name sent to the host.
     pub br_name: Option<StrSlice<'a>>,
+    /// Button request code sent to the host.
     pub br_code: i32,
 }
 
 impl ConfirmWithInfo<'_> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new<'a>(
         title: &'a str,
         subtitle: Option<&'a str>,
@@ -756,19 +906,30 @@ impl ConfirmWithInfo<'_> {
 /// An address display screen, shown via [`crate::ui::show_address`].
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub struct ShowAddress<'a> {
+    /// The address.
     pub address: StrSlice<'a>,
+    /// The address as encoded in the QR code.
     pub address_qr: StrSlice<'a>,
+    /// Screen title.
     pub title: Option<StrSlice<'a>>,
+    /// Subtitle under the title.
     pub subtitle: Option<StrSlice<'a>>,
+    /// Account name shown with the address.
     pub account: Option<StrSlice<'a>>,
+    /// Derivation path shown with the address.
     pub path: Option<StrSlice<'a>>,
+    /// Extended public keys of a multisig address.
     pub xpubs: Slice<'a, Property<'a>>,
+    /// Shows the value in monospace chunks, for easier comparison.
     pub chunkify: bool,
+    /// Button request code sent to the host.
     pub br_code: i32,
+    /// The address is case-sensitive.
     pub case_sensitive: bool,
 }
 
 impl ShowAddress<'_> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new<'a>(
         address: &'a str,
         address_qr: &'a str,
@@ -802,32 +963,54 @@ impl ShowAddress<'_> {
 /// by the higher-level `ui` module — do not construct variants directly.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum TrezorUiEnum<'a> {
+    /// A [`SelectMenu`] screen.
     SelectMenu(SelectMenu<'a>),
+    /// A [`ConfirmTrade`] screen.
     ConfirmTrade(ConfirmTrade<'a>),
+    /// A [`ConfirmAction`] screen.
     ConfirmAction(ConfirmAction<'a>),
+    /// A [`ConfirmSummary`] screen.
     ConfirmSummary(ConfirmSummary<'a>),
+    /// A [`ConfirmValue`] screen.
     ConfirmValue(ConfirmValue<'a>),
+    /// A [`ConfirmValueIntro`] screen.
     ConfirmValueIntro(ConfirmValueIntro<'a>),
+    /// A [`ShowWarning`] screen.
     ShowWarning(ShowWarning<'a>),
+    /// A [`ShowMismatch`] screen.
     ShowMismatch(ShowMismatch<'a>),
+    /// A [`ShowDanger`] screen.
     ShowDanger(ShowDanger<'a>),
+    /// A [`ShowSuccess`] screen.
     ShowSuccess(ShowSuccess<'a>),
+    /// A [`RequestNumber`] screen.
     RequestNumber(RequestNumber<'a>),
+    /// A [`ConfirmProperties`] screen.
     ConfirmProperties(ConfirmProperties<'a>),
+    /// A [`ShowProperties`] screen.
     ShowProperties(ShowProperties<'a>),
+    /// A [`ShowPublicKey`] screen.
     ShowPublicKey(ShowPublicKey<'a>),
+    /// A [`ShowInfoWithCancel`] screen.
     ShowInfoWithCancel(ShowInfoWithCancel<'a>),
+    /// A [`ConfirmWithInfo`] screen.
     ConfirmWithInfo(ConfirmWithInfo<'a>),
+    /// A [`ShowAddress`] screen.
     ShowAddress(ShowAddress<'a>),
 }
 
 /// Result returned by the Core task after a UI interaction.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum TrezorUiResult {
+    /// The user confirmed.
     Confirmed,
+    /// The user went back.
     Back,
+    /// The user cancelled.
     Cancelled,
+    /// The user asked for more information.
     Info,
+    /// The number the user entered.
     Integer(u32),
 }
 
@@ -836,46 +1019,68 @@ pub enum TrezorUiResult {
 /// Constructed by the higher-level `crypto` module — do not construct variants directly.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum TrezorCryptoEnum<'a> {
+    /// Derive the raw xpub, see [`CryptoV1::get_xpub`](crate::traits::crypto::CryptoV1::get_xpub).
     GetXpub {
         /// A [`Curve`](crate::traits::crypto::Curve), as its `u8` value.
         curve: u8,
+        /// Derivation path.
         address_n: Slice<'a, u32>,
     },
+    /// Derive a public key.
     GetPublicKey {
         /// A [`Curve`](crate::traits::crypto::Curve), as its `u8` value.
         curve: u8,
+        /// Derivation path.
         address_n: Slice<'a, u32>,
+        /// Return the compressed form.
         compressed: bool,
     },
+    /// Sign a digest with ECDSA.
     EcdsaSignDigest {
         /// An [`EcdsaCurve`](crate::traits::crypto::EcdsaCurve), as its `u8`
         /// value.
         curve: u8,
+        /// Derivation path.
         address_n: Slice<'a, u32>,
+        /// The digest to sign.
         digest: [u8; 32],
+        /// Set the recovery header byte for a compressed public key.
         compressed: bool,
         /// A [`CanonicalSig`](crate::traits::crypto::CanonicalSig), as its
         /// `u8` value.
         canonical: u8,
     },
+    /// Sign a message with Ed25519.
     Ed25519Sign {
+        /// Derivation path.
         address_n: Slice<'a, u32>,
+        /// The message to sign.
         message: Slice<'a, u8>,
     },
+    /// Compute the MAC of an address.
     GetAddressMac {
+        /// Derivation path of the address.
         address_n: Slice<'a, u32>,
+        /// The address.
         address: StrSlice<'a>,
+        /// SLIP-44 coin type.
         slip44: u32,
     },
+    /// Check the MAC of an address.
     CheckAddressMac {
+        /// Derivation path of the address.
         address_n: Slice<'a, u32>,
+        /// The MAC to check.
         mac: [u8; 32],
+        /// The address.
         address: StrSlice<'a>,
+        /// SLIP-44 coin type.
         slip44: u32,
     },
 }
 
 impl<'a> TrezorCryptoEnum<'a> {
+    /// The IPC message id of the request.
     pub fn id(&self) -> u8 {
         match self {
             Self::GetXpub { .. } => 0,
@@ -897,8 +1102,11 @@ impl<'a> TrezorCryptoEnum<'a> {
 /// accepts.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum TrezorCryptoResult<'a> {
+    /// A string.
     String(StrSlice<'a>),
+    /// Bytes.
     Bytes(Slice<'a, u8>),
+    /// A boolean.
     Boolean(bool),
 }
 
@@ -907,20 +1115,30 @@ pub enum TrezorCryptoResult<'a> {
 /// Constructed by the higher-level `progress` module — do not construct variants directly.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum TrezorProgressEnum<'a> {
+    /// Show a progress indicator.
     Init {
+        /// Description text.
         description: Option<StrSlice<'a>>,
+        /// Title.
         title: Option<StrSlice<'a>>,
+        /// The progress has no known value; shows an animation instead.
         indeterminate: bool,
+        /// Shows the indicator as dangerous.
         danger: bool,
     },
+    /// Update the progress indicator.
     Update {
+        /// New description text.
         description: Option<StrSlice<'a>>,
+        /// Progress, from 0 to 1000.
         value: u32,
     },
+    /// Close the progress indicator.
     End,
 }
 
 impl<'a> TrezorProgressEnum<'a> {
+    /// The IPC message id of the request.
     pub fn id(&self) -> u16 {
         match self {
             TrezorProgressEnum::Init { .. } => 0,

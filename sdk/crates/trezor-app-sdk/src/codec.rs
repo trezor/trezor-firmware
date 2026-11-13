@@ -15,11 +15,13 @@ use crate::wire::wire_call;
 
 /// Decodes a wire message body into `T` using the implementing codec.
 pub trait WireDecode<T> {
+    /// Decodes `data` into a `T`.
     fn decode(data: &[u8]) -> Result<T>;
 }
 
 /// Encodes `T` into a wire message body using the implementing codec.
 pub trait WireEncode<T> {
+    /// Encodes `val` into a message body.
     fn encode(val: &T) -> Vec<u8>;
 }
 
@@ -30,7 +32,9 @@ pub trait WireEncode<T> {
 /// annotation and the message id in lockstep — a common source of copy-paste
 /// mismatches when they're passed as two independent arguments/annotations.
 pub trait WireRequest {
+    /// The type the host answers this request with.
     type Response;
+    /// The wire message id of this request.
     const ID: u16;
 }
 

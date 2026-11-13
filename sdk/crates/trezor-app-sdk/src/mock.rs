@@ -449,6 +449,7 @@ pub struct Sha256 {
 }
 
 impl Sha256 {
+    /// A hasher fed with `data`, if given.
     pub fn new(data: Option<&[u8]>) -> Self {
         let ctx = Sha256_impl::new();
         let mut hasher = Self { ctx };
@@ -458,6 +459,7 @@ impl Sha256 {
         hasher
     }
 
+    /// Returns the digest.
     pub fn digest(&mut self) -> [u8; 32] {
         self.ctx.clone().finalize()
     }
@@ -479,6 +481,7 @@ pub struct Sha512 {
 }
 
 impl Sha512 {
+    /// A hasher fed with `data`, if given.
     pub fn new(data: Option<&[u8]>) -> Self {
         let ctx = Sha512_impl::new();
         let mut hasher = Self { ctx };
@@ -488,6 +491,7 @@ impl Sha512 {
         hasher
     }
 
+    /// Returns the digest.
     pub fn digest(&mut self) -> [u8; 64] {
         self.ctx.clone().finalize()
     }
@@ -510,6 +514,7 @@ pub struct Keccak256 {
 }
 
 impl Keccak256 {
+    /// A hasher fed with `data`, if given.
     pub fn new(data: Option<&[u8]>) -> Self {
         let ctx = Keccak256_impl::new();
         let mut hasher = Self { ctx };
@@ -519,6 +524,7 @@ impl Keccak256 {
         hasher
     }
 
+    /// Returns the digest.
     pub fn digest(&mut self) -> [u8; 32] {
         let mut out = [0u8; 32];
         out.copy_from_slice(self.ctx.clone().finalize_fixed().as_slice());
@@ -542,6 +548,7 @@ pub struct Sha3_256 {
 }
 
 impl Sha3_256 {
+    /// A hasher fed with `data`, if given.
     pub fn new(data: Option<&[u8]>) -> Self {
         let ctx = Sha3_256_impl::new();
         let mut hasher = Self { ctx };
@@ -551,6 +558,7 @@ impl Sha3_256 {
         hasher
     }
 
+    /// Returns the digest.
     pub fn digest(&mut self) -> [u8; 32] {
         let mut out = [0u8; 32];
         out.copy_from_slice(self.ctx.clone().finalize_fixed().as_slice());
@@ -574,6 +582,7 @@ pub struct Keccak512 {
 }
 
 impl Keccak512 {
+    /// A hasher fed with `data`, if given.
     pub fn new(data: Option<&[u8]>) -> Self {
         let ctx = Keccak512_impl::new();
         let mut hasher = Self { ctx };
@@ -583,6 +592,7 @@ impl Keccak512 {
         hasher
     }
 
+    /// Returns the digest.
     pub fn digest(&mut self) -> [u8; 64] {
         let mut out = [0u8; 64];
         out.copy_from_slice(self.ctx.clone().finalize_fixed().as_slice());
@@ -606,6 +616,7 @@ pub struct Sha3_512 {
 }
 
 impl Sha3_512 {
+    /// A hasher fed with `data`, if given.
     pub fn new(data: Option<&[u8]>) -> Self {
         let ctx = Sha3_512_impl::new();
         let mut hasher = Self { ctx };
@@ -615,6 +626,7 @@ impl Sha3_512 {
         hasher
     }
 
+    /// Returns the digest.
     pub fn digest(&mut self) -> [u8; 64] {
         let mut out = [0u8; 64];
         out.copy_from_slice(self.ctx.clone().finalize_fixed().as_slice());
@@ -640,6 +652,7 @@ pub struct HmacSha256 {
 }
 
 impl HmacSha256 {
+    /// An HMAC keyed with `key`, fed with `data`, if given.
     pub fn new(key: &[u8], data: Option<&[u8]>) -> Self {
         let ctx = HMAC256_impl::new(key);
         let mut hasher = Self { ctx };
@@ -649,6 +662,7 @@ impl HmacSha256 {
         hasher
     }
 
+    /// Returns the digest.
     pub fn digest(&mut self) -> [u8; 32] {
         let mut out = [0u8; 32];
         out.copy_from_slice(self.ctx.clone().finalize().as_slice());
@@ -677,6 +691,7 @@ pub struct HmacSha512 {
 }
 
 impl HmacSha512 {
+    /// An HMAC keyed with `key`, fed with `data`, if given.
     pub fn new(key: &[u8], data: Option<&[u8]>) -> Self {
         let mut ctx = HMAC512_impl::new(key);
         if let Some(data) = data {
@@ -685,6 +700,7 @@ impl HmacSha512 {
         Self { ctx: Some(ctx) }
     }
 
+    /// Feeds more input into the HMAC.
     pub fn update(&mut self, data: &[u8]) {
         self.ctx
             .as_mut()
@@ -692,6 +708,7 @@ impl HmacSha512 {
             .update(data);
     }
 
+    /// Returns the digest. Call it once.
     pub fn digest(&mut self) -> [u8; 64] {
         self.ctx
             .take()

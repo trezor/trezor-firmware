@@ -18,6 +18,7 @@ pub(crate) fn opt_bytes(s: Option<&str>) -> StabbyOption<Slice<'_, u8>> {
 }
 
 impl<'a> Property<'a> {
+    /// A property `key`: `value`, the value in a monospace font if `mono`.
     pub fn new(key: &'a str, value: &'a str, mono: bool) -> Self {
         Self {
             key: key.into(),
@@ -26,16 +27,19 @@ impl<'a> Property<'a> {
         }
     }
 
+    /// A property with its value in a monospace font.
     pub fn mono(key: &'a str, value: &'a str) -> Self {
         Self::new(key, value, true)
     }
 
+    /// A property with its value in the regular font.
     pub fn plain(key: &'a str, value: &'a str) -> Self {
         Self::new(key, value, false)
     }
 }
 
 impl<'a> StrExt<'a> {
+    /// A text, in a monospace font if `mono`.
     pub fn new(key: &'a str, mono: bool) -> Self {
         Self {
             key: key.into(),
@@ -43,16 +47,20 @@ impl<'a> StrExt<'a> {
         }
     }
 
+    /// A text in a monospace font.
     pub fn mono(key: &'a str) -> Self {
         Self::new(key, true)
     }
 
+    /// A text in the regular font.
     pub fn plain(key: &'a str) -> Self {
         Self::new(key, false)
     }
 }
 
 impl<'a> SelectMenu<'a> {
+    /// A menu of `items`, with an optional `cancel` entry; `br_code` is the
+    /// button request code sent to the host.
     pub fn new(items: &'a [Str<'a>], cancel: Option<&'a str>, br_code: i32) -> Self {
         Self {
             items: items.into(),
@@ -63,6 +71,7 @@ impl<'a> SelectMenu<'a> {
 }
 
 impl<'a> ConfirmTrade<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         subtitle: &'a str,
@@ -86,6 +95,7 @@ impl<'a> ConfirmTrade<'a> {
 
 impl<'a> ConfirmAction<'a> {
     #[allow(clippy::too_many_arguments)]
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         action: &'a str,
@@ -115,6 +125,7 @@ impl<'a> ConfirmAction<'a> {
 
 impl<'a> ConfirmSummary<'a> {
     #[allow(clippy::too_many_arguments)]
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         amount: Option<&'a str>,
@@ -148,6 +159,7 @@ impl<'a> ConfirmSummary<'a> {
 
 impl<'a> ConfirmValue<'a> {
     #[allow(clippy::too_many_arguments)]
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         content: &'a str,
@@ -192,6 +204,7 @@ impl<'a> ConfirmValue<'a> {
 
 impl<'a> ConfirmValueIntro<'a> {
     #[allow(clippy::too_many_arguments)]
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         value: &'a str,
@@ -220,6 +233,7 @@ impl<'a> ConfirmValueIntro<'a> {
 }
 
 impl<'a> ShowWarning<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         content: &'a str,
@@ -242,6 +256,7 @@ impl<'a> ShowWarning<'a> {
 }
 
 impl<'a> ShowMismatch<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(title: &'a str, br_code: i32) -> Self {
         Self {
             title: title.into(),
@@ -251,6 +266,7 @@ impl<'a> ShowMismatch<'a> {
 }
 
 impl<'a> ShowDanger<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         content: &'a str,
@@ -271,6 +287,7 @@ impl<'a> ShowDanger<'a> {
 }
 
 impl<'a> ShowSuccess<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         content: &'a str,
@@ -291,6 +308,7 @@ impl<'a> ShowSuccess<'a> {
 }
 
 impl<'a> RequestNumber<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         content: &'a str,
@@ -311,6 +329,7 @@ impl<'a> RequestNumber<'a> {
 }
 
 impl<'a> ConfirmProperties<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         props: &'a [Property<'a>],
@@ -335,6 +354,7 @@ impl<'a> ConfirmProperties<'a> {
 }
 
 impl<'a> ShowProperties<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         props: &'a [Property<'a>],
@@ -353,6 +373,7 @@ impl<'a> ShowProperties<'a> {
 }
 
 impl<'a> ShowPublicKey<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         pubkey: &'a str,
         title: &'a str,
@@ -375,6 +396,7 @@ impl<'a> ShowPublicKey<'a> {
 }
 
 impl<'a> ShowInfoWithCancel<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         items: &'a [Property<'a>],
@@ -393,6 +415,7 @@ impl<'a> ShowInfoWithCancel<'a> {
 }
 
 impl<'a> ConfirmWithInfo<'a> {
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         title: &'a str,
         subtitle: Option<&'a str>,
@@ -416,6 +439,7 @@ impl<'a> ConfirmWithInfo<'a> {
 
 impl<'a> ShowAddress<'a> {
     #[allow(clippy::too_many_arguments)]
+    /// Creates the request; each argument sets the field of the same name.
     pub fn new(
         address: &'a str,
         address_qr: &'a str,

@@ -5,22 +5,36 @@ use crate::traits::crypto::CryptoError;
 use crate::traits::util::{CoreServiceError, FastResult, ServiceResult};
 use crate::traits::wire::FailureKind;
 
+/// The SDK's result type.
 pub type Result<T> = core::result::Result<T, Error>;
 
 #[cfg_attr(any(feature = "debug", feature = "test"), derive(Debug))]
+/// Errors an app's code can return. Which ones reach the host, and as what,
+/// is decided by [`Error::kind`] and [`Error::message`].
 pub enum Error {
+    /// A call to a Core service failed.
     ServiceError,
+    /// The request's data is invalid; the text says why.
     DataError(&'static str),
+    /// The user cancelled the action.
     Cancelled,
+    /// A message could not be decoded.
     InvalidMessage,
+    /// A parameter can't be passed to the SDK function, e.g. a value out of range.
     InvalidArgument,
+    /// A value is invalid; the text says why.
     ValueError(&'static str),
     /// Core asked the app to stop, the error must reach the app's entry point.
     Stopped,
     #[cfg(feature = "debug")]
+    /// Another error with the source location where it was propagated, see
+    /// [`ResultExt::c`].
     Context {
+        /// Source file of the location.
         file: &'static str,
+        /// Line of the location.
         line: u32,
+        /// The wrapped error.
         source: Box<Error>,
     },
 }
@@ -68,6 +82,7 @@ impl Error {
         }
     }
 
+    /// The variant's name, for logging.
     pub fn error_type(&self) -> &'static str {
         match self {
             Self::ServiceError => "ServiceError",
@@ -83,6 +98,7 @@ impl Error {
     }
 
     #[cfg(feature = "debug")]
+    /// Wraps the error with the source location `loc`.
     pub fn c_at(self, loc: &'static core::panic::Location<'static>) -> Self {
         Error::Context {
             file: loc.file(),
@@ -92,6 +108,7 @@ impl Error {
     }
 
     #[cfg(feature = "debug")]
+    /// The wrapped error, if this is a [`Error::Context`].
     pub fn source(&self) -> Option<&Error> {
         match self {
             Error::Context { source, .. } => Some(&*source),
@@ -133,6 +150,7 @@ impl<E> CoreServiceError<E> {
 /// }
 /// ```
 pub trait ServiceResultExt<T, E> {
+    /// Splits into the service's own result and the system errors.
     fn split_service_error(
         self,
     ) -> core::result::Result<core::result::Result<T, E>, CoreServiceError<()>>;
@@ -187,6 +205,7 @@ impl From<CoreServiceError<CryptoError>> for Error {
 /// [`CryptoV1`](crate::traits::crypto::CryptoV1)/[`UiV1`](crate::traits::ui::UiV1)
 /// call returns into this crate's own [`Result`].
 pub trait IntoAppResult<T> {
+    /// Converts into the SDK's [`Result`].
     fn into_app_result(self) -> Result<T>;
 }
 
