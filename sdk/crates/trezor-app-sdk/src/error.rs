@@ -17,7 +17,6 @@ pub enum Error {
     ServiceError,
     DataError(&'static str),
     Cancelled,
-    InvalidFunction,
     InvalidMessage,
     InvalidArgument,
     ValueError(&'static str),
@@ -38,7 +37,6 @@ impl Error {
             Self::ServiceError => FailureKind::ProcessError,
             Self::DataError(_) => FailureKind::DataError,
             Self::Cancelled => FailureKind::ActionCancelled,
-            Self::InvalidFunction => FailureKind::UnexpectedMessage,
             Self::InvalidMessage => FailureKind::DataError,
             Self::InvalidArgument => FailureKind::DataError,
             Self::ValueError(_) => FailureKind::DataError,
@@ -54,7 +52,6 @@ impl Error {
     pub fn message(&self) -> &'static str {
         match self {
             Self::ServiceError => "service error",
-            Self::InvalidFunction => "invalid function",
             Self::InvalidMessage => "invalid message",
             Self::InvalidArgument => "invalid argument",
             Self::DataError(msg) => msg,
@@ -81,7 +78,6 @@ impl Error {
             Self::ServiceError => "ServiceError",
             Self::DataError(_) => "DataError",
             Self::Cancelled => "Cancelled",
-            Self::InvalidFunction => "InvalidFunction",
             Self::InvalidMessage => "InvalidMessage",
             Self::InvalidArgument => "InvalidArgument",
             Self::ValueError(_) => "ValueError",
