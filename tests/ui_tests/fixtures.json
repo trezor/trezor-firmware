@@ -48839,6 +48839,7 @@
 "T3W1_en_test_language.py::test_full_language_change[pt]": "4a0ff252c249ef044b0f197c534f6d907df748faccf2be6e85d62ce914c31989",
 "T3W1_en_test_language.py::test_header_trailing_data": "2b76b71017599c0972dac29e7f6308f6f575faf417ddab5e8abf0a09d0e450b6",
 "T3W1_en_test_language.py::test_language_is_removed_after_wipe": "1dd6da859b0b2d96922d667a56c846e14233a1475bca142b3d6b402a3bcfc56d",
+"T3W1_en_test_language.py::test_outdated_translations_notification": "06281cc164d761ab72b5fdbca2083ee0d55badf793a202d307985b1734d64f82",
 "T3W1_en_test_language.py::test_reject_update": "a0ce5b61c728e3070d50e53ff8717ae4ccd575e0a7cf4987a70a233c12427ef3",
 "T3W1_en_test_language.py::test_silent_first_install[False-False]": "1ab29c0ccb96d76fddc539ef36f0f95ffd152d7ce55f824fee2f262d41e92294",
 "T3W1_en_test_language.py::test_silent_first_install[None-False]": "1ab29c0ccb96d76fddc539ef36f0f95ffd152d7ce55f824fee2f262d41e92294",

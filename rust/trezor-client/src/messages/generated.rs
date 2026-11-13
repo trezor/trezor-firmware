@@ -98,6 +98,7 @@ trezor_message_impl! {
     DebugLinkK1N1Read => MessageType_DebugLinkK1N1Read,
     DebugLinkK1N1Response => MessageType_DebugLinkK1N1Response,
     DebugLinkSetBatteryState => MessageType_DebugLinkSetBatteryState,
+    DebugLinkSetTranslationsVersionCheck => MessageType_DebugLinkSetTranslationsVersionCheck,
     ThpCreateNewSession => MessageType_ThpCreateNewSession,
     ThpCredentialRequest => MessageType_ThpCredentialRequest,
     ThpCredentialResponse => MessageType_ThpCredentialResponse,

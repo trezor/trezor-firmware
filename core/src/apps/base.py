@@ -53,7 +53,7 @@ def busy_expiry_ms() -> int:
     return expiry_ms if expiry_ms > 0 else 0
 
 
-def _language_version_matches() -> bool:
+def language_version_matches() -> bool:
     """
     Whether translation blob version matches firmware version.
     """
@@ -82,7 +82,7 @@ def get_features() -> Features:
         vendor="trezor.io",
         fw_vendor=utils.firmware_vendor(),
         language=translations.get_language(),
-        language_version_matches=_language_version_matches(),
+        language_version_matches=language_version_matches(),
         major_version=v_major,
         minor_version=v_minor,
         patch_version=v_patch,

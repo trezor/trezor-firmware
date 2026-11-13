@@ -1503,6 +1503,7 @@ pub enum TranslatedString {
     solana__view_details_in_menu = 1316,  // "View details in the menu."
     address__xpub_export_warning = 1317,  // "A quantum computer could use this public key to reveal all keys derived from it."
     menu__turn_off = 1318,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Turn off"}
+    homescreen__title_translations_outdated = 1319,  // "Language outdated"
 }
 
 impl TranslatedString {
@@ -2829,6 +2830,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Language outdated",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4153,6 +4155,7 @@ impl TranslatedString {
                 17919,
                 17999,
                 17999,
+                18016,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5476,6 +5479,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Language outdated",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6800,6 +6804,7 @@ impl TranslatedString {
                 17919,
                 17999,
                 17999,
+                18016,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8123,6 +8128,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Language outdated",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9447,6 +9453,7 @@ impl TranslatedString {
                 17919,
                 17999,
                 17999,
+                18016,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10770,6 +10777,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Language outdated",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -12094,6 +12102,7 @@ impl TranslatedString {
                 17919,
                 17999,
                 17999,
+                18016,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13418,6 +13427,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Language outdated",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14742,6 +14752,7 @@ impl TranslatedString {
                 17180,
                 17260,
                 17260,
+                17277,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16065,6 +16076,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Language outdated",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -17389,6 +17401,7 @@ impl TranslatedString {
                 17180,
                 17260,
                 17260,
+                17277,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18712,6 +18725,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Language outdated",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -20036,6 +20050,7 @@ impl TranslatedString {
                 17180,
                 17260,
                 17260,
+                17277,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21359,6 +21374,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Language outdated",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22683,6 +22699,7 @@ impl TranslatedString {
                 17180,
                 17260,
                 17260,
+                17277,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -24007,6 +24024,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Language outdated",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -25331,6 +25349,7 @@ impl TranslatedString {
                 19330,
                 19410,
                 19410,
+                19427,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26654,6 +26673,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Language outdated",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27978,6 +27998,7 @@ impl TranslatedString {
                 19330,
                 19410,
                 19410,
+                19427,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29301,6 +29322,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Language outdated",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -30625,6 +30647,7 @@ impl TranslatedString {
                 19330,
                 19410,
                 19410,
+                19427,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31948,6 +31971,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Language outdated",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -33272,6 +33296,7 @@ impl TranslatedString {
                 19330,
                 19410,
                 19410,
+                19427,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -34596,6 +34621,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "Turn off",
+                "Language outdated",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -35920,6 +35946,7 @@ impl TranslatedString {
                 20333,
                 20413,
                 20421,
+                20438,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -37243,6 +37270,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "Turn off",
+                "Language outdated",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -38567,6 +38595,7 @@ impl TranslatedString {
                 20333,
                 20413,
                 20421,
+                20438,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39890,6 +39919,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "Turn off",
+                "Language outdated",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -41214,6 +41244,7 @@ impl TranslatedString {
                 20333,
                 20413,
                 20421,
+                20438,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42537,6 +42568,7 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "Turn off",
+                "Language outdated",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -43861,6 +43893,7 @@ impl TranslatedString {
                 20333,
                 20413,
                 20421,
+                20438,
             ];
 
         }
@@ -44534,6 +44567,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_homescreen__title_pin_not_set, Self::homescreen__title_pin_not_set),
         (Qstr::MP_QSTR_homescreen__title_seedless, Self::homescreen__title_seedless),
         (Qstr::MP_QSTR_homescreen__title_set, Self::homescreen__title_set),
+        (Qstr::MP_QSTR_homescreen__title_translations_outdated, Self::homescreen__title_translations_outdated),
         (Qstr::MP_QSTR_inputs__back, Self::inputs__back),
         (Qstr::MP_QSTR_inputs__cancel, Self::inputs__cancel),
         (Qstr::MP_QSTR_inputs__delete, Self::inputs__delete),

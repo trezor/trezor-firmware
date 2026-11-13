@@ -35,6 +35,7 @@ if __debug__:
             DebugLinkReseedRandom,
             DebugLinkSetBatteryState,
             DebugLinkSetLogFilter,
+            DebugLinkSetTranslationsVersionCheck,
             DebugLinkState,
             DebugLinkStop,
             WipeDevice,
@@ -482,6 +483,12 @@ if __debug__:
         else:
             raise wire.UnexpectedMessage("Debug console not supported")
 
+    async def dispatch_DebugLinkSetTranslationsVersionCheck(
+        msg: DebugLinkSetTranslationsVersionCheck,
+    ) -> Success:
+        storage.translations_version_check = msg.enabled
+        return Success()
+
     async def dispatch_DebugLinkStop(msg: DebugLinkStop) -> NoReturn:
         """Restart the event loop"""
         raise RestartEventLoop
@@ -622,6 +629,9 @@ if __debug__:
         MessageType.DebugLinkResetDebugEvents: _no_op,
         MessageType.DebugLinkGetGcInfo: dispatch_DebugLinkGetGcInfo,
         MessageType.DebugLinkSetLogFilter: dispatch_DebugLinkSetLogFilter,
+        MessageType.DebugLinkSetTranslationsVersionCheck: (
+            dispatch_DebugLinkSetTranslationsVersionCheck
+        ),
         MessageType.DebugLinkStop: dispatch_DebugLinkStop,
         MessageType.WipeDevice: dispatch_WipeDevice,
     }

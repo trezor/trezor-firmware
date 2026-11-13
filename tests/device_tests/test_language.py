@@ -38,6 +38,8 @@ from trezorlib.testing.translations import (
 
 pytestmark = pytest.mark.models("core")
 
+PIN4 = "1234"
+
 
 MAX_DATA_LENGTH = {
     models.T2T1: 48 * 1024,
@@ -243,6 +245,31 @@ def test_full_language_change(session: Session, lang: str):
     _check_ping_screen_texts(
         session, get_ping_title("en"), get_ping_button("en", session)
     )
+
+
+@pytest.mark.setup_client(pin=PIN4)
+def test_outdated_translations_notification(session: Session):
+    # PIN is set so that the "PIN not set" notification does not take precedence
+    assert session.features.language == "en-US"
+    assert session.features.language_version_matches is True
+
+    # Simulate translations which were not updated together with the firmware.
+    # Firmware refuses such blob, so the version check is disabled via debuglink.
+    cur_version = get_version(session)
+    old_version = (cur_version[0] - 1,) + cur_version[1:]
+    blob = prepare_blob("cs", session.model, old_version)
+    session.debug.set_translations_version_check(False)
+    try:
+        with session.test_ctx as client:
+            client.use_pin_sequence([PIN4])
+            device.change_language(session, language_data=sign_blob(blob))
+    finally:
+        session.debug.set_translations_version_check(True)
+
+    assert session.features.language == "cs-CZ"
+    assert session.features.language_version_matches is False
+    # Homescreen shows the "Language outdated" notification
+    assert session.debug.read_layout().main_component() == "Homescreen"
 
 
 def test_build_version_mismatch(session: Session):

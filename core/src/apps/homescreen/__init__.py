@@ -8,7 +8,7 @@ from trezor.enums import MessageType
 from trezor.ui.layouts.homescreen import run_busyscreen, run_homescreen, run_lockscreen
 from trezorui_api import NotificationLevel
 
-from apps.base import busy_expiry_ms
+from apps.base import busy_expiry_ms, language_version_matches
 from apps.common.authorization import is_set_any_session
 from apps.common.lock_manager import can_lock_device, lock_device
 
@@ -27,8 +27,6 @@ async def homescreen() -> None:
         label = storage.device.get_label()
     else:
         label = None
-
-    # TODO: add notification that translations are out of date
 
     notification = None
     if is_set_any_session(MessageType.AuthorizeCoinJoin):
@@ -60,6 +58,12 @@ async def homescreen() -> None:
             TR.homescreen__title_pin_not_set,
             NotificationLevel.WARNING,
             True,
+        )
+    elif not language_version_matches():
+        notification = (
+            TR.homescreen__title_translations_outdated,
+            NotificationLevel.WARNING,
+            False,
         )
     elif storage.device.get_experimental_features():
         notification = (

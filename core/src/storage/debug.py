@@ -8,3 +8,5 @@ if __debug__:
 
     reset_internal_entropy = bytearray(32)
     reset_internal_entropy[:] = bytes()
+
+    translations_version_check = True

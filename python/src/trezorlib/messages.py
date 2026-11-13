@@ -638,6 +638,7 @@ class MessageType(IntEnum):
     DebugLinkK1N1Read = 9016
     DebugLinkK1N1Response = 9017
     DebugLinkSetBatteryState = 9018
+    DebugLinkSetTranslationsVersionCheck = 9019
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -4603,6 +4604,20 @@ class DebugLinkSetBatteryState(protobuf.MessageType):
         self.charging_limited = charging_limited
         self.temp_control_active = temp_control_active
         self.battery_connected = battery_connected
+
+
+class DebugLinkSetTranslationsVersionCheck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9019
+    FIELDS = {
+        1: protobuf.Field("enabled", "bool", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        enabled: bool,
+    ) -> None:
+        self.enabled = enabled
 
 
 class DebugLinkWatchLayout(protobuf.MessageType):

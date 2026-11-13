@@ -912,6 +912,17 @@ class DebugLink:
         else:
             self.t1_take_screenshots = False
 
+    def set_translations_version_check(self, enabled: bool) -> None:
+        """Enable or disable the translations version check in ChangeLanguage.
+
+        Disabling it allows installing a translation blob that does not match
+        the firmware version.
+        """
+        self._call(
+            messages.DebugLinkSetTranslationsVersionCheck(enabled=enabled),
+            expect=messages.Success,
+        )
+
     def erase_sd_card(self, format: bool = True) -> None:
         self._call(
             messages.DebugLinkEraseSdCard(format=format), expect=messages.Success

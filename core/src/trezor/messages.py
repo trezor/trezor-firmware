@@ -3187,6 +3187,20 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkSetBatteryState"]:
             return isinstance(msg, cls)
 
+    class DebugLinkSetTranslationsVersionCheck(protobuf.MessageType):
+        enabled: "bool"
+
+        def __init__(
+            self,
+            *,
+            enabled: "bool",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkSetTranslationsVersionCheck"]:
+            return isinstance(msg, cls)
+
     class DebugLinkOptigaSetSecMax(protobuf.MessageType):
 
         @classmethod

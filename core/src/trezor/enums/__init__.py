@@ -575,6 +575,7 @@ if TYPE_CHECKING:
         DebugLinkK1N1Read = 9016
         DebugLinkK1N1Response = 9017
         DebugLinkSetBatteryState = 9018
+        DebugLinkSetTranslationsVersionCheck = 9019
         EthereumGetPublicKey = 450
         EthereumPublicKey = 451
         EthereumGetAddress = 56

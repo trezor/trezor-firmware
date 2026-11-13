@@ -86,7 +86,15 @@ async def do_change_language(
     if len(header.version) != 4 or len(expected_version) != 4:
         raise DataError("Invalid version format")
     if not translations.version_matches_firmware(header.version, expected_version):
-        raise DataError("Translations version mismatch")
+        if __debug__:
+            from storage import debug as storage_debug
+
+            # allows tests to install an outdated translation blob
+            skip_version_check = not storage_debug.translations_version_check
+        else:
+            skip_version_check = False
+        if not skip_version_check:
+            raise DataError("Translations version mismatch")
 
     current_header = translations.TranslationsHeader.load_from_flash()
     if current_header is None:

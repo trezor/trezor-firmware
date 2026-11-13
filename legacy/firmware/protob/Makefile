@@ -9,7 +9,7 @@ SKIPPED_MESSAGES := Cardano DebugMonero Monero Ontology Ripple SdProtect Tron We
 	DebugLinkGcInfo DebugLinkRecordScreen DebugLinkEraseSdCard DebugLinkWatchLayout \
 	DebugLinkLayout DebugLinkResetDebugEvents  DebugLinkSetBatteryState \
 	DebugLinkK1N1Connected DebugLinkK1N1Read DebugLinkK1N1Write DebugLinkK1N1Response \
-	DebugLinkOptigaSetSecMax DebugLinkSetLogFilter \
+	DebugLinkOptigaSetSecMax DebugLinkSetLogFilter DebugLinkSetTranslationsVersionCheck \
 	GetNonce TxAckInput TxAckOutput TxAckPrev PaymentRequest \
 	EthereumABITupleInfo EthereumABIValueInfo EthereumERC7730FieldInfo EthereumDisplayFormatInfo EthereumERC7730Path \
 	EthereumDefinitionRequest EthereumDefinitionAck \

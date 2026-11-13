@@ -256,6 +256,16 @@ message DebugLinkSetBatteryState {
 }
 
 /**
+ * Request: Enable or disable the translations version check in ChangeLanguage.
+ * Allows installing a translation blob that does not match the firmware version.
+ * @start
+ * @next Success
+ */
+message DebugLinkSetTranslationsVersionCheck {
+    required bool enabled = 1;
+}
+
+/**
  * Request: Start or stop tracking layout changes
  * @start
  * @next Success
