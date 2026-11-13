@@ -137,12 +137,15 @@ void display_deinit(display_content_mode_t mode) {
 // display state is preserved across the CPU's low-power stop.
 void display_suspend(display_wakeup_params_t* wakeup_params) {
   if (wakeup_params != NULL) {
-    memset(wakeup_params, 0, sizeof(*wakeup_params));
+    wakeup_params->backlight_level = display_get_backlight();
   }
 }
 
 void display_resume(const display_wakeup_params_t* wakeup_params) {
-  (void)wakeup_params;
+  if (!display_init(DISPLAY_RESET_CONTENT)) {
+    return;
+  }
+  display_set_backlight(wakeup_params->backlight_level);
 }
 #endif  // USE_SUSPEND
 
