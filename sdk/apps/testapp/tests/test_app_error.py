@@ -82,11 +82,15 @@ def test_malformed_request(session: Session, instance_id: int):
     ids=["response_type", "unknown"],
 )
 def test_unknown_request(session: Session, instance_id: int, message_id: int):
-    """A message id the app doesn't handle is the host's error, not a crash."""
-    with raises(SdkError.InvalidFunction):
-        session.call(
-            hash_request(instance_id, message_id), expect=messages.ExtAppResponse
-        )
+    """The app answers a message id it doesn't handle with its own `Failure`:
+    the host's mistake, neither a crash nor a Core failure."""
+    response = session.call(
+        hash_request(instance_id, message_id), expect=messages.ExtAppResponse
+    )
+    assert response.message_id == testapp_ext.message_id(m.Failure)
+    failure = protobuf.load_message(io.BytesIO(response.data), m.Failure)
+    assert failure.code == m.FailureType.UnexpectedMessage
+    assert failure.message == "Unexpected message"
 
 
 def test_crashed_app_reports_app_error(session: Session, instance_id: int):

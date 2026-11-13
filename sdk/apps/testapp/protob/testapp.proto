@@ -261,3 +261,15 @@ message Data {
  * @end
  */
 message Crash {}
+
+/**
+ * Response: the request isn't one this app handles
+ * @end
+ */
+message Failure {
+    optional FailureType code = 1;  // computer-readable definition of the error state
+    optional string message = 2;    // human-readable message of the error state
+    enum FailureType {
+        UnexpectedMessage = 1;
+    }
+}

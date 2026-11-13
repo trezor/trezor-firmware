@@ -31,7 +31,6 @@ class SdkError(Enum):
     ServiceError = (FailureType.ProcessError, "service error")
     DataError = (FailureType.DataError, None)
     Cancelled = (FailureType.ActionCancelled, "cancelled")
-    InvalidFunction = (FailureType.UnexpectedMessage, "invalid function")
     InvalidMessage = (FailureType.DataError, "invalid message")
     InvalidArgument = (FailureType.DataError, "invalid argument")
 
