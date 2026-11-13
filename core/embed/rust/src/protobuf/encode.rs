@@ -24,8 +24,8 @@ pub extern "C" fn protobuf_encode(buf: Obj, obj: Obj) -> Obj {
 
         // SAFETY:
         // We assume that:
-        //  - there are no other refs into `buf` at this point. This specifically means
-        //    that no fields of `obj` should reference `buf` memory.
+        //  - there are no other refs into `buf` at this point. This specifically means that no
+        //    fields of `obj` should reference `buf` memory.
         //  - for the lifetime of `buf`, no Python code will mutate the contents.
         let buf = unsafe { buffer::get_buffer_mut(buf)? };
         let stream = &mut BufferStream::new(buf);

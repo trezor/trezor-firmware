@@ -1,5 +1,6 @@
 use core::convert::{TryFrom, TryInto};
 use core::ffi::CStr;
+use core::str::FromStr;
 
 use super::error::Error;
 use super::ffi;
@@ -272,14 +273,22 @@ impl TryFrom<&[u8]> for Obj {
 /// String slices are converted into `str` MicroPython objects. Strings that are
 /// already interned will turn up as QSTRs, strings not found in the QSTR pool
 /// will be allocated on the heap and copied.
-impl TryFrom<&str> for Obj {
-    type Error = Error;
+impl FromStr for Obj {
+    type Err = Error;
 
-    fn try_from(val: &str) -> Result<Self, Self::Error> {
+    fn from_str(val: &str) -> Result<Self, Self::Err> {
         // SAFETY:
         //  - `str` is guaranteed to be UTF-8.
         // EXCEPTION: Will raise if allocation fails.
         catch_exception!(unsafe { ffi::mp_obj_new_str } => { val.as_ptr().cast(), val.len() })
+    }
+}
+
+impl TryFrom<&str> for Obj {
+    type Error = Error;
+
+    fn try_from(val: &str) -> Result<Self, Self::Error> {
+        Obj::from_str(val)
     }
 }
 
@@ -445,8 +454,7 @@ impl Obj {
             // * The pointer is a valid MicroPython object, which has `ObjBase` as its first
             //   element.
             // * The type pointer points to a valid type object.
-            // * The pointee has a 'static lifetime, i.e., either is ROM-based, or GC
-            //   allocated.
+            // * The pointee has a 'static lifetime, i.e., either is ROM-based, or GC allocated.
             let base = self.as_ptr() as *const ObjBase;
             unsafe { (*base).type_.as_ref() }
         } else {

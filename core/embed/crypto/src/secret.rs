@@ -13,8 +13,7 @@ use zeroize::{Zeroize, ZeroizeOnDrop, zeroize_flat_type};
 /// guarantees:
 ///
 /// * all-zero memory is a valid value
-/// * the type is flat, that is, does not hold Rust references nor dynamically
-///   sized data
+/// * the type is flat, that is, does not hold Rust references nor dynamically sized data
 /// * values inside it do not have Drop impls
 ///
 /// These are all generally true for FFI C structs.

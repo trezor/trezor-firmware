@@ -9,8 +9,7 @@ impl Func {
         // SAFETY:
         //  - We are an object struct with a base and a type.
         //  - 'static lifetime holds us in place.
-        //  - MicroPython is smart enough not to mutate `mp_obj_fun_builtin_fixed_t`
-        //    objects.
+        //  - MicroPython is smart enough not to mutate `mp_obj_fun_builtin_fixed_t` objects.
         unsafe { Obj::from_ptr(self as *const _ as *mut _) }
     }
 }
@@ -27,8 +26,7 @@ impl FuncVar {
         // SAFETY:
         //  - We are an object struct with a base and a type.
         //  - 'static lifetime holds us in place.
-        //  - MicroPython is smart enough not to mutate `mp_obj_fun_builtin_var_t`
-        //    objects.
+        //  - MicroPython is smart enough not to mutate `mp_obj_fun_builtin_var_t` objects.
         unsafe { Obj::from_ptr(self as *const _ as *mut _) }
     }
 }

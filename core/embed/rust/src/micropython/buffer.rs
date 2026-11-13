@@ -162,11 +162,10 @@ impl AsRef<str> for StrBuffer {
     fn as_ref(&self) -> &str {
         // SAFETY:
         // - If constructed from a Rust `&str`, this is safe.
-        // - If constructed from a MicroPython string, we check validity of UTF-8 at
-        //   construction time. Python semantics promise not to mutate the underlying
-        //   data from under us.
-        // - If constructed by `offset()`, we expect the input to be UTF-8 and check
-        //   that we split the string at character boundary.
+        // - If constructed from a MicroPython string, we check validity of UTF-8 at construction
+        //   time. Python semantics promise not to mutate the underlying data from under us.
+        // - If constructed by `offset()`, we expect the input to be UTF-8 and check that we split
+        //   the string at character boundary.
         unsafe { str::from_utf8_unchecked(self.as_bytes()) }
     }
 }

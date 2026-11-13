@@ -107,8 +107,7 @@ pub fn verify_digest(
     let ffi_curve = curve.to_ffi_curve();
     // SAFETY:
     // * ffi_curve is one of the supported builtin curves
-    // * public_key is either a compressed or uncompressed public key of correct
-    //   size
+    // * public_key is either a compressed or uncompressed public key of correct size
     // * signature has correct length
     // * digest has correct length
     let result = unsafe {

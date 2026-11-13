@@ -51,7 +51,7 @@ pub fn test(args: TestArgs) -> Result<()> {
             .env("SCM_REVISION", helpers::git_revision()?)
             .current_dir(helpers::workspace_dir()?);
 
-        println!("xtask: Running test on `{}`", &package);
+        println!("xtask: Running test on `{}`", package);
         println!("{}", command_args_to_string(&cmd).bold().dimmed());
 
         let status = cmd.status().context("Failed to spawn `cargo test`")?;

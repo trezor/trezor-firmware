@@ -51,7 +51,7 @@
             done
           '';
         # NOTE: don't forget to update Minimum Supported Rust Version in docs/core/build/emulator.md
-        rustProfiles = pkgs.rust-bin.nightly."2026-03-16";
+        rustProfiles = pkgs.rust-bin.nightly."2026-11-13";
         rustNightly = rustProfiles.minimal.override {
           targets = [
             "thumbv8m.main-none-eabihf" # T3
