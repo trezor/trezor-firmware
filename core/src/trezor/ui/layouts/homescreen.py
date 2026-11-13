@@ -1,3 +1,5 @@
+import utime
+from micropython import const
 from typing import TYPE_CHECKING
 
 import storage.cache as storage_cache
@@ -13,6 +15,51 @@ if TYPE_CHECKING:
 
     P = ParamSpec("P")
     R = TypeVar("R")
+
+# When a host request finds the device locked, the host is about to show its own screen
+# after the PIN (e.g. the first confirm screen of a Send), but first sends more requests
+# (open a session, public keys) and fetches data: measured 2.2-2.5 s on desktop Suite
+# over USB, 5.3 s on the first Send after a restart. The homescreen would redraw itself
+# in the pauses between these requests and flash before the host's screen. So it keeps
+# the PIN loader up while the host keeps going: up to this long after each of its
+# requests. The longest pause measured during a Send was 275 ms; when Suite connects to
+# a locked device, one pause is longer than 1 s. If a host still makes the homescreen
+# flash after an unlock, measure the pauses between its requests and raise this...
+_AFTER_HOST_STEP_MS = const(2000)
+# ...but no longer than this after the unlock in total, so that a host which keeps
+# sending requests without ever showing a screen (e.g. loading accounts) can't keep
+# the homescreen away indefinitely.
+_AFTER_HOST_UNLOCK_MAX_MS = const(6000)
+
+
+async def _wait_before_redraw() -> None:
+    """Delay the homescreen's redraw while the host that just unlocked the device is
+    still on its way to its own screen. If that screen comes up meanwhile, the
+    homescreen is closed before it is drawn."""
+    from trezor import loop
+
+    # Re-check after each sleep: a request that doesn't restart the main loop (e.g.
+    # `GetFeatures`) can end while the homescreen sleeps, which moves the deadline.
+    while True:
+        unlocked = storage_cache.host_unlocked_ms
+        if unlocked is None:
+            return
+        now = utime.ticks_ms()
+        if utime.ticks_diff(now, unlocked) >= _AFTER_HOST_UNLOCK_MAX_MS:
+            return
+
+        ended = storage_cache.workflow_ended_ms
+        if ended is None or utime.ticks_diff(ended, unlocked) < 0:
+            ended = unlocked
+        due = utime.ticks_add(ended, _AFTER_HOST_STEP_MS)
+        latest = utime.ticks_add(unlocked, _AFTER_HOST_UNLOCK_MAX_MS)
+        if utime.ticks_diff(due, latest) > 0:
+            due = latest
+
+        remaining = utime.ticks_diff(due, now)
+        if remaining <= 0:
+            return
+        await loop.sleep(remaining)
 
 
 def _retry_with_gc(layout: Callable[P, R], *args: P.args, **kwargs: P.kwargs) -> R:
@@ -102,6 +149,9 @@ async def run_homescreen(
 ) -> ui.UiResult:
     class Homescreen(HomescreenBase):
         RENDER_INDICATOR = storage_cache.HOMESCREEN_ON
+
+    if not Homescreen._should_resume():
+        await _wait_before_redraw()
 
     with Homescreen(
         _retry_with_gc(
