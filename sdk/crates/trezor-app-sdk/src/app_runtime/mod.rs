@@ -72,10 +72,6 @@ pub(crate) fn get_api_or_die() -> &'static TrezorApiV1Struct {
     API.get().expect("API not initialized")
 }
 
-pub(crate) fn systick_ms() -> u32 {
-    get_api_or_die().api.systick_ms()
-}
-
 pub(crate) fn sleep(timeout_ms: u32) {
     get_api_or_die().api.sleep(timeout_ms);
 }
