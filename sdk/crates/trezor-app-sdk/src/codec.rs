@@ -44,7 +44,7 @@ where
     Codec: WireEncode<Req> + WireDecode<Req::Response>,
 {
     let req_bytes = Codec::encode(req);
-    let (_id, resp_bytes) = wire_call(&req_bytes, Req::ID)?;
+    let (_id, resp_bytes) = wire_call(Req::ID, &req_bytes)?;
     Codec::decode(resp_bytes.as_ref())
 }
 
@@ -69,7 +69,7 @@ macro_rules! wire_handler {
             match $handler_fn(request) {
                 Ok(resp) => {
                     let response_bytes = <$codec as $crate::WireEncode<_>>::encode(&resp);
-                    $crate::wire_send(&response_bytes, $response_msg as u16)
+                    $crate::wire_send($response_msg as u16, &response_bytes)
                 }
                 Err(e) => $crate::wire_error(&e),
             }

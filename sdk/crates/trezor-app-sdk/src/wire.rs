@@ -20,7 +20,7 @@ pub fn wire_receive() -> Result<(u16, impl AsRef<[u8]>)> {
 
 /// Sends a message to the host. On its own this is how a flow ends; mid-flow
 /// use [`wire_call`].
-pub fn wire_send(bytes: &[u8], id: u16) -> Result<()> {
+pub fn wire_send(id: u16, bytes: &[u8]) -> Result<()> {
     get_wire_or_die()
         .wire_send(id, bytes.into())
         .into_app_result()
@@ -48,7 +48,7 @@ pub fn wire_error(e: &Error) -> Result<()> {
 /// case; use this directly only when you need that dispatch, or need to
 /// bypass [`WireRequest`](crate::WireRequest)/[`WireEncode`](crate::WireEncode)/
 /// [`WireDecode`](crate::WireDecode) entirely.
-pub fn wire_call(req_bytes: &[u8], id: u16) -> Result<(u16, impl AsRef<[u8]> + use<>)> {
-    wire_send(req_bytes, id)?;
+pub fn wire_call(id: u16, req_bytes: &[u8]) -> Result<(u16, impl AsRef<[u8]> + use<>)> {
+    wire_send(id, req_bytes)?;
     wire_receive()
 }
