@@ -37,7 +37,7 @@ it handles one request and returns:
 #[trezor_app_sdk::app]
 fn app() -> Result<()> {
     let (id, data) = wire_receive().c()?;
-    handle_wire_message(id as i32, &data).c()
+    handle_wire_message(id as i32, data.as_ref()).c()
 }
 ```
 

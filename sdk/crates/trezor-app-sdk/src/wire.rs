@@ -11,7 +11,7 @@ use alloc::vec::Vec;
 
 use crate::app_runtime::get_wire_or_die;
 use crate::traits::wire::WireV1Dyn as _;
-use crate::util::Timeout;
+use crate::util::{Bytes, Timeout};
 use crate::{Error, IntoAppResult, Result, ResultExt, debug};
 
 /// Decodes a wire message body into `T` using the implementing codec.
@@ -25,7 +25,7 @@ pub trait WireEncode<T> {
 }
 
 /// Waits for the next message from the host and returns its id and raw bytes.
-pub fn wire_receive() -> Result<(u16, Vec<u8>)> {
+pub fn wire_receive() -> Result<(u16, impl AsRef<[u8]>)> {
     debug!("Waiting for wire message");
     let message = get_wire_or_die()
         .wire_receive(Timeout::max().as_ms())
@@ -33,7 +33,7 @@ pub fn wire_receive() -> Result<(u16, Vec<u8>)> {
         .c()?;
     debug!("Received wire message: id={}", message.id);
 
-    Ok((message.id, message.data.as_ref().to_vec()))
+    Ok((message.id, Bytes(message.data)))
 }
 
 /// Sends a message to the host. On its own this is how a flow ends; mid-flow
@@ -65,7 +65,7 @@ pub fn wire_error(e: &Error) -> Result<()> {
 /// message types. Prefer [`wire_request`] for the common single-response
 /// case; use this directly only when you need that dispatch, or need to
 /// bypass [`WireRequest`]/[`WireEncode`]/[`WireDecode`] entirely.
-pub fn wire_call(req_bytes: &[u8], id: u16) -> Result<(u16, Vec<u8>)> {
+pub fn wire_call(req_bytes: &[u8], id: u16) -> Result<(u16, impl AsRef<[u8]>)> {
     wire_send(req_bytes, id)?;
     wire_receive()
 }
@@ -92,5 +92,5 @@ where
 {
     let req_bytes = Codec::encode(req);
     let (_id, resp_bytes) = wire_call(&req_bytes, Req::ID)?;
-    Codec::decode(&resp_bytes)
+    Codec::decode(resp_bytes.as_ref())
 }
