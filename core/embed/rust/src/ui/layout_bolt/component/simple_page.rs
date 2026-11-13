@@ -74,7 +74,9 @@ where
         self.fade
             .set(Some(theme::backlight::get_backlight_normal()));
     }
+}
 
+impl<T> SimplePage<T> {
     fn is_horizontal(&self) -> bool {
         matches!(self.axis, Axis::Horizontal)
     }
@@ -161,6 +163,7 @@ where
         t.component("SimplePage");
         t.int("active_page", i64::from(self.scrollbar.pager().current()));
         t.int("page_count", i64::from(self.scrollbar.pager().total()));
+        t.bool("horizontal", self.is_horizontal());
         t.child("content", &self.content);
     }
 }
