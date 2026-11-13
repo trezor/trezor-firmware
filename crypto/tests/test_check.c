@@ -7287,7 +7287,10 @@ START_TEST(test_slip39_word_index) {
                  {"satoshi", true, 781},
                  {"member", true, 573},
                  // 9999 value is never checked since the word is not in list
-                 {"fakeword", false, 9999}};
+                 {"fakeword", false, 9999},
+                 {"acad", false, 9999},
+                 {"", false, 9999},
+                 {"zer", false, 9999}};
   for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
     bool result = word_index(&index, vectors[i].word, strlen(vectors[i].word));
     ck_assert_int_eq(result, vectors[i].expected_result);
@@ -7469,6 +7472,15 @@ START_TEST(test_shamir) {
       ck_assert_mem_eq(result, vectors[i].result, vectors[i].len);
     }
   }
+
+  uint8_t zero_result[SHAMIR_MAX_LEN] = {0};
+  uint8_t dummy_indices[1] = {1};
+  const uint8_t *dummy_values[1] = {zero_result};
+  ck_assert_int_eq(shamir_interpolate(zero_result, 0, NULL, NULL, 0, 32),
+                   false);
+  ck_assert_int_eq(
+      shamir_interpolate(zero_result, 0, dummy_indices, dummy_values, 0, 32),
+      false);
 }
 END_TEST
 
@@ -10980,7 +10992,9 @@ static void test_noise_xxpsk3_handshake(uint32_t seed,
                                         noise_xxpsk3_responder_t *responder) {
   random_reseed(seed);
 
-  uint8_t psk[32] = "this_is_a_32byte_preshared_key!!";
+  uint8_t psk[32] = {'t', 'h', 'i', 's', '_', 'i', 's', '_', 'a', '_', '3',
+                     '2', 'b', 'y', 't', 'e', '_', 'p', 'r', 'e', 's', 'h',
+                     'a', 'r', 'e', 'd', '_', 'k', 'e', 'y', '!', '!'};
 
   uint8_t initiator_private_key[32] = {0};
   uint8_t responder_private_key[32] = {0};
