@@ -102,7 +102,12 @@ pub fn ecdsa_verify(m: wire::EcdsaVerify) -> Result<wire::Success> {
     let mut hasher = sdk::get_hasher(HashingAlgorithm::Sha256);
     hasher.update(&m.message);
     let digest = hasher.finalize();
-    sdk::ecdsa_verify_digest(curve(m.curve)?, &m.public_key, &m.signature, &digest)?;
+    sdk::ecdsa_verify_digest(
+        curve(m.curve)?,
+        &m.public_key,
+        &m.signature,
+        digest.as_ref(),
+    )?;
     Ok(wire::Success {})
 }
 
