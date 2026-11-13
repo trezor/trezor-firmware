@@ -77,7 +77,7 @@ mod tests {
     fn keccak_32(input: &[u8]) -> [u8; 4] {
         let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
         hasher.update(input);
-        hasher.finalize().as_slice()[..4]
+        hasher.finalize().as_ref()[..4]
             .try_into()
             .expect("slice with incorrect length")
     }

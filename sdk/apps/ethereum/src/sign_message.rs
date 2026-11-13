@@ -58,5 +58,5 @@ pub fn message_digest(message: &[u8]) -> [u8; 32] {
     hasher.update(message);
 
     // Compute keccak256 hash
-    hasher.finalize().as_slice().try_into().unwrap()
+    hasher.finalize().as_ref().try_into().unwrap()
 }

@@ -45,6 +45,7 @@ pub fn verify_message(msg: VerifyMessage) -> Result<Success> {
     // We can use unwrap here because the hash is always 32 bytes
     if address_bytes
         != pkh_hash
+            .as_ref()
             .last_chunk::<20>()
             .ok_or(Error::DataError("Hash is too short"))?
     {

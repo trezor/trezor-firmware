@@ -193,7 +193,7 @@ pub fn sign_tx(mut msg: SignTx) -> Result<TxRequest> {
         rlp::write(&mut hasher, field);
     }
 
-    let digest: [u8; 32] = hasher.finalize().as_slice().try_into().unwrap();
+    let digest: [u8; 32] = hasher.finalize().as_ref().try_into().unwrap();
 
     // transaction data confirmed, proceed with signing
     let res = sign_digest(&msg, &digest).c()?;

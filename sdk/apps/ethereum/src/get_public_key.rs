@@ -145,8 +145,9 @@ impl HdNodeData {
         let first = hasher.finalize();
 
         let mut hasher = crypto::get_hasher(HashingAlgorithm::Sha256);
-        hasher.update(&first);
+        hasher.update(first.as_ref());
         let second = hasher.finalize();
+        let second = second.as_ref();
 
         [second[0], second[1], second[2], second[3]]
     }

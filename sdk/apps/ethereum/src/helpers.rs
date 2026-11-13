@@ -45,7 +45,7 @@ pub fn address_from_bytes(address_bytes: &[u8], network: Option<&NetworkInfo>) -
     let mut result = String::from("0x");
 
     for (i, ch) in address_hex.chars().enumerate() {
-        let digest_byte = digest[i / 2];
+        let digest_byte = digest.as_ref()[i / 2];
         let bit = if i % 2 == 0 {
             0x80 // even letter -> high nibble
         } else {

@@ -204,7 +204,7 @@ mod tests {
     fn keccak256(data: &[u8]) -> [u8; 32] {
         let mut hasher = crypto::get_hasher(HashingAlgorithm::Keccak256);
         hasher.update(data);
-        hasher.finalize().as_slice().try_into().unwrap()
+        hasher.finalize().as_ref().try_into().unwrap()
     }
 
     #[test]

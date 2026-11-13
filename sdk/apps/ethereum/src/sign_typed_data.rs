@@ -138,7 +138,7 @@ fn generate_typed_data_hash(
     hasher.update(b"\x19\x01");
     hasher.update(&domain_separator);
     hasher.update(&message_hash);
-    Ok(hasher.finalize().as_slice().try_into().unwrap())
+    Ok(hasher.finalize().as_ref().try_into().unwrap())
 }
 
 /// Encapsulates the type information for the message being hashed and signed.
@@ -234,7 +234,7 @@ impl TypedDataEnvelope {
             map_progress,
         )?;
 
-        Ok(hasher.finalize().as_slice().try_into().unwrap())
+        Ok(hasher.finalize().as_ref().try_into().unwrap())
     }
 
     /// Gradually fetch data from client and encode the whole struct.
@@ -380,7 +380,7 @@ impl TypedDataEnvelope {
                         }
                     }
                     let hash = arr_w.finalize();
-                    hasher.update(&hash);
+                    hasher.update(hash.as_ref());
                 } else {
                     return Err(Error::DataError("Missing entry type for array field"))?;
                 }
@@ -399,7 +399,7 @@ impl TypedDataEnvelope {
         let encoded_type = self.encode_type(primary_type)?;
         let mut hasher_inner = crypto::get_hasher(HashingAlgorithm::Keccak256);
         hasher_inner.update(&encoded_type);
-        hasher.update(&hasher_inner.finalize());
+        hasher.update(hasher_inner.finalize().as_ref());
         Ok(())
     }
 
@@ -658,12 +658,12 @@ fn encode_field<H: HasherExt>(h: &mut H, field: &FieldType, value: &[u8]) -> Res
         } else {
             let mut hasher_inner = crypto::get_hasher(HashingAlgorithm::Keccak256);
             hasher_inner.update(value);
-            h.update(&hasher_inner.finalize());
+            h.update(hasher_inner.finalize().as_ref());
         };
     } else if field.data_type == DataType::String as i32 {
         let mut hasher_inner = crypto::get_hasher(HashingAlgorithm::Keccak256);
         hasher_inner.update(value);
-        h.update(&hasher_inner.finalize());
+        h.update(hasher_inner.finalize().as_ref());
     } else if field.data_type == DataType::Int as i32 {
         h.update(&leftpad32(value, true)?);
     } else if field.data_type == DataType::Uint as i32

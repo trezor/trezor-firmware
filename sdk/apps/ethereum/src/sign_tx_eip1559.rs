@@ -183,7 +183,7 @@ pub fn sign_tx_eip1559(mut msg: SignTxEip1559) -> Result<TxRequest> {
         rlp::write(&mut hasher, &RLPItem::List(storage_key_items.as_slice()));
     }
 
-    let digest: [u8; 32] = hasher.finalize().as_slice().try_into().unwrap();
+    let digest: [u8; 32] = hasher.finalize().as_ref().try_into().unwrap();
     let res = sign_digest(&msg, &digest)?;
 
     helpers::end_progress_if_active()?;
