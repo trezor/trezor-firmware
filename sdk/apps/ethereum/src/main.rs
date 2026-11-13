@@ -156,7 +156,7 @@ fn unexpected_message() -> Result<()> {
         code: Some(FailureType::UnexpectedMessage as i32),
         message: Some("Unexpected message".into()),
     };
-    wire_send(&failure.encode_to_vec(), MessageType::Failure as u16)
+    wire_send(MessageType::Failure as u16, &failure.encode_to_vec())
 }
 
 /// Entry point for handling protobuf function calls
