@@ -34,7 +34,9 @@ class Storage:
     def unlock(self, pin: str, ext_salt: bytes = None) -> bool:
         if ext_salt is not None and len(ext_salt) != EXTERNAL_SALT_LEN:
             raise ValueError
-        return UNLOCK_OK == self.lib.storage_unlock(pin.encode(), len(pin), ext_salt)
+        return UNLOCK_OK == self.lib.storage_unlock(
+            pin.encode(), len(pin.encode()), ext_salt
+        )
 
     def lock(self) -> None:
         self.lib.storage_lock()
@@ -54,8 +56,27 @@ class Storage:
             raise ValueError
         return PIN_CHANGE_OK == self.lib.storage_change_pin(
             newpin.encode(),
-            len(newpin),
+            len(newpin.encode()),
             new_ext_salt,
+        )
+
+    def has_wipe_code(self) -> bool:
+        return sectrue == self.lib.storage_has_wipe_code()
+
+    def change_wipe_code(
+        self,
+        pin: str,
+        wipe_code: str,
+        ext_salt: bytes = None,
+    ) -> bool:
+        if ext_salt is not None and len(ext_salt) != EXTERNAL_SALT_LEN:
+            raise ValueError
+        return sectrue == self.lib.storage_change_wipe_code(
+            pin.encode(),
+            len(pin.encode()),
+            ext_salt,
+            wipe_code.encode(),
+            len(wipe_code.encode()),
         )
 
     def get(self, key: int) -> bytes:
