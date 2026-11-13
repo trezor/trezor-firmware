@@ -464,14 +464,6 @@ impl Sha256 {
     }
 }
 
-impl Drop for Sha256 {
-    fn drop(&mut self) {
-        unsafe {
-            core::ptr::write_volatile(&mut self.ctx, core::mem::zeroed());
-        }
-    }
-}
-
 impl Hasher for Sha256 {
     extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>) {
         self.ctx.update(input.as_slice());
@@ -499,14 +491,6 @@ impl Sha512 {
 
     pub fn digest(&mut self) -> [u8; 64] {
         self.ctx.clone().finalize()
-    }
-}
-
-impl Drop for Sha512 {
-    fn drop(&mut self) {
-        unsafe {
-            core::ptr::write_volatile(&mut self.ctx, core::mem::zeroed());
-        }
     }
 }
 
@@ -553,12 +537,6 @@ impl Hasher for Keccak256 {
     }
 }
 
-impl Drop for Keccak256 {
-    fn drop(&mut self) {
-        self.ctx.reset();
-    }
-}
-
 /// **Functional** — delegates to `mock_sha3::Sha3_256` (software SHA3-256).
 pub struct Sha3_256 {
     ctx: Sha3_256_impl,
@@ -588,12 +566,6 @@ impl Hasher for Sha3_256 {
 
     extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
         BoxedSlice::from(&self.digest()[..])
-    }
-}
-
-impl Drop for Sha3_256 {
-    fn drop(&mut self) {
-        self.ctx.reset();
     }
 }
 
@@ -629,12 +601,6 @@ impl Hasher for Keccak512 {
     }
 }
 
-impl Drop for Keccak512 {
-    fn drop(&mut self) {
-        self.ctx.reset();
-    }
-}
-
 /// **Functional** — delegates to `mock_sha3::Sha3_512` (software SHA3-512).
 pub struct Sha3_512 {
     ctx: Sha3_512_impl,
@@ -664,12 +630,6 @@ impl Hasher for Sha3_512 {
 
     extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
         BoxedSlice::from(&self.digest()[..])
-    }
-}
-
-impl Drop for Sha3_512 {
-    fn drop(&mut self) {
-        self.ctx.reset();
     }
 }
 
@@ -704,14 +664,6 @@ impl Hasher for HmacSha256 {
 
     extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
         BoxedSlice::from(&self.digest()[..])
-    }
-}
-
-impl Drop for HmacSha256 {
-    fn drop(&mut self) {
-        unsafe {
-            core::ptr::write_volatile(&mut self.ctx, core::mem::zeroed());
-        }
     }
 }
 
