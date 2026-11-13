@@ -8,6 +8,7 @@ use crate::traits::trezor_v1::{TrezorApiV1Dyn as _, TrezorApiV1Struct};
 use crate::traits::ui::StaticUiV1;
 use crate::traits::wire::StaticWireV1;
 
+/// The global allocator, backed by the heap Core gives the app.
 pub mod allocator;
 
 static API: spin::Once<&'static TrezorApiV1Struct> = spin::Once::new();

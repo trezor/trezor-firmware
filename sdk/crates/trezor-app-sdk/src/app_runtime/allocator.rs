@@ -11,6 +11,8 @@ use crate::traits::allocator::{GlobalAllocatorV1Dyn as _, GlobalAllocatorV1Ref};
 #[global_allocator]
 static REMOTE_ALLOCATOR: RedirAllocator = RedirAllocator;
 
+/// Global allocator that forwards every allocation to Core's allocator for
+/// this app's heap.
 pub struct RedirAllocator;
 
 impl RedirAllocator {

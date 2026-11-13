@@ -1,11 +1,15 @@
+/// A stable-ABI `Result`, for calls that need no service error wrapper.
 #[stabby::stabby]
 #[repr(C, u8)]
 pub enum FastResult<T, E> {
+    /// Success.
     Ok(T) = 0,
+    /// Failure.
     Err(E) = 1,
 }
 
 impl<T, E> FastResult<T, E> {
+    /// Converts into a standard [`Result`].
     pub fn into_result(self) -> Result<T, E> {
         match self {
             FastResult::Ok(t) => Result::Ok(t),
@@ -13,6 +17,7 @@ impl<T, E> FastResult<T, E> {
         }
     }
 
+    /// Borrows the value as a standard [`Result`] of references.
     pub fn as_result_ref<'a>(&'a self) -> Result<&'a T, &'a E> {
         match self {
             FastResult::Ok(t) => Result::Ok(t),
