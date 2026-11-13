@@ -73,6 +73,10 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     session.refresh_features()
     assert device_handler.features().unlocked is True
 
+    # after an unlock for a host request, the homescreen waits a moment before it
+    # redraws (so that it doesn't flash between the host's requests)
+    debug.synchronize_at("Homescreen")
+
     # short touch
     hold(short_duration)
 
