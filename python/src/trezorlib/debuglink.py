@@ -488,6 +488,9 @@ class LayoutContent(UnstructuredJSONReader):
     def has_menu(self) -> bool:
         return bool(self.find_unique_value_by_key("has_menu", False, bool))
 
+    def is_horizontal(self) -> bool:
+        return bool(self.find_unique_value_by_key("horizontal", False, bool))
+
     def danger_menu_items(self) -> list[bool]:
         """Which menu items are dangerous, e.g. cancelling the flow (Caesar)."""
         return self.find_unique_value_by_key("danger_items", [], list)
@@ -1155,6 +1158,43 @@ class DebugUI:
             assert "ScrolledVerticalMenu" in menu_layout.all_components()
         assert gen is None
 
+    def _visit_bolt_info(
+        self, layout: LayoutContent, gen: t.Generator[None, t.Any, None] | None
+    ) -> None:
+        assert self.debuglink.layout_type is LayoutType.Bolt
+        assert layout.has_menu()
+
+        if gen:
+            next(gen)
+
+        # Open the info layout behind the corner info button.
+        self.debuglink.click(self.debuglink.screen_buttons.menu())
+        info_layout = self.debuglink.read_layout()
+        assert (
+            "SimplePage" in info_layout.all_components()
+            or "ButtonPage" in info_layout.all_components()
+        )
+
+        gen = _step(gen)
+
+        for _ in range(info_layout.page_count() - 1):
+            # Go through the info screen pages
+            if info_layout.is_horizontal():
+                self.debuglink.swipe_left()
+            else:
+                self.debuglink.swipe_up()
+
+        # Info layouts with a cancel button are closed with the corner button,
+        # while property lists have a "Close" button at the bottom.
+        if "SimplePage" in info_layout.all_components():
+            self.debuglink.click(self.debuglink.screen_buttons.menu())
+        else:
+            self.debuglink.click(self.debuglink.screen_buttons.ok())
+
+        assert gen is None
+        restored_layout = self.debuglink.read_layout()
+        assert restored_layout.all_components() == layout.all_components()
+
     def visit_menu_items(
         self, gen: t.Generator[None, t.Any, None] | None = None
     ) -> LayoutContent:
@@ -1164,6 +1204,13 @@ class DebugUI:
             and not layout.has_flow_menu()
             or not self.debuglink.allow_interactions
         ):
+            return layout
+
+        if self.debuglink.layout_type is LayoutType.Bolt:
+            # On Bolt, `has_menu` marks the corner info button (Bolt has an info
+            # page rather than a multi-item menu). The visit below returns to
+            # this layout, so no confirmation happens here.
+            self._visit_bolt_info(layout, gen)
             return layout
 
         # enter menu layout and click its items
