@@ -29,7 +29,7 @@ fn request_operation() -> Result<Operation> {
     let req_bytes = ProstCodec::encode(&TxOpRequest {});
     let (id, data) = wire_call(&req_bytes, MessageType::TxOpRequest as u16).c()?;
     let message_type = MessageType::try_from(id as i32).map_err(|_| Error::InvalidMessage)?;
-    Operation::decode(message_type, &data)
+    Operation::decode(message_type, data.as_ref())
 }
 
 /// Requests the transaction extension of a Soroban transaction.
@@ -39,7 +39,7 @@ fn request_tx_ext() -> Result<TxExt> {
     if id as i32 != MessageType::TxExt as i32 {
         return Err(Error::InvalidMessage);
     }
-    TxExt::decode(data.as_slice()).map_err(|_| Error::InvalidMessage)
+    TxExt::decode(data.as_ref()).map_err(|_| Error::InvalidMessage)
 }
 
 pub fn sign_tx(msg: SignTx) -> Result<SignedTx> {

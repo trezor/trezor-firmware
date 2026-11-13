@@ -46,7 +46,7 @@ where
     Resp: Message + Default,
 {
     let (_id, resp_bytes) = wire_call(&req.encode_to_vec(), id as u16).c()?;
-    Resp::decode(resp_bytes.as_slice()).map_err(|_| Error::InvalidMessage)
+    Resp::decode(resp_bytes.as_ref()).map_err(|_| Error::InvalidMessage)
 }
 
 /// Wire codec for [`wire_handler!`] — encodes/decodes messages via [`prost`].
@@ -94,7 +94,7 @@ wire_handler!(
 #[trezor_app_sdk::app]
 fn app() -> Result<()> {
     let (id, data) = wire_receive().c()?;
-    handle_wire_message(id as i32, &data).c()
+    handle_wire_message(id as i32, data.as_ref()).c()
 }
 
 /// Answers a request this app doesn't handle with its own `Failure`; it's the
