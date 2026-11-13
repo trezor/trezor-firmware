@@ -22,7 +22,7 @@ impl Qstr {
     }
 }
 
-impl const qstr::QstrValue for Qstr {
+const impl qstr::QstrValue for Qstr {
     fn from_u16(val: u16) -> Self {
         Self::from_u16(val)
     }
