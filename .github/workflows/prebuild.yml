@@ -71,7 +71,7 @@ jobs:
           submodules: "recursive"
       - uses: ./.github/actions/environment
       - name: "Run gen check"
-        run: $UV_RUN make gen_check
+        run: $UV_RUN make gen_check V=1
 
   # Check uv.lock is up-to-date
   uvlock_check:
