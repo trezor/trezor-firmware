@@ -10183,6 +10183,23 @@ START_TEST(test_der_reencode_int) {
 }
 END_TEST
 
+START_TEST(test_buffer_bounds) {
+  uint8_t dummy[64] = {0};
+  BUFFER_READER reader = {0};
+  BUFFER_READER dest = {0};
+  buffer_reader_init(&reader, dummy, sizeof(dummy));
+  reader.pos = 10;
+
+  size_t huge_size = SIZE_MAX - 5;
+  ck_assert_int_eq(buffer_read_buffer(&reader, &dest, huge_size), false);
+
+  BUFFER_WRITER writer = {0};
+  buffer_writer_init(&writer, dummy, sizeof(dummy));
+  writer.pos = 10;
+  ck_assert_int_eq(buffer_write_array(&writer, dummy, huge_size), false);
+}
+END_TEST
+
 START_TEST(test_elligator2) {
   static struct {
     const char *input;
@@ -10980,7 +10997,9 @@ static void test_noise_xxpsk3_handshake(uint32_t seed,
                                         noise_xxpsk3_responder_t *responder) {
   random_reseed(seed);
 
-  uint8_t psk[32] = "this_is_a_32byte_preshared_key!!";
+  uint8_t psk[32] = {'t', 'h', 'i', 's', '_', 'i', 's', '_', 'a', '_', '3',
+                     '2', 'b', 'y', 't', 'e', '_', 'p', 'r', 'e', 's', 'h',
+                     'a', 'r', 'e', 'd', '_', 'k', 'e', 'y', '!', '!'};
 
   uint8_t initiator_private_key[32] = {0};
   uint8_t responder_private_key[32] = {0};
@@ -11809,6 +11828,7 @@ Suite *test_suite(void) {
   tc = tcase_create("der");
   tcase_add_test(tc, test_der_length);
   tcase_add_test(tc, test_der_reencode_int);
+  tcase_add_test(tc, test_buffer_bounds);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("elligator2");
