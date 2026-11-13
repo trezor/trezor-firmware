@@ -23,4 +23,5 @@ enum MessageType {
     MessageType_WithdrawBalance = 11;
     MessageType_DelegateResourceContract = 12;
     MessageType_UnDelegateResourceContract = 13;
+    MessageType_Failure = 14;
 }

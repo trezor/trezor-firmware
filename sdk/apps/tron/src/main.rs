@@ -9,8 +9,8 @@ extern crate alloc;
 
 use prost::Message;
 use trezor_app_sdk::{
-    Error, Result, ResultExt, WireDecode, WireEncode, error, wire_call, wire_error, wire_handler,
-    wire_receive,
+    Error, Result, ResultExt, WireDecode, WireEncode, error, wire_call, wire_handler, wire_receive,
+    wire_send,
 };
 
 // Include generated code
@@ -30,6 +30,7 @@ mod sc_constants;
 mod sign_tx;
 mod strutil;
 
+use proto::common::{Failure, failure::FailureType};
 use proto::{
     messages::MessageType,
     tron::{GetAddress, SignTx},
@@ -85,6 +86,16 @@ fn app() -> Result<()> {
     handle_wire_message(id as i32, &data).c()
 }
 
+/// Answers a request this app doesn't handle with its own `Failure`; it's the
+/// host's mistake, so the app neither fails nor crashes.
+fn unexpected_message() -> Result<()> {
+    let failure = Failure {
+        code: Some(FailureType::UnexpectedMessage as i32),
+        message: Some("Unexpected message".into()),
+    };
+    wire_send(&failure.encode_to_vec(), MessageType::Failure as u16)
+}
+
 /// Entry point for handling protobuf function calls
 /// fn_id: function identifier
 /// data: serialized protobuf request
@@ -93,13 +104,9 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
     match id.try_into() {
         Ok(MessageType::GetAddress) => handle_get_address(data),
         Ok(MessageType::SignTx) => handle_sign_tx(data),
-        Ok(_) => {
-            error!("Invalid function: {:?}", id);
-            wire_error(&Error::InvalidFunction)
-        }
-        Err(_) => {
-            error!("Non existing message type: {:?}", id);
-            wire_error(&Error::InvalidFunction)
+        _ => {
+            error!("Unexpected message: {:?}", id);
+            unexpected_message()
         }
     }
 }
