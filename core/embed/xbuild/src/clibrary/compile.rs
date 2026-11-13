@@ -124,11 +124,9 @@ impl CLibrary {
     ///
     /// # Parameters
     ///
-    /// - `output_ext`: The file extension for the output files (e.g.,
-    ///   `"upydef"`).
+    /// - `output_ext`: The file extension for the output files (e.g., `"upydef"`).
     /// - `extra_args`: Additional compiler/preprocessor flags.
-    /// - `extra_sources`: Additional source files to process beyond the
-    ///   library's own sources.
+    /// - `extra_sources`: Additional source files to process beyond the library's own sources.
     ///
     /// # Returns
     ///
@@ -216,8 +214,7 @@ impl CLibrary {
     /// # Parameters
     ///
     /// - `input`: Path to the input C header or source file.
-    /// - `output`: Path to the output file where the preprocessed result will
-    ///   be written.
+    /// - `output`: Path to the output file where the preprocessed result will be written.
     ///
     /// # Errors
     ///

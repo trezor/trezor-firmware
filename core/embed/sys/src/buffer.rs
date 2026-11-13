@@ -11,19 +11,17 @@ use core::ops::DerefMut;
 ///
 /// Typical usage:
 ///
-/// 1. [`Self::claim`] consumes `self` and transfers ownership of the pointed-to
-///    buffer into a raw pointer. This ensures that, e.g., no live references to
-///    the memory exist in Rust while it is owned by the kernel.
+/// 1. [`Self::claim`] consumes `self` and transfers ownership of the pointed-to buffer into a raw
+///    pointer. This ensures that, e.g., no live references to the memory exist in Rust while it is
+///    owned by the kernel.
 /// 2. The buffer is passed to the kernel as a raw pointer.
-/// 3. After unregistering from the kernel, [`Self::free`] will free the
-///    associated memory.
+/// 3. After unregistering from the kernel, [`Self::free`] will free the associated memory.
 ///
 /// Two implementations are provided:
-/// - `&mut [T]` for static or stack-allocated buffers. `claim()` is a simple
-///   cast to a raw pointer and `free()` does nothing.
-/// - `Box<[T]>` if feature `alloc` is enabled, for heap-allocated buffers.
-///   `claim()` deconstructs the `Box` and `free()` reconstructs it in order to
-///   drop it.
+/// - `&mut [T]` for static or stack-allocated buffers. `claim()` is a simple cast to a raw pointer
+///   and `free()` does nothing.
+/// - `Box<[T]>` if feature `alloc` is enabled, for heap-allocated buffers. `claim()` deconstructs
+///   the `Box` and `free()` reconstructs it in order to drop it.
 ///
 /// [`KernelBuffer`] runs this sequence automatically: it claims on
 /// construction and frees on drop. The caller is responsible for registering
@@ -33,12 +31,11 @@ use core::ops::DerefMut;
 ///
 /// The sequence of `claim()`/`free()` must be sound:
 ///
-/// 1. [`Self::claim`] deconstructs `self` without freeing it, and returns a raw
-///    pointer to some memory.
+/// 1. [`Self::claim`] deconstructs `self` without freeing it, and returns a raw pointer to some
+///    memory.
 /// 2. This memory remains valid until [`Self::free`] is called.
-/// 3. [`Self::free`], given a raw pointer previously returned by
-///    [`Self::claim`], correctly frees the memory according to the pointer
-///    type.
+/// 3. [`Self::free`], given a raw pointer previously returned by [`Self::claim`], correctly frees
+///    the memory according to the pointer type.
 pub unsafe trait KernelBufferPtr: DerefMut<Target = [Self::Align]> + Sized {
     /// Element type of the buffer slice.
     ///

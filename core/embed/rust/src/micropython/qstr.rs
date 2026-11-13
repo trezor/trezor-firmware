@@ -83,11 +83,10 @@ impl<T: QstrValue> From<T> for Obj {
 /// MicroPython itself is somewhat inconsistent in this:
 ///
 /// * most of the API surface relies on `Obj`s and does conversions internally
-/// * `Map` elements can have keys of an arbitrary `Obj`, but attribute lookups
-///   only work correctly if the `Obj` is a qstr
+/// * `Map` elements can have keys of an arbitrary `Obj`, but attribute lookups only work correctly
+///   if the `Obj` is a qstr
 /// * some struct members (`Type::name`) are numeric types (`u16`)
-/// * certain features (`qstr.h`, `attrtuple`) require the use of explicit
-///   `qstr` type
+/// * certain features (`qstr.h`, `attrtuple`) require the use of explicit `qstr` type
 ///
 /// `Attribute` is a newtype wrapper over `qstr`, which is typically a typedef
 /// over `usize` (so we can't put impls directly on `qstr`). It is also

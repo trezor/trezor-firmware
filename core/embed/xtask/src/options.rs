@@ -75,8 +75,8 @@ macro_rules! option_resolve_arm {
 /// `resolve()`.
 ///
 /// Each entry is declared as `<kind> <name>: <type>`:
-/// - `map`  — the option may be mapped to cargo features in a project.toml
-///   `[build-options]` table (the type must implement [`MapValue`]);
+/// - `map`  — the option may be mapped to cargo features in a project.toml `[build-options]` table
+///   (the type must implement [`MapValue`]);
 /// - `opt`  — a plain build option; mapping it in project.toml fails to parse.
 macro_rules! build_options {
     ($($(#[$attr:meta])* $kind:ident $name:ident: $ty:ty),+ $(,)?) => {

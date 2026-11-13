@@ -46,13 +46,12 @@ unsafe impl GlobalAlloc for TrackedAllocator {
 
         let size = layout.size();
         // SAFETY:
-        //  - Unfortunately we cannot respect `layout.align()` as MicroPython GC does
-        //    not support custom alignment.
-        //  - `raw` is guaranteed to stay valid as long as `m_tracked_free()` is not
-        //    called.
+        //  - Unfortunately we cannot respect `layout.align()` as MicroPython GC does not support
+        //    custom alignment.
+        //  - `raw` is guaranteed to stay valid as long as `m_tracked_free()` is not called.
         // EXCEPTION:
-        // - Terminates with a fatal error if allocation fails (better UX, instead of an
-        //   internal Rust stdlib panic).
+        // - Terminates with a fatal error if allocation fails (better UX, instead of an internal
+        //   Rust stdlib panic).
         let raw: *mut c_void = unsafe { ffi::m_tracked_calloc(1, size) };
 
         ensure!(!raw.is_null(), "Allocation failed");

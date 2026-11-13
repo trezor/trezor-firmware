@@ -36,10 +36,10 @@ impl<T> Gc<T> {
             "Zero-sized allocations are not supported"
         );
         // SAFETY:
-        //  - Unfortunately we cannot respect `layout.align()` as MicroPython GC does
-        //    not support custom alignment.
-        //  - `ptr` is guaranteed to stay valid as long as it's reachable from the stack
-        //    or the MicroPython heap.
+        //  - Unfortunately we cannot respect `layout.align()` as MicroPython GC does not support
+        //    custom alignment.
+        //  - `ptr` is guaranteed to stay valid as long as it's reachable from the stack or the
+        //    MicroPython heap.
         // EXCEPTION: Returns null instead of raising.
         unsafe {
             let raw = ffi::gc_alloc(layout.size(), flags);
@@ -84,10 +84,10 @@ impl<T: Default> Gc<[T]> {
     pub fn new_slice(len: usize) -> Result<Self, Error> {
         let layout = Layout::array::<T>(len).unwrap();
         // SAFETY:
-        //  - Unfortunately we cannot respect `layout.align()` as MicroPython GC does
-        //    not support custom alignment.
-        //  - `ptr` is guaranteed to stay valid as long as it's reachable from the stack
-        //    or the MicroPython heap.
+        //  - Unfortunately we cannot respect `layout.align()` as MicroPython GC does not support
+        //    custom alignment.
+        //  - `ptr` is guaranteed to stay valid as long as it's reachable from the stack or the
+        //    MicroPython heap.
         // EXCEPTION: Returns null instead of raising.
         unsafe {
             let raw = ffi::gc_alloc(layout.size(), 0);
@@ -228,8 +228,8 @@ impl<T: ?Sized> GcBox<T> {
     ///
     /// In addition, the caller must ensure that it is safe to apply box-like
     /// semantics to the value, namely that:
-    ///  * nobody else has the pointer to the value, so that it is safe to
-    ///    create mutable references to it
+    ///  * nobody else has the pointer to the value, so that it is safe to create mutable references
+    ///    to it
     ///  * the value is going to be dropped when the GcBox is dropped.
     pub unsafe fn from_raw(ptr: *mut T) -> Self {
         // SAFETY: just a wrapper around Gc::from_raw

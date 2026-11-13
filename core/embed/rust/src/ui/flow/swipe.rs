@@ -66,8 +66,7 @@ type RendererImpl<'a, 'alloc, 'env> = ScopedRenderer<'alloc, 'env, ConcreteRende
 ///
 /// This trait has no generic parameters:
 /// * it is instantiated with a concrete Renderer type, and
-/// * it requires the `FlowComponentTrait` trait to be implemented for _any_
-///   lifetimes.
+/// * it requires the `FlowComponentTrait` trait to be implemented for _any_ lifetimes.
 pub trait FlowComponentDynTrait:
     for<'a, 'alloc, 'env> FlowComponentTrait<'alloc, RendererImpl<'a, 'alloc, 'env>>
 {

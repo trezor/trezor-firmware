@@ -201,8 +201,7 @@ impl<'a> JpegDecoder<'a> {
         //  - `rgba_u32` is a valid pointer to a mutable buffer of length at least
         //    `RGBA8888_BUFFER_SIZE` aligned to u32
         //  - `slice` is a valid pointer to a mutable `jpegdec_slice_t`
-        //  - `jpegdec_get_slice_rgba8888` doesn't retain the pointers to the data for
-        //    later use
+        //  - `jpegdec_get_slice_rgba8888` doesn't retain the pointers to the data for later use
         unsafe { ffi::jpegdec_get_slice_rgba8888(rgba_u32.as_mut_ptr(), &mut slice) };
 
         let r = Rect::from_top_left_and_size(
@@ -246,11 +245,10 @@ impl<'a> JpegDecoder<'a> {
         };
 
         // SAFETY:
-        //  - `buff` is a valid pointer to a mutable buffer of length at least
-        //    `MONO8_BUFFER_SIZE` bytes aligned to u32
+        //  - `buff` is a valid pointer to a mutable buffer of length at least `MONO8_BUFFER_SIZE`
+        //    bytes aligned to u32
         //  - `slice` is a valid pointer to a mutable `jpegdec_slice_t`
-        //  - `jpegdec_get_slice_yonly` doesn't retain the pointers to the data for
-        //    later use
+        //  - `jpegdec_get_slice_yonly` doesn't retain the pointers to the data for later use
         unsafe { ffi::jpegdec_get_slice_mono8(buff_u32.as_mut_ptr(), &mut slice) };
 
         let r = Rect::from_top_left_and_size(

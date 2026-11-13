@@ -89,11 +89,10 @@ impl Map {
 
     pub fn get_obj(&self, index: Obj) -> Result<Obj, Error> {
         // SAFETY:
-        //  - `mp_map_lookup` returns either NULL or a pointer to a `mp_map_elem_t`
-        //    value with a lifetime valid for the whole lifetime of the passed immutable
-        //    ref of `map`.
-        //  - with `_mp_map_lookup_kind_t_MP_MAP_LOOKUP`, `map` stays unmodified and the
-        //    cast to mut ptr is therefore safe.
+        //  - `mp_map_lookup` returns either NULL or a pointer to a `mp_map_elem_t` value with a
+        //    lifetime valid for the whole lifetime of the passed immutable ref of `map`.
+        //  - with `_mp_map_lookup_kind_t_MP_MAP_LOOKUP`, `map` stays unmodified and the cast to mut
+        //    ptr is therefore safe.
         unsafe {
             let map = self as *const Self as *mut Self;
             // EXCEPTION: Does not raise for MP_MAP_LOOKUP.
@@ -123,12 +122,10 @@ impl Map {
     pub fn set_obj(&mut self, index: Obj, value: Obj) -> Result<(), Error> {
         let map = self as *mut Self;
         // SAFETY:
-        //  - `mp_map_lookup` with `MP_MAP_LOOKUP_ADD_IF_NOT_FOUND` returns a non-null
-        //    pointer to a `mp_map_elem_t` value with a lifetime valid for the whole
-        //    lifetime of `&mut self`.
+        //  - `mp_map_lookup` with `MP_MAP_LOOKUP_ADD_IF_NOT_FOUND` returns a non-null pointer to a
+        //    `mp_map_elem_t` value with a lifetime valid for the whole lifetime of `&mut self`.
         //  - adding an element is an allocation, so it might raise.
-        //  - the original `elem.value` might be an `Obj` that will get GCd when we
-        //    replace it.
+        //  - the original `elem.value` might be an `Obj` that will get GCd when we replace it.
         // EXCEPTION: Will raise if allocation fails.
         let elem_ptr = catch_exception!(unsafe { ffi::mp_map_lookup } => { map, index, ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND })?;
         let elem = unwrap!(unsafe { elem_ptr.as_mut() });

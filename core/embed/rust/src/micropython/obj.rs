@@ -445,8 +445,7 @@ impl Obj {
             // * The pointer is a valid MicroPython object, which has `ObjBase` as its first
             //   element.
             // * The type pointer points to a valid type object.
-            // * The pointee has a 'static lifetime, i.e., either is ROM-based, or GC
-            //   allocated.
+            // * The pointee has a 'static lifetime, i.e., either is ROM-based, or GC allocated.
             let base = self.as_ptr() as *const ObjBase;
             unsafe { (*base).type_.as_ref() }
         } else {

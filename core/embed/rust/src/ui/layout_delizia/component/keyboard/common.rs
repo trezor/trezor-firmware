@@ -139,8 +139,9 @@ pub fn render_pill_shape<'s>(
     let pill_radius = 18;
     let pill_bearing_x = 17;
     let pill_bearing_y = 12;
-    let pill_height = 2 * pill_radius + 4; // adding 4px looks better, if the height is just 2*r it does not look like a
-                                           // perfect half-circle but there is a visible narrowing of the pill shape
+    let pill_height = 2 * pill_radius + 4; // adding 4px looks better, if the height is just 2*r it
+                                           // does not look like a perfect half-circle but there is
+                                           // a visible narrowing of the pill shape
     let pill_width = style.font.text_width(text) + 2 * pill_bearing_x;
 
     let pill_baseline = base_point + Offset::new(-pill_bearing_x, pill_bearing_y);

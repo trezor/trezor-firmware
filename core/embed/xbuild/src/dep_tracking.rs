@@ -26,8 +26,7 @@ use crate::helpers::{
 /// * `outputs` - Output files to check for existence and modification time.
 ///
 /// # Returns
-/// * `Result<()>` - Ok if the command was run or skipped successfully, Err
-///   otherwise.
+/// * `Result<()>` - Ok if the command was run or skipped successfully, Err otherwise.
 pub fn run_command<I, O, In, Out>(
     cmd: &mut std::process::Command,
     inputs: In,
@@ -63,8 +62,7 @@ where
 /// * `cc_dep` - Optional path to a C compiler dependency file.
 ///
 /// # Returns
-/// * `Result<()>` - Ok if the command was run or skipped successfully, Err
-///   otherwise.
+/// * `Result<()>` - Ok if the command was run or skipped successfully, Err otherwise.
 pub fn run_command_with_cc_dep<I, O, In, Out>(
     cmd: &mut std::process::Command,
     inputs: In,
@@ -118,8 +116,7 @@ where
 /// * `output` - Output file to check for existence and modification time.
 ///
 /// # Returns
-/// * `Result<()>` - Ok if the command was run or skipped successfully, Err
-///   otherwise.
+/// * `Result<()>` - Ok if the command was run or skipped successfully, Err otherwise.
 pub fn run_command_to_file<I, O, In>(
     cmd: &mut std::process::Command,
     inputs: In,
