@@ -69,7 +69,7 @@ pub mod mock;
 #[cfg(feature = "app")]
 pub use app_runtime::app;
 #[cfg(feature = "app")]
-pub use error::{Align, Error, IntoAppResult, Result, ResultExt, ServiceResultExt};
+pub use error::{Error, IntoAppResult, Result, ResultExt, ServiceResultExt};
 #[cfg(feature = "app")]
 pub use wire::{
     WireDecode, WireEncode, WireRequest, wire_call, wire_error, wire_receive, wire_request,

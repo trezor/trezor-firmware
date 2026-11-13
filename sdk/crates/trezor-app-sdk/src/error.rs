@@ -5,11 +5,6 @@ use crate::traits::crypto::CryptoError;
 use crate::traits::util::{CoreServiceError, FastResult, ServiceResult};
 use crate::traits::wire::FailureKind;
 
-/// A wrapper which aligns its inner value to 8 bytes.
-#[doc(hidden)]
-#[repr(C, align(8))]
-pub struct Align<T>(pub T);
-
 pub type Result<T> = core::result::Result<T, Error>;
 
 #[cfg_attr(any(feature = "debug", feature = "test"), derive(Debug))]
