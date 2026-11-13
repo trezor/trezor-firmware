@@ -2,7 +2,7 @@ use heapless::Vec;
 #[cfg(feature = "app_loading")]
 use rkyv::{option::ArchivedOption, rancor::Failure, tuple::ArchivedTuple2, Archived};
 #[cfg(feature = "app_loading")]
-use trezor_app_sdk::ui::{
+use trezor_app_sdk::structs::{
     Property, Slice, StrExt, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
 };
 
