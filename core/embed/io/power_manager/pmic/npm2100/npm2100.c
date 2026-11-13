@@ -245,7 +245,7 @@ static bool npm2100_initialize(i2c_bus_t* bus) {
 #endif
   };
 
-  for (uint i = 0; i < ARRAY_LENGTH(table); i++) {
+  for (size_t i = 0; i < ARRAY_LENGTH(table); i++) {
     if (!npm2100_set_reg(bus, table[i].addr, table[i].value)) {
       return false;
     }
@@ -304,6 +304,10 @@ bool pmic_init(void) {
     goto cleanup;
   }
 
+  if (!npm2100_set_reg(drv->i2c_bus, NPM2100_RESET_TASKS_CLR,
+                       NPM2100_RESET_TASK_TRIGGER)) {
+    goto cleanup;
+  }
   if (!npm2100_initialize(drv->i2c_bus)) {
     goto cleanup;
   }

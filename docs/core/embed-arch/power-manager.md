@@ -2,7 +2,7 @@
 
 This document describes how the power-management module (`core/embed/io/power_manager/`) is composed: the axes along which it varies per board, how a board selects an implementation, and the design rules that keep the pieces separable.
 
-The module is built only for models with a battery — currently Trezor Safe 7 (`T3W1`). Models without one do not enable it.
+The module is built for boards whose `[power_manager]` section selects a PMIC driver and whose project enables the`power_manager` feature. This includes the T3T2 devkit and Trezor Safe 7 (`T3W1`).
 
 ## 1. Composition axes
 
@@ -10,7 +10,7 @@ The module is organized by *capability*, not by chip. A board's power hardware i
 
 | Axis | Interface | Implementations |
 | ---- | --------- | --------------- |
-| PMIC driver | `<io/pmic.h>` | `pmic/npm1300/` |
+| PMIC driver | `<io/pmic.h>` | `pmic/npm1300/`, `pmic/npm2100/` |
 | Fuel gauge (state-of-charge estimator) | `fuel_gauge/battery.h` | `fuel_gauge/lifepo4/`, `fuel_gauge/mock/` |
 | Wireless charger | `wireless/stwlc38/stwlc38.h` | `wireless/stwlc38/`, or none |
 | Charger present | `pmic/pmic_charger.h` | capability flag, derived from the PMIC |
