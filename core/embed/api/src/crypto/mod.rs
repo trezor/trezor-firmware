@@ -7,7 +7,7 @@ use stabby::string::String;
 use trezor_app_sdk::structs::{TrezorCryptoEnum, TrezorCryptoResult};
 use trezor_app_sdk::traits::crypto::{
     BoxedHasher, CanonicalSig, CryptoError, CryptoV1, Curve, EcdsaCurve, HashingAlgorithm,
-    HmacAlgorithm,
+    HmacAlgorithm, XPUB_RAW_LEN,
 };
 use trezor_app_sdk::traits::util::{CoreServiceError, FastResult, ServiceResult, TIMEOUT_MAX};
 
@@ -61,14 +61,6 @@ fn expect_array<const N: usize>(data: &[u8]) -> Result<[u8; N], CryptoCallError>
     expect_bytes(data)?
         .try_into()
         .map_err(|_| unexpected_response())
-}
-
-/// A `String` result.
-fn expect_str(data: &[u8]) -> Result<&str, CryptoCallError> {
-    match access_result(data)? {
-        rkyv::Archived::<TrezorCryptoResult>::String(string) => Ok(string.as_ref()),
-        _ => Err(unexpected_response()),
-    }
 }
 
 /// A `Boolean` result.
@@ -168,15 +160,13 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         &self,
         curve: Curve,
         address_n: Slice<'a, u32>,
-        xpub_magic: u32,
-    ) -> ServiceResult<String, CryptoError> {
+    ) -> ServiceResult<[u8; XPUB_RAW_LEN], CryptoError> {
         (|| {
             let data = ipc_crypto_call(&TrezorCryptoEnum::GetXpub {
                 curve: curve as u8,
                 address_n: address_n.as_slice().into(),
-                xpub_magic,
             })?;
-            Ok(String::from(expect_str(&data)?))
+            expect_array::<XPUB_RAW_LEN>(&data)
         })()
         .into()
     }
