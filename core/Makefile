@@ -148,6 +148,7 @@ test_emu_multicore: ## run device tests using multiple cores
 		--lang=$(TEST_LANG)
 
 test_emu_monero: ## run selected monero device tests from monero-agent
+	./tests/monero/prepare.sh
 	cd tests ; $(EMU_TEST) ./run_tests_device_emu_monero.sh $(TESTOPTS)
 
 test_emu_u2f: ## run selected u2f device tests from u2f-tests-hid

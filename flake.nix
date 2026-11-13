@@ -125,6 +125,7 @@
               #bitcoind # for HWI tests which are currently disabled
             ]
             ++ lib.optionals (!isDarwin) [
+              patchelf # for Monero tests on NixOS
               procps
               valgrind
             ]

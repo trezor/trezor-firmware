@@ -663,28 +663,33 @@ jobs:
     timeout-minutes: 120
     permissions:
       contents: read
+    outputs:
+      artifact: monero-tests-${{ steps.inputs.outputs.id }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           persist-credentials: false
-      - id: base
-        run: echo "commit=$(git rev-parse HEAD:vendor/monero)" >> "$GITHUB_OUTPUT"
+      # The vendor/monero commit, build.sh and the patches, see core/tests/monero/inputs.sh.
+      - id: inputs
+        run: echo "id=$(core/tests/monero/inputs.sh)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # actions/cache@v6.1.0
         id: cache
         with:
           path: |
             core/tests/trezor_monero_tests
             core/tests/trezor_monero_tests.sha256
-          # Bump v1 to force a rebuild; the other build inputs are the vendor/monero commit and core/tests/monero/.
-          key: monero-tests-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.base.outputs.commit }}-${{ hashFiles('core/tests/monero/**') }}
+            core/tests/trezor_monero_tests.inputs
+          key: monero-tests-${{ runner.os }}-${{ runner.arch }}-${{ steps.inputs.outputs.id }}
       - if: steps.cache.outputs.cache-hit != 'true'
         run: core/tests/monero/build.sh
+      # Named by the inputs, so that core/tests/monero/download.sh can find it.
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
-          name: monero-tests
+          name: monero-tests-${{ steps.inputs.outputs.id }}
           path: |
             core/tests/trezor_monero_tests
             core/tests/trezor_monero_tests.sha256
+            core/tests/trezor_monero_tests.inputs
           retention-days: 7
 
   # Monero tests.
@@ -715,7 +720,7 @@ jobs:
       - run: chmod +x core/build/artifacts/latest/firmware-emu*
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
-          name: monero-tests
+          name: ${{ needs.monero_tests_binary.outputs.artifact }}
           path: core/tests
       - uses: ./.github/actions/environment
         with:

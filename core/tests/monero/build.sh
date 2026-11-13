@@ -4,12 +4,13 @@
 # the patches in patches/, if any. Needs git and docker. The submodule does not
 # need to be checked out: its commit is fetched from its URL.
 #
-# The build inputs are the submodule commit and this directory: CI caches the
-# binary under both (see docs/tests/monero-tests.md).
+# The build inputs are the submodule commit, this script and the patches, see
+# inputs.sh.
 #
 # Usage: build.sh [OUTPUT]
-# Writes OUTPUT and OUTPUT.sha256. The default OUTPUT is where the run script
-# looks for the binary.
+# Writes OUTPUT, OUTPUT.sha256 and OUTPUT.inputs (the inputs ID) and deletes
+# OUTPUT.chain, the test chain of the previous binary. The default OUTPUT is
+# where the run script looks for the binary.
 
 set -euo pipefail
 
@@ -21,12 +22,25 @@ if [[ $# -gt 1 ]]; then
   exit 1
 fi
 
+if ! docker info > /dev/null 2>&1; then
+  # Membership in the docker group applies only to sessions started after joining it,
+  # sg gets it for this script without logging in again.
+  if [[ -z "${MONERO_BUILD_SG:-}" ]] && id -nG "$(id -un)" | grep -qw docker && command -v sg > /dev/null; then
+    echo "Running with the docker group (sg docker), it is not active in this session yet."
+    exec env MONERO_BUILD_SG=1 sg docker -c "$(printf '%q ' "$0" "$@")"
+  fi
+  echo "Cannot use the docker daemon. Start it, or add your user to the docker group:" >&2
+  echo "  sudo usermod -aG docker $(id -un)" >&2
+  exit 1
+fi
+
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(git -C "$HERE" rev-parse --show-toplevel)"
 # The base: URL from .gitmodules, commit from the index (a staged pin change counts).
 BASE_URL="$(git -C "$REPO" config -f .gitmodules submodule.vendor/monero.url)"
 BASE_COMMIT="$(git -C "$REPO" ls-files -s vendor/monero | cut -d' ' -f2)"
 echo "Base: $BASE_URL $BASE_COMMIT"
+INPUTS="$("$HERE/inputs.sh")"
 OUTPUT="${1:-$REPO/core/tests/trezor_monero_tests}"
 mkdir -p "$(dirname "$OUTPUT")"
 OUT_DIR="$(cd "$(dirname "$OUTPUT")" && pwd)"
@@ -74,3 +88,5 @@ docker run --rm --platform linux/amd64 --user "$(id -u):$(id -g)" -e HOME=/tmp -
   sha256sum "$OUT_NAME" > "$OUT_NAME.sha256"
   cat "$OUT_NAME.sha256"
 '
+echo "$INPUTS" > "$OUT_DIR/$OUT_NAME.inputs"
+rm -f "$OUT_DIR/$OUT_NAME.chain"
