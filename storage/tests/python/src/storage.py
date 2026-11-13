@@ -40,7 +40,8 @@ class Storage:
         self.nc.set(consts.UNAUTH_VERSION_KEY, consts.NORCOW_VERSION)
         self.nc.set(consts.STORAGE_UPGRADED_KEY, consts.FALSE_WORD)
         self.pin_log.init()
-        self._set_wipe_code(consts.WIPE_CODE_EMPTY)
+        ret = self._set_wipe_code(consts.WIPE_CODE_EMPTY)
+        assert ret
         self._set_pin(consts.PIN_EMPTY)
         self.unlocked = True
 
@@ -60,13 +61,20 @@ class Storage:
         else:
             self._set_bool(consts.PIN_NOT_SET_KEY, False)
 
-    def _set_wipe_code(self, wipe_code: str):
+    def _set_wipe_code(self, wipe_code: str) -> bool:
+        if len(wipe_code.encode()) > consts.MAX_WIPE_CODE_LEN:
+            return False
         if wipe_code == consts.PIN_EMPTY:
             wipe_code = consts.WIPE_CODE_EMPTY
         wipe_code_bytes = wipe_code.encode()
         salt = prng.random_buffer(consts.WIPE_CODE_SALT_SIZE)
         tag = crypto._hmac(salt, wipe_code_bytes)[: consts.WIPE_CODE_TAG_SIZE]
         self.nc.set(consts.WIPE_CODE_DATA_KEY, wipe_code_bytes + salt + tag)
+        return True
+
+    def _get_wipe_code(self) -> bytes:
+        data = self.nc.get(consts.WIPE_CODE_DATA_KEY)
+        return data[: -consts.WIPE_CODE_SALT_SIZE - consts.WIPE_CODE_TAG_SIZE]
 
     def wipe(self):
         self.nc.wipe()
@@ -96,7 +104,13 @@ class Storage:
         self.unlocked = False
 
     def unlock(self, pin: str) -> bool:
-        if not self.initialized or not self.check_pin(pin):
+        if not self.initialized:
+            return False
+
+        if pin.encode() == self._get_wipe_code():
+            self.wipe()
+
+        if not self.check_pin(pin):
             return False
 
         version = self._decrypt(consts.VERSION_KEY)
@@ -116,11 +130,27 @@ class Storage:
     def change_pin(self, newpin: str, oldpin: str | None = None) -> bool:
         if not self.initialized or not self.unlocked:
             return False
+        if newpin.encode() == self._get_wipe_code():
+            return False
         if oldpin is not None:
             if not self.check_pin(oldpin):
                 return False
         self._set_pin(newpin)
         return True
+
+    def has_wipe_code(self) -> bool:
+        if not self.initialized or not self.unlocked:
+            return False
+        return self._get_wipe_code() != consts.WIPE_CODE_EMPTY.encode()
+
+    def change_wipe_code(self, pin: str, wipe_code: str) -> bool:
+        if not self.initialized:
+            return False
+        if pin != consts.PIN_EMPTY and pin == wipe_code:
+            return False
+        if not self.unlock(pin):
+            return False
+        return self._set_wipe_code(wipe_code)
 
     def get(self, key: int) -> bytes:
         app = key >> 8
