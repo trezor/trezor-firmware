@@ -74,10 +74,7 @@ impl<'a> ufmt::uWrite for LocalWriter<'a> {
 }
 
 fn syslog() -> StaticSyslogV1 {
-    if let Some(syslog) = app_runtime::try_get_syslog() {
-        return syslog;
-    }
-    fallback_syslog()
+    app_runtime::try_get_syslog().unwrap_or_else(fallback_syslog)
 }
 
 // `unix_ffi` only exists off-target (see its `#[cfg]` above), so the choice
