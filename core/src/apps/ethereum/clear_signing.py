@@ -1547,23 +1547,27 @@ async def _handle_generic_ui(
     from .layout import require_confirm_clear_signing
     from .networks import UNKNOWN_NETWORK
 
-    # Surface the native ETH value in the summary when non-zero - unless one of
-    # the display format's own fields already renders it (e.g. a swap's "Amount
-    # to Send"), in which case repeating it in the summary is pure duplication.
-
     value = int.from_bytes(msg.value, "big")
-    amount = format_ethereum_amount(value, None, defs.network) if value else None
+
+    # To avoid duplicating it again to the summary screen.
+    value_shown_as_amount_field = any(
+        fd.path == ContainerPath.Value
+        and isinstance(fd.get_formatter(), AmountFormatter)
+        for fd in display_format.field_definitions
+    )
+    amount = (
+        format_ethereum_amount(value, None, defs.network)
+        if value and not value_shown_as_amount_field
+        else None
+    )
 
     _, fields = await display_format.parse_calldata(calldata, msg, defs)
 
     properties_to_confirm = []
-    value_shown_as_field = False
 
     for (label, formatted, is_mono), actual_token, actual_token_address in fields:
         if isinstance(formatted, AboveThreshold):
             formatted = formatted.message
-        if amount is not None and formatted == amount:
-            value_shown_as_field = True
         properties_to_confirm.append((label, formatted, is_mono))
         # a tokenless amount has no contract address to show
         if actual_token is tokens.UNKNOWN_TOKEN and actual_token_address is not None:
@@ -1600,7 +1604,7 @@ async def _handle_generic_ui(
         maximum_fee=maximum_fee,
         contract_address=address_from_bytes(address_bytes, defs.network),
         chain_info=chain_info,
-        amount=None if value_shown_as_field else amount,
+        amount=amount,
         account=account,
         account_path=account_path,
     )
