@@ -22,12 +22,12 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
+#include <io/smp.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
+#include <sys/systick.h>
 
 #include "../nrf_internal.h"
-#include "../rust_smp.h"
-#include "sys/systick.h"
 
 extern nrf_driver_t g_nrf_driver;
 
