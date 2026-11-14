@@ -29,7 +29,8 @@
           "path": [
             0
           ]
-        }
+        },
+        "lookup_address": false
       },
       {
         "path": {
@@ -38,16 +39,18 @@
           ]
         },
         "label": "Recipient",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
           "container_path": "VALUE"
         },
         "label": "Deposit fee",
-        "formatter": "FORMATTER_AMOUNT"
+        "formatter": "FORMATTER_AMOUNT",
+        "lookup_address": false
       }
     ],
-    "provider_name": "StarkWare"
+    "provider_name": "StarkWare: L1StarkGateSTRKbridge"
   }
 }

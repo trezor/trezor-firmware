@@ -22,14 +22,16 @@
         },
         "label": "Deposit asset",
         "formatter": "FORMATTER_TOKEN_AMOUNT",
-        "const_token_address": "dac17f958d2ee523a2206206994597c13d831ec7"
+        "const_token_address": "dac17f958d2ee523a2206206994597c13d831ec7",
+        "lookup_address": false
       },
       {
         "path": {
           "const_value": "lmMsthUSDT"
         },
         "label": "Share ticker",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
@@ -38,7 +40,8 @@
           ]
         },
         "label": "Send shares to",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       }
     ],
     "provider_name": "Kiln"

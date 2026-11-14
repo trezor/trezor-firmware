@@ -56,7 +56,12 @@
             1,
             0
           ]
-        }
+        },
+        "native_currency_address": [
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "0000000000000000000000000000000000000000"
+        ],
+        "lookup_address": false
       },
       {
         "path": {
@@ -72,7 +77,12 @@
             1,
             1
           ]
-        }
+        },
+        "native_currency_address": [
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "0000000000000000000000000000000000000000"
+        ],
+        "lookup_address": false
       },
       {
         "path": {
@@ -82,9 +92,10 @@
           ]
         },
         "label": "Beneficiary",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": false
       }
     ],
-    "provider_name": "1inch Network"
+    "provider_name": "1inch Network: AggregationRouterV6"
   }
 }

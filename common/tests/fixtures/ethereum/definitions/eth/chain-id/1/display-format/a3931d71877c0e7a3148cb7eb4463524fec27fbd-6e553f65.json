@@ -22,14 +22,16 @@
         },
         "label": "Deposit asset",
         "formatter": "FORMATTER_TOKEN_AMOUNT",
-        "const_token_address": "dc035d45d973e3ec169d2276ddab16f1e407384f"
+        "const_token_address": "dc035d45d973e3ec169d2276ddab16f1e407384f",
+        "lookup_address": false
       },
       {
         "path": {
           "const_value": "sUSDS"
         },
         "label": "Share ticker",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
@@ -38,9 +40,10 @@
           ]
         },
         "label": "Send shares to",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       }
     ],
-    "provider_name": "Sky"
+    "provider_name": "Sky: sUSDS"
   }
 }

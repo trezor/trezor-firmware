@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 43114,
+    "address": "2b2c81e08f1af8835a78bb2a90ae924ace0ea4be",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "BENQI: sAVAX"
+  }
+}

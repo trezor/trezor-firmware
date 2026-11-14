@@ -47,7 +47,7 @@
                 "atomic": "ABI_BOOL"
               }
             ],
-            "is_dynamic": false
+            "is_dynamic": true
           }
         }
       }
@@ -69,7 +69,8 @@
             0,
             2
           ]
-        }
+        },
+        "lookup_address": false
       },
       {
         "path": {
@@ -85,7 +86,8 @@
             -1,
             3
           ]
-        }
+        },
+        "lookup_address": false
       },
       {
         "path": {
@@ -94,9 +96,10 @@
           ]
         },
         "label": "Recipient",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       }
     ],
-    "provider_name": "LI.FI"
+    "provider_name": "LI.FI Service GmbH"
   }
 }

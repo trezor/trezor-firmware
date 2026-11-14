@@ -27,7 +27,8 @@
         "formatter": "FORMATTER_TOKEN_AMOUNT",
         "token_path": {
           "container_path": "TO"
-        }
+        },
+        "lookup_address": false
       },
       {
         "path": {
@@ -36,7 +37,8 @@
           ]
         },
         "label": "To",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       },
       {
         "path": {
@@ -45,9 +47,10 @@
           ]
         },
         "label": "Owner",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       }
     ],
-    "provider_name": "Sky"
+    "provider_name": "Sky: sUSDS"
   }
 }

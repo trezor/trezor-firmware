@@ -65,7 +65,12 @@
             0,
             4
           ]
-        }
+        },
+        "native_currency_address": [
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "0000000000000000000000000000000000000000"
+        ],
+        "lookup_address": false
       },
       {
         "path": {
@@ -81,7 +86,12 @@
             0,
             3
           ]
-        }
+        },
+        "native_currency_address": [
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "0000000000000000000000000000000000000000"
+        ],
+        "lookup_address": false
       },
       {
         "path": {
@@ -96,7 +106,12 @@
             0,
             4
           ]
-        }
+        },
+        "native_currency_address": [
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "0000000000000000000000000000000000000000"
+        ],
+        "lookup_address": false
       },
       {
         "path": {
@@ -132,9 +147,10 @@
             "key": 96,
             "value": "Unwrap"
           }
-        ]
+        ],
+        "lookup_address": false
       }
     ],
-    "provider_name": "1inch Network"
+    "provider_name": "1inch Network: AggregationRouterV6"
   }
 }

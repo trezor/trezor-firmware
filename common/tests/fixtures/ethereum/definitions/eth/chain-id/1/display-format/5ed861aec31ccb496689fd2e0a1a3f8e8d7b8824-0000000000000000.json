@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "5ed861aec31ccb496689fd2e0a1a3f8e8d7b8824",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "P2P Staking: P2pSsvProxyFactory"
+  }
+}

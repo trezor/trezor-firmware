@@ -21,7 +21,8 @@
         "formatter": "FORMATTER_TOKEN_AMOUNT",
         "token_path": {
           "container_path": "TO"
-        }
+        },
+        "lookup_address": false
       }
     ],
     "provider_name": "Figment"
