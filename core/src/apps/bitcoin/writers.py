@@ -57,6 +57,15 @@ def write_tx_input_check(w: Writer, i: TxInput) -> None:
     write_uint32(w, i.orig_index or 0)
     write_bytes_prefixed(w, i.script_pubkey or b"")
 
+    # SignTx.policies  are stable during signing, so policy_index identifies the policy.
+    if (redeem := i.miniscript) is None:
+        write_uint8(w, 0)
+    else:
+        write_uint8(w, 1)
+        write_uint32(w, redeem.policy_index)
+        write_uint8(w, redeem.derivation.internal)
+        write_uint32(w, redeem.derivation.index)
+
 
 def write_tx_output(
     w: Writer, o: TxOutput | PrevOutput, script_pubkey: AnyBytes

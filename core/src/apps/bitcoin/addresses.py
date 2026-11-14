@@ -17,7 +17,9 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from trezor.crypto import bip32
-    from trezor.messages import MultisigRedeemScriptType
+    from trezor.messages import (
+        MultisigRedeemScriptType,
+    )
 
     from apps.common.coininfo import CoinInfo
 

@@ -1,7 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import workflow
+from trezor import utils, workflow
 from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType, OutputScriptType
 from trezor.utils import HashWriter, empty_bytearray, ensure
@@ -33,6 +33,9 @@ if TYPE_CHECKING:
     from . import approvers
     from .sig_hasher import SigHasher
     from .tx_info import TxInfo
+
+    if utils.USE_MINISCRIPT:
+        from ..miniscript import RegisteredPolicy
 
 
 # the number of bytes to preallocate for serialized transaction chunks
@@ -163,6 +166,8 @@ class Bitcoin:
 
         # The index of the payment request being processed.
         self.payment_req_index: int | None = None
+
+        self.registered_policies: list[RegisteredPolicy] = []
 
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(sha256())
@@ -648,6 +653,7 @@ class Bitcoin:
             self.tx_info.tx,
             self.coin,
             self.get_hash_type(txi),
+            self.registered_policies,
         )
 
         signature = ecdsa_sign(node, hash143_digest)
@@ -953,10 +959,17 @@ class Bitcoin:
             assert txi.script_pubkey is not None  # checked in _sanitize_tx_input
             return txi.script_pubkey
 
-        if node is None:
-            node = self.keychain.derive(txi.address_n)
+        if utils.USE_MINISCRIPT and (redeem := txi.miniscript) is not None:
+            policy = self.registered_policies[redeem.policy_index]
+            # TODO: verify txi.address_n matches
+            address = policy.address_wsh(redeem.derivation, self.coin)
+        else:
+            if node is None:
+                node = self.keychain.derive(txi.address_n)
+            address = addresses.get_address(
+                txi.script_type, self.coin, node, txi.multisig
+            )
 
-        address = addresses.get_address(txi.script_type, self.coin, node, txi.multisig)
         return scripts.output_derive_script(address, self.coin)
 
     def output_derive_script(self, txo: TxOutput) -> AnyBytes:
@@ -964,7 +977,11 @@ class Bitcoin:
             assert txo.op_return_data is not None  # checked in _sanitize_tx_output
             return scripts.output_script_paytoopreturn(txo.op_return_data)
 
-        if txo.address_n:
+        if utils.USE_MINISCRIPT and (redeem := txo.miniscript) is not None:
+            policy = self.registered_policies[redeem.policy_index]
+            txo.address = policy.address_wsh(redeem.derivation, self.coin)
+            # TODO: clear txo.address_n?
+        elif txo.address_n:
             # change output
             try:
                 input_script_type = common.CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[
