@@ -65,7 +65,7 @@ jobs:
 
       # Pre-download nix + uv deps; build_cmd runs through nix-shell, which (unlike
       # the flake used by $UV_RUN) works on commits older than flake.nix
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
 
       - name: Run MemBrowse Onboard Action
         uses: membrowse/membrowse-action/onboard-action@14677ae592be153b43eb7dbe4f542cf0c7d098ed  # membrowse/membrowse-action@v1.2.18

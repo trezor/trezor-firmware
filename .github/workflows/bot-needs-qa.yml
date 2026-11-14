@@ -1,13 +1,11 @@
 name: "[Bot] set project status on PR close"
 
 on:
-  pull_request_target:
+  pull_request:
     types: [closed]
 
 permissions:
   contents: read
-  pull-requests: read
-  repository-projects: write
 
 jobs:
   set-project-status:
@@ -22,6 +20,9 @@ jobs:
         with:
           client-id: ${{ secrets.TREZOR_BOT_CLIENT_ID }}
           private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
+          permission-contents: read
+          permission-pull-requests: read
+          permission-repository-projects: write
 
       - name: Set project status based on merge state and no-QA label
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd  # actions/github-script@v8.0.0

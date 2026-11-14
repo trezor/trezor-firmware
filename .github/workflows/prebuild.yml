@@ -15,6 +15,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+permissions:
+  contents: read  # for actions/checkout
+
 jobs:
   block-fixup:
     name: Block fixup
@@ -23,6 +26,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
       - name: Block Fixup Commit Merge
         uses: 13rac1/block-fixup-merge-action@bd5504fb9ca0253e109d98eb86b7debc01970cdc  # 13rac1/block-fixup-merge-action@v2.0.0
 
@@ -36,12 +41,14 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
       - name: Initialize and update ts-tvl
         run: |
           git submodule update --init --recursive vendor/ts-tvl
       - name: Initialize and update QR-Code-generator (needed for cargo fmt)
         run: git submodule update --init --recursive vendor/QR-Code-generator
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - name: "Run style check"
         run: $UV_RUN make style_check
       - name: "Run .editorconfig check"
@@ -56,7 +63,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: "recursive"
-      - uses: ./.github/actions/environment
+          persist-credentials: false
+      - uses: $/.github/actions/environment
       - name: "Run defs check"
         run: $UV_RUN make defs_check
 
@@ -69,7 +77,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: "recursive"
-      - uses: ./.github/actions/environment
+          persist-credentials: false
+      - uses: $/.github/actions/environment
       - name: "Run gen check"
         run: $UV_RUN make gen_check
 
@@ -82,7 +91,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: "recursive"
-      - uses: ./.github/actions/environment
+          persist-credentials: false
+      - uses: $/.github/actions/environment
         with:
           pre-download: false
       - name: "Run uv.lock check"
@@ -100,5 +110,21 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
       - name: "Run changelog check"
         run: ./ci/check_changelog.sh
+
+  actions_check:
+    name: GitHub Actions check
+    runs-on: ubuntu-slim
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1

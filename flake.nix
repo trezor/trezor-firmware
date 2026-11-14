@@ -118,6 +118,7 @@
               libjpeg
               libusb1
               llvmPackages.clang
+              moreutils
               ninja # for nRF build
               openssl
               perl
@@ -132,8 +133,8 @@
               sccache
               uv
               wget
+              zizmor
               zlib
-              moreutils
             ]
             ++ lib.optionals fullDeps [
               #bitcoind # for HWI tests which are currently disabled

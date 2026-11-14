@@ -31,7 +31,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: ./.github/actions/environment
+          persist-credentials: false
+      - uses: $/.github/actions/environment
       - run: cp -r crypto crypto_noasan
       - run: $UV_RUN make -C crypto
       - run: $UV_RUN make -C crypto_noasan
@@ -61,7 +62,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: ./.github/actions/environment
+          persist-credentials: false
+      - uses: $/.github/actions/environment
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: crypto-build
@@ -88,7 +90,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: ./.github/actions/environment
+          persist-credentials: false
+      - uses: $/.github/actions/environment
       # LD_LIBRARY_PATH workaround: https://discourse.nixos.org/t/nixpkgs-nixos-unstable-many-package-fail-with-glibc-2-38-not-found/35078 https://github.com/NixOS/nixpkgs/issues/287764
       # Allow uv to use any python version for python tests
       - run: $NIX_RUN bash -c "unset LD_LIBRARY_PATH && export UV_PYTHON_PREFERENCE=managed UV_PYTHON_DOWNLOADS=automatic && cd python && uv run tox"
@@ -101,7 +104,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: ./.github/actions/environment
+          persist-credentials: false
+      - uses: $/.github/actions/environment
       - run: $NIX_RUN make -C rust check
 
   storage_test:
@@ -113,7 +117,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: ./.github/actions/environment
+          persist-credentials: false
+      - uses: $/.github/actions/environment
       - run: unset PYTEST_TIMEOUT
       - run: $UV_RUN make -C storage/tests build
       - run: $UV_RUN make -C storage/tests tests_all
@@ -124,7 +129,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
-      - uses: ./.github/actions/environment
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/environment
         with:
           pre-download: false
       - run: |
@@ -154,6 +161,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - run: git checkout ${REF}
 

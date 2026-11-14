@@ -11,17 +11,20 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - uses: ./.github/actions/environment
+    - uses: $/.github/actions/environment
 
     - run: $UV_RUN legacy/script/cibuild
       shell: sh
 
     - id: prepare_binary
       run: |
-        TARGET="legacy/firmware/trezor-emu-legacy-T1B1-v${{ inputs.version }}${{ inputs.binary-suffix }}"
+        TARGET="legacy/firmware/trezor-emu-legacy-T1B1-v${INPUTS_VERSION}${INPUTS_BINARY_SUFFIX}"
         mv legacy/firmware/trezor.elf "$TARGET"
         echo "binary_path=$TARGET" >> "$GITHUB_OUTPUT"
       shell: sh
+      env:
+        INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_BINARY_SUFFIX: ${{ inputs.binary-suffix }}
 
     - name: Configure aws credentials
       if: github.repository == 'trezor/trezor-firmware'
@@ -33,5 +36,7 @@ runs:
     - name: Upload emulator binaries
       if: github.repository == 'trezor/trezor-firmware'
       run: |
-        aws s3 cp "${{ steps.prepare_binary.outputs.binary_path }}" "s3://data.trezor.io/dev/firmware/releases/emulators-new/T1B1/"
+        aws s3 cp "${STEPS_PREPARE_BINARY_OUTPUTS_BINARY_PATH}" "s3://data.trezor.io/dev/firmware/releases/emulators-new/T1B1/"
       shell: sh
+      env:
+        STEPS_PREPARE_BINARY_OUTPUTS_BINARY_PATH: ${{ steps.prepare_binary.outputs.binary_path }}

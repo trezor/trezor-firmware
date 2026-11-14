@@ -31,7 +31,7 @@ runs:
         mkdir -p ~/.config/nix
         grep --quiet experimental-features ~/.config/nix/nix.conf || echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
     - name: Set convenience variables
-      run: |
+      run: | # zizmor: ignore[github-env,template-injection] nix-dev-shell is choice of hardcoded options
         echo NIX_RUN="nix develop .#${{ inputs.nix-dev-shell }} --command" >> $GITHUB_ENV
         echo UV_RUN="nix develop .#${{ inputs.nix-dev-shell }} --command uv run" >> $GITHUB_ENV
         cat $GITHUB_ENV
