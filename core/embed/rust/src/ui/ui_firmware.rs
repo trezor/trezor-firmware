@@ -224,11 +224,6 @@ pub trait FirmwareUI {
         accounts: Gc<List>, // TODO: replace Gc<List>
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
-    fn confirm_firmware_update(
-        description: TString<'static>,
-        fingerprint: TString<'static>,
-    ) -> Result<impl LayoutMaybeTrace, Error>;
-
     fn confirm_modify_fee(
         title: TString<'static>,
         sign: i32,
