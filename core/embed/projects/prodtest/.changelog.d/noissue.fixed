@@ -1,0 +1,1 @@
+Show the error screen instead of freezing when prodtest crashes inside an interrupt handler.

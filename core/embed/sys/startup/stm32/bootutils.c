@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 #include <trezor_bsp.h>
 #include <trezor_model.h>
@@ -39,8 +39,6 @@
 #error "RSOD_INFINITE_LOOP is not supported on battery powered devices"
 #endif
 #endif
-
-#ifdef SECURE_MODE
 
 #ifdef STM32U5
 // Persistent variable that holds the 'command' for the next reboot.
@@ -237,8 +235,6 @@ __attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {
 #endif
 }
 
-#endif  // SECURE_MODE
-
 // args1 - vector table address of the next stage
 // args2 - pointer to the startup_args_t struct
 static void jump_to_next_stage_phase_2(uint32_t arg1, uint32_t arg2) {
@@ -284,4 +280,4 @@ void __attribute__((noreturn)) jump_to_next_stage(uint32_t vectbl_address,
                       jump_to_next_stage_phase_2);
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE
