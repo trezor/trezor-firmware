@@ -566,6 +566,43 @@ static void systask_exit_fault_ex(uint32_t msp, uint32_t exc_return,
 
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
+  uint32_t cfsr = SCB->CFSR;
+
+#ifdef USE_APPLETS
+  if (privileged && (cfsr & SCB_CFSR_MLSPERR_Msk) != 0 &&
+      scheduler->active_task != &scheduler->kernel_task) {
+    // Lazy FP state preservation failed. The FP registers are saved to
+    // the exception frame of the unprivileged task when the first FP
+    // instruction is executed in handler mode, so the fault is taken
+    // from a privileged context although it's caused by the invalid
+    // stack of the unprivileged task.
+    //
+    // FPCCR can't be used to identify the owner of the frame. If the
+    // fault was raised with exceptions masked (e.g. inside irq_lock()),
+    // it's just pended, the FP instruction is completed and the fault is
+    // taken later. FPCCR then already describes the frame of this
+    // handler.
+    //
+    // As a consequence, the task is blamed even if the failed frame
+    // belongs to the kernel (nested handlers using FP). This is
+    // acceptable: kernel frames live on the main stack right above the
+    // already pushed basic frame, so they can fail only if the kernel
+    // itself is broken (main stack underflow or inaccessible). Then the
+    // task is killed by mistake, but the kernel faults again right after
+    // that anyway.
+    privileged = false;
+    sp = __get_PSP();
+
+    uint32_t user_lsp = FPU_FPCCR_LSPACT_Msk | FPU_FPCCR_USER_Msk;
+    if ((FPU->FPCCR & user_lsp) == user_lsp) {
+      // The lazy save to the task frame is still pending. Drop it,
+      // otherwise it would be retried (and fault again) when the
+      // interrupted FP instruction is restarted.
+      FPU->FPCCR &= ~FPU_FPCCR_LSPACT_Msk;
+    }
+  }
+#endif
+
   // Task that was running when the exception occurred
   systask_t* origin =
       privileged ? &scheduler->kernel_task : scheduler->active_task;
@@ -587,7 +624,7 @@ static void systask_exit_fault_ex(uint32_t msp, uint32_t exc_return,
     pminfo->fault.sp_lim = origin->sp_lim;
 #endif
     pminfo->fault.irqn = (__get_IPSR() & IPSR_ISR_Msk) - 16;
-    pminfo->fault.cfsr = SCB->CFSR;
+    pminfo->fault.cfsr = cfsr;
     pminfo->fault.mmfar = SCB->MMFAR;
     pminfo->fault.bfar = SCB->BFAR;
     pminfo->fault.hfsr = SCB->HFSR;
@@ -601,6 +638,10 @@ static void systask_exit_fault_ex(uint32_t msp, uint32_t exc_return,
 #endif
 #endif
   }
+
+  // Clear the sticky fault status bits (write 1 to clear) so they are
+  // not attributed to a later, unrelated fault
+  SCB->CFSR = cfsr;
 
   systask_kill(task);
 
@@ -622,7 +663,14 @@ __attribute((used)) static void systask_exit_fault(uint32_t msp,
 #ifdef USE_APPLETS
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
-  if (scheduler->active_task->killed) {
+  bool thread_mode = (exc_return & 0x8) != 0;
+
+  // If the fault was taken from handler mode (lazy FP state preservation
+  // fault), we just return to the interrupted handler. The exception return
+  // to the kernel task is not possible while another handler is active and
+  // the killed task is switched out by the pending PendSV.
+
+  if (scheduler->active_task->killed && thread_mode) {
     // The task was killed, so we have to switch to the kernel task.
     //
     // We can't just rely on the PendSV pended by `systask_kill()` and
@@ -809,6 +857,35 @@ systask_switch_to_kernel(void) {
   );
 }
 
+// Checks that the context of the active unprivileged task can be saved
+// on its stack.
+//
+// `psp` is fully controlled by the task. The PendSV handler stores
+// R4-R11 and S16-S31 below it with kernel privileges, so the whole area
+// (including the exception frame above `psp`) must lie inside the task
+// stack. If it does not, the task is killed and `false` is returned.
+__attribute__((no_stack_protector, used)) static bool pendsv_check_psp(
+    uint32_t psp, uint32_t exc_return) {
+  systask_t* task = g_systask_scheduler.active_task;
+
+  // Exception frame pushed by the CPU (with/without FP context)
+  uint32_t frame_size = (exc_return & 0x10) == 0 ? 0x68 : 0x20;
+  // R4-R11 and S16-S31 saved by the PendSV handler
+  uint32_t save_size = 0x60;
+
+  if (psp >= task->stack_base + save_size &&
+      psp <= task->stack_end - frame_size) {
+    return true;
+  }
+
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
+  static const char msg[] = "Invalid PSP";
+  systask_exit_fatal(task, msg, sizeof(msg) - 1, NULL, 0, __LINE__);
+  mpu_restore(mpu_mode);
+
+  return false;
+}
+
 __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
   __asm__ volatile(
       "LDR     R0, =%[active_task] \n"
@@ -816,11 +893,22 @@ __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
       "LDR     R1, =%[waiting_task]\n"
       "LDR     R1, [R1]            \n"  // R1 =  waiting_task
       "CMP     R0, R1              \n"
-      "BEQ     1f                  \n"  // No task switch needed
+      "BEQ     2f                  \n"  // No task switch needed
 
       "LDR     R0, [R0, #12]       \n"  // R0 =  active_task->killed
       "CMP     R0, #0              \n"
       "BNE     systask_switch_to_kernel\n"  // Killed => don't save context
+
+      "TST      LR, #0x4           \n"  // Return stack (1=>PSP, 0=>MSP)
+      "BEQ      1f                 \n"  // Kernel task => no check needed
+      "MRS      R0, PSP            \n"  // `psp` argument
+      "MOV      R1, LR             \n"  // `exc_return` argument
+      "PUSH     {R4, LR}           \n"
+      "BL       pendsv_check_psp   \n"  // Is there a space for the context?
+      "POP      {R4, LR}           \n"
+      "CMP      R0, #0             \n"
+      "BEQ      systask_switch_to_kernel\n"  // Killed => don't save context
+      "1:                          \n"
 
       // Save the current task context on its stack before switching
 
@@ -852,7 +940,7 @@ __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
                                         // fp context preservation of S0-S15
       "B        systask_switch_context\n"
 
-      "1:                          \n"
+      "2:                          \n"
       "BX       LR                 \n"
       :                                                        // No output
       : [active_task] "i"(&g_systask_scheduler.active_task),   // Input
@@ -861,10 +949,24 @@ __attribute__((naked, no_stack_protector)) void PendSV_Handler(void) {
   );
 }
 
-__attribute__((no_stack_protector, used)) static uint32_t svc_handler(
-    uint32_t* stack, uint32_t* msp, uint32_t exc_return, uint32_t r4,
-    uint32_t r5, uint32_t r6) {
+__attribute__((no_stack_protector, used)) static void svc_handler(
+    uint32_t* stack, uint32_t r4, uint32_t r5, uint32_t r6) {
   IRQ_LOG_ENTER();
+
+#ifdef USE_APPLETS
+  // Force the lazy FP state preservation of the calling task now. If its
+  // exception frame is invalid, the fault is taken here and not later in
+  // the middle of the syscall processing, which could not be abandoned.
+  __asm__ volatile("vmov.f32 s0, s0");
+
+  if (systask_active()->killed) {
+    // The calling task was killed by the fault above (or by a fault in
+    // an interrupt handler preempting this one); the pending PendSV
+    // switches to the kernel task.
+    IRQ_LOG_EXIT();
+    return;
+  }
+#endif
 
   uint8_t svc_number = ((uint8_t*)stack[6])[-2];
 
@@ -894,8 +996,6 @@ __attribute__((no_stack_protector, used)) static uint32_t svc_handler(
   mpu_restore(mpu_mode);
 
   IRQ_LOG_EXIT();
-
-  return exc_return;
 }
 
 __attribute((naked, no_stack_protector)) void SVC_Handler(void) {
@@ -907,13 +1007,12 @@ __attribute((naked, no_stack_protector)) void SVC_Handler(void) {
       "TST      LR, #0x20           \n"
       "IT       EQ                  \n"
       "ADDEQ    R0, R0, #0x40       \n"
-      "MRS      R1, MSP             \n"  // `msp` argument
-      "MOV      R2, LR              \n"  // `exc_return` argument
-      "MOV      R3, R4              \n"  // 'r4' argument
-      "PUSH     {R5, R6}            \n"  // 'r5' and 'r6' arguments on stack
+      "MOV      R1, R4              \n"  // 'r4' argument
+      "MOV      R2, R5              \n"  // 'r5' argument
+      "MOV      R3, R6              \n"  // 'r6' argument
+      "PUSH     {R3, LR}            \n"  // Save EXC_RETURN (R3 is padding)
       "BL       svc_handler         \n"
-      "POP      {R5, R6}            \n"
-      "BX       R0                  \n"  // Branch to the returned value
+      "POP      {R3, PC}            \n"  // Return from the exception
   );
 }
 
