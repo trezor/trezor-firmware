@@ -4,4 +4,31 @@ version = "0.1.0"
 edition = "2024"
 
 [features]
-use_std = []
+# The prover (host side); the rest of the crate is no_std and allocation-free.
+use_std = ["debug"]
+# A ready `Hash` implementation over the `sha2` crate, for hosts.
+sha2 = ["dep:sha2"]
+# `Debug` for the proof, entry and walk types (`Error` has it regardless); on with `use_std`.
+debug = []
+
+[dependencies]
+sha2 = { version = "0.10", optional = true, default-features = false }
+
+[dev-dependencies]
+hex = "0.4"
+rand = { version = "0.9", default-features = false }
+rand_xorshift = "0.4"
+trezor-ward = { path = ".", features = ["use_std", "sha2"] }
+
+# rustc lints reach the firmware build (a path dependency), so they only warn; clippy lints
+# never do, so they deny, which CI's plain `cargo clippy` then enforces.
+[lints.rust]
+missing_docs = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+cast_lossless = "deny"
+cast_possible_truncation = "deny"
+cast_possible_wrap = "deny"
+cast_sign_loss = "deny"
