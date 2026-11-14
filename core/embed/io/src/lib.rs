@@ -12,6 +12,22 @@ pub mod nrf;
 #[cfg(feature = "smp")]
 pub mod smp;
 
+/// Launch arguments the loader hands to a loaded app's entry point
+/// (`coreapp_app_entry`), copied onto the app's own stack.
+///
+/// - `applet_main`: the app's own entry point, which `coreapp_app_entry` calls
+///   once the app's runtime is set up.
+/// - `heap_ptr`/`heap_size`: the heap the loader set aside for the app. Its
+///   size is what the loader reserved, which can differ from the heap size the
+///   app asked for: rounded up to the MPU alignment on hardware, and the rest
+///   of the app's data area on the emulator.
+/// - `ipc_buffer_size`: the IPC inbox size, in bytes, the app declared in its
+///   manifest (`ipc-buffer-size` under `[package.metadata.trezor]`). The loader
+///   rejects the app unless this is in `1..=IPC_MAX_BUFFER_SIZE` and, on
+///   hardware, fits inside the app's heap.
+#[cfg(feature = "app_loading")]
+pub use ffi::app_args_t as AppArgs;
+
 #[cfg(test)]
 #[unsafe(no_mangle)]
 pub fn main() -> i32 {

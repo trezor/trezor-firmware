@@ -11,6 +11,14 @@ inputs:
     description: 'Either "success" or "failure"'
     required: false
     default: "failure"
+  app-root:
+    description: 'Path (relative to repo root) of the app whose tests/ui_tests to prepare. Defaults to the repo root, i.e. Core itself.'
+    required: false
+    default: "."
+  job-name:
+    description: 'Override for the job identifier used in the report file prefix. Defaults to the current job id.'
+    required: false
+    default: ${{ github.job }}
 runs:
   using: composite
   steps:
@@ -20,12 +28,13 @@ runs:
         role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
         aws-region: eu-central-1
     - run: |
-        MODELJOB=${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}
+        MODELJOB=${{ inputs.model }}-${{ inputs.lang }}-${{ inputs.job-name }}
         OUTDIR=${{ github.run_id }}
         mkdir -p $OUTDIR
-        $UV_RUN ci/prepare_ui_artifacts.py || true
-        mv tests/ui_tests/reports/test/* $OUTDIR
-        mv tests/ui_tests/fixtures.*.json $OUTDIR
+        $UV_RUN ci/prepare_ui_artifacts.py ${{ inputs.app-root }} || true
+        # an app without UI tests (testapp) has no report, only the job status
+        mv ${{ inputs.app-root }}/tests/ui_tests/reports/test/* $OUTDIR || true
+        mv ${{ inputs.app-root }}/tests/ui_tests/fixtures.*.json $OUTDIR || true
 
         # rename all model/job-speficific report files, so they won't be overwritten during upload
         cd $OUTDIR
@@ -57,13 +66,18 @@ runs:
         $NIX_RUN bash -c "$CMD ${{ github.run_id }}/ s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/" &
         PID1=$!
 
-        # Upload test screen recording
-        du -sh ci/ui_test_records
-        $NIX_RUN bash -c "$CMD ci/ui_test_records/ s3://data.trezor.io/dev/firmware/ui_tests/" &
-        PID2=$!
+        # Upload test screen recording (none without UI tests, e.g. testapp)
+        PID2=
+        if [ -d ci/ui_test_records ]; then
+          du -sh ci/ui_test_records
+          $NIX_RUN bash -c "$CMD ci/ui_test_records/ s3://data.trezor.io/dev/firmware/ui_tests/" &
+          PID2=$!
+        fi
         # TODO: generate directory listing / autoindex
 
         # Wait for the above copy jobs to finish (fail if one of them fails)
         wait $PID1
-        wait $PID2
+        if [ -n "$PID2" ]; then
+          wait $PID2
+        fi
       shell: sh

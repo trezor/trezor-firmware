@@ -41,6 +41,8 @@ jobs:
           git submodule update --init --recursive vendor/ts-tvl
       - name: Initialize and update QR-Code-generator (needed for cargo fmt)
         run: git submodule update --init --recursive vendor/QR-Code-generator
+      - name: Initialize and update stabby (needed for cargo fmt)
+        run: git submodule update --init --recursive vendor/stabby
       - uses: ./.github/actions/environment
       - name: "Run style check"
         run: $UV_RUN make style_check
