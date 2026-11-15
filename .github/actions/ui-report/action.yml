@@ -11,6 +11,10 @@ inputs:
     description: 'Either "success" or "failure"'
     required: false
     default: "failure"
+  all-screens:
+    description: 'Upload the screens of every test, not only those that match the fixtures (for tests that compare with their previous run)'
+    required: false
+    default: "false"
 runs:
   using: composite
   steps:
@@ -20,10 +24,13 @@ runs:
         role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
         aws-region: eu-central-1
     - run: |
-        MODELJOB=${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}
-        OUTDIR=${{ github.run_id }}
+        OUTDIR=$GITHUB_RUN_ID
         mkdir -p $OUTDIR
-        $UV_RUN ci/prepare_ui_artifacts.py || true
+        if [ "$ALL_SCREENS" = "true" ]; then
+          $UV_RUN ci/prepare_ui_artifacts.py --all || true
+        else
+          $UV_RUN ci/prepare_ui_artifacts.py || true
+        fi
         mv tests/ui_tests/reports/test/* $OUTDIR
         mv tests/ui_tests/fixtures.*.json $OUTDIR
 
@@ -39,12 +46,16 @@ runs:
         done
         cd ..
 
-        if [ "${{ inputs.status }}" = "success" ]; then
+        if [ "${INPUTS_STATUS}" = "success" ]; then
           cp .github/actions/ui-report/success.png $OUTDIR/$MODELJOB-status.png
         else
           cp .github/actions/ui-report/failure.png $OUTDIR/$MODELJOB-status.png
         fi
       shell: sh
+      env:
+        MODELJOB: "${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}"
+        INPUTS_STATUS: ${{ inputs.status }}
+        ALL_SCREENS: ${{ inputs.all-screens }}
     - name: Upload test results
       run: |
         # Cache s5cmd package (to be reused by the next calls)
@@ -53,8 +64,8 @@ runs:
         CMD="s5cmd --log error cp --concurrency 100"
 
         # Upload report
-        du -sh ${{ github.run_id }}
-        $NIX_RUN bash -c "$CMD ${{ github.run_id }}/ s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/" &
+        du -sh $GITHUB_RUN_ID
+        $NIX_RUN bash -c "$CMD $GITHUB_RUN_ID/ s3://data.trezor.io/dev/firmware/ui_report/$GITHUB_RUN_ID/" &
         PID1=$!
 
         # Upload test screen recording
