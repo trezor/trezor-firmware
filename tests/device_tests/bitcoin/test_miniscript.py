@@ -52,15 +52,17 @@ def _to_protobuf(k: Key) -> messages.MiniscriptKey:
 
 
 TEST_XPUBS = _parse_keys(
-    # SLIP-0014 + passphrases ("", "a", "b", "c", "d", "e", "f", "g")
-    "[5c9e228d/48'/1'/0'/2']tpubDEGquuorgFNbDrg8vepq1HnaV2mgQu9TcSBgBYfXw4AX8VMgkWqvkxHNuJmiah8iVnA3Hgj4cSvaGAXEnq814yC6hMEreckLsd7zyLL3o76",
-    "[6d96bc8f/48'/1'/0'/2']tpubDFNKLpb6iPByHNd6MRa7gxfAa97aTdtzwp17owgyLp9FFbkAuW1gMfD4Vrn7uVssvYfhiG41eHKmb2kaPz5qhqszYybAfiaBATMv8XfrGvg",
-    "[4eb89218/48'/1'/0'/2']tpubDF4uVnH8X1sTG14X1wc5kXLsnMDtyDG7fxSpaz4ajnhFCMWwTgevfdzyLTtRMX5Lg21ajRsHQJ8FyUDo9YEW2cag1vQVKHWRpbiLyv95fTj",
-    "[7b4bed5a/48'/1'/0'/2']tpubDEBZzwMptCpUxPPJLapgDoUBCnV5SXNEjRkdasgs1ZwzqrJPahDg2WnGZxFtL9ETLUQNKV2Qi2mdy9GBkwnBYuaq3mNZW8LX1Hf7VxqbEXQ",
-    "[cab51272/48'/1'/0'/2']tpubDEbN34MtnQ1LWCT8Z1XKUHeB9tY9ebA4e7P84W5gmAMpqKiud1UWRN2ym68p1ijZ4kxAFqmPPAJVvYNPjopEj4cMUXCS8toffucdDgdXVok",
-    "[479c205a/48'/1'/0'/2']tpubDEPMzvruWArtmyH7aZy2FhWvarNBCKECXtV1fYS7LeVtUkHdeEWK85bRwnC1otxJ3pJ9eDtpPJF9dSfhTAn3CWtPA95JnxHdq9iHU9KLAXx",
-    "[4dd3052b/48'/1'/0'/2']tpubDE6eirnmQdosibC43AKuiG1jb7LebhDAYXzFFemfWWW5LnJhjwdZo9Nwe19qp5tu3vsb1JZXefcHPbaMig92kEPVUcdyoNGnNV5t8ugMBw1",
-    "[bc424d11/48'/1'/0'/2']tpubDF721Fe13ScDgtMcpPmgBbb2gCBcsPscm4E2iDfTJDDNyXM958LbVgVxvHJnDVLg6EkuvKuk1GAwDSz1J8u5UUBWQsevdmDW1LsB745UHt8",
+    # SLIP-0014 + passphrases:
+    "[5c9e228d/48'/1'/0'/2']tpubDEGquuorgFNbDrg8vepq1HnaV2mgQu9TcSBgBYfXw4AX8VMgkWqvkxHNuJmiah8iVnA3Hgj4cSvaGAXEnq814yC6hMEreckLsd7zyLL3o76",  # passphrase=''
+    "[6d96bc8f/48'/1'/0'/2']tpubDFNKLpb6iPByHNd6MRa7gxfAa97aTdtzwp17owgyLp9FFbkAuW1gMfD4Vrn7uVssvYfhiG41eHKmb2kaPz5qhqszYybAfiaBATMv8XfrGvg",  # passphrase='a'
+    "[4eb89218/48'/1'/0'/2']tpubDF4uVnH8X1sTG14X1wc5kXLsnMDtyDG7fxSpaz4ajnhFCMWwTgevfdzyLTtRMX5Lg21ajRsHQJ8FyUDo9YEW2cag1vQVKHWRpbiLyv95fTj",  # passphrase='b'
+    "[7b4bed5a/48'/1'/0'/2']tpubDEBZzwMptCpUxPPJLapgDoUBCnV5SXNEjRkdasgs1ZwzqrJPahDg2WnGZxFtL9ETLUQNKV2Qi2mdy9GBkwnBYuaq3mNZW8LX1Hf7VxqbEXQ",  # passphrase='c'
+    "[cab51272/48'/1'/0'/2']tpubDEbN34MtnQ1LWCT8Z1XKUHeB9tY9ebA4e7P84W5gmAMpqKiud1UWRN2ym68p1ijZ4kxAFqmPPAJVvYNPjopEj4cMUXCS8toffucdDgdXVok",  # passphrase='d'
+    "[479c205a/48'/1'/0'/2']tpubDEPMzvruWArtmyH7aZy2FhWvarNBCKECXtV1fYS7LeVtUkHdeEWK85bRwnC1otxJ3pJ9eDtpPJF9dSfhTAn3CWtPA95JnxHdq9iHU9KLAXx",  # passphrase='e'
+    "[4dd3052b/48'/1'/0'/2']tpubDE6eirnmQdosibC43AKuiG1jb7LebhDAYXzFFemfWWW5LnJhjwdZo9Nwe19qp5tu3vsb1JZXefcHPbaMig92kEPVUcdyoNGnNV5t8ugMBw1",  # passphrase='f'
+    "[bc424d11/48'/1'/0'/2']tpubDF721Fe13ScDgtMcpPmgBbb2gCBcsPscm4E2iDfTJDDNyXM958LbVgVxvHJnDVLg6EkuvKuk1GAwDSz1J8u5UUBWQsevdmDW1LsB745UHt8",  # passphrase='g'
+    "[a2bdb4a8/48'/1'/0'/2']tpubDE2XJYgZAMgSTxD7KXcSQqVgffVBpwbwg9kgFsRBP2k2GQdoEVDZEApVC5YtLtmLTE4fh8exvuLbT3vVG85HGfXhQk7uR3ft1NdSZKETdLs",  # passphrase='h'
+    "[ad476583/48'/1'/0'/2']tpubDEB8HevBnbBimFTT95ksN6NHRohEoWofSUBakBBkMZHZmbSvYtmJVr8qopU3Lr94CGmADnUabeQ4sxjskxbJP2MwTSBKpJ4RZ1vgkqMFDDe",  # passphrase='i'
 )
 
 DATA = [
@@ -160,7 +162,7 @@ DATA = [
         ],
     ),
     (
-        "liana-large",
+        "liana-8keys-4paths",
         "wsh(or_i(and_v(v:thresh(1,pkh(@0/<6;7>/*),a:pkh(@1/<6;7>/*),a:pkh(@2/<6;7>/*),a:pkh(@3/<6;7>/*),a:pkh(@4/<6;7>/*),a:pkh(@5/<6;7>/*),a:pkh(@6/<6;7>/*),a:pkh(@7/<6;7>/*)),older(3)),or_i(and_v(v:thresh(4,pkh(@0/<4;5>/*),a:pkh(@1/<4;5>/*),a:pkh(@2/<4;5>/*),a:pkh(@3/<4;5>/*),a:pkh(@4/<4;5>/*),a:pkh(@5/<4;5>/*),a:pkh(@6/<4;5>/*),a:pkh(@7/<4;5>/*)),older(2)),or_i(and_v(v:thresh(6,pkh(@0/<2;3>/*),a:pkh(@1/<2;3>/*),a:pkh(@2/<2;3>/*),a:pkh(@3/<2;3>/*),a:pkh(@4/<2;3>/*),a:pkh(@5/<2;3>/*),a:pkh(@6/<2;3>/*),a:pkh(@7/<2;3>/*)),older(1)),and_v(v:and_v(v:and_v(v:and_v(v:and_v(v:and_v(v:and_v(v:pk(@0/<0;1>/*),pk(@1/<0;1>/*)),pk(@2/<0;1>/*)),pk(@3/<0;1>/*)),pk(@4/<0;1>/*)),pk(@5/<0;1>/*)),pk(@6/<0;1>/*)),pk(@7/<0;1>/*))))))",
         "Signet",
         TEST_XPUBS,
@@ -171,6 +173,22 @@ DATA = [
             (1, 1, "tb1qpg949j8wvaarryw7nt9x4pyh7tnjfta0dcef7pldvvu334rprxdsmtfa2g"),
             (1, 2, "tb1qdmrkhfw0hxftqe7h0jh94pmyk3xxzl72uxzj2w6pkkq3r23l6vxq8tmglk"),
             (1, 3, "tb1qktvztjh0zx804nwtmya3z4g8y6wn69x3vm095x7xtansjwvarmts357lde"),
+        ],
+    ),
+    (
+        "liana-10keys-5paths",
+        "wsh(andor(multi(1,@0/<8;9>/*,@1/<8;9>/*,@2/<8;9>/*,@3/<8;9>/*,@4/<8;9>/*,@5/<8;9>/*,@6/<8;9>/*,@7/<8;9>/*,@8/<8;9>/*,@9/<8;9>/*),older(2016),andor(multi(3,@0/<6;7>/*,@1/<6;7>/*,@2/<6;7>/*,@3/<6;7>/*,@4/<6;7>/*,@5/<6;7>/*,@6/<6;7>/*,@7/<6;7>/*,@8/<6;7>/*,@9/<6;7>/*),older(720),or_i(and_v(v:thresh(5,pkh(@0/<4;5>/*),a:pkh(@1/<4;5>/*),a:pkh(@2/<4;5>/*),a:pkh(@3/<4;5>/*),a:pkh(@4/<4;5>/*),a:pkh(@5/<4;5>/*),a:pkh(@6/<4;5>/*),a:pkh(@7/<4;5>/*),a:pkh(@8/<4;5>/*),a:pkh(@9/<4;5>/*)),older(60)),or_i(and_v(v:thresh(7,pkh(@0/<2;3>/*),a:pkh(@1/<2;3>/*),a:pkh(@2/<2;3>/*),a:pkh(@3/<2;3>/*),a:pkh(@4/<2;3>/*),a:pkh(@5/<2;3>/*),a:pkh(@6/<2;3>/*),a:pkh(@7/<2;3>/*),a:pkh(@8/<2;3>/*),a:pkh(@9/<2;3>/*)),older(3)),and_v(v:and_v(v:and_v(v:and_v(v:and_v(v:and_v(v:and_v(v:and_v(v:and_v(v:pk(@0/<0;1>/*),pk(@1/<0;1>/*)),pk(@2/<0;1>/*)),pk(@3/<0;1>/*)),pk(@4/<0;1>/*)),pk(@5/<0;1>/*)),pk(@6/<0;1>/*)),pk(@7/<0;1>/*)),pk(@8/<0;1>/*)),pk(@9/<0;1>/*)))))))",
+        "Signet",
+        TEST_XPUBS,
+        [
+            (0, 0, "tb1qklw9yrd49x2evaxyfgxtp8u7e2nreq2ektny5k47pfaa383d003qfujk4m"),
+            (0, 1, "tb1qlvtxelz77myq62gjpgqh4ndyedd6wwp342jc20kpdnucf030aeus2a58y4"),
+            (0, 2, "tb1qsrgu0c5kx7fwthakasjjmc66av7krt0x8fjagdzyv6z4rpq6tmeq26hl5c"),
+            (0, 3, "tb1q327eaqdsmp8v9n0c4pn3nxml430l23a0jgz7tykvk2hj9veh28dquh2nj4"),
+            (1, 0, "tb1q6zyvdqshj0f9nwhgsv2qscn9q5s8cjsmklnusdf887hy7f79xt5qdhxl6x"),
+            (1, 1, "tb1qefglmdp5dpmy3zd4ea083gpxh6aq0h2pj543ppee48z5rug7xm5smpelrx"),
+            (1, 2, "tb1qv0744q3mppquxyqa323tdt68z9v3ykmh5fkq5z5n3nfeztdna5tq5fhk2p"),
+            (1, 3, "tb1q99c9yyathma4h9d2m4058v8n44txf4vp0n494eq979q7qpn9lhksejf644"),
         ],
     ),
 ]
