@@ -27,21 +27,12 @@ from .input_flows import InputFlowShowAddressQRCode
 
 @parametrize_using_common_fixtures("get_address.json")
 def test_get_address(session: Session, instance_id: int, parameters, result):
-    address_n = parse_path(parameters["path"])
-    address = tron_ext.get_address(session, instance_id, address_n, show_display=True)
-    assert address == result["address"]
-
-
-@parametrize_using_common_fixtures("get_address.json")
-def test_get_address_chunkify_details(
-    session: Session, instance_id: int, parameters, result
-):
     with session.test_ctx as client:
         IF = InputFlowShowAddressQRCode(client)
         client.set_input_flow(IF.get())
         address_n = parse_path(parameters["path"])
         address = tron_ext.get_address(
-            session, instance_id, address_n, show_display=True, chunkify=True
+            session, instance_id, address_n, show_display=True
         )
         assert address == result["address"]
 
