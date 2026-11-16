@@ -67,7 +67,11 @@ static K_MUTEX_DEFINE(adv_mutex);
 uint32_t adv_options = 0;
 uint8_t manufacturer_data[8] = {0x29, 0x0F, 0, 0, 0, 0, 0, 0};
 
+// Pairing mode: flags + local name. Whitelist (bonded) mode: flags only, so
+// passive scanners learn neither the user's device label nor that this is a
+// Trezor; bonded hosts recognize the RPA via the IRK exchanged at bonding.
 static struct bt_data advertising_data[2];
+static size_t advertising_data_count = 0;
 
 static const struct bt_data scan_response_data[] = {
     BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_UUID_TRZ_VAL),
@@ -124,7 +128,7 @@ static void change_adv_work_handler(struct k_work *work) {
   // Restart advertising with new parameters
   err = bt_le_adv_start(BT_LE_ADV_PARAM(adv_options, ADV_INTERVAL_SLOW_MIN,
                                         ADV_INTERVAL_SLOW_MAX, NULL),
-                        advertising_data, ARRAY_SIZE(advertising_data),
+                        advertising_data, advertising_data_count,
                         scan_response_data, ARRAY_SIZE(scan_response_data));
 
   if (err) {
@@ -170,10 +174,16 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
   manufacturer_data[3] = color;
   manufacturer_data[4] = device_code;
 
+  // General discoverable only in pairing mode; bonded-mode advertising is
+  // non-discoverable (it only serves reconnection of bonded hosts).
+  // Hosts may rely on this: unlike the scan response, ADV_IND reaches every
+  // host, so the discoverable bit is their up-to-date pairing-mode indicator.
+  static const uint8_t flags_pairing = (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR);
+  static const uint8_t flags_bonded = BT_LE_AD_NO_BREDR;
+
   advertising_data[0].type = BT_DATA_FLAGS;
   advertising_data[0].data_len = 1;
-  static const uint8_t flags = (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR);
-  advertising_data[0].data = &flags;
+  advertising_data[0].data = wl ? &flags_bonded : &flags_pairing;
 
   /* Fill second element for the name */
   advertising_data[1].type = BT_DATA_NAME_COMPLETE;
@@ -183,6 +193,9 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
   memset(adv_name, 0, BLE_ADV_NAME_LEN + 1);
   memcpy(adv_name, name, name_len);
   advertising_data[1].data = (const uint8_t *)adv_name;
+
+  // The name is advertised only in pairing mode
+  advertising_data_count = wl ? 1 : 2;
 
   char gap_name[BLE_ADV_NAME_LEN + 1] = {0};
   memcpy(gap_name, name, name_len);
@@ -205,7 +218,7 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
 
     err = bt_le_adv_start(BT_LE_ADV_PARAM(options, ADV_INTERVAL_FAST_MIN,
                                           ADV_INTERVAL_FAST_MAX, NULL),
-                          advertising_data, ARRAY_SIZE(advertising_data),
+                          advertising_data, advertising_data_count,
                           scan_response_data, ARRAY_SIZE(scan_response_data));
   } else {
     LOG_INF("Advertising no whitelist");
@@ -222,7 +235,7 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
 
     err = bt_le_adv_start(BT_LE_ADV_PARAM(options, ADV_INTERVAL_FAST_MIN,
                                           ADV_INTERVAL_FAST_MAX, NULL),
-                          advertising_data, ARRAY_SIZE(advertising_data),
+                          advertising_data, advertising_data_count,
                           scan_response_data, ARRAY_SIZE(scan_response_data));
   }
   if (err) {
