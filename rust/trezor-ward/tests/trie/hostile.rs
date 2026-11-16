@@ -2,7 +2,7 @@
 
 use std::ops::Range;
 
-use trezor_ward::trie::{BitPos, Error, Leaf, Proof, Sha256, Step, key_bits};
+use trezor_ward::trie::{BitPos, Error, Leaf, Proof, Root, Sha256, Step, key_bits};
 
 use crate::T;
 
@@ -58,8 +58,9 @@ impl Lookup {
     }
 
     fn verify(&self) -> Result<(), Error> {
-        Proof::<_, [u8; 1], Sha256>::parse(&self.proof[..])
-            .and_then(|proof| proof.verify(&self.tree.root(), &self.key).map(drop))
+        let root = Root::trusted(self.tree.root());
+        let proof = Proof::<_, [u8; 1], Sha256>::parse(&self.proof[..])?;
+        root.get(&self.key, &proof).map(drop)
     }
 
     #[track_caller]

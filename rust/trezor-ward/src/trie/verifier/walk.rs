@@ -16,29 +16,36 @@
 //! it already holds above `C`: both proofs share them, and the step at `C` changes its sibling
 //! from the right child, where the next entry lives, to the left child, which the walk is
 //! leaving and can fold itself. Either way the result is the entry's full proof, held against
-//! the root by
-//! [`Proof::verify`] like any other, and only then checked for the successor rule. The walk
-//! allocates nothing: the caller hands in the storage for each proof, sized by
-//! [`Walk::next_len`], and may keep the proof between steps and come back with [`Walk::at`].
+//! the root by [`Root::get`] like any other, and only then checked for the successor rule. The
+//! walk allocates nothing: the caller hands in the storage for each proof, sized by
+//! [`Walk::next_len`], and may keep the proof between steps and come back with
+//! [`Root::walk_at`].
+//!
+//! A walk borrows its root for as long as it is open, so the tree cannot change under it, and
+//! the entries it steps over are for reading. Changing the entry it stands at ends the walk:
+//! [`Walk::into_entry`] hands that entry over with the root.
 
 #[cfg(feature = "debug")]
 use core::fmt;
 use core::iter;
 
 use super::entry::{OccupiedEntry, fold};
+use super::root::Root;
 use crate::trie::common::{
     BitPos, Error, HashFn, Key, Leaf, Proof, Side, Step, crit_bit, empty_root, leaf_digest,
     write_into,
 };
 
 /// A position in the walk over the entries of the tree with one root, in key order: before
-/// the first entry, or at the entry whose proof it holds.
+/// the first entry, or at the entry whose proof it holds. Started with [`Root::walk`] or
+/// [`Root::walk_at`], it borrows the root until it is dropped or ends in
+/// [`into_entry`](Self::into_entry).
 ///
 /// `B` is the storage of that proof: `Vec<u8>` on a host, a buffer the caller allocated on a
 /// device. The walk reads the proof through `AsRef<[u8]>` and writes a new one only into a
 /// buffer the caller provides for [`next_into`](Self::next_into).
-pub struct Walk<B, K: Key, H: HashFn> {
-    root: H::Output,
+pub struct Walk<'r, B, K: Key, H: HashFn> {
+    root: &'r mut Root<H>,
     /// The current entry's full proof; `None` before the first entry.
     current: Option<Proof<B, K, H>>,
 }
@@ -64,42 +71,47 @@ fn lies_below<K: Key, H: HashFn>(proof: &Proof<impl AsRef<[u8]>, K, H>, c: BitPo
         .is_none_or(|step| step.crit_bit > c)
 }
 
-impl<B: AsRef<[u8]>, K: Key, H: HashFn> Walk<B, K, H> {
-    /// Before the first entry of the tree with `root`; done at once if `root` is the root of
-    /// the empty map.
-    pub fn new(root: H::Output) -> Self {
-        Self {
-            root,
+impl<H: HashFn> Root<H> {
+    /// A walk over the tree with this root, before the first entry; done at once if this is
+    /// the root of the empty map.
+    pub fn walk<B: AsRef<[u8]>, K: Key>(&mut self) -> Walk<'_, B, K, H> {
+        Walk {
+            root: self,
             current: None,
         }
     }
 
-    /// At the entry `proof` proves, in the tree with `root`. The proof is held against the
-    /// root as [`Proof::verify`] holds it: one that does not fold to it is
+    /// A walk over the tree with this root, at the entry `proof` proves. The proof is held
+    /// against the root as [`get`](Self::get) holds it: one that does not fold to it is
     /// [`Error::RootMismatch`], and the proof of the empty map, which names no entry, gives
-    /// the walk over the empty tree, done at once as [`new`](Self::new) gives it for that
+    /// the walk over the empty tree, done at once as [`walk`](Self::walk) gives it for that
     /// root. Which entry the walk is at is the caller's position, as the root is the caller's
     /// trust: a proof kept from an earlier step resumes from there.
-    pub fn at(root: H::Output, proof: Proof<B, K, H>) -> Result<Self, Error> {
+    pub fn walk_at<B: AsRef<[u8]>, K: Key>(
+        &mut self,
+        proof: Proof<B, K, H>,
+    ) -> Result<Walk<'_, B, K, H>, Error> {
         let Some(leaf) = proof.leaf() else {
             // The empty proof folds to the empty root alone, and there is nothing to hold.
-            return if root == empty_root::<H>() {
-                Ok(Self::new(root))
+            return if self.0 == empty_root::<H>() {
+                Ok(self.walk())
             } else {
                 Err(Error::RootMismatch)
             };
         };
         // The key is the proof's own, so the entry is occupied or the proof is refused.
-        proof.verify(&root, &leaf.key)?;
-        Ok(Self {
-            root,
+        self.get(&leaf.key, &proof)?;
+        Ok(Walk {
+            root: self,
             current: Some(proof),
         })
     }
+}
 
+impl<'r, B: AsRef<[u8]>, K: Key, H: HashFn> Walk<'r, B, K, H> {
     /// The root of the tree being walked.
-    pub fn root(&self) -> &H::Output {
-        &self.root
+    pub fn root(&self) -> &Root<H> {
+        self.root
     }
 
     /// The current entry's full proof; `None` before the first entry.
@@ -112,18 +124,27 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Walk<B, K, H> {
         self.current
     }
 
-    /// The current entry; `None` before the first.
-    pub fn current(&self) -> Option<OccupiedEntry<'_, K, H>> {
+    /// The current entry, for reading; `None` before the first.
+    pub fn current(&self) -> Option<OccupiedEntry<&Root<H>, &[u8], K, H>> {
         self.current
             .as_ref()
-            .map(|proof| OccupiedEntry::from_verified(proof.view()))
+            .map(|proof| OccupiedEntry::from_verified(&*self.root, proof.view()))
+    }
+
+    /// Ends the walk at the current entry, to change it: the entry over the walk's root and
+    /// the proof the walk has already held against it, so nothing is folded twice. `None`
+    /// before the first entry. The walk is consumed because the change leaves its proof
+    /// behind: it is of the root as it was.
+    pub fn into_entry(self) -> Option<OccupiedEntry<&'r mut Root<H>, B, K, H>> {
+        let proof = self.current?;
+        Some(OccupiedEntry::from_verified(self.root, proof))
     }
 
     /// Whether nothing follows: the current key is the largest, since its path never turns
     /// left, or the tree is empty.
     pub fn is_done(&self) -> bool {
         match &self.current {
-            None => self.root == empty_root::<H>(),
+            None => self.root.0 == empty_root::<H>(),
             Some(_) => self.turn().is_none(),
         }
     }
@@ -140,7 +161,7 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Walk<B, K, H> {
 
     /// Accepts `proof` as the entry after the current one, or as the first entry of a fresh
     /// walk, and moves to it: that entry's full proof is written into `buf`, which becomes
-    /// the current proof, and the entry is returned.
+    /// the current proof, and the entry is returned, for reading.
     ///
     /// `proof` is either the entry's full proof or the part of its path below the branch
     /// where it parts from the current entry ([`Proof::below`]), at the host's choice on
@@ -156,7 +177,7 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Walk<B, K, H> {
         &mut self,
         proof: &Proof<impl AsRef<[u8]>, K, H>,
         mut buf: B,
-    ) -> Result<OccupiedEntry<'_, K, H>, Error>
+    ) -> Result<OccupiedEntry<&Root<H>, &[u8], K, H>, Error>
     where
         B: AsMut<[u8]>,
     {
@@ -203,7 +224,7 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Walk<B, K, H> {
         // Parsed and held against the root before it replaces the current proof. The key is
         // the proof's own, so the entry is occupied or the proof is refused.
         let new = Proof::parse(buf)?;
-        new.verify(&self.root, &leaf.key)?;
+        self.root.get(&leaf.key, &new)?;
 
         // The successor rule: the entry parts from the current one at `C`, where the current
         // key has 0 since it turned left there, so the entry has 1 and lies on the far side of
@@ -227,6 +248,7 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Walk<B, K, H> {
         }
 
         Ok(OccupiedEntry::from_verified(
+            &*self.root,
             self.current.insert(new).view(),
         ))
     }
@@ -252,12 +274,12 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Walk<B, K, H> {
 }
 
 #[cfg(feature = "use_std")]
-impl<K: Key, H: HashFn> Walk<Vec<u8>, K, H> {
+impl<K: Key, H: HashFn> Walk<'_, Vec<u8>, K, H> {
     /// [`next_into`](Self::next_into) with a vector of the right length.
     pub fn next(
         &mut self,
         proof: &Proof<impl AsRef<[u8]>, K, H>,
-    ) -> Result<OccupiedEntry<'_, K, H>, Error> {
+    ) -> Result<OccupiedEntry<&Root<H>, &[u8], K, H>, Error> {
         let buf = vec![0; self.next_len(proof)];
         self.next_into(proof, buf)
     }
@@ -265,10 +287,10 @@ impl<K: Key, H: HashFn> Walk<Vec<u8>, K, H> {
 
 // By hand for the reason given above the impls in `common/proof.rs`.
 #[cfg(feature = "debug")]
-impl<B: AsRef<[u8]>, K: Key, H: HashFn> fmt::Debug for Walk<B, K, H> {
+impl<B: AsRef<[u8]>, K: Key, H: HashFn> fmt::Debug for Walk<'_, B, K, H> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Walk")
-            .field("root", &self.root.as_ref())
+            .field("root", &self.root)
             .field("current", &self.current())
             .finish()
     }
@@ -296,8 +318,9 @@ mod tests {
 
     type Key1 = [u8; 1];
     type T = Tree<Key1, Vec<u8>, Sha256>;
-    type W = Walk<Vec<u8>, Key1, Sha256>;
+    type W<'r> = Walk<'r, Vec<u8>, Key1, Sha256>;
     type P = Proof<Vec<u8>, Key1, Sha256>;
+    type R = Root<Sha256>;
 
     const A: Key1 = [0b0000_0000];
     const B: Key1 = [0b0000_1111];
@@ -312,6 +335,11 @@ mod tests {
         T::from_entries(KEYS.map(|key| (key, key.to_vec())))
     }
 
+    /// The root of `tree`, as a device that trusts it holds it.
+    fn trusted(tree: &T) -> R {
+        Root::trusted(tree.root())
+    }
+
     /// What the host sends, in order: A's full proof, then each entry's part below the branch
     /// where it parts from the previous one.
     fn proofs(tree: &T) -> Vec<P> {
@@ -324,9 +352,9 @@ mod tests {
         P::parse(full.below(BitPos::new(c).unwrap()).as_bytes().to_vec()).unwrap()
     }
 
-    /// The walk at `key`, reached the honest way.
-    fn walk_to(tree: &T, key: Key1) -> W {
-        let mut walk = W::new(tree.root());
+    /// The walk over `root` at `key`, reached the honest way.
+    fn walk_to<'r>(root: &'r mut R, tree: &T, key: Key1) -> W<'r> {
+        let mut walk = root.walk();
         for (k, _, proof) in tree.walk() {
             walk.next(&proof).unwrap();
             if *k == key {
@@ -338,7 +366,7 @@ mod tests {
 
     /// `walk` refuses `proof` with `error` and stays where it was.
     #[track_caller]
-    fn refused(walk: &mut W, proof: &P, error: Error) {
+    fn refused(walk: &mut W<'_>, proof: &P, error: Error) {
         let before = walk.proof().cloned();
         assert_eq!(walk.next(proof).unwrap_err(), error);
         assert_eq!(
@@ -356,7 +384,8 @@ mod tests {
         let steps: Vec<usize> = proofs.iter().map(|proof| proof.steps().len()).collect();
         assert_eq!(steps, [3, 0, 1, 0, 1, 0]);
 
-        let mut walk = W::new(tree.root());
+        let mut root = trusted(&tree);
+        let mut walk: W<'_> = root.walk();
         assert!(!walk.is_done());
         assert!(walk.current().is_none() && walk.proof().is_none());
         for (key, proof) in KEYS.iter().zip(&proofs) {
@@ -371,13 +400,15 @@ mod tests {
             assert_eq!(walk.current().unwrap().key(), key);
             assert_eq!(walk.is_done(), *key == F);
         }
+        assert_eq!(walk.root(), &trusted(&tree));
         assert_eq!(walk.into_proof().unwrap(), tree.prove(&F));
     }
 
     #[test]
     fn a_full_proof_is_accepted_where_a_truncated_one_is_due() {
         let tree = tree();
-        let mut walk = walk_to(&tree, A);
+        let mut root = trusted(&tree);
+        let mut walk = walk_to(&mut root, &tree, A);
         walk.next(&tree.prove(&B)).unwrap();
         assert_eq!(walk.proof().unwrap(), &tree.prove(&B));
         // And the truncated form again after it.
@@ -389,11 +420,12 @@ mod tests {
     fn resumed_from_a_kept_proof() {
         // The binding's path: every step from the kept bytes alone.
         let tree = tree();
+        let mut root = trusted(&tree);
         let mut kept: Option<P> = None;
         for (key, _, proof) in tree.walk() {
             let mut walk = match kept.take() {
-                None => W::new(tree.root()),
-                Some(kept) => W::at(tree.root(), kept).unwrap(),
+                None => root.walk(),
+                Some(kept) => root.walk_at(kept).unwrap(),
             };
             let len = walk.next_len(&proof);
             let entry = walk.next_into(&proof, vec![0; len]).unwrap();
@@ -402,16 +434,17 @@ mod tests {
             kept = walk.into_proof();
         }
         assert_eq!(kept.unwrap(), tree.prove(&F));
-        // `at` stands where the proof says.
-        assert!(W::at(tree.root(), tree.prove(&F)).unwrap().is_done());
-        assert!(!W::at(tree.root(), tree.prove(&A)).unwrap().is_done());
+        // `walk_at` stands where the proof says.
+        assert!(root.walk_at(tree.prove(&F)).unwrap().is_done());
+        assert!(!root.walk_at(tree.prove(&A)).unwrap().is_done());
     }
 
     #[test]
     fn next_len_counts_the_step_at_c_and_the_shared_steps() {
         let tree = tree();
         // B's path has three steps and turns left at bit 1, with one step above it.
-        let walk = walk_to(&tree, B);
+        let mut root = trusted(&tree);
+        let walk = walk_to(&mut root, &tree, B);
         let part = cut(&tree, C, 1);
         assert_eq!(part.steps().len(), 1);
         assert_eq!(
@@ -425,13 +458,13 @@ mod tests {
 
     #[test]
     fn the_empty_tree() {
-        let root = empty_root::<Sha256>();
+        let mut root = R::empty();
         let empty = || P::parse(Vec::new()).unwrap();
-        let mut walk = W::new(root);
+        let mut walk: W<'_> = root.walk();
         assert!(walk.is_done());
         assert_eq!(walk.next(&empty()).unwrap_err(), Error::OutOfOrder);
         // The proof of the empty map describes the whole tree: nothing to walk, nothing held.
-        let walk = W::at(root, empty()).unwrap();
+        let walk = root.walk_at(empty()).unwrap();
         assert!(walk.is_done() && walk.proof().is_none() && walk.current().is_none());
     }
 
@@ -441,7 +474,8 @@ mod tests {
         let proofs = proofs(&tree);
         assert_eq!(proofs.len(), 1);
         assert_eq!(proofs[0].steps().len(), 0);
-        let mut walk = W::new(tree.root());
+        let mut root = trusted(&tree);
+        let mut walk: W<'_> = root.walk();
         walk.next(&proofs[0]).unwrap();
         assert!(walk.is_done());
     }
@@ -449,29 +483,36 @@ mod tests {
     #[test]
     fn the_empty_proof_against_a_non_empty_root() {
         let tree = tree();
+        let mut root = trusted(&tree);
         let empty = P::parse(Vec::new()).unwrap();
-        refused(&mut W::new(tree.root()), &empty, Error::RootMismatch);
-        assert_eq!(W::at(tree.root(), empty).unwrap_err(), Error::RootMismatch);
+        refused(&mut root.walk(), &empty, Error::RootMismatch);
+        assert_eq!(root.walk_at(empty).unwrap_err(), Error::RootMismatch);
     }
 
     #[test]
     fn a_skipped_entry() {
         let tree = tree();
+        let mut root = trusted(&tree);
         // C's part after A: its step at bit 2 is not below A's turn at 4, so it is taken for a
         // full proof, which it is not.
         refused(
-            &mut walk_to(&tree, A),
+            &mut walk_to(&mut root, &tree, A),
             &cut(&tree, C, 1),
             Error::RootMismatch,
         );
         // C's full proof after A: genuine, but A and C part at bit 1, not 4.
-        refused(&mut walk_to(&tree, A), &tree.prove(&C), Error::OutOfOrder);
+        refused(
+            &mut walk_to(&mut root, &tree, A),
+            &tree.prove(&C),
+            Error::OutOfOrder,
+        );
     }
 
     #[test]
     fn a_repeated_entry() {
         let tree = tree();
-        let mut walk = walk_to(&tree, B);
+        let mut root = trusted(&tree);
+        let mut walk = walk_to(&mut root, &tree, B);
         // B's part, a bare leaf, splices to a proof that puts B on the wrong side of bit 1.
         refused(&mut walk, &cut(&tree, B, 4), Error::RootMismatch);
         // B's full proof: equal keys part nowhere.
@@ -481,26 +522,29 @@ mod tests {
     #[test]
     fn going_backwards() {
         let tree = tree();
-        refused(&mut walk_to(&tree, B), &tree.prove(&A), Error::OutOfOrder);
+        let mut root = trusted(&tree);
+        refused(
+            &mut walk_to(&mut root, &tree, B),
+            &tree.prove(&A),
+            Error::OutOfOrder,
+        );
     }
 
     #[test]
     fn not_the_first_entry() {
         let tree = tree();
+        let mut root = trusted(&tree);
         // B turns right at bit 4.
-        refused(&mut W::new(tree.root()), &tree.prove(&B), Error::OutOfOrder);
+        refused(&mut root.walk(), &tree.prove(&B), Error::OutOfOrder);
         // A bare leaf is a full proof only of a one-leaf tree.
-        refused(
-            &mut W::new(tree.root()),
-            &cut(&tree, B, 4),
-            Error::RootMismatch,
-        );
+        refused(&mut root.walk(), &cut(&tree, B, 4), Error::RootMismatch);
     }
 
     #[test]
     fn anything_after_the_last_entry() {
         let tree = tree();
-        let mut walk = walk_to(&tree, F);
+        let mut root = trusted(&tree);
+        let mut walk = walk_to(&mut root, &tree, F);
         assert!(walk.is_done());
         refused(&mut walk, &tree.prove(&A), Error::OutOfOrder);
         refused(&mut walk, &cut(&tree, F, 7), Error::OutOfOrder);
@@ -509,24 +553,30 @@ mod tests {
     #[test]
     fn not_the_smallest_beyond_the_branch() {
         let tree = tree();
+        let mut root = trusted(&tree);
         // D's part where C's is due splices to D's genuine proof, which holds against the
         // root; but D turns right at bit 2, so C lies between.
-        refused(&mut walk_to(&tree, B), &cut(&tree, D, 1), Error::OutOfOrder);
+        refused(
+            &mut walk_to(&mut root, &tree, B),
+            &cut(&tree, D, 1),
+            Error::OutOfOrder,
+        );
     }
 
     #[test]
     fn a_cut_one_step_too_many_or_too_few() {
         let tree = tree();
+        let mut root = trusted(&tree);
         // C's part cut below the root carries the step at bit 1: taken for a full proof, it
         // stops short of the root.
         refused(
-            &mut walk_to(&tree, B),
+            &mut walk_to(&mut root, &tree, B),
             &cut(&tree, C, 0),
             Error::RootMismatch,
         );
         // E's bare leaf where its step at bit 7 is due: the splice lacks that step.
         refused(
-            &mut walk_to(&tree, D),
+            &mut walk_to(&mut root, &tree, D),
             &cut(&tree, E, 7),
             Error::RootMismatch,
         );
@@ -536,19 +586,42 @@ mod tests {
     fn a_proof_of_another_tree() {
         let tree = tree();
         let other = T::from_entries(KEYS.map(|key| (key, b"x".to_vec())));
+        let mut root = trusted(&tree);
         assert_eq!(
-            W::at(tree.root(), other.prove(&A)).unwrap_err(),
+            root.walk_at(other.prove(&A)).unwrap_err(),
             Error::RootMismatch
         );
         let (_, _, part) = other.walk().nth(1).unwrap();
-        refused(&mut walk_to(&tree, A), &part, Error::RootMismatch);
+        refused(
+            &mut walk_to(&mut root, &tree, A),
+            &part,
+            Error::RootMismatch,
+        );
+    }
+
+    #[test]
+    fn a_change_ends_the_walk() {
+        let mut tree = tree();
+        let mut root = trusted(&tree);
+        // Before the first entry there is nothing to change.
+        let walk: W<'_> = root.walk();
+        assert!(walk.into_entry().is_none());
+
+        // The search stops at C; the entry it hands over is C's, over the walk's own proof.
+        let entry = walk_to(&mut root, &tree, C).into_entry().unwrap();
+        assert_eq!(entry.key(), &C);
+        assert_eq!(entry.value(&C[..]).unwrap(), &C[..]);
+        entry.remove();
+        tree.remove(&C);
+        assert_eq!(root, trusted(&tree));
     }
 
     #[test]
     #[should_panic(expected = "the buffer is not `next_len` bytes")]
     fn the_buffer_must_be_next_len_bytes() {
         let tree = tree();
-        let mut walk = W::new(tree.root());
+        let mut root = trusted(&tree);
+        let mut walk = root.walk();
         let proof = tree.prove(&A);
         let len = walk.next_len(&proof);
         let _ = walk.next_into(&proof, vec![0; len + 1]);

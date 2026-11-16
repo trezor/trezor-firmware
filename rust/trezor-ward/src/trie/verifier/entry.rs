@@ -1,38 +1,55 @@
-//! One lookup, held against the root: [`Proof::verify`] answers where a key sits in the tree
-//! with that root, as an [`Entry`], occupied by a value or vacant, and derives the root a
-//! change produces from the root and the proof alone. The entry is the only way to derive a
-//! new root, so nothing is ever derived from an unverified proof. The three changes are
-//! reachable only from the variant where they make sense: a vacant entry can be inserted
-//! into, an occupied one can be replaced or removed.
+//! One lookup, held against the root: [`Root::entry`] answers where a key sits in the tree
+//! with that root, as an [`Entry`], occupied by a value or vacant, and a change made through
+//! the entry advances the root to the one the change produces, derived from the root and the
+//! proof alone. The entry is the only way to change a root, so nothing is ever derived from an
+//! unverified proof. The three changes are reachable only from the variant where they make
+//! sense: a vacant entry can be inserted into, an occupied one can be replaced or removed.
+//! [`Root::get`] is the same lookup for reading.
 
 #[cfg(feature = "debug")]
 use core::fmt;
 
+use super::root::Root;
 use crate::trie::common::{
     BitPos, Error, HashFn, Hashable, Key, Leaf, Proof, Side, Step, bit, crit_bit, empty_root,
     leaf_digest, parent_digest,
 };
 
-/// Where a key sits in the tree with a given root, as proven by a proof.
+/// Where a key sits in the tree with a given root, as proven by a proof, and the handle for
+/// changing it.
 ///
 /// Modelled on `std::collections::hash_map::Entry`: the lookup result and the handle for the
-/// change in one. Obtained from [`Proof::verify`].
+/// change in one. Obtained from [`Root::entry`]; it borrows the root until it is used or
+/// dropped, and dropping it changes nothing.
 pub enum Entry<'a, K: Key, H: HashFn> {
     /// The key is present.
-    Occupied(OccupiedEntry<'a, K, H>),
+    Occupied(OccupiedEntry<&'a mut Root<H>, &'a [u8], K, H>),
     /// The key is absent.
     Vacant(VacantEntry<'a, K, H>),
 }
 
-/// A key proven present: its value digest, and the handle to replace or remove it.
-pub struct OccupiedEntry<'a, K: Key, H: HashFn> {
-    proof: Proof<&'a [u8], K, H>,
+/// A key proven present: its value digest and, where the root is held exclusively, the handle
+/// to replace or remove it.
+///
+/// `R` is how the entry holds the root. Over `&Root<H>`, from [`Root::get`] or a step of a
+/// [`Walk`](super::Walk), the entry is for reading. Over `&mut Root<H>`, from [`Root::entry`]
+/// or [`Walk::into_entry`](super::Walk::into_entry), it can also [`replace`](Self::replace)
+/// and [`remove`](Self::remove).
+///
+/// `B` is the storage of the proof the entry was verified with, which a change folds along.
+/// It is a slice borrowed from the caller's proof or from the walk's, with one exception:
+/// [`Walk::into_entry`](super::Walk::into_entry) consumes the walk, so a slice would borrow
+/// from a walk that is gone, and the entry takes over the walk's own storage instead.
+pub struct OccupiedEntry<R, B, K: Key, H: HashFn> {
+    root: R,
+    proof: Proof<B, K, H>,
     key: K,
     value: H::Output,
 }
 
 /// A key proven absent, and the handle to insert it.
 pub struct VacantEntry<'a, K: Key, H: HashFn> {
+    root: &'a mut Root<H>,
     proof: Proof<&'a [u8], K, H>,
     key: K,
     /// The leaf the lookup ended at and the first bit on which it differs from `key`; `None`
@@ -40,53 +57,97 @@ pub struct VacantEntry<'a, K: Key, H: HashFn> {
     splice: Option<(Leaf<K, H>, BitPos<K>)>,
 }
 
-impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
-    /// Where `key` sits in the tree with root `root`, if this is `key`'s lookup path in that
-    /// tree.
+/// Where a key's lookup ends, once its proof is held against the root.
+enum Lookup<K: Key, H: HashFn> {
+    /// At the key's own leaf, which commits to this value digest.
+    Present(H::Output),
+    /// At another leaf, with the first bit on which the key differs from it; `None` for the
+    /// empty map.
+    Absent(Option<(Leaf<K, H>, BitPos<K>)>),
+}
+
+/// Holds `proof` against `root` as `key`'s lookup path; the one check behind [`Root::get`]
+/// and [`Root::entry`].
+fn lookup<K: Key, H: HashFn>(
+    root: &Root<H>,
+    key: &K,
+    proof: &Proof<&[u8], K, H>,
+) -> Result<Lookup<K, H>, Error> {
+    let Some(leaf) = proof.leaf() else {
+        // The empty map holds nothing, and nothing else has this root.
+        return if root.0 == empty_root::<H>() {
+            Ok(Lookup::Absent(None))
+        } else {
+            Err(Error::RootMismatch)
+        };
+    };
+
+    // A lookup for `key` reads exactly the bits the path branches on; it ends at the
+    // terminal leaf only if the two keys agree at all of them.
+    if proof
+        .steps()
+        .any(|step| bit(key, step.crit_bit) != bit(&leaf.key, step.crit_bit))
+    {
+        return Err(Error::OffPath);
+    }
+    // The crit bit sits inside every branch digest, so a path that folds to the root
+    // branches on exactly the bits it claims to.
+    let start = leaf_digest::<K, H>(&leaf.key, &leaf.value);
+    if fold(start, proof.steps(), key) != root.0 {
+        return Err(Error::RootMismatch);
+    }
+
+    Ok(match crit_bit(key, &leaf.key) {
+        None => Lookup::Present(leaf.value),
+        Some(c) => Lookup::Absent(Some((leaf, c))),
+    })
+}
+
+impl<H: HashFn> Root<H> {
+    /// `key`'s entry in the tree with this root, for reading, or `None` if `key` is absent,
+    /// provided `proof` is `key`'s lookup path in that tree.
     ///
     /// The proof is refused with [`Error::OffPath`] if it is not the path a lookup for `key`
-    /// takes, and with [`Error::RootMismatch`] if it does not fold to `root`. Whether `key` is
-    /// present is then read off the terminal leaf: a proof claims nothing by itself.
-    pub fn verify(&self, root: &H::Output, key: &K) -> Result<Entry<'_, K, H>, Error> {
-        let proof = self.view();
-        let Some(leaf) = proof.leaf() else {
-            // The empty map holds nothing, and nothing else has this root.
-            return if *root == empty_root::<H>() {
-                Ok(Entry::Vacant(VacantEntry {
-                    proof,
-                    key: *key,
-                    splice: None,
-                }))
-            } else {
-                Err(Error::RootMismatch)
-            };
-        };
-
-        // A lookup for `key` reads exactly the bits the path branches on; it ends at the
-        // terminal leaf only if the two keys agree at all of them.
-        if proof
-            .steps()
-            .any(|step| bit(key, step.crit_bit) != bit(&leaf.key, step.crit_bit))
-        {
-            return Err(Error::OffPath);
-        }
-        // The crit bit sits inside every branch digest, so a path that folds to the root
-        // branches on exactly the bits it claims to.
-        let start = leaf_digest::<K, H>(&leaf.key, &leaf.value);
-        if fold(start, proof.steps(), key) != *root {
-            return Err(Error::RootMismatch);
-        }
-
-        Ok(match crit_bit(key, &leaf.key) {
-            None => Entry::Occupied(OccupiedEntry {
+    /// takes, and with [`Error::RootMismatch`] if it does not fold to the root. Whether `key` is
+    /// present is then read off the terminal leaf: a proof claims nothing by itself, and
+    /// `None` is as proven as an entry.
+    pub fn get<'a, K: Key>(
+        &'a self,
+        key: &K,
+        proof: &'a Proof<impl AsRef<[u8]>, K, H>,
+    ) -> Result<Option<OccupiedEntry<&'a Self, &'a [u8], K, H>>, Error> {
+        let proof = proof.view();
+        Ok(match lookup(self, key, &proof)? {
+            Lookup::Present(value) => Some(OccupiedEntry {
+                root: self,
                 proof,
                 key: *key,
-                value: leaf.value,
+                value,
             }),
-            Some(c) => Entry::Vacant(VacantEntry {
+            Lookup::Absent(_) => None,
+        })
+    }
+
+    /// Where `key` sits in the tree with this root, as the handle for changing it. The proof
+    /// is held against the root, and refused, as [`get`](Self::get) does it.
+    pub fn entry<'a, K: Key>(
+        &'a mut self,
+        key: &K,
+        proof: &'a Proof<impl AsRef<[u8]>, K, H>,
+    ) -> Result<Entry<'a, K, H>, Error> {
+        let proof = proof.view();
+        Ok(match lookup(self, key, &proof)? {
+            Lookup::Present(value) => Entry::Occupied(OccupiedEntry {
+                root: self,
                 proof,
                 key: *key,
-                splice: Some((leaf, c)),
+                value,
+            }),
+            Lookup::Absent(splice) => Entry::Vacant(VacantEntry {
+                root: self,
+                proof,
+                key: *key,
+                splice,
             }),
         })
     }
@@ -113,10 +174,9 @@ impl<K: Key, H: HashFn> Entry<'_, K, H> {
         }
     }
 
-    /// The root after storing `new` under the key: a replacement if the key is present, an
-    /// insertion otherwise.
-    #[must_use = "this only computes the new root; the write takes effect when the caller stores it"]
-    pub fn set(self, new: &(impl Hashable<H> + ?Sized)) -> H::Output {
+    /// Stores `new` under the key, advancing the root: a replacement if the key is present,
+    /// an insertion otherwise.
+    pub fn set(self, new: &(impl Hashable<H> + ?Sized)) {
         match self {
             Self::Occupied(entry) => entry.replace(new),
             Self::Vacant(entry) => entry.insert(new),
@@ -124,23 +184,22 @@ impl<K: Key, H: HashFn> Entry<'_, K, H> {
     }
 }
 
-impl<'a, K: Key, H: HashFn> OccupiedEntry<'a, K, H> {
-    /// The entry over a proof already held against the root and found occupied, as a walk
+impl<R, B: AsRef<[u8]>, K: Key, H: HashFn> OccupiedEntry<R, B, K, H> {
+    /// The entry over a proof already held against `root` and found occupied, as a walk
     /// keeps one: the key and the digest are read off its leaf, which the proof has, since
     /// only the empty proof has none and the empty map holds no entry. Only the verifier may
     /// make this claim, hence `pub(super)`.
-    pub(super) fn from_verified(proof: Proof<&'a [u8], K, H>) -> Self {
+    pub(super) fn from_verified(root: R, proof: Proof<B, K, H>) -> Self {
         // An occupied entry's proof ends at a leaf.
         let leaf = proof.leaf().unwrap();
         Self {
+            root,
             proof,
             key: leaf.key,
             value: leaf.value,
         }
     }
-}
 
-impl<K: Key, H: HashFn> OccupiedEntry<'_, K, H> {
     /// The key this entry is for.
     pub fn key(&self) -> &K {
         &self.key
@@ -160,30 +219,31 @@ impl<K: Key, H: HashFn> OccupiedEntry<'_, K, H> {
             Err(Error::ValueMismatch)
         }
     }
+}
 
-    /// The root after replacing the value with `new`.
+impl<B: AsRef<[u8]>, K: Key, H: HashFn> OccupiedEntry<&mut Root<H>, B, K, H> {
+    /// Replaces the value with `new`, advancing the root.
     ///
     /// Only the leaf changes, so the shape of the tree and every sibling on the path stay as
     /// they are; the new leaf folds up the same path.
-    #[must_use = "this only computes the new root; the write takes effect when the caller stores it"]
-    pub fn replace(self, new: &(impl Hashable<H> + ?Sized)) -> H::Output {
+    pub fn replace(self, new: &(impl Hashable<H> + ?Sized)) {
         let start = leaf_digest::<K, H>(&self.key, &new.digest());
-        fold(start, self.proof.steps(), &self.key)
+        self.root.0 = fold(start, self.proof.steps(), &self.key);
     }
 
-    /// The root after removing the key: the root of the empty map if it was the last one.
+    /// Removes the key, advancing the root: to the root of the empty map if it was the last
+    /// one.
     ///
     /// The branch directly above the leaf would be left with one child, so it collapses and
     /// its other child takes its place. That child keeps its digest, since a digest does not
     /// depend on depth, whether it is a leaf or a whole subtree; and it stays on the removed
     /// key's path above that point, so the fold continues along the same path.
-    #[must_use = "this only computes the new root; the write takes effect when the caller stores it"]
-    pub fn remove(self) -> H::Output {
+    pub fn remove(self) {
         let mut steps = self.proof.steps();
-        match steps.next() {
+        self.root.0 = match steps.next() {
             None => empty_root::<H>(),
             Some(parent) => fold(parent.sibling, steps, &self.key),
-        }
+        };
     }
 }
 
@@ -193,7 +253,7 @@ impl<K: Key, H: HashFn> VacantEntry<'_, K, H> {
         &self.key
     }
 
-    /// The root after inserting `new` under the key.
+    /// Inserts `new` under the key, advancing the root.
     ///
     /// Into the empty map, the tree becomes the new leaf. Otherwise a new branch splits the
     /// key from the terminal leaf at the first bit on which they differ, computed here and
@@ -201,11 +261,11 @@ impl<K: Key, H: HashFn> VacantEntry<'_, K, H> {
     /// that bit is tested by no existing branch: the new branch goes directly above the
     /// terminal leaf, or inside a run of skipped bits further up, above some existing branches.
     /// Whatever hangs below that point moves under the new branch with its digest unchanged.
-    #[must_use = "this only computes the new root; the write takes effect when the caller stores it"]
-    pub fn insert(self, new: &(impl Hashable<H> + ?Sized)) -> H::Output {
+    pub fn insert(self, new: &(impl Hashable<H> + ?Sized)) {
         let new_leaf = leaf_digest::<K, H>(&self.key, &new.digest());
         let Some((terminal, c)) = self.splice else {
-            return new_leaf;
+            self.root.0 = new_leaf;
+            return;
         };
         // Steps are leaf-to-root, so those below the new branch come first: the terminal
         // leaf's own path, up to the first branch at or above `c`.
@@ -217,13 +277,13 @@ impl<K: Key, H: HashFn> VacantEntry<'_, K, H> {
         );
         let branch = parent_digest::<K, H>(c, Side::of(&self.key, c), &new_leaf, &subtree);
         // Above the branch both keys take the same turns.
-        fold(branch, steps, &self.key)
+        self.root.0 = fold(branch, steps, &self.key);
     }
 }
 
 // By hand for the reason given above the impls in `common/proof.rs` (a derive would bound `K`
 // and `H` rather than the fields), and because these show the key and the digest only: the
-// proof and the splice are left out on purpose.
+// root, the proof and the splice are left out on purpose.
 
 #[cfg(feature = "debug")]
 impl<K: Key, H: HashFn> fmt::Debug for Entry<'_, K, H> {
@@ -236,7 +296,7 @@ impl<K: Key, H: HashFn> fmt::Debug for Entry<'_, K, H> {
 }
 
 #[cfg(feature = "debug")]
-impl<K: Key, H: HashFn> fmt::Debug for OccupiedEntry<'_, K, H> {
+impl<R, B, K: Key, H: HashFn> fmt::Debug for OccupiedEntry<R, B, K, H> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("OccupiedEntry")
             .field("key", &self.key.as_bytes().as_ref())
@@ -313,11 +373,17 @@ mod tests {
         hex::decode(s).unwrap().try_into().unwrap()
     }
 
+    fn trusted(s: &str) -> Root<Sha256> {
+        Root::trusted(digest(s))
+    }
+
     fn proof(s: &str) -> Vec<u8> {
         hex::decode(s).unwrap()
     }
 
-    fn occupied<'a>(entry: Entry<'a, Key1, Sha256>) -> OccupiedEntry<'a, Key1, Sha256> {
+    fn occupied<'a>(
+        entry: Entry<'a, Key1, Sha256>,
+    ) -> OccupiedEntry<&'a mut Root<Sha256>, &'a [u8], Key1, Sha256> {
         match entry {
             Entry::Occupied(entry) => entry,
             Entry::Vacant(_) => panic!("expected an occupied entry"),
@@ -335,38 +401,41 @@ mod tests {
     fn present_and_absent_are_read_off_the_same_proof() {
         let bytes = proof(PROOF_A);
         let proof_a = P::parse(&bytes).unwrap();
-        let root = digest(ROOT);
+        let mut root = trusted(ROOT);
 
-        let entry = occupied(proof_a.verify(&root, &A).unwrap());
+        let entry = root.get(&A, &proof_a).unwrap().unwrap();
         assert_eq!(entry.key(), &A);
         assert_eq!(entry.digest(), &Hashable::<Sha256>::digest(b"a"));
         assert_eq!(entry.value(b"a").unwrap(), b"a");
         assert_eq!(entry.value(b"x").unwrap_err(), Error::ValueMismatch);
 
         for absent in [E, G] {
-            let entry = vacant(proof_a.verify(&root, &absent).unwrap());
-            assert_eq!(entry.key(), &absent);
+            assert!(root.get(&absent, &proof_a).unwrap().is_none());
+            assert_eq!(
+                vacant(root.entry(&absent, &proof_a).unwrap()).key(),
+                &absent
+            );
         }
 
         let bytes = proof(PROOF_B);
         let proof_b = P::parse(&bytes).unwrap();
-        let entry = occupied(proof_b.verify(&root, &B).unwrap());
+        let entry = occupied(root.entry(&B, &proof_b).unwrap());
         assert_eq!(entry.value(b"b").unwrap(), b"b");
     }
 
     #[test]
     fn a_path_is_only_good_for_the_keys_that_take_it() {
-        let root = digest(ROOT);
+        let root = trusted(ROOT);
         // B's path branches on bit 4, where A and B differ.
         let bytes = proof(PROOF_B);
         assert_eq!(
-            P::parse(&bytes).unwrap().verify(&root, &A).unwrap_err(),
+            root.get(&A, &P::parse(&bytes).unwrap()).unwrap_err(),
             Error::OffPath
         );
         // D's path branches on bit 0 only, where C differs from D.
         let bytes = proof(PROOF_D);
         assert_eq!(
-            P::parse(&bytes).unwrap().verify(&root, &C).unwrap_err(),
+            root.get(&C, &P::parse(&bytes).unwrap()).unwrap_err(),
             Error::OffPath
         );
     }
@@ -377,18 +446,20 @@ mod tests {
         let proof = P::parse(&bytes).unwrap();
         let mut other = digest(ROOT);
         other[0] ^= 1;
-        assert_eq!(proof.verify(&other, &A).unwrap_err(), Error::RootMismatch);
         assert_eq!(
-            proof.verify(&digest(EMPTY), &A).unwrap_err(),
+            Root::trusted(other).get(&A, &proof).unwrap_err(),
+            Error::RootMismatch
+        );
+        assert_eq!(
+            trusted(EMPTY).get(&A, &proof).unwrap_err(),
             Error::RootMismatch
         );
         // A relabelled crit bit changes the branch digest.
         let mut relabelled = bytes.clone();
         relabelled[33 + 1] = 5;
         assert_eq!(
-            P::parse(&relabelled)
-                .unwrap()
-                .verify(&digest(ROOT), &A)
+            trusted(ROOT)
+                .get(&A, &P::parse(&relabelled).unwrap())
                 .unwrap_err(),
             Error::RootMismatch
         );
@@ -396,9 +467,8 @@ mod tests {
         let mut other_value = bytes.clone();
         other_value[1] ^= 1;
         assert_eq!(
-            P::parse(&other_value)
-                .unwrap()
-                .verify(&digest(ROOT), &A)
+            trusted(ROOT)
+                .get(&A, &P::parse(&other_value).unwrap())
                 .unwrap_err(),
             Error::RootMismatch
         );
@@ -407,20 +477,21 @@ mod tests {
     #[test]
     fn the_empty_map() {
         let proof = P::parse(&[]).unwrap();
-        let entry = vacant(proof.verify(&digest(EMPTY), &A).unwrap());
-        assert_eq!(entry.key(), &A);
+        let mut root = trusted(EMPTY);
+        assert!(root.get(&A, &proof).unwrap().is_none());
+        assert_eq!(vacant(root.entry(&A, &proof).unwrap()).key(), &A);
         assert_eq!(
-            proof.verify(&digest(ROOT), &A).unwrap_err(),
+            trusted(ROOT).get(&A, &proof).unwrap_err(),
             Error::RootMismatch
         );
         // The first leaf is the whole tree.
-        let root = vacant(proof.verify(&digest(EMPTY), &A).unwrap()).insert(b"a");
+        vacant(root.entry(&A, &proof).unwrap()).insert(b"a");
         assert_eq!(
-            hex::encode(root),
+            hex::encode(root.digest()),
             "676388dd193dc4fde9a116f42237ef61bd8d4d6f54fca0c80ed8d83ee7f2d871"
         );
         assert_eq!(
-            root,
+            *root.digest(),
             leaf_digest::<Key1, Sha256>(&A, &Hashable::<Sha256>::digest(b"a"))
         );
     }
@@ -429,9 +500,10 @@ mod tests {
     fn replace_keeps_the_path() {
         let bytes = proof(PROOF_A);
         let proof = P::parse(&bytes).unwrap();
-        let entry = occupied(proof.verify(&digest(ROOT), &A).unwrap());
+        let mut root = trusted(ROOT);
+        occupied(root.entry(&A, &proof).unwrap()).replace(b"a2");
         assert_eq!(
-            hex::encode(entry.replace(b"a2")),
+            hex::encode(root.digest()),
             "4039397b1a045ecba779552c436351f936a3706fc47e3408050a9d537e530c33"
         );
     }
@@ -441,9 +513,10 @@ mod tests {
         // A's sibling is the leaf B.
         let bytes = proof(PROOF_A);
         let proof_a = P::parse(&bytes).unwrap();
-        let entry = occupied(proof_a.verify(&digest(ROOT), &A).unwrap());
+        let mut root = trusted(ROOT);
+        occupied(root.entry(&A, &proof_a).unwrap()).remove();
         assert_eq!(
-            hex::encode(entry.remove()),
+            hex::encode(root.digest()),
             "7dbabafa74f085a6a3b1a4f1379bb5bec6fa710f83b52fdb573ab249e1e0cb7c"
         );
         // D's sibling is the branch over A, B and C, which becomes the root as it is: the
@@ -451,11 +524,11 @@ mod tests {
         let bytes = proof(PROOF_D);
         let proof = P::parse(&bytes).unwrap();
         let sibling = proof.steps().next().unwrap().sibling;
-        let entry = occupied(proof.verify(&digest(ROOT), &D).unwrap());
-        let root = entry.remove();
-        assert_eq!(root, sibling);
+        let mut root = trusted(ROOT);
+        occupied(root.entry(&D, &proof).unwrap()).remove();
+        assert_eq!(*root.digest(), sibling);
         assert_eq!(
-            hex::encode(root),
+            hex::encode(root.digest()),
             "325efa106c9af145cc41bf14c06be7a3caaf40ca92b7a0a44bd867b29267fe1d"
         );
     }
@@ -465,14 +538,16 @@ mod tests {
         let mut bytes = A.to_vec();
         bytes.extend_from_slice(&Hashable::<Sha256>::digest(b"a"));
         let proof = P::parse(&bytes).unwrap();
-        let root = leaf_digest::<Key1, Sha256>(&A, &Hashable::<Sha256>::digest(b"a"));
-        let entry = occupied(proof.verify(&root, &A).unwrap());
-        assert_eq!(entry.remove(), digest(EMPTY));
+        let mut root = Root::trusted(leaf_digest::<Key1, Sha256>(
+            &A,
+            &Hashable::<Sha256>::digest(b"a"),
+        ));
+        occupied(root.entry(&A, &proof).unwrap()).remove();
+        assert_eq!(root, Root::empty());
     }
 
     #[test]
     fn insert_splices_at_the_first_differing_bit() {
-        let root = digest(ROOT);
         for (key, value, proof_hex, expected) in [
             // inside the compressed run between the branches at bits 1 and 4
             (
@@ -498,8 +573,9 @@ mod tests {
         ] {
             let bytes = proof(proof_hex);
             let proof = P::parse(&bytes).unwrap();
-            let entry = vacant(proof.verify(&root, &key).unwrap());
-            assert_eq!(hex::encode(entry.insert(value)), expected, "key {key:?}");
+            let mut root = trusted(ROOT);
+            vacant(root.entry(&key, &proof).unwrap()).insert(value);
+            assert_eq!(hex::encode(root.digest()), expected, "key {key:?}");
         }
     }
 
@@ -507,14 +583,38 @@ mod tests {
     fn set_dispatches_on_presence() {
         let bytes = proof(PROOF_A);
         let proof = P::parse(&bytes).unwrap();
-        let root = digest(ROOT);
+        let mut root = trusted(ROOT);
+        root.entry(&A, &proof).unwrap().set(b"a2");
         assert_eq!(
-            hex::encode(proof.verify(&root, &A).unwrap().set(b"a2")),
+            hex::encode(root.digest()),
             "4039397b1a045ecba779552c436351f936a3706fc47e3408050a9d537e530c33"
         );
+        let mut root = trusted(ROOT);
+        root.entry(&E, &proof).unwrap().set(b"e");
         assert_eq!(
-            hex::encode(proof.verify(&root, &E).unwrap().set(b"e")),
+            hex::encode(root.digest()),
             "1332219b91225b1d87a0256eaa0281869c08625c553ee87f08fe3b836040dc42"
         );
+    }
+
+    #[test]
+    fn a_change_leaves_the_proofs_of_the_old_root_behind() {
+        // Both proofs are of the tree with `ROOT`.
+        let (bytes_a, bytes_b) = (proof(PROOF_A), proof(PROOF_B));
+        let proof_a = P::parse(&bytes_a).unwrap();
+        let proof_b = P::parse(&bytes_b).unwrap();
+        let mut root = trusted(ROOT);
+        // An entry that is looked at and dropped changes nothing.
+        assert_eq!(root.entry(&A, &proof_a).unwrap().key(), &A);
+        assert_eq!(root, trusted(ROOT));
+
+        root.entry(&A, &proof_a).unwrap().set(b"a2");
+        let changed = root.clone();
+        assert_ne!(changed, trusted(ROOT));
+        // The second of two changes proven against one root is refused, not applied on its
+        // own; and so is every other proof of the tree as it was.
+        assert_eq!(root.entry(&B, &proof_b).unwrap_err(), Error::RootMismatch);
+        assert_eq!(root.get(&A, &proof_a).unwrap_err(), Error::RootMismatch);
+        assert_eq!(root, changed, "a refused proof moved the root");
     }
 }
