@@ -1216,6 +1216,7 @@ impl<'a> MpyBuilder<'a> {
 
         if cfg!(feature = "ward") {
             files.add(src, "apps/ward/*.py")?;
+            files.add(src, "apps/display_address/*.py")?;
         }
 
         if cfg!(feature = "app_loading") {
