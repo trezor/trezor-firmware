@@ -141,9 +141,10 @@ def test_ward_batch_rejects_an_update_hidden_behind_another_leaf(
 ) -> None:
     """A host pairs a genuine update of alice with an "update" of an ABSENT entry,
     serving a stale sealed leaf it kept from history and a forged proof that walks
-    through alice's leaf. The multiproof used to read alice's leaf at that position,
-    ignore the forged item, match the stored root, and commit only alice's change --
-    an approved write that silently never happened. It must be refused."""
+    through alice's leaf. A multiproof once read alice's leaf at that position,
+    ignored the forged item, matched the stored root, and committed only alice's
+    change -- an approved write that silently never happened. Every item's proof is
+    now held against the running root, so the forged one is refused."""
     tree = _seeded()
     _seed_device(session, tree)
 
@@ -172,14 +173,14 @@ def test_ward_batch_rejects_an_update_hidden_behind_another_leaf(
         if msg.entry_key != ek(victim):
             return honest(msg)
         return messages.WARDProofAck(
-            proof=[(split + 1).to_bytes(2, "big") + b"\x55" * 32]
+            proof=[bytes([split + 1]) + b"\x55" * 32]
             + tree.get_proof_by_key(alice),
             content=ward.make_leaf_content(stale.content),
             identity=ward.make_leaf_identity(stale.key_type, stale.identity),
         )
 
     session.client.app.ward_proof_callback = forged
-    with pytest.raises(TrezorFailure, match="another leaf"):
+    with pytest.raises(TrezorFailure, match="does not match the root"):
         ward.perform_batch(session, [p1, p2])
 
 

@@ -73,7 +73,7 @@ def test_ward_cache_entry_refuses_a_forged_proof(session: Session) -> None:
 
     def forged(msg: messages.WARDProofRequest) -> messages.WARDProofAck:
         ack = honest(msg)
-        ack.proof[0] = ack.proof[0][:2] + bytes(32)
+        ack.proof[0] = ack.proof[0][:1] + bytes(32)
         return ack
 
     with pytest.raises(TrezorFailure, match="does not verify"):

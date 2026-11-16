@@ -77,11 +77,11 @@ def test_ward_list_shows_every_entry(session: Session) -> None:
 
 
 def test_ward_list_one_node_per_round_trip(session: Session) -> None:
-    """The batch size is the host's choice; one node per request walks the same trie."""
+    """The batch size is the host's choice; one entry per request walks the same trie."""
     tree = _tree()
     ward.debug_set_root(session, tree.get_root_hash())
 
-    ack, _seen = _list(session, ward.tree_node_callback(tree, max_nodes=1), 4)
+    ack, _seen = _list(session, ward.tree_node_callback(tree, max_entries=1), 4)
 
     assert (ack.shown, ack.entries, ack.complete) == (4, 4, True)
 
@@ -118,26 +118,34 @@ def test_ward_list_empty_tree(session: Session) -> None:
     assert (ack.shown, ack.entries, ack.complete) == (0, 0, True)
 
 
-@pytest.mark.parametrize("attack", ["substituted_child", "omitted_subtree", "no_nodes"])
+@pytest.mark.parametrize(
+    "attack", ["substituted_sibling", "skipped_entry", "repeated_entry", "no_entries"]
+)
 def test_ward_list_rejects_a_dishonest_host(session: Session, attack: str) -> None:
-    """Whatever the host serves must hash to what the trusted root committed to; a
-    substituted or skipped subtree, or a host that stops answering, ends the listing
-    with a failure -- never with a quietly shorter list."""
+    """Every entry's proof must hold against the trusted root, and every entry must be
+    the successor of the one before: a forged proof, a skipped or repeated entry, or a
+    host that stops answering, ends the listing with a failure -- never with a quietly
+    shorter list."""
     tree = _tree()
     ward.debug_set_root(session, tree.get_root_hash())
     honest = ward.tree_node_callback(tree)
 
     def dishonest(msg: messages.WARDNodeRequest) -> messages.WARDNodeAck:
         ack = honest(msg)
-        if msg.node_hash != tree.get_root_hash():
+        if msg.after is not None:
             return ack
-        if attack == "no_nodes":
-            return messages.WARDNodeAck(nodes=[])
-        root = ack.nodes[0]
-        if attack == "substituted_child":
-            root.left = b"\x42" * 32
-        else:  # claim the root is its own left subtree's first leaf
-            ack.nodes = [n for n in ack.nodes if n.entry_key is not None][:1]
+        if attack == "no_entries":
+            return messages.WARDNodeAck(entries=[])
+        if attack == "substituted_sibling":
+            step = ack.entries[0].proof[0]
+            ack.entries[0].proof[0] = step[:1] + b"\x42" * 32
+        elif attack == "skipped_entry":
+            # the second entry, with its full proof, in place of the first
+            first, second = ack.entries[0], ack.entries[1]
+            second.proof = tree.get_proof_by_key(second.entry_key)
+            ack.entries = [second] + ack.entries[2:]
+        else:  # the first entry twice
+            ack.entries = [ack.entries[0], ack.entries[0]] + ack.entries[1:]
         return ack
 
     with session.test_ctx as client:
