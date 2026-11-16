@@ -110,7 +110,8 @@ def vectors() -> dict:
 
 
 def trie_vectors() -> dict:
-    """Pin the default Rust value encoding, roots and legacy wire proof steps."""
+    """Pin the trie shared with `trezor_ward`: the value encoding, roots, wire proof
+    steps (1-byte split bit) and the steps a listing walk serves."""
     tree = WARDTree()
     rows = []
     for i in range(4):
@@ -164,6 +165,10 @@ def trie_vectors() -> dict:
         witnessKey=witness.hex(),
         witnessCommit=commit.hex(),
         nonMemberProof=[step.hex() for step in proof],
+        walk=[
+            dict(entryKeyHex=key.hex(), proof=[step.hex() for step in steps])
+            for key, steps in tree.get_walk_entries(None, len(rows))
+        ],
     )
 
 

@@ -206,18 +206,18 @@ fn answers_listing_node_pulls() {
     let (url, task) = server(|mut socket| {
         let request = read(&mut socket);
         assert_eq!(request["method"], "answerNodeRequest");
-        assert_eq!(request["params"]["request"]["node_hash"], "ab");
+        assert_eq!(request["params"]["request"]["after"], "ab");
         send(
             &mut socket,
-            json!({"id": request["id"], "result": {"nodes": []}}),
+            json!({"id": request["id"], "result": {"entries": []}}),
         );
     });
     let mut client = Client::connect(&url, "test-token").unwrap();
     assert_eq!(
         client
-            .answer_ward_request("WARDNodeRequest", json!({"node_hash": "ab"}))
+            .answer_ward_request("WARDNodeRequest", json!({"after": "ab"}))
             .unwrap(),
-        json!({"deviceCall": {"name": "WARDNodeAck", "message": {"nodes": []}}})
+        json!({"deviceCall": {"name": "WARDNodeAck", "message": {"entries": []}}})
     );
     assert!(client
         .answer_ward_request("GetPublicKey", json!({}))

@@ -562,9 +562,9 @@ def list_entries(
     device_id: Optional[int] = None,
 ) -> messages.WARDListEntriesAck:
     """Show every WARD entry matching the filters on the device screen. The device
-    walks its trusted root and pulls each node through the registered
-    ``ward_node_callback`` (e.g. ``tree_node_callback(tree)``), verifying it before
-    use. Returns only counts: (shown, entries, counter, complete)."""
+    walks its trusted root in entry_key order and pulls the entries through the
+    registered ``ward_node_callback`` (e.g. ``tree_node_callback(tree)``), verifying
+    each before use. Returns only counts: (shown, entries, counter, complete)."""
     return session.call(
         messages.WARDListEntries(app_id=app_id, key_type=key_type, device_id=device_id),
         expect=messages.WARDListEntriesAck,
@@ -572,35 +572,28 @@ def list_entries(
 
 
 def tree_node_callback(
-    tree: "WARDTree", max_nodes: int = 16
+    tree: "WARDTree", max_entries: int = 16
 ) -> Callable[[messages.WARDNodeRequest], messages.WARDNodeAck]:
     """Build an AppManifest.ward_node_callback that serves a listing walk from `tree`:
-    the requested node and up to `max_nodes - 1` descendants in pre-order per round
-    trip.
+    up to `max_entries` entries after the requested one per round trip.
 
         client.app.ward_node_callback = ward.tree_node_callback(tree)
     """
 
     def _callback(msg: messages.WARDNodeRequest) -> messages.WARDNodeAck:
-        nodes = []
-        for split_bit, left, right, entry_key in tree.get_nodes(
-            msg.node_hash, max_nodes
-        ):
-            if entry_key is None:
-                nodes.append(
-                    messages.WARDTrieNode(split_bit=split_bit, left=left, right=right)
-                )
-                continue
+        entries = []
+        for entry_key, steps in tree.get_walk_entries(msg.after, max_entries):
             leaf = tree.get_leaf(entry_key)
             assert leaf is not None
-            nodes.append(
-                messages.WARDTrieNode(
+            entries.append(
+                messages.WARDWalkEntry(
                     entry_key=entry_key,
+                    proof=steps,
                     content=make_leaf_content(leaf.content),
                     identity=make_leaf_identity(leaf.key_type, leaf.identity),
                 )
             )
-        return messages.WARDNodeAck(nodes=nodes)
+        return messages.WARDNodeAck(entries=entries)
 
     return _callback
 

@@ -45,14 +45,14 @@ def test_default_value_hash_matches_rust_and_rejects_old_domain():
         old_commit = hashlib.sha256(b"\x02" + wc.leaf_value_bytes(leaf)).digest()
         node = wc.leaf_hash_of(key, old_commit)
         for step in proof:
-            bit = int.from_bytes(step[:2], "big")
-            sibling = step[2:]
+            bit = step[0]
+            sibling = step[1:]
             left, right = (
                 (node, sibling)
                 if not (key[bit // 8] & (0x80 >> (bit % 8)))
                 else (sibling, node)
             )
-            node = hashlib.sha256(b"\x01" + step[:2] + left + right).digest()
+            node = hashlib.sha256(b"\x01" + step[:1] + left + right).digest()
         assert node != tree.get_root_hash()
 
 

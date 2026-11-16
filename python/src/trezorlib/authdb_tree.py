@@ -9,7 +9,7 @@ can still reconstruct and prove (ward-design.md §2.2):
   commit   = SHA-256(0x03 || len8(key_type) || key_type
                           || len32(id_part) || id_part || len32(val_part) || val_part)
   leaf     = SHA-256(0x00 || LeafIdentityMAC || commit)
-  internal = SHA-256(0x01 || split_bit_u16 || left || right)
+  internal = SHA-256(0x01 || split_bit_u8 || left || right)
                                                     — positional, no sorting
 
 The trie is **key-first**: every operation takes a precomputed
@@ -19,13 +19,16 @@ Non-membership witnesses
 travel as two hashes ``(witness_entry_key, witness_commit)`` and reveal neither
 the neighbour's identifier nor its plaintext value.
 
-Proof format (leaf→root order): each element is 34 bytes,
-2-byte split_bit + 32-byte sibling hash. O(log N).
+This is the trie of ``trezor_ward`` (``rust/trezor-ward``), the device's verifier; the
+two must agree byte for byte (``common/tests/fixtures/ward/trie.json``).
+
+Proof format (leaf→root order): each element is 33 bytes,
+1-byte split_bit + 32-byte sibling hash. O(log N).
 
 ``skiplen`` used to be hashed and carried alongside ``split_bit``. It is a function
 of the split bits either side of it, so committing to it bound nothing — and it made
 a node's hash depend on its DEPTH, which broke every re-parenting operation. See
-``apps.ward.service.internal_hash`` for the two bugs that cost.
+``apps.ward.trie`` (git history) for the two bugs that cost.
 
 Empty tree: ``get_root_hash()`` returns ``EMPTY_ROOT`` (SHA-256 of 0x02); test
 ``is_empty()`` rather than comparing against it.
@@ -55,22 +58,31 @@ def _addr_bit(entry_key: bytes, bit: int) -> int:
     return (entry_key[bit // 8] >> (7 - (bit % 8))) & 1
 
 
-def _u16be(n: int) -> bytes:
-    return n.to_bytes(2, "big")
+def _bit_pos(n: int) -> bytes:
+    # One byte holds every position of a 256-bit key.
+    return bytes([n])
 
 
 def _internal_hash(split_bit: int, left: bytes, right: bytes) -> bytes:
-    return ward_crypto.sha256(b"\x01" + _u16be(split_bit) + left + right)
+    return ward_crypto.sha256(b"\x01" + _bit_pos(split_bit) + left + right)
 
 
 def _proof_elem(split_bit: int, sibling: bytes) -> bytes:
-    return _u16be(split_bit) + sibling
+    return _bit_pos(split_bit) + sibling
 
 
 def _parse_proof_elem(elem: bytes) -> tuple[int, bytes]:
-    if len(elem) != 34:
+    if len(elem) != 33:
         raise ValueError("invalid proof element length")
-    return int.from_bytes(elem[0:2], "big"), elem[2:]
+    return elem[0], elem[1:]
+
+
+def _crit_bit(a: bytes, b: bytes) -> int:
+    """The first bit on which two different keys differ."""
+    for bit in range(256):
+        if _addr_bit(a, bit) != _addr_bit(b, bit):
+            return bit
+    raise ValueError("equal keys have no crit bit")
 
 
 # --- internal MPT node types ---
@@ -153,8 +165,8 @@ def _proof_steps_root_to_leaf(proof: List[bytes]) -> Optional[List[tuple[int, by
     return steps
 
 
-# A node served to a listing walk: (split_bit, left, right, entry_key).
-_ServedNode = Tuple[Optional[int], Optional[bytes], Optional[bytes], Optional[bytes]]
+# An entry served to a listing walk: (entry_key, proof steps leaf-to-root).
+_WalkEntry = Tuple[bytes, List[bytes]]
 
 
 class WARDTree:
@@ -296,33 +308,31 @@ class WARDTree:
             return EMPTY_ROOT
         return _hash_mpt(_build_mpt(self._leaf_nodes(), 0))
 
-    def get_nodes(self, node_hash: bytes, max_nodes: int = 16) -> List[_ServedNode]:
-        """Serve a listing walk: the node with `node_hash`, then up to `max_nodes - 1`
-        of its descendants in pre-order. Each is `(split_bit, left, right, entry_key)`:
-        a branch has entry_key None, a leaf has only entry_key (its parts are
-        `get_leaf(entry_key)`). Empty if no node has that hash."""
-
-        def find(node):
-            if _hash_mpt(node) == node_hash:
-                return node
-            if isinstance(node, _BranchNode):
-                return find(node.left) or find(node.right)
-            return None
-
-        if not self._leaves:
+    def get_walk_entries(
+        self, after: Optional[bytes], max_entries: int = 16
+    ) -> List[_WalkEntry]:
+        """Serve a listing walk: up to `max_entries` entries after the entry_key
+        `after` (None: from the first), in entry_key order, each `(entry_key, steps)`
+        (its parts are `get_leaf(entry_key)`). The steps are those below the branch
+        where the entry parts from the one before it, which the device already holds
+        the rest of; the first entry gets its full proof. Empty if `after` is not an
+        entry."""
+        keys = sorted(self._leaves)
+        if after is None:
+            start = 0
+        elif after in self._leaves:
+            start = keys.index(after) + 1
+        else:
             return []
-        start = find(_build_mpt(self._leaf_nodes(), 0))
-        out: List[_ServedNode] = []
-        stack = [] if start is None else [start]
-        while stack and len(out) < max_nodes:
-            node = stack.pop()
-            if isinstance(node, _LeafNode):
-                out.append((None, None, None, node.addr_hash))
-            else:
-                left, right = _hash_mpt(node.left), _hash_mpt(node.right)
-                out.append((node.bit, left, right, None))
-                stack.append(node.right)
-                stack.append(node.left)
+        out: List[_WalkEntry] = []
+        previous = after
+        for key in keys[start : start + max_entries]:
+            steps = self.get_proof_by_key(key)
+            if previous is not None:
+                c = _crit_bit(previous, key)
+                steps = [s for s in steps if _parse_proof_elem(s)[0] > c]
+            out.append((key, steps))
+            previous = key
         return out
 
     def get_proof_by_key(self, entry_key: bytes) -> List[bytes]:
