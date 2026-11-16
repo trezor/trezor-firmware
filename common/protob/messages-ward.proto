@@ -265,7 +265,7 @@ message WARDReconcileAck {
 message WARDLookup {
     required bytes  address            = 1;  // identifier; device forms entry_key = HMAC(K_path, app_id||0x00||key_type||0x00||device_id||identifier)
     reserved 2;                              // was plaintext value; membership now carries (nonce,tag,ct)
-    repeated bytes  proof              = 3;  // leaf-to-root; 34B each: u16be(split_bit) || sibling(32B)
+    repeated bytes  proof              = 3;  // leaf-to-root; 33B each: split_bit(1B) || sibling(32B)
     optional bytes  witness_entry_key  = 4;  // non-membership: witness leaf entry_key (32B; reveals no plaintext)
     optional bytes  witness_commit     = 5;  // non-membership: witness leaf commitment over key_type and both encoded parts (value tag 0x03)
     reserved 6;                              // was counter; C_leaf now lives inside ct
@@ -356,7 +356,7 @@ message WARDAttestation {
  */
 message WARDProofAck {
     reserved 1;                              // was plaintext value; membership now carries (nonce,tag,ct)
-    repeated bytes  proof             = 2;   // leaf-to-root; 34B each: u16be(split_bit) || sibling(32B)
+    repeated bytes  proof             = 2;   // leaf-to-root; 33B each: split_bit(1B) || sibling(32B)
     reserved 3;                              // was counter; C_leaf now lives inside ct
     optional bytes  witness_entry_key = 4;   // non-membership: witness leaf entry_key (32B; reveals no plaintext)
     optional bytes  witness_commit    = 5;   // non-membership: witness leaf commitment over key_type and both encoded parts (value tag 0x03)
@@ -657,24 +657,23 @@ message WARDVerifyChainAck {
 }
 
 /**
- * One trie node served to a verified listing walk: a BRANCH (split_bit, left, right)
- * or, when entry_key is set, a LEAF (entry_key + its two parts).
+ * One entry served to a verified listing walk: the leaf and its proof. The proof is
+ * the entry's full proof, or only its steps below the branch where it parts from the
+ * entry before it; the device completes it from the proof it holds.
  */
-message WARDTrieNode {
-    optional uint32 split_bit = 1;        // branch: the bit this node splits on
-    optional bytes  left      = 2;        // branch: 32B hash of the 0-child
-    optional bytes  right     = 3;        // branch: 32B hash of the 1-child
-    optional bytes  entry_key = 4;        // leaf: 32B path; set => this node is a leaf
-    optional LeafContent  content  = 5;   // leaf: sealed value
-    optional LeafIdentity identity = 6;   // leaf: sealed identity
+message WARDWalkEntry {
+    required bytes  entry_key = 1;        // 32B path of the leaf
+    repeated bytes  proof     = 2;        // leaf-to-root; 33B each: split_bit(1B) || sibling(32B)
+    optional LeafContent  content  = 3;   // sealed value
+    optional LeafIdentity identity = 4;   // sealed identity
 }
 
 /**
  * Request: list every WARD entry on the device screen. The device walks its trusted
- * root top-down, pulling nodes from the host (WARDNodeRequest) and verifying each
- * against the hash its parent committed to, so the walk is complete and exact. Leaves
- * matching the filters are decrypted and shown one per screen; the host learns only
- * the counts.
+ * root in entry_key order, pulling the entries from the host (WARDNodeRequest) and
+ * holding each one's proof against the root and checking it is the successor of the
+ * one before, so the walk is complete and exact. Leaves matching the filters are
+ * decrypted and shown one per screen; the host learns only the counts.
  * @start
  * @next WARDNodeRequest
  * @next ButtonRequest
@@ -688,20 +687,21 @@ message WARDListEntries {
 }
 
 /**
- * Request: DEVICE -> HOST. The listing walk needs the node with this hash.
+ * Request: DEVICE -> HOST. The listing walk needs the entries after `after`.
  * @next WARDNodeAck
  */
 message WARDNodeRequest {
-    required bytes node_hash = 1;  // 32B hash the device already trusts
+    reserved 1;                 // was node_hash; the walk now pulls entries, not nodes
+    optional bytes after = 2;   // 32B entry_key the walk stands at; absent for the first entry
 }
 
 /**
- * Response: HOST -> DEVICE. The requested node first, then as many of its
- * descendants as the host chooses, in pre-order (node, left subtree, right subtree),
- * so one round trip can carry a whole subtree.
+ * Response: HOST -> DEVICE. The next entry first, then as many of its successors as
+ * the host chooses, in entry_key order, so one round trip can carry many entries.
  */
 message WARDNodeAck {
-    repeated WARDTrieNode nodes = 1;
+    reserved 1;                          // was nodes
+    repeated WARDWalkEntry entries = 2;
 }
 
 /**

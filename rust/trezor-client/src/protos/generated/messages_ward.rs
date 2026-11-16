@@ -11476,130 +11476,35 @@ impl ::protobuf::reflect::ProtobufValue for WARDVerifyChainAck {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.ward.WARDTrieNode)
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WARDWalkEntry)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct WARDTrieNode {
+pub struct WARDWalkEntry {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDTrieNode.split_bit)
-    pub split_bit: ::std::option::Option<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDTrieNode.left)
-    pub left: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDTrieNode.right)
-    pub right: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDTrieNode.entry_key)
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDWalkEntry.entry_key)
     pub entry_key: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDTrieNode.content)
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDWalkEntry.proof)
+    pub proof: ::std::vec::Vec<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDWalkEntry.content)
     pub content: ::protobuf::MessageField<LeafContent>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDTrieNode.identity)
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDWalkEntry.identity)
     pub identity: ::protobuf::MessageField<LeafIdentity>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDTrieNode.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDWalkEntry.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a WARDTrieNode {
-    fn default() -> &'a WARDTrieNode {
-        <WARDTrieNode as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a WARDWalkEntry {
+    fn default() -> &'a WARDWalkEntry {
+        <WARDWalkEntry as ::protobuf::Message>::default_instance()
     }
 }
 
-impl WARDTrieNode {
-    pub fn new() -> WARDTrieNode {
+impl WARDWalkEntry {
+    pub fn new() -> WARDWalkEntry {
         ::std::default::Default::default()
     }
 
-    // optional uint32 split_bit = 1;
-
-    pub fn split_bit(&self) -> u32 {
-        self.split_bit.unwrap_or(0)
-    }
-
-    pub fn clear_split_bit(&mut self) {
-        self.split_bit = ::std::option::Option::None;
-    }
-
-    pub fn has_split_bit(&self) -> bool {
-        self.split_bit.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_split_bit(&mut self, v: u32) {
-        self.split_bit = ::std::option::Option::Some(v);
-    }
-
-    // optional bytes left = 2;
-
-    pub fn left(&self) -> &[u8] {
-        match self.left.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_left(&mut self) {
-        self.left = ::std::option::Option::None;
-    }
-
-    pub fn has_left(&self) -> bool {
-        self.left.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_left(&mut self, v: ::std::vec::Vec<u8>) {
-        self.left = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_left(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.left.is_none() {
-            self.left = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.left.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_left(&mut self) -> ::std::vec::Vec<u8> {
-        self.left.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
-    // optional bytes right = 3;
-
-    pub fn right(&self) -> &[u8] {
-        match self.right.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_right(&mut self) {
-        self.right = ::std::option::Option::None;
-    }
-
-    pub fn has_right(&self) -> bool {
-        self.right.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_right(&mut self, v: ::std::vec::Vec<u8>) {
-        self.right = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_right(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.right.is_none() {
-            self.right = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.right.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_right(&mut self) -> ::std::vec::Vec<u8> {
-        self.right.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
-    // optional bytes entry_key = 4;
+    // required bytes entry_key = 1;
 
     pub fn entry_key(&self) -> &[u8] {
         match self.entry_key.as_ref() {
@@ -11636,72 +11541,69 @@ impl WARDTrieNode {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(6);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "split_bit",
-            |m: &WARDTrieNode| { &m.split_bit },
-            |m: &mut WARDTrieNode| { &mut m.split_bit },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "left",
-            |m: &WARDTrieNode| { &m.left },
-            |m: &mut WARDTrieNode| { &mut m.left },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "right",
-            |m: &WARDTrieNode| { &m.right },
-            |m: &mut WARDTrieNode| { &mut m.right },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "entry_key",
-            |m: &WARDTrieNode| { &m.entry_key },
-            |m: &mut WARDTrieNode| { &mut m.entry_key },
+            |m: &WARDWalkEntry| { &m.entry_key },
+            |m: &mut WARDWalkEntry| { &mut m.entry_key },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "proof",
+            |m: &WARDWalkEntry| { &m.proof },
+            |m: &mut WARDWalkEntry| { &mut m.proof },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, LeafContent>(
             "content",
-            |m: &WARDTrieNode| { &m.content },
-            |m: &mut WARDTrieNode| { &mut m.content },
+            |m: &WARDWalkEntry| { &m.content },
+            |m: &mut WARDWalkEntry| { &mut m.content },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, LeafIdentity>(
             "identity",
-            |m: &WARDTrieNode| { &m.identity },
-            |m: &mut WARDTrieNode| { &mut m.identity },
+            |m: &WARDWalkEntry| { &m.identity },
+            |m: &mut WARDWalkEntry| { &mut m.identity },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDTrieNode>(
-            "WARDTrieNode",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDWalkEntry>(
+            "WARDWalkEntry",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for WARDTrieNode {
-    const NAME: &'static str = "WARDTrieNode";
+impl ::protobuf::Message for WARDWalkEntry {
+    const NAME: &'static str = "WARDWalkEntry";
 
     fn is_initialized(&self) -> bool {
+        if self.entry_key.is_none() {
+            return false;
+        }
+        for v in &self.content {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.identity {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
-                8 => {
-                    self.split_bit = ::std::option::Option::Some(is.read_uint32()?);
-                },
-                18 => {
-                    self.left = ::std::option::Option::Some(is.read_bytes()?);
-                },
-                26 => {
-                    self.right = ::std::option::Option::Some(is.read_bytes()?);
-                },
-                34 => {
+                10 => {
                     self.entry_key = ::std::option::Option::Some(is.read_bytes()?);
                 },
-                42 => {
+                18 => {
+                    self.proof.push(is.read_bytes()?);
+                },
+                26 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.content)?;
                 },
-                50 => {
+                34 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.identity)?;
                 },
                 tag => {
@@ -11716,18 +11618,12 @@ impl ::protobuf::Message for WARDTrieNode {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.split_bit {
-            my_size += ::protobuf::rt::uint32_size(1, v);
-        }
-        if let Some(v) = self.left.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(2, &v);
-        }
-        if let Some(v) = self.right.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(3, &v);
-        }
         if let Some(v) = self.entry_key.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(4, &v);
+            my_size += ::protobuf::rt::bytes_size(1, &v);
         }
+        for value in &self.proof {
+            my_size += ::protobuf::rt::bytes_size(2, &value);
+        };
         if let Some(v) = self.content.as_ref() {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
@@ -11742,23 +11638,17 @@ impl ::protobuf::Message for WARDTrieNode {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.split_bit {
-            os.write_uint32(1, v)?;
-        }
-        if let Some(v) = self.left.as_ref() {
-            os.write_bytes(2, v)?;
-        }
-        if let Some(v) = self.right.as_ref() {
-            os.write_bytes(3, v)?;
-        }
         if let Some(v) = self.entry_key.as_ref() {
-            os.write_bytes(4, v)?;
+            os.write_bytes(1, v)?;
         }
+        for v in &self.proof {
+            os.write_bytes(2, &v)?;
+        };
         if let Some(v) = self.content.as_ref() {
-            ::protobuf::rt::write_message_field_with_cached_size(5, v, os)?;
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
         }
         if let Some(v) = self.identity.as_ref() {
-            ::protobuf::rt::write_message_field_with_cached_size(6, v, os)?;
+            ::protobuf::rt::write_message_field_with_cached_size(4, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -11772,26 +11662,22 @@ impl ::protobuf::Message for WARDTrieNode {
         &mut self.special_fields
     }
 
-    fn new() -> WARDTrieNode {
-        WARDTrieNode::new()
+    fn new() -> WARDWalkEntry {
+        WARDWalkEntry::new()
     }
 
     fn clear(&mut self) {
-        self.split_bit = ::std::option::Option::None;
-        self.left = ::std::option::Option::None;
-        self.right = ::std::option::Option::None;
         self.entry_key = ::std::option::Option::None;
+        self.proof.clear();
         self.content.clear();
         self.identity.clear();
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static WARDTrieNode {
-        static instance: WARDTrieNode = WARDTrieNode {
-            split_bit: ::std::option::Option::None,
-            left: ::std::option::Option::None,
-            right: ::std::option::Option::None,
+    fn default_instance() -> &'static WARDWalkEntry {
+        static instance: WARDWalkEntry = WARDWalkEntry {
             entry_key: ::std::option::Option::None,
+            proof: ::std::vec::Vec::new(),
             content: ::protobuf::MessageField::none(),
             identity: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
@@ -11800,20 +11686,20 @@ impl ::protobuf::Message for WARDTrieNode {
     }
 }
 
-impl ::protobuf::MessageFull for WARDTrieNode {
+impl ::protobuf::MessageFull for WARDWalkEntry {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("WARDTrieNode").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WARDWalkEntry").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for WARDTrieNode {
+impl ::std::fmt::Display for WARDWalkEntry {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for WARDTrieNode {
+impl ::protobuf::reflect::ProtobufValue for WARDWalkEntry {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
@@ -12070,8 +11956,8 @@ impl ::protobuf::reflect::ProtobufValue for WARDListEntries {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct WARDNodeRequest {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDNodeRequest.node_hash)
-    pub node_hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDNodeRequest.after)
+    pub after: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDNodeRequest.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -12088,49 +11974,49 @@ impl WARDNodeRequest {
         ::std::default::Default::default()
     }
 
-    // required bytes node_hash = 1;
+    // optional bytes after = 2;
 
-    pub fn node_hash(&self) -> &[u8] {
-        match self.node_hash.as_ref() {
+    pub fn after(&self) -> &[u8] {
+        match self.after.as_ref() {
             Some(v) => v,
             None => &[],
         }
     }
 
-    pub fn clear_node_hash(&mut self) {
-        self.node_hash = ::std::option::Option::None;
+    pub fn clear_after(&mut self) {
+        self.after = ::std::option::Option::None;
     }
 
-    pub fn has_node_hash(&self) -> bool {
-        self.node_hash.is_some()
+    pub fn has_after(&self) -> bool {
+        self.after.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_node_hash(&mut self, v: ::std::vec::Vec<u8>) {
-        self.node_hash = ::std::option::Option::Some(v);
+    pub fn set_after(&mut self, v: ::std::vec::Vec<u8>) {
+        self.after = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_node_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.node_hash.is_none() {
-            self.node_hash = ::std::option::Option::Some(::std::vec::Vec::new());
+    pub fn mut_after(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.after.is_none() {
+            self.after = ::std::option::Option::Some(::std::vec::Vec::new());
         }
-        self.node_hash.as_mut().unwrap()
+        self.after.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_node_hash(&mut self) -> ::std::vec::Vec<u8> {
-        self.node_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_after(&mut self) -> ::std::vec::Vec<u8> {
+        self.after.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(1);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "node_hash",
-            |m: &WARDNodeRequest| { &m.node_hash },
-            |m: &mut WARDNodeRequest| { &mut m.node_hash },
+            "after",
+            |m: &WARDNodeRequest| { &m.after },
+            |m: &mut WARDNodeRequest| { &mut m.after },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDNodeRequest>(
             "WARDNodeRequest",
@@ -12144,17 +12030,14 @@ impl ::protobuf::Message for WARDNodeRequest {
     const NAME: &'static str = "WARDNodeRequest";
 
     fn is_initialized(&self) -> bool {
-        if self.node_hash.is_none() {
-            return false;
-        }
         true
     }
 
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
-                10 => {
-                    self.node_hash = ::std::option::Option::Some(is.read_bytes()?);
+                18 => {
+                    self.after = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -12168,8 +12051,8 @@ impl ::protobuf::Message for WARDNodeRequest {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.node_hash.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(1, &v);
+        if let Some(v) = self.after.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -12177,8 +12060,8 @@ impl ::protobuf::Message for WARDNodeRequest {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.node_hash.as_ref() {
-            os.write_bytes(1, v)?;
+        if let Some(v) = self.after.as_ref() {
+            os.write_bytes(2, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -12197,13 +12080,13 @@ impl ::protobuf::Message for WARDNodeRequest {
     }
 
     fn clear(&mut self) {
-        self.node_hash = ::std::option::Option::None;
+        self.after = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static WARDNodeRequest {
         static instance: WARDNodeRequest = WARDNodeRequest {
-            node_hash: ::std::option::Option::None,
+            after: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -12231,8 +12114,8 @@ impl ::protobuf::reflect::ProtobufValue for WARDNodeRequest {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct WARDNodeAck {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDNodeAck.nodes)
-    pub nodes: ::std::vec::Vec<WARDTrieNode>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDNodeAck.entries)
+    pub entries: ::std::vec::Vec<WARDWalkEntry>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDNodeAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -12253,9 +12136,9 @@ impl WARDNodeAck {
         let mut fields = ::std::vec::Vec::with_capacity(1);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
-            "nodes",
-            |m: &WARDNodeAck| { &m.nodes },
-            |m: &mut WARDNodeAck| { &mut m.nodes },
+            "entries",
+            |m: &WARDNodeAck| { &m.entries },
+            |m: &mut WARDNodeAck| { &mut m.entries },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDNodeAck>(
             "WARDNodeAck",
@@ -12269,14 +12152,19 @@ impl ::protobuf::Message for WARDNodeAck {
     const NAME: &'static str = "WARDNodeAck";
 
     fn is_initialized(&self) -> bool {
+        for v in &self.entries {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
-                10 => {
-                    self.nodes.push(is.read_message()?);
+                18 => {
+                    self.entries.push(is.read_message()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -12290,7 +12178,7 @@ impl ::protobuf::Message for WARDNodeAck {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        for value in &self.nodes {
+        for value in &self.entries {
             let len = value.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         };
@@ -12300,8 +12188,8 @@ impl ::protobuf::Message for WARDNodeAck {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        for v in &self.nodes {
-            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        for v in &self.entries {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
         };
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -12320,13 +12208,13 @@ impl ::protobuf::Message for WARDNodeAck {
     }
 
     fn clear(&mut self) {
-        self.nodes.clear();
+        self.entries.clear();
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static WARDNodeAck {
         static instance: WARDNodeAck = WARDNodeAck {
-            nodes: ::std::vec::Vec::new(),
+            entries: ::std::vec::Vec::new(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -14084,35 +13972,34 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     s\"}\n\x12WARDVerifyChainAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\
     \x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\
     \x17\n\x07ward_id\x18\x03\x20\x01(\x0cR\x06wardId\x12\x19\n\x08root_mac\
-    \x18\x04\x20\x01(\x0cR\x07rootMac\"\xf5\x01\n\x0cWARDTrieNode\x12\x1b\n\
-    \tsplit_bit\x18\x01\x20\x01(\rR\x08splitBit\x12\x12\n\x04left\x18\x02\
-    \x20\x01(\x0cR\x04left\x12\x14\n\x05right\x18\x03\x20\x01(\x0cR\x05right\
-    \x12\x1b\n\tentry_key\x18\x04\x20\x01(\x0cR\x08entryKey\x12>\n\x07conten\
-    t\x18\x05\x20\x01(\x0b2$.hw.trezor.messages.ward.LeafContentR\x07content\
-    \x12A\n\x08identity\x18\x06\x20\x01(\x0b2%.hw.trezor.messages.ward.LeafI\
-    dentityR\x08identity\"`\n\x0fWARDListEntries\x12\x15\n\x06app_id\x18\x01\
-    \x20\x01(\tR\x05appId\x12\x19\n\x08key_type\x18\x02\x20\x01(\tR\x07keyTy\
-    pe\x12\x1b\n\tdevice_id\x18\x03\x20\x01(\rR\x08deviceId\".\n\x0fWARDNode\
-    Request\x12\x1b\n\tnode_hash\x18\x01\x20\x02(\x0cR\x08nodeHash\"J\n\x0bW\
-    ARDNodeAck\x12;\n\x05nodes\x18\x01\x20\x03(\x0b2%.hw.trezor.messages.war\
-    d.WARDTrieNodeR\x05nodes\"z\n\x12WARDListEntriesAck\x12\x14\n\x05shown\
-    \x18\x01\x20\x02(\rR\x05shown\x12\x18\n\x07entries\x18\x02\x20\x02(\rR\
-    \x07entries\x12\x18\n\x07counter\x18\x03\x20\x02(\rR\x07counter\x12\x1a\
-    \n\x08complete\x18\x04\x20\x02(\x08R\x08complete\"E\n\x0eWARDCacheEntry\
-    \x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12\x16\n\x06sti\
-    cky\x18\x02\x20\x01(\x08R\x06sticky\"I\n\x11WARDCacheEntryAck\x12\x1a\n\
-    \x08replaced\x18\x01\x20\x02(\x08R\x08replaced\x12\x18\n\x07counter\x18\
-    \x02\x20\x02(\rR\x07counter\"\x11\n\x0fWARDCacheExport\".\n\x12WARDCache\
-    ExportAck\x12\x18\n\x07entries\x18\x01\x20\x03(\x0cR\x07entries\"+\n\x0f\
-    WARDCacheImport\x12\x18\n\x07entries\x18\x01\x20\x03(\x0cR\x07entries\"J\
-    \n\x12WARDCacheImportAck\x12\x1a\n\x08imported\x18\x01\x20\x02(\rR\x08im\
-    ported\x12\x18\n\x07skipped\x18\x02\x20\x02(\rR\x07skipped\"\x13\n\x11WA\
-    RDValidateCache\"\xa2\x01\n\x14WARDValidateCacheAck\x12\x18\n\x07checked\
-    \x18\x01\x20\x02(\rR\x07checked\x12\x1c\n\tunchanged\x18\x02\x20\x02(\rR\
-    \tunchanged\x12\x18\n\x07updated\x18\x03\x20\x02(\rR\x07updated\x12\x18\
-    \n\x07removed\x18\x04\x20\x02(\rR\x07removed\x12\x18\n\x07counter\x18\
-    \x06\x20\x02(\rR\x07counterJ\x04\x08\x05\x10\x06B8\n#com.satoshilabs.tre\
-    zor.lib.protobufB\x11TrezorMessageWard\
+    \x18\x04\x20\x01(\x0cR\x07rootMac\"\xc5\x01\n\rWARDWalkEntry\x12\x1b\n\t\
+    entry_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12\x14\n\x05proof\x18\x02\
+    \x20\x03(\x0cR\x05proof\x12>\n\x07content\x18\x03\x20\x01(\x0b2$.hw.trez\
+    or.messages.ward.LeafContentR\x07content\x12A\n\x08identity\x18\x04\x20\
+    \x01(\x0b2%.hw.trezor.messages.ward.LeafIdentityR\x08identity\"`\n\x0fWA\
+    RDListEntries\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x19\n\
+    \x08key_type\x18\x02\x20\x01(\tR\x07keyType\x12\x1b\n\tdevice_id\x18\x03\
+    \x20\x01(\rR\x08deviceId\"-\n\x0fWARDNodeRequest\x12\x14\n\x05after\x18\
+    \x02\x20\x01(\x0cR\x05afterJ\x04\x08\x01\x10\x02\"U\n\x0bWARDNodeAck\x12\
+    @\n\x07entries\x18\x02\x20\x03(\x0b2&.hw.trezor.messages.ward.WARDWalkEn\
+    tryR\x07entriesJ\x04\x08\x01\x10\x02\"z\n\x12WARDListEntriesAck\x12\x14\
+    \n\x05shown\x18\x01\x20\x02(\rR\x05shown\x12\x18\n\x07entries\x18\x02\
+    \x20\x02(\rR\x07entries\x12\x18\n\x07counter\x18\x03\x20\x02(\rR\x07coun\
+    ter\x12\x1a\n\x08complete\x18\x04\x20\x02(\x08R\x08complete\"E\n\x0eWARD\
+    CacheEntry\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12\
+    \x16\n\x06sticky\x18\x02\x20\x01(\x08R\x06sticky\"I\n\x11WARDCacheEntryA\
+    ck\x12\x1a\n\x08replaced\x18\x01\x20\x02(\x08R\x08replaced\x12\x18\n\x07\
+    counter\x18\x02\x20\x02(\rR\x07counter\"\x11\n\x0fWARDCacheExport\".\n\
+    \x12WARDCacheExportAck\x12\x18\n\x07entries\x18\x01\x20\x03(\x0cR\x07ent\
+    ries\"+\n\x0fWARDCacheImport\x12\x18\n\x07entries\x18\x01\x20\x03(\x0cR\
+    \x07entries\"J\n\x12WARDCacheImportAck\x12\x1a\n\x08imported\x18\x01\x20\
+    \x02(\rR\x08imported\x12\x18\n\x07skipped\x18\x02\x20\x02(\rR\x07skipped\
+    \"\x13\n\x11WARDValidateCache\"\xa2\x01\n\x14WARDValidateCacheAck\x12\
+    \x18\n\x07checked\x18\x01\x20\x02(\rR\x07checked\x12\x1c\n\tunchanged\
+    \x18\x02\x20\x02(\rR\tunchanged\x12\x18\n\x07updated\x18\x03\x20\x02(\rR\
+    \x07updated\x12\x18\n\x07removed\x18\x04\x20\x02(\rR\x07removed\x12\x18\
+    \n\x07counter\x18\x06\x20\x02(\rR\x07counterJ\x04\x08\x05\x10\x06B8\n#co\
+    m.satoshilabs.trezor.lib.protobufB\x11TrezorMessageWard\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -14174,7 +14061,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(WARDChainLink::generated_message_descriptor_data());
             messages.push(WARDVerifyChain::generated_message_descriptor_data());
             messages.push(WARDVerifyChainAck::generated_message_descriptor_data());
-            messages.push(WARDTrieNode::generated_message_descriptor_data());
+            messages.push(WARDWalkEntry::generated_message_descriptor_data());
             messages.push(WARDListEntries::generated_message_descriptor_data());
             messages.push(WARDNodeRequest::generated_message_descriptor_data());
             messages.push(WARDNodeAck::generated_message_descriptor_data());

@@ -5974,30 +5974,24 @@ class WARDVerifyChainAck(protobuf.MessageType):
         self.root_mac = root_mac
 
 
-class WARDTrieNode(protobuf.MessageType):
+class WARDWalkEntry(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("split_bit", "uint32", repeated=False, required=False, default=None),
-        2: protobuf.Field("left", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("right", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
-        5: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
-        6: protobuf.Field("identity", "LeafIdentity", repeated=False, required=False, default=None),
+        1: protobuf.Field("entry_key", "bytes", repeated=False, required=True),
+        2: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
+        3: protobuf.Field("content", "LeafContent", repeated=False, required=False, default=None),
+        4: protobuf.Field("identity", "LeafIdentity", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        split_bit: int | None = None,
-        left: bytes | None = None,
-        right: bytes | None = None,
-        entry_key: bytes | None = None,
+        entry_key: bytes,
+        proof: Sequence[bytes] | None = None,
         content: LeafContent | None = None,
         identity: LeafIdentity | None = None,
     ) -> None:
-        self.split_bit = split_bit
-        self.left = left
-        self.right = right
+        self.proof: Sequence[bytes] = proof if proof is not None else []
         self.entry_key = entry_key
         self.content = content
         self.identity = identity
@@ -6026,29 +6020,29 @@ class WARDListEntries(protobuf.MessageType):
 class WARDNodeRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2366
     FIELDS = {
-        1: protobuf.Field("node_hash", "bytes", repeated=False, required=True),
+        2: protobuf.Field("after", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        node_hash: bytes,
+        after: bytes | None = None,
     ) -> None:
-        self.node_hash = node_hash
+        self.after = after
 
 
 class WARDNodeAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2367
     FIELDS = {
-        1: protobuf.Field("nodes", "WARDTrieNode", repeated=True, required=False, default=None),
+        2: protobuf.Field("entries", "WARDWalkEntry", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        nodes: Sequence[WARDTrieNode] | None = None,
+        entries: Sequence[WARDWalkEntry] | None = None,
     ) -> None:
-        self.nodes: Sequence[WARDTrieNode] = nodes if nodes is not None else []
+        self.entries: Sequence[WARDWalkEntry] = entries if entries is not None else []
 
 
 class WARDListEntriesAck(protobuf.MessageType):

@@ -4307,28 +4307,24 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WARDVerifyChainAck"]:
             return isinstance(msg, cls)
 
-    class WARDTrieNode(protobuf.MessageType):
-        split_bit: "int | None"
-        left: "AnyBytes | None"
-        right: "AnyBytes | None"
-        entry_key: "AnyBytes | None"
+    class WARDWalkEntry(protobuf.MessageType):
+        entry_key: "AnyBytes"
+        proof: "list[AnyBytes]"
         content: "LeafContent | None"
         identity: "LeafIdentity | None"
 
         def __init__(
             self,
             *,
-            split_bit: "int | None" = None,
-            left: "AnyBytes | None" = None,
-            right: "AnyBytes | None" = None,
-            entry_key: "AnyBytes | None" = None,
+            entry_key: "AnyBytes",
+            proof: "list[AnyBytes] | None" = None,
             content: "LeafContent | None" = None,
             identity: "LeafIdentity | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WARDTrieNode"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["WARDWalkEntry"]:
             return isinstance(msg, cls)
 
     class WARDListEntries(protobuf.MessageType):
@@ -4350,12 +4346,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WARDNodeRequest(protobuf.MessageType):
-        node_hash: "AnyBytes"
+        after: "AnyBytes | None"
 
         def __init__(
             self,
             *,
-            node_hash: "AnyBytes",
+            after: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -4364,12 +4360,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WARDNodeAck(protobuf.MessageType):
-        nodes: "list[WARDTrieNode]"
+        entries: "list[WARDWalkEntry]"
 
         def __init__(
             self,
             *,
-            nodes: "list[WARDTrieNode] | None" = None,
+            entries: "list[WARDWalkEntry] | None" = None,
         ) -> None:
             pass
 
