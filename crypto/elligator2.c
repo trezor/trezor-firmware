@@ -36,7 +36,7 @@ static int curve25519_isequal(bignum25519 a, const bignum25519 b) {
 // Sets out to a if c equals 0, sets out to b if c equals 1.
 static void curve25519_cmov(bignum25519 out, const bignum25519 a,
                             const bignum25519 b, uint32_t c) {
-  assert((int)(c == 1) | (int)(c == 0));
+  assert(c <= 1);
 
   bignum25519 a_copy = {0}, b_copy = {0};
   curve25519_copy(a_copy, a);
