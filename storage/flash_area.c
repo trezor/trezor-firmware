@@ -167,8 +167,7 @@ secbool __wur flash_area_write_data_padded(const flash_area_t *area,
 
   while (total_size > 0) {
 #ifdef USE_FLASH_BURST
-    if ((offset % FLASH_BURST_SIZE) == 0 &&
-        (offset + FLASH_BURST_SIZE) <= total_size) {
+    if ((offset % FLASH_BURST_SIZE) == 0 && FLASH_BURST_SIZE <= total_size) {
       if (data_size >= FLASH_BURST_SIZE) {
         if (flash_area_write_burst(area, offset, data32) != sectrue) {
           return secfalse;
