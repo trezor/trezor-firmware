@@ -67,11 +67,14 @@ def trie_remove(root: AnyBytes, key: AnyBytes, proof: AnyBytes) -> bytes:
 
 
 # rust/src/ward/micropython.rs
-def trie_follow_replace(key: AnyBytes, proof: AnyBytes, commit: AnyBytes, other_key: AnyBytes, other: bytearray) -> None:
+def trie_replace_all(root: AnyBytes, keys: list[bytes], proofs: list[bytearray], commits: list[bytes]) -> bytes:
     """
-    Bring `other`, the proof of `other_key` under the root before `key` was
-    replaced with `commit` under `proof`, up to date with that replacement, in
-    place. The result is held against the new root before it is used.
+    Return the root after a batch of replacements: `keys[i]`'s value
+    digest becomes `commits[i]`, every `proofs[i]` against `root`. The
+    updates are made in turn, each proof held against the root the ones
+    before left, and the proofs are brought up to date in place. Raise
+    ValueError if a proof is refused, a key is absent or named twice, or
+    the batch is empty or larger than the queue.
     """
 
 

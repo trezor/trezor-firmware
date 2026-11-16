@@ -1,12 +1,13 @@
 //! The WARD trie on the device: `trezor_ward`'s verifier over the firmware's
 //! SHA-256, with 32-byte entry keys. The device holds only the root; every root
-//! it derives comes from a proof that `Proof::verify` (or a `Walk`) has held
-//! against a root it trusts.
+//! it derives comes from proofs held against a `Root` it trusts. A `Root` here
+//! lives for one call: the caller passes the root's digest in and stores what
+//! comes back, so a derived root is a candidate until the caller installs it.
 
 use crypto::sha256::{Sha256 as Sha256Hasher, Sha256Ctx};
 use trezor_ward::trie::{
-    bit, branch_digest, crit_bit, leaf_digest, BitPos, Entry, Error, HashFn, Leaf, Proof, Step,
-    Walk,
+    bit, branch_digest, crit_bit, leaf_digest, BitPos, Entry, Error, HashFn, Leaf, Proof, Root,
+    Step, Walk,
 };
 
 /// SHA-256 from trezor-crypto.
@@ -28,6 +29,10 @@ impl HashFn for Sha256 {
 pub type Digest = [u8; 32];
 pub type Key = [u8; 32];
 
+/// The most updates one batch can carry: the intents a wallet can queue
+/// (`storage.ward_store.MAX_PENDING`).
+pub const BATCH_MAX: usize = 8;
+
 /// A value already committed to by its digest: the leaf commitment the firmware
 /// computes over a leaf's key type and both encoded parts.
 struct Committed<'a>(&'a Digest);
@@ -45,43 +50,63 @@ fn parse(proof: &[u8]) -> Result<Proof<&[u8], Key, Sha256>, Error> {
 /// The value digest under `key` in the tree with `root`, or `None` if `key` is
 /// absent.
 pub fn lookup(root: &Digest, key: &Key, proof: &[u8]) -> Result<Option<Digest>, Error> {
-    Ok(match parse(proof)?.verify(root, key)? {
-        Entry::Occupied(entry) => Some(*entry.digest()),
-        Entry::Vacant(_) => None,
-    })
+    let proof = parse(proof)?;
+    let root = Root::<Sha256>::trusted(*root);
+    Ok(root.get(key, &proof)?.map(|entry| *entry.digest()))
 }
 
 /// The root after inserting `commit` under `key`, which must be absent.
 pub fn insert(root: &Digest, key: &Key, proof: &[u8], commit: &Digest) -> Result<Digest, Refusal> {
-    match parse(proof)?.verify(root, key)? {
-        Entry::Vacant(entry) => Ok(entry.insert(&Committed(commit))),
-        Entry::Occupied(_) => Err(Refusal::Present),
+    let proof = parse(proof)?;
+    let mut root = Root::<Sha256>::trusted(*root);
+    match root.entry(key, &proof)? {
+        Entry::Vacant(entry) => entry.insert(&Committed(commit)),
+        Entry::Occupied(_) => return Err(Refusal::Present),
     }
+    Ok(*root.digest())
 }
 
 /// The root after replacing the value of `key`, which must be present.
 pub fn replace(root: &Digest, key: &Key, proof: &[u8], commit: &Digest) -> Result<Digest, Refusal> {
-    match parse(proof)?.verify(root, key)? {
-        Entry::Occupied(entry) => Ok(entry.replace(&Committed(commit))),
-        Entry::Vacant(_) => Err(Refusal::Absent),
-    }
+    let mut root = Root::<Sha256>::trusted(*root);
+    replace_in(&mut root, key, proof, commit)?;
+    Ok(*root.digest())
 }
 
 /// The root after removing `key`, which must be present.
 pub fn remove(root: &Digest, key: &Key, proof: &[u8]) -> Result<Digest, Refusal> {
-    match parse(proof)?.verify(root, key)? {
-        Entry::Occupied(entry) => Ok(entry.remove()),
-        Entry::Vacant(_) => Err(Refusal::Absent),
+    let proof = parse(proof)?;
+    let mut root = Root::<Sha256>::trusted(*root);
+    match root.entry(key, &proof)? {
+        Entry::Occupied(entry) => entry.remove(),
+        Entry::Vacant(_) => return Err(Refusal::Absent),
     }
+    Ok(*root.digest())
 }
 
-/// Why a change was refused: the proof, or a key the change needs absent
-/// (insert) or present (replace, remove) that the proof shows otherwise.
+fn replace_in(
+    root: &mut Root<Sha256>,
+    key: &Key,
+    proof: &[u8],
+    commit: &Digest,
+) -> Result<(), Refusal> {
+    let proof = parse(proof)?;
+    match root.entry(key, &proof)? {
+        Entry::Occupied(entry) => entry.replace(&Committed(commit)),
+        Entry::Vacant(_) => return Err(Refusal::Absent),
+    }
+    Ok(())
+}
+
+/// Why a change was refused: the proof, a key the change needs absent (insert)
+/// or present (replace, remove) that the proof shows otherwise, or a batch that
+/// is empty, too large or names a key twice.
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub enum Refusal {
     Refused(Error),
     Absent,
     Present,
+    Batch,
 }
 
 impl From<Error> for Refusal {
@@ -90,14 +115,60 @@ impl From<Error> for Refusal {
     }
 }
 
+/// One update of a batch: `key`'s value becomes `commit`, and `proof` is its
+/// proof against the root the batch starts from. The proof is brought up to
+/// date in place as the updates before it are made.
+pub struct Update<'a> {
+    pub key: &'a Key,
+    pub proof: &'a mut [u8],
+    pub commit: &'a Digest,
+}
+
+/// The root after a batch of replacements, all proven against `root`.
+///
+/// The host proves every update against the root the batch starts from: it
+/// cannot prove against the tree the earlier updates leave, since only the
+/// device knows their new leaves. So the updates are made one at a time on one
+/// `Root`, each held against the root as the ones before left it, and after
+/// each one the proofs still to come follow it. A replacement keeps the shape
+/// of the tree, so on another key's path only the sibling where the two keys
+/// part changes. A proof that does not follow, because the host served a wrong
+/// one, is refused when its turn comes. Inserts and removals change the shape
+/// and are not batched.
+pub fn replace_all(root: &Digest, updates: &mut [Update<'_>]) -> Result<Digest, Refusal> {
+    if updates.is_empty() || updates.len() > BATCH_MAX {
+        return Err(Refusal::Batch);
+    }
+    for (i, update) in updates.iter().enumerate() {
+        if updates[i + 1..].iter().any(|other| other.key == update.key) {
+            return Err(Refusal::Batch);
+        }
+    }
+    let mut root = Root::<Sha256>::trusted(*root);
+    for i in 0..updates.len() {
+        let (done, rest) = updates.split_at_mut(i + 1);
+        let update = &done[i];
+        replace_in(&mut root, update.key, update.proof, update.commit)?;
+        for other in rest {
+            follow_replace(
+                update.key,
+                update.proof,
+                update.commit,
+                other.key,
+                other.proof,
+            )?;
+        }
+    }
+    Ok(*root.digest())
+}
+
 /// Brings `other`, a proof for `other_key` held against the root before `key`
 /// changed to `commit`, up to date with that change, in place. `proof` is the
-/// proof `key` changed under. Only replacements are followed: the shape of the
-/// tree stays, and on `other`'s path only the sibling at the branch where the
-/// two keys part changes, to the subtree that now holds `key`'s new leaf. The
-/// patched proof proves nothing by itself; it is held against the new root like
-/// any other before it is used.
-pub fn follow_replace(
+/// proof `key` changed under. On `other`'s path only the sibling at the branch
+/// where the two keys part changes, to the subtree that now holds `key`'s new
+/// leaf. The patched proof proves nothing by itself; it is held against the new
+/// root like any other before it is used.
+fn follow_replace(
     key: &Key,
     proof: &[u8],
     commit: &Digest,
@@ -134,26 +205,30 @@ fn parent(key: &Key, step: Step<Key, Sha256>, node: &Digest) -> Digest {
     }
 }
 
-/// The walk over the tree with `root`, at the entry `current` proves, or before
-/// the first entry without one.
-fn walk_at<B: AsRef<[u8]>>(
+/// Runs `f` on the walk over the tree with `root`, at the entry `current`
+/// proves, or before the first entry without one.
+fn with_walk<B: AsRef<[u8]>, T>(
     root: &Digest,
     current: Option<B>,
-) -> Result<Walk<B, Key, Sha256>, Error> {
-    match current {
-        None => Ok(Walk::new(*root)),
-        Some(current) => Walk::at(*root, Proof::parse(current)?),
-    }
+    f: impl FnOnce(&mut Walk<'_, B, Key, Sha256>) -> Result<T, Error>,
+) -> Result<T, Error> {
+    let mut root = Root::<Sha256>::trusted(*root);
+    let mut walk = match current {
+        None => root.walk(),
+        Some(current) => root.walk_at(Proof::parse(current)?)?,
+    };
+    f(&mut walk)
 }
 
 /// Whether the walk at `current` is over.
 pub fn walk_done(root: &Digest, current: Option<&[u8]>) -> Result<bool, Error> {
-    Ok(walk_at(root, current)?.is_done())
+    with_walk(root, current, |walk| Ok(walk.is_done()))
 }
 
 /// The length of the full proof `walk_next` writes for `proof`.
 pub fn walk_next_len(root: &Digest, current: Option<&[u8]>, proof: &[u8]) -> Result<usize, Error> {
-    Ok(walk_at(root, current)?.next_len(&parse(proof)?))
+    let proof = parse(proof)?;
+    with_walk(root, current, |walk| Ok(walk.next_len(&proof)))
 }
 
 /// Accepts `proof`, full or cut below where it parts from `current`, as the
@@ -166,13 +241,14 @@ pub fn walk_next(
     proof: &[u8],
     buf: &mut [u8],
 ) -> Result<(Key, Digest), Error> {
-    let mut walk = walk_at(root, current)?;
     let proof = parse(proof)?;
-    if buf.len() != walk.next_len(&proof) {
-        return Err(Error::Length);
-    }
-    let entry = walk.next_into(&proof, buf)?;
-    Ok((*entry.key(), *entry.digest()))
+    with_walk(root, current, |walk| {
+        if buf.len() != walk.next_len(&proof) {
+            return Err(Error::Length);
+        }
+        let entry = walk.next_into(&proof, buf)?;
+        Ok((*entry.key(), *entry.digest()))
+    })
 }
 
 #[cfg(test)]
@@ -352,31 +428,118 @@ mod tests {
         );
     }
 
+    fn batch(t: &Three, order: &[usize], commits: &[Digest]) -> Result<Digest, Refusal> {
+        let mut proofs: Vec<Vec<u8>> = order.iter().map(|&i| t.proof(i)).collect();
+        let mut updates: Vec<Update> = order
+            .iter()
+            .zip(proofs.iter_mut())
+            .zip(commits)
+            .map(|((&i, proof), commit)| Update {
+                key: &t.keys[i],
+                proof,
+                commit,
+            })
+            .collect();
+        replace_all(&t.root(), &mut updates)
+    }
+
     #[test]
-    fn a_followed_proof_holds_against_the_new_root() {
+    fn a_batch_is_every_update_in_any_order() {
+        let t = Three::new();
+        let new = [commit(8), commit(9), commit(7)];
+        let mut expected = Three::new();
+        expected.commits = new;
+        for order in [
+            [0, 1, 2],
+            [0, 2, 1],
+            [1, 0, 2],
+            [1, 2, 0],
+            [2, 0, 1],
+            [2, 1, 0],
+        ] {
+            let commits: Vec<Digest> = order.iter().map(|&i| new[i]).collect();
+            assert_eq!(batch(&t, &order, &commits), Ok(expected.root()));
+        }
+        // a part of the keys, and a single update
+        expected = Three::new();
+        expected.commits[2] = commit(7);
+        expected.commits[0] = commit(8);
+        assert_eq!(
+            batch(&t, &[2, 0], &[commit(7), commit(8)]),
+            Ok(expected.root())
+        );
+        let mut one = Three::new();
+        one.commits[1] = commit(9);
+        assert_eq!(batch(&t, &[1], &[commit(9)]), Ok(one.root()));
+    }
+
+    #[test]
+    fn a_batch_refuses_a_wrong_proof_or_shape() {
         let t = Three::new();
         let root = t.root();
-        let (mut p0, p1, mut p2) = (t.proof(0), t.proof(1), t.proof(2));
+        let c = [commit(8), commit(9)];
 
-        // 0x40.. changes; the proofs of 0x00.. and 0x80.. follow it
-        let new_root = replace(&root, &t.keys[1], &p1, &commit(9)).unwrap();
-        for (other_key, other) in [(&t.keys[0], &mut p0), (&t.keys[2], &mut p2)] {
-            follow_replace(&t.keys[1], &p1, &commit(9), other_key, other).unwrap();
-        }
-        // and 0x00.. changes next, against the new root
-        let newer = replace(&new_root, &t.keys[0], &p0, &commit(8)).unwrap();
-        follow_replace(&t.keys[0], &p0, &commit(8), &t.keys[2], &mut p2).unwrap();
-        let last = replace(&newer, &t.keys[2], &p2, &commit(7)).unwrap();
-
-        let mut expected = Three::new();
-        expected.commits = [commit(8), commit(9), commit(7)];
-        assert_eq!(last, expected.root());
-
-        // an unfollowed proof no longer holds
+        // a forged sibling in the second proof, one the first update does not
+        // rewrite: 0x00.. and 0x40.. part at bit 1, the forged step is at bit 0
+        let mut p0 = t.proof(0);
+        let mut p1 = t.proof(1);
+        let last = p1.len() - 1;
+        p1[last] ^= 1;
+        let mut updates = [
+            Update {
+                key: &t.keys[0],
+                proof: &mut p0,
+                commit: &c[0],
+            },
+            Update {
+                key: &t.keys[1],
+                proof: &mut p1,
+                commit: &c[1],
+            },
+        ];
         assert_eq!(
-            replace(&new_root, &t.keys[2], &t.proof(2), &commit(7)),
+            replace_all(&root, &mut updates),
             Err(Refusal::Refused(Error::RootMismatch))
         );
+
+        // an absent key, its proof ending at another leaf
+        let absent = key(0x60);
+        let mut pa = t.proof(1);
+        let mut updates = [Update {
+            key: &absent,
+            proof: &mut pa,
+            commit: &c[0],
+        }];
+        assert_eq!(replace_all(&root, &mut updates), Err(Refusal::Absent));
+
+        // a key twice, an empty batch, a batch beyond the queue
+        let (mut pa, mut pb) = (t.proof(1), t.proof(1));
+        let mut updates = [
+            Update {
+                key: &t.keys[1],
+                proof: &mut pa,
+                commit: &c[0],
+            },
+            Update {
+                key: &t.keys[1],
+                proof: &mut pb,
+                commit: &c[1],
+            },
+        ];
+        assert_eq!(replace_all(&root, &mut updates), Err(Refusal::Batch));
+        assert_eq!(replace_all(&root, &mut []), Err(Refusal::Batch));
+        let mut proofs: Vec<Vec<u8>> = (0..=BATCH_MAX).map(|_| t.proof(0)).collect();
+        let keys: Vec<Key> = (0..=BATCH_MAX).map(|i| key(i as u8)).collect();
+        let mut updates: Vec<Update> = keys
+            .iter()
+            .zip(proofs.iter_mut())
+            .map(|(key, proof)| Update {
+                key,
+                proof,
+                commit: &c[0],
+            })
+            .collect();
+        assert_eq!(replace_all(&root, &mut updates), Err(Refusal::Batch));
     }
 
     #[test]

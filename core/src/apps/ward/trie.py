@@ -22,9 +22,9 @@ nothing, so callers must pass a root of their own.
 
 from trezor.crypto.hashlib import sha256
 from trezorward import (
-    trie_follow_replace,
     trie_lookup,
     trie_remove,
+    trie_replace_all,
     trie_set,
     trie_walk_done,
     trie_walk_next,
@@ -175,10 +175,11 @@ def compute_batch_root(stored_root, ops):
     `stored_root` (the single common base the host serves for the whole batch).
 
     - A single-op batch (n=1) is `compute_new_root`: INIT / INSERT / UPDATE / DELETE.
-    - A multi-op batch supports **UPDATES only** (the trie shape is unchanged). The
-      updates are applied one at a time, each proof held against the running root;
-      after each one, the proofs still to come follow it (`trie_follow_replace`): on
-      their paths only the sibling where they part from the updated key changes.
+    - A multi-op batch supports **UPDATES only** (the trie shape is unchanged) and is
+      one Rust call (`trie_replace_all`): the updates are made in turn on one root,
+      each proof held against the root the ones before left, and the proofs still to
+      come follow each update. Nothing here carries a root from one update to the
+      next.
 
     Per-leaf counter monotonicity (`C_new > C_old`, §4.5/F12) is enforced by the
     caller (`perform_batch`), not here."""
@@ -206,7 +207,7 @@ def compute_batch_root(stored_root, ops):
 
     if stored_root is None:
         raise ValueError("multi-leaf update batch requires a non-empty tree")
-    items = []
+    keys, proofs, commits = [], [], []
     for ek, old_leaf, new_leaf, proof, w_ek, _w_commit in ops:
         if old_leaf is None or new_leaf is None or w_ek is not None:
             raise ValueError(
@@ -214,20 +215,11 @@ def compute_batch_root(stored_root, ops):
                 "for insert/delete"
             )
         old_commit = commit_of(old_leaf[0], old_leaf[1], old_leaf[2])
-        items.append(
-            (
-                ek,
-                bytearray(_proof(ek, old_commit, proof)),
-                commit_of(new_leaf[0], new_leaf[1], new_leaf[2]),
-            )
-        )
-
-    root = stored_root
-    for i, (ek, p, new_commit) in enumerate(items):
-        root = trie_set(root, ek, p, new_commit, True)
-        for other_ek, other, _ in items[i + 1 :]:
-            trie_follow_replace(ek, p, new_commit, other_ek, other)
-    return root
+        keys.append(ek)
+        # written in place as the updates before it are made
+        proofs.append(bytearray(_proof(ek, old_commit, proof)))
+        commits.append(commit_of(new_leaf[0], new_leaf[1], new_leaf[2]))
+    return trie_replace_all(stored_root, keys, proofs, commits)
 
 
 class EntryWalk:

@@ -941,9 +941,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_trezorthp;
   MP_QSTR_trezorui_api;
   MP_QSTR_trezorward;
-  MP_QSTR_trie_follow_replace;
   MP_QSTR_trie_lookup;
   MP_QSTR_trie_remove;
+  MP_QSTR_trie_replace_all;
   MP_QSTR_trie_set;
   MP_QSTR_trie_walk_done;
   MP_QSTR_trie_walk_next;

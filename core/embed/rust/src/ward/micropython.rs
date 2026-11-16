@@ -1,7 +1,9 @@
 use super::error::WARD_EXCEPTION_TYPE;
 use super::store::{Buffer, Scope, Store};
-use super::trie::{self, Digest, Refusal};
+use super::trie::{self, Digest, Refusal, Update, BATCH_MAX};
 use crate::micropython::buffer::{get_buffer, get_buffer_mut};
+use crate::micropython::gc::Gc;
+use crate::micropython::list::List;
 use crate::micropython::macros::{obj_fn_2, obj_fn_3, obj_fn_var, obj_module};
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
@@ -82,6 +84,9 @@ fn refusal_error(error: Refusal) -> Error {
         Refusal::Refused(error) => trie_error(error),
         Refusal::Absent => Error::ValueError(c"WARD trie: entry is absent"),
         Refusal::Present => Error::ValueError(c"WARD trie: entry is present"),
+        Refusal::Batch => {
+            Error::ValueError(c"WARD trie: batch is empty, too large or has a key twice")
+        }
     }
 }
 
@@ -150,22 +155,49 @@ extern "C" fn ward_trie_remove(root: Obj, key: Obj, proof: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn ward_trie_follow_replace(n_args: usize, args: *const Obj) -> Obj {
+extern "C" fn ward_trie_replace_all(n_args: usize, args: *const Obj) -> Obj {
     let block = |args: &[Obj], _kwargs: &Map| {
-        distinct(args[4], &args[..4])?;
-        // SAFETY: references are discarded at the end of this block, and `other` is a
-        // different object from the others.
-        let (key, proof, commit, other_key, other) = unsafe {
-            (
-                digest(args[0])?,
-                get_buffer(args[1])?,
-                digest(args[2])?,
-                digest(args[3])?,
-                get_buffer_mut(args[4])?,
-            )
-        };
-        trie::follow_replace(key, proof, commit, other_key, other).map_err(trie_error)?;
-        Ok(Obj::const_none())
+        let root = args[0];
+        let (keys, proofs, commits): (Gc<List>, Gc<List>, Gc<List>) = (
+            args[1].try_into()?,
+            args[2].try_into()?,
+            args[3].try_into()?,
+        );
+        // SAFETY: the lists are not modified while the slices are held.
+        let (keys, proofs, commits) =
+            unsafe { (keys.as_slice(), proofs.as_slice(), commits.as_slice()) };
+        if keys.len() != proofs.len() || keys.len() != commits.len() || keys.len() > BATCH_MAX {
+            return Err(Error::ValueError(
+                c"WARD trie: batch is empty, too large or has a key twice",
+            ));
+        }
+        // Every proof is written in place: each must be its own object.
+        for (i, &proof) in proofs.iter().enumerate() {
+            distinct(proof, &proofs[..i])?;
+            distinct(proof, keys)?;
+            distinct(proof, commits)?;
+            distinct(proof, &[root])?;
+        }
+        // SAFETY: references are discarded at the end of this block, and every
+        // proof is a different object from the others and from every other
+        // argument.
+        let root = unsafe { digest(root)? };
+        let mut updates: heapless::Vec<Update, BATCH_MAX> = heapless::Vec::new();
+        for i in 0..keys.len() {
+            let update = unsafe {
+                Update {
+                    key: digest(keys[i])?,
+                    proof: get_buffer_mut(proofs[i])?,
+                    commit: digest(commits[i])?,
+                }
+            };
+            // The length was checked against BATCH_MAX.
+            let _ = updates.push(update);
+        }
+        trie::replace_all(root, &mut updates)
+            .map_err(refusal_error)?
+            .as_slice()
+            .try_into()
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
@@ -287,13 +319,16 @@ pub static mp_module_trezorward: Module = obj_module! {
     ///     """
     Qstr::MP_QSTR_trie_remove => obj_fn_3!(ward_trie_remove).as_obj(),
 
-    /// def trie_follow_replace(key: AnyBytes, proof: AnyBytes, commit: AnyBytes, other_key: AnyBytes, other: bytearray) -> None:
+    /// def trie_replace_all(root: AnyBytes, keys: list[bytes], proofs: list[bytearray], commits: list[bytes]) -> bytes:
     ///     """
-    ///     Bring `other`, the proof of `other_key` under the root before `key` was
-    ///     replaced with `commit` under `proof`, up to date with that replacement, in
-    ///     place. The result is held against the new root before it is used.
+    ///     Return the root after a batch of replacements: `keys[i]`'s value
+    ///     digest becomes `commits[i]`, every `proofs[i]` against `root`. The
+    ///     updates are made in turn, each proof held against the root the ones
+    ///     before left, and the proofs are brought up to date in place. Raise
+    ///     ValueError if a proof is refused, a key is absent or named twice, or
+    ///     the batch is empty or larger than the queue.
     ///     """
-    Qstr::MP_QSTR_trie_follow_replace => obj_fn_var!(5, 5, ward_trie_follow_replace).as_obj(),
+    Qstr::MP_QSTR_trie_replace_all => obj_fn_var!(4, 4, ward_trie_replace_all).as_obj(),
 
     /// def trie_walk_done(root: AnyBytes, current: AnyBytes | None) -> bool:
     ///     """
