@@ -436,26 +436,24 @@ async def list_entries(
     device_id: int | None = None,
 ) -> tuple[int, int, int, bool]:
     """Show every matching entry on-device via a verified walk of the trusted root.
-    The node pulls (WARDNodeRequest -> WARDNodeAck) live here in the gateway; the
-    trust anchor verifies each node before it uses it. Returns
+    The entry pulls (WARDNodeRequest -> WARDNodeAck) live here in the gateway; the
+    trust anchor verifies each entry before it uses it. Returns
     (shown, entries, counter, complete)."""
     from trezor.messages import WARDNodeAck, WARDNodeRequest
     from trezor.wire import context
 
     from apps.ward import service
 
-    async def fetch(node_hash: bytes) -> list:
-        ack = await context.call(WARDNodeRequest(node_hash=node_hash), WARDNodeAck)
+    async def fetch(after: bytes | None) -> list:
+        ack = await context.call(WARDNodeRequest(after=after), WARDNodeAck)
         return [
             (
-                n.split_bit,
-                bytes(n.left) if n.left is not None else None,
-                bytes(n.right) if n.right is not None else None,
-                bytes(n.entry_key) if n.entry_key is not None else None,
-                read_leaf_identity(n.identity),
-                read_leaf_content(n.content),
+                bytes(e.entry_key),
+                [bytes(step) for step in e.proof],
+                read_leaf_identity(e.identity),
+                read_leaf_content(e.content),
             )
-            for n in ack.nodes
+            for e in ack.entries
         ]
 
     return await service.list_entries(fetch, app_id, key_type, device_id)

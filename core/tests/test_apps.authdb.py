@@ -494,7 +494,12 @@ class TestWardProofSoundness(unittest.TestCase):
     """Proof-level checks for the hardened WARD trie verifier."""
 
     def _proof_elem(self, split_bit, sibling):
-        return split_bit.to_bytes(2, "big") + sibling
+        return bytes([split_bit]) + sibling
+
+    def _branch(self, split_bit, left, right):
+        from trezor.crypto.hashlib import sha256
+
+        return sha256(b"\x01" + bytes([split_bit]) + left + right).digest()
 
     def test_nonmembership_rejects_relabelled_witness_path(self):
         from apps.ward import leaf, trie
@@ -511,8 +516,8 @@ class TestWardProofSoundness(unittest.TestCase):
         witness_leaf = leaf.leaf_hash_of(witness, witness_commit)
         other_leaf = leaf.leaf_hash_of(other, other_commit)
 
-        left = trie.internal_hash(2, target_leaf, witness_leaf)
-        root = trie.internal_hash(0, left, other_leaf)
+        left = self._branch(2, target_leaf, witness_leaf)
+        root = self._branch(0, left, other_leaf)
 
         honest_proof = [
             self._proof_elem(2, target_leaf),
@@ -545,15 +550,16 @@ class TestWardProofSoundness(unittest.TestCase):
         witness_leaf = leaf.leaf_hash_of(witness, witness_commit)
         other_leaf = leaf.leaf_hash_of(other, other_commit)
 
-        left = trie.internal_hash(2, target_leaf, witness_leaf)
-        root = trie.internal_hash(0, left, other_leaf)
+        left = self._branch(2, target_leaf, witness_leaf)
+        root = self._branch(0, left, other_leaf)
 
         forged_proof = [
             self._proof_elem(1, target_leaf),
             self._proof_elem(0, other_leaf),
         ]
 
-        new_leaf = (b"N" * 12, b"G" * 16, b"ciphertext")
+        part = (leaf.ENC_ENCRYPTED, b"N" * 12, b"G" * 16, b"ciphertext")
+        new_leaf = ("address", part, part)
         with self.assertRaises(ValueError):
             trie.compute_new_root(
                 target,
@@ -578,7 +584,7 @@ class TestWardProofSoundness(unittest.TestCase):
 
         a_leaf = leaf.leaf_hash(a, *leaf_of(b"a"))
         c_leaf = leaf.leaf_hash(c, *leaf_of(b"c"))
-        root = trie.internal_hash(0, a_leaf, c_leaf)
+        root = self._branch(0, a_leaf, c_leaf)
         return a, b, c, a_leaf, c_leaf, root, leaf_of
 
     def test_batch_rejects_proof_through_another_items_leaf(self):
@@ -659,66 +665,86 @@ class TestWardProofSoundness(unittest.TestCase):
                 None,
             ),
         ]
-        expected = trie.internal_hash(
+        expected = self._branch(
             0,
             leaf.leaf_hash(a, *leaf_of(b"a2")),
             leaf.leaf_hash(c, *leaf_of(b"c2")),
         )
         self.assertEqual(trie.compute_batch_root(root, ops), expected)
 
-    # --- the verified listing walk (TrieWalk) ----------------------------------
+    # --- the verified listing walk (EntryWalk) ---------------------------------
 
     def _three_leaf_tree(self):
-        from apps.ward import leaf, trie
+        from apps.ward import leaf
 
         a = bytes([0x00]) + b"\x00" * 31  # 00..
         d = bytes([0x20]) + b"\x00" * 31  # 001.
         c = bytes([0x80]) + b"\x00" * 31  # 1...
         commits = {k: bytes([k[0] | 1]) * 32 for k in (a, d, c)}
         leaves = {k: leaf.leaf_hash_of(k, commits[k]) for k in commits}
-        left = trie.internal_hash(2, leaves[a], leaves[d])
-        root = trie.internal_hash(0, left, leaves[c])
+        left = self._branch(2, leaves[a], leaves[d])
+        root = self._branch(0, left, leaves[c])
         return a, d, c, commits, leaves, left, root
 
-    def test_walk_visits_every_leaf_in_preorder(self):
+    def test_walk_visits_every_entry_in_key_order(self):
         from apps.ward import trie
 
         a, d, c, commits, leaves, left, root = self._three_leaf_tree()
-        walk = trie.TrieWalk(root)
-        self.assertEqual(walk.expected(), root)
-        walk.branch(0, left, leaves[c])
-        walk.branch(2, leaves[a], leaves[d])
-        walk.leaf(a, commits[a])
-        walk.leaf(d, commits[d])
-        self.assertEqual(walk.expected(), leaves[c])
-        walk.leaf(c, commits[c])
-        self.assertIsNone(walk.expected())
-        self.assertIsNone(trie.TrieWalk(None).expected())  # empty tree: nothing to walk
+        walk = trie.EntryWalk(root)
+        self.assertFalse(walk.done())
+        walk.next(a, commits[a], [self._proof_elem(2, leaves[d]), self._proof_elem(0, leaves[c])])
+        # d parts from a at bit 2: only the steps below it, none here
+        walk.next(d, commits[d], [])
+        self.assertEqual(walk.key, d)
+        # c parts from d at bit 0: its full proof, no step below that branch
+        walk.next(c, commits[c], [])
+        self.assertTrue(walk.done())
+        self.assertTrue(trie.EntryWalk(None).done())  # empty tree: nothing to walk
 
-    def test_walk_rejects_a_node_its_parent_did_not_commit_to(self):
+    def test_walk_accepts_full_proofs(self):
         from apps.ward import trie
 
-        a, _d, c, commits, leaves, left, root = self._three_leaf_tree()
-        walk = trie.TrieWalk(root)
-        with self.assertRaises(ValueError):  # a substituted subtree
-            walk.branch(0, b"X" * 32, leaves[c])
-        walk.branch(0, left, leaves[c])
-        with self.assertRaises(ValueError):  # a leaf where a branch is committed
-            walk.leaf(a, commits[a])
-        # a rejected node leaves the walk where it was: the omitted subtree is still owed
-        self.assertEqual(walk.expected(), left)
+        a, d, c, commits, leaves, left, root = self._three_leaf_tree()
+        walk = trie.EntryWalk(root)
+        walk.next(a, commits[a], [self._proof_elem(2, leaves[d]), self._proof_elem(0, leaves[c])])
+        walk.next(d, commits[d], [self._proof_elem(2, leaves[a]), self._proof_elem(0, leaves[c])])
+        walk.next(c, commits[c], [self._proof_elem(0, left)])
+        self.assertTrue(walk.done())
+
+    def test_walk_rejects_a_substituted_subtree(self):
+        from apps.ward import trie
+
+        a, _d, c, commits, leaves, _left, root = self._three_leaf_tree()
+        walk = trie.EntryWalk(root)
+        with self.assertRaises(ValueError):
+            walk.next(a, commits[a], [self._proof_elem(2, b"X" * 32), self._proof_elem(0, leaves[c])])
+        # a refused entry leaves the walk where it was
+        self.assertIsNone(walk.key)
+
+    def test_walk_rejects_a_skipped_or_repeated_entry(self):
+        from apps.ward import trie
+
+        a, d, c, commits, leaves, left, root = self._three_leaf_tree()
+        walk = trie.EntryWalk(root)
+        with self.assertRaises(ValueError):  # d is not the first entry
+            walk.next(d, commits[d], [self._proof_elem(2, leaves[a]), self._proof_elem(0, leaves[c])])
+        walk.next(a, commits[a], [self._proof_elem(2, leaves[d]), self._proof_elem(0, leaves[c])])
+        with self.assertRaises(ValueError):  # c skips d
+            walk.next(c, commits[c], [self._proof_elem(0, left)])
+        with self.assertRaises(ValueError):  # a again
+            walk.next(a, commits[a], [self._proof_elem(2, leaves[d]), self._proof_elem(0, leaves[c])])
+        self.assertEqual(walk.key, a)
 
     def test_walk_rejects_split_bits_out_of_order(self):
         from apps.ward import leaf, trie
 
         a, d = bytes([0x00]) + b"\x00" * 31, bytes([0x40]) + b"\x00" * 31
         la, ld = leaf.leaf_hash_of(a, b"A" * 32), leaf.leaf_hash_of(d, b"D" * 32)
-        inner = trie.internal_hash(0, la, ld)  # splits on bit 0 BELOW a bit-1 branch
-        root = trie.internal_hash(1, inner, b"R" * 32)
-        walk = trie.TrieWalk(root)
-        walk.branch(1, inner, b"R" * 32)
+        inner = self._branch(0, la, ld)  # splits on bit 0 BELOW a bit-1 branch
+        root = self._branch(1, inner, b"R" * 32)
+        walk = trie.EntryWalk(root)
         with self.assertRaises(ValueError):
-            walk.branch(0, la, ld)
+            walk.next(a, b"A" * 32, [self._proof_elem(0, ld), self._proof_elem(1, b"R" * 32)])
 
     def test_walk_rejects_a_leaf_off_its_path(self):
         # A root that commits to a leaf on the wrong side of a branch. Its hashes all
@@ -728,10 +754,9 @@ class TestWardProofSoundness(unittest.TestCase):
         c = bytes([0x80]) + b"\x00" * 31  # bit 0 = 1, placed on the 0 side
         a = bytes([0x00]) + b"\x00" * 31
         lc, la = leaf.leaf_hash_of(c, b"C" * 32), leaf.leaf_hash_of(a, b"A" * 32)
-        walk = trie.TrieWalk(trie.internal_hash(0, lc, la))
-        walk.branch(0, lc, la)
+        walk = trie.EntryWalk(self._branch(0, lc, la))
         with self.assertRaises(ValueError):
-            walk.leaf(c, b"C" * 32)
+            walk.next(c, b"C" * 32, [self._proof_elem(0, la)])
 
     # --- what dropping skiplen from the node hash bought -----------------------
     #
@@ -749,7 +774,7 @@ class TestWardProofSoundness(unittest.TestCase):
         c = bytes([0x60]) + b"\x00" * 31        # 0b01100000...
         lb = leaf.leaf_hash_of(b, b"B" * 32)
         lc = leaf.leaf_hash_of(c, b"C" * 32)
-        return b, c, lb, lc, trie.internal_hash(2, lb, lc)
+        return b, c, lb, lc, self._branch(2, lb, lc)
 
     def test_delete_promotes_a_branch_sibling_unchanged(self):
         """The sibling that takes the collapsing branch's place is a BRANCH here.
@@ -763,15 +788,19 @@ class TestWardProofSoundness(unittest.TestCase):
         a = b"\x00" * 32                        # 0b000...; parts from b at bit 1
         a_leaf = ("address", None, (1, b"", b"", b"A" * 32))
         la = leaf.leaf_hash_of(a, leaf.commit_of(*a_leaf))
-        root = trie.internal_hash(1, la, sub)
+        root = self._branch(1, la, sub)
 
         proof = [self._proof_elem(1, sub)]      # a's membership proof, leaf-to-root
         derived = trie.compute_new_root(a, a_leaf, None, proof, root)
         # what a rebuilder computes for the surviving {b, c}: the promoted subtree
         self.assertEqual(derived, sub)
         # and the survivors still verify against it
-        self.assertEqual(trie.reconstruct(lb, [self._proof_elem(2, lc)], b), derived)
-        self.assertEqual(trie.reconstruct(lc, [self._proof_elem(2, lb)], c), derived)
+        from trezorward import trie_lookup
+
+        proof_b = b + b"B" * 32 + self._proof_elem(2, lc)
+        proof_c = c + b"C" * 32 + self._proof_elem(2, lb)
+        self.assertEqual(trie_lookup(derived, b, proof_b), b"B" * 32)
+        self.assertEqual(trie_lookup(derived, c, proof_c), b"C" * 32)
 
     def test_insert_splices_above_an_existing_branch(self):
         """The new key parts from its witness INSIDE a compressed run.
@@ -794,7 +823,7 @@ class TestWardProofSoundness(unittest.TestCase):
         )
 
         la = leaf.leaf_hash_of(a, leaf.commit_of("address", None, a_part))
-        self.assertEqual(derived, trie.internal_hash(1, la, root))
+        self.assertEqual(derived, self._branch(1, la, root))
 
     def test_false_absence_by_boundary_shift_is_rejected(self):
         """A PRESENT key proved absent, using its own membership proof.

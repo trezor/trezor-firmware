@@ -54,7 +54,7 @@ from .leaf import (
     encode_identity,
 )
 from .trie import (
-    TrieWalk,
+    EntryWalk,
     compute_batch_root,
     compute_new_root,
     verify_nonmembership,
@@ -1148,8 +1148,9 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
         ops.append((ek, old_leaf, new_leaf, proof, w_ek, w_commit))
         leaves.append((ek, key_type, out_id_part, out_val_part))
 
-    # Fold all leaves into one successor root (order-independent, no sort; rejects a
-    # duplicate entry_key within the batch). Each proof is against the running root.
+    # Fold all leaves into one successor root (rejects a duplicate entry_key within the
+    # batch). The host serves every proof against stored_root; the device brings each
+    # one up to date with the updates before it and holds it against the running root.
     try:
         to_root = compute_batch_root(stored_root, ops)
     except ValueError as e:
@@ -1831,12 +1832,12 @@ async def list_entries(
     device_id: int | None = None,
 ) -> tuple[int, int, int, bool]:
     """Show every entry under the authenticated root that matches the filters, one per
-    trusted screen, via a verified top-down walk (`trie.TrieWalk`).
+    trusted screen, via a verified walk in entry_key order (`trie.EntryWalk`).
 
-    `fetch(node_hash)` returns the host's nodes for that hash in pre-order, each
-    `(split_bit, left, right, entry_key, (key_type, id_part), val_part)`; a set
-    entry_key marks a leaf. Nothing a node claims is used before the walk has
-    verified it against a hash already trusted.
+    `fetch(after)` returns the host's entries after the entry_key `after` (None: from
+    the first), in order, each `(entry_key, proof, (key_type, id_part), val_part)`.
+    Nothing an entry claims is used before the walk has held its proof against the
+    trusted root and checked it is the successor of the entry before.
 
     Every leaf is verified, filtered or not -- skipping one would let the host hide
     a matching entry behind it. Of the ones shown, the identity is checked to be the
@@ -1859,25 +1860,22 @@ async def list_entries(
 
     k_path = await derive_k_path()
     keys = {}  # key_type -> (K_ident, K_data), derived once per type
-    walk = TrieWalk(root)
+    walk = EntryWalk(root)
     shown = 0
     entries = 0
-    while walk.expected() is not None:
-        nodes = await fetch(walk.expected())
-        if not nodes:
-            raise DataError("WARD listing: the host returned no node")
-        for split_bit, left, right, ek, identity, val_part in nodes:
-            if walk.expected() is None:
-                raise DataError("WARD listing: nodes past the end of the trie")
+    while not walk.done():
+        served = await fetch(walk.key)
+        if not served:
+            raise DataError("WARD listing: the host returned no entry")
+        for ek, proof, identity, val_part in served:
+            if walk.done():
+                raise DataError("WARD listing: entries past the last one")
             kt, id_part = identity
+            kt = kt or ENTRY_TYPE_ADDRESS
             try:
-                if ek is None:
-                    walk.branch(split_bit or 0, left or b"", right or b"")
-                    continue
-                kt = kt or ENTRY_TYPE_ADDRESS
                 if id_part is None or val_part is None:
                     raise ValueError("leaf is missing a part")
-                walk.leaf(ek, commit_of(kt, id_part, val_part))
+                walk.next(ek, commit_of(kt, id_part, val_part), proof)
             except ValueError as e:
                 raise DataError("WARD listing: " + str(e))
             entries += 1

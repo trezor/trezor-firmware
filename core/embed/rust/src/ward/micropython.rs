@@ -1,7 +1,8 @@
 use super::error::WARD_EXCEPTION_TYPE;
 use super::store::{Buffer, Scope, Store};
-use crate::micropython::buffer::get_buffer;
-use crate::micropython::macros::{obj_fn_3, obj_fn_var, obj_module};
+use super::trie::{self, Digest, Refusal};
+use crate::micropython::buffer::{get_buffer, get_buffer_mut};
+use crate::micropython::macros::{obj_fn_2, obj_fn_3, obj_fn_var, obj_module};
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
 use crate::micropython::qstr::Qstr;
@@ -64,6 +65,165 @@ extern "C" fn ward_delete(wallet_id: Obj, app: Obj, key: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+fn trie_error(error: trezor_ward::trie::Error) -> Error {
+    use trezor_ward::trie::Error as E;
+    Error::ValueError(match error {
+        E::Length => c"WARD trie: malformed proof",
+        E::Shape => c"WARD trie: proof split bits out of order",
+        E::OffPath => c"WARD trie: proof is not the key's path",
+        E::RootMismatch => c"WARD trie: proof does not match the root",
+        E::ValueMismatch => c"WARD trie: value does not match the proof",
+        E::OutOfOrder => c"WARD trie: entry out of order",
+    })
+}
+
+fn refusal_error(error: Refusal) -> Error {
+    match error {
+        Refusal::Refused(error) => trie_error(error),
+        Refusal::Absent => Error::ValueError(c"WARD trie: entry is absent"),
+        Refusal::Present => Error::ValueError(c"WARD trie: entry is present"),
+    }
+}
+
+/// Refuses a writable buffer that is also another argument: Rust would then
+/// hold a mutable reference to bytes it also reads.
+fn distinct(buf: Obj, others: &[Obj]) -> Result<(), Error> {
+    if others.contains(&buf) {
+        return Err(Error::ValueError(c"WARD trie: aliased buffer"));
+    }
+    Ok(())
+}
+
+/// A 32-byte digest or key.
+///
+/// SAFETY: the reference must be discarded before the object can be modified.
+unsafe fn digest<'a>(obj: Obj) -> Result<&'a Digest, Error> {
+    unsafe { get_buffer(obj) }?
+        .try_into()
+        .map_err(|_| Error::ValueError(c"WARD trie: expected 32 bytes"))
+}
+
+extern "C" fn ward_trie_lookup(root: Obj, key: Obj, proof: Obj) -> Obj {
+    let block = || {
+        // SAFETY: references are discarded at the end of this block.
+        let (root, key, proof) = unsafe { (digest(root)?, digest(key)?, get_buffer(proof)?) };
+        match trie::lookup(root, key, proof).map_err(trie_error)? {
+            Some(commit) => commit.as_slice().try_into(),
+            None => Ok(Obj::const_none()),
+        }
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ward_trie_set(n_args: usize, args: *const Obj) -> Obj {
+    let block = |args: &[Obj], _kwargs: &Map| {
+        // Read before any buffer is borrowed: it may run Python code.
+        let present: bool = args[4].try_into()?;
+        // SAFETY: references are discarded at the end of this block.
+        let (root, key, proof, commit) = unsafe {
+            (
+                digest(args[0])?,
+                digest(args[1])?,
+                get_buffer(args[2])?,
+                digest(args[3])?,
+            )
+        };
+        let root = if present {
+            trie::replace(root, key, proof, commit)
+        } else {
+            trie::insert(root, key, proof, commit)
+        };
+        root.map_err(refusal_error)?.as_slice().try_into()
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
+}
+
+extern "C" fn ward_trie_remove(root: Obj, key: Obj, proof: Obj) -> Obj {
+    let block = || {
+        // SAFETY: references are discarded at the end of this block.
+        let (root, key, proof) = unsafe { (digest(root)?, digest(key)?, get_buffer(proof)?) };
+        trie::remove(root, key, proof)
+            .map_err(refusal_error)?
+            .as_slice()
+            .try_into()
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ward_trie_follow_replace(n_args: usize, args: *const Obj) -> Obj {
+    let block = |args: &[Obj], _kwargs: &Map| {
+        distinct(args[4], &args[..4])?;
+        // SAFETY: references are discarded at the end of this block, and `other` is a
+        // different object from the others.
+        let (key, proof, commit, other_key, other) = unsafe {
+            (
+                digest(args[0])?,
+                get_buffer(args[1])?,
+                digest(args[2])?,
+                digest(args[3])?,
+                get_buffer_mut(args[4])?,
+            )
+        };
+        trie::follow_replace(key, proof, commit, other_key, other).map_err(trie_error)?;
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
+}
+
+extern "C" fn ward_trie_walk_done(root: Obj, current: Obj) -> Obj {
+    let block = || {
+        // SAFETY: references are discarded at the end of this block.
+        let root = unsafe { digest(root)? };
+        let current = if current == Obj::const_none() {
+            None
+        } else {
+            Some(unsafe { get_buffer(current)? })
+        };
+        Ok(trie::walk_done(root, current).map_err(trie_error)?.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ward_trie_walk_next_len(root: Obj, current: Obj, proof: Obj) -> Obj {
+    let block = || {
+        // SAFETY: references are discarded at the end of this block.
+        let (root, proof) = unsafe { (digest(root)?, get_buffer(proof)?) };
+        let current = if current == Obj::const_none() {
+            None
+        } else {
+            Some(unsafe { get_buffer(current)? })
+        };
+        trie::walk_next_len(root, current, proof)
+            .map_err(trie_error)?
+            .try_into()
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ward_trie_walk_next(n_args: usize, args: *const Obj) -> Obj {
+    let block = |args: &[Obj], _kwargs: &Map| {
+        distinct(args[3], &args[..3])?;
+        distinct(args[1], &[args[0], args[2]])?;
+        // SAFETY: references are discarded at the end of this block, and `current` and
+        // `buf` are different objects from the others and from each other.
+        let (root, proof, buf) = unsafe {
+            (
+                digest(args[0])?,
+                get_buffer(args[2])?,
+                get_buffer_mut(args[3])?,
+            )
+        };
+        let current = if args[1] == Obj::const_none() {
+            None
+        } else {
+            Some(unsafe { get_buffer_mut(args[1])? })
+        };
+        let (key, commit) = trie::walk_next(root, current, proof, buf).map_err(trie_error)?;
+        (key.as_slice(), commit.as_slice()).try_into()
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
+}
+
 #[no_mangle]
 #[rustfmt::skip]
 pub static mp_module_trezorward: Module = obj_module! {
@@ -102,4 +262,58 @@ pub static mp_module_trezorward: Module = obj_module! {
     ///     Return whether a record was deleted.
     ///     """
     Qstr::MP_QSTR_delete => obj_fn_3!(ward_delete).as_obj(),
+    /// def trie_lookup(root: AnyBytes, key: AnyBytes, proof: AnyBytes) -> bytes | None:
+    ///     """
+    ///     Hold `proof` against the trusted `root` as the lookup path of `key` and
+    ///     return the value digest stored under `key`, or None if `key` is absent.
+    ///     Raise ValueError if the proof is refused.
+    ///     """
+    Qstr::MP_QSTR_trie_lookup => obj_fn_3!(ward_trie_lookup).as_obj(),
+
+    /// def trie_set(root: AnyBytes, key: AnyBytes, proof: AnyBytes, commit: AnyBytes, present: bool) -> bytes:
+    ///     """
+    ///     Return the root after storing the value digest `commit` under `key`, held
+    ///     against `root` by `proof`: a replacement if `present`, which `key` then
+    ///     must be, else an insertion, which `key` must be absent for. Raise
+    ///     ValueError if the proof is refused or `key` is not as required.
+    ///     """
+    Qstr::MP_QSTR_trie_set => obj_fn_var!(5, 5, ward_trie_set).as_obj(),
+
+    /// def trie_remove(root: AnyBytes, key: AnyBytes, proof: AnyBytes) -> bytes:
+    ///     """
+    ///     Return the root after removing `key`, which `proof` must show present
+    ///     under `root`; the empty root if it was the last entry. Raise ValueError
+    ///     otherwise.
+    ///     """
+    Qstr::MP_QSTR_trie_remove => obj_fn_3!(ward_trie_remove).as_obj(),
+
+    /// def trie_follow_replace(key: AnyBytes, proof: AnyBytes, commit: AnyBytes, other_key: AnyBytes, other: bytearray) -> None:
+    ///     """
+    ///     Bring `other`, the proof of `other_key` under the root before `key` was
+    ///     replaced with `commit` under `proof`, up to date with that replacement, in
+    ///     place. The result is held against the new root before it is used.
+    ///     """
+    Qstr::MP_QSTR_trie_follow_replace => obj_fn_var!(5, 5, ward_trie_follow_replace).as_obj(),
+
+    /// def trie_walk_done(root: AnyBytes, current: AnyBytes | None) -> bool:
+    ///     """
+    ///     Whether the key-order walk of the tree with `root`, at the entry the full
+    ///     proof `current` proves (None: before the first), is over.
+    ///     """
+    Qstr::MP_QSTR_trie_walk_done => obj_fn_2!(ward_trie_walk_done).as_obj(),
+
+    /// def trie_walk_next_len(root: AnyBytes, current: AnyBytes | None, proof: AnyBytes) -> int:
+    ///     """
+    ///     The length of the full proof `trie_walk_next` writes for `proof`.
+    ///     """
+    Qstr::MP_QSTR_trie_walk_next_len => obj_fn_3!(ward_trie_walk_next_len).as_obj(),
+
+    /// def trie_walk_next(root: AnyBytes, current: bytearray | None, proof: AnyBytes, buf: bytearray) -> tuple[bytes, bytes]:
+    ///     """
+    ///     Accept `proof`, full or cut below where it parts from `current`, as the
+    ///     entry after `current` (the first entry if None), and write its full proof
+    ///     into `buf` of `trie_walk_next_len` bytes. Return the entry's key and value
+    ///     digest. Raise ValueError if the proof is refused or out of order.
+    ///     """
+    Qstr::MP_QSTR_trie_walk_next => obj_fn_var!(4, 4, ward_trie_walk_next).as_obj(),
 };
