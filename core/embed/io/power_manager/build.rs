@@ -129,6 +129,9 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
             gauges.push((
                 "fuel_gauge_alkaline",
                 &[
+                    "power_manager/fuel_gauge/alkaline/battery.c",
+                    "power_manager/fuel_gauge/alkaline/fuel_gauge.c",
+                    "power_manager/fuel_gauge/alkaline/dummy_load.c",
                     "power_manager/fuel_gauge/alkaline/battery_model/src/soc_ocv_data.c",
                     "power_manager/fuel_gauge/alkaline/battery_model/src/soc_ocv_temp.c",
                     "power_manager/fuel_gauge/alkaline/battery_model/src/soc_ocv_lut.c",

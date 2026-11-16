@@ -22,6 +22,7 @@
 
 #include <io/pmic.h>
 #include <io/suspend.h>
+#include <math.h>
 #include <sec/backup_ram.h>
 #include <sys/irq.h>
 #include <sys/systick.h>
@@ -40,6 +41,37 @@
 #include "../power_manager_poll.h"
 #include "../wireless/stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
+
+/**
+ * @brief Structure for power management data stored in backup RAM
+ *
+ * This structure contains critical power management information that needs to
+ * persist across power cycles and resets. It stores battery state of charge
+ * (SOC), timing information, and system state data required for proper power
+ * management.
+ *
+ * If the structure is changed, the version must be incremented and
+ * proper migration logic must be implemented.
+ */
+typedef struct {
+  /** Data version */
+  uint16_t version;
+  /** Fuel gauge state of charge <0, 1> */
+  float soc;
+  /** Fuel gauge covariance */
+  float P;
+  /** Initial volrage measurement */
+  float voltage_V;
+  /** Initial current measurement */
+  float current_A;
+  /** Critical battery level flag **/
+  bool bat_critical;
+  /** RTC time at which SOC was captured */
+  uint32_t last_capture_timestamp;
+  /** Power manager state at bootloader exit so it could be correctly
+  restored in the firwmare. */
+  uint32_t bootloader_exit_state;
+} pm_recovery_data_t;
 
 // Global driver instance
 pm_driver_t g_pm = {
@@ -81,7 +113,10 @@ pm_status_t pm_init(bool inherit_state) {
   }
 
   // Initialize battery model with fuel gauge estimator
-  bat_init();
+  if (ts_error(bat_init())) {
+    pm_deinit();
+    return PM_ERROR;
+  }
 
   // Create monitoring timer
   drv->monitoring_timer = systimer_create(pm_monitoring_timer_handler, NULL);
@@ -107,6 +142,7 @@ pm_status_t pm_init(bool inherit_state) {
   bool recovery_ok = pm_load_recovery_data(&recovery);
 
   if (!recovery_ok) {
+    // TODO: 1s delay for initial battery measurement should be model dependant.
     // Wait for 1s to sample battery data
     systick_delay_ms(1000);
   }
@@ -139,7 +175,8 @@ pm_status_t pm_init(bool inherit_state) {
 #endif
 
     drv->battery_critical = recovery.bat_critical;
-    bat_fg_set_soc(recovery.soc, recovery.P);
+    bat_fg_recovery(recovery.soc, recovery.P, recovery.voltage_V,
+                    recovery.current_A);
   } else {
     bat_fg_initial_guess();
   }
@@ -209,6 +246,8 @@ void pm_deinit(void) {
   if (bat_fg_is_locked()) {
     pm_store_data_to_backup_ram();
   }
+
+  bat_deinit();
 
   pmic_deinit();
 #ifdef USE_WIRELESS_CHARGER
@@ -549,6 +588,8 @@ pm_status_t pm_store_data_to_backup_ram() {
 
   recovery.soc = fg_state.soc;
   recovery.P = fg_state.P;
+  recovery.voltage_V = fg_state.voltage_V;
+  recovery.current_A = fg_state.current_mA;
 
   // Power manager state
   recovery.bat_critical = drv->battery_critical;
