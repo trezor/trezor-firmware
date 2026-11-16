@@ -2,8 +2,8 @@
 ///
 /// `Length` and `Shape` are raised by [`Proof::parse`](super::Proof::parse): the bytes are not
 /// a proof at all, a malformed message. The rest are raised when a well-formed proof is held
-/// against a root, by [`Proof::verify`](super::Proof::verify) or by a walk: a claim that does
-/// not hold.
+/// against a root, by a lookup ([`Root::get`](crate::trie::Root::get),
+/// [`Root::entry`](crate::trie::Root::entry)) or by a walk: a claim that does not hold.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// The bytes do not fit the proof layout: neither empty, nor a terminal leaf followed by

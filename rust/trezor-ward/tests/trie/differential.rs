@@ -14,7 +14,7 @@ use rand::seq::{IndexedRandom as _, IteratorRandom as _};
 use rand::{Rng as _, SeedableRng as _};
 // Seeded, so a failure reproduces from the seed; the stream is stable across patch releases.
 use rand_xorshift::XorShiftRng as Rng;
-use trezor_ward::trie::{Entry, Sha256, Walk, empty_root};
+use trezor_ward::trie::{Entry, Root, Sha256};
 
 use crate::{T, Val};
 
@@ -23,7 +23,6 @@ const REMOVE_PROBABILITY: f64 = 0.5;
 
 /// The reference the tree is checked against: what the driver knows it has set and removed.
 type Model<const N: usize> = BTreeMap<[u8; N], Val>;
-type Digest = [u8; 32];
 
 fn value(rng: &mut Rng) -> Val {
     let len = 1 + rng.random_range(0..5);
@@ -88,7 +87,7 @@ mod keys {
 fn run<const N: usize>(keys: &[[u8; N]], rng: &mut Rng, steps: usize) {
     let mut tree = T::<N>::new();
     let mut model = Model::<N>::new();
-    let mut root = empty_root::<Sha256>();
+    let mut root = Root::empty();
 
     for &key in keys {
         change(&mut tree, &mut model, &mut root, key, false, rng);
@@ -102,7 +101,7 @@ fn run<const N: usize>(keys: &[[u8; N]], rng: &mut Rng, steps: usize) {
         let key = *model.keys().choose(rng).unwrap();
         change(&mut tree, &mut model, &mut root, key, true, rng);
     }
-    assert_eq!(root, empty_root::<Sha256>());
+    assert_eq!(root, Root::empty());
 }
 
 /// One change, made by the verifier on its root from the proof, by the prover on its map, and
@@ -110,55 +109,60 @@ fn run<const N: usize>(keys: &[[u8; N]], rng: &mut Rng, steps: usize) {
 fn change<const N: usize>(
     tree: &mut T<N>,
     model: &mut Model<N>,
-    root: &mut Digest,
+    root: &mut Root<Sha256>,
     key: [u8; N],
     remove: bool,
     rng: &mut Rng,
 ) {
     let proof = tree.prove(&key);
-    let entry = proof
-        .verify(root, &key)
+    let entry = root
+        .entry(&key, &proof)
         .expect("the prover's own proof verifies against its own root");
 
-    *root = match (entry, model.get(&key).cloned()) {
+    match (entry, model.get(&key).cloned()) {
         (Entry::Occupied(entry), Some(old)) => {
             assert_eq!(entry.value(&old).unwrap(), &old);
             if remove {
                 assert_eq!(tree.remove(&key), Some(old));
                 model.remove(&key);
-                entry.remove()
+                entry.remove();
             } else {
                 let new = value(rng);
-                let derived = entry.replace(&new);
+                entry.replace(&new);
                 assert_eq!(tree.set(key, new.clone()), Some(old));
                 model.insert(key, new);
-                derived
             }
         }
         (Entry::Vacant(entry), None) => {
             if remove {
                 assert_eq!(tree.remove(&key), None);
-                *root
             } else {
                 let new = value(rng);
-                let derived = entry.insert(&new);
+                entry.insert(&new);
                 assert_eq!(tree.set(key, new.clone()), None);
                 model.insert(key, new);
-                derived
             }
         }
         (entry, stored) => panic!("presence of {key:?} disagrees: {entry:?} vs {stored:?}"),
-    };
+    }
 
-    check(tree, model, *root);
+    check(tree, model, root);
 }
 
 /// The tree holds what the model holds, the three roots agree, and so do all proofs; and a
 /// walk through the prover's proofs is the model, in order.
-fn check<const N: usize>(tree: &T<N>, model: &Model<N>, derived: Digest) {
-    assert_eq!(tree.root(), derived, "incremental prover vs verifier");
+fn check<const N: usize>(tree: &T<N>, model: &Model<N>, derived: &Root<Sha256>) {
+    assert_eq!(
+        &tree.root(),
+        derived.digest(),
+        "incremental prover vs verifier"
+    );
     let rebuilt = T::<N>::from_entries(model.iter().map(|(key, value)| (*key, value.clone())));
-    assert_eq!(rebuilt.root(), derived, "canonical rebuild vs verifier");
+    assert_eq!(
+        &rebuilt.root(),
+        derived.digest(),
+        "canonical rebuild vs verifier"
+    );
     assert!(tree.iter().eq(model.iter()), "entries in key order");
     assert_eq!(tree.len(), model.len());
     for (key, value) in model {
@@ -169,9 +173,9 @@ fn check<const N: usize>(tree: &T<N>, model: &Model<N>, derived: Digest) {
             proof,
             "the two provers' proofs for {key:?}"
         );
-        match proof.verify(&derived, key).unwrap() {
-            Entry::Occupied(entry) => assert_eq!(entry.value(value).unwrap(), value),
-            Entry::Vacant(_) => panic!("{key:?} is stored but proves absent"),
+        match derived.get(key, &proof).unwrap() {
+            Some(entry) => assert_eq!(entry.value(value).unwrap(), value),
+            None => panic!("{key:?} is stored but proves absent"),
         }
     }
     walk(tree, model, derived);
@@ -181,17 +185,19 @@ fn check<const N: usize>(tree: &T<N>, model: &Model<N>, derived: Digest) {
 /// visits the model's entries in the model's order; after every step the walk's proof is the
 /// entry's own full proof, and the step is also made again from the kept proof alone, as a
 /// device that keeps nothing between messages makes it; the walk is done where the model ends.
-fn walk<const N: usize>(tree: &T<N>, model: &Model<N>, derived: Digest) {
-    let mut walk = Walk::new(derived);
+fn walk<const N: usize>(tree: &T<N>, model: &Model<N>, derived: &Root<Sha256>) {
+    // A walk borrows its root exclusively, so this one walks a copy.
+    let mut root = derived.clone();
+    let mut walk = root.walk();
     let mut expected = model.iter();
     for (key, value, proof) in tree.walk() {
         assert_eq!(expected.next(), Some((key, value)), "walk order");
         let entry = walk.next(&proof).expect("the prover's walk is accepted");
         assert_eq!(entry.key(), key);
         assert_eq!(entry.value(value).unwrap(), value);
-        let kept = walk.proof().expect("a proof after a step");
-        assert_eq!(kept, &tree.prove(key), "the walk's proof is {key:?}'s own");
-        walk = Walk::at(derived, kept.clone()).expect("the kept proof resumes the walk");
+        let kept = walk.proof().expect("a proof after a step").clone();
+        assert_eq!(kept, tree.prove(key), "the walk's proof is {key:?}'s own");
+        walk = root.walk_at(kept).expect("the kept proof resumes the walk");
     }
     assert_eq!(
         expected.next(),

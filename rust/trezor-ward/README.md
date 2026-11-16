@@ -52,16 +52,22 @@ it is `k`'s own path, and that it folds to the trusted root.
 
 ### Verifier
 
-`Proof::verify(root, key)` holds a proof against a trusted root and answers where `key` sits in
-that tree as an `Entry`, modelled on the entry API of `HashMap`: `Occupied`, with the value's
-digest and the handles `replace` and `remove`, or `Vacant`, with `insert`. Each handle returns
-the root the change produces, computed from the old root and the proof alone. Nothing is ever
-derived from an unverified proof, and an insert is only reachable from a vacant entry. A value
-the host supplies is obtained through `OccupiedEntry::value`, which hands it back only if it
-hashes to the digest the proof commits to.
+A `Root` is a root the caller trusts, and all the verifier holds of the map.
+`Root::entry(key, proof)` holds a proof against it and answers where `key` sits in that tree as
+an `Entry`, modelled on the entry API of `HashMap`: `Occupied`, with the value's digest and the
+handles `replace` and `remove`, or `Vacant`, with `insert`. Each handle advances the root to
+the one the change produces, computed from the old root and the proof alone. The entry borrows
+the root until then, so a later proof can only be held against the tree as it is after the
+change: of two changes proven against the same root, the second is refused. Nothing is ever
+derived from an unverified proof, and an insert is only reachable from a vacant entry.
 
-The verifier is `no_std`, allocates nothing, and keeps no state of its own: which root to
-trust, and whether one is held at all, is the caller's concern.
+`Root::get(key, proof)` is the same lookup for reading: it returns the occupied entry without
+its handles, or `None` for a key proven absent. A value the host supplies is obtained through
+`OccupiedEntry::value`, which hands it back only if it hashes to the digest the proof commits
+to.
+
+The verifier is `no_std`, allocates nothing, and keeps no state besides the `Root`: which root
+to trust, whether one is held at all, and storing it after a change, is the caller's concern.
 
 ### Walk
 
@@ -76,25 +82,35 @@ The walk holds the current entry's full proof. For the next entry the host sends
 full proof or only the part of its path below the branch where the two entries part
 (`Proof::below`), which is a prefix of the full proof's bytes; the walk splices that onto the
 steps it already holds, folds the one sibling that changes itself, and holds the result against
-the root with `Proof::verify` like any other proof, so every entry comes out as an
+the root with `Root::get` like any other proof, so every entry comes out as an
 `OccupiedEntry`. Over a whole walk the truncated form sends each branch's step once. The walk
 allocates nothing: the caller provides the storage for each proof, sized by `Walk::next_len`,
 and `Tree::walk` produces exactly what a `Walk` accepts.
 
-```rust
-use trezor_ward::trie::{Sha256, Tree, Walk};
+A walk borrows its root for as long as it is open, so the tree cannot change under it, and the
+entries it steps over are for reading. To change the entry a search has stopped at,
+`Walk::into_entry` ends the walk and hands that entry over with its handles.
 
-let tree: Tree<[u8; 32], Vec<u8>, Sha256> =
+```rust
+use trezor_ward::trie::{Root, Sha256, Tree};
+
+let mut tree: Tree<[u8; 32], Vec<u8>, Sha256> =
     Tree::from_entries([([1; 32], b"one".to_vec()), ([2; 32], b"two".to_vec())]);
 
 // The device holds the root and walks; the host serves one proof per entry.
-let mut walk = Walk::new(tree.root());
+let mut root = Root::trusted(tree.root());
+let mut walk = root.walk();
 for (key, value, proof) in tree.walk() {
     let entry = walk.next(&proof).unwrap();
     assert_eq!(entry.key(), key);
     assert_eq!(entry.value(value).unwrap(), value);
 }
 assert!(walk.is_done());
+
+// The walk stands at the last entry; ending it there hands that entry over for a change.
+walk.into_entry().unwrap().remove();
+tree.remove(&[2; 32]);
+assert_eq!(&tree.root(), root.digest());
 ```
 
 ### Prover
@@ -105,25 +121,25 @@ deliberately separate code path; and `prove(key)` records the lookup for any key
 absent, as a `Proof` whose bytes go to the verifier. The prover needs `std` (feature `use_std`).
 
 ```rust
-use trezor_ward::trie::{Entry, Sha256, Tree};
+use trezor_ward::trie::{Entry, Root, Sha256, Tree};
 
 // The host holds the map.
 let mut tree: Tree<[u8; 32], Vec<u8>, Sha256> = Tree::new();
 tree.set([1; 32], b"one".to_vec());
 tree.set([2; 32], b"two".to_vec());
-let root = tree.root();            // what the device holds
-let proof = tree.prove(&[2; 32]);  // what the host sends, together with the value
+let mut root = Root::trusted(tree.root());  // what the device holds
+let proof = tree.prove(&[2; 32]);           // what the host sends, together with the value
 
-// The device verifies, reads, and derives the root of the change.
-let new_root = match proof.verify(&root, &[2; 32]).unwrap() {
+// The device verifies, reads, and makes the change on its root.
+match root.entry(&[2; 32], &proof).unwrap() {
     Entry::Occupied(entry) => {
         assert_eq!(entry.value(b"two").unwrap(), b"two");
-        entry.replace(b"deux")
+        entry.replace(b"deux");
     }
     Entry::Vacant(_) => unreachable!(),
-};
+}
 
 // The host applies the same change and arrives at the same root.
 tree.set([2; 32], b"deux".to_vec());
-assert_eq!(tree.root(), new_root);
+assert_eq!(&tree.root(), root.digest());
 ```
