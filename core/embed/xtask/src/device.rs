@@ -8,9 +8,11 @@
 //! * the board capabilities the boardloader stores at `BOARDCAPS_START`, which
 //!   name the model the boardloader was built for.
 //!
-//! A mismatch in either refuses the operation. Missing or unreadable board
-//! capabilities (blank flash, or a boardloader too old to have them) only
-//! confirm the MCU, and a warning says so.
+//! A mismatch in either refuses the operation, and so do missing or unreadable
+//! board capabilities: models sharing an MCU do not all keep them at the same
+//! address, so finding none at the model's own address does not rule out
+//! another model's boardloader. A blank device, or a boardloader too old to
+//! have them, needs `--skip-device-check`.
 
 use std::fs;
 
@@ -48,25 +50,25 @@ pub fn check(model: Model, skip: bool) -> Result<()> {
         .context("Failed to read the MCU's IDCODE")?;
     check_mcu(model.model_id(), &config.mcu, expected, dev_id(&idcode)?)?;
 
-    match openocd::read_memory(model, caps_start, caps_size).map(|caps| board_name(&caps)) {
-        Ok(Some(board)) => {
-            check_board(model.model_id(), &board)?;
-            println!(
-                "Connected device: {} with a {board} boardloader",
-                config.mcu
-            );
-        }
-        Ok(None) => println!(
-            "Warning: no board capabilities at 0x{caps_start:08X} (blank flash or an old \
-             boardloader), so only the MCU ({}) is confirmed, not the model",
-            config.mcu
-        ),
-        Err(error) => println!(
-            "Warning: could not read the board capabilities at 0x{caps_start:08X} ({error:#}), \
-             so only the MCU ({}) is confirmed, not the model",
-            config.mcu
-        ),
-    }
+    let caps = openocd::read_memory(model, caps_start, caps_size).with_context(|| {
+        format!(
+            "Failed to read the board capabilities at 0x{caps_start:08X}, so the model \
+             cannot be confirmed. Pass --skip-device-check to proceed anyway"
+        )
+    })?;
+    let board = board_name(&caps).with_context(|| {
+        format!(
+            "no board capabilities at 0x{caps_start:08X} (blank flash, an old boardloader, \
+             or another model's boardloader), so the model cannot be confirmed. \
+             Pass --skip-device-check to proceed anyway"
+        )
+    })?;
+    check_board(model.model_id(), &board)?;
+
+    println!(
+        "Connected device: {} with a {board} boardloader",
+        config.mcu
+    );
     Ok(())
 }
 
