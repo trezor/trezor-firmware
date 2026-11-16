@@ -139,6 +139,7 @@ include_icon!(
     "layout_eckhart/res/keyboard/dash_vertical.toif"
 );
 include_icon!(ICON_DELETE, "layout_eckhart/res/keyboard/delete.toif");
+include_icon!(ICON_EYE, "layout_eckhart/res/keyboard/eye.toif");
 include_icon!(ICON_SPACE, "layout_eckhart/res/keyboard/space.toif");
 include_icon!(
     ICON_SPECIAL_CHARS,

@@ -63,6 +63,7 @@ include_icon!(
 include_icon!(ICON_CHEVRON_UP, "layout_delizia/res/chevron_up24.toif");
 include_icon!(ICON_CHEVRON_DOWN, "layout_delizia/res/chevron_down24.toif");
 include_icon!(ICON_DOWNLOAD, "layout_delizia/res/download24.toif");
+include_icon!(ICON_EYE, "layout_delizia/res/eye24.toif");
 include_icon!(ICON_KEY, "layout_delizia/res/key20.toif");
 include_icon!(ICON_QR_CODE, "layout_delizia/res/qr_code24.toif");
 include_icon!(ICON_REBOOT, "layout_delizia/res/reboot24.toif");
