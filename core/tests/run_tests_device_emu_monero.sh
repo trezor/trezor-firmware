@@ -73,8 +73,11 @@ else
   exit 1
 fi
 
-# Some tests are occasionally flaky (e.g. decoy selection in wallet_api_tests), so retry
-# a failing run. All attempts are kept in $TREZOR_MONERO_TESTS_LOG.
+# Retry a failing run: some tests are occasionally flaky, independently of the firmware.
+# For example, wallet_api_tests can fail with "not enough outputs for specified ring
+# size = 16 ... found outputs to use = 14" when random decoy selection on the small
+# test chain finds too few outputs; the wallet fails before the device is involved.
+# All attempts are kept in $TREZOR_MONERO_TESTS_LOG.
 : "${TREZOR_MONERO_TESTS_ATTEMPTS:=3}"
 : > "$TREZOR_MONERO_TESTS_LOG"
 for ((attempt = 1; attempt <= TREZOR_MONERO_TESTS_ATTEMPTS; attempt++)); do
