@@ -108,8 +108,8 @@ def test_ward_batch_single_commit(session: Session) -> None:
 
 def test_ward_batch_multi_commit(session: Session) -> None:
     """N>1 UPDATES of existing leaves commit as ONE transition advancing the counter
-    by exactly 1 (not by N), via the shape-preserving multiproof over the pre-batch
-    root."""
+    by exactly 1 (not by N). The host proves every update against the pre-batch root;
+    the device makes them in turn and brings the remaining proofs up to date."""
     tree = _seeded()
     counter0 = _seed_device(session, tree)
 
@@ -119,6 +119,26 @@ def test_ward_batch_multi_commit(session: Session) -> None:
     counter, new_root, _from_root, _ac = _commit_batch(session, tree, [p1, p2])
 
     assert counter == counter0 + 1  # whole batch is ONE transition
+    assert new_root == tree.get_root_hash()
+
+
+def test_ward_batch_full_queue_in_any_order(session: Session) -> None:
+    """A batch as large as the queue, committed in the reverse of the order it was
+    queued in: every proof is of the pre-batch root and is brought up to date by the
+    seven updates made before it, so the device lands on the host's root."""
+    addresses = [b"addr%d" % i for i in range(8)]
+    tree = _tree()
+    for addr in addresses:
+        tree.insert(_APP, addr, b"old_" + addr, counter=1)
+    counter0 = _seed_device(session, tree)
+
+    pids = [
+        _queue_update(session, addr, b"old_" + addr, b"new_" + addr)
+        for addr in addresses
+    ]
+    counter, new_root, _from_root, _ac = _commit_batch(session, tree, pids[::-1])
+
+    assert counter == counter0 + 1
     assert new_root == tree.get_root_hash()
 
 
