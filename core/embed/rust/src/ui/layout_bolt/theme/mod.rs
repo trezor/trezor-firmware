@@ -53,6 +53,7 @@ include_icon!(ICON_FORWARD, "layout_bolt/res/caret-right24.toif");
 include_icon!(ICON_UP, "layout_bolt/res/caret-up24.toif");
 include_icon!(ICON_DOWN, "layout_bolt/res/caret-down24.toif");
 include_icon!(ICON_CLICK, "layout_bolt/res/finger24.toif");
+include_icon!(ICON_EYE, "layout_bolt/res/eye24.toif");
 
 include_icon!(ICON_CORNER_CANCEL, "layout_bolt/res/x32.toif");
 include_icon!(ICON_CORNER_INFO, "layout_bolt/res/info32.toif");

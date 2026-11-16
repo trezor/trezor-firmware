@@ -17,8 +17,8 @@ use crate::ui::component::{
 };
 use crate::ui::display;
 use crate::ui::event::TouchEvent;
-use crate::ui::geometry::{Alignment, Grid, Insets, Offset, Rect};
-use crate::ui::shape::{Bar, Renderer, Text};
+use crate::ui::geometry::{Alignment, Alignment2D, Grid, Insets, Offset, Point, Rect};
+use crate::ui::shape::{Bar, Renderer, Text, ToifImage};
 use crate::ui::util::{DisplayStyle, Pager};
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
@@ -399,6 +399,13 @@ impl Input {
     const STYLE: TextStyle =
         theme::label_keyboard().with_line_breaking(LineBreaking::BreakWordsNoHyphen);
     const SHOWN_INSETS: Insets = Insets::new(8, 10, 8, 10);
+    /// Space between the left edge of the input area and the eye icon
+    const EYE_ICON_PADDING: i16 = 10;
+    /// Space between the eye icon and the first character
+    const EYE_ICON_SPACE: i16 = 8;
+    /// Space kept free on each side of the centered characters for the eye icon
+    const TEXT_MARGIN: i16 =
+        Self::EYE_ICON_PADDING + theme::ICON_EYE.toif.width() + Self::EYE_ICON_SPACE;
 
     fn new(max_len: usize) -> Self {
         Self {
@@ -464,11 +471,19 @@ impl Input {
         let last_char_visible = self.display_style == DisplayStyle::LastOnly
             || self.display_style == DisplayStyle::LastWithMarker;
 
-        // Compute how many characters fit in the available width. Account for the
-        // pending marker, which draws itself one pixel longer than the last char.
-        let available_width = self.area.width() - 1;
+        // Compute how many characters fit in the available width. The characters
+        // are centered, so the eye icon margin is kept free on both sides. Account
+        // for the pending marker, which draws itself one pixel longer than the last
+        // char, for the overflow twitch, and for a last char wider than an asterisk.
+        let available_width = self.area.width() - 2 * Self::TEXT_MARGIN - Self::TWITCH - 1;
         let asterisk_width = style.text_font.char_width('*').max(1);
-        let max_visible = (available_width / asterisk_width).max(1) as usize;
+        let last_char_width = "MW@%"
+            .chars()
+            .map(|c| style.text_font.char_width(c))
+            .max()
+            .unwrap_or(asterisk_width);
+        let max_visible =
+            ((available_width - last_char_width) / asterisk_width + 1).max(1) as usize;
         let visible_count = pp_len.min(max_visible);
         let asterisk_count = visible_count.saturating_sub(last_char_visible.into());
 
@@ -478,8 +493,32 @@ impl Input {
             let _ = asterisks.push('*');
         }
 
-        let mut text_baseline = self.area.top_left() + Offset::y(style.text_font.text_height())
-            - Offset::y(style.text_font.text_baseline());
+        let last_char = if last_char_visible {
+            self.textbox.last_char_str()
+        } else {
+            None
+        };
+
+        // Center the characters horizontally
+        let text_width = style.text_font.text_width(&asterisks)
+            + last_char.map_or(0, |last| style.text_font.text_width(last));
+        let mut text_baseline = Point::new(
+            self.area.center().x - text_width / 2,
+            self.area.y0 + style.text_font.text_height() - style.text_font.text_baseline(),
+        );
+
+        // Eye icon hinting that holding the input reveals the passphrase,
+        // vertically centered on the characters
+        ToifImage::new(
+            Point::new(
+                self.area.x0 + Self::EYE_ICON_PADDING,
+                text_baseline.y - style.text_font.visible_text_height("1") / 2,
+            ),
+            theme::ICON_EYE.toif,
+        )
+        .with_align(Alignment2D::CENTER_LEFT)
+        .with_fg(style.text_color)
+        .render(target);
 
         // Twitch when overflowed (alternates so user sees feedback when typing past
         // what fits)
@@ -496,25 +535,22 @@ impl Input {
         }
 
         // Render the visible last character in the regular text color
-        if last_char_visible {
-            if let Some(last) = self.textbox.last_char_str() {
-                let last_baseline =
-                    text_baseline + Offset::x(style.text_font.text_width(&asterisks));
+        if let Some(last) = last_char {
+            let last_baseline = text_baseline + Offset::x(style.text_font.text_width(&asterisks));
 
-                Text::new(last_baseline, last, style.text_font)
-                    .with_align(Alignment::Start)
-                    .with_fg(style.text_color)
-                    .render(target);
+            Text::new(last_baseline, last, style.text_font)
+                .with_align(Alignment::Start)
+                .with_fg(style.text_color)
+                .render(target);
 
-                if self.display_style == DisplayStyle::LastWithMarker {
-                    render_pending_marker(
-                        target,
-                        last_baseline,
-                        last,
-                        style.text_font,
-                        style.text_color,
-                    );
-                }
+            if self.display_style == DisplayStyle::LastWithMarker {
+                render_pending_marker(
+                    target,
+                    last_baseline,
+                    last,
+                    style.text_font,
+                    style.text_color,
+                );
             }
         }
     }
