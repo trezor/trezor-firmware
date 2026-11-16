@@ -123,6 +123,7 @@ class StubWardd:
 
 class _App:
     ward_proof_callback = None
+    ward_node_callback = None
 
 
 class FakeSession:
