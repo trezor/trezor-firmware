@@ -516,6 +516,13 @@ impl Input {
     const STYLE: TextStyle =
         theme::label_keyboard().with_line_breaking(LineBreaking::BreakWordsNoHyphen);
     const SHOWN_INSETS: Insets = Insets::new(8, 10, 8, 10);
+    /// Space between the left edge of the input area and the eye icon
+    const EYE_ICON_PADDING: i16 = 4;
+    /// Space between the eye icon and the first dot
+    const EYE_ICON_SPACE: i16 = 8;
+    /// Horizontal offset of the first dot, leaving room for the eye icon
+    const DOTS_OFFSET: i16 =
+        Self::EYE_ICON_PADDING + theme::ICON_EYE.toif.width() + Self::EYE_ICON_SPACE;
 
     fn new(max_len: usize) -> Self {
         Self {
@@ -530,10 +537,11 @@ impl Input {
     }
 
     /// Maximum number of dots that fit in the input area (accounting for the
-    /// confirm button taking the right portion of the row).
+    /// eye icon on the left and the confirm button taking the right portion of
+    /// the row).
     fn max_shown_dots(&self) -> usize {
         let step = Self::DOT_ICON_WIDTH + Self::DOT_ICON_SPACING;
-        let dots_space = (self.area.width() + Self::DOT_ICON_SPACING) / step;
+        let dots_space = (self.area.width() - Self::DOTS_OFFSET + Self::DOT_ICON_SPACING) / step;
         // reduce by one to create more space between the written dots and `confirm_btn`
         let dots_space = dots_space - 1;
         (dots_space).max(1) as usize
@@ -583,7 +591,7 @@ impl Input {
         debug_assert_ne!(self.display_style, DisplayStyle::Shown);
 
         let style = theme::label_keyboard();
-        let mut cursor = self.area.left_center();
+        let mut cursor = self.area.left_center().ofs(Offset::x(Self::DOTS_OFFSET));
 
         let pp_len = self.textbox.count();
         let last_char = self.display_style == DisplayStyle::LastOnly
@@ -594,6 +602,17 @@ impl Input {
         if pp_len == 0 {
             return;
         }
+
+        // Eye icon hinting that holding the input reveals the passphrase
+        ToifImage::new(
+            self.area
+                .left_center()
+                .ofs(Offset::x(Self::EYE_ICON_PADDING)),
+            theme::ICON_EYE.toif,
+        )
+        .with_align(Alignment2D::CENTER_LEFT)
+        .with_fg(theme::GREY_LIGHT)
+        .render(target);
 
         let visible_len = pp_len.min(max_dots);
         let visible_icons = visible_len - usize::from(last_char);

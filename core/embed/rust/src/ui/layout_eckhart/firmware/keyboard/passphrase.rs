@@ -37,7 +37,10 @@ impl PassphraseInput {
     const ICON: Icon = theme::ICON_DASH_VERTICAL;
     const ICON_WIDTH: i16 = Self::ICON.toif.width();
     const ICON_SPACE: i16 = 12;
-    const MAX_SHOWN_LEN: usize = 13; // max number of icons per line
+    const EYE_ICON: Icon = theme::ICON_EYE;
+    const EYE_ICON_WIDTH: i16 = Self::EYE_ICON.toif.width();
+    const EYE_ICON_SPACE: i16 = 24;
+    const MAX_SHOWN_LEN: usize = 10; // max number of icons per line
     const LAST_DIGIT_TIMEOUT: Duration = Duration::from_secs(1);
 
     pub fn new(max_len: usize, allow_cancel: bool, allow_empty: bool) -> Self {
@@ -102,12 +105,21 @@ impl PassphraseInput {
         let pp_len = self.textbox.count();
         let last_char = self.display_style != DisplayStyle::Hidden;
 
-        let mut cursor = hidden_area.left_center().ofs(Offset::x(12));
-
         // Render only when there are characters
         if pp_len == 0 {
             return;
         }
+
+        // Eye icon hinting that holding the input reveals the passphrase
+        ToifImage::new(hidden_area.left_center(), Self::EYE_ICON.toif)
+            .with_align(Alignment2D::CENTER_LEFT)
+            .with_fg(theme::GREY_LIGHT)
+            .render(target);
+
+        let mut cursor = hidden_area
+            .left_center()
+            .ofs(Offset::x(Self::EYE_ICON_WIDTH + Self::EYE_ICON_SPACE));
+
         // Number of visible icons + characters
         let visible_len = pp_len.min(Self::MAX_SHOWN_LEN);
         // Number of visible icons
