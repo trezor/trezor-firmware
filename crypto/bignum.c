@@ -304,8 +304,7 @@ int bn_is_equal(const bignum256 *x, const bignum256 *y) {
 //   &truecase == &falsecase or &res == &truecase == &falsecase
 void bn_cmov(bignum256 *res, volatile uint32_t cond, const bignum256 *truecase,
              const bignum256 *falsecase) {
-  // Intentional use of bitwise OR operator to ensure constant-time
-  assert((int)(cond == 1) | (int)(cond == 0));
+  assert(cond <= 1);
 
   uint32_t tmask = -cond;   // tmask = 0xFFFFFFFF if cond else 0x00000000
   uint32_t fmask = ~tmask;  // fmask = 0x00000000 if cond else 0xFFFFFFFF
@@ -324,8 +323,7 @@ void bn_cmov(bignum256 *res, volatile uint32_t cond, const bignum256 *truecase,
 // Assumes prime is normalized and
 //   0 < prime < 2**260 == 2**(BITS_PER_LIMB * LIMBS - 1)
 void bn_cnegate(volatile uint32_t cond, bignum256 *x, const bignum256 *prime) {
-  // Intentional use of bitwise OR operator to ensure constant time
-  assert((int)(cond == 1) | (int)(cond == 0));
+  assert(cond <= 1);
 
   uint32_t tmask = -cond;   // tmask = 0xFFFFFFFF if cond else 0x00000000
   uint32_t fmask = ~tmask;  // fmask = 0x00000000 if cond else 0xFFFFFFFF
