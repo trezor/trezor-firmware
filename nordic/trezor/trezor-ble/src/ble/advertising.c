@@ -152,6 +152,19 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
   }
   int err;
 
+  if (!static_addr) {
+    // Start every advertising session on a fresh RPA. Otherwise it keeps the
+    // address of the previous session (e.g. identifying pairing-mode
+    // advertising, or a connection) until the RPA timeout, which links the
+    // anonymous connectable advertising to it. While not advertising,
+    // bt_le_oob_get_local() forces a new RPA as a side effect.
+    struct bt_le_oob oob;
+    err = bt_le_oob_get_local(BT_ID_DEFAULT, &oob);
+    if (err) {
+      LOG_WRN("Failed to rotate RPA (err %d)", err);
+    }
+  }
+
   if (name == NULL || name_len == 0) {
     name = DEVICE_NAME;
     name_len = DEVICE_NAME_LEN;
