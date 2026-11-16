@@ -197,6 +197,15 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
   // The name is advertised only in pairing mode
   advertising_data_count = wl ? 1 : 2;
 
+  if (wl) {
+    // The scan response is answered only to bonded hosts (scan request
+    // filter), but is still visible to sniffers. Keep the company ID and the
+    // service UUID (current hosts discover bonded devices by them) and a
+    // zeroed payload (pairing = 0, which hosts need to refresh their cached
+    // flags), but no status, color or model.
+    memset(&manufacturer_data[2], 0, sizeof(manufacturer_data) - 2);
+  }
+
   char gap_name[BLE_ADV_NAME_LEN + 1] = {0};
   memcpy(gap_name, name, name_len);
 
