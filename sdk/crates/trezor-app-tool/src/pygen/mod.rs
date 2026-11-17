@@ -8,7 +8,7 @@ mod model;
 mod render;
 
 use crate::{args::GenPyArgs, helpers};
-use anyhow::{Context, Result, ensure};
+use anyhow::{Context, Result};
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -28,10 +28,18 @@ pub fn generate_packages(args: GenPyArgs) -> Result<()> {
 }
 
 /// Generates `tests/generated/messages.py` for the app at `package_dir`
-/// from the `.proto` files in its `protob/` directory.
+/// from the `.proto` files in its `protob/` directory; an app without any is
+/// skipped.
 pub fn generate(package_dir: &Path) -> Result<()> {
     let proto_dir = package_dir.join(PROTOB_DIR);
     let proto_files = collect_proto_files(&proto_dir)?;
+    if proto_files.is_empty() {
+        println!(
+            "app-tool: No .proto files in {}, skipping",
+            proto_dir.display()
+        );
+        return Ok(());
+    }
 
     let descriptors = protox::compile(&proto_files, [&proto_dir]).with_context(|| {
         format!(
@@ -57,10 +65,14 @@ pub fn generate(package_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Returns the `.proto` file names in `proto_dir`, sorted for deterministic
-/// output. Names are relative to `proto_dir`, which is the include root.
+/// Returns the `.proto` file names in `proto_dir` (none if it does not
+/// exist), sorted for deterministic output. Names are relative to
+/// `proto_dir`, which is the include root.
 fn collect_proto_files(proto_dir: &Path) -> Result<Vec<PathBuf>> {
     let mut files = Vec::new();
+    if !proto_dir.exists() {
+        return Ok(files);
+    }
     for entry in fs::read_dir(proto_dir)
         .with_context(|| format!("Failed to read {}", proto_dir.display()))?
     {
@@ -69,11 +81,25 @@ fn collect_proto_files(proto_dir: &Path) -> Result<Vec<PathBuf>> {
             files.push(PathBuf::from(path.file_name().expect("file has a name")));
         }
     }
-    ensure!(
-        !files.is_empty(),
-        "no .proto files found in {}",
-        proto_dir.display()
-    );
     files.sort();
     Ok(files)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generate_skips_apps_without_protos() {
+        let root = std::env::temp_dir().join(format!("app-tool-pygen-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        // no `protob/`
+        fs::create_dir_all(&root).unwrap();
+        generate(&root).unwrap();
+        // empty `protob/`
+        fs::create_dir_all(root.join(PROTOB_DIR)).unwrap();
+        generate(&root).unwrap();
+        assert!(!root.join(OUT_FILE).exists());
+        let _ = fs::remove_dir_all(&root);
+    }
 }
