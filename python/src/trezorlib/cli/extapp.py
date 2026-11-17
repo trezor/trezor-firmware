@@ -32,6 +32,26 @@ if t.TYPE_CHECKING:
 LOG = logging.getLogger(__name__)
 
 
+def _select_app(app_dir: Path, app_id: str) -> tuple[Path, bytes]:
+    """Pick the '{app_id}_*.tapp' in `app_dir` with the highest header version.
+
+    If any image satisfies `--min-version`, the newest one does.
+    """
+    candidates = []
+    for path in sorted(app_dir.glob(f"{app_id}_*.tapp")):
+        binary = path.read_bytes()
+        candidates.append((extapp.AppImage.parse(binary).header.version, path, binary))
+    if not candidates:
+        raise ValueError(f"No app found for id '{app_id}' in {app_dir}")
+
+    _, path, binary = max(candidates, key=lambda c: c[0])
+    if len(candidates) > 1:
+        click.echo(
+            f"Warning: multiple versions found for '{app_id}', picked {path.name}"
+        )
+    return path, binary
+
+
 @click.group(name="extapp")
 def cli() -> None:
     """External application commands - load and run external apps."""
@@ -81,19 +101,8 @@ def load(
                 )
             version = t.cast(tuple[int, int, int, int], parts + (0,) * (4 - len(parts)))
 
-        # Locate the app by its id only, matching '{app_id}_*.tapp' in the given directory.
-        candidates = sorted(app_dir.glob(f"{app_id}_*.tapp"))
-        if not candidates:
-            raise ValueError(f"No app found for id '{app_id}' in {app_dir}")
-        app_path = candidates[0]
-        if len(candidates) > 1:
-            click.echo(
-                f"Warning: multiple versions found for '{app_id}', picked {app_path.name}"
-            )
-        proof_path = app_path.with_suffix(".proof")
-
-        app_binary = app_path.read_bytes()
-        proof = proof_path.read_bytes()
+        app_path, app_binary = _select_app(app_dir, app_id)
+        proof = app_path.with_suffix(".proof").read_bytes()
 
         # Pick the root packet based on the app ring stored in the app header:
         # ring 0 -> rootpacket_0, rings 1 and 2 -> rootpacket_12.
