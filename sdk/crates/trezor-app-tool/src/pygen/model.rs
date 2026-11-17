@@ -1,11 +1,12 @@
 //! Flattened view of the messages and enums in a set of protobuf file
 //! descriptors, in the shape the Python renderer needs.
 
-use anyhow::{Result, bail};
+use anyhow::{Result, bail, ensure};
 use prost_types::{
     DescriptorProto, EnumDescriptorProto, FieldDescriptorProto, FileDescriptorSet,
     field_descriptor_proto::{Label, Type},
 };
+use std::collections::HashSet;
 
 pub struct Definitions {
     pub enums: Vec<Enum>,
@@ -32,6 +33,8 @@ pub struct Field {
     pub default_repr: String,
     pub required: bool,
     pub repeated: bool,
+    /// Whether `type_name` is a message or enum, not a scalar.
+    pub reference: bool,
 }
 
 impl Field {
@@ -67,7 +70,31 @@ impl Definitions {
         if defs.messages.is_empty() && defs.enums.is_empty() {
             bail!("No messages and no enums found.");
         }
+        defs.check_references()?;
         Ok(defs)
+    }
+
+    /// Fails if a field uses a message or enum that is not generated, e.g.
+    /// because it is deprecated: its Python class would not exist.
+    fn check_references(&self) -> Result<()> {
+        let known: HashSet<&str> = self
+            .messages
+            .iter()
+            .map(|m| m.name.as_str())
+            .chain(self.enums.iter().map(|e| e.name.as_str()))
+            .collect();
+        for message in &self.messages {
+            for field in message.fields.iter().filter(|f| f.reference) {
+                ensure!(
+                    known.contains(field.type_name.as_str()),
+                    "Field `{}.{}` uses `{}`, which is deprecated or not defined",
+                    message.name,
+                    field.name,
+                    field.type_name
+                );
+            }
+        }
+        Ok(())
     }
 
     fn add_enums(&mut self, enums: &[EnumDescriptorProto]) {
@@ -160,6 +187,7 @@ impl Field {
             default_repr,
             required: f.label() == Label::Required,
             repeated: f.label() == Label::Repeated,
+            reference: !f.type_name().is_empty(),
         })
     }
 }
@@ -286,6 +314,55 @@ mod tests {
     #[test]
     fn strip_prefix_requires_underscore_separator() {
         assert_eq!(strip_enum_prefix("Some", "SomeValue"), "SomeValue");
+    }
+
+    fn message(name: &str, deprecated: bool, fields: Vec<FieldDescriptorProto>) -> DescriptorProto {
+        DescriptorProto {
+            name: Some(name.into()),
+            field: fields,
+            options: deprecated.then(|| prost_types::MessageOptions {
+                deprecated: Some(true),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }
+    }
+
+    fn field_of(type_name: &str) -> FieldDescriptorProto {
+        FieldDescriptorProto {
+            name: Some("old".into()),
+            number: Some(1),
+            label: Some(Label::Optional as i32),
+            r#type: Some(Type::Message as i32),
+            type_name: Some(type_name.into()),
+            ..Default::default()
+        }
+    }
+
+    fn set(messages: Vec<DescriptorProto>) -> FileDescriptorSet {
+        FileDescriptorSet {
+            file: vec![prost_types::FileDescriptorProto {
+                message_type: messages,
+                ..Default::default()
+            }],
+        }
+    }
+
+    #[test]
+    fn rejects_field_using_deprecated_message() {
+        let old = message("Old", true, vec![]);
+        let msg = message("Msg", false, vec![field_of(".Old")]);
+        let Err(error) = Definitions::from_descriptors(&set(vec![old, msg])) else {
+            panic!("expected an error");
+        };
+        assert!(error.to_string().contains("Msg.old"));
+    }
+
+    #[test]
+    fn accepts_field_using_generated_message() {
+        let old = message("Old", false, vec![]);
+        let msg = message("Msg", false, vec![field_of(".Old")]);
+        assert!(Definitions::from_descriptors(&set(vec![old, msg])).is_ok());
     }
 
     #[test]
