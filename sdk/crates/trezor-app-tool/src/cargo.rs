@@ -14,8 +14,9 @@ use crate::{
 
 /// Builds the selected app(s) for the model/language/profile in `args` in a
 /// single `cargo build`, then converts each resulting ELF to the app binary
-/// format, publishes both as artifacts, and (unless `args.production`)
-/// generates the dev-signed app proofs and RootPacket needed to load them.
+/// format, publishes both as artifacts, and generates the app tree with the
+/// app proofs and a dev-signed RootPacket, which only non-production
+/// firmware accepts (also for `--production` builds).
 pub fn build(args: BuildArgs) -> Result<()> {
     build_packages(&args)?;
     Ok(())
