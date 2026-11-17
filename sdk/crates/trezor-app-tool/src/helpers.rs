@@ -4,7 +4,7 @@
 //! given [`BuildArgs`] invocation reads from or writes to.
 
 use anyhow::{Context, Result, anyhow, ensure};
-use cargo_metadata::{MetadataCommand, Package};
+use cargo_metadata::{MetadataCommand, Package, TargetKind};
 use std::path::{Path, PathBuf};
 
 use crate::args::{BuildArgs, Language, Model, TargetArch};
@@ -93,7 +93,23 @@ pub fn artifact_name(
 
 /// Returns the path to the built ELF file of `package` for the given build arguments.
 pub fn elf_path(args: &BuildArgs, package: &Package) -> Result<PathBuf> {
-    Ok(profile_dir(args)?.join(&*package.name))
+    Ok(profile_dir(args)?.join(bin_name(package)?))
+}
+
+/// Returns the name of `package`'s only binary target, which names the ELF
+/// (it may differ from the package name).
+fn bin_name(package: &Package) -> Result<&str> {
+    let mut bins = package
+        .targets
+        .iter()
+        .filter(|t| t.is_kind(TargetKind::Bin));
+    match (bins.next(), bins.next()) {
+        (Some(bin), None) => Ok(&bin.name),
+        _ => Err(anyhow!(
+            "Package `{}` must have exactly one binary target",
+            package.name
+        )),
+    }
 }
 
 /// Returns the profile output directory (e.g. `build/thumbv7em-none-eabihf/release`).
@@ -249,6 +265,47 @@ pub fn command_args_to_string(cmd: &std::process::Command) -> String {
 mod tests {
     use super::*;
     use std::process::Command;
+
+    /// Returns the package of a throwaway crate with `bins` binary sources.
+    fn package_with_bins(test: &str, manifest_extra: &str, bins: &[&str]) -> Package {
+        let root = std::env::temp_dir().join(format!("app-tool-{test}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(root.join("src/bin")).unwrap();
+        std::fs::write(
+            root.join("Cargo.toml"),
+            format!("[package]\nname = \"app\"\nversion = \"0.1.0\"\nedition = \"2021\"\n{manifest_extra}"),
+        )
+        .unwrap();
+        for bin in bins {
+            std::fs::write(root.join(bin), "fn main() {}").unwrap();
+        }
+        let metadata = MetadataCommand::new()
+            .manifest_path(root.join("Cargo.toml"))
+            .no_deps()
+            .exec()
+            .unwrap();
+        let _ = std::fs::remove_dir_all(&root);
+        metadata.packages.into_iter().next().unwrap()
+    }
+
+    #[test]
+    fn bin_name_defaults_to_package_name() {
+        let package = package_with_bins("bin-default", "", &["src/main.rs"]);
+        assert_eq!(bin_name(&package).unwrap(), "app");
+    }
+
+    #[test]
+    fn bin_name_follows_renamed_bin_target() {
+        let extra = "[[bin]]\nname = \"renamed\"\npath = \"src/main.rs\"\n";
+        let package = package_with_bins("bin-renamed", extra, &["src/main.rs"]);
+        assert_eq!(bin_name(&package).unwrap(), "renamed");
+    }
+
+    #[test]
+    fn bin_name_rejects_multiple_bins() {
+        let package = package_with_bins("bin-multi", "", &["src/main.rs", "src/bin/other.rs"]);
+        assert!(bin_name(&package).is_err());
+    }
 
     #[test]
     fn formats_program_and_args() {
