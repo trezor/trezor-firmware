@@ -529,7 +529,7 @@ fn format_utc(timestamp: i64) -> String {
 
 /// Converts days since 1970-01-01 into a (year, month, day) date, using
 /// Howard Hinnant's `civil_from_days` algorithm
-/// (https://howardhinnant.github.io/date_algorithms.html#civil_from_days).
+/// (<https://howardhinnant.github.io/date_algorithms.html#civil_from_days>).
 fn civil_from_days(days: i64) -> (i64, i64, i64) {
     // Shift the epoch to 0000-03-01, so that the leap day ends a year
     let days = days + 719468;

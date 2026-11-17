@@ -7,7 +7,7 @@
 //! to configure here, so rather than making each app carry an identical
 //! `memory.x` at its root -- copied by hand into every new app, and free to
 //! drift once copied -- the script lives in this crate (see
-//! [`MEMORY_X`]) and [`memory_x`] writes it into the build directory on
+//! [`MEMORY_X`]) and [`prepare_linker_script`] writes it into the build directory on
 //! every build.
 
 use anyhow::{Context, Result};
