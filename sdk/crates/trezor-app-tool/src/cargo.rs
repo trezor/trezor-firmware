@@ -26,6 +26,7 @@ pub fn build(args: BuildArgs) -> Result<()> {
 pub fn build_packages(args: &BuildArgs) -> Result<Vec<(Package, PathBuf)>> {
     let target_arch = helpers::resolve_target_arch(args.model, args.arch, args.emulator)?;
     let packages = helpers::selected_packages(&args.package)?;
+    helpers::ensure_apps(&packages)?;
 
     // Build the component(s)
     run_cargo_subcommand("build", args, &packages, None::<&[&str]>)?;
