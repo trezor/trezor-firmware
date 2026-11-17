@@ -27,7 +27,7 @@ from .. import extapp
 from . import with_session
 
 if t.TYPE_CHECKING:
-    from ..transport.session import Session
+    from ..client import Session
 
 LOG = logging.getLogger(__name__)
 
