@@ -54,6 +54,22 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
 
             lib.add_sources(["flash/stm32u5/flash.c", "flash/stm32u5/flash_otp.c"]);
         }
+    } else if cfg!(feature = "mcu_stm32h5") {
+        // flash_layout.c is MCU-agnostic (uses only FLASH_PAGE_SIZE /
+        // FLASH_BASE_* and the model area macros), so it is shared with stm32u5.
+        lib.add_source("flash/stm32u5/flash_layout.c");
+
+        lib.add_defines([
+            ("FLASH_BLOCK_WORDS", Some("4")),
+            // STM32H5 names the 8 KB unit FLASH_SECTOR_SIZE; the rest of the
+            // tree expects the U5-style FLASH_PAGE_SIZE name (same value).
+            ("FLASH_PAGE_SIZE", Some("FLASH_SECTOR_SIZE")),
+        ]);
+
+        // The STM32H5 OTP handling diverges from the U5 (ECC-protected array
+        // read-gated on the hardware OTP block-lock register), so it has its own
+        // flash_otp.c rather than sharing the U5 one.
+        lib.add_sources(["flash/stm32h5/flash.c", "flash/stm32h5/flash_otp.c"]);
     } else {
         bail_unsupported!();
     }

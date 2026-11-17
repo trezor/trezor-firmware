@@ -27,7 +27,9 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         lib.add_source("storage/unix/storage_salt.c");
     } else if cfg!(feature = "mcu_stm32f4") {
         lib.add_source("storage/stm32f4/storage_salt.c");
-    } else if cfg!(feature = "mcu_stm32u5") {
+    } else if cfg!(feature = "mcu_stm32u5") || cfg!(feature = "mcu_stm32h5") {
+        // storage_salt.c is MCU-agnostic (master-key path is pure C; the legacy
+        // CPUID path uses LL_GetUID_* which resolves via trezor_bsp.h on H5).
         lib.add_source("storage/stm32u5/storage_salt.c");
     } else {
         bail_unsupported!();

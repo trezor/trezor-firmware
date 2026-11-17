@@ -42,7 +42,7 @@
 
 #ifdef SECURE_MODE
 
-#ifdef STM32U5
+#if defined(STM32U5) || defined(STM32H5)
 // Persistent variable that holds the 'command' for the next reboot.
 boot_command_t __attribute__((section(".boot_command"))) g_boot_command;
 #else
@@ -91,7 +91,7 @@ boot_command_t g_boot_command_saved;
 boot_command_t bootargs_get_command() { return g_boot_command_saved; }
 
 void bootargs_init(uint32_t r11_register) {
-#ifdef STM32U5
+#if defined(STM32U5) || defined(STM32H5)
   g_boot_command_saved = g_boot_command;
   g_boot_command = BOOT_COMMAND_NONE;
 #else
@@ -157,7 +157,7 @@ static void reboot_with_args_phase_2(uint32_t arg1, uint32_t arg2) {
   MEMREGION_DEL_SECTION(&region, _bootargs_ram);
   memregion_fill(&region, 0);
 
-#if defined STM32U5
+#if defined STM32U5 || defined STM32H5
   NVIC_SystemReset();
 #elif defined STM32F4
   boot_command_t command = arg1;
