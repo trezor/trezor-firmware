@@ -74,15 +74,18 @@ impl Definitions {
         Ok(defs)
     }
 
-    /// Fails if a field uses a message or enum that is not generated, e.g.
-    /// because it is deprecated: its Python class would not exist.
+    /// Fails if two types share a name (nested types become flat Python
+    /// classes, so one would overwrite the other), or if a field uses a
+    /// message or enum that is not generated, e.g. because it is deprecated.
     fn check_references(&self) -> Result<()> {
-        let known: HashSet<&str> = self
-            .messages
-            .iter()
-            .map(|m| m.name.as_str())
-            .chain(self.enums.iter().map(|e| e.name.as_str()))
-            .collect();
+        let mut known = HashSet::new();
+        let names = self.messages.iter().map(|m| m.name.as_str());
+        for name in names.chain(self.enums.iter().map(|e| e.name.as_str())) {
+            ensure!(
+                known.insert(name),
+                "Type name `{name}` is defined more than once"
+            );
+        }
         for message in &self.messages {
             for field in message.fields.iter().filter(|f| f.reference) {
                 ensure!(
@@ -356,6 +359,18 @@ mod tests {
             panic!("expected an error");
         };
         assert!(error.to_string().contains("Msg.old"));
+    }
+
+    #[test]
+    fn rejects_duplicate_type_names() {
+        let mut a = message("A", false, vec![]);
+        a.nested_type.push(message("Inner", false, vec![]));
+        let mut b = message("B", false, vec![]);
+        b.nested_type.push(message("Inner", false, vec![]));
+        let Err(error) = Definitions::from_descriptors(&set(vec![a, b])) else {
+            panic!("expected an error");
+        };
+        assert!(error.to_string().contains("`Inner`"));
     }
 
     #[test]
