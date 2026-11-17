@@ -50,6 +50,7 @@ LOG = logging.getLogger(__name__)
 MAX_PASSPHRASE_LENGTH = 50
 MAX_PIN_LENGTH = 50
 
+# Can be used to override default read timeout to avoid stuck tests (in case of a packet loss)
 _DEFAULT_READ_TIMEOUT: int | None = None
 
 
