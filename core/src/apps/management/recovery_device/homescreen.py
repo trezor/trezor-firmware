@@ -37,6 +37,8 @@ async def recovery_process(method: BackupMethod | None) -> Success:
 
     from apps.common import backup
 
+    # TODO persist method if set? try loading method from storage if unset?
+
     recovery_type = storage_recovery.get_type()
 
     if utils.USE_THP:

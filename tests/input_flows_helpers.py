@@ -801,7 +801,7 @@ def k1n1_write_share(
     br = yield
     assert br.name == "backup_write"
     share = k1n1_handle_write(debug).decode()
-    # br = yield
-    # assert br.name == "backup_nfc_success"
-    # debug.press_yes()
+    br = yield
+    assert br.name == "backup_nfc_success"
+    debug.press_yes()
     return share
