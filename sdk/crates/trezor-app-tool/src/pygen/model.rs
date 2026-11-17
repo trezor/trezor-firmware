@@ -248,6 +248,8 @@ fn python_str_repr(s: &str) -> String {
                 out.push('\\');
                 out.push(c);
             }
+            // e.g. NUL, which Python rejects in source
+            c if c.is_ascii_control() => out.push_str(&format!("\\x{:02x}", c as u32)),
             c => out.push(c),
         }
     }
@@ -291,5 +293,6 @@ mod tests {
         assert_eq!(python_str_repr(""), "''");
         assert_eq!(python_str_repr("it's"), "\"it's\"");
         assert_eq!(python_str_repr("a\\b\n"), "'a\\\\b\\n'");
+        assert_eq!(python_str_repr("a\0b\x1f\x7f"), "'a\\x00b\\x1f\\x7f'");
     }
 }
