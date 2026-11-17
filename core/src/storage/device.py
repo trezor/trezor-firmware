@@ -37,8 +37,9 @@ INITIALIZED                = const(0x13)  # bool (0x01 or empty)
 _SAFETY_CHECK_LEVEL        = const(0x14)  # int
 _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 _HIDE_PASSPHRASE_FROM_HOST = const(0x16)  # bool (0x01 or empty)
-if utils.USE_THP:
+if utils.USE_THP or utils.USE_K1N1:
     DEVICE_SECRET         = const(0x17)  # bytes
+if utils.USE_THP:
     CRED_AUTH_KEY_COUNTER = const(0x18)  # bytes
 # unused from python:
 # _BRIGHTNESS                = const(0x19)  # int
@@ -468,6 +469,9 @@ if utils.USE_THP:
             device_secret = random.bytes(16, True)
             common.set(_NAMESPACE, DEVICE_SECRET, device_secret)
         return device_secret
+
+
+if utils.USE_THP:
 
     def get_cred_auth_key_counter() -> bytes:
         return common.get(_NAMESPACE, CRED_AUTH_KEY_COUNTER) or bytes(4)

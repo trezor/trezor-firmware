@@ -45,16 +45,18 @@ def reset(excluded: tuple[AnyBytes, AnyBytes] | None) -> None:
     from trezor import utils
 
     device_id = device.get_device_id()
-    if utils.USE_THP:
+    if utils.USE_THP or utils.USE_K1N1:
         device_secret = device.get_device_secret()
+    if utils.USE_THP:
         credential_counter = device.get_cred_auth_key_counter()
         # keep the name cache since we're keeping BLE bonds as well as THP credentials
         paired_names = device.get_thp_paired_names()
     wipe(clear_cache=False)
     wipe_cache(excluded)
     common.set(common.APP_DEVICE, device.DEVICE_ID, device_id.encode(), public=True)
-    if utils.USE_THP:
+    if utils.USE_THP or utils.USE_K1N1:
         common.set(common.APP_DEVICE, device.DEVICE_SECRET, device_secret)
+    if utils.USE_THP:
         common.set(
             common.APP_DEVICE,
             device.CRED_AUTH_KEY_COUNTER,
