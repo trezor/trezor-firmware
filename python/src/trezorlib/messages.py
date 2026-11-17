@@ -634,8 +634,7 @@ class MessageType(IntEnum):
     DebugLinkPairingInfo = 9012
     DebugLinkSetLogFilter = 9013
     DebugLinkK1N1Connected = 9014
-    DebugLinkK1N1Write = 9015
-    DebugLinkK1N1Read = 9016
+    DebugLinkK1N1Command = 9015
     DebugLinkK1N1Response = 9017
     DebugLinkSetBatteryState = 9018
     EthereumGetPublicKey = 450
@@ -4661,51 +4660,47 @@ class DebugLinkSetLogFilter(protobuf.MessageType):
 
 class DebugLinkK1N1Connected(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9014
+    FIELDS = {
+        1: protobuf.Field("uid", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        uid: bytes,
+    ) -> None:
+        self.uid = uid
 
 
-class DebugLinkK1N1Write(protobuf.MessageType):
+class DebugLinkK1N1Command(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9015
     FIELDS = {
-        1: protobuf.Field("key", "string", repeated=False, required=False, default=None),
-        2: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
+        1: protobuf.Field("data", "bytes", repeated=False, required=True),
+        2: protobuf.Field("psk", "bool", repeated=False, required=False, default=False),
     }
 
     def __init__(
         self,
         *,
-        key: str | None = None,
-        value: bytes | None = None,
+        data: bytes,
+        psk: bool | None = False,
     ) -> None:
-        self.key = key
-        self.value = value
-
-
-class DebugLinkK1N1Read(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 9016
-    FIELDS = {
-        1: protobuf.Field("key", "string", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        key: str | None = None,
-    ) -> None:
-        self.key = key
+        self.data = data
+        self.psk = psk
 
 
 class DebugLinkK1N1Response(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9017
     FIELDS = {
-        1: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
+        1: protobuf.Field("data", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        value: bytes | None = None,
+        data: bytes,
     ) -> None:
-        self.value = value
+        self.data = data
 
 
 class DebugLinkGcInfoItem(protobuf.MessageType):
