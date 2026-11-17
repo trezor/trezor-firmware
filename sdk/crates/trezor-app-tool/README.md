@@ -70,7 +70,7 @@ app-tool clippy [--package <PACKAGE>] [options]
 
 ## Size Analysis
 
-Displays section sizes for the selected app binary using the requested target configuration. Build the app first so the binary is available for analysis.
+Displays section sizes for the selected app binary using the requested target configuration. Build the app first so the binary is available for analysis. Requires `cargo-binutils` and the toolchain's `llvm-tools` component. The repository's nix shell provides both; with rustup, run `cargo install cargo-binutils` and `rustup component add llvm-tools`.
 
 ```sh
 app-tool size [--package <PACKAGE>] [options]
