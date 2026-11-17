@@ -5,7 +5,7 @@ use crate::{
     args::{DeviceTestArgs, UiMode},
     cargo, helpers, pygen,
 };
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use cargo_metadata::Package;
 use std::{path::Path, process};
 
@@ -46,23 +46,18 @@ fn test_package(package: &Package, app_path: &Path, args: &DeviceTestArgs) -> Re
     println!("\x1b[1;90m{}\x1b[0m", helpers::command_args_to_string(&cmd));
 
     let status = cmd.status().context("Failed to spawn `pytest`")?;
+    check_pytest_status(status.code())
+}
 
-    match status.code() {
-        Some(0) | Some(1) => {
-            // 0 = all tests passed, 1 = some tests failed (pytest convention)
-            // Continue as normal
-        }
-        Some(code) => {
-            // pytest exited with an unexpected code
-            anyhow::bail!("pytest exited with unexpected code: {}", code);
-        }
-        None => {
-            // pytest did not exit normally (e.g., killed by signal)
-            anyhow::bail!("pytest did not exit normally (terminated by signal or unknown error)");
-        }
+/// Maps the pytest exit code to a result; only 0 (all tests passed) is success.
+fn check_pytest_status(code: Option<i32>) -> Result<()> {
+    match code {
+        Some(0) => Ok(()),
+        Some(1) => bail!("Device tests failed"),
+        Some(code) => bail!("pytest exited with code {code}"),
+        // e.g. killed by a signal
+        None => bail!("pytest did not exit normally"),
     }
-
-    Ok(())
 }
 
 /// Pytest flags for UI screenshot testing, as in Core's `test_emu_ui*` targets.
@@ -78,6 +73,15 @@ fn ui_args(ui: Option<UiMode>) -> &'static [&'static str] {
 mod tests {
     use super::*;
     use crate::args::{Cli, Cmd};
+
+    #[test]
+    fn pytest_status_only_zero_is_success() {
+        assert!(check_pytest_status(Some(0)).is_ok());
+        let error = check_pytest_status(Some(1)).unwrap_err();
+        assert!(error.to_string().contains("Device tests failed"));
+        assert!(check_pytest_status(Some(2)).is_err());
+        assert!(check_pytest_status(None).is_err());
+    }
     use clap::Parser;
 
     fn parse_ui(args: &[&str]) -> Option<UiMode> {
