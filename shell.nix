@@ -2,6 +2,7 @@
   fullDeps ? false,
   hardwareTest ? false,
   devTools ? false,
+  wasm ? false,
   ...
 }:
 let
@@ -10,6 +11,8 @@ let
       "everything"
     else if devTools || hardwareTest then
       "default"
+    else if wasm then
+      "wasm"
     else
       "minimal";
 in
