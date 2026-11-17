@@ -52,7 +52,7 @@ Run `app-tool --help` or `xtask apps --help` to list commands, and append `--hel
 
 ## Build
 
-Builds the selected apps for hardware or the emulator, converts each ELF into a loadable app binary, and publishes the resulting artifacts. Development builds also create the app proofs and RootPacket needed to load an app during development. Use `--production` for a production build and `--debug` to use the debug firmware profile.
+Builds the selected apps for hardware or the emulator, converts each ELF into a loadable app binary, and publishes the resulting artifacts. Every build also creates the app proofs and a RootPacket signed with development keys, which only non-production firmware accepts; `--production` does not change that yet. Use `--production` for a production build and `--debug` to use the debug firmware profile.
 
 ```sh
 app-tool build [--package <PACKAGE>] [options]
