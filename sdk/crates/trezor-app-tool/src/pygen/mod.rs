@@ -90,6 +90,28 @@ mod tests {
     use super::*;
 
     #[test]
+    fn generate_keeps_bytes_default_escapes() {
+        let root = std::env::temp_dir().join(format!("app-tool-bytes-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(root.join(PROTOB_DIR)).unwrap();
+        // default bytes: a, 0xf6, ', ", \, newline, NUL, z
+        let proto = r#"syntax = "proto2";
+message M {
+  optional bytes b = 1 [default = "a\366'\"\\\n\0z"];
+}
+"#;
+        fs::write(root.join(PROTOB_DIR).join("m.proto"), proto).unwrap();
+        generate(&root).unwrap();
+        let python = fs::read_to_string(root.join(OUT_FILE)).unwrap();
+        let _ = fs::remove_dir_all(&root);
+        // the descriptor holds the value C-escaped, which a Python bytes literal reads as is
+        assert!(
+            python.contains(r#"default=b'a\366\'\"\\\n\000z')"#),
+            "{python}"
+        );
+    }
+
+    #[test]
     fn generate_skips_apps_without_protos() {
         let root = std::env::temp_dir().join(format!("app-tool-pygen-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
