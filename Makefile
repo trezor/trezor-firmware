@@ -8,18 +8,6 @@
 	protostyle protostyle_check \
 	defs_check \
 	ruststyle ruststyle_check \
-	sdk_fmt sdk_fmt_check \
-	sdk_check sdk_clippy \
-	sdk_test sdk_doctest sdk_doc \
-	sdk_audit sdk_vet \
-	app_tool_fmt app_tool_fmt_check \
-	app_tool_check app_tool_clippy \
-	app_tool_test app_tool_doc \
-	app_tool_audit app_tool_vet \
-	app_build_fmt app_build_fmt_check \
-	app_build_check app_build_clippy \
-	app_build_test app_build_doc \
-	app_build_audit app_build_vet \
 	extapp_build_firmware extapp_build_emu \
 	extapp_unit_tests extapp_test_emu extapp_test_emu_ui extapp_test_emu_ui_record \
 	extapp_fmt extapp_fmt_check \
@@ -155,129 +143,12 @@ ruststyle: ## apply code style on rust sources
 	@echo [RUSTFMT]
 	@cd core/embed ; cargo fmt
 	make -C rust style
-	make app_tool_fmt
-	make app_build_fmt
-	make sdk_fmt
 
 ruststyle_check: ## run code style check on rust sources
 	@echo [RUSTFMT]
 	@cd core/embed ; cargo fmt -- --check
 	make -C rust style_check
-	make app_tool_fmt_check
-	make app_build_fmt_check
 
-	make sdk_fmt_check
-
-## sdk commands:
-
-sdk_fmt: ## apply code style on the trezor-app-sdk crate
-	@echo [SDK-RUSTFMT]
-	@cd sdk/crates/trezor-app-sdk ; cargo fmt
-
-sdk_fmt_check: ## run code style check on the trezor-app-sdk crate
-	@echo [SDK-RUSTFMT]
-	@cd sdk/crates/trezor-app-sdk ; cargo fmt -- --check
-
-sdk_check: ## run cargo check on the trezor-app-sdk crate across its feature sets
-	@echo [SDK-CHECK]
-	@cd sdk/crates/trezor-app-sdk ; cargo check
-	@cd sdk/crates/trezor-app-sdk ; cargo check --no-default-features
-	@cd sdk/crates/trezor-app-sdk ; cargo check --features debug
-	@cd sdk/crates/trezor-app-sdk ; cargo check --features test
-	@cd sdk/crates/trezor-app-sdk ; cargo check --all-features
-
-sdk_clippy: ## run clippy on the trezor-app-sdk crate
-	@echo [SDK-CLIPPY]
-	@cd sdk/crates/trezor-app-sdk ; cargo clippy --no-default-features
-	@cd sdk/crates/trezor-app-sdk ; cargo clippy --all-features
-
-sdk_test: ## run unit tests for the trezor-app-sdk crate
-	@echo [SDK-TEST]
-	@cd sdk/crates/trezor-app-sdk ; cargo test --lib --features test
-
-sdk_doctest: ## run doc tests for the trezor-app-sdk crate
-	@echo [SDK-DOCTEST]
-	@cd sdk/crates/trezor-app-sdk ; cargo test --doc --features test
-
-sdk_doc: ## build documentation for the trezor-app-sdk crate
-	@echo [SDK-DOC]
-	@cd sdk/crates/trezor-app-sdk ; cargo doc --no-deps --all-features
-
-sdk_audit: ## run cargo audit on the trezor-app-sdk crate's dependencies
-	@echo [SDK-AUDIT]
-	@cd sdk/crates/trezor-app-sdk ; cargo audit
-
-sdk_vet: ## run cargo vet on the trezor-app-sdk crate's dependencies
-	@echo [SDK-VET]
-	@cd sdk/crates/trezor-app-sdk ; cargo vet --locked
-
-## trezor-app-tool commands:
-
-app_tool_fmt: ## apply code style on the trezor-app-tool crate
-	@echo [APP-TOOL-RUSTFMT]
-	@cd sdk/crates/trezor-app-tool ; cargo fmt
-
-app_tool_fmt_check: ## run code style check on the trezor-app-tool crate
-	@echo [APP-TOOL-RUSTFMT]
-	@cd sdk/crates/trezor-app-tool ; cargo fmt -- --check
-
-app_tool_check: ## run cargo check on the trezor-app-tool crate
-	@echo [APP-TOOL-CHECK]
-	@cd sdk/crates/trezor-app-tool ; cargo check --all-targets
-
-app_tool_clippy: ## run clippy on the trezor-app-tool crate
-	@echo [APP-TOOL-CLIPPY]
-	@cd sdk/crates/trezor-app-tool ; cargo clippy --all-targets
-
-app_tool_test: ## run unit tests for the trezor-app-tool crate
-	@echo [APP-TOOL-TEST]
-	@cd sdk/crates/trezor-app-tool ; cargo test --bins
-
-app_tool_doc: ## build documentation for the trezor-app-tool crate
-	@echo [APP-TOOL-DOC]
-	@cd sdk/crates/trezor-app-tool ; cargo doc --no-deps
-
-app_tool_audit: ## run cargo audit on the trezor-app-tool crate's dependencies
-	@echo [APP-TOOL-AUDIT]
-	@cd sdk/crates/trezor-app-tool ; cargo audit
-
-app_tool_vet: ## run cargo vet on the trezor-app-tool crate's dependencies
-	@echo [APP-TOOL-VET]
-	@cd sdk/crates/trezor-app-tool ; cargo vet --locked
-
-## trezor-app-build commands:
-
-app_build_fmt: ## apply code style on the trezor-app-build crate
-	@echo [APP-BUILD-RUSTFMT]
-	@cd sdk/crates/trezor-app-build ; cargo fmt
-
-app_build_fmt_check: ## run code style check on the trezor-app-build crate
-	@echo [APP-BUILD-RUSTFMT]
-	@cd sdk/crates/trezor-app-build ; cargo fmt -- --check
-
-app_build_check: ## run cargo check on the trezor-app-build crate
-	@echo [APP-BUILD-CHECK]
-	@cd sdk/crates/trezor-app-build ; cargo check --all-targets
-
-app_build_clippy: ## run clippy on the trezor-app-build crate
-	@echo [APP-BUILD-CLIPPY]
-	@cd sdk/crates/trezor-app-build ; cargo clippy --all-targets
-
-app_build_test: ## run unit tests for the trezor-app-build crate
-	@echo [APP-BUILD-TEST]
-	@cd sdk/crates/trezor-app-build ; cargo test --lib
-
-app_build_doc: ## build documentation for the trezor-app-build crate
-	@echo [APP-BUILD-DOC]
-	@cd sdk/crates/trezor-app-build ; cargo doc --no-deps
-
-app_build_audit: ## run cargo audit on the trezor-app-build crate's dependencies
-	@echo [APP-BUILD-AUDIT]
-	@cd sdk/crates/trezor-app-build ; cargo audit
-
-app_build_vet: ## run cargo vet on the trezor-app-build crate's dependencies
-	@echo [APP-BUILD-VET]
-	@cd sdk/crates/trezor-app-build ; cargo vet --locked
 ## extapp commands:
 
 EXTAPP ?= tron
