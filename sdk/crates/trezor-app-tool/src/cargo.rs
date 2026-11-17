@@ -1,5 +1,5 @@
 //! `cargo build`/`test`/`clippy`/... wrappers driven by [`BuildArgs`]/
-//! [`UnitTestArgs`], plus the post-build steps a `build` also runs: binary
+//! [`TestArgs`], plus the post-build steps a `build` also runs: binary
 //! conversion, artifact publishing, and app proof/RootPacket generation.
 
 use anyhow::{Context, Result, ensure};

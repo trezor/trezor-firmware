@@ -104,7 +104,7 @@ fn validate_ipc_buffer_size(size: u64) -> Result<u32> {
     );
 
     ensure!(
-        size % 8 == 0,
+        size.is_multiple_of(8),
         "IPC buffer size {} must be a multiple of 8",
         size
     );

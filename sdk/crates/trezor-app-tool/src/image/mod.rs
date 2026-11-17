@@ -47,9 +47,9 @@ impl TargetArch {
 
 /// Converts the ELF at `elf_path` into the app binary format Core loads:
 /// prepends a fixed-size `AppHeader` (built from `package`'s
-/// `[package.metadata.trezor]`, see [`crate::metadata`]) to the
+/// `[package.metadata.trezor]`, see [`metadata`]) to the
 /// architecture-specific payload -- the relocated ARMv8-M image from
-/// [`crate::armv8m`] for a hardware build, or the raw ELF bytes as-is for an
+/// [`armv8m`] for a hardware build, or the raw ELF bytes as-is for an
 /// x86-64 emulator build. `language` is recorded in the header as the
 /// language the app was built for. Writes the result next to `elf_path` and returns
 /// its path.
