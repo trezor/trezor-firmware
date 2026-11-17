@@ -3228,48 +3228,42 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class DebugLinkK1N1Connected(protobuf.MessageType):
+        uid: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            uid: "AnyBytes",
+        ) -> None:
+            pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkK1N1Connected"]:
             return isinstance(msg, cls)
 
-    class DebugLinkK1N1Write(protobuf.MessageType):
-        key: "str | None"
-        value: "AnyBytes | None"
+    class DebugLinkK1N1Command(protobuf.MessageType):
+        data: "AnyBytes"
+        psk: "bool"
 
         def __init__(
             self,
             *,
-            key: "str | None" = None,
-            value: "AnyBytes | None" = None,
+            data: "AnyBytes",
+            psk: "bool | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkK1N1Write"]:
-            return isinstance(msg, cls)
-
-    class DebugLinkK1N1Read(protobuf.MessageType):
-        key: "str | None"
-
-        def __init__(
-            self,
-            *,
-            key: "str | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkK1N1Read"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkK1N1Command"]:
             return isinstance(msg, cls)
 
     class DebugLinkK1N1Response(protobuf.MessageType):
-        value: "AnyBytes | None"
+        data: "AnyBytes"
 
         def __init__(
             self,
             *,
-            value: "AnyBytes | None" = None,
+            data: "AnyBytes",
         ) -> None:
             pass
 
