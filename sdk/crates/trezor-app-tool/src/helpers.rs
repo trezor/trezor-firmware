@@ -363,7 +363,11 @@ mod tests {
 
     #[test]
     fn resolve_target_arch_emulator_defaults_to_host() {
-        let host = emulator_target_arch().unwrap();
+        let Ok(host) = emulator_target_arch() else {
+            // unsupported host: no emulator build
+            assert!(resolve_target_arch(None, None, true).is_err());
+            return;
+        };
         assert!(host.is_emulator());
         assert_eq!(
             resolve_target_arch(Some(Model::T3W1), None, true).unwrap(),
