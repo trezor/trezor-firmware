@@ -71,7 +71,34 @@ impl Definitions {
             bail!("No messages and no enums found.");
         }
         defs.check_references()?;
+        defs.check_keywords()?;
         Ok(defs)
+    }
+
+    /// Fails if a generated Python identifier would be a keyword (e.g. a
+    /// field named `from`). Renaming is not an option: `trezorlib.protobuf`
+    /// uses the field name as the attribute name.
+    fn check_keywords(&self) -> Result<()> {
+        let check = |kind: &str, name: &str| {
+            ensure!(
+                !PYTHON_KEYWORDS.contains(&name),
+                "{kind} `{name}` is a Python keyword"
+            );
+            Ok(())
+        };
+        for message in &self.messages {
+            check("Message", &message.name)?;
+            for field in &message.fields {
+                check("Field", &field.name)?;
+            }
+        }
+        for e in &self.enums {
+            check("Enum", &e.name)?;
+            for (value, _) in &e.values {
+                check("Enum value", value)?;
+            }
+        }
+        Ok(())
     }
 
     /// Fails if two types share a name (nested types become flat Python
@@ -124,6 +151,14 @@ impl Definitions {
         Ok(())
     }
 }
+
+/// Python's hard keywords (`keyword.kwlist`), invalid as identifiers.
+const PYTHON_KEYWORDS: [&str; 35] = [
+    "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class", "continue",
+    "def", "del", "elif", "else", "except", "finally", "for", "from", "global", "if", "import",
+    "in", "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "return", "try", "while",
+    "with", "yield",
+];
 
 fn is_message_deprecated(message: &DescriptorProto) -> bool {
     message.options.as_ref().is_some_and(|o| o.deprecated())
@@ -372,6 +407,48 @@ mod tests {
             panic!("expected an error");
         };
         assert!(error.to_string().contains("`Inner`"));
+    }
+
+    #[test]
+    fn rejects_python_keywords() {
+        let mut field = field_of(".Old");
+        field.name = Some("from".into());
+        let defs = set(vec![
+            message("Old", false, vec![]),
+            message("Msg", false, vec![field]),
+        ]);
+        let Err(error) = Definitions::from_descriptors(&defs) else {
+            panic!("expected an error");
+        };
+        assert!(error.to_string().contains("`from` is a Python keyword"));
+
+        // enum values are checked after the prefix is stripped
+        let mut defs = set(vec![message("Msg", false, vec![])]);
+        defs.file[0].enum_type.push(EnumDescriptorProto {
+            name: Some("Kind".into()),
+            value: vec![prost_types::EnumValueDescriptorProto {
+                name: Some("Kind_None".into()),
+                number: Some(0),
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+        assert!(Definitions::from_descriptors(&defs).is_err());
+    }
+
+    #[test]
+    fn python_keywords_match_python() {
+        let Ok(out) = std::process::Command::new("python3")
+            .args(["-c", "import keyword; print(' '.join(keyword.kwlist))"])
+            .output()
+        else {
+            return; // no python3 on this host
+        };
+        let kwlist = String::from_utf8(out.stdout).unwrap();
+        assert_eq!(
+            kwlist.split_whitespace().collect::<Vec<_>>(),
+            PYTHON_KEYWORDS
+        );
     }
 
     #[test]
