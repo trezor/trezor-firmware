@@ -292,7 +292,25 @@ pub struct RaConfigArgs {
 }
 
 #[derive(Args, Debug)]
+// forward `--help` to app-tool
+#[command(disable_help_flag = true)]
 pub struct AppsArgs {
     #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
     pub args: Vec<OsString>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn apps_forwards_help_to_app_tool() {
+        for flag in ["--help", "-h"] {
+            let cli = Cli::try_parse_from(["xtask", "apps", flag]).unwrap();
+            let Cmd::Apps(args) = cli.command else {
+                panic!("expected the apps command");
+            };
+            assert_eq!(args.args, [flag]);
+        }
+    }
 }
