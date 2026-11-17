@@ -167,11 +167,7 @@ pub fn selected_packages(names: &[String]) -> Result<Vec<Package>> {
     let members = metadata.workspace_packages();
 
     if names.is_empty() {
-        let apps: Vec<Package> = members
-            .into_iter()
-            .filter(|p| p.metadata.get("trezor").is_some())
-            .cloned()
-            .collect();
+        let apps: Vec<Package> = members.into_iter().filter(|p| is_app(p)).cloned().collect();
         ensure!(
             !apps.is_empty(),
             "No app package (with `[package.metadata.trezor]`) found in the workspace"
@@ -189,6 +185,24 @@ pub fn selected_packages(names: &[String]) -> Result<Vec<Package>> {
                 .ok_or_else(|| anyhow!("Package '{}' not found in the workspace", name))
         })
         .collect()
+}
+
+/// Returns true for app packages, i.e. those with `[package.metadata.trezor]`.
+fn is_app(package: &Package) -> bool {
+    package.metadata.get("trezor").is_some()
+}
+
+/// Fails unless all `packages` are apps; `build` needs that, while `check`,
+/// `clippy`, `test` and `fmt` also accept library crates.
+pub fn ensure_apps(packages: &[Package]) -> Result<()> {
+    for package in packages {
+        ensure!(
+            is_app(package),
+            "Package '{}' is not an app (no `[package.metadata.trezor]`)",
+            package.name
+        );
+    }
+    Ok(())
 }
 
 /// Returns the directory where built artifacts for a specific model
@@ -299,6 +313,15 @@ mod tests {
         let extra = "[[bin]]\nname = \"renamed\"\npath = \"src/main.rs\"\n";
         let package = package_with_bins("bin-renamed", extra, &["src/main.rs"]);
         assert_eq!(bin_name(&package).unwrap(), "renamed");
+    }
+
+    #[test]
+    fn ensure_apps_rejects_library_crates() {
+        let app = package_with_bins("app", "[package.metadata.trezor]\n", &["src/main.rs"]);
+        let lib = package_with_bins("lib", "", &["src/lib.rs"]);
+        assert!(ensure_apps(std::slice::from_ref(&app)).is_ok());
+        let error = ensure_apps(&[app, lib]).unwrap_err();
+        assert!(error.to_string().contains("not an app"));
     }
 
     #[test]
