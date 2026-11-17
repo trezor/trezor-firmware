@@ -613,7 +613,7 @@ async def confirm_payment_request(
             menu_items.append(
                 create_info_menu_leaf(
                     TR.address__title_refund_address,
-                    refund_account_items,
+                    with_colon(refund_account_items),
                 )
             )
         with trezorui_api.confirm_properties(
@@ -650,8 +650,8 @@ async def confirm_payment_request(
             fee_label=with_colon(TR.words__transaction_fee),
             title=TR.words__title_summary,
             info=(
-                (TR.confirm_total__title_fee, fee_info_items),
-                (TR.address_details__account_info, account_items),
+                (TR.confirm_total__title_fee, with_colon(fee_info_items)),
+                (TR.address_details__account_info, with_colon(account_items)),
             ),
             br_code=BR_CODE_OTHER,
         )
@@ -1127,7 +1127,9 @@ async def confirm_trade(
             (TR.address_details__derivation_path, trade.account_path, None)
         )
     menu_items = [
-        create_info_menu_leaf(TR.address__title_receive_address, account_items)
+        create_info_menu_leaf(
+            TR.address__title_receive_address, with_colon(account_items)
+        )
     ]
     for k, v in extra_menu_items:
         menu_items.append(create_info_menu_leaf(k, v))
