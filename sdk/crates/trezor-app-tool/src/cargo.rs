@@ -8,7 +8,7 @@ use std::{ffi::OsStr, path::PathBuf, process};
 
 use crate::{
     apptree,
-    args::{BuildArgs, TestArgs},
+    args::{self, BuildArgs, TestArgs},
     artifacts, helpers, image,
 };
 
@@ -97,8 +97,8 @@ pub fn test(args: TestArgs) -> Result<()> {
     for package in &packages {
         cmd.arg("-p").arg(&*package.name);
     }
-    cmd.args(["--features", &features.join(",")])
-        .arg(&args.test);
+    args::add_features(&mut cmd, &features);
+    cmd.arg(&args.test);
 
     println!("app-tool: Running cargo test");
     println!("\x1b[1;90m{}\x1b[0m", helpers::command_args_to_string(&cmd));

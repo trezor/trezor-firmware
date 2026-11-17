@@ -306,8 +306,7 @@ impl BuildArgs {
             cmd.arg("-p").arg(&*package.name);
         }
 
-        let features = self.resolve_features()?;
-        cmd.args(["--features", &features.join(",")]);
+        add_features(cmd, &self.resolve_features()?);
 
         if self.debug {
             cmd.arg("--profile").arg("debug-fw");
@@ -360,6 +359,12 @@ impl BuildArgs {
             Some(Model::T3W1.target_triple())
         }
     }
+}
+
+/// Enables exactly `features`: an app's default features would otherwise be
+/// added and could override the selected language or model.
+pub fn add_features(cmd: &mut process::Command, features: &[&str]) {
+    cmd.args(["--no-default-features", "--features", &features.join(",")]);
 }
 
 /// Arguments for `app-tool test`.
@@ -510,6 +515,18 @@ mod tests {
             .resolve_features()
             .unwrap_err();
         assert!(error.to_string().contains("production"));
+    }
+
+    #[test]
+    fn configure_cargo_disables_default_features() {
+        let mut cmd = process::Command::new("cargo");
+        build_args(true, false, false)
+            .configure_cargo(&mut cmd, &[])
+            .unwrap();
+        let args: Vec<_> = cmd.get_args().collect();
+        let i = args.iter().position(|a| *a == "--features").unwrap();
+        assert_eq!(args[i - 1], "--no-default-features");
+        assert!(args[i + 1].to_str().unwrap().contains("lang_en"));
     }
 
     #[test]
