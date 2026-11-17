@@ -1766,9 +1766,16 @@ class TrezorTestContext:
         else:
             return msg
 
-    def _map_resp_message(self, msg: protobuf.MessageType) -> protobuf.MessageType:
+    @staticmethod
+    def _map_resp_message(
+        msg: protobuf.MessageType,
+        resp_mappings: dict[
+            type[protobuf.MessageType],
+            t.Callable[[protobuf.MessageType], protobuf.MessageType],
+        ],
+    ) -> protobuf.MessageType:
         message_type = msg.__class__
-        callback = self.resp_mappings.get(message_type)
+        callback = resp_mappings.get(message_type)
         if callable(callback):
             return callback(deepcopy(msg))
         else:
@@ -1784,9 +1791,10 @@ class TrezorTestContext:
     def __exit__(self, exc_type: t.Any, value: t.Any, _traceback: t.Any) -> None:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
-        # copy expected/actual responses before clearing them
+        # copy expected/actual responses and mappings before clearing them
         expected_responses = self.expected_responses
         actual_responses = self.actual_responses
+        resp_mappings = self.resp_mappings
 
         # grab a copy of the inputflow generator to raise an exception through it
         if isinstance(self.ui, DebugUI):
@@ -1799,18 +1807,22 @@ class TrezorTestContext:
         if exc_type is None:
             # If no other exception was raised, evaluate missed responses
             # (raises AssertionError on mismatch)
-            self._verify_responses(expected_responses, actual_responses)
+            self._verify_responses(expected_responses, actual_responses, resp_mappings)
         elif isinstance(input_flow, t.Generator):
             # Propagate the exception through the input flow, so that we see in
             # traceback where it is stuck.
             input_flow.throw(value)
-        self.reset_resp_mappings()
         self.actual_responses = []
 
+    @classmethod
     def _verify_responses(
-        self,
+        cls,
         expected: list[MessageFilter] | None,
         actual: list[protobuf.MessageType],
+        resp_mappings: dict[
+            type[protobuf.MessageType],
+            t.Callable[[protobuf.MessageType], protobuf.MessageType],
+        ],
     ) -> None:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
@@ -1819,7 +1831,7 @@ class TrezorTestContext:
 
         for i, (exp, act) in enumerate(zip_longest(expected, actual)):
             if exp is None:
-                output = self._expectation_lines(expected, i)
+                output = cls._expectation_lines(expected, i)
                 output.append("No more messages were expected, but we got:")
                 for resp in actual[i:]:
                     output.append(
@@ -1827,14 +1839,14 @@ class TrezorTestContext:
                     )
                 raise AssertionError("\n".join(output))
 
-            act_mapped = self._map_resp_message(act)
+            act_mapped = cls._map_resp_message(act, resp_mappings)
             if act_mapped is None:
-                output = self._expectation_lines(expected, i)
+                output = cls._expectation_lines(expected, i)
                 output.append("This and the following message was not received.")
                 raise AssertionError("\n".join(output))
 
             if not exp.match(act_mapped):
-                output = self._expectation_lines(expected, i)
+                output = cls._expectation_lines(expected, i)
                 output.append("Actually received:")
                 output.append(textwrap.indent(protobuf.format_message(act), "    "))
                 raise AssertionError("\n".join(output))
