@@ -4,7 +4,7 @@ use anyhow::{Result, ensure};
 use cargo_metadata::Package;
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
-use std::process;
+use std::{path::Path, process};
 
 use crate::prebuild;
 
@@ -321,7 +321,7 @@ impl BuildArgs {
                 .model
                 .map_or(Model::T3W1.target_triple(), |m| m.target_triple());
             cmd.args(["--target", target]);
-            cmd.env("RUSTFLAGS", Self::resolve_rustflags()?);
+            cmd.env("CARGO_ENCODED_RUSTFLAGS", Self::resolve_rustflags()?);
         }
 
         if self.verbose {
@@ -331,21 +331,14 @@ impl BuildArgs {
         Ok(())
     }
 
-    /// Returns the `RUSTFLAGS` value for a non-emulator build.
+    /// Returns the `CARGO_ENCODED_RUSTFLAGS` value for a non-emulator build.
     fn resolve_rustflags() -> Result<String> {
         let linker_script = prebuild::prepare_linker_script()?;
-
-        let mut rustflags = std::env::var("RUSTFLAGS").unwrap_or_default();
-        if !rustflags.is_empty() {
-            rustflags.push(' ');
-        }
-        rustflags.push_str(&format!(
-            "-C link-arg=-T{} \
-             -C link-arg=--emit-relocs \
-             -C link-arg=--no-dynamic-linker",
-            linker_script.display()
-        ));
-        Ok(rustflags)
+        Ok(encode_rustflags(
+            std::env::var("CARGO_ENCODED_RUSTFLAGS").ok(),
+            std::env::var("RUSTFLAGS").ok(),
+            &linker_script,
+        ))
     }
 
     /// Returns the Rust target triple used when building firmware (i.e.
@@ -359,6 +352,34 @@ impl BuildArgs {
             Some(Model::T3W1.target_triple())
         }
     }
+}
+
+/// Appends the linker flags to the caller's rustflags, encoded as cargo's
+/// `CARGO_ENCODED_RUSTFLAGS` (`0x1f`-separated, so paths may contain spaces).
+/// Like cargo, prefers the caller's encoded flags over `RUSTFLAGS`.
+fn encode_rustflags(
+    encoded: Option<String>,
+    plain: Option<String>,
+    linker_script: &Path,
+) -> String {
+    let mut flags: Vec<String> = match (encoded, plain) {
+        (Some(e), _) => e
+            .split('\x1f')
+            .filter(|f| !f.is_empty())
+            .map(String::from)
+            .collect(),
+        (None, Some(p)) => p.split_whitespace().map(String::from).collect(),
+        (None, None) => Vec::new(),
+    };
+    flags.extend([
+        "-C".into(),
+        format!("link-arg=-T{}", linker_script.display()),
+        "-C".into(),
+        "link-arg=--emit-relocs".into(),
+        "-C".into(),
+        "link-arg=--no-dynamic-linker".into(),
+    ]);
+    flags.join("\x1f")
 }
 
 /// Enables exactly `features`: an app's default features would otherwise be
@@ -515,6 +536,29 @@ mod tests {
             .resolve_features()
             .unwrap_err();
         assert!(error.to_string().contains("production"));
+    }
+
+    #[test]
+    fn encode_rustflags_keeps_paths_with_spaces() {
+        let flags = encode_rustflags(None, None, Path::new("/Users/Jane Doe/memory.x"));
+        let flags: Vec<_> = flags.split('\x1f').collect();
+        assert_eq!(flags[..2], ["-C", "link-arg=-T/Users/Jane Doe/memory.x"]);
+        assert_eq!(flags.len(), 6);
+    }
+
+    #[test]
+    fn encode_rustflags_keeps_caller_flags() {
+        let script = Path::new("memory.x");
+        // `RUSTFLAGS` is whitespace-separated
+        let flags = encode_rustflags(None, Some(" -C  opt-level=s ".into()), script);
+        assert!(flags.starts_with("-C\x1fopt-level=s\x1f-C\x1flink-arg=-T"));
+        // the encoded variable wins, as in cargo
+        let flags = encode_rustflags(
+            Some("--cfg\x1fa b".into()),
+            Some("-C opt-level=s".into()),
+            script,
+        );
+        assert!(flags.starts_with("--cfg\x1fa b\x1f-C\x1flink-arg=-T"));
     }
 
     #[test]
