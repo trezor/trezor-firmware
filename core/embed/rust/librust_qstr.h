@@ -411,6 +411,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_footer;
   MP_QSTR_get;
   MP_QSTR_get_bonds;
+  MP_QSTR_get_command;
   MP_QSTR_get_enabled;
   MP_QSTR_get_language;
   MP_QSTR_get_transition_out;
@@ -874,9 +875,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_send_transport_busy;
   MP_QSTR_set;
   MP_QSTR_set_brightness;
+  MP_QSTR_set_connected;
   MP_QSTR_set_enabled;
   MP_QSTR_set_high_speed;
   MP_QSTR_set_name;
+  MP_QSTR_set_response;
   MP_QSTR_setting__adjust;
   MP_QSTR_setting__apply;
   MP_QSTR_setup;
@@ -962,6 +965,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_trezorlog;
   MP_QSTR_trezorminiscript;
   MP_QSTR_trezornfc;
+  MP_QSTR_trezornfcemu;
   MP_QSTR_trezorproto;
   MP_QSTR_trezorthp;
   MP_QSTR_trezorui_api;

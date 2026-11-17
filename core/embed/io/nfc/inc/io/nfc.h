@@ -153,3 +153,27 @@ ts_t nfc_transceive_psk_start(const uint8_t *pcd_psk, size_t pcd_psk_len);
  * TS_ENOSTATE if there is no exchange to complete.
  */
 ts_t nfc_transceive_complete(nfc_apdu_message_t *resp);
+
+/**
+ * @brief Emulator only: place a card in the field, or remove the card if `uid`
+ * is NULL (no-op if there is none). Removing the card fails the exchange in
+ * progress. Stopping discovery removes the card too.
+ */
+ts_t nfc_emu_set_connected(const uint8_t *uid, size_t uid_len);
+
+/**
+ * @brief Emulator only: take the frame waiting to be sent to the card.
+ *
+ * @param cmd [out] The frame, or NULL if there is none
+ * @param is_psk [out] The frame is the reader's PSK share
+ * @return TS_ENOEN if the card is not in the field.
+ */
+ts_t nfc_emu_get_command(nfc_apdu_message_t **cmd, bool *is_psk);
+
+/**
+ * @brief Emulator only: complete the exchange with the card's response, or
+ * fail it with `status`.
+ *
+ * @return TS_ENOEN if the card is not in the field.
+ */
+ts_t nfc_emu_set_response(uint32_t status, const uint8_t *resp, size_t len);

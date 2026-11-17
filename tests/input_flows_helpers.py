@@ -17,6 +17,7 @@
 import typing as t
 
 from trezorlib import messages
+from trezorlib._internal.k1n1 import SEED_LEN, K1N1Tag, tap_over_debuglink
 from trezorlib.debuglink import DebugLink, LayoutType
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.testing import translations as TR
@@ -410,8 +411,11 @@ class RecoveryFlow:
             mnemonic = share.split(" ")
             yield from self.input_mnemonic(mnemonic, method)
 
-            # Caesar does not have the info button
-            if self.client.layout_type is LayoutType.Caesar:
+            # Caesar and the K1N1 recovery state screen do not have the info button
+            if (
+                self.client.layout_type is LayoutType.Caesar
+                or method is messages.BackupMethod.K1N1
+            ):
                 click_info = False
 
             if index < len(shares) - 1:
@@ -768,19 +772,32 @@ class EthereumFlow:
 
 
 def k1n1_handle_write(debug: DebugLink) -> bytes:
-    assert debug._call(messages.DebugLinkK1N1Connected()) == messages.DebugLinkK1N1Read(
-        key="mnemonic"
-    )
-    write = debug._call(
-        messages.DebugLinkK1N1Response(), expect=messages.DebugLinkK1N1Write
-    )
-    assert write.key == "mnemonic" and write.value is not None
-    assert debug._call(messages.DebugLinkK1N1Response(), expect=messages.Success)
-    return write.value
+    """Tap an empty card, return the share the device wrote to it."""
+    card = K1N1Tag()
+    tap_over_debuglink(debug, card)
+    assert card.seed is not None, "Nothing written to the card"
+    # the firmware pads the share with zeros
+    return card.seed.rstrip(b"\x00")
 
 
 def k1n1_handle_read(debug: DebugLink, value: bytes | None) -> None:
-    assert debug._call(messages.DebugLinkK1N1Connected()) == messages.DebugLinkK1N1Read(
-        key="mnemonic"
-    )
-    debug._call(messages.DebugLinkK1N1Response(value=value), expect=messages.Success)
+    """Tap a card holding the share `value`, or an empty card if it's None."""
+    seed = value.ljust(SEED_LEN, b"\x00") if value is not None else None
+    tap_over_debuglink(debug, K1N1Tag(seed=seed))
+
+
+def k1n1_backup_intro(debug: DebugLink) -> BRGeneratorType:
+    """Confirm the screen shown before the shares are written to K1N1s."""
+    br = yield
+    assert br.name == "backup_nfc_before"
+    debug.press_yes()
+
+
+def k1n1_write_share(
+    debug: DebugLink,
+) -> t.Generator[None, messages.ButtonRequest, str]:
+    """Write a share to an empty K1N1 and confirm the success screen."""
+    br = yield
+    assert br.name == "backup_write"
+    share = k1n1_handle_write(debug).decode()
+    return share

@@ -16,9 +16,9 @@ use crate::micropython::{util, Error};
 
 const DELETED: Error = Error::RuntimeError(c"NFC connection deleted");
 const BUSY: Error = Error::RuntimeError(c"NFC context is locked");
-const EXCEPTION_TYPE: ExceptionType =
+static EXCEPTION_TYPE: ExceptionType =
     ExceptionType::new(builtin::RuntimeError, Qstr::MP_QSTR_NfcError);
-const EXCEPTION_COMMAND_FAILED_TYPE: ExceptionType =
+static EXCEPTION_COMMAND_FAILED_TYPE: ExceptionType =
     ExceptionType::new(&EXCEPTION_TYPE, Qstr::MP_QSTR_NfcCommandFailed);
 
 impl From<NfcError> for Error {
@@ -204,7 +204,9 @@ extern "C" fn nfc_conn_send_command(this: Obj, ins: Obj, data: Obj) -> Obj {
         let ins = u16::try_from(ins)?;
         let ins =
             Instruction::try_from(ins).map_err(|_| Error::ValueError(c"Unknown instruction"))?;
-        let data = if matches!(ins, Instruction::SetPin) {
+        let data = if data == Obj::const_none() {
+            &[]
+        } else if matches!(ins, Instruction::SetPin) {
             &encode_pin(StrBuffer::try_from(data)?.as_ref())?
         } else {
             // SAFETY: reference is discarded before the function returns, with no calls to
@@ -361,4 +363,71 @@ pub static mp_module_trezornfc: Module = obj_module! {
 
     /// PIN_UNLOCKED: int
     Qstr::MP_QSTR_PIN_UNLOCKED => Obj::small_int(Instruction::PinUnlocked.code()),
+};
+
+#[cfg(feature = "emulator")]
+mod emulator {
+    use num_traits::FromPrimitive;
+    use rtl::error::Error as RtlError;
+
+    use super::super::emulator::{get_command, set_connected, set_response};
+    use super::*;
+
+    pub extern "C" fn py_set_connected(uid: Obj) -> Obj {
+        let block = || {
+            let uid: Option<Bytes> = uid.try_into_option()?;
+            set_connected(uid.as_deref())?;
+            Ok(Obj::const_none())
+        };
+        unsafe { util::try_or_raise(block) }
+    }
+
+    pub extern "C" fn py_get_command() -> Obj {
+        let block = || match get_command()? {
+            None => Ok(Obj::const_none()),
+            Some((apdu, is_psk)) => (apdu.as_slice(), is_psk).try_into(),
+        };
+        unsafe { util::try_or_raise(block) }
+    }
+
+    pub extern "C" fn py_set_response(response: Obj) -> Obj {
+        let block = || {
+            if let Ok(code) = i32::try_from(response) {
+                let error =
+                    RtlError::from_i32(code).ok_or(Error::ValueError(c"Unknown error code"))?;
+                set_response(Err(error))?;
+            } else {
+                set_response(Ok(&Bytes::try_from(response)?))?;
+            }
+            Ok(Obj::const_none())
+        };
+        unsafe { util::try_or_raise(block) }
+    }
+}
+
+#[cfg(feature = "emulator")]
+#[no_mangle]
+#[rustfmt::skip]
+pub static mp_module_trezornfcemu: Module = obj_module! {
+    Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezornfcemu.to_obj(),
+
+    /// mock:global
+
+    /// def set_connected(uid: AnyBytes | None) -> None:
+    ///     """Place a card with the given UID in the field, or remove it if `uid`
+    ///     is None. Removing the card fails the exchange in progress. Stopping
+    ///     discovery removes the card too."""
+    Qstr::MP_QSTR_set_connected => obj_fn_1!(emulator::py_set_connected).as_obj(),
+
+    /// def get_command() -> tuple[bytes, bool] | None:
+    ///     """Take the frame waiting to be sent to the card, together with a flag
+    ///     that is True for the PSK share and False for a command APDU. Returns
+    ///     None if no exchange has been started. Raises EOFError if the card is
+    ///     not in the field."""
+    Qstr::MP_QSTR_get_command => obj_fn_0!(emulator::py_get_command).as_obj(),
+
+    /// def set_response(response: AnyBytes | int) -> None:
+    ///     """Complete the exchange with the card's response, or fail it with the
+    ///     given error code. Raises EOFError if the card is not in the field."""
+    Qstr::MP_QSTR_set_response => obj_fn_1!(emulator::py_set_response).as_obj(),
 };

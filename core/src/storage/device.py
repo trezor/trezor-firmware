@@ -456,7 +456,7 @@ def get_hide_passphrase_from_host() -> bool:
     return common.get_bool(_NAMESPACE, _HIDE_PASSPHRASE_FROM_HOST)
 
 
-if utils.USE_THP:
+if utils.USE_THP or utils.USE_K1N1:
 
     def get_device_secret() -> bytes:
         """

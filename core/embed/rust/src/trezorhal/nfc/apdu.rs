@@ -258,6 +258,7 @@ impl DerefMut for RApdu {
 /// Values corresponding to CLA INS that are used by firmware.
 #[repr(u16)]
 #[derive(Copy, Clone, FromPrimitive, PartialEq, ufmt::derive::uDebug)]
+#[cfg_attr(test, derive(Debug))]
 pub enum Instruction {
     Select = 0x00a4,
 
