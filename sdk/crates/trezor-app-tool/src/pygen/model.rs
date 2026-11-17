@@ -176,7 +176,8 @@ impl Field {
             Some(ref value) => match ty {
                 Type::Enum => format!("{type_name}.{}", strip_enum_prefix(&type_name, value)),
                 Type::String => python_str_repr(value),
-                Type::Bytes => format!("b{}", python_str_repr(value)),
+                // stored C-escaped (quotes too), the same syntax as a Python bytes literal
+                Type::Bytes => format!("b'{value}'"),
                 Type::Bool => if value == "true" { "True" } else { "False" }.to_string(),
                 _ => value.clone(),
             },
