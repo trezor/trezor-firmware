@@ -233,12 +233,12 @@ pub struct BuildArgs {
     #[arg(long, short = 'p')]
     pub package: Vec<String>,
 
-    /// Build target model
+    /// Build target model; selects the UI layout and the target triple
     #[arg(long, short = 'm', ignore_case = true)]
-    pub model: Option<Model>,
+    pub model: Model,
 
-    /// Build target architecture (defaults to the model's; required when
-    /// no model is given for a non-emulator build)
+    /// Build target architecture (defaults to the model's, or the host's
+    /// for an emulator build)
     #[arg(long, ignore_case = true)]
     pub arch: Option<TargetArch>,
 
@@ -273,11 +273,11 @@ impl BuildArgs {
     /// plus `emulator`/`debug` when those flags are set, plus `dev_keys`
     /// unless this is a `--production` build.
     pub fn resolve_features(&self) -> Result<Vec<&'static str>> {
-        let mut features = vec![self.lang.feature_name(), self.log_level.feature_name()];
-
-        if let Some(model) = &self.model {
-            features.push(model.feature_name());
-        }
+        let mut features = vec![
+            self.lang.feature_name(),
+            self.log_level.feature_name(),
+            self.model.feature_name(),
+        ];
 
         if self.emulator {
             features.push("emulator");
@@ -312,10 +312,7 @@ impl BuildArgs {
         }
 
         if !self.emulator {
-            let target = self
-                .model
-                .map_or(Model::T3W1.target_triple(), |m| m.target_triple());
-            cmd.args(["--target", target]);
+            cmd.args(["--target", self.model.target_triple()]);
             cmd.env("CARGO_ENCODED_RUSTFLAGS", Self::resolve_rustflags()?);
         }
 
@@ -339,13 +336,7 @@ impl BuildArgs {
     /// Returns the Rust target triple used when building firmware (i.e.
     /// non-emulator) for the model.
     pub fn target_triple(&self) -> Option<&'static str> {
-        if self.emulator {
-            None
-        } else if let Some(model) = &self.model {
-            Some(model.target_triple())
-        } else {
-            Some(Model::T3W1.target_triple())
-        }
+        (!self.emulator).then(|| self.model.target_triple())
     }
 }
 
@@ -493,7 +484,7 @@ mod tests {
         BuildArgs {
             package: vec!["tron".into()],
             arch: None,
-            model: Some(Model::T3W1),
+            model: Model::T3W1,
             lang: Language::EN,
             log_level: LogLevel::Info,
             emulator,
@@ -546,6 +537,25 @@ mod tests {
             script,
         );
         assert!(flags.starts_with("--cfg\x1fa b\x1f-C\x1flink-arg=-T"));
+    }
+
+    #[test]
+    fn build_requires_model() {
+        assert!(Cli::try_parse_from(["app-tool", "build", "-e"]).is_err());
+        let cli = Cli::try_parse_from(["app-tool", "build", "-e", "-m", "t3t1"]).unwrap();
+        let Cmd::Build(args) = cli.command else {
+            panic!("expected the build command");
+        };
+        assert!(args.resolve_features().unwrap().contains(&"model_t3t1"));
+    }
+
+    #[test]
+    fn target_triple_comes_from_model() {
+        assert_eq!(build_args(true, false, false).target_triple(), None);
+        assert_eq!(
+            build_args(false, false, false).target_triple(),
+            Some(Model::T3W1.target_triple())
+        );
     }
 
     #[test]

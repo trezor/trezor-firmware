@@ -85,7 +85,8 @@ mod tests {
     use clap::Parser;
 
     fn parse_ui(args: &[&str]) -> Option<UiMode> {
-        let cli = Cli::try_parse_from([&["app-tool", "device-test"], args].concat()).unwrap();
+        let base = ["app-tool", "device-test", "-m", "t3w1"];
+        let cli = Cli::try_parse_from([&base[..], args].concat()).unwrap();
         match cli.command {
             Cmd::DeviceTest(args) => args.ui,
             _ => unreachable!(),

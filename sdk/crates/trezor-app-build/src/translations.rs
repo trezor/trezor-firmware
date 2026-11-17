@@ -17,7 +17,7 @@ struct TranslationFile {
 /// resolves the translations, and generates a Rust macro for easy access to the translations.
 pub fn build_translations() -> Result<()> {
     let language = Language::from_env();
-    let model = Model::from_env();
+    let model = Model::from_env()?;
     let layout = model.layout();
     let json_path = language.file();
 
