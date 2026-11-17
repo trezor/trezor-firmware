@@ -35,12 +35,17 @@ LOG = logging.getLogger(__name__)
 def _select_app(app_dir: Path, app_id: str) -> tuple[Path, bytes]:
     """Pick the '{app_id}_*.tapp' in `app_dir` with the highest header version.
 
-    If any image satisfies `--min-version`, the newest one does.
+    If any image satisfies `--min-version`, the newest one does. Images whose
+    header ID is not `app_id` (misnamed, or e.g. 'foo_bar_*' for 'foo') are skipped.
     """
     candidates = []
     for path in sorted(app_dir.glob(f"{app_id}_*.tapp")):
         binary = path.read_bytes()
-        candidates.append((extapp.AppImage.parse(binary).header.version, path, binary))
+        header = extapp.AppImage.parse(binary).header
+        if header.id != app_id:
+            click.echo(f"Warning: skipping {path.name}, its app ID is '{header.id}'")
+            continue
+        candidates.append((header.version, path, binary))
     if not candidates:
         raise ValueError(f"No app found for id '{app_id}' in {app_dir}")
 

@@ -27,11 +27,13 @@ APP_ID = "test.example.com"
 PAYLOAD = b"\x01\x02\x03\x04"
 
 
-def write_app(app_dir: Path, version: tuple[int, int, int, int]) -> Path:
+def write_app(
+    app_dir: Path, version: tuple[int, int, int, int], app_id: str = APP_ID
+) -> Path:
     header = AppHeader.SUBCON.build(
         dict(
             header_size=512,
-            id=APP_ID,
+            id=app_id,
             name="Test",
             vendor="Example",
             model="T3W1",
@@ -70,6 +72,20 @@ def test_select_app_by_header_version(tmp_path: Path) -> None:
     write_app(tmp_path, (2, 0, 0, 0)).rename(tmp_path / f"{APP_ID}_1.tapp")
     path, _ = _select_app(tmp_path, APP_ID)
     assert path.name == f"{APP_ID}_1.tapp"
+
+
+def test_select_app_skips_other_ids(tmp_path: Path) -> None:
+    # a misnamed image of another app must not be loaded
+    write_app(tmp_path, (9, 0, 0, 0), app_id="other.example.com").rename(
+        tmp_path / f"{APP_ID}_9.tapp"
+    )
+    write_app(tmp_path, (1, 0, 0, 0))
+    path, _ = _select_app(tmp_path, APP_ID)
+    assert path.name == f"{APP_ID}_1.0.0.0.tapp"
+
+    (tmp_path / f"{APP_ID}_1.0.0.0.tapp").unlink()
+    with pytest.raises(ValueError, match="No app found"):
+        _select_app(tmp_path, APP_ID)
 
 
 def test_select_app_missing(tmp_path: Path) -> None:
