@@ -1683,13 +1683,14 @@ class TrezorTestContext:
         message_type: type[protobuf.MessageType],
         callback: t.Callable[[protobuf.MessageType], protobuf.MessageType] | None,
     ) -> None:
-        """Configure a mapping function for a specified message type.
+        """Map received messages of `message_type` before they are checked against
+        `set_expected_responses` at the end of the `with` block.
 
-        The `callback` must be a function that accepts and returns a protobuf message of arbitrary type. Whenever a message
-        is sent or received that matches `message_type`, `callback` is invoked on the
-        message and its result is substituted for the original.
+        The `callback` accepts a message and returns the message to compare instead.
+        It does not change what is sent or what `session.call` returns.
 
-        Useful for test scenarios with an active malicious actor on the wire.
+        Useful when a response wraps the message to check, e.g. an `ExtAppResponse`
+        carrying an app's own message.
         """
         if not self.in_with_statement:
             raise RuntimeError("Must be called inside 'with' statement")
