@@ -102,7 +102,10 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
+        with:
+          nix-dev-shell: wasm
       - run: $NIX_RUN make -C rust check
+      - run: $NIX_RUN make -C rust test_wasm
 
   storage_test:
     name: Storage test
