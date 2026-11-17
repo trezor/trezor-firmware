@@ -208,6 +208,8 @@ def load(
     print(f"Requesting {image.header.id} {min_version_info}")
 
     fingerprint = image.fingerprint() if match_fingerprint else None
+    # validate the payload before the device enters its loading workflow
+    chunks = image.chunks()
 
     # Send a request to the device to load the app, providing the hash, app ID, and minimum version.
     resp = session.call(
@@ -233,8 +235,6 @@ def load(
 
         if isinstance(resp, messages.ExtAppRootPacketRequest):
             resp = session.call(messages.ExtAppRootPacketAck(root_packet=root_packet))
-
-        chunks = image.chunks()
 
         print(
             f"Uploading {image.header.id} {_format_version(image.header.version)} ({len(image.payload) / 1024:.1f} KB)"
