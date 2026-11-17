@@ -28,20 +28,17 @@ pub fn emulator_target_arch() -> Result<TargetArch> {
 /// Resolves the architecture a build targets from the model, an explicit
 /// `--arch`, and the emulator flag. An unspecified emulator architecture
 /// defaults to the current host; an unspecified firmware architecture
-/// defaults to the model's, so a firmware build needs at least one of
-/// `--model`/`--arch`. Fails when the given architecture does not match
+/// defaults to the model's. Fails when the given architecture does not match
 /// the emulator flag or the model.
 pub fn resolve_target_arch(
-    model: Option<Model>,
+    model: Model,
     target_arch: Option<TargetArch>,
     emulator: bool,
 ) -> Result<TargetArch> {
     let arch = match target_arch {
         Some(arch) => arch,
         None if emulator => emulator_target_arch()?,
-        None => model
-            .ok_or_else(|| anyhow!("Either --model or --arch must be specified"))?
-            .target_arch(),
+        None => model.target_arch(),
     };
 
     ensure!(
@@ -51,7 +48,7 @@ pub fn resolve_target_arch(
         if emulator { "not" } else { "only" }
     );
 
-    if !emulator && let Some(model) = model {
+    if !emulator {
         ensure!(
             model.target_arch() == arch,
             "Model '{}' requires architecture '{}', not '{}'",
@@ -69,7 +66,7 @@ pub fn resolve_target_arch(
 pub fn artifact_name(
     package: &Package,
     language: Language,
-    model: Option<Model>,
+    model: Model,
     target_arch: Option<TargetArch>,
     emulator: bool,
 ) -> Result<String> {
@@ -86,7 +83,7 @@ pub fn artifact_name(
         app_id,
         package.version,
         language.name(),
-        model.map_or("all", Model::model_id),
+        model.model_id(),
         arch.name(),
     ))
 }
@@ -365,44 +362,31 @@ mod tests {
     fn resolve_target_arch_emulator_defaults_to_host() {
         let Ok(host) = emulator_target_arch() else {
             // unsupported host: no emulator build
-            assert!(resolve_target_arch(None, None, true).is_err());
+            assert!(resolve_target_arch(Model::T3W1, None, true).is_err());
             return;
         };
         assert!(host.is_emulator());
-        assert_eq!(
-            resolve_target_arch(Some(Model::T3W1), None, true).unwrap(),
-            host
-        );
-        assert_eq!(resolve_target_arch(None, None, true).unwrap(), host);
+        assert_eq!(resolve_target_arch(Model::T3W1, None, true).unwrap(), host);
     }
 
     #[test]
     fn resolve_target_arch_firmware_defaults_to_model() {
         assert_eq!(
-            resolve_target_arch(Some(Model::T3T1), None, false).unwrap(),
-            TargetArch::Armv8m
-        );
-    }
-
-    #[test]
-    fn resolve_target_arch_firmware_requires_model_or_arch() {
-        assert!(resolve_target_arch(None, None, false).is_err());
-        assert_eq!(
-            resolve_target_arch(None, Some(TargetArch::Armv8m), false).unwrap(),
+            resolve_target_arch(Model::T3T1, None, false).unwrap(),
             TargetArch::Armv8m
         );
     }
 
     #[test]
     fn resolve_target_arch_rejects_emulator_mismatch() {
-        assert!(resolve_target_arch(None, Some(TargetArch::Armv8m), true).is_err());
-        assert!(resolve_target_arch(None, Some(TargetArch::LinuxX86_64), false).is_err());
+        assert!(resolve_target_arch(Model::T3W1, Some(TargetArch::Armv8m), true).is_err());
+        assert!(resolve_target_arch(Model::T3W1, Some(TargetArch::LinuxX86_64), false).is_err());
     }
 
     #[test]
     fn resolve_target_arch_accepts_explicit_emulator_arch() {
         assert_eq!(
-            resolve_target_arch(Some(Model::T3W1), Some(TargetArch::MacosAarch64), true).unwrap(),
+            resolve_target_arch(Model::T3W1, Some(TargetArch::MacosAarch64), true).unwrap(),
             TargetArch::MacosAarch64
         );
     }

@@ -1,3 +1,4 @@
+use anyhow::{Result, bail};
 use std::env;
 
 #[derive(Default)]
@@ -47,21 +48,28 @@ impl Language {
     }
 }
 
-#[derive(Default)]
 pub enum Model {
-    #[default]
     T3W1,
     T3T1,
 }
 
 impl Model {
-    pub fn from_env() -> Self {
-        if env::var("CARGO_FEATURE_MODEL_T3W1").is_ok() {
-            Self::T3W1
-        } else if env::var("CARGO_FEATURE_MODEL_T3T1").is_ok() {
-            Self::T3T1
-        } else {
-            Self::default()
+    /// The model selected by the app's `model_*` feature, which app-tool sets
+    /// from `--model`; exactly one must be enabled.
+    pub fn from_env() -> Result<Self> {
+        let models = [
+            ("CARGO_FEATURE_MODEL_T3W1", Self::T3W1),
+            ("CARGO_FEATURE_MODEL_T3T1", Self::T3T1),
+        ];
+        let mut enabled = models
+            .into_iter()
+            .filter(|(var, _)| env::var(var).is_ok())
+            .map(|(_, model)| model);
+        match (enabled.next(), enabled.next()) {
+            (Some(model), None) => Ok(model),
+            _ => bail!(
+                "Enable exactly one `model_*` feature (`cargo app-tool` sets it from `--model`)"
+            ),
         }
     }
 
@@ -175,29 +183,29 @@ mod tests {
     }
 
     #[test]
-    fn model_defaults_to_t3w1() {
+    fn model_requires_a_feature() {
         let _env = Env::new();
-        assert_eq!(Model::from_env().layout(), "Eckhart");
+        assert!(Model::from_env().is_err());
     }
 
     #[test]
     fn model_from_feature() {
         let env = Env::new();
         env.set(&[("CARGO_FEATURE_MODEL_T3T1", "1")]);
-        assert_eq!(Model::from_env().layout(), "Delizia");
+        assert_eq!(Model::from_env().unwrap().layout(), "Delizia");
         Env::clear();
         env.set(&[("CARGO_FEATURE_MODEL_T3W1", "1")]);
-        assert_eq!(Model::from_env().layout(), "Eckhart");
+        assert_eq!(Model::from_env().unwrap().layout(), "Eckhart");
     }
 
     #[test]
-    fn model_prefers_t3w1_when_both_set() {
+    fn model_rejects_several_features() {
         let env = Env::new();
         env.set(&[
             ("CARGO_FEATURE_MODEL_T3W1", "1"),
             ("CARGO_FEATURE_MODEL_T3T1", "1"),
         ]);
-        assert_eq!(Model::from_env().layout(), "Eckhart");
+        assert!(Model::from_env().is_err());
     }
 
     #[test]

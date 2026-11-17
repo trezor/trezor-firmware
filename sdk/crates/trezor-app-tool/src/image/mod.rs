@@ -56,7 +56,7 @@ impl TargetArch {
 pub fn convert_elf_to_bin(
     elf_path: &Path,
     package: &Package,
-    model: Option<Model>,
+    model: Model,
     language: Language,
 ) -> Result<PathBuf> {
     let raw_elf = fs::read(elf_path)
@@ -104,7 +104,7 @@ pub fn convert_elf_to_bin(
         id: pack_str(&metadata::app_identifier(package)?, "App identifier")?,
         app_name: pack_str(&metadata::app_name(package)?, "App name")?,
         vendor_name: pack_str(&metadata::vendor_name(package)?, "Vendor name")?,
-        model: model.map_or([0; 4], |m| m.model_id_bytes()),
+        model: model.model_id_bytes(),
         version: pack_version(&metadata::app_version(package))?,
         sdk_version: pack_version(&metadata::sdk_version(package)?)?,
         abi_version: metadata::abi_version()?,
