@@ -2,6 +2,8 @@ use core::cell::RefCell;
 
 use crypto::noise_xxpsk3::NoiseXXpsk3Ctx;
 
+#[cfg(feature = "emulator")]
+use super::super::ffi;
 use super::*;
 use crate::micropython::buffer::{get_buffer, Bytes, StrBuffer};
 use crate::micropython::gc::{Gc, GcBox};
@@ -225,6 +227,69 @@ extern "C" fn py_connect() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+#[cfg(not(feature = "emulator"))]
+extern "C" fn py_emu_set_connected(_uid: Obj) -> Obj {
+    Obj::const_none()
+}
+
+#[cfg(not(feature = "emulator"))]
+extern "C" fn py_emu_get_command() -> Obj {
+    Obj::const_none()
+}
+
+#[cfg(not(feature = "emulator"))]
+extern "C" fn py_emu_set_response(_response: Obj) -> Obj {
+    Obj::const_none()
+}
+
+#[cfg(feature = "emulator")]
+extern "C" fn py_emu_set_connected(uid: Obj) -> Obj {
+    let block = || {
+        let uid: Option<Bytes> = uid.try_into_option()?;
+        let res = match uid {
+            None => unsafe { ffi::nfc_emu_set_connected(core::ptr::null(), 0usize) },
+            Some(b) => unsafe { ffi::nfc_emu_set_connected(b.as_ptr(), b.len()) },
+        };
+        res.ok().map_err(NfcError::from)?;
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+#[cfg(feature = "emulator")]
+extern "C" fn py_emu_get_command() -> Obj {
+    let block = || {
+        let mut cmd: *mut Apdu = core::ptr::null_mut();
+        let mut is_psk = false;
+        // SAFETY: ffi
+        unsafe { ffi::nfc_emu_get_command(&mut cmd, &mut is_psk) }
+            .ok()
+            .map_err(NfcError::from)?;
+        // SAFETY: the frame lives in the driver state, which is not modified
+        // until `nfc_emu_set_response()`. It is copied out right away.
+        match unsafe { cmd.as_ref() } {
+            None => Ok(Obj::const_none()),
+            Some(apdu) => (apdu.as_slice(), is_psk).try_into(),
+        }
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+#[cfg(feature = "emulator")]
+extern "C" fn py_emu_set_response(response: Obj) -> Obj {
+    let block = || {
+        let res = if let Ok(num) = u32::try_from(response) {
+            unsafe { ffi::nfc_emu_set_response(num, core::ptr::null(), 0usize) }
+        } else {
+            let bytes = Bytes::try_from(response)?;
+            unsafe { ffi::nfc_emu_set_response(0, bytes.as_ptr(), bytes.len()) }
+        };
+        res.ok().map_err(NfcError::from)?;
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 #[no_mangle]
 #[rustfmt::skip]
 pub static mp_module_trezornfc: Module = obj_module! {
@@ -328,4 +393,25 @@ pub static mp_module_trezornfc: Module = obj_module! {
 
     /// PIN_UNLOCKED: int
     Qstr::MP_QSTR_PIN_UNLOCKED => Obj::small_int(Instruction::PinUnlocked.code()),
+
+    /// mock:global
+
+    /// def emu_set_connected(uid: AnyBytes | None) -> None:
+    ///     """Emulator only: place a card with the given UID in the field, or remove
+    ///     it if `uid` is None. Removing the card fails the exchange in progress.
+    ///     Stopping discovery removes the card too."""
+    Qstr::MP_QSTR_emu_set_connected => obj_fn_1!(py_emu_set_connected).as_obj(),
+
+    /// def emu_get_command() -> tuple[bytes, bool] | None:
+    ///     """Emulator only: take the frame waiting to be sent to the card, together
+    ///     with a flag that is True for the PSK share and False for a command APDU.
+    ///     Returns None if no exchange has been started. Raises EOFError if the card
+    ///     is not in the field."""
+    Qstr::MP_QSTR_emu_get_command => obj_fn_0!(py_emu_get_command).as_obj(),
+
+    /// def emu_set_response(response: AnyBytes | int) -> None:
+    ///     """Emulator only: complete the exchange with the card's response, or fail
+    ///     it with the given error code. Raises EOFError if the card is not in the
+    ///     field."""
+    Qstr::MP_QSTR_emu_set_response => obj_fn_1!(py_emu_set_response).as_obj(),
 };

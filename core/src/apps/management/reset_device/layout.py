@@ -222,12 +222,14 @@ async def choose_backup_handler(method: BackupMethod | None) -> BackupHandler:
 
 
 if utils.USE_K1N1:
+    import trezorui_api
     from trezor import TR
+    from trezor.ui.layouts.common import raise_if_not_confirmed
 
     if TYPE_CHECKING:
         from buffer_types import AnyBytes
 
-        from apps.debug.k1n1_mock import K1N1Context
+        from apps.management.k1n1.context import K1N1Context
 
     class RetryWrite(Exception):
         def __init__(self, msg: str) -> None:
@@ -239,14 +241,19 @@ if utils.USE_K1N1:
             pass
 
         async def backup(self, iter_shares: Iterable[ShareInfo]) -> None:
-            # TODO(K1N1): warn user about safety
+            with trezorui_api.show_info(
+                title="Backup wallet",
+                description="Beginning K1N1 backup.",
+                button=("Start", True),
+            ) as layout:
+                await raise_if_not_confirmed(layout, br_name="backup_nfc_before")
 
             # backup all shares
             for share in iter_shares:
                 await self._backup_share(share)
 
         async def _backup_share(self, share: ShareInfo) -> None:
-            from apps.debug import k1n1_mock
+            import apps.management.k1n1.context as k1n1
 
             # TODO(K1N1): use protobuf?
             blob = " ".join(share.words).encode()
@@ -260,12 +267,9 @@ if utils.USE_K1N1:
 
             while True:
                 try:
-                    with k1n1_mock.ctx as ctx:
+                    with k1n1.ctx as ctx:
                         return await _write_share(ctx, description, button, blob)
                 except RetryWrite as exc:
-                    import trezorui_api
-                    from trezor.ui.layouts.common import raise_if_not_confirmed
-
                     with trezorui_api.show_warning(
                         title=TR.words__important,
                         button=TR.buttons__continue,
@@ -288,7 +292,7 @@ if utils.USE_K1N1:
             br_name="backup_write",
         )
         # continue K1N1 communication (the tag is connected)
-        result = await ctx.read(key="mnemonic")
+        result = await ctx.read_share()
         if result is not None:
             raise RetryWrite(TR.k1n1__err_nonempty)
 
@@ -296,7 +300,7 @@ if utils.USE_K1N1:
         progress_obj.start()
         progress_obj.report(100)
         try:
-            await ctx.write(key="mnemonic", value=blob)
+            await ctx.write_share(value=blob)
             # TODO(K1N1): animate during I/O?
             progress_obj.report(1000)
         finally:

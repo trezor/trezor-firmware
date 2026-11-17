@@ -383,6 +383,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_disable_animation;
   MP_QSTR_disconnect;
   MP_QSTR_duration_ms;
+  MP_QSTR_emu_get_command;
+  MP_QSTR_emu_set_connected;
+  MP_QSTR_emu_set_response;
   MP_QSTR_encode;
   MP_QSTR_encoded_length;
   MP_QSTR_entropy__send;
