@@ -480,12 +480,19 @@ __attribute__((noreturn)) void reboot_with_fade(void) {
   reboot_device();
 }
 
+// Smoke test for the binary size report in CI, to be reverted.
+static const uint8_t size_report_smoke_test[500] = {[0 ... 499] = 0x5A};
+
 #ifndef TREZOR_EMULATOR
 int main(void) {
 #else
 int bootloader_main(void) {
 #endif
   secbool touch_initialized = secfalse;
+  volatile uint32_t size_report_smoke_index = 0;
+  volatile uint8_t size_report_smoke_sink =
+      size_report_smoke_test[size_report_smoke_index];
+  (void)size_report_smoke_sink;
 
 #ifdef USE_TRUSTZONE
   tz_init();
