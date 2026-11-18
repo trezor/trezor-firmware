@@ -167,7 +167,7 @@ The wire functions at the crate root are:
 | `crypto` | Key derivation and signing (done by Core), plus hashing, HMAC, Base58, signature verification and CoSi (done locally) |
 | `log` | The `error!`, `warn!`, `info!` and `debug!` macros |
 | `error` | The `Error` and `Result` types, and `ResultExt` for call-site context |
-| `util` | Small helpers, such as `Timeout` |
+| `util` | Small helpers, such as `Timeout` and `systick_ms` |
 | `structs`, `traits` | The types and interfaces shared with Core |
 | `mock` | Mock implementations of Core's services (`test` feature) |
 
