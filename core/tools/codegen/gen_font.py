@@ -13,6 +13,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from itertools import groupby
 from pathlib import Path
+from typing import Any
 
 import click
 import freetype
@@ -220,6 +221,30 @@ def process_bitmap_buffer(
 
 
 @dataclass
+class Bitmap:
+    """Hand-drawn glyph, see `bitmaps` in `gen_font.toml`."""
+
+    bitmap: list[str]
+    # metrics overrides, the rendered glyph's metrics are kept when None
+    bearing_x: int | None = None
+    bearing_y: int | None = None
+    advance: int | None = None
+
+    @property
+    def has_metrics(self) -> bool:
+        return None not in (self.bearing_x, self.bearing_y, self.advance)
+
+    def apply(self, glyph: Glyph) -> None:
+        glyph.replace_bitmap(self.bitmap)
+        if self.bearing_x is not None:
+            glyph.bearingX = self.bearing_x
+        if self.bearing_y is not None:
+            glyph.bearingY = self.bearing_y
+        if self.advance is not None:
+            glyph.advance = self.advance
+
+
+@dataclass
 class FontConfig:
     """One font entry of `gen_font.toml`, see the keys description there."""
 
@@ -236,10 +261,16 @@ class FontConfig:
     features: list[str] = field(default_factory=list)
     max_advance: int | None = None
     min_spacing: int | None = None
-    bitmaps: dict[str, list[str]] = field(default_factory=dict)
+    bitmaps: dict[str, Bitmap] = field(default_factory=dict)
     notes: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
+        # TOML values are either a list of rows or a table with `bitmap` and metrics
+        raw_bitmaps: dict[str, Any] = self.bitmaps
+        self.bitmaps = {
+            c: Bitmap(b) if isinstance(b, list) else Bitmap(**b)
+            for c, b in raw_bitmaps.items()
+        }
         if self.font_idx is None and self.font_idx_upper is None:
             raise ValueError(f"{self.id}: font_idx or font_idx_upper must be set")
         if self.nums_only and self.font_idx is None:
@@ -406,9 +437,6 @@ class FaceProcessor:
             self.write_foreign_json(upper_cased=False)
         if self.cfg.font_idx_upper is not None:
             self.write_foreign_json(upper_cased=True)
-        if "º" in self._unsupported:
-            self._unsupported.remove("º")
-            LOG.warning(f"{self.cfg.id}: 'º' not supported, using fallback glyph 'o'")
         if self._unsupported:
             LOG.warning(
                 f"{self.cfg.id}: characters not supported, using unknown glyph: "
@@ -431,10 +459,9 @@ class FaceProcessor:
                 assert len(c) == 1
                 assert len(map_from) == 1
 
-                if not self._char_supported(c):
+                # Consider bitmap overrides before considering glyph unsupported
+                if not self._char_supported(c) and c not in self.cfg.bitmaps:
                     self._unsupported.add(c)
-                    if c == "º":
-                        c = "o"
                 glyph = self.glyph(c)
                 glyph.log_metrics()
                 fontdata["glyphs"][map_from] = glyph.to_bytes(self.cfg.bpp).hex()
@@ -516,7 +543,14 @@ class FaceProcessor:
             self.face.load_char(c, FT_LOAD_FLAGS)
         glyph = Glyph.from_face(self.face, c, self.cfg.shave_x, inverse_colors)
         if c in self.cfg.bitmaps:
-            glyph.replace_bitmap(self.cfg.bitmaps[c])
+            bitmap = self.cfg.bitmaps[c]
+            # a missing char renders as the unknown glyph, whose metrics are arbitrary
+            if not self._char_supported(c) and not bitmap.has_metrics:
+                raise ValueError(
+                    f"{self.cfg.id}: bitmap of '{c}' (missing in the font) must set "
+                    "bearing_x, bearing_y and advance"
+                )
+            bitmap.apply(glyph)
         if self.cfg.max_advance is not None:
             glyph.advance = min(glyph.advance, self.cfg.max_advance)
         if self.cfg.min_spacing is not None:
