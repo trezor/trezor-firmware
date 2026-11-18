@@ -83,7 +83,7 @@ fn main() -> Result<()> {
                 ]);
 
                 // Default ASAN runtime options (disables leak detection)
-                lib.add_source("asan.c");
+                lib.add_source("src/asan.c");
             }
         } else if cfg!(feature = "mcu_stm32") {
             // arm-none-eabi-gcc uses short enums (-fshort-enums) by default,
@@ -208,7 +208,7 @@ fn main() -> Result<()> {
 
         // Compile some dummy source file to ensure the library is created
         // (=> metadata are passed to higher-level crates)
-        lib.add_source("_dummy.c");
+        lib.add_source("src/_dummy.c");
 
         Ok(())
     })
