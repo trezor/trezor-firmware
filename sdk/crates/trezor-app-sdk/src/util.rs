@@ -50,6 +50,11 @@ impl Timeout {
         self.0
     }
 
+    /// Converts this timeout to an absolute deadline by adding it to the current systick.
+    pub fn as_deadline(&self) -> u32 {
+        app_runtime::systick_ms().wrapping_add(self.0)
+    }
+
     /// Blocks until this timeout elapses.
     pub fn sleep(&self) {
         app_runtime::sleep(self.0);
@@ -99,5 +104,17 @@ pub(crate) struct Bytes(pub(crate) BoxedSlice<u8>);
 impl AsRef<[u8]> for Bytes {
     fn as_ref(&self) -> &[u8] {
         &self.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn as_deadline_adds_timeout_to_systick() {
+        // the mock API's systick is 0
+        crate::mock::sdk_init();
+        assert_eq!(Timeout::ms(1500).as_deadline(), 1500);
     }
 }
