@@ -195,5 +195,10 @@ class BridgeTransport(Transport):
     def read_chunk(self, *, timeout: float | None = None) -> bytes:
         return self.handle.read_buf(timeout=timeout)
 
+    def _discard_stale_packets(self) -> None:
+        # Bridge can't do a harmless timed read: aborting one releases the session
+        # (Bridge v2) or USB-resets the device (Bridge v3).
+        pass
+
     def is_open(self) -> bool:
         return self.session is not None
