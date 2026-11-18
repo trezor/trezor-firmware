@@ -2,6 +2,7 @@
 from common import *  # isort:skip
 
 import storage.cache_codec
+from mock import MockAsync, patch
 from trezor import wire
 from trezor.crypto import bip32
 from trezor.enums import InputScriptType, OutputScriptType
@@ -14,14 +15,15 @@ from trezor.messages import (
 )
 
 from apps.bitcoin.authorization import FEE_RATE_DECIMALS, CoinJoinAuthorization
-from apps.bitcoin.sign_tx.approvers import CoinJoinApprover
+from apps.bitcoin.sign_tx import layout
+from apps.bitcoin.sign_tx.approvers import BasicApprover, CoinJoinApprover
 from apps.bitcoin.sign_tx.bitcoin import Bitcoin
 from apps.bitcoin.sign_tx.tx_info import TxInfo
 from apps.common import coins
 
 
 class TestApprover(TestCaseWithContext):
-    def setUp(self):
+    def setUp(self) -> None:
         self.coin = coins.by_name("Bitcoin")
         self.fee_rate_percent = 0.3
         self.no_fee_threshold = 1000000
@@ -49,7 +51,7 @@ class TestApprover(TestCaseWithContext):
         if not utils.USE_THP:
             storage.cache_codec.start_session()
 
-    def make_coinjoin_request(self, inputs):
+    def make_coinjoin_request(self, inputs: list[TxInput]) -> CoinJoinRequest:
         return CoinJoinRequest(
             fee_rate=int(self.fee_rate_percent * 10**FEE_RATE_DECIMALS),
             no_fee_threshold=self.no_fee_threshold,
@@ -58,7 +60,7 @@ class TestApprover(TestCaseWithContext):
             signature=bytearray(),
         )
 
-    def test_coinjoin_lots_of_inputs(self):
+    def test_coinjoin_lots_of_inputs(self) -> None:
         denomination = 10_000_000
         coordinator_fee = int(self.fee_rate_percent / 100 * denomination)
         fees = coordinator_fee + 500
@@ -154,7 +156,7 @@ class TestApprover(TestCaseWithContext):
 
         await_result(approver.approve_tx(tx_info, [], None))
 
-    def test_coinjoin_input_account_depth_mismatch(self):
+    def test_coinjoin_input_account_depth_mismatch(self) -> None:
         txi = TxInput(
             prev_hash=bytes(32),
             prev_index=0,
@@ -177,7 +179,7 @@ class TestApprover(TestCaseWithContext):
         with self.assertRaises(wire.ProcessError):
             await_result(approver.add_internal_input(txi, self.node))
 
-    def test_coinjoin_input_account_path_mismatch(self):
+    def test_coinjoin_input_account_path_mismatch(self) -> None:
         txi = TxInput(
             prev_hash=bytes(32),
             prev_index=0,
@@ -199,6 +201,90 @@ class TestApprover(TestCaseWithContext):
 
         with self.assertRaises(wire.ProcessError):
             await_result(approver.add_internal_input(txi, self.node))
+
+
+class TestBasicApproverForeignAddress(unittest.TestCase):
+    coin = coins.by_name("Bitcoin")
+    # BIP-44 paths, foreign for both SPENDWITNESS and SPENDTAPROOT.
+    FOREIGN_A = [H_(44), H_(0), H_(0), 0, 0]
+    FOREIGN_B = [H_(44), H_(0), H_(7), 0, 3]
+    # BIP-86 path, valid for SPENDTAPROOT.
+    NATIVE = [H_(86), H_(0), H_(0), 0, 0]
+
+    def make_approver(self) -> BasicApprover:
+        tx = SignTx(
+            outputs_count=1,
+            inputs_count=2,
+            coin_name=self.coin.coin_name,
+            lock_time=0,
+        )
+        return BasicApprover(tx, self.coin)
+
+    def make_input(
+        self,
+        address_n: list[int],
+        script_type: InputScriptType = InputScriptType.SPENDTAPROOT,
+    ) -> TxInput:
+        return TxInput(
+            prev_hash=bytes(32),
+            prev_index=0,
+            amount=100000,
+            script_type=script_type,
+            address_n=address_n,
+            sequence=0xFFFFFFFF,
+        )
+
+    def add_input(self, approver: BasicApprover, txi: TxInput) -> list[list[int]]:
+        """Run add_internal_input() and return the paths shown in foreign-address warnings."""
+        confirm = MockAsync()
+        with patch(layout, "confirm_foreign_address", confirm):
+            await_result(approver.add_internal_input(txi, None))  # node is unused
+        return [args[0] for args, _ in confirm.calls]
+
+    def test_native_path_is_not_confirmed(self) -> None:
+        approver = self.make_approver()
+        txi = self.make_input(self.NATIVE)
+        self.assertEqual(self.add_input(approver, txi), [])
+        approver.check_internal_input(txi)
+
+    def test_each_foreign_path_is_confirmed(self) -> None:
+        approver = self.make_approver()
+        txi_a = self.make_input(self.FOREIGN_A)
+        txi_b = self.make_input(self.FOREIGN_B)
+        self.assertEqual(self.add_input(approver, txi_a), [self.FOREIGN_A])
+        self.assertEqual(self.add_input(approver, txi_b), [self.FOREIGN_B])
+        approver.check_internal_input(txi_a)
+        approver.check_internal_input(txi_b)
+
+    def test_confirmed_foreign_path_does_not_authorize_another(self) -> None:
+        approver = self.make_approver()
+        txi_a = self.make_input(self.FOREIGN_A)
+        self.assertEqual(self.add_input(approver, txi_a), [self.FOREIGN_A])
+
+        approver.check_internal_input(txi_a)
+        with self.assertRaises(wire.ProcessError):
+            approver.check_internal_input(self.make_input(self.FOREIGN_B))
+
+    def test_confirmed_foreign_path_does_not_authorize_another_script_type(
+        self,
+    ) -> None:
+        approver = self.make_approver()
+        txi = self.make_input(self.FOREIGN_A, InputScriptType.SPENDWITNESS)
+        self.assertEqual(self.add_input(approver, txi), [self.FOREIGN_A])
+
+        approver.check_internal_input(txi)
+        with self.assertRaises(wire.ProcessError):
+            approver.check_internal_input(
+                self.make_input(self.FOREIGN_A, InputScriptType.SPENDTAPROOT)
+            )
+
+    def test_native_path_does_not_authorize_a_foreign_one(self) -> None:
+        approver = self.make_approver()
+        txi = self.make_input(self.NATIVE)
+        self.assertEqual(self.add_input(approver, txi), [])
+
+        with self.assertRaises(wire.ProcessError):
+            approver.check_internal_input(self.make_input(self.FOREIGN_A))
 
 
 if __name__ == "__main__":
