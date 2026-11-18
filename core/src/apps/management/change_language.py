@@ -133,6 +133,29 @@ async def do_change_language(
     await _show_success(silent_install, show_display)
 
 
+def _language_name(lang_code: str) -> str:
+    # Match on the primary subtag only ("cs-CZ" -> "cs"), so that a regional
+    # variant still gets a readable name.
+    # Intentionally an if-chain, not a dict, to minimize heap usage.
+    primary = lang_code.split("-", 1)[0].lower()
+    if primary == "cs":
+        return TR.language__czech
+    if primary == "de":
+        return TR.language__german
+    if primary == "en":
+        return TR.language__english
+    if primary == "es":
+        return TR.language__spanish
+    if primary == "fr":
+        return TR.language__french
+    if primary == "id":
+        return TR.language__indonesian
+    if primary == "pt":
+        return TR.language__portuguese
+    # Language unknown to this firmware: fall back to the raw code.
+    return lang_code
+
+
 async def _require_confirm_change_language(
     header: translations.TranslationsHeader | None,
     silent_install: bool,
@@ -141,7 +164,7 @@ async def _require_confirm_change_language(
     from trezor.enums import ButtonRequestType
     from trezor.ui.layouts import confirm_action
 
-    lang = "en-US" if header is None else header.language
+    lang_code = "en-US" if header is None else header.language
 
     if not silent_install and show_display is False:
         # host requested silent change but we cannot do it
@@ -156,7 +179,7 @@ async def _require_confirm_change_language(
     await confirm_action(
         "set_language",
         TR.language__title,
-        description=TR.language__change_to_template.format(lang),
+        description=TR.language__change_to_template.format(_language_name(lang_code)),
         verb="OK",  # going for an international word, so it does not need translations
         br_code=ButtonRequestType.ProtectCall,
         prompt_screen=True,
