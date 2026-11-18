@@ -51,4 +51,4 @@ default = ["app", "nightly"]
 # --------------------------------------------------------------------------
 # Selectable features
 # --------------------------------------------------------------------------
-test = ["mock_sha3", "mock_hmac_sha256", "mock_hmac_sha512"]
+test = ["app", "mock_sha3", "mock_hmac_sha256", "mock_hmac_sha512"]
