@@ -35,6 +35,7 @@
 #include <SDL3/SDL_blendmode.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3_image/SDL_image.h>
+#include <limits.h>
 #include <stdlib.h>
 
 #ifdef USE_POWER_MANAGER
@@ -744,7 +745,7 @@ void display_save(const char *prefix) {
 #endif
 
   static int count;
-  static char filename[256];
+  static char filename[PATH_MAX];
   // take a cropped view of the screen contents
   const SDL_Rect rect = {0, 0, DISPLAY_RESX, DISPLAY_RESY};
   SDL_Surface *crop = SDL_CreateSurface(rect.w, rect.h, drv->buffer->format);
@@ -763,7 +764,10 @@ void display_save(const char *prefix) {
     SDL_DestroySurface(drv->prev_saved);
   }
   // save to png
-  snprintf(filename, sizeof(filename), "%s%08d.png", prefix, count++);
+  int len = snprintf(filename, sizeof(filename), "%s%08d.png", prefix, count++);
+  // A truncated filename would make the screenshots overwrite each other
+  ensure_true(len >= 0 && (size_t)len < sizeof(filename),
+              "Screenshot path too long");
   IMG_SavePNG(crop, filename);
   drv->prev_saved = crop;
 }
