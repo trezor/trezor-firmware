@@ -55,6 +55,6 @@ macro_rules! unwrap {
         $e.unwrap_or_fatal_error($msg, file!(), line!())
     }};
     ($expr:expr) => {
-        unwrap!($expr, "unwrap failed")
+        $crate::unwrap!($expr, "unwrap failed")
     };
 }
