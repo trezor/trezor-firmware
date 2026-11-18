@@ -1,4 +1,7 @@
 name: Core
+# Name reference builds explicitly instead of after the head commit message. An empty
+# run-name falls back to GitHub's default (PR title / commit message) for other events.
+run-name: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') && 'Reference build (main)' || '' }}
 
 on:
   pull_request:
