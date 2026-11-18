@@ -24,7 +24,7 @@ import pytest
 import requests
 
 from trezorlib import mapping, messages, protobuf, protocol_v1
-from trezorlib.transport import all_transports
+from trezorlib.transport import Timeout, Transport, all_transports
 from trezorlib.transport.bridge import BridgeException, BridgeTransport
 
 
@@ -107,6 +107,13 @@ def test_udp_transport_throttles_packets():
     assert transport.socket.sendall.call_count == chunk_count
     assert monotonic.call_count == chunk_count + 1
     sleep.assert_called_once_with(UdpTransport.SEND_WINDOW_SEC)
+
+
+def test_discard_stale_packets():
+    transport = mock.create_autospec(Transport, instance=True)
+    transport.read_chunk.side_effect = [b"stale", b"stale", Timeout()]
+    Transport._discard_stale_packets(transport)
+    assert transport.read_chunk.call_count == 3
 
 
 @pytest.mark.parametrize("legacy", (False, True))
