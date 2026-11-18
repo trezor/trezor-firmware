@@ -1503,6 +1503,13 @@ pub enum TranslatedString {
     solana__view_details_in_menu = 1316,  // "View details in the menu."
     address__xpub_export_warning = 1317,  // "A quantum computer could use this public key to reveal all keys derived from it."
     menu__turn_off = 1318,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Turn off"}
+    language__czech = 1319,  // "Czech"
+    language__english = 1320,  // "English"
+    language__french = 1321,  // "French"
+    language__german = 1322,  // "German"
+    language__indonesian = 1323,  // "Indonesian"
+    language__portuguese = 1324,  // "Portuguese"
+    language__spanish = 1325,  // "Spanish"
 }
 
 impl TranslatedString {
@@ -2829,6 +2836,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4153,6 +4167,13 @@ impl TranslatedString {
                 17919,
                 17999,
                 17999,
+                18004,
+                18011,
+                18017,
+                18023,
+                18033,
+                18043,
+                18050,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5476,6 +5497,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6800,6 +6828,13 @@ impl TranslatedString {
                 17919,
                 17999,
                 17999,
+                18004,
+                18011,
+                18017,
+                18023,
+                18033,
+                18043,
+                18050,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8123,6 +8158,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9447,6 +9489,13 @@ impl TranslatedString {
                 17919,
                 17999,
                 17999,
+                18004,
+                18011,
+                18017,
+                18023,
+                18033,
+                18043,
+                18050,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10770,6 +10819,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -12094,6 +12150,13 @@ impl TranslatedString {
                 17919,
                 17999,
                 17999,
+                18004,
+                18011,
+                18017,
+                18023,
+                18033,
+                18043,
+                18050,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -13418,6 +13481,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14742,6 +14812,13 @@ impl TranslatedString {
                 17180,
                 17260,
                 17260,
+                17265,
+                17272,
+                17278,
+                17284,
+                17294,
+                17304,
+                17311,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16065,6 +16142,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -17389,6 +17473,13 @@ impl TranslatedString {
                 17180,
                 17260,
                 17260,
+                17265,
+                17272,
+                17278,
+                17284,
+                17294,
+                17304,
+                17311,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18712,6 +18803,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -20036,6 +20134,13 @@ impl TranslatedString {
                 17180,
                 17260,
                 17260,
+                17265,
+                17272,
+                17278,
+                17284,
+                17294,
+                17304,
+                17311,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21359,6 +21464,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -22683,6 +22795,13 @@ impl TranslatedString {
                 17180,
                 17260,
                 17260,
+                17265,
+                17272,
+                17278,
+                17284,
+                17294,
+                17304,
+                17311,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -24007,6 +24126,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -25331,6 +25457,13 @@ impl TranslatedString {
                 19330,
                 19410,
                 19410,
+                19415,
+                19422,
+                19428,
+                19434,
+                19444,
+                19454,
+                19461,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26654,6 +26787,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -27978,6 +28118,13 @@ impl TranslatedString {
                 19330,
                 19410,
                 19410,
+                19415,
+                19422,
+                19428,
+                19434,
+                19444,
+                19454,
+                19461,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29301,6 +29448,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -30625,6 +30779,13 @@ impl TranslatedString {
                 19330,
                 19410,
                 19410,
+                19415,
+                19422,
+                19428,
+                19434,
+                19444,
+                19454,
+                19461,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31948,6 +32109,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -33272,6 +33440,13 @@ impl TranslatedString {
                 19330,
                 19410,
                 19410,
+                19415,
+                19422,
+                19428,
+                19434,
+                19444,
+                19454,
+                19461,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -34596,6 +34771,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "Turn off",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -35920,6 +36102,13 @@ impl TranslatedString {
                 20333,
                 20413,
                 20421,
+                20426,
+                20433,
+                20439,
+                20445,
+                20455,
+                20465,
+                20472,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -37243,6 +37432,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "Turn off",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -38567,6 +38763,13 @@ impl TranslatedString {
                 20333,
                 20413,
                 20421,
+                20426,
+                20433,
+                20439,
+                20445,
+                20455,
+                20465,
+                20472,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39890,6 +40093,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "Turn off",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -41214,6 +41424,13 @@ impl TranslatedString {
                 20333,
                 20413,
                 20421,
+                20426,
+                20433,
+                20439,
+                20445,
+                20455,
+                20465,
+                20472,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -42537,6 +42754,13 @@ impl TranslatedString {
                 "View details in the menu.",
                 "A quantum computer could use this public key to reveal all keys derived from it.",
                 "Turn off",
+                "Czech",
+                "English",
+                "French",
+                "German",
+                "Indonesian",
+                "Portuguese",
+                "Spanish",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -43861,6 +44085,13 @@ impl TranslatedString {
                 20333,
                 20413,
                 20421,
+                20426,
+                20433,
+                20439,
+                20445,
+                20455,
+                20465,
+                20472,
             ];
 
         }
@@ -44575,7 +44806,14 @@ impl TranslatedString {
         (Qstr::MP_QSTR_k1n1__writing, Self::k1n1__writing),
         (Qstr::MP_QSTR_language__change_to_template, Self::language__change_to_template),
         (Qstr::MP_QSTR_language__changed, Self::language__changed),
+        (Qstr::MP_QSTR_language__czech, Self::language__czech),
+        (Qstr::MP_QSTR_language__english, Self::language__english),
+        (Qstr::MP_QSTR_language__french, Self::language__french),
+        (Qstr::MP_QSTR_language__german, Self::language__german),
+        (Qstr::MP_QSTR_language__indonesian, Self::language__indonesian),
+        (Qstr::MP_QSTR_language__portuguese, Self::language__portuguese),
         (Qstr::MP_QSTR_language__progress, Self::language__progress),
+        (Qstr::MP_QSTR_language__spanish, Self::language__spanish),
         (Qstr::MP_QSTR_language__title, Self::language__title),
         (Qstr::MP_QSTR_led__disable, Self::led__disable),
         (Qstr::MP_QSTR_led__enable, Self::led__enable),

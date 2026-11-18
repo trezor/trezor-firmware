@@ -487,7 +487,14 @@ static void _librust_qstrs(void) {
   MP_QSTR_language;
   MP_QSTR_language__change_to_template;
   MP_QSTR_language__changed;
+  MP_QSTR_language__czech;
+  MP_QSTR_language__english;
+  MP_QSTR_language__french;
+  MP_QSTR_language__german;
+  MP_QSTR_language__indonesian;
+  MP_QSTR_language__portuguese;
   MP_QSTR_language__progress;
+  MP_QSTR_language__spanish;
   MP_QSTR_language__title;
   MP_QSTR_last_attempt;
   MP_QSTR_last_write;
