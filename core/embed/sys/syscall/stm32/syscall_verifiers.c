@@ -72,7 +72,7 @@ void sysevents_poll__verified(const sysevents_t *awaited,
   sysevents_t awaited_copy = *awaited;
 
   applet_t *applet = syscall_get_context();
-  if (!applet->privileges.unlimited_syscalls) {
+  if (applet->privileges.unlimited_syscalls != sectrue) {
     syshandle_mask_t allowed_handles = SYSHANDLE_MASK_IPC;
     awaited_copy.read_ready &= allowed_handles;
     awaited_copy.write_ready &= allowed_handles;
