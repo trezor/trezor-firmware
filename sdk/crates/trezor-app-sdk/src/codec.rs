@@ -10,8 +10,8 @@
 
 use alloc::vec::Vec;
 
-use crate::Result;
 use crate::wire::wire_call;
+use crate::{Error, Result};
 
 /// Decodes a wire message body into `T` using the implementing codec.
 pub trait WireDecode<T> {
@@ -36,6 +36,8 @@ pub trait WireRequest {
     type Response;
     /// The wire message id of this request.
     const ID: u16;
+    /// The wire message id the host answers with.
+    const RESPONSE_ID: u16;
 }
 
 /// Sends `req` to the host using `Codec` and decodes the response.
@@ -48,8 +50,26 @@ where
     Codec: WireEncode<Req> + WireDecode<Req::Response>,
 {
     let req_bytes = Codec::encode(req);
-    let (_id, resp_bytes) = wire_call(Req::ID, &req_bytes)?;
-    Codec::decode(resp_bytes.as_ref())
+    let (id, resp_bytes) = wire_call(Req::ID, &req_bytes)?;
+    decode_response::<Codec, Req>(id, resp_bytes.as_ref())
+}
+
+/// Decodes the host's answer to `Req`. Another message id is rejected before
+/// decoding, since a lenient codec (e.g. protobuf) could accept its bytes.
+fn decode_response<Codec, Req>(id: u16, data: &[u8]) -> Result<Req::Response>
+where
+    Req: WireRequest,
+    Codec: WireDecode<Req::Response>,
+{
+    if id != Req::RESPONSE_ID {
+        crate::warn!(
+            "Unexpected response id {}, expected {}",
+            id,
+            Req::RESPONSE_ID
+        );
+        return Err(Error::InvalidMessage);
+    }
+    Codec::decode(data)
 }
 
 /// Macro to generate handler functions.
@@ -81,14 +101,43 @@ macro_rules! wire_handler {
     };
 }
 
-/// Declares `$req`'s response type and wire id for [`$crate::wire_request`],
-/// so callers don't have to repeat both at every call site.
+/// Declares `$req`'s response type, its wire id and the response's wire id
+/// for [`$crate::wire_request`], so callers don't have to repeat them at every
+/// call site.
 #[macro_export]
 macro_rules! wire_request_type {
-    ($req:ty => $resp:ty, $id:expr) => {
+    ($req:ty => $resp:ty, $id:expr, $response_id:expr) => {
         impl $crate::WireRequest for $req {
             type Response = $resp;
             const ID: u16 = $id as u16;
+            const RESPONSE_ID: u16 = $response_id as u16;
         }
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct Ping;
+    wire_request_type!(Ping => u8, 1, 2);
+
+    /// Decodes the first byte, accepting any message.
+    struct FirstByte;
+
+    impl WireDecode<u8> for FirstByte {
+        fn decode(data: &[u8]) -> Result<u8> {
+            data.first().copied().ok_or(Error::InvalidMessage)
+        }
+    }
+
+    #[test]
+    fn decode_response_checks_the_id() {
+        crate::mock::sdk_init();
+        assert!(matches!(decode_response::<FirstByte, Ping>(2, &[7]), Ok(7)));
+        assert!(matches!(
+            decode_response::<FirstByte, Ping>(3, &[7]),
+            Err(Error::InvalidMessage)
+        ));
+    }
 }
