@@ -1,4 +1,8 @@
 /// A stable-ABI `Result`, for calls that need no service error wrapper.
+///
+/// A plain `#[repr(C, u8)]` enum, used instead of `stabby::result::Result` to
+/// avoid stabby's niche optimization, which makes compilation excessively slow
+/// when both `T` and `E` are non-trivial.
 #[stabby::stabby]
 #[repr(C, u8)]
 pub enum FastResult<T, E> {
