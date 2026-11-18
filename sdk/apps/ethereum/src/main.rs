@@ -76,7 +76,7 @@ impl<T: Message> WireEncode<T> for ProstCodec {
 
 /// Sends a request to core via [`ProstCodec`] and decodes the response.
 ///
-/// The response type and wire id come from `Req`'s `wire_request_type!`
+/// The response type and both wire ids come from `Req`'s `wire_request_type!`
 /// declaration below, instead of being repeated at every call site.
 fn wire_request<Req>(req: &Req) -> Result<Req::Response>
 where
@@ -86,10 +86,10 @@ where
     trezor_app_sdk::wire_request::<ProstCodec, Req>(req)
 }
 
-wire_request_type!(TypedDataStructRequest => TypedDataStructAck, MessageType::TypedDataStructRequest);
-wire_request_type!(TypedDataValueRequest => TypedDataValueAck, MessageType::TypedDataValueRequest);
-wire_request_type!(DefinitionRequest => DefinitionAck, MessageType::DefinitionRequest);
-wire_request_type!(TxRequest => TxAck, MessageType::TxRequest);
+wire_request_type!(TypedDataStructRequest => TypedDataStructAck, MessageType::TypedDataStructRequest, MessageType::TypedDataStructAck);
+wire_request_type!(TypedDataValueRequest => TypedDataValueAck, MessageType::TypedDataValueRequest, MessageType::TypedDataValueAck);
+wire_request_type!(DefinitionRequest => DefinitionAck, MessageType::DefinitionRequest, MessageType::DefinitionAck);
+wire_request_type!(TxRequest => TxAck, MessageType::TxRequest, MessageType::TxAck);
 
 // Generate all handler functions
 wire_handler!(
