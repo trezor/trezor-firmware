@@ -1,0 +1,1 @@
+GetPublicKey returns Zpub/Ypub and no descriptor for BIP-48 SegWit multisig accounts.
