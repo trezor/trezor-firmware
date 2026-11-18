@@ -121,6 +121,9 @@ void bn_long_division(bignum256 *x, uint32_t d, bignum256 *q, uint32_t *r);
 void bn_divmod58(bignum256 *x, uint32_t *r);
 void bn_divmod1000(bignum256 *x, uint32_t *r);
 void bn_inverse(bignum256 *x, const bignum256 *prime);
+void bn_inverse_blinded(bignum256 *x, const bignum256 *prime);
+void bn_divide_blinded(bignum256 *s, bignum256 *x, const bignum256 *prime);
+void bn_random(bignum256 *x, const bignum256 *prime);
 size_t bn_format(const bignum256 *amount, const char *prefix,
                  const char *suffix, unsigned int decimals, int exponent,
                  bool trailing, char thousands, char *output,
