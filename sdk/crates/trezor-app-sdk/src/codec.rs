@@ -95,6 +95,8 @@ macro_rules! wire_handler {
                     let response_bytes = <$codec as $crate::WireEncode<_>>::encode(&resp);
                     $crate::wire_send($response_msg as u16, &response_bytes)
                 }
+                // a stop never reaches the host, the app's entry point exits
+                Err(e) if e.is_stopped() => Err(e),
                 Err(e) => $crate::wire_error(&e),
             }
         }
@@ -129,6 +131,25 @@ mod tests {
         fn decode(data: &[u8]) -> Result<u8> {
             data.first().copied().ok_or(Error::InvalidMessage)
         }
+    }
+
+    impl WireEncode<u8> for FirstByte {
+        fn encode(val: &u8) -> Vec<u8> {
+            alloc::vec![*val]
+        }
+    }
+
+    fn stop(_: u8) -> Result<u8> {
+        Err(Error::Stopped)
+    }
+
+    wire_handler!(handle_stop, FirstByte, u8, 5u16, stop);
+
+    #[test]
+    fn wire_handler_returns_stop() {
+        crate::mock::sdk_init();
+        // not sent to the host (the mock's `wire_error` would fail)
+        assert!(handle_stop(&[1]).is_err_and(|e| e.is_stopped()));
     }
 
     #[test]
