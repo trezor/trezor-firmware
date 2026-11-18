@@ -82,16 +82,18 @@ pub struct PublicNode {
 
 impl PublicNode {
     fn from_raw(raw: &[u8; XPUB_RAW_LEN]) -> Self {
-        let (depth, rest) = raw.split_at(1);
-        let (fingerprint, rest) = rest.split_at(4);
-        let (child_num, rest) = rest.split_at(4);
-        let (chain_code, public_key) = rest.split_at(32);
+        // the field sizes add up to `XPUB_RAW_LEN`, so the unwraps cannot fail
+        const _: () = assert!(XPUB_RAW_LEN == 1 + 4 + 4 + 32 + 33);
+        let (depth, rest) = raw.split_first_chunk::<1>().unwrap();
+        let (fingerprint, rest) = rest.split_first_chunk::<4>().unwrap();
+        let (child_num, rest) = rest.split_first_chunk::<4>().unwrap();
+        let (chain_code, public_key) = rest.split_first_chunk::<32>().unwrap();
         Self {
             depth: depth[0],
-            fingerprint: u32::from_be_bytes(fingerprint.try_into().unwrap_or_default()),
-            child_num: u32::from_be_bytes(child_num.try_into().unwrap_or_default()),
-            chain_code: chain_code.try_into().unwrap_or_default(),
-            public_key: public_key.try_into().unwrap_or([0; 33]),
+            fingerprint: u32::from_be_bytes(*fingerprint),
+            child_num: u32::from_be_bytes(*child_num),
+            chain_code: *chain_code,
+            public_key: public_key.try_into().unwrap(),
         }
     }
 
