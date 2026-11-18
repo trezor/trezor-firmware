@@ -147,9 +147,10 @@ test_emu_multicore: ## run device tests using multiple cores
 		--control-emulators --model=core --random-order-seed=$(RANDOM) \
 		--lang=$(TEST_LANG)
 
-# The prepare and run scripts run in different directories.
+# The prepare and run scripts run in different directories. Not abspath, it would split a path with spaces.
 ifneq ($(TREZOR_MONERO_TESTS_PATH),)
-test_emu_monero clean_monero: override export TREZOR_MONERO_TESTS_PATH := $(abspath $(TREZOR_MONERO_TESTS_PATH))
+test_emu_monero clean_monero: override export TREZOR_MONERO_TESTS_PATH := \
+	$(if $(filter /%,$(firstword $(TREZOR_MONERO_TESTS_PATH))),,$(CURDIR)/)$(TREZOR_MONERO_TESTS_PATH)
 endif
 
 test_emu_monero: ## run selected monero device tests from monero-agent
@@ -306,9 +307,10 @@ clean: ## clean all
 	xtask clean
 
 clean_monero: ## delete the monero tests binary with its test chain and logs
-	rm -f $(foreach bin,tests/trezor_monero_tests $(TREZOR_MONERO_TESTS_PATH),\
-		"$(bin)" "$(bin).sha256" "$(bin).inputs" "$(bin).chain") \
-		tests/trezor_monero_tests.log tests/trezor_monero_tests.log.attempt
+	for bin in tests/trezor_monero_tests $${TREZOR_MONERO_TESTS_PATH:+"$$TREZOR_MONERO_TESTS_PATH"}; do \
+		rm -f "$$bin" "$$bin.sha256" "$$bin.inputs" "$$bin.chain"; \
+	done
+	rm -f tests/trezor_monero_tests.log tests/trezor_monero_tests.log.attempt
 
 ## flash commands:
 

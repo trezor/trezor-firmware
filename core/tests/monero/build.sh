@@ -70,14 +70,13 @@ fi
 docker build --platform linux/amd64 -f "$SRC/docker/tests/Dockerfile" --build-arg BASE_IMAGE="$BASE_IMAGE" \
   -t monero-trezor-tests --iidfile "$WORK/image-id" "$SRC"
 
-# Until the new binary is complete, the old one with its chain must not pass as current.
-rm -f "$OUT_DIR/$OUT_NAME.inputs" "$OUT_DIR/$OUT_NAME.chain"
-
 # Debug build includes the UDP transport for the emulator.
 # ARCH=default: no -march, the default "native" would target the build machine's CPU.
 # The binary is checked in the container, the host may not be Linux.
+# It is built to WORK first, a failed build keeps the previous binary usable.
+mkdir "$WORK/out"
 docker run --rm --platform linux/amd64 --user "$(id -u):$(id -g)" -e HOME=/tmp -e OUT_NAME="$OUT_NAME" \
-  -v "$SRC:/src" -v "$OUT_DIR:/out" -w /src "$(cat "$WORK/image-id")" bash -c '
+  -v "$SRC:/src" -v "$WORK/out:/out" -w /src "$(cat "$WORK/image-id")" bash -c '
   set -ex
   mkdir -p build/debug
   cd build/debug
@@ -98,4 +97,8 @@ docker run --rm --platform linux/amd64 --user "$(id -u):$(id -g)" -e HOME=/tmp -
   sha256sum "$OUT_NAME" > "$OUT_NAME.sha256"
   cat "$OUT_NAME.sha256"
 '
+
+# Until the new binary is complete, the old one with its chain must not pass as current.
+rm -f "$OUT_DIR/$OUT_NAME.inputs" "$OUT_DIR/$OUT_NAME.chain"
+mv "$WORK/out/$OUT_NAME" "$WORK/out/$OUT_NAME.sha256" "$OUT_DIR/"
 echo "$INPUTS" > "$OUT_DIR/$OUT_NAME.inputs"

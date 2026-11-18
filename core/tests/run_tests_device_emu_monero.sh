@@ -68,20 +68,23 @@ if [[ "$OSTYPE" == "linux-gnu" && "$FORCE_DOCKER_USE" != 1 ]]; then
 
   echo "Note: use --heavy-tests with real device (and TREZOR_PATH) env var"
   run_tests_once() {
-    TEST_MAX_HF=15 TEST_MIN_HF=15 "$TREZOR_MONERO_TESTS_PATH" --fix-chain --chain-path=$TREZOR_MONERO_TESTS_CHAIN "${TEST_ARGS[@]}" > "$1" 2>&1
+    TEST_MAX_HF=15 TEST_MIN_HF=15 "$TREZOR_MONERO_TESTS_PATH" --fix-chain --chain-path="$TREZOR_MONERO_TESTS_CHAIN" "${TEST_ARGS[@]}" > "$1" 2>&1
   }
 
 elif [[ "$OSTYPE" == "darwin"* || "$FORCE_DOCKER_USE" == 1 ]]; then
-  # The binary is mounted separately, TREZOR_MONERO_TESTS_PATH may be outside CORE_DIR.
+  # The binary and the chain are mounted separately, they may be outside CORE_DIR.
+  chain_dir="$(mkdir -p "$(dirname "$TREZOR_MONERO_TESTS_CHAIN")" && cd "$(dirname "$TREZOR_MONERO_TESTS_CHAIN")" && pwd)"
   DOCKER_ID=$(docker run -idt --platform linux/amd64 --mount type=bind,src="$CORE_DIR",dst="$CORE_DIR" \
     --mount type=bind,src="$TREZOR_MONERO_TESTS_PATH",dst=/trezor_monero_tests,readonly \
+    --mount type=bind,src="$chain_dir",dst=/chain \
     -w "$CORE_DIR" --network=host ubuntu:18.04)
   docker exec $DOCKER_ID apt-get update -qq 2>/dev/null >/dev/null
   docker exec $DOCKER_ID apt-get install --no-install-recommends --no-upgrade -qq net-tools socat 2>/dev/null >/dev/null
   docker exec -d $DOCKER_ID socat UDP-LISTEN:21324,reuseaddr,reuseport,fork UDP4-SENDTO:host.docker.internal:21324
   docker exec -d $DOCKER_ID socat UDP-LISTEN:21325,reuseaddr,reuseport,fork UDP4-SENDTO:host.docker.internal:21325
   run_tests_once() {
-    docker exec -e TEST_MAX_HF=15 -e TEST_MIN_HF=15 $DOCKER_ID /trezor_monero_tests > "$1" 2>&1
+    docker exec -e TEST_MAX_HF=15 -e TEST_MIN_HF=15 $DOCKER_ID /trezor_monero_tests \
+      --fix-chain --chain-path="/chain/$(basename "$TREZOR_MONERO_TESTS_CHAIN")" "${TEST_ARGS[@]}" > "$1" 2>&1
   }
 
 else

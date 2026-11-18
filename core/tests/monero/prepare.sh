@@ -16,13 +16,18 @@ CORE_DIR="$(cd "$HERE/../.." && pwd)"
 : "${TREZOR_MONERO_TESTS_PATH:=$CORE_DIR/tests/trezor_monero_tests}"
 INPUTS="$("$HERE/inputs.sh")"
 
+checksum_ok() {
+  (cd "$(dirname "$TREZOR_MONERO_TESTS_PATH")" \
+    && sha256sum -c "$(basename "$TREZOR_MONERO_TESTS_PATH").sha256" > /dev/null 2>&1)
+}
+
 if [[ ! -f "$TREZOR_MONERO_TESTS_PATH" ]]; then
   state=missing
+# build.sh and download.sh write both sidecars, a binary without them is not managed by them.
+elif [[ -f "$TREZOR_MONERO_TESTS_PATH.sha256" || -f "$TREZOR_MONERO_TESTS_PATH.inputs" ]] && ! checksum_ok; then
+  state=corrupt
 elif [[ "$(cat "$TREZOR_MONERO_TESTS_PATH.inputs" 2>/dev/null)" != "$INPUTS" ]]; then
   state=outdated
-elif [[ -f "$TREZOR_MONERO_TESTS_PATH.sha256" ]] && ! (cd "$(dirname "$TREZOR_MONERO_TESTS_PATH")" \
-    && sha256sum -c "$(basename "$TREZOR_MONERO_TESTS_PATH").sha256" > /dev/null 2>&1); then
-  state=corrupt
 else
   exit 0
 fi
