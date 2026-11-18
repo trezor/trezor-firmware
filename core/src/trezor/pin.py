@@ -68,7 +68,7 @@ def show_pin_timeout(
     if callable(keepalive_callback):
         keepalive_callback()
 
-    if progress == 0 or _progress_layout is None:
+    if _progress_layout is None or _started_with_empty_loader:
         _previous_seconds = None
 
     if seconds != _previous_seconds:
@@ -84,8 +84,7 @@ def show_pin_timeout(
     else:
         remaining = _previous_remaining
 
-    # create the layout if it doesn't exist yet or should be started again
-    if _progress_layout is None or (progress == 0 and not _started_with_empty_loader):
+    if _progress_layout is None:
         _progress_layout = pin_progress(message, description=remaining or "")
 
     # reset the flag - the render_empty_loader() has the effect only in the first call
