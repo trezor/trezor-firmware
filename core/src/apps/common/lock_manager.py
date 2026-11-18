@@ -257,12 +257,30 @@ async def unlock_device() -> None:
     utils.notify_send(utils.NOTIFY_SOFTUNLOCK)
 
 
+def mark_host_unlock() -> None:
+    """Note that the device was just unlocked for a host request, so the homescreen
+    doesn't flash before the host's next screen (see `trezor.ui.layouts.homescreen`).
+
+    Any screen that comes up afterwards ends this (see `trezor.ui.Layout.start`)."""
+    import utime
+
+    import storage.cache as storage_cache
+
+    storage_cache.host_unlocked_ms = utime.ticks_ms()
+
+
 def _pinlock_filter(msg_type: int, prev_handler: Handler[Msg]) -> Handler[Msg]:
     if msg_type in workflow.ALLOW_WHILE_LOCKED:
         return prev_handler
 
     async def wrapper(msg: Msg) -> protobuf.MessageType:
+        was_locked = not config.is_unlocked()
         await unlock_device()
+        if was_locked:
+            # right after the PIN, before the request runs: if the request shows its
+            # own screen, that ends the wait again; if it shows none (or fails, like
+            # Suite's first request on a locked device), the host's next screen follows
+            mark_host_unlock()
         return await prev_handler(msg)
 
     return wrapper

@@ -201,6 +201,12 @@ class Layout(Generic[T]):
         # do not notify debuglink, we will do it when we receive an ATTACHED event
         set_current_layout(self)
 
+        # a new screen is up, so the host that unlocked the device has reached its own
+        # screen and the homescreen no longer waits (see `trezor.ui.layouts.homescreen`)
+        import storage.cache as storage_cache
+
+        storage_cache.host_unlocked_ms = None
+
         try:
             self.button_request_handler = context.get_context().button_request_handler
         except context.NoWireContext:

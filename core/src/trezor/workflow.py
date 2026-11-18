@@ -72,6 +72,7 @@ def _on_close(workflow: loop.spawn) -> None:
     if __debug__:
         log.debug(__name__, "close: %s", workflow.task)
     tasks.remove(workflow)
+    storage_cache.workflow_ended_ms = utime.ticks_ms()
     if not tasks and default_constructor:
         # If no workflows are running, we should create a new default workflow
         # and run it.
