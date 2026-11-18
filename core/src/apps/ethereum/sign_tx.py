@@ -186,7 +186,7 @@ async def confirm_tx_data(
                 fee_items,
                 payment_request_verifier,
             )
-        except clear_signing.ClearSigningFailed:
+        except (clear_signing.ClearSigningFailed, DataError):
             clear_signed = False
 
     recipient_str = (

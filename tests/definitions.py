@@ -219,15 +219,48 @@ _MESSAGE_TYPES: dict[messages.DefinitionType, type[protobuf.MessageType]] = {
 }
 
 
+def dump_message_unchecked(msg: protobuf.MessageType) -> bytes:
+    """Encode `msg` like `protobuf.dump_message`, but write enum values as raw
+    ints without checking them against the enum.
+
+    Used to build definitions with enum values unknown to the firmware (e.g. ones
+    added in a newer protobuf version), which `dump_message` refuses to encode."""
+    writer = io.BytesIO()
+    for tag, field in msg.FIELDS.items():
+        value = getattr(msg, field.name, None)
+        if value is None:
+            continue
+        for item in value if field.repeated else [value]:
+            protobuf.dump_uvarint(writer, (tag << 3) | field.wire_type)
+            if isinstance(item, protobuf.MessageType):
+                item = dump_message_unchecked(item)
+            elif isinstance(item, str):
+                item = item.encode()
+            if isinstance(item, (bytes, bytearray)):
+                protobuf.dump_uvarint(writer, len(item))
+                writer.write(item)
+            else:
+                if field.proto_type.startswith("sint"):
+                    item = protobuf.sint_to_uint(item)
+                protobuf.dump_uvarint(writer, int(item))
+    return writer.getvalue()
+
+
 def json_to_dat(d: dict[str, t.Any]) -> bytes:
     """Encode and dev-sign a JSON definition.
 
     Always uses format version 2 and the maximum timestamp (the `make_payload`
-    defaults), so the test definitions never expire."""
+    defaults), so the test definitions never expire.
+
+    With `"unchecked_enums": true`, enum fields may hold raw ints unknown to the
+    current protobuf definitions (see `dump_message_unchecked`)."""
     data_type = messages.DefinitionType[d["data_type"]]
+    message = protobuf.dict_to_proto(_MESSAGE_TYPES[data_type], d["message"])
     payload = make_payload(
         data_type=data_type,
-        message=protobuf.dict_to_proto(_MESSAGE_TYPES[data_type], d["message"]),
+        message=(
+            dump_message_unchecked(message) if d.get("unchecked_enums") else message
+        ),
     )
     proof, signature = sign_payload(payload, [])
     return payload + proof + signature
