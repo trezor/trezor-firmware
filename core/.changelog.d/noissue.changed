@@ -1,1 +1,1 @@
-[T3W1] Bluetooth no longer advertises the device name outside of pairing mode.
+[T3W1] Bluetooth no longer advertises the device name or identifies the device as a Trezor outside of pairing mode.

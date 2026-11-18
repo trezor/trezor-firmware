@@ -73,10 +73,15 @@ uint8_t manufacturer_data[8] = {0x29, 0x0F, 0, 0, 0, 0, 0, 0};
 static struct bt_data advertising_data[2];
 static size_t advertising_data_count = 0;
 
+// Scan response: service UUID + manufacturer data in pairing mode only. In
+// whitelist (bonded) mode it is empty: it is answered only to bonded hosts,
+// but sniffers overhear it, and the UUID and company ID would identify the
+// device as a Trezor. Bonded hosts reconnect by the resolved address instead.
 static const struct bt_data scan_response_data[] = {
     BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_UUID_TRZ_VAL),
     BT_DATA(BT_DATA_MANUFACTURER_DATA, manufacturer_data, 8),
 };
+static size_t scan_response_data_count = 0;
 
 static void change_adv_work_handler(struct k_work *work);
 static void change_adv_interval_handler(struct k_timer *timer_id);
@@ -129,7 +134,7 @@ static void change_adv_work_handler(struct k_work *work) {
   err = bt_le_adv_start(BT_LE_ADV_PARAM(adv_options, ADV_INTERVAL_SLOW_MIN,
                                         ADV_INTERVAL_SLOW_MAX, NULL),
                         advertising_data, advertising_data_count,
-                        scan_response_data, ARRAY_SIZE(scan_response_data));
+                        scan_response_data, scan_response_data_count);
 
   if (err) {
     LOG_ERR("Failed to restart advertising with slow interval (err %d)", err);
@@ -207,17 +212,9 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
   memcpy(adv_name, name, name_len);
   advertising_data[1].data = (const uint8_t *)adv_name;
 
-  // The name is advertised only in pairing mode
+  // The name and the scan response are sent only in pairing mode
   advertising_data_count = wl ? 1 : 2;
-
-  if (wl) {
-    // The scan response is answered only to bonded hosts (scan request
-    // filter), but is still visible to sniffers. Keep the company ID and the
-    // service UUID (current hosts discover bonded devices by them) and a
-    // zeroed payload (pairing = 0, which hosts need to refresh their cached
-    // flags), but no status, color or model.
-    memset(&manufacturer_data[2], 0, sizeof(manufacturer_data) - 2);
-  }
+  scan_response_data_count = wl ? 0 : ARRAY_SIZE(scan_response_data);
 
   char gap_name[BLE_ADV_NAME_LEN + 1] = {0};
   memcpy(gap_name, name, name_len);
@@ -241,7 +238,7 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
     err = bt_le_adv_start(BT_LE_ADV_PARAM(options, ADV_INTERVAL_FAST_MIN,
                                           ADV_INTERVAL_FAST_MAX, NULL),
                           advertising_data, advertising_data_count,
-                          scan_response_data, ARRAY_SIZE(scan_response_data));
+                          scan_response_data, scan_response_data_count);
   } else {
     LOG_INF("Advertising no whitelist");
 
@@ -258,7 +255,7 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
     err = bt_le_adv_start(BT_LE_ADV_PARAM(options, ADV_INTERVAL_FAST_MIN,
                                           ADV_INTERVAL_FAST_MAX, NULL),
                           advertising_data, advertising_data_count,
-                          scan_response_data, ARRAY_SIZE(scan_response_data));
+                          scan_response_data, scan_response_data_count);
   }
   if (err) {
     LOG_ERR("Advertising failed to start (err %d)", err);
