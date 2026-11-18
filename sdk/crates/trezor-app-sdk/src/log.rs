@@ -69,7 +69,12 @@ macro_rules! log {
             feature = "log_level_debug",
         ))]
         {
-            $crate::print::log($level, |mut writer| ufmt::uwrite!(writer, $($args)*));
+            $crate::print::log($level, |mut writer| {
+                // `uwrite!` expands to `ufmt::` paths, resolved here so apps
+                // need no `ufmt` dependency of their own
+                use $crate::__ufmt as ufmt;
+                ufmt::uwrite!(writer, $($args)*)
+            });
         }
     }
 }

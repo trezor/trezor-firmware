@@ -79,5 +79,9 @@ pub use app_runtime::app;
 pub use codec::{WireDecode, WireEncode, WireRequest, wire_request};
 #[cfg(feature = "app")]
 pub use error::{Error, IntoAppResult, Result, ResultExt, ServiceResultExt};
+// for the log macros, see `log!`
+#[cfg(feature = "app")]
+#[doc(hidden)]
+pub use ufmt as __ufmt;
 #[cfg(feature = "app")]
 pub use wire::{wire_call, wire_error, wire_receive, wire_send};
