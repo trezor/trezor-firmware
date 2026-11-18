@@ -26,6 +26,7 @@ MAX_BYTES_FIELD = const(8192)
 MAX_REPEATED = const(256)
 MAX_DEPTH = const(16)
 CONTINUATION_TIMEOUT_MS = const(500)
+PROOF_STEP_LEN = const(33)  # split_bit(1B) || sibling(32B)
 
 
 class StreamCodec:
@@ -148,8 +149,8 @@ class StreamCodec:
                 if kind == 8:
                     value = await self.message(nested, self.position + size, depth + 1)
                 else:
-                    if name == "proof" and size != 34:
-                        raise DataError("WARD proof element must be 34 bytes")
+                    if name == "proof" and size != PROOF_STEP_LEN:
+                        raise DataError("WARD proof element must be 33 bytes")
                     value = await self.bytes(size, end)
                     assert value is not None
                     if kind == 6:

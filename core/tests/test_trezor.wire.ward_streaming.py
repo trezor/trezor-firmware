@@ -5,6 +5,7 @@ import gc
 from struct import pack
 
 from trezor import loop, protobuf
+from trezor.crypto.hashlib import sha256
 from trezor.enums import MessageType as MT
 
 if utils.USE_WARD:
@@ -86,10 +87,11 @@ class TestWardStreaming(unittest.TestCase):
         key = bytes(32)
         id_part = leaf.encode_identity(b"i" * 32, key, "address", b"addr", b"bitcoin")
         val_part = leaf.encode_content(b"v" * 32, key, "address", 1, b"label")
-        path = [bit.to_bytes(2, "big") + b"s" * 32 for bit in range(255, -1, -1)]
-        root = trie.reconstruct(
-            leaf.leaf_hash(key, "address", id_part, val_part), path, key
-        )
+        path = [bytes([bit]) + b"s" * 32 for bit in range(255, -1, -1)]
+        # every bit of the all-zero key goes left, so the sibling is on the right
+        root = leaf.leaf_hash(key, "address", id_part, val_part)
+        for step in path:
+            root = sha256(b"\x01" + step[:1] + root + step[1:]).digest()
         message = WARDProofAck(
             proof=path,
             identity=make_leaf_identity("address", id_part),
@@ -108,21 +110,19 @@ class TestWardStreaming(unittest.TestCase):
         )
 
     def test_all_hashes_can_cross_report_boundaries(self):
-        path = [
-            bit.to_bytes(2, "big") + bytes([bit]) * 32 for bit in range(255, -1, -1)
-        ]
+        path = [bytes([bit]) + bytes([bit]) * 32 for bit in range(255, -1, -1)]
         payload = encoded(
             WARDProofAck(
                 proof=path, witness_entry_key=b"k" * 32, witness_commit=b"h" * 32
             )
         )
-        self.assertEqual(len(payload), 9284)
+        self.assertEqual(len(payload), 9028)
         decoded = self.decode(payload)
         self.assertEqual(decoded.proof, path)
         self.assertEqual(decoded.witness_commit, b"h" * 32)
 
     def test_257_hops_are_refused(self):
-        payload = encoded(WARDProofAck(proof=[bytes(34)] * 257))
+        payload = encoded(WARDProofAck(proof=[bytes(33)] * 257))
         with self.assertRaises(DataError):
             self.decode(payload)
 
@@ -142,7 +142,7 @@ class TestWardStreaming(unittest.TestCase):
         self.assertEqual(self.decode(b"\x9a\x06\x80\x80\x01" + bytes(16384)).proof, [])
 
     def test_encoder_uses_the_same_single_report_for_large_messages(self):
-        msg = WARDProofAck(proof=[bytes(34)] * 256)
+        msg = WARDProofAck(proof=[bytes(33)] * 256)
         expected = reports(MT.WARDProofAck, encoded(msg))
         iface = FakeInterface([])
         codec = StreamCodec(iface)

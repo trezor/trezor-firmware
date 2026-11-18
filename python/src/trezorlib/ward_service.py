@@ -151,7 +151,7 @@ class WardService:
                 reply = protobuf.dict_to_proto(messages.WARDProofAck, answer)
             elif isinstance(request, messages.WARDNodeRequest):
                 answer = self.backend.call(
-                    "answerNodeRequest", {"request": body, "maxNodes": 1}
+                    "answerNodeRequest", {"request": body, "maxEntries": 1}
                 )
                 reply = protobuf.dict_to_proto(messages.WARDNodeAck, answer)
             elif isinstance(
