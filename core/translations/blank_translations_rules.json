@@ -422,6 +422,9 @@
       "pin__cancel_setup",
       "send__cancel_sign",
       "send__incl_transaction_fee",
+      "solana__skip_details",
+      "solana__skip_details_hint",
+      "solana__title_blind_signing",
       "wipe_code__cancel_setup"
     ],
     "allowedLayouts": [ "Delizia", "Eckhart" ],
@@ -447,6 +450,8 @@
       "reset__select_word_from_share_template",
       "reset__select_word_template",
       "send__send_in_the_app",
+      "solana__details_not_reviewed",
+      "solana__view_details_in_menu",
       "words__cancel_question",
       "words__receive",
       "words__recovery_share"
