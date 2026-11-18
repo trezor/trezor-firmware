@@ -1488,7 +1488,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Share doesn't match"
+      "Eckhart": "Share doesn't match."
     },
     "recovery__share_from_another_multi_share_backup": "You have entered a share from a different backup.",
     "recovery__share_from_group_entered_template": {
