@@ -148,7 +148,7 @@ async def show_invalid_mnemonic(word_count: int) -> None:
 async def show_identifier_mismatch() -> None:
     await show_recovery_warning(
         "warning_mismatched_share",
-        f"{TR.recovery__share_does_not_match}. {TR.recovery__share_from_another_multi_share_backup}",
+        f"{TR.recovery__share_does_not_match} {TR.recovery__share_from_another_multi_share_backup}",
         button=TR.buttons__try_again,
     )
 
