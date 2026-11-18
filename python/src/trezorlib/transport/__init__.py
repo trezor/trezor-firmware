@@ -155,6 +155,15 @@ class Transport(metaclass=ABCMeta):
     def read_chunk(self, *, timeout: float | None = None) -> bytes:
         raise NotImplementedError
 
+    def _discard_stale_packets(self) -> None:
+        max_stale_packets = 500
+        for _ in range(max_stale_packets):
+            try:
+                chunk = self.read_chunk(timeout=0.1)
+            except Timeout:
+                return
+            LOG.debug(f"stale packet: {chunk.hex()}")
+
     def is_ready(self) -> bool:
         return self.is_open()
 
