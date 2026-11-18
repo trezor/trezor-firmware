@@ -19,6 +19,4 @@
 
 #pragma once
 
-#include <trezor_types.h>
-
 #include <ffi/io/smp.h>
