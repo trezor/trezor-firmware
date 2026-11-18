@@ -1586,7 +1586,7 @@
     "recovery__cancel_dry_run": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Annuler la vérification de la sauvegarde",
+      "Delizia": "Annuler la vérification",
       "Eckhart": ""
     },
     "recovery__check_dry_run": {
@@ -1804,7 +1804,12 @@
       "Delizia": "Vérifier le fragm. {0}",
       "Eckhart": ""
     },
-    "reset__check_wallet_backup_title": "Vérifier la sauvegarde du portefeuille",
+    "reset__check_wallet_backup_title": {
+      "Bolt": "Vérifier la sauvegarde",
+      "Caesar": "Vérifier la sauvegarde du portefeuille",
+      "Delizia": "Vérifier la sauvegarde",
+      "Eckhart": "Vérifier la sauvegarde du portefeuille"
+    },
     "reset__continue_with_next_share": {
       "Bolt": "Continuez avec le fragment suivant.",
       "Caesar": "Continuez avec le fragment suivant.",
@@ -2207,8 +2212,8 @@
     },
     "reset__write_down_words_template": {
       "Bolt": "",
-      "Caesar": "Écrivez les {0} mots suivants dans l'ordre.",
-      "Delizia": "Écrivez les {0} mots suivants dans l'ordre sur la carte de sauvegarde de portefeuille.",
+      "Caesar": "Écrivez les {0} mots suivants dans l'ordre sur la carte de sauvegarde.",
+      "Delizia": "Écrivez les {0} mots suivants dans l'ordre sur la carte de sauvegarde.",
       "Eckhart": "Écrivez les {0} mots suivants dans l'ordre sur la carte de sauvegarde de portefeuille."
     },
     "reset__wrong_word_selected": {
