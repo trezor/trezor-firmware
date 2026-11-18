@@ -659,6 +659,7 @@ jobs:
   # Monero tests binary, built from ph4r05/monero and core/tests/monero/patches only when they change.
   monero_tests_binary:
     name: Monero tests binary
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'  # not for reference builds
     runs-on: ubuntu-26.04
     timeout-minutes: 120
     permissions:
@@ -671,7 +672,9 @@ jobs:
           persist-credentials: false
       # The vendor/monero commit, build.sh and the patches, see core/tests/monero/inputs.sh.
       - id: inputs
-        run: echo "id=$(core/tests/monero/inputs.sh)" >> "$GITHUB_OUTPUT"
+        run: |
+          id="$(core/tests/monero/inputs.sh)"
+          echo "id=$id" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # actions/cache@v6.1.0
         id: cache
         with:

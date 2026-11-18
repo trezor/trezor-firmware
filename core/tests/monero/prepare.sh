@@ -20,6 +20,9 @@ if [[ ! -f "$TREZOR_MONERO_TESTS_PATH" ]]; then
   state=missing
 elif [[ "$(cat "$TREZOR_MONERO_TESTS_PATH.inputs" 2>/dev/null)" != "$INPUTS" ]]; then
   state=outdated
+elif [[ -f "$TREZOR_MONERO_TESTS_PATH.sha256" ]] && ! (cd "$(dirname "$TREZOR_MONERO_TESTS_PATH")" \
+    && sha256sum -c "$(basename "$TREZOR_MONERO_TESTS_PATH").sha256" > /dev/null 2>&1); then
+  state=corrupt
 else
   exit 0
 fi
@@ -46,8 +49,8 @@ case "$action" in
   download) "$HERE/download.sh" "$TREZOR_MONERO_TESTS_PATH" ;;
   build) "$HERE/build.sh" "$TREZOR_MONERO_TESTS_PATH" ;;
   keep)
-    if [[ $state == missing ]]; then
-      echo "There is no binary to keep." >&2
+    if [[ $state != outdated ]]; then
+      echo "There is no usable binary to keep." >&2
       exit 1
     fi
     echo "Using the outdated binary."

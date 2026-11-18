@@ -5,10 +5,12 @@
 CORE_DIR="$(SHELL_SESSION_FILE='' && cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
 
 DOCKER_ID=""
+PATCH_DIR=""
 
 # Test termination trap
 terminate_test() {
   if [ -n "$DOCKER_ID" ]; then docker kill $DOCKER_ID 2>/dev/null >/dev/null; fi
+  if [ -n "$PATCH_DIR" ]; then rm -rf "$PATCH_DIR"; fi
 }
 
 set -e
@@ -37,7 +39,15 @@ fi
 if [[ -f "$TREZOR_MONERO_TESTS_PATH.sha256" ]]; then
   (cd "$(dirname "$TREZOR_MONERO_TESTS_PATH")" && sha256sum -c "$(basename "$TREZOR_MONERO_TESTS_PATH").sha256")
 fi
-chmod +x "$TREZOR_MONERO_TESTS_PATH"
+[[ -x "$TREZOR_MONERO_TESTS_PATH" ]] || chmod +x "$TREZOR_MONERO_TESTS_PATH"
+
+# Number of runs before the tests fail, see the retry loop below.
+: "${TREZOR_MONERO_TESTS_ATTEMPTS:=3}"
+if [[ ! "$TREZOR_MONERO_TESTS_ATTEMPTS" =~ ^[1-9][0-9]*$ ]]; then
+  echo "TREZOR_MONERO_TESTS_ATTEMPTS must be a positive integer, got '$TREZOR_MONERO_TESTS_ATTEMPTS'."
+  exit 1
+fi
+attempt_log="$TREZOR_MONERO_TESTS_LOG.attempt"
 
 echo "Running tests"
 TIME_TESTS_START=$SECONDS
@@ -45,8 +55,11 @@ TEST_ARGS=("$@")
 if [[ "$OSTYPE" == "linux-gnu" && "$FORCE_DOCKER_USE" != 1 ]]; then
   # The binary uses the system dynamic loader. Where it is missing (NixOS), run a copy
   # patched to use the loader of the running bash (nix-provided in nix-shell).
-  if command -v patchelf >/dev/null && [[ ! -e "$(patchelf --print-interpreter "$TREZOR_MONERO_TESTS_PATH")" ]]; then
-    patched="$CORE_DIR/tests/trezor_monero_tests.patched"
+  # A static binary has no interpreter and needs no patching.
+  interpreter="$(command -v patchelf >/dev/null && patchelf --print-interpreter "$TREZOR_MONERO_TESTS_PATH" 2>/dev/null || true)"
+  if [[ -n "$interpreter" && ! -e "$interpreter" ]]; then
+    PATCH_DIR="$(mktemp -d)"
+    patched="$PATCH_DIR/trezor_monero_tests"
     cp "$TREZOR_MONERO_TESTS_PATH" "$patched"
     chmod u+w "$patched"
     patchelf --set-interpreter "$(patchelf --print-interpreter "$(readlink -f "$(command -v bash)")")" "$patched"
@@ -55,17 +68,20 @@ if [[ "$OSTYPE" == "linux-gnu" && "$FORCE_DOCKER_USE" != 1 ]]; then
 
   echo "Note: use --heavy-tests with real device (and TREZOR_PATH) env var"
   run_tests_once() {
-    TEST_MAX_HF=15 TEST_MIN_HF=15 "$TREZOR_MONERO_TESTS_PATH" --fix-chain --chain-path=$TREZOR_MONERO_TESTS_CHAIN "${TEST_ARGS[@]}" 2>&1 > "$1"
+    TEST_MAX_HF=15 TEST_MIN_HF=15 "$TREZOR_MONERO_TESTS_PATH" --fix-chain --chain-path=$TREZOR_MONERO_TESTS_CHAIN "${TEST_ARGS[@]}" > "$1" 2>&1
   }
 
 elif [[ "$OSTYPE" == "darwin"* || "$FORCE_DOCKER_USE" == 1 ]]; then
-  DOCKER_ID=$(docker run -idt --platform linux/amd64 --mount type=bind,src="$CORE_DIR",dst="$CORE_DIR" -w "$CORE_DIR" --network=host ubuntu:18.04)
+  # The binary is mounted separately, TREZOR_MONERO_TESTS_PATH may be outside CORE_DIR.
+  DOCKER_ID=$(docker run -idt --platform linux/amd64 --mount type=bind,src="$CORE_DIR",dst="$CORE_DIR" \
+    --mount type=bind,src="$TREZOR_MONERO_TESTS_PATH",dst=/trezor_monero_tests,readonly \
+    -w "$CORE_DIR" --network=host ubuntu:18.04)
   docker exec $DOCKER_ID apt-get update -qq 2>/dev/null >/dev/null
   docker exec $DOCKER_ID apt-get install --no-install-recommends --no-upgrade -qq net-tools socat 2>/dev/null >/dev/null
   docker exec -d $DOCKER_ID socat UDP-LISTEN:21324,reuseaddr,reuseport,fork UDP4-SENDTO:host.docker.internal:21324
   docker exec -d $DOCKER_ID socat UDP-LISTEN:21325,reuseaddr,reuseport,fork UDP4-SENDTO:host.docker.internal:21325
   run_tests_once() {
-    docker exec -e TEST_MAX_HF=15 -e TEST_MIN_HF=15 $DOCKER_ID "$TREZOR_MONERO_TESTS_PATH" 2>&1 > "$1"
+    docker exec -e TEST_MAX_HF=15 -e TEST_MIN_HF=15 $DOCKER_ID /trezor_monero_tests > "$1" 2>&1
   }
 
 else
@@ -78,10 +94,8 @@ fi
 # size = 16 ... found outputs to use = 14" when random decoy selection on the small
 # test chain finds too few outputs; the wallet fails before the device is involved.
 # All attempts are kept in $TREZOR_MONERO_TESTS_LOG.
-: "${TREZOR_MONERO_TESTS_ATTEMPTS:=3}"
 : > "$TREZOR_MONERO_TESTS_LOG"
 for ((attempt = 1; attempt <= TREZOR_MONERO_TESTS_ATTEMPTS; attempt++)); do
-  attempt_log="$TREZOR_MONERO_TESTS_LOG.attempt"
   # With set -e a failing test run would exit before the summary below.
   error=0
   run_tests_once "$attempt_log" || error=$?

@@ -58,16 +58,26 @@ patches=("$HERE"/patches/*.patch)
 if [[ ${#patches[@]} -gt 0 ]]; then
   git -C "$SRC" apply "${patches[@]}"
 fi
+# The pin or the patches could have changed since INPUTS was computed.
+if [[ "$("$HERE/inputs.sh")" != "$INPUTS" ]]; then
+  echo "The build inputs changed during the build, run it again." >&2
+  exit 1
+fi
 
 # Ubuntu 18.04 image with statically built dependencies, see docker/README.md.
 # x86-64 on every host, emulated on Apple Silicon.
-docker build --platform linux/amd64 -f "$SRC/docker/tests/Dockerfile" --build-arg BASE_IMAGE="$BASE_IMAGE" -t monero-trezor-tests "$SRC"
+# The image is run by its ID: another build can move the tag in the meantime.
+docker build --platform linux/amd64 -f "$SRC/docker/tests/Dockerfile" --build-arg BASE_IMAGE="$BASE_IMAGE" \
+  -t monero-trezor-tests --iidfile "$WORK/image-id" "$SRC"
+
+# Until the new binary is complete, the old one with its chain must not pass as current.
+rm -f "$OUT_DIR/$OUT_NAME.inputs" "$OUT_DIR/$OUT_NAME.chain"
 
 # Debug build includes the UDP transport for the emulator.
 # ARCH=default: no -march, the default "native" would target the build machine's CPU.
 # The binary is checked in the container, the host may not be Linux.
 docker run --rm --platform linux/amd64 --user "$(id -u):$(id -g)" -e HOME=/tmp -e OUT_NAME="$OUT_NAME" \
-  -v "$SRC:/src" -v "$OUT_DIR:/out" -w /src monero-trezor-tests bash -c '
+  -v "$SRC:/src" -v "$OUT_DIR:/out" -w /src "$(cat "$WORK/image-id")" bash -c '
   set -ex
   mkdir -p build/debug
   cd build/debug
@@ -89,4 +99,3 @@ docker run --rm --platform linux/amd64 --user "$(id -u):$(id -g)" -e HOME=/tmp -
   cat "$OUT_NAME.sha256"
 '
 echo "$INPUTS" > "$OUT_DIR/$OUT_NAME.inputs"
-rm -f "$OUT_DIR/$OUT_NAME.chain"

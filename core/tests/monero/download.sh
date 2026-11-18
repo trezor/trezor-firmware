@@ -25,7 +25,7 @@ OUTPUT="${1:-$REPO/core/tests/trezor_monero_tests}"
 INPUTS="$("$HERE/inputs.sh")"
 NAME="monero-tests-$INPUTS"
 
-ARTIFACT_ID="$(gh api "repos/$TREZOR_MONERO_TESTS_REPO/actions/artifacts?name=$NAME" --jq '
+ARTIFACT_ID="$(gh api "repos/$TREZOR_MONERO_TESTS_REPO/actions/artifacts?name=$NAME&per_page=100" --jq '
   [.artifacts[] | select((.expired | not) and .workflow_run.head_repository_id == .workflow_run.repository_id)]
   | first | .id // empty')"
 if [[ -z "$ARTIFACT_ID" ]]; then
@@ -48,9 +48,10 @@ fi
 mkdir -p "$(dirname "$OUTPUT")"
 OUT_DIR="$(cd "$(dirname "$OUTPUT")" && pwd)"
 OUT_NAME="$(basename "$OUTPUT")"
+# Until the new binary is complete, the old one with its chain must not pass as current.
+rm -f "$OUT_DIR/$OUT_NAME.inputs" "$OUT_DIR/$OUT_NAME.chain"
 cp "$WORK/artifact/trezor_monero_tests" "$OUT_DIR/$OUT_NAME"
 chmod +x "$OUT_DIR/$OUT_NAME"
 (cd "$OUT_DIR" && sha256sum "$OUT_NAME" > "$OUT_NAME.sha256")
-echo "$INPUTS" > "$OUT_DIR/$OUT_NAME.inputs"
-rm -f "$OUT_DIR/$OUT_NAME.chain"
 cat "$OUT_DIR/$OUT_NAME.sha256"
+echo "$INPUTS" > "$OUT_DIR/$OUT_NAME.inputs"
