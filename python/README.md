@@ -71,6 +71,9 @@ you install HIDAPI support (see below).
   pip3 install trezor[hidapi]
   ```
 
+  HIDAPI support is not available on Python 3.15: `hidapi` has no prebuilt
+  packages for it (yet), so installing it will likely fail.
+
 To install all four, use `pip3 install trezor[ble,hidapi,ethereum,stellar]`.
 
 ### Distro packages
