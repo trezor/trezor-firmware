@@ -17,15 +17,13 @@ const API_VERSION: u32 = 1;
 
 /// The app's entry point, implemented by the app as
 /// `#[trezor_app_sdk::app] fn app() -> Result<()>`.
-#[cfg(not(test))]
 #[eii]
 pub fn app() -> crate::error::Result<()>;
 
-// the SDK's own unit tests link no app
 #[cfg(test)]
-#[eii]
-pub fn app() -> crate::error::Result<()> {
-    Ok(())
+#[app]
+fn app_test() -> crate::error::Result<()> {
+    panic!("App item called from test suite")
 }
 
 /// This app's entry point — but not the first thing to run on its task.
