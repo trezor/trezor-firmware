@@ -1530,18 +1530,8 @@
       "Delizia": "{count} more {plural} starting",
       "Eckhart": "You need {count} more {plural} starting"
     },
-    "recovery__x_more_shares_needed_template_plural": {
-      "Bolt": "{count} more {plural} needed",
-      "Caesar": "{count} more {plural} needed.",
-      "Delizia": "{count} more {plural} needed",
-      "Eckhart": "{count} more {plural} needed."
-    },
-    "recovery__x_of_y_entered_template": {
-      "Bolt": "{0} of {1} shares entered",
-      "Caesar": "{0} of {1} shares entered.",
-      "Delizia": "{0} of {1} shares entered",
-      "Eckhart": "{0} of {1} shares entered."
-    },
+    "recovery__x_more_shares_needed_template_plural": "{count} more {plural} needed.",
+    "recovery__x_of_y_entered_template": "{0} of {1} shares entered.",
     "recovery__you_have_entered": {
       "Bolt": "You have entered",
       "Caesar": "You have entered",
