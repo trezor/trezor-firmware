@@ -216,7 +216,6 @@ def test_definition_request_with_invalid_display_format(session: Session) -> Non
             # extra field — causes OutOfBounds during clear signing
             messages.EthereumABIValueInfo(atomic=messages.EthereumABIType.ABI_UINT256),
         ],
-        is_dynamic=False,
     )
     bad_display_format = definitions.make_eth_display_format(
         chain_id=UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.chain_id,

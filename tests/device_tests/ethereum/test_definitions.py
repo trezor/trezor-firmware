@@ -417,7 +417,6 @@ UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT = definitions.make_eth_display_format(
                         atomic=messages.EthereumABIType.ABI_UINT160
                     ),  # sqrtPriceLimitX96
                 ],
-                is_dynamic=False,
             )
         )
     ],
@@ -588,7 +587,6 @@ def test_clear_signing_with_mismatched_definition(session: Session) -> None:
             # extra field — causes OutOfBounds during clear signing
             messages.EthereumABIValueInfo(atomic=messages.EthereumABIType.ABI_UINT256),
         ],
-        is_dynamic=False,
     )
     bad_display_format = definitions.make_eth_display_format(
         chain_id=UNISWAP_EXACT_INPUT_SINGLE_DISPLAY_FORMAT.chain_id,
@@ -742,7 +740,6 @@ OKX_PATHS_DISPLAY_FORMAT = definitions.make_eth_display_format(
                             atomic=messages.EthereumABIType.ABI_UINT256
                         ),  # fromToken
                     ],
-                    is_dynamic=True,
                 )
             )
         )

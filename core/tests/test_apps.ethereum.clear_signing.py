@@ -94,12 +94,8 @@ def p_dynamic(abi_type: "EthereumABIType") -> "EthereumABIValueInfo":
     return EthereumABIValueInfo(dynamic=abi_type)
 
 
-def p_tuple(
-    fields: "list[EthereumABIValueInfo]", is_dynamic: bool
-) -> "EthereumABIValueInfo":
-    return EthereumABIValueInfo(
-        tuple=EthereumABITupleInfo(fields=fields, is_dynamic=is_dynamic)
-    )
+def p_tuple(fields: "list[EthereumABIValueInfo]") -> "EthereumABIValueInfo":
+    return EthereumABIValueInfo(tuple=EthereumABITupleInfo(fields=fields))
 
 
 def p_array(element: "EthereumABIValueInfo") -> "EthereumABIValueInfo":
@@ -1824,7 +1820,6 @@ class TestABIValueFromProto(unittest.TestCase):
         node = ABIValue.from_proto(
             p_tuple(
                 [p_atomic(EABIT.ABI_ADDRESS), p_atomic(EABIT.ABI_UINT256)],
-                is_dynamic=False,
             )
         )
 
@@ -1845,7 +1840,6 @@ class TestABIValueFromProto(unittest.TestCase):
         node = ABIValue.from_proto(
             p_tuple(
                 [p_atomic(EABIT.ABI_ADDRESS), p_dynamic(EABIT.ABI_BYTES)],
-                is_dynamic=True,
             )
         )
 
@@ -1928,7 +1922,6 @@ class TestABIValueFromProto(unittest.TestCase):
             p_array(
                 p_tuple(
                     [p_atomic(EABIT.ABI_ADDRESS), p_atomic(EABIT.ABI_UINT256)],
-                    is_dynamic=False,
                 )
             )
         )
@@ -1947,14 +1940,10 @@ class TestABIValueFromProto(unittest.TestCase):
         self.assertEqual(consumed, 32)
 
     def test_array_of_dynamic_tuples(self):
-        # The wire descriptor's `is_dynamic` is already ignored in this
-        # position - the flag is derived from the fields instead - so pass the
-        # value the generator actually emits here (False) to pin that.
         node = ABIValue.from_proto(
             p_array(
                 p_tuple(
                     [p_atomic(EABIT.ABI_ADDRESS), p_dynamic(EABIT.ABI_STRING)],
-                    is_dynamic=False,
                 )
             )
         )
@@ -1984,8 +1973,8 @@ class TestABIValueFromProto(unittest.TestCase):
     def test_tuple_field_may_be_a_tuple(self):
         # ((uint256 b) inner): a struct as a struct member. Both are static,
         # so the whole thing is one word encoded in place.
-        inner = p_tuple([p_atomic(EABIT.ABI_UINT256)], is_dynamic=False)
-        node = ABIValue.from_proto(p_tuple([inner], is_dynamic=False))
+        inner = p_tuple([p_atomic(EABIT.ABI_UINT256)])
+        node = ABIValue.from_proto(p_tuple([inner]))
 
         self.assertFalse(node.is_dynamic)
         self.assertEqual(node.head_size, 32)
@@ -2000,7 +1989,7 @@ class TestABIValueFromProto(unittest.TestCase):
         # (uint256[] xs): the array member makes the struct dynamic, and the
         # array's own offset is relative to the struct's body start.
         inner = p_array(p_atomic(EABIT.ABI_UINT256))
-        node = ABIValue.from_proto(p_tuple([inner], is_dynamic=True))
+        node = ABIValue.from_proto(p_tuple([inner]))
 
         self.assertTrue(node.is_dynamic)
         self.assertEqual(node.head_size, 32)
@@ -2040,7 +2029,6 @@ class TestABIValueFromProto(unittest.TestCase):
                     p_atomic(EABIT.ABI_UINT160),
                     p_array(p_atomic(EABIT.ABI_BYTES32)),
                 ],
-                is_dynamic=True,
             )
         )
 
@@ -2088,7 +2076,6 @@ class TestABIValueFromProto(unittest.TestCase):
                 p_atomic(EABIT.ABI_UINT256),  # 9 flags
                 p_dynamic(EABIT.ABI_BYTES),  # 10 permit
             ],
-            is_dynamic=True,
         )
         execution = p_tuple(
             [
@@ -2098,7 +2085,6 @@ class TestABIValueFromProto(unittest.TestCase):
                 desc,  # 3 desc
                 p_dynamic(EABIT.ABI_BYTES),  # 4 clientData
             ],
-            is_dynamic=True,
         )
 
         src_token = bytes.fromhex("a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
@@ -2193,7 +2179,6 @@ class TestABIValueFromProto(unittest.TestCase):
                         p_array(p_dynamic(EABIT.ABI_BYTES)),
                         p_atomic(EABIT.ABI_UINT256),
                     ],
-                    is_dynamic=True,
                 )
             )
         )
@@ -2235,13 +2220,11 @@ class TestABIValueFromProto(unittest.TestCase):
                 p_atomic(EABIT.ABI_UINT120),
                 p_atomic(EABIT.ABI_UINT8),
             ],
-            is_dynamic=False,
         )
         node = ABIValue.from_proto(
             p_array(
                 p_tuple(
                     [p_array(p_atomic(EABIT.ABI_BYTES32)), body],
-                    is_dynamic=True,
                 )
             )
         )
@@ -2279,11 +2262,9 @@ class TestABIValueFromProto(unittest.TestCase):
                                 p_atomic(EABIT.ABI_ADDRESS),
                                 p_atomic(EABIT.ABI_UINT256),
                             ],
-                            is_dynamic=False,
                         )
                     ),
                 ],
-                is_dynamic=True,
             )
         )
 
@@ -2326,7 +2307,6 @@ class TestABIValueFromProto(unittest.TestCase):
         # them past the cap.
         node = p_tuple(
             [p_array(p_array(p_array(p_atomic(EABIT.ABI_UINT256))))],
-            is_dynamic=True,
         )
         with self.assertRaises(InvalidFormatDefinition):
             ABIValue.from_proto(node)
@@ -2341,7 +2321,6 @@ class TestABIValueFromProto(unittest.TestCase):
                     p_array(p_atomic(EABIT.ABI_UINT256)),
                     p_array(p_atomic(EABIT.ABI_UINT256)),
                 ],
-                is_dynamic=True,
             )
         )
 
@@ -2369,7 +2348,7 @@ class TestABIValueFromProto(unittest.TestCase):
         def nest(n: int) -> "EthereumABIValueInfo":
             node = p_atomic(EABIT.ABI_UINT256)
             for _ in range(n):
-                node = p_tuple([node], is_dynamic=False)
+                node = p_tuple([node])
             return node
 
         deepest_accepted = ABIValue.from_proto(nest(8))
@@ -2394,7 +2373,6 @@ class TestABIValueFromProto(unittest.TestCase):
                 p_array(p_dynamic(EABIT.ABI_BYTES)),  # extraData
                 p_atomic(EABIT.ABI_UINT256),  # fromToken
             ],
-            is_dynamic=True,
         )
         with self.assertRaises(InvalidFormatDefinition):
             ABIValue.from_proto(p_array(p_array(element)))
