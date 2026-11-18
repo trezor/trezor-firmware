@@ -362,6 +362,11 @@ class EthereumABIType(IntEnum):
     ABI_UINT8 = 15
     ABI_BOOL = 16
     ABI_INT160 = 17
+    ABI_INT128 = 18
+    ABI_INT64 = 19
+    ABI_INT32 = 40
+    ABI_INT24 = 41
+    ABI_INT256 = 42
     ABI_BYTES32 = 20
     ABI_BYTES16 = 21
     ABI_BYTES8 = 22
@@ -381,12 +386,14 @@ class EthereumERC7730FieldFormatterType(IntEnum):
     FORMATTER_CALLDATA = 6
     FORMATTER_ENUM = 7
     FORMATTER_DURATION = 8
+    FORMATTER_NFT_NAME = 9
 
 
 class EthereumERC7730ContainerPath(IntEnum):
     FROM = 1
     VALUE = 2
     TO = 3
+    CHAIN_ID = 4
 
 
 class EthereumDataType(IntEnum):
@@ -4798,14 +4805,14 @@ class EthereumABITupleInfo(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("fields", "EthereumABIValueInfo", repeated=True, required=False, default=None),
-        2: protobuf.Field("is_dynamic", "bool", repeated=False, required=True),
+        2: protobuf.Field("is_dynamic", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        is_dynamic: bool,
         fields: Sequence[EthereumABIValueInfo] | None = None,
+        is_dynamic: bool | None = None,
     ) -> None:
         self.fields: Sequence[EthereumABIValueInfo] = fields if fields is not None else []
         self.is_dynamic = is_dynamic
@@ -4842,18 +4849,21 @@ class EthereumERC7730Path(protobuf.MessageType):
         3: protobuf.Field("const_value", "string", repeated=False, required=False, default=None),
         4: protobuf.Field("slice_start", "sint32", repeated=False, required=False, default=None),
         5: protobuf.Field("slice_end", "sint32", repeated=False, required=False, default=None),
+        6: protobuf.Field("steps", "EthereumERC7730PathStep", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         path: Sequence[int] | None = None,
+        steps: Sequence[EthereumERC7730PathStep] | None = None,
         container_path: EthereumERC7730ContainerPath | None = None,
         const_value: str | None = None,
         slice_start: int | None = None,
         slice_end: int | None = None,
     ) -> None:
         self.path: Sequence[int] = path if path is not None else []
+        self.steps: Sequence[EthereumERC7730PathStep] = steps if steps is not None else []
         self.container_path = container_path
         self.const_value = const_value
         self.slice_start = slice_start
@@ -4874,10 +4884,24 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         7: protobuf.Field("base", "string", repeated=False, required=False, default=None),
         8: protobuf.Field("prefix", "bool", repeated=False, required=False, default=None),
         9: protobuf.Field("const_token_address", "bytes", repeated=False, required=False, default=None),
+        21: protobuf.Field("chain_id_path", "EthereumERC7730Path", repeated=False, required=False, default=None),
+        22: protobuf.Field("const_chain_id", "uint64", repeated=False, required=False, default=None),
         10: protobuf.Field("callee_path", "EthereumERC7730Path", repeated=False, required=False, default=None),
+        25: protobuf.Field("const_callee", "bytes", repeated=False, required=False, default=None),
+        28: protobuf.Field("selector_path", "EthereumERC7730Path", repeated=False, required=False, default=None),
         11: protobuf.Field("selector", "bytes", repeated=False, required=False, default=None),
+        23: protobuf.Field("amount_path", "EthereumERC7730Path", repeated=False, required=False, default=None),
+        29: protobuf.Field("const_amount", "bytes", repeated=False, required=False, default=None),
+        24: protobuf.Field("spender_path", "EthereumERC7730Path", repeated=False, required=False, default=None),
+        26: protobuf.Field("const_spender", "bytes", repeated=False, required=False, default=None),
+        27: protobuf.Field("is_delegate_call", "bool", repeated=False, required=False, default=None),
         12: protobuf.Field("enum_values", "EthereumERC7730EnumEntry", repeated=True, required=False, default=None),
         15: protobuf.Field("lookup_address", "bool", repeated=False, required=False, default=False),
+        16: protobuf.Field("lookup_token", "bool", repeated=False, required=False, default=False),
+        17: protobuf.Field("lookup_contract", "bool", repeated=False, required=False, default=False),
+        18: protobuf.Field("if_not_in", "bytes", repeated=True, required=False, default=None),
+        19: protobuf.Field("must_match", "bytes", repeated=True, required=False, default=None),
+        20: protobuf.Field("bundle_id", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4888,6 +4912,8 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         formatter: EthereumERC7730FieldFormatterType,
         native_currency_address: Sequence[bytes] | None = None,
         enum_values: Sequence[EthereumERC7730EnumEntry] | None = None,
+        if_not_in: Sequence[bytes] | None = None,
+        must_match: Sequence[bytes] | None = None,
         token_path: EthereumERC7730Path | None = None,
         threshold: bytes | None = None,
         threshold_message: str | None = None,
@@ -4895,12 +4921,26 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         base: str | None = None,
         prefix: bool | None = None,
         const_token_address: bytes | None = None,
+        chain_id_path: EthereumERC7730Path | None = None,
+        const_chain_id: int | None = None,
         callee_path: EthereumERC7730Path | None = None,
+        const_callee: bytes | None = None,
+        selector_path: EthereumERC7730Path | None = None,
         selector: bytes | None = None,
+        amount_path: EthereumERC7730Path | None = None,
+        const_amount: bytes | None = None,
+        spender_path: EthereumERC7730Path | None = None,
+        const_spender: bytes | None = None,
+        is_delegate_call: bool | None = None,
         lookup_address: bool | None = False,
+        lookup_token: bool | None = False,
+        lookup_contract: bool | None = False,
+        bundle_id: int | None = None,
     ) -> None:
         self.native_currency_address: Sequence[bytes] = native_currency_address if native_currency_address is not None else []
         self.enum_values: Sequence[EthereumERC7730EnumEntry] = enum_values if enum_values is not None else []
+        self.if_not_in: Sequence[bytes] = if_not_in if if_not_in is not None else []
+        self.must_match: Sequence[bytes] = must_match if must_match is not None else []
         self.path = path
         self.label = label
         self.formatter = formatter
@@ -4911,9 +4951,21 @@ class EthereumERC7730FieldInfo(protobuf.MessageType):
         self.base = base
         self.prefix = prefix
         self.const_token_address = const_token_address
+        self.chain_id_path = chain_id_path
+        self.const_chain_id = const_chain_id
         self.callee_path = callee_path
+        self.const_callee = const_callee
+        self.selector_path = selector_path
         self.selector = selector
+        self.amount_path = amount_path
+        self.const_amount = const_amount
+        self.spender_path = spender_path
+        self.const_spender = const_spender
+        self.is_delegate_call = is_delegate_call
         self.lookup_address = lookup_address
+        self.lookup_token = lookup_token
+        self.lookup_contract = lookup_contract
+        self.bundle_id = bundle_id
 
 
 class EthereumERC7730EnumEntry(protobuf.MessageType):
@@ -4921,6 +4973,7 @@ class EthereumERC7730EnumEntry(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("key", "uint32", repeated=False, required=True),
         2: protobuf.Field("value", "string", repeated=False, required=True),
+        3: protobuf.Field("wide_key", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4928,9 +4981,11 @@ class EthereumERC7730EnumEntry(protobuf.MessageType):
         *,
         key: int,
         value: str,
+        wide_key: bytes | None = None,
     ) -> None:
         self.key = key
         self.value = value
+        self.wide_key = wide_key
 
 
 class EthereumDisplayFormatInfo(protobuf.MessageType):
@@ -4963,6 +5018,32 @@ class EthereumDisplayFormatInfo(protobuf.MessageType):
         self.func_sig = func_sig
         self.intent = intent
         self.provider_name = provider_name
+
+
+class EthereumERC7730PathStep(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("field", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("index", "sint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("each", "bool", repeated=False, required=False, default=None),
+        4: protobuf.Field("slice_start", "sint32", repeated=False, required=False, default=None),
+        5: protobuf.Field("slice_end", "sint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        field: int | None = None,
+        index: int | None = None,
+        each: bool | None = None,
+        slice_start: int | None = None,
+        slice_end: int | None = None,
+    ) -> None:
+        self.field = field
+        self.index = index
+        self.each = each
+        self.slice_start = slice_start
+        self.slice_end = slice_end
 
 
 class EthereumGetPublicKey(protobuf.MessageType):

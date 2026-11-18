@@ -3355,13 +3355,13 @@ if TYPE_CHECKING:
 
     class EthereumABITupleInfo(protobuf.MessageType):
         fields: "list[EthereumABIValueInfo]"
-        is_dynamic: "bool"
+        is_dynamic: "bool | None"
 
         def __init__(
             self,
             *,
-            is_dynamic: "bool",
             fields: "list[EthereumABIValueInfo] | None" = None,
+            is_dynamic: "bool | None" = None,
         ) -> None:
             pass
 
@@ -3395,11 +3395,13 @@ if TYPE_CHECKING:
         const_value: "str | None"
         slice_start: "int | None"
         slice_end: "int | None"
+        steps: "list[EthereumERC7730PathStep]"
 
         def __init__(
             self,
             *,
             path: "list[int] | None" = None,
+            steps: "list[EthereumERC7730PathStep] | None" = None,
             container_path: "EthereumERC7730ContainerPath | None" = None,
             const_value: "str | None" = None,
             slice_start: "int | None" = None,
@@ -3423,10 +3425,24 @@ if TYPE_CHECKING:
         base: "str | None"
         prefix: "bool | None"
         const_token_address: "AnyBytes | None"
+        chain_id_path: "EthereumERC7730Path | None"
+        const_chain_id: "int | None"
         callee_path: "EthereumERC7730Path | None"
+        const_callee: "AnyBytes | None"
+        selector_path: "EthereumERC7730Path | None"
         selector: "AnyBytes | None"
+        amount_path: "EthereumERC7730Path | None"
+        const_amount: "AnyBytes | None"
+        spender_path: "EthereumERC7730Path | None"
+        const_spender: "AnyBytes | None"
+        is_delegate_call: "bool | None"
         enum_values: "list[EthereumERC7730EnumEntry]"
         lookup_address: "bool"
+        lookup_token: "bool"
+        lookup_contract: "bool"
+        if_not_in: "list[AnyBytes]"
+        must_match: "list[AnyBytes]"
+        bundle_id: "int | None"
 
         def __init__(
             self,
@@ -3436,6 +3452,8 @@ if TYPE_CHECKING:
             formatter: "EthereumERC7730FieldFormatterType",
             native_currency_address: "list[AnyBytes] | None" = None,
             enum_values: "list[EthereumERC7730EnumEntry] | None" = None,
+            if_not_in: "list[AnyBytes] | None" = None,
+            must_match: "list[AnyBytes] | None" = None,
             token_path: "EthereumERC7730Path | None" = None,
             threshold: "AnyBytes | None" = None,
             threshold_message: "str | None" = None,
@@ -3443,9 +3461,21 @@ if TYPE_CHECKING:
             base: "str | None" = None,
             prefix: "bool | None" = None,
             const_token_address: "AnyBytes | None" = None,
+            chain_id_path: "EthereumERC7730Path | None" = None,
+            const_chain_id: "int | None" = None,
             callee_path: "EthereumERC7730Path | None" = None,
+            const_callee: "AnyBytes | None" = None,
+            selector_path: "EthereumERC7730Path | None" = None,
             selector: "AnyBytes | None" = None,
+            amount_path: "EthereumERC7730Path | None" = None,
+            const_amount: "AnyBytes | None" = None,
+            spender_path: "EthereumERC7730Path | None" = None,
+            const_spender: "AnyBytes | None" = None,
+            is_delegate_call: "bool | None" = None,
             lookup_address: "bool | None" = None,
+            lookup_token: "bool | None" = None,
+            lookup_contract: "bool | None" = None,
+            bundle_id: "int | None" = None,
         ) -> None:
             pass
 
@@ -3456,12 +3486,14 @@ if TYPE_CHECKING:
     class EthereumERC7730EnumEntry(protobuf.MessageType):
         key: "int"
         value: "str"
+        wide_key: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             key: "int",
             value: "str",
+            wide_key: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -3493,6 +3525,28 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["EthereumDisplayFormatInfo"]:
+            return isinstance(msg, cls)
+
+    class EthereumERC7730PathStep(protobuf.MessageType):
+        field: "int | None"
+        index: "int | None"
+        each: "bool | None"
+        slice_start: "int | None"
+        slice_end: "int | None"
+
+        def __init__(
+            self,
+            *,
+            field: "int | None" = None,
+            index: "int | None" = None,
+            each: "bool | None" = None,
+            slice_start: "int | None" = None,
+            slice_end: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EthereumERC7730PathStep"]:
             return isinstance(msg, cls)
 
     class EthereumGetPublicKey(protobuf.MessageType):
