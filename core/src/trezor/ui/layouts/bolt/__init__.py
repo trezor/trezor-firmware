@@ -2181,7 +2181,7 @@ async def confirm_modify_output(
             value=address,
             verb=TR.buttons__continue,
             verb_cancel=None,
-            description=TR.words__address + ":",
+            description=with_colon(TR.words__address),
         ) as layout:
             await interact(
                 layout,
