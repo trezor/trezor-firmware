@@ -654,6 +654,175 @@ class TestEthereumClearSigning(unittest.TestCase):
         with self.assertRaises(OutOfBounds):
             nested_array_parser.parse(memoryview(payload_fail), 0)
 
+    # --- Arrays of dynamic leaves (`bytes[]` / `string[]`) ---
+    #
+    # Each element head is an offset, relative to the start of the element
+    # heads (right after the count word), to a length-prefixed body.
+
+    def test_array_of_bytes_valid(self):
+        array_parser = Array(DynamicLeaf(parse_bytes))
+
+        e0 = b"\xde\xad\xbe\xef"
+        e1 = b""  # zero-length: a length word and no data words
+        e2 = bytes(range(40))  # spans two data words
+        assert len(e2) > _EVM_WORD_SIZE
+
+        # ABI layout (absolute positions within raw_data):
+        #   [7]:   pointer slot -> array body at 7+32 = 39
+        #   [39]:  element count = 3
+        #   [71]:  heads base; e0 at rel. 96 -> 167
+        #   [103]: e1 at rel. 160 -> 231
+        #   [135]: e2 at rel. 192 -> 263
+        #   [167]: len(e0) = 4,  [199]: e0 data (1 word)
+        #   [231]: len(e1) = 0
+        #   [263]: len(e2) = 40, [295]: e2 data (2 words)
+        payload = (
+            to_bytes(len(SEVEN_RANDOM_BYTES) + 32)
+            + to_bytes(3)
+            + to_bytes(96)
+            + to_bytes(160)
+            + to_bytes(192)
+            + to_bytes(len(e0))
+            + pad_right(e0)
+            + to_bytes(len(e1))
+            + to_bytes(len(e2))
+            + pad_right(e2)
+        )
+        data = memoryview(SEVEN_RANDOM_BYTES + payload + FIVE_RANDOM_BYTES)
+
+        parsed, consumed = array_parser.parse(data, len(SEVEN_RANDOM_BYTES))
+
+        self.assertEqual(parsed, [e0, e1, e2])
+        self.assertEqual(consumed, 32)
+
+    def test_array_of_strings_valid(self):
+        array_parser = Array(DynamicLeaf(parse_string))
+
+        s0 = ""  # zero-length and first: s1's body starts one word after s0's
+        s1 = "Hello"
+        # multi-byte UTF-8: the length word counts bytes (53), not chars (38)
+        s2 = "Příliš žluťoučký kůň úpěl ďábelské ódy"
+        s2_bytes = s2.encode()
+        assert len(s2_bytes) == 53
+
+        # ABI layout (absolute positions within raw_data):
+        #   [5]:   pointer slot -> array body at 5+32 = 37
+        #   [37]:  element count = 3
+        #   [69]:  heads base; s0 at rel. 96 -> 165
+        #   [101]: s1 at rel. 128 -> 197
+        #   [133]: s2 at rel. 192 -> 261
+        #   [165]: len(s0) = 0
+        #   [197]: len(s1) = 5,  [229]: s1 data (1 word)
+        #   [261]: len(s2) = 53, [293]: s2 data (2 words)
+        payload = (
+            to_bytes(len(FIVE_RANDOM_BYTES) + 32)
+            + to_bytes(3)
+            + to_bytes(96)
+            + to_bytes(128)
+            + to_bytes(192)
+            + to_bytes(0)
+            + to_bytes(len(s1))
+            + pad_right(s1.encode())
+            + to_bytes(len(s2_bytes))
+            + pad_right(s2_bytes)
+        )
+        data = memoryview(FIVE_RANDOM_BYTES + payload + SEVEN_RANDOM_BYTES)
+
+        parsed, consumed = array_parser.parse(data, len(FIVE_RANDOM_BYTES))
+
+        self.assertEqual(parsed, [s0, s1, s2])
+        self.assertEqual(consumed, 32)
+
+    def test_array_of_dynamic_leaves_empty(self):
+        for parser in (parse_bytes, parse_string):
+            array_parser = Array(DynamicLeaf(parser))
+
+            # the data ends right after the zero count word: no heads to read
+            payload = to_bytes(len(SEVEN_RANDOM_BYTES) + 32) + to_bytes(0)
+            data = memoryview(SEVEN_RANDOM_BYTES + payload)
+
+            parsed, consumed = array_parser.parse(data, len(SEVEN_RANDOM_BYTES))
+
+            self.assertEqual(parsed, [])
+            self.assertEqual(consumed, 32)
+
+    def test_array_of_dynamic_leaves_out_of_bounds(self):
+        # Every case is a one-element array whose body starts at 32, so the
+        # element head sits at 64 and is relative to the heads base at 64.
+        def one_element(element_offset: int, tail: bytes) -> memoryview:
+            return memoryview(
+                to_bytes(32)  # 0   pointer -> array body at 32
+                + to_bytes(1)  # 32  element count
+                + to_bytes(element_offset)  # 64  element head
+                + tail  # 96
+            )
+
+        blob = b"\x01" * 32
+
+        for parser in (parse_bytes, parse_string):
+            array_parser = Array(DynamicLeaf(parser))
+
+            # border valid: the element data ends exactly at the end of the data
+            parsed, _ = array_parser.parse(
+                one_element(32, to_bytes(len(blob)) + blob), 0
+            )
+            self.assertEqual(parsed, [parser(memoryview(blob))])
+
+            # element offset points past the end of the data
+            with self.assertRaises(OutOfBounds):
+                array_parser.parse(one_element(9999, to_bytes(0)), 0)
+
+            # element offset too large for any calldata
+            with self.assertRaises(OutOfBounds):
+                array_parser.parse(one_element(2**256 - 1, to_bytes(0)), 0)
+
+            # length word of the element body is truncated
+            with self.assertRaises(OutOfBounds):
+                array_parser.parse(one_element(32, b"\x00" * 16), 0)
+
+            # element offset lands so that its length word straddles the end
+            with self.assertRaises(OutOfBounds):
+                array_parser.parse(one_element(48, to_bytes(0)), 0)
+
+            # element length exceeds the remaining data by one byte
+            with self.assertRaises(OutOfBounds):
+                array_parser.parse(one_element(32, to_bytes(len(blob) + 1) + blob), 0)
+
+            # element length too large for any calldata
+            with self.assertRaises(OutOfBounds):
+                array_parser.parse(one_element(32, to_bytes(2**256 - 1) + blob), 0)
+
+    def test_array_of_dynamic_leaves_truncated_heads(self):
+        array_parser = Array(DynamicLeaf(parse_bytes))
+
+        # count claims two elements but only one head is present; the heads
+        # pre-check rejects this before any element is dereferenced
+        data = memoryview(
+            to_bytes(32)  # 0   pointer -> array body at 32
+            + to_bytes(2)  # 32  element count
+            + to_bytes(32)  # 64  head of elem 0 -> 96
+        )
+        with self.assertRaises(OutOfBounds):
+            array_parser.parse(data, 0)
+
+    def test_array_of_dynamic_leaves_one_bad_element_fails_all(self):
+        # the first element is fine, the second one overruns: the whole array
+        # is rejected, not returned partially
+        array_parser = Array(DynamicLeaf(parse_bytes))
+
+        data = memoryview(
+            to_bytes(32)  # 0   pointer -> array body at 32
+            + to_bytes(2)  # 32  element count
+            + to_bytes(64)  # 64  elem 0 at rel. 64 -> 128
+            + to_bytes(128)  # 96  elem 1 at rel. 128 -> 192
+            + to_bytes(1)  # 128 len(elem 0)
+            + pad_right(b"\xaa")  # 160
+            + to_bytes(33)  # 192 len(elem 1): claims 33 bytes, 32 follow
+            + b"\xbb" * 32  # 224
+        )
+        with self.assertRaises(OutOfBounds):
+            array_parser.parse(data, 0)
+
     # --- Field formatters ---
 
     def test_raw_formatter(self):
