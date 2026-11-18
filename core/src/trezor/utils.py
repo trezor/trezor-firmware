@@ -2,6 +2,7 @@ import gc
 import sys
 from trezorutils import (  # noqa: F401
     BITCOIN_ONLY,
+    BOOT_WIPE,
     EMULATOR,
     HOMESCREEN_MAXSIZE,
     INTERNAL_MODEL,
