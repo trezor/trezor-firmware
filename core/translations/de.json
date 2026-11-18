@@ -99,6 +99,7 @@
       "Delizia": "XPUB",
       "Eckhart": "Public Key (XPUB)"
     },
+    "address__xpub_export_warning": "",
     "address_details__account_info": "Konto-Info",
     "address_details__derivation_path": "Ableitungspfad",
     "address_details__title_receive_address": "Empfangsadresse",
@@ -575,12 +576,7 @@
     "cardano__cost": "Kosten",
     "cardano__credential_intro_template": "{0}-Anmeldedaten sind ein {1}",
     "cardano__credential_mismatch": "Daten stimmen nicht mit Zahlungsdaten überein.",
-    "cardano__datum_hash": {
-      "Bolt": "Datum-Hash",
-      "Caesar": "Bezugspunkt-Hash",
-      "Delizia": "Bezugspunkt-Hash",
-      "Eckhart": "Bezugspunkt-Hash"
-    },
+    "cardano__datum_hash": "Datenelement-Hash",
     "cardano__delegating_to": "Delegieren an",
     "cardano__delegating_to_key_hash": "Delegieren an Key-Hash",
     "cardano__delegating_to_script": "Delegieren an Skript",
@@ -589,12 +585,7 @@
     "cardano__for_account_template": "Für Konto {0}",
     "cardano__for_key_hash": "Für Key-Hash",
     "cardano__for_script": "Für Skript",
-    "cardano__inline_datum": {
-      "Bolt": "Inline-Datum",
-      "Caesar": "Inline-Bezugspunkt",
-      "Delizia": "Inline-Bezugspunkt",
-      "Eckhart": "Inline-Datum"
-    },
+    "cardano__inline_datum": "Inline-Datenelement",
     "cardano__input_id": "Eingabe-ID",
     "cardano__input_index": "Eingabenindex",
     "cardano__intro_text_change": {
@@ -712,7 +703,7 @@
     "cardano__total_collateral": "Gesamtsicherheiten",
     "cardano__transaction": "Transaktion",
     "cardano__transaction_contains_minting_or_burning": "Die Transaktion beinhaltet das Minting oder Burning von Token.",
-    "cardano__transaction_contains_script_address_no_datum": "Die folgende Transaktionsausgabe enthält eine Skriptadresse, aber kein Datum.",
+    "cardano__transaction_contains_script_address_no_datum": "Die folgende Transaktionsausgabe enthält eine Skriptadresse, aber kein Datenelement.",
     "cardano__transaction_id": "Transaktions-ID",
     "cardano__transaction_no_collateral_input": "Die Transaktion enthält keine Sicherheiten. Das Plutus-Skript kann nicht ausgeführt werden.",
     "cardano__transaction_no_script_data_hash": "Die Transaktion enthält keinen Skriptdaten-Hash. Das Plutus-Skript kann nicht ausgeführt werden.",
@@ -900,19 +891,9 @@
       "Eckhart": "Daten:\n{0} / {1} Bytes"
     },
     "ethereum__title_signing_address": "Signieradresse",
-    "ethereum__title_token_contract": {
-      "Bolt": "Token-Contract",
-      "Caesar": "Token-Contract-Adresse",
-      "Delizia": "Token-Contract",
-      "Eckhart": "Token-Contract-Adresse"
-    },
+    "ethereum__title_token_contract": "Contract-Adresse",
     "ethereum__to": "An",
-    "ethereum__token_contract": {
-      "Bolt": "Token-Contract-Adresse",
-      "Caesar": "Token-Contract",
-      "Delizia": "Token-Contract-Adresse",
-      "Eckhart": "Token-Contract-Adresse"
-    },
+    "ethereum__token_contract": "Contract-Adresse",
     "ethereum__units_template": "{0} Einheiten",
     "ethereum__unknown_contract_address": {
       "Bolt": "Unbekannte Contract-Adresse.",
@@ -1262,7 +1243,14 @@
     "k1n1__writing": "",
     "language__change_to_template": "Sprache in {0} ändern?",
     "language__changed": "Sprache erfolgreich geändert.",
+    "language__czech": "",
+    "language__english": "",
+    "language__french": "",
+    "language__german": "",
+    "language__indonesian": "",
+    "language__portuguese": "",
     "language__progress": "Sprache wird geändert...",
+    "language__spanish": "",
     "language__title": {
       "Bolt": "Spracheinstellungen",
       "Caesar": "Spracheinstellungen",
@@ -1698,7 +1686,7 @@
       "Delizia": "Beginne mit der Eingabe",
       "Eckhart": "Beginne mit der Eingabe"
     },
-    "recovery__title": "Wallet wiederherst.",
+    "recovery__title": "Wallet wiederherstellen",
     "recovery__title_cancel_dry_run": {
       "Bolt": "Backup-Prüfung abbr.",
       "Caesar": "Backup-Prüfung abbr.",
@@ -1707,7 +1695,7 @@
     },
     "recovery__title_cancel_recovery": "Wiederherst. abbr.",
     "recovery__title_dry_run": "Backup-Prüfung",
-    "recovery__title_recover": "Wallet wiederherst.",
+    "recovery__title_recover": "Wallet wiederherstellen",
     "recovery__title_remaining_shares": "Verbleibende Shares",
     "recovery__title_unlock_repeated_backup": "Multi-Share-Backup",
     "recovery__type_word_x_of_y_template": "Tippe Wort {0} von {1}",
@@ -1729,16 +1717,11 @@
       "Delizia": "{count} mehr {plural} gestartet",
       "Eckhart": "Du brauchst {count} mehr, beginnend mit {plural}"
     },
-    "recovery__x_more_shares_needed_template_plural": {
-      "Bolt": "{count} weitere {plural} erforderlich",
-      "Caesar": "{count} weitere {plural} erforderlich.",
-      "Delizia": "{count} weitere {plural} erforderlich",
-      "Eckhart": "{count} weitere {plural} erforderlich."
-    },
+    "recovery__x_more_shares_needed_template_plural": "{count} weitere {plural} erforderlich.",
     "recovery__x_of_y_entered_template": {
-      "Bolt": "{0} von {1} Shares eingegeben",
+      "Bolt": "{0} von {1} Shares eingegeben.",
       "Caesar": "{0} von {1} Shares eingegeben.",
-      "Delizia": "{0} von {1} Shares eingegeben",
+      "Delizia": "{0} von {1} Shares eingegeben.",
       "Eckhart": "{0} von {1} Shares eingegeben"
     },
     "recovery__you_have_entered": {
