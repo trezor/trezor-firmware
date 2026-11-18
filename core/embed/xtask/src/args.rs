@@ -123,6 +123,14 @@ pub enum LogLevel {
     Debug,
 }
 
+#[derive(ValueEnum, Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum TropicRev {
+    Abab,
+    #[default]
+    Acab,
+}
+
 #[derive(Parser, Debug)]
 #[command(name = "xtask")]
 #[command(about = "Trezor workspace automation tasks")]

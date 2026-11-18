@@ -1,0 +1,1 @@
+Select the Tropic silicon revision with the `--tropic-rev` build option. `make` still accepts `TROPIC_SILICON_REVISION`.
