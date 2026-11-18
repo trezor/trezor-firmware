@@ -104,6 +104,7 @@
       "Delizia": "XPUB",
       "Eckhart": "Clave pública (XPUB)"
     },
+    "address__xpub_export_warning": "",
     "address_details__account_info": "Información de cuenta",
     "address_details__derivation_path": "Ruta de derivación",
     "address_details__title_receive_address": "Dirección de recepción",
@@ -755,19 +756,9 @@
       "Eckhart": "Datos:\n{0} / {1} bytes"
     },
     "ethereum__title_signing_address": "Dirección de firma",
-    "ethereum__title_token_contract": {
-      "Bolt": "Contrato del token",
-      "Caesar": "Dirección del contrato del token",
-      "Delizia": "Contrato del token",
-      "Eckhart": "Dirección del contrato del token"
-    },
+    "ethereum__title_token_contract": "Dirección del contrato",
     "ethereum__to": "A",
-    "ethereum__token_contract": {
-      "Bolt": "Dirección del contrato del token",
-      "Caesar": "Contrato del token",
-      "Delizia": "Dirección del contrato del token",
-      "Eckhart": "Dirección del contrato del token"
-    },
+    "ethereum__token_contract": "Dirección del contrato",
     "ethereum__units_template": "{0} unidades",
     "ethereum__unknown_contract_address": {
       "Bolt": "Dirección de contrato desconocida.",
@@ -1074,7 +1065,7 @@
     },
     "joint__to_the_total_amount": {
       "Bolt": "",
-      "Caesar": "Al la cantidad total",
+      "Caesar": "A la cantidad total",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -1097,7 +1088,14 @@
     "k1n1__writing": "",
     "language__change_to_template": "¿Cambiar el idioma a {0}?",
     "language__changed": "El idioma cambió con éxito.",
+    "language__czech": "",
+    "language__english": "",
+    "language__french": "",
+    "language__german": "",
+    "language__indonesian": "",
+    "language__portuguese": "",
     "language__progress": "Cambiando lenguaje...",
+    "language__spanish": "",
     "language__title": "Configuración de idioma",
     "led__disable": {
       "Bolt": "",
@@ -1467,7 +1465,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "La parte no coincide"
+      "Eckhart": "La parte no coincide."
     },
     "recovery__share_from_another_multi_share_backup": "Has ingresado parte de un respaldo diferente.",
     "recovery__share_from_group_entered_template": {
@@ -1509,18 +1507,8 @@
       "Delizia": "{count} {plural} más iniciando",
       "Eckhart": "Necesitas {count} adicionales {plural} para comenzar"
     },
-    "recovery__x_more_shares_needed_template_plural": {
-      "Bolt": "Se necesita(n) {count} {plural} más",
-      "Caesar": "Se necesita(n) {count} {plural} más.",
-      "Delizia": "Se necesita(n) {count} {plural} más",
-      "Eckhart": "Se necesita(n) {count} {plural} más."
-    },
-    "recovery__x_of_y_entered_template": {
-      "Bolt": "{0} de {1} partes ingresadas",
-      "Caesar": "{0} de {1} partes ingresadas.",
-      "Delizia": "{0} de {1} partes ingresadas",
-      "Eckhart": "{0} de {1} partes ingresadas."
-    },
+    "recovery__x_more_shares_needed_template_plural": "Se necesita {count} {plural} más.",
+    "recovery__x_of_y_entered_template": "{0} de {1} partes ingresadas.",
     "recovery__you_have_entered": {
       "Bolt": "Has ingresado",
       "Caesar": "Has ingresado",
@@ -2609,7 +2597,7 @@
     },
     "tutorial__press_and_hold": {
       "Bolt": "",
-      "Caesar": "Mantén pulsado el botón derecho para\naprobar operaciones importantes.",
+      "Caesar": "Mantén pulsado el botón derecho para aprobar operaciones importantes.",
       "Delizia": "",
       "Eckhart": ""
     },
