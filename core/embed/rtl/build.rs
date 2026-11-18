@@ -9,21 +9,21 @@ fn main() -> Result<()> {
         lib.add_define("SCM_REVISION_SHORT_INIT", Some(&get_scm_revision_short()?));
 
         lib.add_sources([
-            "cli.c",
-            "error_handling.c",
-            "scm_revision.c",
-            "strutils.c",
-            "unit_test.c",
+            "src/cli.c",
+            "src/error_handling.c",
+            "src/scm_revision.c",
+            "src/strutils.c",
+            "src/unit_test.c",
         ]);
 
         if cfg!(any(feature = "sprintf", not(feature = "production"))) {
-            lib.add_source("printf.c");
+            lib.add_source("src/printf.c");
         }
 
         add_uzlib(lib);
 
         if cfg!(feature = "error_shims") {
-            lib.add_source("error_shims.c");
+            lib.add_source("src/error_shims.c");
         }
 
         lib.add_rust_bindings(add_rust_bindings)?;
