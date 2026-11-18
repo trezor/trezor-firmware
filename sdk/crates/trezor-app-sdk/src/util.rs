@@ -4,6 +4,15 @@ use ufmt::derive::uDebug;
 use crate::app_runtime;
 use crate::traits::util::TIMEOUT_MAX;
 
+/// Milliseconds since the device started.
+///
+/// Wraps around after about 49.7 days, so compare ticks by their difference,
+/// e.g. `systick_ms().wrapping_sub(start) >= timeout_ms`, and build deadlines
+/// with `systick_ms().wrapping_add(ms)`.
+pub fn systick_ms() -> u32 {
+    app_runtime::systick_ms()
+}
+
 /// Represents a timeout duration in milliseconds.
 ///
 /// Use [`Timeout::max`] for the longest supported timeout, or construct
@@ -48,11 +57,6 @@ impl Timeout {
     /// Returns the timeout in milliseconds.
     pub fn as_ms(&self) -> u32 {
         self.0
-    }
-
-    /// Converts this timeout to an absolute deadline by adding it to the current systick.
-    pub fn as_deadline(&self) -> u32 {
-        app_runtime::systick_ms().wrapping_add(self.0)
     }
 
     /// Blocks until this timeout elapses.
@@ -112,9 +116,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn as_deadline_adds_timeout_to_systick() {
+    fn systick_ms_reads_core() {
         // the mock API's systick is 0
         crate::mock::sdk_init();
-        assert_eq!(Timeout::ms(1500).as_deadline(), 1500);
+        assert_eq!(systick_ms(), 0);
     }
 }
