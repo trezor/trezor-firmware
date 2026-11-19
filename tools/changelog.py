@@ -191,11 +191,17 @@ def filter_changelog(changelog_file: Path, internal_name: str) -> None:
             if res is not None:
                 destination.write(res)
 
+        # Copy the link definitions skipped by the truncation, so that the links
+        # keep their URLs from the main changelog
+        for line in changelog:
+            if LINK_RE.match(line):
+                destination.write(line)
+
     # Drop empty sub-sections
     destination_file.write_text(re.sub(r"### .*\n\n", "", destination_file.read_text()))
 
-    # Ensure issue links are present even if we truncated before the link block,
-    # and drop links copied from the main changelog that the model doesn't use
+    # Ensure issue links are present, and drop links copied from the main
+    # changelog that the model doesn't use
     linkify_changelog(destination_file, drop_unused=True)
 
 
