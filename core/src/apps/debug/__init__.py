@@ -506,14 +506,14 @@ if __debug__:
         ) -> Success:
             """Place an emulated K1N1 card in the NFC field and pass the frames sent
             to it to the host, until the device ends the NFC session."""
-            import trezornfc as nfc
+            import trezornfcemu as nfcemu
             from trezor.messages import DebugLinkK1N1Command, DebugLinkK1N1Response
 
             assert DEBUG_CONTEXT is not None
-            nfc.emu_set_connected(msg.uid)
+            nfcemu.set_connected(msg.uid)
             try:
                 while True:
-                    frame = nfc.emu_get_command()
+                    frame = nfcemu.get_command()
                     if frame is None:
                         await _K1N1_POLL_SLEEP
                         continue
@@ -527,13 +527,13 @@ if __debug__:
                     )
                     if isinstance(res, int):
                         raise RuntimeError("Timed out waiting for emulated K1N1")
-                    nfc.emu_set_response(res.data)
+                    nfcemu.set_response(res.data)
             except EOFError:
                 pass  # the device stopped discovery, which removes the card
             finally:
                 # If the host failed to answer, this fails the pending exchange,
                 # so that the device does not wait forever.
-                nfc.emu_set_connected(None)
+                nfcemu.set_connected(None)
             return Success()
 
     async def _no_op(_msg: Any) -> Success:

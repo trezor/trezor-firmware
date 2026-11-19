@@ -1,4 +1,6 @@
 mod apdu;
+#[cfg(feature = "emulator")]
+mod emulator;
 mod error;
 #[cfg(feature = "micropython")]
 mod micropython;

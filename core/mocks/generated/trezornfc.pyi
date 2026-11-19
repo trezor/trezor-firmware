@@ -69,25 +69,3 @@ MEASURE_CPU_FREQUENCY: int
 HARDEN_MEMORY: int
 INTEGRITY_CHECK: int
 PIN_UNLOCKED: int
-
-
-# rust/src/trezorhal/nfc/micropython.rs
-def emu_set_connected(uid: AnyBytes | None) -> None:
-    """Emulator only: place a card with the given UID in the field, or remove
-    it if `uid` is None. Removing the card fails the exchange in progress.
-    Stopping discovery removes the card too."""
-
-
-# rust/src/trezorhal/nfc/micropython.rs
-def emu_get_command() -> tuple[bytes, bool] | None:
-    """Emulator only: take the frame waiting to be sent to the card, together
-    with a flag that is True for the PSK share and False for a command APDU.
-    Returns None if no exchange has been started. Raises EOFError if the card
-    is not in the field."""
-
-
-# rust/src/trezorhal/nfc/micropython.rs
-def emu_set_response(response: AnyBytes | int) -> None:
-    """Emulator only: complete the exchange with the card's response, or fail
-    it with the given error code. Raises EOFError if the card is not in the
-    field."""
