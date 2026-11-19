@@ -39,8 +39,6 @@ impl PassphraseInput {
     const ICON: Icon = theme::ICON_DASH_VERTICAL;
     const ICON_WIDTH: i16 = Self::ICON.toif.width();
     const ICON_SPACE: i16 = 12;
-    const EYE_ICON: Icon = theme::ICON_EYE;
-    const EYE_ICON_WIDTH: i16 = Self::EYE_ICON.toif.width();
     const EYE_ICON_SPACE: i16 = 24;
     /// Distance the eye icon travels when sliding in, starting off the screen
     const EYE_ICON_SLIDE: i16 = 48;
@@ -135,14 +133,14 @@ impl PassphraseInput {
                 EyeHintAnimation::offset(self.eye_hint.icon_progress(), Self::EYE_ICON_SLIDE);
             ToifImage::new(
                 hidden_area.left_center().ofs(Offset::x(eye_offset)),
-                Self::EYE_ICON.toif,
+                theme::ICON_EYE.toif,
             )
             .with_align(Alignment2D::CENTER_LEFT)
             .with_fg(theme::GREY_LIGHT)
             .render(target);
         }
 
-        let dashes_offset = Self::EYE_ICON_WIDTH
+        let dashes_offset = theme::ICON_EYE.toif.width()
             + Self::EYE_ICON_SPACE
             + EyeHintAnimation::offset(self.eye_hint.content_progress(), Self::DASHES_SLIDE);
         let mut cursor = hidden_area.left_center().ofs(Offset::x(dashes_offset));
