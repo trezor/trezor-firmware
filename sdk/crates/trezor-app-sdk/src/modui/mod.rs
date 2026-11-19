@@ -109,7 +109,8 @@
 //! match modui::review("message", "Confirm message", &facts).details() {
 //!     Ok(Details::Show) => { /* the person wants the details */ }
 //!     Ok(Details::Skip) => { /* they accepted without them */ }
-//!     Err(_) => { /* no, carry on */ }
+//!     Err(Error::Cancelled) => { /* no, carry on */ }
+//!     Err(e) => return Err(e),
 //! }
 //! ```
 //!
@@ -207,6 +208,7 @@
 //! # Example
 //!
 //! ```no_run
+//! use trezor_app_sdk::Error;
 //! use trezor_app_sdk::modui::{self, Details, Field};
 //!
 //! // A sequence of layouts is just a sequence of calls. Cancelling any one of
@@ -221,11 +223,12 @@
 //! }
 //!
 //! // Or handle the cancel yourself, when leaving is not the end of the flow.
-//! fn offer_details(address: &str) -> bool {
+//! fn offer_details(address: &str) -> trezor_app_sdk::Result<bool> {
 //!     match modui::review("send", "Send", &[Field::address("Recipient", address)]).details() {
-//!         Ok(Details::Show) => true,
-//!         Ok(Details::Skip) => false,
-//!         Err(_) => false,
+//!         Ok(Details::Show) => Ok(true),
+//!         Ok(Details::Skip) => Ok(false),
+//!         Err(Error::Cancelled) => Ok(false),
+//!         Err(e) => Err(e),
 //!     }
 //! }
 //! ```
