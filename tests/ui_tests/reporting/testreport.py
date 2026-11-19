@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import shutil
+import tempfile
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -40,7 +41,14 @@ from dominate.tags import (
 )
 from dominate.util import text
 
-from ..common import FixturesType, TestCase, TestResult
+from ..common import (
+    FixturesType,
+    TestCase,
+    TestResult,
+    hash_files,
+    screens_and_hashes,
+    screens_diff,
+)
 from . import download, html
 from .common import (
     GIF_SCRIPT,
@@ -98,6 +106,7 @@ def setup(main_runner: bool) -> None:
         (TESTREPORT_PATH / "failed").mkdir()
         (TESTREPORT_PATH / "passed").mkdir()
         (TESTREPORT_PATH / "new").mkdir()
+        (TESTREPORT_PATH / "removed").mkdir()
         (TESTREPORT_PATH / "diff").mkdir()
         IMAGES_PATH.mkdir(parents=True)
 
@@ -109,6 +118,8 @@ def index() -> Path:
     passed_tests = list((TESTREPORT_PATH / "passed").iterdir())
     failed_tests = list((TESTREPORT_PATH / "failed").iterdir())
     new_tests = list((TESTREPORT_PATH / "new").iterdir())
+    removed_dir = TESTREPORT_PATH / "removed"
+    removed_tests = list(removed_dir.iterdir()) if removed_dir.exists() else []
 
     actual_hashes = {
         result.test.id: result.actual_hash for result in TestResult.recent_results()
@@ -121,7 +132,7 @@ def index() -> Path:
 
     with doc:
         h1("UI Test report")
-        if not failed_tests:
+        if not failed_tests and not removed_tests:
             p("All tests succeeded!", style="color: green; font-weight: bold;")
         else:
             p("Some tests failed!", style="color: red; font-weight: bold;")
@@ -150,6 +161,11 @@ def index() -> Path:
 
         h2("New tests", style="color: blue;")
         html.report_links(new_tests, TESTREPORT_PATH)
+
+        if removed_tests:
+            h2("Removed tests", style="color: darkred;")
+            i("Expected by the fixtures, but did not run:")
+            html.report_links(removed_tests, TESTREPORT_PATH)
 
         h2("Passed", style="color: green;")
         html.report_links(passed_tests, TESTREPORT_PATH)
@@ -395,9 +411,77 @@ def passed(result: TestResult) -> Path:
     return recorded(result, header="Passed")
 
 
+def _screens_table(
+    diff: list[tuple[str | None, str | None]], dir: str, header: str = "Expected"
+) -> None:
+    with table(border=1, width=600):
+        with tr():
+            th(header)
+            th("Actual")
+            th("Diff")
+
+        html.diff_table(diff, TESTREPORT_PATH / dir)
+
+
 def missing(result: TestResult) -> Path:
-    """Generate an HTML file for a newly seen test-case."""
-    return recorded(result, header="New testcase", dir="new")
+    """Generate an HTML file for a newly seen test-case.
+
+    Shows its screens next to missing expected ones.
+    """
+    _copy_deduplicated(result.test)
+
+    doc = document(title=result.test.id, model=result.test.model)
+    with doc.head:
+        script(type="text/javascript", src="../testreport.js")
+    with doc:
+        _header(result, "new")
+        _screens_table(screens_diff([], result.images), "new")
+    return html.write(TESTREPORT_PATH / "new", doc, result.test.id + ".html")
+
+
+def removed(test: TestCase, expected_hash: str) -> Path:
+    """Generate an HTML file for a test-case of the fixtures that did not run.
+
+    Shows its expected screens next to missing actual ones.
+    """
+    # Download the expected screens, or keep the local ones if they are the same.
+    download_failed = False
+    with tempfile.TemporaryDirectory() as tmp:
+        try:
+            download.fetch_recorded(expected_hash, Path(tmp))
+        except Exception:
+            download_failed = True
+        else:
+            shutil.rmtree(test.recorded_dir, ignore_errors=True)
+            shutil.copytree(tmp, test.recorded_dir)
+    if download_failed and (
+        not test.recorded_dir.exists() or hash_files(test.recorded_dir) != expected_hash
+    ):
+        expected: list[str] = []
+    else:
+        screens, expected = screens_and_hashes(test.recorded_dir)
+        html.store_images(screens, expected)
+
+    doc = document(title=test.id, model=test.model)
+    with doc.head:
+        script(type="text/javascript", src="../testreport.js")
+    with doc:
+        h1(test.id)
+        with div():
+            p(
+                "This test is in the fixtures, but did not run.",
+                style="color: darkred; font-weight: bold;",
+            )
+            p("Expected: ", expected_hash)
+        hr()
+
+        if not expected:
+            with p():
+                strong("WARNING:")
+                text(" failed to download the expected screens.")
+
+        _screens_table(screens_diff(expected, []), "removed")
+    return html.write(TESTREPORT_PATH / "removed", doc, test.id + ".html")
 
 
 def recorded(result: TestResult, header: str = "Recorded", dir: str = "passed") -> Path:

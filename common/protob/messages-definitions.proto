@@ -76,6 +76,7 @@ message SolanaTokenInfo {
  */
 enum EthereumABIType {
     ABI_ADDRESS = 0;
+
     ABI_UINT256 = 1;
     ABI_UINT248 = 2;
     ABI_UINT160 = 3;
@@ -91,8 +92,16 @@ enum EthereumABIType {
     ABI_UINT24 = 13;
     ABI_UINT16 = 14;
     ABI_UINT8 = 15;
+
     ABI_BOOL = 16;
+
     ABI_INT160 = 17;
+    ABI_INT128 = 18;
+    ABI_INT64 = 19;
+    ABI_INT32 = 40;
+    ABI_INT24 = 41;
+    ABI_INT256 = 42;
+
     ABI_BYTES32 = 20;
     ABI_BYTES16 = 21;
     ABI_BYTES8 = 22;
@@ -110,10 +119,8 @@ enum EthereumABIType {
  */
 message EthereumABITupleInfo {
     repeated EthereumABIValueInfo fields = 1;
-    // Whether the tuple is a dynamic ABI type, i.e. at least one of its
-    // fields is dynamic. For tuples nested inside an array the firmware
-    // ignores this flag and derives the value from `fields` instead.
-    required bool is_dynamic = 2;
+    // To be deprecated. No longer used.
+    optional bool is_dynamic = 2;
 }
 
 /**
@@ -142,6 +149,9 @@ enum EthereumERC7730FieldFormatterType {
     FORMATTER_CALLDATA = 6;
     FORMATTER_ENUM = 7;
     FORMATTER_DURATION = 8;
+
+    // Reserved for future. Not supported yet.
+    FORMATTER_NFT_NAME = 9;
 }
 
 /**
@@ -153,6 +163,7 @@ enum EthereumERC7730ContainerPath {
     FROM = 1;
     VALUE = 2;
     TO = 3;
+    CHAIN_ID = 4;
 }
 
 /**
@@ -162,16 +173,34 @@ enum EthereumERC7730ContainerPath {
  *  * container paths (starting with `@`)
  *  * constant values (a literal resolved by the parser, e.g. a `$.metadata.constants.*`
  *    reference or a literal `value`), not walked from calldata
- * `$` and `#` paths are not supported.
  * @embed
  */
 message EthereumERC7730Path {
-    // Exactly one of the following should be set:
+    // Exactly one of the following 3 should be set:
+    // Deprecated. Use ..PathStep instead.
+    // https://github.com/trezor/trezor-firmware/issues/8337
     repeated sint32 path = 1;         // eg. (0,) is encoded as [0], (1, 2) is encoded as [1, 2], etc.
     optional EthereumERC7730ContainerPath container_path = 2;
     optional string const_value = 3;  // a literal constant value, not walked from calldata
+
+    // Deprecated. Use ..PathStep instead.
+    // https://github.com/trezor/trezor-firmware/issues/8337
+    // Slice parameters when `(sint32) path` is specified.
     optional sint32 slice_start = 4;
     optional sint32 slice_end = 5;
+
+    repeated EthereumERC7730PathStep steps = 6;  // 1,4,5, should be absent when this is set.
+
+    // e.g. Something like amounts.[].data[5].value.[].name would be a sequence like [0 (amounts posistion in function
+    // args), each, 4 (data is the 5th attribute of amounts struct), 5, 2(value), each, 1(name) ]
+    message EthereumERC7730PathStep {
+        // exactly one kind per step
+        optional uint32 field = 1;  // tuple member or top-level parameter
+        optional sint32 index = 2;  // array element, negative = from the end
+        optional bool each = 3;     // `.[]`
+        optional sint32 slice_start = 4;
+        optional sint32 slice_end = 5;
+    }
 }
 
 /**
@@ -198,9 +227,24 @@ message EthereumERC7730FieldInfo {
     // Typically a metadata value, resolved by the parser.
     optional bytes const_token_address = 9;
 
+    // chain ID, mirroring token_path / const_token_address
+    optional EthereumERC7730Path chain_id_path = 21;
+    optional uint64 const_chain_id = 22;
+
     // CalldataFormatter params
-    optional EthereumERC7730Path callee_path = 10;  // address of the called contract
-    optional bytes selector = 11;                   // 4-byte selector, when the embedded calldata is args-only
+    optional EthereumERC7730Path callee_path = 10;    // address of the called contract
+    optional bytes const_callee = 25;                 // 20 bytes, callee not in calldata
+
+    optional EthereumERC7730Path selector_path = 28;  // inner @.selector, when the embedded calldata is args-only
+    optional bytes selector = 11;                     // 4-byte selector, when the embedded calldata is args-only
+
+    optional EthereumERC7730Path amount_path = 23;    // inner @.value
+    optional bytes const_amount = 29;                 // inner @.value
+
+    optional EthereumERC7730Path spender_path = 24;   // inner @.from
+    optional bytes const_spender = 26;                // 20 bytes
+
+    optional bool is_delegate_call = 27;              // forward compatibility, not in the spec yet
 
     // EnumFormatter params
     repeated EthereumERC7730EnumEntry enum_values = 12;
@@ -208,7 +252,19 @@ message EthereumERC7730FieldInfo {
     // AddressNameFormatter params
     // https://eips.ethereum.org/EIPS/eip-7730#address-types-and-sources
     // True when the addressName has `types` parameter in (contract, token)
-    optional bool lookup_address = 15 [default = false];  // whether to lookup the address in the token list
+    // To be deprecated in favour of `lookup_token` and `lookup_contract` flags.
+    // https://github.com/trezor/trezor-firmware/issues/8337
+    optional bool lookup_address = 15 [default = false];
+
+    optional bool lookup_token = 16 [default = false];
+    optional bool lookup_contract = 17 [default = false];
+
+    // conditional visibility
+    repeated bytes if_not_in = 18;
+    repeated bytes must_match = 19;
+
+    // bundled iteration
+    optional uint32 bundle_id = 20;
 }
 
 /**
@@ -219,6 +275,8 @@ message EthereumERC7730FieldInfo {
 message EthereumERC7730EnumEntry {
     required uint32 key = 1;
     required string value = 2;
+    // big-endian; `key` is 0xFFFFFFFF (reserved) when this is set
+    optional bytes wide_key = 3;
 }
 
 /**

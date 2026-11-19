@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import shutil
 import typing as t
@@ -38,7 +39,11 @@ from trezorlib.debuglink import TrezorTestContext as Client
 UI_TESTS_DIR = Path(__file__).resolve().parent
 SCREENS_DIR = UI_TESTS_DIR / "screens"
 IMAGES_DIR = SCREENS_DIR / "all_images"
-FIXTURES_FILE = UI_TESTS_DIR / "fixtures.json"
+# Test classes that keep their own fixtures (tests/clear_signing_tests) point
+# TREZOR_UI_FIXTURES at their file, so tests/ui_tests/fixtures.json is untouched.
+FIXTURES_FILE = Path(
+    os.environ.get("TREZOR_UI_FIXTURES") or UI_TESTS_DIR / "fixtures.json"
+)
 
 # fixtures.json are structured as follows:
 # {
@@ -90,7 +95,7 @@ def prepare_fixtures(
             new_tests = set(new_content.keys())
             old_tests = set(current_content.keys())
             missing_tests |= {
-                TestCase(model, group, test, language) for test in old_tests - new_tests
+                TestCase.from_fixtures(test, group) for test in old_tests - new_tests
             }
             current_content.clear()
             current_content.update(diff_languages)
@@ -157,7 +162,7 @@ def _get_bytes_from_png(png_file: Path) -> bytes:
     return Image.open(str(png_file)).tobytes()
 
 
-def _hash_files(path: Path) -> str:
+def hash_files(path: Path) -> str:
     files = path.iterdir()
     hasher = hashlib.sha256()
     for file in sorted(files):
@@ -309,7 +314,7 @@ class TestCase:
         result = TestResult(
             test=self,
             passed=get_last_call_test_result(request),
-            actual_hash=_hash_files(self.actual_dir),
+            actual_hash=hash_files(self.actual_dir),
             images=self.actual_screens[1],
         )
         result.save_metadata()

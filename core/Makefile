@@ -8,6 +8,7 @@
 	test_emu_click test_emu_click_ui test_emu_click_ui_multicore \
 	test_emu_persistence test_emu_persistence_ui test_emu_upgrade \
 	test_emu_ui test_emu_ui_multicore test_emu_ui_record test_emu_ui_record_multicore \
+	test_emu_clear_signing_ui test_emu_clear_signing_ui_record \
 	test_emu_prodtest \
 	pylint mypy typecheck pyright clippy \
 	audit_rust vet_rust \
@@ -198,6 +199,22 @@ test_emu_ui_record: ## record and hash screens for ui integration tests
 test_emu_ui_record_multicore: ## quickly record all screens
 	make test_emu_ui_multicore || echo "All errors are recorded in fixtures.json"
 	../tests/update_fixtures.py local --remove-missing
+
+# Nightly clear-signing tests, with their own UI fixtures; see docs/tests/clear-signing-tests.md.
+# They need TREZOR_CLEAR_SIGNING_REGISTRY and TREZOR_CLEAR_SIGNING_DEFINITIONS. CI sets
+# CLEAR_SIGNING_FIXTURES to the screens of the last nightly run (nightly.py fetch-baseline).
+CLEAR_SIGNING_FIXTURES ?= $(TESTPATH)/clear_signing_tests/fixtures.json
+CLEAR_SIGNING_UI_FIXTURES = TREZOR_UI_FIXTURES=$(CLEAR_SIGNING_FIXTURES)
+
+test_emu_clear_signing_ui: ## run the clear-signing registry tests with UI testing using multiple cores
+	rm -rf $(TESTPATH)/clear_signing_tests/results
+	$(CLEAR_SIGNING_UI_FIXTURES) $(PYTEST) -n $(MULTICORE) $(TESTPATH)/clear_signing_tests $(TESTOPTS) \
+		--timeout $(PYTEST_TIMEOUT) --ui=test --ui-check-missing --lang=en \
+		--control-emulators --model=core --random-order-seed=$(RANDOM)
+
+test_emu_clear_signing_ui_record: ## record the screens of all clear-signing registry tests
+	make test_emu_clear_signing_ui || echo "All errors are recorded in the fixtures"
+	$(CLEAR_SIGNING_UI_FIXTURES) ../tests/update_fixtures.py local --remove-missing
 
 test_emu_prodtest: ## run prodtest device tests
 	$(PRODTEST_EMU) --headless -c $(PYTEST) $(TESTPATH)/prodtest_tests $(TESTOPTS)

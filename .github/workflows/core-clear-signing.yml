@@ -1,0 +1,227 @@
+name: Clear signing tests
+run-name: Clear signing tests on ${{ inputs.models_json != '' && join(fromJSON(inputs.models_json), ', ') || 'all models' }}
+
+on:
+  schedule:
+    - cron: '45 23 * * *'  # every day @ 23:45
+  workflow_dispatch:
+    inputs:
+      models_json:
+        description: models as a JSON list
+        type: string
+        required: true
+        default: "[\"T2T1\",\"T3B1\",\"T3T1\",\"T3W1\"]"
+      definitions_sha:
+        description: trezor/definitions commit (default is the one of the last unsigned dev deploy)
+        type: string
+        required: false
+        default: ""
+
+# Queue, do not cancel: each run compares with the screens of the previous one, so it
+# must start after that one has uploaded them.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read  # for actions/checkout
+
+# [Clear-signing tests](../tests/clear-signing-tests.md): the ERC-7730 registry test
+# cases (mainnet) on the emulator, with the unsigned dev definitions of trezor/definitions.
+# Both come from the trezor/definitions commit of its last unsigned dev deploy. The screens
+# are compared with those of the last nightly run (`nightly.py fetch-baseline`), not with
+# the device tests' fixtures.
+#
+# Runs nightly on `main`, and can be started manually.
+jobs:
+  prepare:
+    name: Resolve inputs
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # No scheduled runs on forks.
+    if: github.repository == 'trezor/trezor-firmware' || github.event_name != 'schedule'
+    permissions:
+      actions: read    # for listing the earlier nightly runs (fetch-baseline)
+      contents: read   # for actions/checkout
+      id-token: write  # for fetching the OIDC token for AWS (dev definitions)
+    outputs:
+      models: ${{ steps.models.outputs.models }}
+    steps:
+      - id: models
+        env:
+          MODELS: ${{ github.event_name == 'workflow_dispatch' && inputs.models_json || '["T2T1","T3B1","T3T1","T3W1"]' }}
+        run: echo "models=$(echo "$MODELS" | jq -cM .)" >> $GITHUB_OUTPUT
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: $/.github/actions/environment
+      - name: Resolve the definitions and registry commits
+        id: inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFINITIONS_SHA: ${{ inputs.definitions_sha }}
+        run: $UV_RUN tests/clear_signing_tests/nightly.py resolve-inputs ${DEFINITIONS_SHA:+--definitions-sha "$DEFINITIONS_SHA"} -o clear-signing-inputs/inputs.json
+      - name: Checkout the registry tests
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          repository: ethereum/clear-signing-erc7730-registry
+          ref: ${{ steps.inputs.outputs.registry_sha }}
+          path: clear-signing-inputs/registry
+          sparse-checkout: /registry/*/testsv2/
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
+        with:
+          role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
+          aws-region: eu-central-1
+      - name: Download the unsigned dev definitions (mainnet)
+        run: |
+          aws s3 sync --only-show-errors \
+            s3://dev.firmware.sldev.cz/unsigned/v2/definitions/eth/chain-id/1/ \
+            clear-signing-inputs/definitions/eth/chain-id/1/
+      - name: Check the dev definitions
+        run: $UV_RUN tests/clear_signing_tests/nightly.py check-definitions clear-signing-inputs/definitions
+      - name: Fetch the screens of the last nightly run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MODELS: ${{ steps.models.outputs.models }}
+        run: |
+          $UV_RUN tests/clear_signing_tests/nightly.py fetch-baseline \
+            --models "$MODELS" \
+            -o clear-signing-inputs/fixtures.json \
+            --sources clear-signing-inputs/baseline.json
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        with:
+          name: clear-signing-inputs
+          path: clear-signing-inputs
+          retention-days: 7
+
+  core_clear_signing_test:
+    # The job id is part of the UI report and fixtures results names on S3,
+    # see JOB in tests/clear_signing_tests/nightly.py; it must not contain "-".
+    name: Clear signing tests (${{ matrix.model }})
+    runs-on: ubuntu-latest
+    needs: prepare
+    timeout-minutes: 120
+    permissions:
+      contents: read   # for actions/checkout
+      id-token: write  # for fetching the OIDC token for AWS (UI report)
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJSON(needs.prepare.outputs.models) }}
+    env:
+      TREZOR_MODEL: ${{ matrix.model }}
+      BITCOIN_ONLY: 0
+      PYOPT: 0
+      TESTOPTS: "--durations 10 --session-timeout 5400"  # pytest global timeout
+      TREZOR_CLEAR_SIGNING_REGISTRY: ${{ github.workspace }}/clear-signing-inputs/registry
+      TREZOR_CLEAR_SIGNING_DEFINITIONS: ${{ github.workspace }}/clear-signing-inputs/definitions
+      CLEAR_SIGNING_FIXTURES: ${{ github.workspace }}/clear-signing-inputs/fixtures.json
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: $/.github/actions/environment
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+        with:
+          name: clear-signing-inputs
+          path: clear-signing-inputs
+      - run: $UV_RUN make -C core build_unix_frozen
+      - name: Run clear signing tests
+        run: $UV_RUN make -C core test_emu_clear_signing_ui
+      - run: tail -v -n50 tests/trezor*.log || true
+        if: failure()
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        with:
+          name: clear-signing-results-${{ matrix.model }}
+          path: tests/clear_signing_tests/results
+          retention-days: 7
+        if: always()
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        with:
+          name: clear-signing-logs-${{ matrix.model }}
+          path: |
+            tests/trezor*.log
+            tests/junit.xml
+          retention-days: 7
+        if: always()
+      - uses: $/.github/actions/ui-report
+        with:
+          model: ${{ matrix.model }}
+          lang: en
+          status: ${{ job.status }}
+          # the next run compares with all of these screens
+          all-screens: true
+        if: always()
+        continue-on-error: true
+
+  summary:
+    name: Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [prepare, core_clear_signing_test]
+    if: always() && needs.prepare.result == 'success'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: $/.github/actions/environment
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+        with:
+          name: clear-signing-inputs
+          path: clear-signing-inputs
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+        with:
+          pattern: clear-signing-results-*
+          path: clear-signing-results
+          merge-multiple: true
+      - name: Write the summary
+        env:
+          MODELS: ${{ needs.prepare.outputs.models }}
+        run: |
+          $UV_RUN tests/clear_signing_tests/nightly.py summarize \
+            --inputs clear-signing-inputs/inputs.json \
+            --registry clear-signing-inputs/registry \
+            --definitions clear-signing-inputs/definitions \
+            --results clear-signing-results \
+            --baseline clear-signing-inputs/baseline.json \
+            --run-id "$GITHUB_RUN_ID" \
+            --models "$MODELS" >> "$GITHUB_STEP_SUMMARY"
+
+  notify_scheduled_failure_to_slack:
+    name: Notify Slack on nightly failure
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Only nightly runs; manual runs are watched by whoever started them.
+    if: failure() && github.event_name == 'schedule'
+    needs: [prepare, core_clear_signing_test, summary]
+    permissions:
+      actions: read     # to list the jobs of this run
+    steps:
+      - name: Notify scheduled job failure to Slack
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
+          COMMIT_SHA: ${{ github.sha }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CLEAR_SIGNING_WEBHOOK }}  # zizmor: ignore[secrets-outside-env] a repository secret, like SLACK_HW_TESTS_WEBHOOK in core-hw.yml
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "::warning::SLACK_CLEAR_SIGNING_WEBHOOK is not set, not notifying Slack"
+            exit 0
+          fi
+          JOBS=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs?per_page=100")
+          # cancelled also covers jobs that hit timeout-minutes
+          FAILED=$(jq -r '.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled") | "• <\(.html_url)|\(.name)>"' <<< "$JOBS")
+          # count only test jobs; must match the names of the `prepare` and `summary` jobs
+          COUNTS=$(jq -r '[.jobs[] | select(.name != "Resolve inputs" and .name != "Summary" and .conclusion != null and .conclusion != "skipped")]
+            | "\(map(select(.conclusion != "success")) | length) of \(length) test jobs failed"' <<< "$JOBS")
+          HEADER="Nightly clear signing tests failed on \`$GITHUB_REF_NAME\` (<$COMMIT_URL|${COMMIT_SHA::10}>), $COUNTS: <$GITHUB_RUN_URL|GitHub run>"
+          jq -n --arg header "$HEADER" --arg failed "$FAILED" \
+            '{text: (if $failed == "" then $header else $header + "\n" + $failed end)}' \
+            | curl -sSf -X POST -H 'Content-type: application/json' --data @- "$SLACK_WEBHOOK_URL"

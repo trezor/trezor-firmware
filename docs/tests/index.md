@@ -25,6 +25,12 @@ See [ui-tests.md](ui-tests.md) for more info.
 
 Click tests are a next-generation of the Device tests. The tests are quite similar, but they are capable of imitating user's interaction with the screen.
 
+### Clear-signing tests
+
+Nightly UI tests that sign the test transactions of the ERC-7730 clear-signing registry with the unsigned dev definitions. They are separate from the device tests, and compare their screens with those of the previous nightly run.
+
+See [clear-signing-tests.md](clear-signing-tests.md) for more info.
+
 ## Fido tests
 
 Implement U2F/FIDO2 tests.

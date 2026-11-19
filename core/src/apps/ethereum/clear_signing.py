@@ -264,8 +264,18 @@ def _get_parser(t: int, is_dynamic: bool) -> Parser:
         return make_uint_parser(8)
     elif t == T.ABI_BOOL:
         return parse_bool
+    elif t == T.ABI_INT256:
+        return make_int_parser(256)
     elif t == T.ABI_INT160:
         return make_int_parser(160)
+    elif t == T.ABI_INT128:
+        return make_int_parser(128)
+    elif t == T.ABI_INT64:
+        return make_int_parser(64)
+    elif t == T.ABI_INT32:
+        return make_int_parser(32)
+    elif t == T.ABI_INT24:
+        return make_int_parser(24)
     elif t == T.ABI_BYTES32:
         return make_fixed_bytes_parser(32)
     elif t == T.ABI_BYTES20:
@@ -296,7 +306,7 @@ class FieldFormatter:
         if formatting this value implied dealing with a new token
         (like getting a token from parameters using `token_path`).
         """
-        raise NotImplementedError
+        raise InvalidFormatDefinition
 
 
 class AddressNameFormatter(FieldFormatter):
@@ -693,7 +703,7 @@ class ABIValue:
 
     def parse_body(self, raw_data: memoryview, pos: int) -> AnyValue:
         """Parse the value body located directly at `pos` (no indirection)."""
-        raise NotImplementedError
+        raise InvalidFormatDefinition
 
     @staticmethod
     def from_proto(
@@ -1033,7 +1043,7 @@ class DisplayFormat:
                 elif path == ContainerPath.Value:
                     return int.from_bytes(msg.value, "big")
                 else:
-                    raise NotImplementedError  # TODO
+                    raise InvalidFormatDefinition  # TODO
             else:
                 if len(path) == 0:
                     # can't get anywhere by walking an inexisting path!
