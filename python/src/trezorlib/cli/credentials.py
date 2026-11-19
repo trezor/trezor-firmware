@@ -27,6 +27,7 @@ from pathlib import Path
 
 import keyring
 import platformdirs
+from keyring.errors import PasswordDeleteError
 from typing_extensions import Self
 
 from ..thp.credentials import Credential, TrezorPublicKeys, matches
@@ -66,6 +67,8 @@ class KeyringCredential:
         keyring_key = self._key(key)
         try:
             keyring.delete_password(keyring_key, self._username)
+        except PasswordDeleteError:
+            LOG.debug("Not found in keyring: %s", keyring_key)
         except Exception as e:
             LOG.warning("Failed to delete %s from keyring: %s", keyring_key, e)
 
@@ -147,13 +150,32 @@ class CredentialStore:
     def _save(self, data: dict[str, t.Any]) -> None:
         self.config_path.write_text(json.dumps(data, indent=2) + "\n")
 
+    def _load_and_forget_missing(
+        self, app_data: list[bytes]
+    ) -> list[KeyringCredential]:
+        """Load stored credentials, forgetting those missing from the keyring"""
+        result = []
+        for id in app_data[:]:
+            credential = KeyringCredential(self.app_name, id)
+            try:
+                _ = (
+                    credential.trezor_pubkey,
+                    credential.host_privkey,
+                    credential.credential,
+                )
+            except ValueError as e:
+                LOG.warning("Forgetting credential %s: %s", id.hex(), e)
+                credential.delete()
+                app_data.remove(id)
+            else:
+                result.append(credential)
+        return result
+
     def list(self) -> t.Collection[Credential]:
         with self._with_app() as app_data:
-            # Use recent credentials first (in case older credentials were invalidated)
-            return [
-                KeyringCredential(self.app_name, id).as_credential()
-                for id in reversed(app_data)
-            ]
+            credentials = self._load_and_forget_missing(app_data)
+        # Use recent credentials first (in case older credentials were invalidated)
+        return [c.as_credential() for c in reversed(credentials)]
 
     def add(self, credential: Credential) -> None:
         with self._with_app() as app_data:
@@ -167,8 +189,7 @@ class CredentialStore:
             if id_or_key in app_data:
                 # found by the unique identifier
                 return KeyringCredential(self.app_name, id_or_key)
-        for id in app_data:
-            credential = KeyringCredential(self.app_name, id)
+        for credential in self._load_and_forget_missing(app_data):
             if isinstance(id_or_key, TrezorPublicKeys) and matches(
                 credential.as_credential(), id_or_key
             ):
