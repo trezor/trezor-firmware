@@ -14,6 +14,8 @@ pub mod button_request;
 pub mod cached_jpeg;
 pub mod connect;
 pub mod empty;
+#[cfg(feature = "touch")]
+pub mod eye_hint;
 pub mod image;
 #[cfg(all(feature = "ui_jpeg", feature = "micropython"))]
 pub mod jpeg;
