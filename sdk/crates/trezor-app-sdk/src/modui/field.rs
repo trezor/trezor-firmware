@@ -48,6 +48,13 @@ pub struct Field<'a> {
 /// range once, so a source may hash what it hands out. It stops when the person
 /// reaches the end of the field or refuses it.
 ///
+/// `read` runs inside the review's own call to core, while that call still
+/// waits for the person's decision, and an app has one call to core in flight
+/// at a time. So `read` must not call core or the host: a wire, crypto or UI
+/// call from inside it stops the app. The bytes come from the app itself — held,
+/// decoded or generated. Reading them from the host needs a protocol that does
+/// not exist yet.
+///
 /// `read` takes `&self` so that a [`Field`] stays `Copy`: a source that keeps
 /// state keeps it in a `Cell` or `RefCell` of its own.
 pub trait DataSource {
@@ -211,7 +218,7 @@ impl<'a> Field<'a> {
     /// use trezor_app_sdk::traits::crypto::BoxedHasher;
     /// use trezor_app_sdk::{Error, Result};
     ///
-    /// /// Bytes as the host streams them, hashed on the way out.
+    /// /// Bytes handed out range by range, hashed on the way out.
     /// struct Stream<'a> {
     ///     bytes: &'a [u8],
     ///     hasher: RefCell<BoxedHasher>,

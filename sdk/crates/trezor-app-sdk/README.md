@@ -215,9 +215,9 @@ fn confirm_send(recipient: &str, amount: &str) -> trezor_app_sdk::Result<()> {
 ```
 
 `data` takes bytes the app already holds. `data_source` takes a `DataSource`
-and the total length instead, for bytes the app hands out one range at a time —
-a host stream it hashes on the way out, say; see `DataSource` for how core
-reads it.
+and the total length instead, for bytes the app hands out one range at a time,
+hashing them on the way out, say. The bytes come from the app itself, not from
+the host; see `DataSource` for how core reads it and why.
 
 A refusal is `Err(Error::Cancelled)`, so `?` ends the flow on it. `details`
 answers `Details::Show` when the person picks "Show all", and `Details::Skip`
