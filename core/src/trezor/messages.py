@@ -4248,14 +4248,12 @@ if TYPE_CHECKING:
     class ExtAppResponse(protobuf.MessageType):
         message_id: "int"
         data: "AnyBytes"
-        finished: "bool"
 
         def __init__(
             self,
             *,
             message_id: "int",
             data: "AnyBytes",
-            finished: "bool | None" = None,
         ) -> None:
             pass
 
