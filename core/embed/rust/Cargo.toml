@@ -119,6 +119,7 @@ ward = ["dep:trezor-ward", "storage"]
 
 test = [
     "crypto/aes_gcm",
+    "crypto/noise_xxpsk3_responder",
     "emulator",
     "io/button",
     "io/display_panel_t2t1",
