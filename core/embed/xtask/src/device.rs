@@ -37,7 +37,7 @@ pub fn check(model: Model, skip: bool) -> Result<()> {
     }
 
     let config = model.config()?;
-    let (idcode_address, expected) = config.mcu_dev_id()?;
+    let (idcode_address, expected_dev_id) = config.mcu_dev_id()?;
 
     let memory_ld = model.model_memory_ld()?;
     let content = fs::read_to_string(&memory_ld)
@@ -48,7 +48,12 @@ pub fn check(model: Model, skip: bool) -> Result<()> {
     println!("Checking the connected device");
     let idcode = openocd::read_memory(model, idcode_address, 4)
         .context("Failed to read the MCU's IDCODE")?;
-    check_mcu(model.model_id(), &config.mcu, expected, dev_id(&idcode)?)?;
+    check_mcu(
+        model.model_id(),
+        &config.mcu,
+        expected_dev_id,
+        dev_id(&idcode)?,
+    )?;
 
     let caps = openocd::read_memory(model, caps_start, caps_size).with_context(|| {
         format!(
