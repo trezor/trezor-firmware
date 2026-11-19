@@ -210,8 +210,25 @@ function onClick(id, handler) {
     }
 }
 
-function onLoad() {
+async function loadIncludes() {
+    // Replace <include src="..."> elements by the content of the referenced pages
+    // (used by the per-language summary pages, see `ci/make_summary_htmls.py`)
+    const includes = Array.from(document.getElementsByTagName("include"));
+    await Promise.all(includes.map(async include => {
+        try {
+            const response = await fetch(include.getAttribute("src"));
+            include.insertAdjacentHTML("afterend", await response.text());
+            include.remove();
+        } catch (error) {
+            console.error(error);
+        }
+    }));
+}
+
+async function onLoad() {
     if (window.location.protocol === "file") return
+
+    await loadIncludes()
 
     for (let elem of document.getElementsByClassName("script-hidden")) {
         elem.classList.remove("script-hidden")
@@ -236,7 +253,12 @@ function onLoad() {
         a.addEventListener("click", function(e) { return showAllHidden() });
     });
     document.querySelectorAll('.image-link').forEach(img => {
-        img.addEventListener('load', async function() { await imageLoaded(this) });
+        if (img.complete && img.naturalWidth !== 0) {
+            // already loaded, e.g. visible images delay `window.onload`
+            imageLoaded(img);
+        } else {
+            img.addEventListener('load', async function() { await imageLoaded(this) });
+        }
     });
     onClick('reset-state-all', () => resetState('all'));
     onClick('reset-state-ok', () => resetState('ok'));
@@ -285,17 +307,17 @@ async function imageLoaded(img) {
 
 async function createRowDiff(row) {
     // Find an element with recorded image
-    recImg = row.querySelector("td:nth-child(1) > img");
+    const recImg = row.querySelector("td:nth-child(1) > img");
     // Find an element with the current image
-    curImg = row.querySelector("td:nth-child(2) > img");
+    const curImg = row.querySelector("td:nth-child(2) > img");
     // Skip if we haven't found two images
     if (recImg == null || curImg == null) {
         return;
     }
 
     // Get images's raw data
-    recData = await getImageData(recImg);
-    curData = await getImageData(curImg);
+    const recData = await getImageData(recImg);
+    const curData = await getImageData(curImg);
 
     const width = recImg.naturalWidth;
     const height = recImg.naturalHeight;
@@ -308,7 +330,7 @@ async function createRowDiff(row) {
 
     // Process differences
     const difData = difCtx.createImageData(width, height);
-    options = {threshold: 0.0, includeAA: true, diffColor: [0, 255, 0], diffColorAlt: [255, 0, 0]};
+    const options = {threshold: 0.0, includeAA: true, diffColor: [0, 255, 0], diffColorAlt: [255, 0, 0]};
     pixelmatch(recData.data, curData.data, difData.data, width, height, options);
     difCtx.putImageData(difData, 0, 0);
 
