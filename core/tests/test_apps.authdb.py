@@ -461,8 +461,8 @@ class TestWardAttestation(unittest.TestCase):
 
     def _preimage(self, nonce, wallet_id, counter, mac):
         return (
-            b"WARD ATTEST v2" + bytes([2]) + nonce + wallet_id
-            + counter.to_bytes(4, "big") + mac + (1700000000).to_bytes(8, "big") + b"h" * 32
+            b"WARD ATTEST v1" + bytes([1]) + nonce + wallet_id
+            + counter.to_bytes(4, "big") + mac + (1700000000).to_bytes(8, "big")
         )
 
     def test_valid_attestation_accepted(self):
@@ -475,7 +475,7 @@ class TestWardAttestation(unittest.TestCase):
         mac = _sha256d(b"mac")
         counter = 5
         sig = ed25519.sign(seed, self._preimage(nonce, wallet_id, counter, mac))
-        self.assertTrue(verify_wm_attestation(wallet_id, nonce, counter, mac, sig, 1700000000, b"h" * 32))
+        self.assertTrue(verify_wm_attestation(wallet_id, nonce, counter, mac, sig, 1700000000))
 
     def test_tampered_counter_rejected(self):
         from trezor.crypto.curve import ed25519
@@ -487,7 +487,7 @@ class TestWardAttestation(unittest.TestCase):
         mac = _sha256d(b"mac")
         sig = ed25519.sign(seed, self._preimage(nonce, wallet_id, 5, mac))
         # verify against a different counter -> preimage mismatch -> rejected
-        self.assertFalse(verify_wm_attestation(wallet_id, nonce, 6, mac, sig, 1700000000, b"h" * 32))
+        self.assertFalse(verify_wm_attestation(wallet_id, nonce, 6, mac, sig, 1700000000))
 
 
 class TestWardProofSoundness(unittest.TestCase):

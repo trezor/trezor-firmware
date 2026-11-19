@@ -17,7 +17,6 @@ async def ingest(msg: WARDIngestAttestation) -> WARDIngestAttestationAck:
         bytes(msg.mac) if msg.mac is not None else None,
         bytes(msg.wm_signature),
         msg.timestamp,
-        bytes(msg.head_nonce),
     )
 
     return WARDIngestAttestationAck(counter=counter)

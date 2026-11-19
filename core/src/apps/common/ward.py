@@ -287,7 +287,6 @@ async def resolve_label(caller, address: bytes) -> tuple[str, bytes | None, int]
                 bytes(att.mac) if att.mac is not None else None,
                 bytes(att.wm_signature),
                 att.timestamp,
-                bytes(att.head_nonce),
             )
         ),
     )
@@ -627,11 +626,10 @@ async def ingest(
     mac: bytes | None,
     wm_signature: bytes,
     timestamp: int,
-    head_nonce: bytes,
 ) -> tuple[int, bytes]:
     from apps.ward import service
 
-    return await service.ingest(counter, mac, wm_signature, timestamp, head_nonce)
+    return await service.ingest(counter, mac, wm_signature, timestamp)
 
 
 async def reconcile(

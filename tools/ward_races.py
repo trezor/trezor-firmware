@@ -99,15 +99,12 @@ def run_races(
         assert all(state[:3] == base[0][:3] for state in base)
         prefix = f"ward-race-{round_id}"
         candidates: dict[int, dict] = {}
-        attestations: dict[int, dict] = {}
 
         def prepare(index: int, address: str, label: str) -> None:
             forwarding = devices[index][2]
             previous = forwarding.forward
 
             def intercept(name: str, body: dict):
-                if name == "WARDIngestAttestation":
-                    attestations[index] = dict(body)
                 response_name, response = previous(name, body)
                 if (
                     name == "WARDPerformBatch"
@@ -150,7 +147,8 @@ def run_races(
             status, wm_before = request(
                 "/ward/attest", {"wardId": ward_id, "nonce": "ab" * 32}
             )
-            assert status == 200 and wm_before["counter"] == base[0][0]
+            assert status == 200
+            assert wm_before.get("transition", {}).get("counter", 0) == base[0][0]
 
             records = []
             for index in range(3):
@@ -165,7 +163,6 @@ def run_races(
                         "mac": candidate["mac"],
                         "authCommit": candidate["auth_commit"],
                         "signature": candidate["sig_commit"],
-                        "headNonce": attestations[index]["head_nonce"],
                         "kind": "commit",
                     }
                 )
@@ -174,7 +171,7 @@ def run_races(
 
                 def submit(index: int):
                     barrier.wait(timeout=15)
-                    return request("/ward/commit", records[index])
+                    return request("/ward/commit", {"transition": records[index]})
 
                 with ThreadPoolExecutor(max_workers=3) as workers:
                     responses = list(workers.map(submit, range(3)))
@@ -187,11 +184,15 @@ def run_races(
                 accepted = responses[winner][1]
             else:
                 winner = elected
-                status, accepted = request("/ward/commit", records[winner])
+                status, accepted = request(
+                    "/ward/commit", {"transition": records[winner]}
+                )
                 assert status == 200, accepted
                 for index in range(3):
                     if index != winner:
-                        status, _ = request("/ward/commit", records[index])
+                        status, _ = request(
+                            "/ward/commit", {"transition": records[index]}
+                        )
                         assert status == 409, "WM accepted a competing successor"
             status, history = request(f"/ward/{ward_id}/history")
             assert status == 200

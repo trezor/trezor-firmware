@@ -106,7 +106,7 @@ def test_ward_initial_sync_rejects_incorrect_wm_signature(session: Session) -> N
     with pytest.raises(
         exceptions.TrezorFailure, match="attestation verification failed"
     ):
-        ward.ingest_attestation(session, 2, mac, bad_sig, timestamp=1700000000, head_nonce=b"h" * 32)
+        ward.ingest_attestation(session, 2, mac, bad_sig, timestamp=1700000000)
 
     # Nothing was adopted: there is no authenticated root in the session.
     with pytest.raises(
@@ -181,7 +181,7 @@ def test_ward_sync_rejects_wrong_root_mac(session: Session) -> None:
     nonce, ward_id = ward.sync(session)
     assert ward_id is not None
     sig = wm.sign_attestation(ward_id, nonce, 2, bad_mac)
-    ward.ingest_attestation(session, 2, bad_mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
+    ward.ingest_attestation(session, 2, bad_mac, sig, timestamp=1700000000)
 
     with pytest.raises(
         exceptions.TrezorFailure, match="root does not match the attested mac"
@@ -211,7 +211,7 @@ def test_ward_sync_rejects_counter_mac_mismatch(session: Session) -> None:
     nonce, ward_id = ward.sync(session)
     assert ward_id is not None
     sig = wm.sign_attestation(ward_id, nonce, signed_counter, mismatched_mac)
-    ward.ingest_attestation(session, signed_counter, mismatched_mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
+    ward.ingest_attestation(session, signed_counter, mismatched_mac, sig, timestamp=1700000000)
 
     with pytest.raises(
         exceptions.TrezorFailure, match="root does not match the attested mac"
@@ -239,7 +239,7 @@ def test_ward_sync_rejects_counter_rollback(session: Session) -> None:
     with pytest.raises(
         exceptions.TrezorFailure, match="older than counter_loc"
     ):
-        ward.ingest_attestation(session, stale_counter, mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
+        ward.ingest_attestation(session, stale_counter, mac, sig, timestamp=1700000000)
 
 
 def test_ward_sync_rejects_rollback_after_progress(session: Session) -> None:
@@ -265,7 +265,7 @@ def test_ward_sync_rejects_rollback_after_progress(session: Session) -> None:
     with pytest.raises(
         exceptions.TrezorFailure, match="older than counter_loc"
     ):
-        ward.ingest_attestation(session, 1, mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
+        ward.ingest_attestation(session, 1, mac, sig, timestamp=1700000000)
 
 
 def test_ward_sync_rejects_replayed_attestation(session: Session) -> None:
@@ -287,4 +287,4 @@ def test_ward_sync_rejects_replayed_attestation(session: Session) -> None:
     with pytest.raises(
         exceptions.TrezorFailure, match="attestation verification failed"
     ):
-        ward.ingest_attestation(session, 2, mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)  # replay round-1 attestation
+        ward.ingest_attestation(session, 2, mac, sig, timestamp=1700000000)  # replay round-1 attestation

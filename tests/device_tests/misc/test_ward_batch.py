@@ -21,7 +21,7 @@ from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
-from ...ward_mgr_emu import sign_ward_update
+from ...ward_mgr_emu import sign_wm_final_transition
 from .test_ward import (
     _APP,
     _apply_device_leaf,
@@ -65,8 +65,9 @@ def _commit_batch(session: Session, tree: WARDTree, pending_ids: list) -> tuple:
         leaves,
     ) = ward.perform_batch(session, pending_ids)
     assert ward_id is not None
-    mac_for_sig = mac if mac is not None else ward.ZERO_MAC
-    sig = sign_ward_update(counter, mac_for_sig, ward_id)
+    sig = sign_wm_final_transition(
+        ward_id, counter - 1, from_root, counter, new_root, mac, auth_commit
+    )
     out_counter, out_root, _wid, _root_mac = ward.confirmed_batch_by_wm(
         session, counter, mac, sig
     )
@@ -193,8 +194,7 @@ def test_ward_batch_rejects_an_update_hidden_behind_another_leaf(
         if msg.entry_key != ek(victim):
             return honest(msg)
         return messages.WARDProofAck(
-            proof=[bytes([split + 1]) + b"\x55" * 32]
-            + tree.get_proof_by_key(alice),
+            proof=[bytes([split + 1]) + b"\x55" * 32] + tree.get_proof_by_key(alice),
             content=ward.make_leaf_content(stale.content),
             identity=ward.make_leaf_identity(stale.key_type, stale.identity),
         )
@@ -237,13 +237,14 @@ def test_ward_rollback_one_step(session: Session) -> None:
         mac,
         ward_id,
         _hm,
-        _ar,
+        auth_revert,
         _sig,
     ) = _perform_revert(session, c2, r2, from_root2, ac2)
     assert to_counter == c2 + 1  # forward-increment
     assert from_root == r2
-    mac_for_sig = mac if mac is not None else ward.ZERO_MAC
-    sig = sign_ward_update(to_counter, mac_for_sig, ward_id)
+    sig = sign_wm_final_transition(
+        ward_id, c2, from_root, to_counter, new_root, mac, auth_revert, "revert"
+    )
     out_counter, out_root, _w, _rm = ward.confirmed_revert_by_wm(
         session, to_counter, mac, sig
     )

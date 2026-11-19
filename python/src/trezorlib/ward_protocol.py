@@ -7,11 +7,10 @@ from collections.abc import Mapping
 from typing import Any
 
 EMPTY_ROOT = hashlib.sha256(b"\x02").digest()
-TRANSITION_DOMAIN = b"WARD WM TRANSITION v2"
-
-
-def genesis_nonce(ward_id: str) -> str:
-    return hashlib.sha256(b"WARD GENESIS v2" + bytes.fromhex(ward_id)).hexdigest()
+ATTEST_DOMAIN = b"WARD ATTEST v1"
+ATTEST_VERSION = 1
+TRANSITION_DOMAIN = b"WARD WM TRANSITION v1"
+FINAL_DOMAIN = b"WARD FINAL v1"
 
 
 def attestation_message(
@@ -20,15 +19,14 @@ def attestation_message(
     counter: int,
     mac: str | None,
     timestamp: int,
-    head_nonce: str,
 ) -> bytes:
     return (
-        b"WARD ATTEST v2\x02"
+        ATTEST_DOMAIN
+        + bytes([ATTEST_VERSION])
         + bytes.fromhex(nonce + ward_id)
         + counter.to_bytes(4, "big")
         + (bytes.fromhex(mac) if mac else bytes(32))
         + timestamp.to_bytes(8, "big")
-        + bytes.fromhex(head_nonce)
     )
 
 
@@ -36,11 +34,11 @@ def root_bytes(value: str | None) -> bytes:
     return bytes.fromhex(value) if value else EMPTY_ROOT
 
 
-def transition_message(record: Mapping[str, Any]) -> bytes:
-    kind = {"commit": b"\x00", "revert": b"\x01"}[record.get("kind", "commit")]
+def transition_body(record: Mapping[str, Any]) -> bytes:
+    """The transition fields shared by the wallet and manager signatures."""
+    kind = {"commit": b"\x00", "revert": b"\x01"}[record["kind"]]
     return (
-        TRANSITION_DOMAIN
-        + kind
+        kind
         + bytes.fromhex(record["wardId"])
         + record["fromCounter"].to_bytes(4, "big")
         + root_bytes(record["fromRoot"])
@@ -48,5 +46,14 @@ def transition_message(record: Mapping[str, Any]) -> bytes:
         + root_bytes(record["root"])
         + bytes.fromhex(record["mac"])
         + bytes.fromhex(record["authCommit"])
-        + bytes.fromhex(record["headNonce"])
     )
+
+
+def transition_message(record: Mapping[str, Any]) -> bytes:
+    """The bytes the wallet signs to authorize a transition."""
+    return TRANSITION_DOMAIN + transition_body(record)
+
+
+def finalization_message(record: Mapping[str, Any]) -> bytes:
+    """The bytes the manager signs after accepting a transition."""
+    return FINAL_DOMAIN + transition_body(record)

@@ -5245,7 +5245,6 @@ class WARDIngestAttestation(protobuf.MessageType):
         2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
         4: protobuf.Field("timestamp", "uint64", repeated=False, required=True),
-        5: protobuf.Field("head_nonce", "bytes", repeated=False, required=True),
     }
 
     def __init__(
@@ -5254,13 +5253,11 @@ class WARDIngestAttestation(protobuf.MessageType):
         counter: int,
         wm_signature: bytes,
         timestamp: int,
-        head_nonce: bytes,
         mac: bytes | None = None,
     ) -> None:
         self.counter = counter
         self.wm_signature = wm_signature
         self.timestamp = timestamp
-        self.head_nonce = head_nonce
         self.mac = mac
 
 
@@ -5464,7 +5461,6 @@ class WARDAttestation(protobuf.MessageType):
         2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
         4: protobuf.Field("timestamp", "uint64", repeated=False, required=True),
-        5: protobuf.Field("head_nonce", "bytes", repeated=False, required=True),
     }
 
     def __init__(
@@ -5473,13 +5469,11 @@ class WARDAttestation(protobuf.MessageType):
         counter: int,
         wm_signature: bytes,
         timestamp: int,
-        head_nonce: bytes,
         mac: bytes | None = None,
     ) -> None:
         self.counter = counter
         self.wm_signature = wm_signature
         self.timestamp = timestamp
-        self.head_nonce = head_nonce
         self.mac = mac
 
 

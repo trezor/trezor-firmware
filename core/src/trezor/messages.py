@@ -3656,7 +3656,6 @@ if TYPE_CHECKING:
         mac: "AnyBytes | None"
         wm_signature: "AnyBytes"
         timestamp: "int"
-        head_nonce: "AnyBytes"
 
         def __init__(
             self,
@@ -3664,7 +3663,6 @@ if TYPE_CHECKING:
             counter: "int",
             wm_signature: "AnyBytes",
             timestamp: "int",
-            head_nonce: "AnyBytes",
             mac: "AnyBytes | None" = None,
         ) -> None:
             pass
@@ -3852,7 +3850,6 @@ if TYPE_CHECKING:
         mac: "AnyBytes | None"
         wm_signature: "AnyBytes"
         timestamp: "int"
-        head_nonce: "AnyBytes"
 
         def __init__(
             self,
@@ -3860,7 +3857,6 @@ if TYPE_CHECKING:
             counter: "int",
             wm_signature: "AnyBytes",
             timestamp: "int",
-            head_nonce: "AnyBytes",
             mac: "AnyBytes | None" = None,
         ) -> None:
             pass

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate canonical, public-test-seed WARD v2 interoperability vectors."""
+"""Generate canonical, public-test-seed WARD v1 interoperability vectors."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from trezorlib.authdb_tree import WARDTree
 from trezorlib.ward_protocol import (
     EMPTY_ROOT,
     attestation_message,
-    genesis_nonce,
+    finalization_message,
     transition_message,
 )
 
@@ -61,7 +61,6 @@ def vectors() -> dict:
         "mac": "11" * 32,
         "authCommit": "33" * 32,
         "kind": "commit",
-        "headNonce": genesis_nonce(ward_id),
     }
     record["signature"] = wallet_key.sign(transition_message(record)).hex()
     wm_key = Ed25519PrivateKey.from_private_bytes(b"AUTHDB QM DEBUG KEY SEED v1 ....")
@@ -71,7 +70,6 @@ def vectors() -> dict:
         "counter": 7,
         "mac": "bb" * 32,
         "timestamp": 1700000000,
-        "headNonce": "68" * 32,
     }
     message = attestation_message(
         attestation["wardId"],
@@ -79,11 +77,10 @@ def vectors() -> dict:
         7,
         attestation["mac"],
         1700000000,
-        attestation["headNonce"],
     )
     return {
         "generatedBy": "tools/ward_vectors.py",
-        "version": 2,
+        "version": 1,
         "seedHex": seed.hex(),
         "emptyRoot": EMPTY_ROOT.hex(),
         "pathKey": path.hex(),
@@ -105,6 +102,8 @@ def vectors() -> dict:
         "attestation": attestation,
         "attestationMessage": message.hex(),
         "attestationSignature": wm_key.sign(message).hex(),
+        "finalizationMessage": finalization_message(record).hex(),
+        "finalizationSignature": wm_key.sign(finalization_message(record)).hex(),
         "managerPublicKey": wm_key.public_key().public_bytes_raw().hex(),
     }
 

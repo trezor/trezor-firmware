@@ -268,7 +268,7 @@ Negative device tests check that the trusted head remains unchanged and honest
 operations still work. Proof-specific tests use debug-only root setup; the normal
 authenticated write path is covered separately by the long modes.
 
-Manager tests cover transition signature operands, CAS races, generation nonces,
+Manager tests cover transition signature operands, CAS races, signed timestamps,
 immutable history and SQLite write failure. Host tests cover transition storage
 failure before WM publication, reconstruction/lineage checks, immutable records,
 and rejection of forged cached metadata. Rust adapter protocol tests check the

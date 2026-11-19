@@ -292,7 +292,6 @@ def ingest_attestation(
     wm_signature: bytes,
     *,
     timestamp: int,
-    head_nonce: bytes,
 ) -> int:
     """Verify and record the WM freshness attestation for the open sync round.
 
@@ -304,7 +303,6 @@ def ingest_attestation(
             mac=root_mac_ext,
             wm_signature=wm_signature,
             timestamp=timestamp,
-            head_nonce=head_nonce,
         ),
         expect=messages.WARDIngestAttestationAck,
     )
@@ -600,9 +598,7 @@ def tree_node_callback(
 
 def tree_proof_callback(
     tree: "WARDTree",
-    attest: Optional[
-        Callable[[bytes], Optional[messages.WARDAttestation]]
-    ] = None,
+    attest: Optional[Callable[[bytes], Optional[messages.WARDAttestation]]] = None,
 ) -> Callable[[messages.WARDProofRequest], messages.WARDProofAck]:
     """Build an AppManifest.ward_proof_callback that serves proofs from `tree`.
 

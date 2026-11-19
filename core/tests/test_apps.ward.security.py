@@ -24,21 +24,18 @@ class TestWardSecurity(TestCaseWithSeed):
         config.wipe()
         cache.clear_all()
 
-    def attest(self, counter, mac, timestamp=1700000000, head_nonce=b"h" * 32):
+    def attest(self, counter, mac, timestamp=1700000000):
         nonce, _, _, ward_id = await_result(service.sync())
         message = (
-            b"WARD ATTEST v2\x02"
+            b"WARD ATTEST v1\x01"
             + nonce
             + ward_id
             + counter.to_bytes(4, "big")
             + mac
             + timestamp.to_bytes(8, "big")
-            + head_nonce
         )
         signature = ed25519.sign(DEBUG_SEED, message)
-        return await_result(
-            service.ingest(counter, mac, signature, timestamp, head_nonce)
-        )
+        return await_result(service.ingest(counter, mac, signature, timestamp))
 
     def test_rust_trie_hash_domains(self):
         from apps.ward.leaf import commit_of, leaf_value_bytes
@@ -229,12 +226,12 @@ class TestWardSecurity(TestCaseWithSeed):
         self.attest(0, bytes(32), timestamp=1700001000)
         await_result(service.reconcile(None))
         cache.clear_all()
-        self.assertEqual(ward_head.root_metadata(wallet), (1700001000, b"h" * 32))
+        self.assertEqual(ward_head.root_metadata(wallet), 1700001000)
         with self.assertRaises(wire.DataError):
             self.attest(0, bytes(32), timestamp=1700000699)
         self.attest(0, bytes(32), timestamp=1700000701)
         await_result(service.reconcile(None))
-        self.assertEqual(ward_head.root_metadata(wallet)[0], 1700001000)
+        self.assertEqual(ward_head.root_metadata(wallet), 1700001000)
 
     def test_the_service_not_the_caller_fills_the_scope(self):
         # the host may only omit the scope fields or repeat the service's own values

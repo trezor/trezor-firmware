@@ -180,7 +180,7 @@ message WARDSyncAck {
  *
  * The device verifies wm_signature is a valid Ed25519 signature under the
  * provisioned WM/QM public key over
- *     b"WARD ATTEST v1" || version(1B) || nonce || ward_id || counter(4B BE) || mac
+ *     b"WARD ATTEST v1" || 0x01 || nonce || ward_id || counter(4B BE) || mac || timestamp(8B BE)
  * where nonce is the one minted at WARDSync. It also asserts
  * counter >= counter_loc (anti-rollback), then records (counter, mac) as the
  * attested checkpoint for this round.
@@ -193,7 +193,7 @@ message WARDIngestAttestation {
     optional bytes  mac          = 2;  // mac_ext = MAC(mac_key, root||counter_ext); absent only for genesis, not later empty heads
     required bytes  wm_signature = 3;  // Ed25519 sig over the attestation preimage (see above)
     required uint64 timestamp = 4; // signed UTC seconds, checked against the durable floor
-    required bytes head_nonce = 5; // signed WM generation nonce, rotated after every accepted change
+    reserved 5;  // was head_nonce; the attestation no longer carries a WM generation nonce
 }
 
 /**
@@ -335,7 +335,7 @@ message WARDProofRequest {
 
 /**
  * A WM freshness attestation over a device nonce, as in WARDIngestAttestation:
- * Ed25519 over b"WARD ATTEST v2"||version||nonce||ward_id||counter||mac||timestamp||head_nonce.
+ * Ed25519 over b"WARD ATTEST v1"||0x01||nonce||ward_id||counter||mac||timestamp.
  * Carried in WARDProofAck so a label pull learns whether its root is still current,
  * without a sync round and without changing device state.
  */
@@ -344,7 +344,7 @@ message WARDAttestation {
     optional bytes  mac          = 2;  // root MAC of that head; absent for the genesis empty tree
     required bytes  wm_signature = 3;
     required uint64 timestamp    = 4;  // signed UTC seconds
-    required bytes  head_nonce   = 5;  // signed WM generation nonce
+    reserved 5;                        // was head_nonce
 }
 
 /**
@@ -544,7 +544,7 @@ message WARDPerformBatchAck {
 message WARDConfirmBatchByWM {
     required uint32 counter      = 1;  // to_counter; must equal the committed batch
     optional bytes  mac          = 2;  // root MAC; must equal the committed batch (including an empty-tree candidate)
-    required bytes  wm_signature = 3;  // WM Ed25519 over b"WARD FINAL v1"||ward_id||counter(4B BE)||mac
+    required bytes  wm_signature = 3;  // WM Ed25519 over b"WARD FINAL v1"||kind||ward_id||from_counter||from_root||counter||root||mac||auth_commit, rebuilt from the device's pending batch
 }
 
 /**
@@ -605,7 +605,7 @@ message WARDPerformRevertAck {
 message WARDConfirmRevertByWM {
     required uint32 counter      = 1;  // to_counter; must equal the committed rollback
     optional bytes  mac          = 2;  // root MAC; must equal the committed rollback (including an empty-tree candidate)
-    required bytes  wm_signature = 3;  // WM Ed25519 over b"WARD FINAL v1"||ward_id||counter(4B BE)||mac
+    required bytes  wm_signature = 3;  // WM Ed25519 over b"WARD FINAL v1"||kind||ward_id||from_counter||from_root||counter||root||mac||auth_commit, rebuilt from the device's pending batch
 }
 
 /**

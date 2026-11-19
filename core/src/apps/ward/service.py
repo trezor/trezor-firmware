@@ -78,9 +78,13 @@ def sha256d(data: bytes) -> bytes:
 # its signatures against a provisioned WM public key before trusting attested
 # state. Preimages:
 #   - freshness/ingest (WARDIngestAttestation):
-#       b"WARD ATTEST v1" || version(1B) || nonce || wallet_id || counter(4B BE) || mac
-#   - final/install (WARDConfirmedByWM):
-#       b"WARD FINAL v1" || wallet_id || counter(4B BE) || mac
+#       b"WARD ATTEST v1" || 0x01 || nonce || ward_id || counter(4B BE) || mac
+#       || timestamp(8B BE)
+#   - final/install of an accepted transition (WARDConfirmBatchByWM,
+#     WARDConfirmRevertByWM):
+#       b"WARD FINAL v1" || <transition body, see wm_transition_body>
+#   - legacy single-candidate install (WARDConfirmedByWM):
+#       b"WARD FINAL v1" || ward_id || counter(4B BE) || mac
 # ---------------------------------------------------------------------------
 
 
@@ -103,12 +107,12 @@ if __debug__:
         "17b4c21f6b55935405d5a48ee3f2f29f42d78c9a650d8f686a705b21ef62b0b6"
     )
 
-_WARD_ATTEST_DOMAIN = b"WARD ATTEST v2"
-_WARD_ATTEST_VERSION = const(2)
+_WARD_ATTEST_DOMAIN = b"WARD ATTEST v1"
+_WARD_ATTEST_VERSION = const(1)
 _WARD_FINAL_DOMAIN = b"WARD FINAL v1"
 
 # WARD protocol version echoed in the sync round (WARDSyncAck).
-_WARD_VERSION = const(2)
+_WARD_VERSION = const(1)
 # An absent MAC is encoded as all-zero for genesis. Later empty heads carry a MAC.
 _ZERO_MAC = b"\x00" * 32
 
@@ -145,11 +149,11 @@ def verify_wm_attestation(
     mac: bytes,
     signature: bytes,
     timestamp: int,
-    head_nonce: bytes,
 ) -> bool:
     """Verify the WM's freshness attestation for a sync round:
 
-        b"WARD ATTEST v1" || version(1B) || nonce || ward_id || counter(4B BE) || mac
+        b"WARD ATTEST v1" || 0x01 || nonce || ward_id || counter(4B BE) || mac
+        || timestamp(8B BE)
 
     `ward_id` is the SLIP21-derived WM-facing anchor (see `get_ward_id`), NOT the
     20-byte local `wallet_id`; the WM only ever signs over `ward_id`.
@@ -162,7 +166,6 @@ def verify_wm_attestation(
         + counter.to_bytes(4, "big")
         + mac
         + timestamp.to_bytes(8, "big")
-        + head_nonce
     )
     return _verify(message, signature)
 
@@ -170,7 +173,7 @@ def verify_wm_attestation(
 def verify_ward_final(
     ward_id: bytes, counter: int, mac: bytes, signature: bytes
 ) -> bool:
-    """Verify the WM's final attestation over the committed WARD candidate:
+    """Verify the WM's final attestation over a legacy single-entry candidate:
 
         b"WARD FINAL v1" || ward_id || counter(4B BE) || mac
 
@@ -178,6 +181,29 @@ def verify_ward_final(
     """
     message = _WARD_FINAL_DOMAIN + ward_id + counter.to_bytes(4, "big") + mac
     return _verify(message, signature)
+
+
+def verify_wm_final_transition(env: dict, ward_id: bytes, signature: bytes) -> bool:
+    """Verify the WM's signature over the transition it accepted, rebuilt from the
+    device's own batch envelope:
+
+        b"WARD FINAL v1" || wm_transition_body(...)
+
+    The WM can only finalize the exact transition this device performed: the same
+    predecessor, successor, kind and AuthCommit/AuthRevert."""
+    import storage.ward_store as ward_store
+
+    body = wm_transition_body(
+        ward_id,
+        env["from_counter"],
+        env["from_root"],
+        env["to_counter"],
+        env["to_root"],
+        env["mac"],
+        env["auth_commit"],
+        env["kind"] == ward_store.BATCH_REVERT,
+    )
+    return _verify(_WARD_FINAL_DOMAIN + body, signature)
 
 
 async def _confirm_export_keys(key_type: str) -> None:
@@ -437,7 +463,7 @@ def sig_commit(k_sig_secret: bytes, preimage: bytes) -> bytes:
     return ed25519.sign(k_sig_secret, preimage)
 
 
-def wm_transition_message(
+def wm_transition_body(
     ward_id,
     from_counter,
     from_root,
@@ -446,11 +472,11 @@ def wm_transition_message(
     mac,
     authorization,
     revert=False,
-    head_nonce=None,
 ):
+    """The transition fields the wallet signs (SigCommit) and the WM co-signs once it
+    accepts the transition (finalization)."""
     return (
-        b"WARD WM TRANSITION v2"
-        + bytes([1 if revert else 0])
+        bytes([1 if revert else 0])
         + ward_id
         + from_counter.to_bytes(4, "big")
         + _root_or_empty(from_root)
@@ -458,8 +484,11 @@ def wm_transition_message(
         + _root_or_empty(to_root)
         + mac
         + authorization
-        + (head_nonce if head_nonce is not None else bytes(32))
     )
+
+
+def wm_transition_message(*args, **kwargs):
+    return b"WARD WM TRANSITION v1" + wm_transition_body(*args, **kwargs)
 
 
 async def _resolve_pending_id(wallet_id: bytes, pending_id: int | None) -> int:
@@ -1190,7 +1219,6 @@ async def perform_batch(pending_ids: list, acks: list) -> tuple:
             to_root_b,
             mac_t,
             auth_commit_v,
-            head_nonce=ward_head.root_metadata(wallet_id)[1],
         )
         sig = sig_commit(k_sig, preimage)
 
@@ -1266,7 +1294,7 @@ async def finalize_batch(
         raise DataError("confirmation does not match the committed batch")
 
     ward_id = await get_ward_id()
-    if not verify_ward_final(ward_id, to_counter, mac, wm_signature):
+    if not verify_wm_final_transition(env, ward_id, wm_signature):
         raise DataError("WM final attestation verification failed")
 
     # Re-verify the transition authorization (F7: AuthCommit binds from->to).
@@ -1405,7 +1433,6 @@ async def perform_revert(
                 mac_t,
                 auth_revert_v,
                 True,
-                head_nonce=ward_head.root_metadata(wallet_id)[1],
             ),
         )
 
@@ -1475,7 +1502,7 @@ async def finalize_revert(
         raise DataError("confirmation does not match the committed rollback")
 
     ward_id = await get_ward_id()
-    if not verify_ward_final(ward_id, to_counter, mac, wm_signature):
+    if not verify_wm_final_transition(env, ward_id, wm_signature):
         raise DataError("WM final attestation verification failed")
 
     k_auth = await derive_ward_key(b"K_auth")
@@ -1549,7 +1576,7 @@ async def label_freshness(nonce: bytes, attestation) -> int:
     """Judge whether the root a label was just verified against is still the WM's
     current head, from an attestation the host chose to attach to the proof.
 
-    `attestation` is `(counter, mac, wm_signature, timestamp, head_nonce)` over
+    `attestation` is `(counter, mac, wm_signature, timestamp)` over
     `nonce`, the device-minted nonce of this very proof request, or None. The checks
     mirror `ingest`, but NOTHING is installed: a label pull must never move the
     device's state, so a host gains no new way to change it by answering one.
@@ -1562,11 +1589,10 @@ async def label_freshness(nonce: bytes, attestation) -> int:
 
     if attestation is None:
         return FRESH_UNCHECKED
-    counter, mac_msg, signature, timestamp, head_nonce = attestation
+    counter, mac_msg, signature, timestamp = attestation
     mac = mac_msg if mac_msg is not None else _ZERO_MAC
     if (
         len(mac) != 32
-        or len(head_nonce) != 32
         or timestamp <= 0
         or timestamp >= 1 << 63
         or (counter > 0 and mac == _ZERO_MAC)
@@ -1575,11 +1601,9 @@ async def label_freshness(nonce: bytes, attestation) -> int:
 
     wallet_id = await get_wallet_id()
     ward_id = await get_ward_id()
-    if not verify_wm_attestation(
-        ward_id, nonce, counter, mac, signature, timestamp, head_nonce
-    ):
+    if not verify_wm_attestation(ward_id, nonce, counter, mac, signature, timestamp):
         return FRESH_INVALID
-    if timestamp + 300 < ward_head.root_metadata(wallet_id)[0]:
+    if timestamp + 300 < ward_head.root_metadata(wallet_id):
         return FRESH_INVALID
 
     floor = ward_store.get_counter(wallet_id)
@@ -1606,7 +1630,6 @@ async def ingest(
     mac_msg: bytes | None,
     wm_signature: bytes,
     timestamp: int,
-    head_nonce: bytes,
 ) -> tuple[int, bytes]:
     """Verify + record the WM freshness attestation for the open sync round.
     Returns (counter, wallet_id)."""
@@ -1625,20 +1648,18 @@ async def ingest(
     mac = mac_msg if mac_msg is not None else _ZERO_MAC
     if counter > 0 and mac == _ZERO_MAC:
         raise DataError("positive counter requires an authenticated wallet MAC")
-    if len(head_nonce) != 32 or timestamp <= 0 or timestamp >= 1 << 63:
+    if timestamp <= 0 or timestamp >= 1 << 63:
         raise DataError("invalid attestation metadata")
-    if timestamp + 300 < ward_head.root_metadata(wallet_id)[0]:
+    if timestamp + 300 < ward_head.root_metadata(wallet_id):
         raise DataError("WM timestamp regressed")
-    if not verify_wm_attestation(
-        ward_id, nonce, counter, mac, wm_signature, timestamp, head_nonce
-    ):
+    if not verify_wm_attestation(ward_id, nonce, counter, mac, wm_signature, timestamp):
         raise DataError("WM attestation verification failed")
 
     # Anti-rollback: the attested counter cannot precede the device's floor.
     if counter < ward_store.get_counter(wallet_id):
         raise DataError("attested counter is older than counter_loc")
 
-    ward_head.sync_set_attested(wallet_id, counter, mac_msg, timestamp, head_nonce)
+    ward_head.sync_set_attested(wallet_id, counter, mac_msg, timestamp)
 
     if __debug__:
         from trezor import log
@@ -1700,9 +1721,10 @@ async def reconcile(
     if present and counter_ext == floor and root != current:
         raise DataError("one counter cannot identify two roots")
 
-    timestamp, head_nonce = ward_head.sync_metadata(wallet_id)
-    timestamp = max(timestamp, ward_head.root_metadata(wallet_id)[0])
-    ward_head.root_set(wallet_id, root, timestamp, head_nonce)
+    timestamp = max(
+        ward_head.sync_metadata(wallet_id), ward_head.root_metadata(wallet_id)
+    )
+    ward_head.root_set(wallet_id, root, timestamp)
     ward_store.commit_counter(wallet_id, counter_ext)
     ward_head.sync_clear()
 
@@ -1779,9 +1801,10 @@ async def verify_chain(links: list) -> tuple:
         if computed != mac_ext:
             raise DataError("chain terminal root does not match the attested mac")
 
-    timestamp, head_nonce = ward_head.sync_metadata(wallet_id)
-    timestamp = max(timestamp, ward_head.root_metadata(wallet_id)[0])
-    ward_head.root_set(wallet_id, root_head, timestamp, head_nonce)
+    timestamp = max(
+        ward_head.sync_metadata(wallet_id), ward_head.root_metadata(wallet_id)
+    )
+    ward_head.root_set(wallet_id, root_head, timestamp)
     ward_store.commit_counter(wallet_id, counter_ext)
     ward_head.sync_clear()
 
@@ -1991,7 +2014,9 @@ async def _cache_after_commit(wallet_id: bytes, pid: int, counter: int) -> None:
         store = await cache.store_for(app_id)
     except DataError:
         return
-    key = cache.record_key(kt.decode() if kt else ENTRY_TYPE_ADDRESS, device_id, address)
+    key = cache.record_key(
+        kt.decode() if kt else ENTRY_TYPE_ADDRESS, device_id, address
+    )
     raw = await store.get(key)
     if raw is None:
         return
@@ -2204,7 +2229,11 @@ async def _confirm_import_sticky(entries: int, sticky: int) -> None:
         [
             ("Entries", str(entries), False),
             ("Kept offline", str(sticky), False),
-            ("Note", "Offline entries are shown, marked cached, without a host.", False),
+            (
+                "Note",
+                "Offline entries are shown, marked cached, without a host.",
+                False,
+            ),
         ],
         br_code=ButtonRequestType.ProtectCall,
     )

@@ -48,8 +48,8 @@ DEBUG_QM_SEED = b"AUTHDB QM DEBUG KEY SEED v1 ...."
 
 # WARD attestation domains (must match apps.ward.service).
 _WARD_FINAL_DOMAIN = b"WARD FINAL v1"
-_WARD_ATTEST_DOMAIN = b"WARD ATTEST v2"
-_WARD_ATTEST_VERSION = 2
+_WARD_ATTEST_DOMAIN = b"WARD ATTEST v1"
+_WARD_ATTEST_VERSION = 1
 
 # Transition-auth domains + empty-root sentinel (must match apps.ward.service). Used
 # by the WM CAS to verify a batch-update SigCommit at ingest.
@@ -112,7 +112,8 @@ def sign_wm_attestation(
     WARDIngestAttestation:
 
         Ed25519-Sign(qm_seed,
-            b"WARD ATTEST v1" || version(1B) || nonce || ward_id || counter(4B BE) || mac)
+            b"WARD ATTEST v1" || 0x01 || nonce || ward_id || counter(4B BE) || mac
+            || timestamp(8B BE))
 
     The WM signs over the SLIP21-derived ward_id (32B), NOT the local wallet_id.
     """
@@ -124,7 +125,6 @@ def sign_wm_attestation(
         + counter.to_bytes(4, "big")
         + mac
         + (1700000000).to_bytes(8, "big")
-        + b"h" * 32
     )
     return _ed25519_sign(message, qm_seed)
 
@@ -138,7 +138,7 @@ def wm_attestation(
 ) -> messages.WARDAttestation:
     """The WM's current-head attestation over a device nonce, in the shape a host
     attaches to WARDProofAck (optional label freshness). Signed exactly as
-    `sign_wm_attestation`, with its fixed timestamp and head nonce."""
+    `sign_wm_attestation`, with its fixed timestamp."""
     return messages.WARDAttestation(
         counter=counter,
         mac=mac,
@@ -146,7 +146,6 @@ def wm_attestation(
             nonce, counter, mac if mac is not None else ZERO_MAC, ward_id, qm_seed
         ),
         timestamp=1700000000,
-        head_nonce=b"h" * 32,
     )
 
 
@@ -160,6 +159,38 @@ def sign_ward_update(
     The WM signs over the SLIP21-derived ward_id (32B), NOT the local wallet_id.
     """
     message = _WARD_FINAL_DOMAIN + ward_id + counter.to_bytes(4, "big") + mac
+    return _ed25519_sign(message, qm_seed)
+
+
+def sign_wm_final_transition(
+    ward_id: bytes,
+    from_counter: int,
+    from_root: bytes | None,
+    to_counter: int,
+    to_root: bytes | None,
+    mac: bytes | None,
+    authorization: bytes,
+    kind: str = "commit",
+    qm_seed: bytes = DEBUG_QM_SEED,
+) -> bytes:
+    """Produce the WM finalization of an accepted transition, which the device
+    verifies in WARDConfirmBatchByWM / WARDConfirmRevertByWM:
+
+        Ed25519-Sign(qm_seed, b"WARD FINAL v1" || kind || ward_id
+            || from_counter(4B BE) || from_root || to_counter(4B BE) || to_root
+            || mac || authorization)
+    """
+    message = (
+        _WARD_FINAL_DOMAIN
+        + bytes([1 if kind == "revert" else 0])
+        + ward_id
+        + from_counter.to_bytes(4, "big")
+        + (_EMPTY_ROOT_HASH if from_root is None else from_root)
+        + to_counter.to_bytes(4, "big")
+        + (_EMPTY_ROOT_HASH if to_root is None else to_root)
+        + (mac if mac is not None else ZERO_MAC)
+        + authorization
+    )
     return _ed25519_sign(message, qm_seed)
 
 
@@ -243,7 +274,7 @@ class WMEmulator:
         self, ward_id: bytes, nonce: bytes, counter: int, mac: bytes
     ) -> bytes:
         """Ed25519 WM freshness attestation over
-        b"WARD ATTEST v1"||version||nonce||ward_id||counter||mac."""
+        b"WARD ATTEST v1"||0x01||nonce||ward_id||counter||mac||timestamp."""
         return sign_wm_attestation(nonce, counter, mac, ward_id, self.qm_seed)
 
     def sign_final(self, ward_id: bytes, counter: int, mac: bytes) -> bytes:
@@ -337,8 +368,8 @@ class WMEmulator:
         """Successor-only compare-and-swap (ward-design §4.1 step 6, F1 defence in
         depth). Accepts the transition iff it extends the CURRENT head
         (``from == head`` and ``to_counter > from_counter``), advances the head, stores
-        a TransitionRecord, and returns the WM final signature over
-        ``(ward_id, to_counter, mac)``. Raises :class:`WMConflict` if another writer
+        a TransitionRecord, and returns the WM finalization over the accepted
+        transition (:func:`sign_wm_final_transition`). Raises :class:`WMConflict` if another writer
         advanced the head first (the caller then rebases and retries).
 
         When ``verify_sig_commit`` is on (WARD_KSIG), the device's Ed25519 SigCommit is
@@ -387,8 +418,16 @@ class WMEmulator:
                 "kind": kind,
             }
         )
-        return self.sign_final(
-            ward_id, to_counter, mac if mac is not None else ZERO_MAC
+        return sign_wm_final_transition(
+            ward_id,
+            from_counter,
+            from_root,
+            to_counter,
+            to_root,
+            mac,
+            auth if auth is not None else bytes(32),
+            kind,
+            self.qm_seed,
         )
 
 
@@ -416,9 +455,7 @@ def wm_initial_sync(
     sig = wm.sign_attestation(
         ward_id, nonce, counter, mac if mac is not None else ZERO_MAC
     )
-    ward.ingest_attestation(
-        session, counter, mac, sig, timestamp=1700000000, head_nonce=b"h" * 32
-    )
+    ward.ingest_attestation(session, counter, mac, sig, timestamp=1700000000)
     return ward.reconcile(session, root)
 
 
@@ -446,9 +483,7 @@ def wm_chain_sync(
     sig = wm.sign_attestation(
         ward_id, nonce, counter, mac if mac is not None else ZERO_MAC
     )
-    ward.ingest_attestation(
-        session, counter, mac, sig, timestamp=1700000000, head_nonce=b"h" * 32
-    )
+    ward.ingest_attestation(session, counter, mac, sig, timestamp=1700000000)
 
     roots = [None if from_tree.is_empty() else from_tree.get_root_hash()]
     roots += [

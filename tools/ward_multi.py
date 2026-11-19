@@ -260,7 +260,6 @@ def run(config: dict[str, Any]) -> list[str]:
                     None,
                     bytes.fromhex(attested["signature"]),
                     timestamp=attested["timestamp"],
-                    head_nonce=bytes.fromhex(attested["headNonce"]),
                 )
             except exceptions.TrezorFailure as error:
                 assert "older than counter_loc" in str(error), str(error)
@@ -275,7 +274,6 @@ def run(config: dict[str, Any]) -> list[str]:
                     None,
                     bytes.fromhex(attested["signature"]),
                     timestamp=attested["timestamp"],
-                    head_nonce=bytes.fromhex(attested["headNonce"]),
                 )
             except exceptions.TrezorFailure as error:
                 assert "attestation verification failed" in str(error), str(error)
@@ -292,14 +290,14 @@ def run(config: dict[str, Any]) -> list[str]:
                 headers={"Content-Type": "application/json"},
             )
             with urlopen(request, timeout=10) as response:
-                head = json.load(response)
+                attested = json.load(response)
+            head = attested.get("transition", {"counter": 0})
             ward.ingest_attestation(
                 session,
                 head["counter"],
                 bytes.fromhex(head["mac"]) if head.get("mac") else None,
-                bytes.fromhex(head["signature"]),
-                timestamp=head["timestamp"],
-                head_nonce=bytes.fromhex(head["headNonce"]),
+                bytes.fromhex(attested["signature"]),
+                timestamp=attested["timestamp"],
             )
             try:
                 ward.reconcile(session, b"\x99" * 32)

@@ -143,7 +143,7 @@ class WardHostHarness:
         assert wallet_id is not None
         mac_for_sig = root_mac if root_mac is not None else ward.ZERO_MAC
         sig = self.wm.sign_attestation(ward_id, nonce, counter, mac_for_sig)
-        ward.ingest_attestation(session, counter, root_mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
+        ward.ingest_attestation(session, counter, root_mac, sig, timestamp=1700000000)
         out_counter, out_root, out_root_mac = ward.reconcile(session, root)
         return out_counter, out_root, wallet_id, out_root_mac
 
@@ -244,7 +244,7 @@ def _sync_device(
     assert wallet_id is not None
     mac_for_sig = root_mac if root_mac is not None else ward.ZERO_MAC
     sig = sign_wm_attestation(nonce, counter, mac_for_sig, ward_id)
-    ward.ingest_attestation(session, counter, root_mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
+    ward.ingest_attestation(session, counter, root_mac, sig, timestamp=1700000000)
     out_counter, out_root, out_root_mac = ward.reconcile(session, root)
     return out_counter, out_root, wallet_id, out_root_mac
 
@@ -640,7 +640,7 @@ def test_ward_ingest_bad_signature_rejected(session: Session) -> None:
     valid_sig = sign_wm_attestation(nonce, counter, mac, ward_id)
     bad_sig = bytes([valid_sig[0] ^ 0x01]) + valid_sig[1:]
     with pytest.raises(TrezorFailure):
-        ward.ingest_attestation(session, counter, mac, bad_sig, timestamp=1700000000, head_nonce=b"h" * 32)
+        ward.ingest_attestation(session, counter, mac, bad_sig, timestamp=1700000000)
 
 
 @pytest.mark.models("core")
@@ -657,7 +657,7 @@ def test_ward_ingest_rollback_rejected(session: Session) -> None:
     assert ward_id is not None
     sig = sign_wm_attestation(nonce, 1, mac, ward_id)
     with pytest.raises(TrezorFailure):
-        ward.ingest_attestation(session, 1, mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
+        ward.ingest_attestation(session, 1, mac, sig, timestamp=1700000000)
 
 
 @pytest.mark.models("core")
@@ -706,7 +706,7 @@ def test_ward_catchup_rejects_unreconstructable_root(session: Session) -> None:
     nonce, ward_id = ward.sync(session)
     assert ward_id is not None
     sig = sign_wm_attestation(nonce, counter, mac, ward_id)
-    ward.ingest_attestation(session, counter, mac, sig, timestamp=1700000000, head_nonce=b"h" * 32)
+    ward.ingest_attestation(session, counter, mac, sig, timestamp=1700000000)
 
     # The host serves a root the attested mac does not commit to: it cannot be
     # reconstructed against the attestation, so reconcile must reject it.
@@ -737,7 +737,7 @@ def _verify_chain_setup(session: Session, n: int):
     mac_head = wm.root_mac(wallet_id, c_head, r_head)
     ward.ingest_attestation(
         session, c_head, mac_head, wm.sign_attestation(ward_id, nonce, c_head, mac_head)
-    , timestamp=1700000000, head_nonce=b"h" * 32)
+    , timestamp=1700000000)
 
     links = [
         (

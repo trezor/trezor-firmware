@@ -2236,8 +2236,6 @@ pub struct WARDIngestAttestation {
     pub wm_signature: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDIngestAttestation.timestamp)
     pub timestamp: ::std::option::Option<u64>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDIngestAttestation.head_nonce)
-    pub head_nonce: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDIngestAttestation.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -2364,44 +2362,8 @@ impl WARDIngestAttestation {
         self.timestamp = ::std::option::Option::Some(v);
     }
 
-    // required bytes head_nonce = 5;
-
-    pub fn head_nonce(&self) -> &[u8] {
-        match self.head_nonce.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_head_nonce(&mut self) {
-        self.head_nonce = ::std::option::Option::None;
-    }
-
-    pub fn has_head_nonce(&self) -> bool {
-        self.head_nonce.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_head_nonce(&mut self, v: ::std::vec::Vec<u8>) {
-        self.head_nonce = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_head_nonce(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.head_nonce.is_none() {
-            self.head_nonce = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.head_nonce.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_head_nonce(&mut self) -> ::std::vec::Vec<u8> {
-        self.head_nonce.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "counter",
@@ -2422,11 +2384,6 @@ impl WARDIngestAttestation {
             "timestamp",
             |m: &WARDIngestAttestation| { &m.timestamp },
             |m: &mut WARDIngestAttestation| { &mut m.timestamp },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "head_nonce",
-            |m: &WARDIngestAttestation| { &m.head_nonce },
-            |m: &mut WARDIngestAttestation| { &mut m.head_nonce },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDIngestAttestation>(
             "WARDIngestAttestation",
@@ -2449,9 +2406,6 @@ impl ::protobuf::Message for WARDIngestAttestation {
         if self.timestamp.is_none() {
             return false;
         }
-        if self.head_nonce.is_none() {
-            return false;
-        }
         true
     }
 
@@ -2469,9 +2423,6 @@ impl ::protobuf::Message for WARDIngestAttestation {
                 },
                 32 => {
                     self.timestamp = ::std::option::Option::Some(is.read_uint64()?);
-                },
-                42 => {
-                    self.head_nonce = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -2497,9 +2448,6 @@ impl ::protobuf::Message for WARDIngestAttestation {
         if let Some(v) = self.timestamp {
             my_size += ::protobuf::rt::uint64_size(4, v);
         }
-        if let Some(v) = self.head_nonce.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(5, &v);
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2517,9 +2465,6 @@ impl ::protobuf::Message for WARDIngestAttestation {
         }
         if let Some(v) = self.timestamp {
             os.write_uint64(4, v)?;
-        }
-        if let Some(v) = self.head_nonce.as_ref() {
-            os.write_bytes(5, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -2542,7 +2487,6 @@ impl ::protobuf::Message for WARDIngestAttestation {
         self.mac = ::std::option::Option::None;
         self.wm_signature = ::std::option::Option::None;
         self.timestamp = ::std::option::Option::None;
-        self.head_nonce = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2552,7 +2496,6 @@ impl ::protobuf::Message for WARDIngestAttestation {
             mac: ::std::option::Option::None,
             wm_signature: ::std::option::Option::None,
             timestamp: ::std::option::Option::None,
-            head_nonce: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -4970,8 +4913,6 @@ pub struct WARDAttestation {
     pub wm_signature: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDAttestation.timestamp)
     pub timestamp: ::std::option::Option<u64>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDAttestation.head_nonce)
-    pub head_nonce: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDAttestation.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -5098,44 +5039,8 @@ impl WARDAttestation {
         self.timestamp = ::std::option::Option::Some(v);
     }
 
-    // required bytes head_nonce = 5;
-
-    pub fn head_nonce(&self) -> &[u8] {
-        match self.head_nonce.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_head_nonce(&mut self) {
-        self.head_nonce = ::std::option::Option::None;
-    }
-
-    pub fn has_head_nonce(&self) -> bool {
-        self.head_nonce.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_head_nonce(&mut self, v: ::std::vec::Vec<u8>) {
-        self.head_nonce = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_head_nonce(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.head_nonce.is_none() {
-            self.head_nonce = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.head_nonce.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_head_nonce(&mut self) -> ::std::vec::Vec<u8> {
-        self.head_nonce.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "counter",
@@ -5156,11 +5061,6 @@ impl WARDAttestation {
             "timestamp",
             |m: &WARDAttestation| { &m.timestamp },
             |m: &mut WARDAttestation| { &mut m.timestamp },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "head_nonce",
-            |m: &WARDAttestation| { &m.head_nonce },
-            |m: &mut WARDAttestation| { &mut m.head_nonce },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDAttestation>(
             "WARDAttestation",
@@ -5183,9 +5083,6 @@ impl ::protobuf::Message for WARDAttestation {
         if self.timestamp.is_none() {
             return false;
         }
-        if self.head_nonce.is_none() {
-            return false;
-        }
         true
     }
 
@@ -5203,9 +5100,6 @@ impl ::protobuf::Message for WARDAttestation {
                 },
                 32 => {
                     self.timestamp = ::std::option::Option::Some(is.read_uint64()?);
-                },
-                42 => {
-                    self.head_nonce = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -5231,9 +5125,6 @@ impl ::protobuf::Message for WARDAttestation {
         if let Some(v) = self.timestamp {
             my_size += ::protobuf::rt::uint64_size(4, v);
         }
-        if let Some(v) = self.head_nonce.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(5, &v);
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -5251,9 +5142,6 @@ impl ::protobuf::Message for WARDAttestation {
         }
         if let Some(v) = self.timestamp {
             os.write_uint64(4, v)?;
-        }
-        if let Some(v) = self.head_nonce.as_ref() {
-            os.write_bytes(5, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -5276,7 +5164,6 @@ impl ::protobuf::Message for WARDAttestation {
         self.mac = ::std::option::Option::None;
         self.wm_signature = ::std::option::Option::None;
         self.timestamp = ::std::option::Option::None;
-        self.head_nonce = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -5286,7 +5173,6 @@ impl ::protobuf::Message for WARDAttestation {
             mac: ::std::option::Option::None,
             wm_signature: ::std::option::Option::None,
             timestamp: ::std::option::Option::None,
-            head_nonce: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -14916,130 +14802,129 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     unter\x18\x05\x20\x02(\rR\x07counter\x12\x12\n\x04root\x18\x06\x20\x01(\
     \x0cR\x04root\x12\x1d\n\nroot_known\x18\x07\x20\x02(\x08R\trootKnown\x12\
     #\n\rservice_bound\x18P\x20\x01(\x08R\x0cserviceBoundJ\x04\x08\x03\x10\
-    \x04\"\xa3\x01\n\x15WARDIngestAttestation\x12\x18\n\x07counter\x18\x01\
+    \x04\"\x8a\x01\n\x15WARDIngestAttestation\x12\x18\n\x07counter\x18\x01\
     \x20\x02(\rR\x07counter\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\
     \x12!\n\x0cwm_signature\x18\x03\x20\x02(\x0cR\x0bwmSignature\x12\x1c\n\t\
-    timestamp\x18\x04\x20\x02(\x04R\ttimestamp\x12\x1d\n\nhead_nonce\x18\x05\
-    \x20\x02(\x0cR\theadNonce\":\n\x18WARDIngestAttestationAck\x12\x18\n\x07\
-    counter\x18\x01\x20\x02(\rR\x07counterJ\x04\x08\x02\x10\x03\"\x16\n\x14W\
-    ARDListPendingEdits\"\x8e\x01\n\x17WARDListPendingEditsAck\x12\x1c\n\tad\
-    dresses\x18\x01\x20\x03(\x0cR\taddresses\x12\x1b\n\twallet_id\x18\x02\
-    \x20\x01(\x0cR\x08walletId\x12\x1f\n\x0bpending_ids\x18\x03\x20\x03(\rR\
-    \npendingIds\x12\x17\n\x07ward_id\x18\x04\x20\x01(\x0cR\x06wardId\"#\n\r\
-    WARDReconcile\x12\x12\n\x04root\x18\x01\x20\x01(\x0cR\x04root\"h\n\x10WA\
-    RDReconcileAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\
-    \x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x19\n\x08root_ma\
-    c\x18\x04\x20\x01(\x0cR\x07rootMacJ\x04\x08\x03\x10\x04\"\x85\x03\n\nWAR\
-    DLookup\x12\x18\n\x07address\x18\x01\x20\x02(\x0cR\x07address\x12\x14\n\
-    \x05proof\x18\x03\x20\x03(\x0cR\x05proof\x12*\n\x11witness_entry_key\x18\
-    \x04\x20\x01(\x0cR\x0fwitnessEntryKey\x12%\n\x0ewitness_commit\x18\x05\
-    \x20\x01(\x0cR\rwitnessCommit\x12\x15\n\x06app_id\x18\x08\x20\x01(\tR\
-    \x05appId\x12\x19\n\x08key_type\x18\t\x20\x01(\tR\x07keyType\x12\x1b\n\t\
-    device_id\x18\n\x20\x01(\rR\x08deviceId\x12>\n\x07content\x18\x0e\x20\
+    timestamp\x18\x04\x20\x02(\x04R\ttimestampJ\x04\x08\x05\x10\x06\":\n\x18\
+    WARDIngestAttestationAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07cou\
+    nterJ\x04\x08\x02\x10\x03\"\x16\n\x14WARDListPendingEdits\"\x8e\x01\n\
+    \x17WARDListPendingEditsAck\x12\x1c\n\taddresses\x18\x01\x20\x03(\x0cR\t\
+    addresses\x12\x1b\n\twallet_id\x18\x02\x20\x01(\x0cR\x08walletId\x12\x1f\
+    \n\x0bpending_ids\x18\x03\x20\x03(\rR\npendingIds\x12\x17\n\x07ward_id\
+    \x18\x04\x20\x01(\x0cR\x06wardId\"#\n\rWARDReconcile\x12\x12\n\x04root\
+    \x18\x01\x20\x01(\x0cR\x04root\"h\n\x10WARDReconcileAck\x12\x18\n\x07cou\
+    nter\x18\x01\x20\x02(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\
+    \x01(\x0cR\x07newRoot\x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\x07roo\
+    tMacJ\x04\x08\x03\x10\x04\"\x85\x03\n\nWARDLookup\x12\x18\n\x07address\
+    \x18\x01\x20\x02(\x0cR\x07address\x12\x14\n\x05proof\x18\x03\x20\x03(\
+    \x0cR\x05proof\x12*\n\x11witness_entry_key\x18\x04\x20\x01(\x0cR\x0fwitn\
+    essEntryKey\x12%\n\x0ewitness_commit\x18\x05\x20\x01(\x0cR\rwitnessCommi\
+    t\x12\x15\n\x06app_id\x18\x08\x20\x01(\tR\x05appId\x12\x19\n\x08key_type\
+    \x18\t\x20\x01(\tR\x07keyType\x12\x1b\n\tdevice_id\x18\n\x20\x01(\rR\x08\
+    deviceId\x12>\n\x07content\x18\x0e\x20\x01(\x0b2$.hw.trezor.messages.war\
+    d.LeafContentR\x07content\x12A\n\x08identity\x18\x0f\x20\x01(\x0b2%.hw.t\
+    rezor.messages.ward.LeafIdentityR\x08identityJ\x04\x08\x02\x10\x03J\x04\
+    \x08\x06\x10\x07J\x04\x08\x07\x10\x08J\x04\x08\x0b\x10\x0cJ\x04\x08\x0c\
+    \x10\rJ\x04\x08\r\x10\x0e\"~\n\rWARDLookupAck\x12\x14\n\x05valid\x18\x01\
+    \x20\x02(\x08R\x05valid\x12\x18\n\x07counter\x18\x02\x20\x02(\rR\x07coun\
+    ter\x12\x1e\n\nmembership\x18\x03\x20\x01(\x08R\nmembership\x12\x17\n\
+    \x07ward_id\x18\x05\x20\x01(\x0cR\x06wardIdJ\x04\x08\x04\x10\x05\"&\n\
+    \x10WARDDebugSetRoot\x12\x12\n\x04root\x18\x01\x20\x02(\x0cR\x04root\"\
+    \x82\x01\n\x13WARDDebugSetRootAck\x12\x18\n\x07counter\x18\x01\x20\x02(\
+    \rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\
+    \x12\x1b\n\twallet_id\x18\x03\x20\x01(\x0cR\x08walletId\x12\x19\n\x08roo\
+    t_mac\x18\x04\x20\x01(\x0cR\x07rootMac\"\x83\x01\n\x10WARDProofRequest\
+    \x12\x1d\n\npending_id\x18\x02\x20\x01(\rR\tpendingId\x12\x1b\n\tentry_k\
+    ey\x18\x04\x20\x02(\x0cR\x08entryKey\x12'\n\x0ffreshness_nonce\x18\x05\
+    \x20\x01(\x0cR\x0efreshnessNonceJ\x04\x08\x01\x10\x02J\x04\x08\x03\x10\
+    \x04\"\x84\x01\n\x0fWARDAttestation\x12\x18\n\x07counter\x18\x01\x20\x02\
+    (\rR\x07counter\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0c\
+    wm_signature\x18\x03\x20\x02(\x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\
+    \x18\x04\x20\x02(\x04R\ttimestampJ\x04\x08\x05\x10\x06\"\x98\x03\n\x0cWA\
+    RDProofAck\x12\x14\n\x05proof\x18\x02\x20\x03(\x0cR\x05proof\x12*\n\x11w\
+    itness_entry_key\x18\x04\x20\x01(\x0cR\x0fwitnessEntryKey\x12%\n\x0ewitn\
+    ess_commit\x18\x05\x20\x01(\x0cR\rwitnessCommit\x12>\n\x07content\x18\
+    \x0c\x20\x01(\x0b2$.hw.trezor.messages.ward.LeafContentR\x07content\x12A\
+    \n\x08identity\x18\r\x20\x01(\x0b2%.hw.trezor.messages.ward.LeafIdentity\
+    R\x08identity\x12J\n\x0battestation\x18\x0e\x20\x01(\x0b2(.hw.trezor.mes\
+    sages.ward.WARDAttestationR\x0battestation\x12\x20\n\x0bunavailable\x18\
+    \x0f\x20\x01(\x08R\x0bunavailableJ\x04\x08\x01\x10\x02J\x04\x08\x03\x10\
+    \x04J\x04\x08\x06\x10\x07J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\
+    \x08\t\x10\nJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\x0c\"+\n\x0eWARDExportK\
+    eys\x12\x19\n\x08key_type\x18\x01\x20\x01(\tR\x07keyType\"u\n\x11WARDExp\
+    ortKeysAck\x12\x15\n\x06k_path\x18\x01\x20\x01(\x0cR\x05kPath\x12\x15\n\
+    \x06k_data\x18\x02\x20\x01(\x0cR\x05kData\x12\x19\n\x08key_type\x18\x03\
+    \x20\x01(\tR\x07keyType\x12\x17\n\x07k_ident\x18\x04\x20\x01(\x0cR\x06kI\
+    dent\"3\n\x12WARDDiscardPending\x12\x1d\n\npending_id\x18\x01\x20\x01(\r\
+    R\tpendingId\"\x80\x01\n\x15WARDDiscardPendingAck\x12+\n\x11discarded_ad\
+    dress\x18\x01\x20\x01(\x0cR\x10discardedAddress\x12\x1b\n\twallet_id\x18\
+    \x02\x20\x01(\x0cR\x08walletId\x12\x1d\n\npending_id\x18\x03\x20\x01(\rR\
+    \tpendingId\"G\n\rEncryptedLeaf\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\
+    \x05nonce\x12\x10\n\x03tag\x18\x02\x20\x01(\x0cR\x03tag\x12\x0e\n\x02ct\
+    \x18\x03\x20\x01(\x0cR\x02ct\")\n\rPlaintextLeaf\x12\x18\n\x07content\
+    \x18\x01\x20\x01(\x0cR\x07content\"\xb5\x01\n\x0bLeafContent\x12\x1a\n\
+    \x08encoding\x18\x01\x20\x01(\rR\x08encoding\x12D\n\tencrypted\x18\x02\
+    \x20\x01(\x0b2&.hw.trezor.messages.ward.EncryptedLeafR\tencrypted\x12D\n\
+    \tplaintext\x18\x03\x20\x01(\x0b2&.hw.trezor.messages.ward.PlaintextLeaf\
+    R\tplaintext\"c\n\rPlainIdentity\x12\x1e\n\nidentifier\x18\x01\x20\x01(\
+    \x0cR\nidentifier\x12\x15\n\x06app_id\x18\x02\x20\x01(\tR\x05appId\x12\
+    \x1b\n\tdevice_id\x18\x03\x20\x01(\rR\x08deviceId\"K\n\x11EncryptedIdent\
+    ity\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x10\n\x03tag\
+    \x18\x02\x20\x01(\x0cR\x03tag\x12\x0e\n\x02ct\x18\x03\x20\x01(\x0cR\x02c\
+    t\"\xcd\x01\n\x0cLeafIdentity\x12\x1a\n\x08encoding\x18\x01\x20\x01(\rR\
+    \x08encoding\x12\x19\n\x08key_type\x18\x02\x20\x01(\tR\x07keyType\x12H\n\
+    \tencrypted\x18\x03\x20\x01(\x0b2*.hw.trezor.messages.ward.EncryptedIden\
+    tityR\tencrypted\x12<\n\x05plain\x18\x04\x20\x01(\x0b2&.hw.trezor.messag\
+    es.ward.PlainIdentityR\x05plain\"\xc7\x01\n\rWARDBatchLeaf\x12\x1b\n\ten\
+    try_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12>\n\x07content\x18\x06\x20\
     \x01(\x0b2$.hw.trezor.messages.ward.LeafContentR\x07content\x12A\n\x08id\
-    entity\x18\x0f\x20\x01(\x0b2%.hw.trezor.messages.ward.LeafIdentityR\x08i\
-    dentityJ\x04\x08\x02\x10\x03J\x04\x08\x06\x10\x07J\x04\x08\x07\x10\x08J\
-    \x04\x08\x0b\x10\x0cJ\x04\x08\x0c\x10\rJ\x04\x08\r\x10\x0e\"~\n\rWARDLoo\
-    kupAck\x12\x14\n\x05valid\x18\x01\x20\x02(\x08R\x05valid\x12\x18\n\x07co\
-    unter\x18\x02\x20\x02(\rR\x07counter\x12\x1e\n\nmembership\x18\x03\x20\
-    \x01(\x08R\nmembership\x12\x17\n\x07ward_id\x18\x05\x20\x01(\x0cR\x06war\
-    dIdJ\x04\x08\x04\x10\x05\"&\n\x10WARDDebugSetRoot\x12\x12\n\x04root\x18\
-    \x01\x20\x02(\x0cR\x04root\"\x82\x01\n\x13WARDDebugSetRootAck\x12\x18\n\
-    \x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\
-    \x20\x01(\x0cR\x07newRoot\x12\x1b\n\twallet_id\x18\x03\x20\x01(\x0cR\x08\
-    walletId\x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMac\"\x83\
-    \x01\n\x10WARDProofRequest\x12\x1d\n\npending_id\x18\x02\x20\x01(\rR\tpe\
-    ndingId\x12\x1b\n\tentry_key\x18\x04\x20\x02(\x0cR\x08entryKey\x12'\n\
-    \x0ffreshness_nonce\x18\x05\x20\x01(\x0cR\x0efreshnessNonceJ\x04\x08\x01\
-    \x10\x02J\x04\x08\x03\x10\x04\"\x9d\x01\n\x0fWARDAttestation\x12\x18\n\
-    \x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x10\n\x03mac\x18\x02\x20\
-    \x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x02(\x0cR\x0bwmSign\
-    ature\x12\x1c\n\ttimestamp\x18\x04\x20\x02(\x04R\ttimestamp\x12\x1d\n\nh\
-    ead_nonce\x18\x05\x20\x02(\x0cR\theadNonce\"\x98\x03\n\x0cWARDProofAck\
-    \x12\x14\n\x05proof\x18\x02\x20\x03(\x0cR\x05proof\x12*\n\x11witness_ent\
-    ry_key\x18\x04\x20\x01(\x0cR\x0fwitnessEntryKey\x12%\n\x0ewitness_commit\
-    \x18\x05\x20\x01(\x0cR\rwitnessCommit\x12>\n\x07content\x18\x0c\x20\x01(\
-    \x0b2$.hw.trezor.messages.ward.LeafContentR\x07content\x12A\n\x08identit\
-    y\x18\r\x20\x01(\x0b2%.hw.trezor.messages.ward.LeafIdentityR\x08identity\
-    \x12J\n\x0battestation\x18\x0e\x20\x01(\x0b2(.hw.trezor.messages.ward.WA\
-    RDAttestationR\x0battestation\x12\x20\n\x0bunavailable\x18\x0f\x20\x01(\
-    \x08R\x0bunavailableJ\x04\x08\x01\x10\x02J\x04\x08\x03\x10\x04J\x04\x08\
-    \x06\x10\x07J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\x08\t\x10\nJ\
-    \x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\x0c\"+\n\x0eWARDExportKeys\x12\x19\n\
-    \x08key_type\x18\x01\x20\x01(\tR\x07keyType\"u\n\x11WARDExportKeysAck\
-    \x12\x15\n\x06k_path\x18\x01\x20\x01(\x0cR\x05kPath\x12\x15\n\x06k_data\
-    \x18\x02\x20\x01(\x0cR\x05kData\x12\x19\n\x08key_type\x18\x03\x20\x01(\t\
-    R\x07keyType\x12\x17\n\x07k_ident\x18\x04\x20\x01(\x0cR\x06kIdent\"3\n\
-    \x12WARDDiscardPending\x12\x1d\n\npending_id\x18\x01\x20\x01(\rR\tpendin\
-    gId\"\x80\x01\n\x15WARDDiscardPendingAck\x12+\n\x11discarded_address\x18\
-    \x01\x20\x01(\x0cR\x10discardedAddress\x12\x1b\n\twallet_id\x18\x02\x20\
-    \x01(\x0cR\x08walletId\x12\x1d\n\npending_id\x18\x03\x20\x01(\rR\tpendin\
-    gId\"G\n\rEncryptedLeaf\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonc\
-    e\x12\x10\n\x03tag\x18\x02\x20\x01(\x0cR\x03tag\x12\x0e\n\x02ct\x18\x03\
-    \x20\x01(\x0cR\x02ct\")\n\rPlaintextLeaf\x12\x18\n\x07content\x18\x01\
-    \x20\x01(\x0cR\x07content\"\xb5\x01\n\x0bLeafContent\x12\x1a\n\x08encodi\
-    ng\x18\x01\x20\x01(\rR\x08encoding\x12D\n\tencrypted\x18\x02\x20\x01(\
-    \x0b2&.hw.trezor.messages.ward.EncryptedLeafR\tencrypted\x12D\n\tplainte\
-    xt\x18\x03\x20\x01(\x0b2&.hw.trezor.messages.ward.PlaintextLeafR\tplaint\
-    ext\"c\n\rPlainIdentity\x12\x1e\n\nidentifier\x18\x01\x20\x01(\x0cR\nide\
-    ntifier\x12\x15\n\x06app_id\x18\x02\x20\x01(\tR\x05appId\x12\x1b\n\tdevi\
-    ce_id\x18\x03\x20\x01(\rR\x08deviceId\"K\n\x11EncryptedIdentity\x12\x14\
-    \n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x10\n\x03tag\x18\x02\x20\
-    \x01(\x0cR\x03tag\x12\x0e\n\x02ct\x18\x03\x20\x01(\x0cR\x02ct\"\xcd\x01\
-    \n\x0cLeafIdentity\x12\x1a\n\x08encoding\x18\x01\x20\x01(\rR\x08encoding\
-    \x12\x19\n\x08key_type\x18\x02\x20\x01(\tR\x07keyType\x12H\n\tencrypted\
-    \x18\x03\x20\x01(\x0b2*.hw.trezor.messages.ward.EncryptedIdentityR\tencr\
-    ypted\x12<\n\x05plain\x18\x04\x20\x01(\x0b2&.hw.trezor.messages.ward.Pla\
-    inIdentityR\x05plain\"\xc7\x01\n\rWARDBatchLeaf\x12\x1b\n\tentry_key\x18\
-    \x01\x20\x02(\x0cR\x08entryKey\x12>\n\x07content\x18\x06\x20\x01(\x0b2$.\
-    hw.trezor.messages.ward.LeafContentR\x07content\x12A\n\x08identity\x18\
-    \x07\x20\x01(\x0b2%.hw.trezor.messages.ward.LeafIdentityR\x08identityJ\
-    \x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\x05J\x04\x08\
-    \x05\x10\x06\"3\n\x10WARDPerformBatch\x12\x1f\n\x0bpending_ids\x18\x01\
-    \x20\x03(\rR\npendingIds\"\xd6\x02\n\x13WARDPerformBatchAck\x12\x18\n\
-    \x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x1b\n\tfrom_root\x18\x02\
-    \x20\x01(\x0cR\x08fromRoot\x12\x19\n\x08new_root\x18\x03\x20\x01(\x0cR\
-    \x07newRoot\x12\x10\n\x03mac\x18\x04\x20\x01(\x0cR\x03mac\x12\x17\n\x07w\
-    ard_id\x18\x05\x20\x01(\x0cR\x06wardId\x12\x19\n\x08head_mac\x18\x06\x20\
-    \x02(\x0cR\x07headMac\x12\x1f\n\x0bauth_commit\x18\x07\x20\x02(\x0cR\nau\
-    thCommit\x12\x1d\n\nsig_commit\x18\x08\x20\x01(\x0cR\tsigCommit\x12>\n\
-    \x06leaves\x18\t\x20\x03(\x0b2&.hw.trezor.messages.ward.WARDBatchLeafR\
-    \x06leaves\x12'\n\x0fservice_applied\x18P\x20\x01(\x08R\x0eserviceApplie\
-    d\"e\n\x14WARDConfirmBatchByWM\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\
-    \x07counter\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_s\
-    ignature\x18\x03\x20\x02(\x0cR\x0bwmSignature\"\x82\x01\n\x17WARDConfirm\
-    BatchByWMAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x19\
-    \n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x17\n\x07ward_id\x18\
-    \x03\x20\x01(\x0cR\x06wardId\x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\
-    \x07rootMac\"\xa4\x01\n\x11WARDPerformRevert\x12#\n\rstuck_counter\x18\
-    \x01\x20\x02(\rR\x0cstuckCounter\x12\x1d\n\nstuck_root\x18\x02\x20\x01(\
-    \x0cR\tstuckRoot\x12\x1b\n\tprev_root\x18\x03\x20\x01(\x0cR\x08prevRoot\
-    \x12.\n\x13forward_auth_commit\x18\x04\x20\x02(\x0cR\x11forwardAuthCommi\
-    t\"\x97\x02\n\x14WARDPerformRevertAck\x12\x18\n\x07counter\x18\x01\x20\
-    \x02(\rR\x07counter\x12\x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fromRo\
-    ot\x12\x19\n\x08new_root\x18\x03\x20\x01(\x0cR\x07newRoot\x12\x10\n\x03m\
-    ac\x18\x04\x20\x01(\x0cR\x03mac\x12\x17\n\x07ward_id\x18\x05\x20\x01(\
-    \x0cR\x06wardId\x12\x19\n\x08head_mac\x18\x06\x20\x02(\x0cR\x07headMac\
-    \x12\x1f\n\x0bauth_revert\x18\x07\x20\x02(\x0cR\nauthRevert\x12\x1d\n\ns\
-    ig_commit\x18\x08\x20\x01(\x0cR\tsigCommit\x12'\n\x0fservice_applied\x18\
-    P\x20\x01(\x08R\x0eserviceApplied\"f\n\x15WARDConfirmRevertByWM\x12\x18\
-    \n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x10\n\x03mac\x18\x02\
-    \x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x02(\x0cR\x0bwm\
-    Signature\"\x83\x01\n\x18WARDConfirmRevertByWMAck\x12\x18\n\x07counter\
-    \x18\x01\x20\x02(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\
-    \x0cR\x07newRoot\x12\x17\n\x07ward_id\x18\x03\x20\x01(\x0cR\x06wardId\
-    \x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMac\"\xc7\x01\n\rWAR\
-    DChainLink\x12!\n\x0cfrom_counter\x18\x01\x20\x02(\rR\x0bfromCounter\x12\
-    \x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fromRoot\x12\x1d\n\nto_counte\
-    r\x18\x03\x20\x02(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x04\x20\x01(\
-    \x0cR\x06toRoot\x12\x1f\n\x0bauth_commit\x18\x05\x20\x02(\x0cR\nauthComm\
-    it\x12\x1d\n\nsig_commit\x18\x06\x20\x01(\x0cR\tsigCommit\"O\n\x0fWARDVe\
-    rifyChain\x12<\n\x05links\x18\x01\x20\x03(\x0b2&.hw.trezor.messages.ward\
-    .WARDChainLinkR\x05links\"}\n\x12WARDVerifyChainAck\x12\x18\n\x07counter\
-    \x18\x01\x20\x02(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\
-    \x0cR\x07newRoot\x12\x17\n\x07ward_id\x18\x03\x20\x01(\x0cR\x06wardId\
-    \x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMac\"\xc5\x01\n\rWAR\
-    DWalkEntry\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12\
+    entity\x18\x07\x20\x01(\x0b2%.hw.trezor.messages.ward.LeafIdentityR\x08i\
+    dentityJ\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\x05J\
+    \x04\x08\x05\x10\x06\"3\n\x10WARDPerformBatch\x12\x1f\n\x0bpending_ids\
+    \x18\x01\x20\x03(\rR\npendingIds\"\xd6\x02\n\x13WARDPerformBatchAck\x12\
+    \x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x1b\n\tfrom_root\
+    \x18\x02\x20\x01(\x0cR\x08fromRoot\x12\x19\n\x08new_root\x18\x03\x20\x01\
+    (\x0cR\x07newRoot\x12\x10\n\x03mac\x18\x04\x20\x01(\x0cR\x03mac\x12\x17\
+    \n\x07ward_id\x18\x05\x20\x01(\x0cR\x06wardId\x12\x19\n\x08head_mac\x18\
+    \x06\x20\x02(\x0cR\x07headMac\x12\x1f\n\x0bauth_commit\x18\x07\x20\x02(\
+    \x0cR\nauthCommit\x12\x1d\n\nsig_commit\x18\x08\x20\x01(\x0cR\tsigCommit\
+    \x12>\n\x06leaves\x18\t\x20\x03(\x0b2&.hw.trezor.messages.ward.WARDBatch\
+    LeafR\x06leaves\x12'\n\x0fservice_applied\x18P\x20\x01(\x08R\x0eserviceA\
+    pplied\"e\n\x14WARDConfirmBatchByWM\x12\x18\n\x07counter\x18\x01\x20\x02\
+    (\rR\x07counter\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0c\
+    wm_signature\x18\x03\x20\x02(\x0cR\x0bwmSignature\"\x82\x01\n\x17WARDCon\
+    firmBatchByWMAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\
+    \x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x17\n\x07ward_id\
+    \x18\x03\x20\x01(\x0cR\x06wardId\x12\x19\n\x08root_mac\x18\x04\x20\x01(\
+    \x0cR\x07rootMac\"\xa4\x01\n\x11WARDPerformRevert\x12#\n\rstuck_counter\
+    \x18\x01\x20\x02(\rR\x0cstuckCounter\x12\x1d\n\nstuck_root\x18\x02\x20\
+    \x01(\x0cR\tstuckRoot\x12\x1b\n\tprev_root\x18\x03\x20\x01(\x0cR\x08prev\
+    Root\x12.\n\x13forward_auth_commit\x18\x04\x20\x02(\x0cR\x11forwardAuthC\
+    ommit\"\x97\x02\n\x14WARDPerformRevertAck\x12\x18\n\x07counter\x18\x01\
+    \x20\x02(\rR\x07counter\x12\x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fr\
+    omRoot\x12\x19\n\x08new_root\x18\x03\x20\x01(\x0cR\x07newRoot\x12\x10\n\
+    \x03mac\x18\x04\x20\x01(\x0cR\x03mac\x12\x17\n\x07ward_id\x18\x05\x20\
+    \x01(\x0cR\x06wardId\x12\x19\n\x08head_mac\x18\x06\x20\x02(\x0cR\x07head\
+    Mac\x12\x1f\n\x0bauth_revert\x18\x07\x20\x02(\x0cR\nauthRevert\x12\x1d\n\
+    \nsig_commit\x18\x08\x20\x01(\x0cR\tsigCommit\x12'\n\x0fservice_applied\
+    \x18P\x20\x01(\x08R\x0eserviceApplied\"f\n\x15WARDConfirmRevertByWM\x12\
+    \x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x10\n\x03mac\x18\
+    \x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x02(\x0cR\
+    \x0bwmSignature\"\x83\x01\n\x18WARDConfirmRevertByWMAck\x12\x18\n\x07cou\
+    nter\x18\x01\x20\x02(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\
+    \x01(\x0cR\x07newRoot\x12\x17\n\x07ward_id\x18\x03\x20\x01(\x0cR\x06ward\
+    Id\x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMac\"\xc7\x01\n\rW\
+    ARDChainLink\x12!\n\x0cfrom_counter\x18\x01\x20\x02(\rR\x0bfromCounter\
+    \x12\x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fromRoot\x12\x1d\n\nto_co\
+    unter\x18\x03\x20\x02(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x04\x20\
+    \x01(\x0cR\x06toRoot\x12\x1f\n\x0bauth_commit\x18\x05\x20\x02(\x0cR\naut\
+    hCommit\x12\x1d\n\nsig_commit\x18\x06\x20\x01(\x0cR\tsigCommit\"O\n\x0fW\
+    ARDVerifyChain\x12<\n\x05links\x18\x01\x20\x03(\x0b2&.hw.trezor.messages\
+    .ward.WARDChainLinkR\x05links\"}\n\x12WARDVerifyChainAck\x12\x18\n\x07co\
+    unter\x18\x01\x20\x02(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\
+    \x01(\x0cR\x07newRoot\x12\x17\n\x07ward_id\x18\x03\x20\x01(\x0cR\x06ward\
+    Id\x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMac\"\xc5\x01\n\rW\
+    ARDWalkEntry\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12\
     \x14\n\x05proof\x18\x02\x20\x03(\x0cR\x05proof\x12>\n\x07content\x18\x03\
     \x20\x01(\x0b2$.hw.trezor.messages.ward.LeafContentR\x07content\x12A\n\
     \x08identity\x18\x04\x20\x01(\x0b2%.hw.trezor.messages.ward.LeafIdentity\

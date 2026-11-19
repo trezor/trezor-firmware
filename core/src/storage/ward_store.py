@@ -23,7 +23,7 @@ WALLET_ID_LENGTH = const(
 )  # BIP32 Hash160 identifier: RIPEMD160(SHA256(master pubkey))
 ROOT_LENGTH = const(32)
 MAX_WALLETS = const(16)  # Refuse new wallets at capacity; never evict a rollback floor.
-# Record layout: [wallet_id: 20][counter: 4]
+# Record layout: [wallet_id: 20][counter: 4][present: 1][root: 32][timestamp: 8]
 #
 # The table is an LRU CACHE keyed by the 20-byte wallet_id: it holds up to
 # MAX_WALLETS wallets' durable counter_loc. Records are ordered
@@ -31,8 +31,8 @@ MAX_WALLETS = const(16)  # Refuse new wallets at capacity; never evict a rollbac
 # its wallet to the back, and inserting a new wallet at capacity evicts the front
 # (least-recently-used) record. Callers must only ever read the record for the
 # CURRENTLY ACTIVE wallet_id -- never enumerate across wallets.
-_RECORD_SIZE = const(97)
-_TABLE_VERSION = b"WH3"
+_RECORD_SIZE = const(65)
+_TABLE_VERSION = b"WH4"
 EMPTY_ROOT = b"\x00" * ROOT_LENGTH
 
 
@@ -44,18 +44,25 @@ def _load_table() -> bytearray:
         table = bytearray(raw[3:])
         if len(table) % _RECORD_SIZE:
             raise ValueError("corrupt WARD trusted-head table")
+    elif raw[:3] == b"WH3":
+        # WH3 appended a 32-byte WM head nonce that the protocol no longer uses.
+        if (len(raw) - 3) % 97:
+            raise ValueError("corrupt WARD trusted-head table")
+        table = bytearray()
+        for off in range(3, len(raw), 97):
+            table += raw[off : off + _RECORD_SIZE]
     elif raw[:3] == b"WH2":
         if (len(raw) - 3) % 57:
             raise ValueError("corrupt WARD trusted-head table")
         table = bytearray()
         for off in range(3, len(raw), 57):
-            table += raw[off : off + 57] + bytes(40)
+            table += raw[off : off + 57] + bytes(8)
     else:
         if len(raw) % 24:
             raise ValueError("corrupt legacy WARD counter table")
         table = bytearray()
         for off in range(0, len(raw), 24):
-            table += raw[off : off + 24] + bytes(73)
+            table += raw[off : off + 24] + bytes(41)
     if __debug__:
         from trezor import log
 
@@ -133,14 +140,13 @@ def commit_counter(wallet_id: bytes, counter: int) -> None:
     if off >= 0 and counter < _read_counter(table, off):
         raise ValueError("WARD counter regression")
     present, root = ward_head.root_get(wallet_id)
-    timestamp, head_nonce = ward_head.root_metadata(wallet_id)
+    timestamp = ward_head.root_metadata(wallet_id)
     record = (
         wallet_id
         + counter.to_bytes(4, "big")
         + bytes([1 if present else 0])
         + (root if root is not None else EMPTY_ROOT)
         + timestamp.to_bytes(8, "big")
-        + head_nonce
     )
     _put_mru(table, wallet_id, record)
 
@@ -166,14 +172,13 @@ def trusted_root(wallet_id: bytes):
     return True, None if root == EMPTY_ROOT else root
 
 
-def trusted_metadata(wallet_id: bytes):
+def trusted_metadata(wallet_id: bytes) -> int:
+    """Return the persisted attested timestamp, or 0 for an unknown wallet."""
     table = _load_table()
     off = _find_record(table, wallet_id)
     if off < 0:
-        return 0, bytes(32)
-    return int.from_bytes(table[off + 57 : off + 65], "big"), bytes(
-        table[off + 65 : off + 97]
-    )
+        return 0
+    return int.from_bytes(table[off + 57 : off + 65], "big")
 
 
 # ---------------------------------------------------------------------------

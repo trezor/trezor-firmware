@@ -73,10 +73,9 @@ def run_recovery(
         "mac": candidate["mac"],
         "authCommit": candidate["auth_commit"],
         "signature": candidate["sig_commit"],
-        "headNonce": captured["attestation"]["head_nonce"],
         "kind": "commit",
     }
-    accepted = request("/ward/commit", publication)
+    accepted = request("/ward/commit", {"transition": publication})
     cached = {
         "counter": candidate["counter"],
         "mac": candidate["mac"],
@@ -161,8 +160,8 @@ def run_recovery(
         raise AssertionError("rollback proceeded without user approval")
     head = request("/ward/attest", {"wardId": ward_id, "nonce": "ab" * 32})
     assert (
-        head["counter"] == candidate["counter"]
-        and head["root"] == candidate["new_root"]
+        head["transition"]["counter"] == candidate["counter"]
+        and head["transition"]["root"] == candidate["new_root"]
     )
     assert anchor(0).counter == candidate["counter"]
     assert anchor(1).counter == before["counter"]

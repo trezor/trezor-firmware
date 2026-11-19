@@ -91,7 +91,7 @@ def _sync_device(
     mac_for_sig = root_mac if root_mac is not None else ward.ZERO_MAC
     sig = sign_wm_attestation(nonce, counter, mac_for_sig, ward_id)
     ward.ingest_attestation(
-        session, counter, root_mac, sig, timestamp=1700000000, head_nonce=b"h" * 32
+        session, counter, root_mac, sig, timestamp=1700000000
     )
     return ward.reconcile(session, root)
 

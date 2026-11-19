@@ -22,7 +22,6 @@ from .test_ward_mpt import _tree
 pytestmark = pytest.mark.models("T3T1", "T3W1")
 
 TIMESTAMP = 1700001000
-GENERATION = b"h" * 32
 
 
 def _head(session: Session) -> tuple:
@@ -48,14 +47,12 @@ def _attestation(
             counter,
             mac.hex() if mac is not None else None,
             timestamp,
-            GENERATION.hex(),
         )
     )
     return messages.WARDIngestAttestation(
         counter=counter,
         mac=mac,
         timestamp=timestamp,
-        head_nonce=GENERATION,
         wm_signature=signature,
     )
 
@@ -82,7 +79,6 @@ def _genesis_still_usable(session: Session, before: tuple) -> None:
         "counter",
         "mac",
         "timestamp",
-        "head_nonce",
         "signature",
     ],
 )
@@ -97,8 +93,6 @@ def test_adversarial_attestation_field_tampering(session: Session, field: str) -
         request.mac = b"m" * 32
     elif field == "timestamp":
         request.timestamp += 1
-    elif field == "head_nonce":
-        request.head_nonce = b"x" * 32
     elif field == "signature":
         request.wm_signature = b"\x00" * 64
     _reject(session, request)
@@ -440,7 +434,12 @@ def test_adversarial_replayed_membership_cannot_revive_a_deleted_leaf(
 
 @pytest.mark.parametrize(
     "scope",
-    [{"app_id": "ethereum"}, {"key_type": "label"}, {"device_id": 1}, {"device_id": 256}],
+    [
+        {"app_id": "ethereum"},
+        {"key_type": "label"},
+        {"device_id": 1},
+        {"device_id": 256},
+    ],
 )
 def test_adversarial_host_cannot_choose_the_scope(
     session: Session, scope: dict

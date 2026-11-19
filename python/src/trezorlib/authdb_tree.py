@@ -127,6 +127,17 @@ def _hash_mpt(node) -> bytes:
     return _internal_hash(node.bit, _hash_mpt(node.left), _hash_mpt(node.right))
 
 
+def root_from_value_digests(values: dict[bytes, bytes]) -> bytes:
+    """Reconstruct the root from entry keys and precomputed value digests."""
+    if not values:
+        return EMPTY_ROOT
+    leaves = [
+        _LeafNode(key, ward_crypto.leaf_hash_of(key, digest))
+        for key, digest in values.items()
+    ]
+    return _hash_mpt(_build_mpt(leaves, 0))
+
+
 def _walk_proof(root, target_key: bytes) -> List[bytes]:
     proof: List[bytes] = []
 
