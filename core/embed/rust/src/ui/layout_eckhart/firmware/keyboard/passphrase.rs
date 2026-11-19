@@ -8,6 +8,7 @@ use super::super::keyboard::common::{
 use super::super::keyboard::keypad::{ButtonState, KeypadState};
 use super::super::{theme, StringInput, StringInputMsg};
 use crate::strutil::TString;
+use crate::ui::component::eye_hint::EyeHintAnimation;
 use crate::ui::component::text::common::TextBox;
 use crate::ui::component::text::layout::{LayoutFit, LineBreaking};
 use crate::ui::component::text::TextStyle;
@@ -28,6 +29,7 @@ pub struct PassphraseInput {
     multi_tap: MultiTapKeyboard,
     allow_cancel: bool,
     allow_empty: bool,
+    eye_hint: EyeHintAnimation,
 }
 
 impl PassphraseInput {
@@ -40,6 +42,10 @@ impl PassphraseInput {
     const EYE_ICON: Icon = theme::ICON_EYE;
     const EYE_ICON_WIDTH: i16 = Self::EYE_ICON.toif.width();
     const EYE_ICON_SPACE: i16 = 24;
+    /// Distance the eye icon travels when sliding in, starting off the screen
+    const EYE_ICON_SLIDE: i16 = 48;
+    /// Distance the dashes travel to make room for the sliding eye icon
+    const DASHES_SLIDE: i16 = 36;
     const MAX_SHOWN_LEN: usize = 10; // max number of icons per line
     const LAST_DIGIT_TIMEOUT: Duration = Duration::from_secs(1);
 
@@ -54,7 +60,20 @@ impl PassphraseInput {
             multi_tap: MultiTapKeyboard::new(),
             allow_cancel,
             allow_empty,
+            eye_hint: EyeHintAnimation::default(),
         }
+    }
+
+    /// Slide the eye icon in once the first character is hidden behind a dash,
+    /// and reset it when the input is cleared.
+    fn update_eye_hint(&mut self, ctx: &mut EventCtx) {
+        let count = self.textbox.count();
+        let visible = match count {
+            0 => false,
+            1 => self.eye_hint.is_visible() || self.display_style == DisplayStyle::Hidden,
+            _ => true,
+        };
+        self.eye_hint.set_visible(ctx, visible);
     }
 
     fn update_shown_area(&mut self) {
@@ -111,14 +130,22 @@ impl PassphraseInput {
         }
 
         // Eye icon hinting that holding the input reveals the passphrase
-        ToifImage::new(hidden_area.left_center(), Self::EYE_ICON.toif)
+        if self.eye_hint.is_visible() {
+            let eye_offset =
+                EyeHintAnimation::offset(self.eye_hint.icon_progress(), Self::EYE_ICON_SLIDE);
+            ToifImage::new(
+                hidden_area.left_center().ofs(Offset::x(eye_offset)),
+                Self::EYE_ICON.toif,
+            )
             .with_align(Alignment2D::CENTER_LEFT)
             .with_fg(theme::GREY_LIGHT)
             .render(target);
+        }
 
-        let mut cursor = hidden_area
-            .left_center()
-            .ofs(Offset::x(Self::EYE_ICON_WIDTH + Self::EYE_ICON_SPACE));
+        let dashes_offset = Self::EYE_ICON_WIDTH
+            + Self::EYE_ICON_SPACE
+            + EyeHintAnimation::offset(self.eye_hint.content_progress(), Self::DASHES_SLIDE);
+        let mut cursor = hidden_area.left_center().ofs(Offset::x(dashes_offset));
 
         // Number of visible icons + characters
         let visible_len = pp_len.min(Self::MAX_SHOWN_LEN);
@@ -198,6 +225,7 @@ impl StringInput for PassphraseInput {
             self.last_char_timer.stop();
             self.display_style = DisplayStyle::LastWithMarker;
         }
+        self.update_eye_hint(ctx);
     }
 
     fn on_erase(&mut self, ctx: &mut EventCtx, long_erase: bool) {
@@ -208,6 +236,7 @@ impl StringInput for PassphraseInput {
             self.textbox.delete_last(ctx);
         }
         self.display_style = DisplayStyle::Hidden;
+        self.update_eye_hint(ctx);
     }
 
     fn get_keypad_state(&self) -> KeypadState {
@@ -298,8 +327,11 @@ impl Component for PassphraseInput {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.eye_hint.process(ctx, event);
+
         // No touch events are handled when the textbox is empty
         if self.is_empty() {
+            self.update_eye_hint(ctx);
             return None;
         }
 
@@ -328,11 +360,13 @@ impl Component for PassphraseInput {
             Event::Touch(TouchEvent::TouchEnd(_)) if self.display_style == DisplayStyle::Shown => {
                 self.multi_tap.clear_pending_state(ctx);
                 self.display_style = DisplayStyle::Hidden;
+                self.update_eye_hint(ctx);
                 return Some(StringInputMsg::UpdateKeypad);
             }
             // Timeout for showing the last char.
             Event::Timer(_) if self.last_char_timer.expire(event) => {
                 self.display_style = DisplayStyle::Hidden;
+                self.update_eye_hint(ctx);
                 ctx.request_paint();
             }
             _ => {}
