@@ -170,7 +170,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           repository: trezor/trezor-suite
-          ref: 3e6f238f3338f5cfc409d4a583de238885205118
+          ref: 47be448a9ab29f90ad20368f451c546c008b7bfa
           path: ward-suite
           persist-credentials: false
       - name: Install wardd dependencies
