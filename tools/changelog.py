@@ -47,7 +47,9 @@ for project in KNOWN_PROJECTS:
 IGNORED_FILES = (".gitignore", ".keep")
 
 
-def linkify_changelog(changelog_file: Path, only_check: bool = False) -> bool:
+def linkify_changelog(
+    changelog_file: Path, only_check: bool = False, drop_unused: bool = False
+) -> bool:
     links = {}
     orig_links = {}
     result_lines = []
@@ -71,6 +73,9 @@ def linkify_changelog(changelog_file: Path, only_check: bool = False) -> bool:
             else:
                 return True
 
+        if drop_unused:
+            # keep only the existing links that are referenced in the text
+            orig_links = {k: v for k, v in orig_links.items() if k in links}
         links.update(orig_links)
 
         changelog.seek(0)
@@ -184,8 +189,9 @@ def filter_changelog(changelog_file: Path, internal_name: str) -> None:
     # Drop empty sub-sections
     destination_file.write_text(re.sub(r"### .*\n\n", "", destination_file.read_text()))
 
-    # Ensure issue links are present even if we truncated before the link block
-    linkify_changelog(destination_file)
+    # Ensure issue links are present even if we truncated before the link block,
+    # and drop links copied from the main changelog that the model doesn't use
+    linkify_changelog(destination_file, drop_unused=True)
 
 
 def _iter_fragments(project: Path) -> Iterator[Path]:
