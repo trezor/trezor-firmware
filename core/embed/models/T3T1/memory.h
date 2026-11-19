@@ -81,13 +81,17 @@
 #define MAIN_RAM_SIZE (28 * 1024)
 
 #define AUX2_RAM_START 0x30037000
-#define AUX2_RAM_SIZE (323 * 1024)
+#define AUX2_RAM_SIZE (204 * 1024)
 
-#define FB1_RAM_START 0x30087C00
+#define APP_ARENA_RAM_START (0x3006A000)
+#define APP_ARENA_RAM_SIZE (231 * 1024)
+
+#define FB1_RAM_START 0x300A3E00
 #define FB1_RAM_SIZE (115200)
 
-#define FB2_RAM_START 0x300A3E00
-#define FB2_RAM_SIZE (115200)
+// Single framebuffer configuration: FB2 is unused (FRAME_BUFFER_COUNT == 1)
+#define FB2_RAM_START 0x300C0000
+#define FB2_RAM_SIZE (0)
 
 // misc
 #define CODE_ALIGNMENT 0x200

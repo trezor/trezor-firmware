@@ -1,0 +1,8 @@
+# uv workspace of all apps: one shared `.venv` and `uv.lock` in this directory.
+[project]
+name = "trezor-apps"
+version = "0.1.0"
+requires-python = ">=3.9, <4"
+
+[tool.uv.workspace]
+members = ["ethereum", "stellar", "testapp", "tron"]

@@ -31,14 +31,22 @@
 
 #include "vendor/secp256k1-zkp/include/secp256k1.h"
 
+// TEMPORARY: the pointer to the context lives in task-local storage
+// (`THREAD_LOCAL`), so that external app tasks, which the MPU keeps out of
+// Core's RAM, can point it at a context of their own, in their own memory (see
+// `zkp_context_init_unrandomized()`). The context itself is too big for TLS.
+#ifndef THREAD_LOCAL
+#define THREAD_LOCAL
+#endif
+
 // Make sure `context_buffer` is properly aligned for `secp256k1_context`,
 // since it should be "aligned to hold an object of any type".
 // See `secp256k1_context_preallocated_create()` comment and
 // https://github.com/rust-bitcoin/rust-secp256k1/pull/233.
 static uint8_t context_buffer[SECP256K1_CONTEXT_SIZE]
     __attribute__((aligned(_Alignof(max_align_t))));
-static secp256k1_context *context;
-static volatile atomic_flag locked;
+static THREAD_LOCAL secp256k1_context *context;
+static THREAD_LOCAL volatile atomic_flag locked;
 
 // returns 0 on success
 int secp256k1_context_writable_randomize(secp256k1_context *context_writable) {
@@ -79,6 +87,38 @@ int zkp_context_init(void) {
 
   if (secp256k1_context_writable_randomize(context) != 0) {
     zkp_context_destroy();
+    return 1;
+  }
+
+  atomic_flag_clear(&locked);
+
+  return 0;
+}
+
+size_t zkp_context_size(void) { return SECP256K1_CONTEXT_SIZE; }
+
+// Creates this task's context in `buffer` without randomizing it, unless the
+// task already has one. Meant for external app tasks, which only verify
+// signatures and recover public keys: an unrandomized context must not be used
+// for signing. `buffer` must be at least `zkp_context_size()` bytes, aligned to
+// `max_align_t`, and must outlive the task's use of the context.
+// Returns 0 on success.
+int zkp_context_init_unrandomized(void *buffer, size_t buffer_size) {
+  if (context != NULL) {
+    return 0;
+  }
+
+  const unsigned int context_flags =
+      SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY;
+
+  const size_t context_size =
+      secp256k1_context_preallocated_size(context_flags);
+  if (context_size == 0 || context_size > buffer_size) {
+    return 1;
+  }
+
+  context = secp256k1_context_preallocated_create(buffer, context_flags);
+  if (context == NULL) {
     return 1;
   }
 

@@ -1,0 +1,728 @@
+//! Mock implementations for unit testing only.
+//!
+//! This module provides stub implementations of the Trezor crypto and API interfaces
+//! intended exclusively for use in unit tests. It must **not** be used in production builds.
+//!
+//! Each implementation is explicitly marked as either:
+//! - **Functional** — delegates to a real software implementation via a third-party crate.
+//! - **Stub** — always returns a fixed error value, zero, `false`, or `null`; does not perform
+//!   any real computation.
+
+use std::alloc::{GlobalAlloc, System};
+
+use mock_hmac_sha256::{HMAC as HMAC256_impl, Hash as Sha256_impl};
+use mock_hmac_sha512::{HMAC as HMAC512_impl, Hash as Sha512_impl};
+use mock_sha3::digest::FixedOutput;
+use mock_sha3::{
+    Digest, Keccak256 as Keccak256_impl, Keccak512 as Keccak512_impl, Sha3_256 as Sha3_256_impl,
+    Sha3_512 as Sha3_512_impl,
+};
+use stabby::boxed::{Box, BoxedSlice};
+use stabby::slice::Slice;
+use stabby::str::Str;
+
+use crate::traits::ApiVariant;
+use crate::traits::allocator::{FfiLayout, GlobalAllocatorV1, GlobalAllocatorV1Vtable};
+use crate::traits::crypto::{
+    BoxedHasher, CanonicalSig, CryptoError, CryptoV1, CryptoV1Vtable, Curve, EcdsaCurve, Hasher,
+    HashingAlgorithm, HmacAlgorithm, XPUB_RAW_LEN,
+};
+use crate::traits::syslog::{
+    LogCallbackDyn as _, LogCallbackRef, LogLevel, LogRecord, SyslogV1, SyslogV1Vtable,
+};
+use crate::traits::trezor_v1::{TrezorApiV1, TrezorApiV1Struct, TrezorApiV1Vtable};
+use crate::traits::ui::{
+    ConfirmAction, ConfirmProperties, ConfirmSummary, ConfirmTrade, ConfirmValue,
+    ConfirmValueIntro, ConfirmWithInfo, RequestNumber, SelectMenu, ShowAddress, ShowDanger,
+    ShowInfoWithCancel, ShowMismatch, ShowProperties, ShowPublicKey, ShowSuccess, ShowWarning,
+    TrezorUiResult, UiV1, UiV1Vtable,
+};
+use crate::traits::util::{CoreServiceError, FastResult, ServiceResult};
+use crate::traits::wire::{FailureKind, WireMessage, WireV1, WireV1Vtable};
+
+// ============================================================================
+// Dummy implementation of the stable ABI, for host-based unit tests.
+//
+// `syslog`, `allocator` (indirectly, via `std`'s allocator), and `crypto`'s
+// `get_hasher`/`get_hmac` (via the `Sha256`/`Keccak256`/etc. mocks further
+// down) do real work; everything else in `crypto` and all of `ipc` are
+// unimplemented — no test talks to a (nonexistent, in this context) Core
+// over IPC.
+// ============================================================================
+
+struct DummyApi;
+
+impl TrezorApiV1 for DummyApi {
+    extern "C" fn system_exit(&self) -> ! {
+        panic!("app called system_exit")
+    }
+
+    extern "C" fn system_exit_error<'a>(
+        &self,
+        title: Str<'a>,
+        message: Str<'a>,
+        _footer: Str<'a>,
+    ) -> ! {
+        panic!(
+            "app called system_exit_error: {} / {}",
+            title.as_str(),
+            message.as_str()
+        )
+    }
+
+    extern "C" fn system_exit_fatal<'a>(&self, message: Str<'a>, file: Str<'a>, line: u32) -> ! {
+        panic!(
+            "app called system_exit_fatal: {} at {}:{}",
+            message.as_str(),
+            file.as_str(),
+            line
+        )
+    }
+
+    extern "C" fn systick_ms(&self) -> u32 {
+        0
+    }
+
+    extern "C" fn sleep(&self, _timeout_ms: u32) {}
+}
+
+struct DummyAllocator;
+
+// SAFETY: forwards to `std::alloc::System`, a real, correct allocator.
+unsafe impl GlobalAllocatorV1 for DummyAllocator {
+    unsafe extern "C" fn alloc(&self, layout: FfiLayout) -> *mut u8 {
+        unsafe { System.alloc(layout.into()) }
+    }
+
+    unsafe extern "C" fn dealloc(&self, ptr: *mut u8, layout: FfiLayout) {
+        unsafe { System.dealloc(ptr, layout.into()) }
+    }
+
+    unsafe extern "C" fn alloc_zeroed(&self, layout: FfiLayout) -> *mut u8 {
+        unsafe { System.alloc_zeroed(layout.into()) }
+    }
+
+    unsafe extern "C" fn realloc(
+        &self,
+        ptr: *mut u8,
+        layout: FfiLayout,
+        new_size: usize,
+    ) -> *mut u8 {
+        unsafe { System.realloc(ptr, layout.into(), new_size) }
+    }
+}
+
+struct DummyCrypto;
+
+impl CryptoV1 for DummyCrypto {
+    extern "C" fn get_hasher(&self, algorithm: HashingAlgorithm) -> BoxedHasher {
+        match algorithm {
+            HashingAlgorithm::Sha256 => Box::new(Sha256::new(None)).into(),
+            HashingAlgorithm::Sha512 => Box::new(Sha512::new(None)).into(),
+            HashingAlgorithm::Sha3_256 => Box::new(Sha3_256::new(None)).into(),
+            HashingAlgorithm::Keccak256 => Box::new(Keccak256::new(None)).into(),
+            HashingAlgorithm::Sha3_512 => Box::new(Sha3_512::new(None)).into(),
+            HashingAlgorithm::Keccak512 => Box::new(Keccak512::new(None)).into(),
+        }
+    }
+
+    extern "C" fn get_hmac<'a>(&self, algorithm: HmacAlgorithm, key: Slice<'a, u8>) -> BoxedHasher {
+        match algorithm {
+            HmacAlgorithm::Sha256 => Box::new(HmacSha256::new(key.as_slice(), None)).into(),
+            HmacAlgorithm::Sha512 => Box::new(HmacSha512::new(key.as_slice(), None)).into(),
+        }
+    }
+
+    extern "C" fn get_xpub<'a>(
+        &self,
+        _curve: Curve,
+        _address_n: Slice<'a, u32>,
+    ) -> ServiceResult<[u8; XPUB_RAW_LEN], CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn get_public_key<'a>(
+        &self,
+        _curve: Curve,
+        _address_n: Slice<'a, u32>,
+        _compressed: bool,
+    ) -> ServiceResult<stabby::boxed::BoxedSlice<u8>, CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn ecdsa_sign_digest<'a>(
+        &self,
+        _curve: EcdsaCurve,
+        _address_n: Slice<'a, u32>,
+        _digest: &'a [u8; 32],
+        _compressed: bool,
+        _canonical: CanonicalSig,
+    ) -> ServiceResult<[u8; 65], CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn ed25519_sign<'a>(
+        &self,
+        _address_n: Slice<'a, u32>,
+        _message: Slice<'a, u8>,
+    ) -> ServiceResult<[u8; 64], CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn check_address_mac<'a>(
+        &self,
+        _address_n: Slice<'a, u32>,
+        _mac: &'a [u8; 32],
+        _address: Str<'a>,
+        _slip44: u32,
+    ) -> ServiceResult<(), CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn get_address_mac<'a>(
+        &self,
+        _address_n: Slice<'a, u32>,
+        _address: Str<'a>,
+        _slip44: u32,
+    ) -> ServiceResult<[u8; 32], CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn ecdsa_verify_digest<'a>(
+        &self,
+        _curve: EcdsaCurve,
+        _public_key: Slice<'a, u8>,
+        _signature: Slice<'a, u8>,
+        _digest: Slice<'a, u8>,
+    ) -> FastResult<(), CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn ecdsa_recover_pubkey<'a>(
+        &self,
+        _curve: EcdsaCurve,
+        _signature: Slice<'a, u8>,
+        _digest: Slice<'a, u8>,
+    ) -> FastResult<stabby::boxed::BoxedSlice<u8>, CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn ed25519_verify<'a>(
+        &self,
+        _public_key: Slice<'a, u8>,
+        _signature: Slice<'a, u8>,
+        _message: Slice<'a, u8>,
+    ) -> FastResult<(), CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn base58_encode<'a>(&self, _data: Slice<'a, u8>) -> stabby::string::String {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn base58_decode<'a>(
+        &self,
+        _data: Str<'a>,
+    ) -> FastResult<stabby::boxed::BoxedSlice<u8>, CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn base58check_encode<'a>(&self, _data: Slice<'a, u8>) -> stabby::string::String {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn base58check_decode<'a>(
+        &self,
+        _data: Str<'a>,
+    ) -> FastResult<stabby::boxed::BoxedSlice<u8>, CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+}
+
+struct DummySyslog;
+
+impl LogRecord for DummySyslog {
+    extern "C" fn write<'a>(&self, string: Str<'a>) -> FastResult<(), ()> {
+        print!("{}", string.as_str());
+        Ok(()).into()
+    }
+}
+
+impl SyslogV1 for DummySyslog {
+    extern "C" fn log_simple<'a>(&self, _level: LogLevel, message: Str<'a>) {
+        println!("{}", message.as_str());
+    }
+
+    extern "C" fn log<'a>(&self, _level: LogLevel, callback: LogCallbackRef<'a>) {
+        callback.call(self.into());
+        println!();
+    }
+}
+
+struct DummyWire;
+
+impl WireV1 for DummyWire {
+    extern "C" fn wire_receive(&self, _timeout_ms: u32) -> ServiceResult<WireMessage> {
+        Err(CoreServiceError::Timeout).into()
+    }
+
+    extern "C" fn wire_send<'a>(&self, _id: u16, _data: Slice<'a, u8>) -> ServiceResult<()> {
+        Err(CoreServiceError::ServiceCallFailed).into()
+    }
+
+    extern "C" fn wire_error<'a>(
+        &self,
+        _kind: FailureKind,
+        _message: Str<'a>,
+    ) -> ServiceResult<()> {
+        Err(CoreServiceError::ServiceCallFailed).into()
+    }
+}
+
+struct DummyUi;
+
+impl UiV1 for DummyUi {
+    extern "C" fn confirm_value<'a>(
+        &self,
+        _value: ConfirmValue<'a>,
+    ) -> ServiceResult<TrezorUiResult> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn confirm_value_intro<'a>(
+        &self,
+        _value: ConfirmValueIntro<'a>,
+    ) -> ServiceResult<TrezorUiResult> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn confirm_summary<'a>(
+        &self,
+        _value: ConfirmSummary<'a>,
+    ) -> ServiceResult<TrezorUiResult> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn confirm_action<'a>(
+        &self,
+        _value: ConfirmAction<'a>,
+    ) -> ServiceResult<TrezorUiResult> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn select_menu<'a>(&self, _value: SelectMenu<'a>) -> ServiceResult<TrezorUiResult> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn confirm_properties<'a>(
+        &self,
+        _value: ConfirmProperties<'a>,
+    ) -> ServiceResult<TrezorUiResult> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_properties<'a>(&self, _value: ShowProperties<'a>) -> ServiceResult<()> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_warning<'a>(&self, _value: ShowWarning<'a>) -> ServiceResult<()> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_info_with_cancel<'a>(
+        &self,
+        _value: ShowInfoWithCancel<'a>,
+    ) -> ServiceResult<TrezorUiResult> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_mismatch<'a>(
+        &self,
+        _value: ShowMismatch<'a>,
+    ) -> ServiceResult<TrezorUiResult> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn confirm_trade<'a>(
+        &self,
+        _value: ConfirmTrade<'a>,
+    ) -> ServiceResult<TrezorUiResult> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_danger<'a>(&self, _value: ShowDanger<'a>) -> ServiceResult<TrezorUiResult> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_success<'a>(&self, _value: ShowSuccess<'a>) -> ServiceResult<()> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn request_number<'a>(
+        &self,
+        _value: RequestNumber<'a>,
+    ) -> ServiceResult<TrezorUiResult> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_public_key<'a>(
+        &self,
+        _value: ShowPublicKey<'a>,
+    ) -> ServiceResult<TrezorUiResult> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn confirm_with_info<'a>(
+        &self,
+        _value: ConfirmWithInfo<'a>,
+    ) -> ServiceResult<TrezorUiResult> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn show_address<'a>(
+        &self,
+        _value: ShowAddress<'a>,
+    ) -> ServiceResult<TrezorUiResult> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn init_progress<'a>(
+        &self,
+        _description: stabby::option::Option<stabby::slice::Slice<'a, u8>>,
+        _title: stabby::option::Option<stabby::slice::Slice<'a, u8>>,
+        _indeterminate: bool,
+        _danger: bool,
+    ) -> ServiceResult<()> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn update_progress<'a>(
+        &self,
+        _description: stabby::option::Option<stabby::slice::Slice<'a, u8>>,
+        _value: u32,
+    ) -> ServiceResult<()> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn end_progress(&self) -> ServiceResult<()> {
+        unimplemented!("not exercised by the current test suite")
+    }
+}
+
+static DUMMY_API: TrezorApiV1Struct = TrezorApiV1Struct {
+    api: stabby::dynref_static!(DummyApi as TrezorApiV1Vtable),
+    allocator: stabby::dynref_static!(DummyAllocator as GlobalAllocatorV1Vtable),
+    crypto: stabby::dynref_static!(DummyCrypto as CryptoV1Vtable),
+    syslog: stabby::dynref_static!(DummySyslog as SyslogV1Vtable),
+    wire: stabby::dynref_static!(DummyWire as WireV1Vtable),
+    ui: stabby::dynref_static!(DummyUi as UiV1Vtable),
+};
+
+extern "C" fn dummy_api_getter(version: u32) -> ApiVariant {
+    match version {
+        1 => ApiVariant::V1(&DUMMY_API),
+        _ => panic!("unsupported API version: {version}"),
+    }
+}
+
+/// Initializes the app-side SDK with a dummy stable-ABI implementation, so
+/// `app_runtime`-backed code (logging, `Timeout`, etc.) doesn't panic with
+/// "API not initialized" in unit tests. Idempotent: call it as many times as
+/// you like, from as many tests as you like — only the first call matters.
+pub fn sdk_init() {
+    crate::app_runtime::init(dummy_api_getter);
+}
+
+// ============================================================================
+// Functional hash / HMAC implementations (via third-party crates)
+// ============================================================================
+//
+// All structs below delegate to real software implementations and produce
+// correct cryptographic output. They are safe to use in unit tests that
+// need to verify hash or HMAC correctness.
+
+// Sha functions
+
+/// **Functional** — delegates to `mock_hmac_sha256::Hash` (software SHA-256).
+pub struct Sha256 {
+    ctx: Sha256_impl,
+}
+
+impl Sha256 {
+    /// A hasher fed with `data`, if given.
+    pub fn new(data: Option<&[u8]>) -> Self {
+        let ctx = Sha256_impl::new();
+        let mut hasher = Self { ctx };
+        if let Some(data) = data {
+            hasher.ctx.update(data);
+        }
+        hasher
+    }
+
+    /// Returns the digest.
+    pub fn digest(&mut self) -> [u8; 32] {
+        self.ctx.clone().finalize()
+    }
+}
+
+impl Hasher for Sha256 {
+    extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>) {
+        self.ctx.update(input.as_slice());
+    }
+
+    extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
+        BoxedSlice::from(&self.ctx.clone().finalize()[..])
+    }
+}
+
+/// **Functional** — delegates to `mock_hmac_sha512::Hash` (software SHA-512).
+pub struct Sha512 {
+    ctx: Sha512_impl,
+}
+
+impl Sha512 {
+    /// A hasher fed with `data`, if given.
+    pub fn new(data: Option<&[u8]>) -> Self {
+        let ctx = Sha512_impl::new();
+        let mut hasher = Self { ctx };
+        if let Some(data) = data {
+            hasher.ctx.update(data);
+        }
+        hasher
+    }
+
+    /// Returns the digest.
+    pub fn digest(&mut self) -> [u8; 64] {
+        self.ctx.clone().finalize()
+    }
+}
+
+impl Hasher for Sha512 {
+    extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>) {
+        self.ctx.update(input.as_slice());
+    }
+
+    extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
+        BoxedSlice::from(&self.digest()[..])
+    }
+}
+// Sha3 functions
+
+/// **Functional** — delegates to `mock_sha3::Keccak256` (software Keccak-256).
+pub struct Keccak256 {
+    ctx: Keccak256_impl,
+}
+
+impl Keccak256 {
+    /// A hasher fed with `data`, if given.
+    pub fn new(data: Option<&[u8]>) -> Self {
+        let ctx = Keccak256_impl::new();
+        let mut hasher = Self { ctx };
+        if let Some(data) = data {
+            hasher.ctx.update(data);
+        }
+        hasher
+    }
+
+    /// Returns the digest.
+    pub fn digest(&mut self) -> [u8; 32] {
+        let mut out = [0u8; 32];
+        out.copy_from_slice(self.ctx.clone().finalize_fixed().as_slice());
+        out
+    }
+}
+
+impl Hasher for Keccak256 {
+    extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>) {
+        self.ctx.update(input.as_slice());
+    }
+
+    extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
+        BoxedSlice::from(&self.digest()[..])
+    }
+}
+
+/// **Functional** — delegates to `mock_sha3::Sha3_256` (software SHA3-256).
+pub struct Sha3_256 {
+    ctx: Sha3_256_impl,
+}
+
+impl Sha3_256 {
+    /// A hasher fed with `data`, if given.
+    pub fn new(data: Option<&[u8]>) -> Self {
+        let ctx = Sha3_256_impl::new();
+        let mut hasher = Self { ctx };
+        if let Some(data) = data {
+            hasher.ctx.update(data);
+        }
+        hasher
+    }
+
+    /// Returns the digest.
+    pub fn digest(&mut self) -> [u8; 32] {
+        let mut out = [0u8; 32];
+        out.copy_from_slice(self.ctx.clone().finalize_fixed().as_slice());
+        out
+    }
+}
+
+impl Hasher for Sha3_256 {
+    extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>) {
+        self.ctx.update(input.as_slice());
+    }
+
+    extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
+        BoxedSlice::from(&self.digest()[..])
+    }
+}
+
+/// **Functional** — delegates to `mock_sha3::Keccak512` (software Keccak-512).
+pub struct Keccak512 {
+    ctx: Keccak512_impl,
+}
+
+impl Keccak512 {
+    /// A hasher fed with `data`, if given.
+    pub fn new(data: Option<&[u8]>) -> Self {
+        let ctx = Keccak512_impl::new();
+        let mut hasher = Self { ctx };
+        if let Some(data) = data {
+            hasher.ctx.update(data);
+        }
+        hasher
+    }
+
+    /// Returns the digest.
+    pub fn digest(&mut self) -> [u8; 64] {
+        let mut out = [0u8; 64];
+        out.copy_from_slice(self.ctx.clone().finalize_fixed().as_slice());
+        out
+    }
+}
+
+impl Hasher for Keccak512 {
+    extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>) {
+        self.ctx.update(input.as_slice());
+    }
+
+    extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
+        BoxedSlice::from(&self.digest()[..])
+    }
+}
+
+/// **Functional** — delegates to `mock_sha3::Sha3_512` (software SHA3-512).
+pub struct Sha3_512 {
+    ctx: Sha3_512_impl,
+}
+
+impl Sha3_512 {
+    /// A hasher fed with `data`, if given.
+    pub fn new(data: Option<&[u8]>) -> Self {
+        let ctx = Sha3_512_impl::new();
+        let mut hasher = Self { ctx };
+        if let Some(data) = data {
+            hasher.ctx.update(data);
+        }
+        hasher
+    }
+
+    /// Returns the digest.
+    pub fn digest(&mut self) -> [u8; 64] {
+        let mut out = [0u8; 64];
+        out.copy_from_slice(self.ctx.clone().finalize_fixed().as_slice());
+        out
+    }
+}
+
+impl Hasher for Sha3_512 {
+    extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>) {
+        self.ctx.update(input.as_slice());
+    }
+
+    extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
+        BoxedSlice::from(&self.digest()[..])
+    }
+}
+
+// HMAC functions
+
+/// **Functional** — delegates to `mock_hmac_sha256::HMAC` (software HMAC-SHA-256).
+pub struct HmacSha256 {
+    ctx: HMAC256_impl,
+}
+
+impl HmacSha256 {
+    /// An HMAC keyed with `key`, fed with `data`, if given.
+    pub fn new(key: &[u8], data: Option<&[u8]>) -> Self {
+        let ctx = HMAC256_impl::new(key);
+        let mut hasher = Self { ctx };
+        if let Some(data) = data {
+            hasher.ctx.update(data);
+        }
+        hasher
+    }
+
+    /// Returns the digest.
+    pub fn digest(&mut self) -> [u8; 32] {
+        let mut out = [0u8; 32];
+        out.copy_from_slice(self.ctx.clone().finalize().as_slice());
+        out
+    }
+}
+
+impl Hasher for HmacSha256 {
+    extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>) {
+        self.ctx.update(input.as_slice());
+    }
+
+    extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
+        BoxedSlice::from(&self.digest()[..])
+    }
+}
+
+/// **Functional** — delegates to `mock_hmac_sha512::HMAC` (software HMAC-SHA-512).
+///
+/// Unlike the other mocks here, `hmac_sha512::HMAC` isn't `Clone`, and its
+/// `finalize` consumes `self` — so this wraps it in an `Option`, taken on
+/// [`Self::digest`] (which the [`Hasher`] impl below then calls at most once,
+/// per the same "finalize just once" contract [`Hasher::finalize`] documents).
+pub struct HmacSha512 {
+    ctx: Option<HMAC512_impl>,
+}
+
+impl HmacSha512 {
+    /// An HMAC keyed with `key`, fed with `data`, if given.
+    pub fn new(key: &[u8], data: Option<&[u8]>) -> Self {
+        let mut ctx = HMAC512_impl::new(key);
+        if let Some(data) = data {
+            ctx.update(data);
+        }
+        Self { ctx: Some(ctx) }
+    }
+
+    /// Feeds more input into the HMAC.
+    pub fn update(&mut self, data: &[u8]) {
+        self.ctx
+            .as_mut()
+            .expect("HmacSha512 has been finalized")
+            .update(data);
+    }
+
+    /// Returns the digest. Call it once.
+    pub fn digest(&mut self) -> [u8; 64] {
+        self.ctx
+            .take()
+            .expect("HmacSha512 has been finalized")
+            .finalize()
+    }
+}
+
+impl Hasher for HmacSha512 {
+    extern "C" fn update<'a>(&mut self, input: Slice<'a, u8>) {
+        HmacSha512::update(self, input.as_slice());
+    }
+
+    extern "C" fn finalize(&mut self) -> BoxedSlice<u8> {
+        BoxedSlice::from(&self.digest()[..])
+    }
+}

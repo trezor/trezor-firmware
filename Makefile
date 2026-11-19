@@ -8,6 +8,10 @@
 	protostyle protostyle_check \
 	defs_check \
 	ruststyle ruststyle_check \
+	extapp_build_firmware extapp_build_emu \
+	extapp_unit_tests extapp_test_emu extapp_test_emu_ui extapp_test_emu_ui_record \
+	extapp_fmt extapp_fmt_check \
+	extapp_clippy extapp_vet \
 	typecheck pyright \
 	mocks mocks_check \
 	templates templates_check \
@@ -36,12 +40,12 @@ help: ## show this help
 
 PY_FILES = $(shell find . -name .venv -prune -o -type f -name '*.py'   -print | sed 'sO^\./OO' | grep -f ./tools/style.py.include | grep -v -f ./tools/style.py.exclude ) common/protob/pb2py
 C_FILES =  $(shell find . -name .venv -prune -o -type f -name '*.[ch]' -print | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
-PROTO_FILES = $(shell find common core -name .venv -prune -o -type f -name '*.proto' -print)
+PROTO_FILES = $(shell find common core sdk -name .venv -prune -o -type f -name '*.proto' -print)
 RUST_CRATES = $(shell find core -type f -name Cargo.toml -printf "%h\n")
 
-style_check: pystyle_check ruststyle_check cstyle_check protostyle_check changelog_check translations_style_check yaml_check workflow_timeout_check docs_summary_check editor_check ## run all style checks
+style_check: pystyle_check ruststyle_check cstyle_check protostyle_check changelog_check translations_style_check extapp_fmt_check yaml_check workflow_timeout_check docs_summary_check editor_check ## run all style checks
 
-style: pystyle ruststyle cstyle protostyle changelog_style translations_style ## apply all code styles (Python+Rust+C+protobuf+changelog+translation JSON)
+style: pystyle ruststyle cstyle protostyle changelog_style translations_style extapp_fmt ## apply all code styles (Python+Rust+C+protobuf+changelog+translation JSON+extapps)
 
 pystyle_check: ## run code style check on application sources and tests
 	flake8 --version
@@ -145,6 +149,73 @@ ruststyle_check: ## run code style check on rust sources
 	@cd core/embed ; cargo fmt -- --check
 	make -C rust style_check
 
+## extapp commands:
+
+EXTAPP ?= tron
+EXTAPP_MODEL ?= t3w1
+EXTAPP_LANG ?= en
+
+# Same emulator-running setup as core/Makefile, so extapp device tests behave
+# the same way as core's own (see core/Makefile's own TREZOR_MODEL/EMU/etc.).
+TREZOR_MODEL ?= T3W1
+PYTEST_TIMEOUT ?= 500
+TEST_LANG ?= "en"
+
+EMU = core/emu.py
+EMU_LOG_FILE ?= tests/trezor.log
+EMU_TEST_ARGS = --disable-animation --headless --output=$(EMU_LOG_FILE) --temporary-profile
+EMU_TEST = $(EMU) $(EMU_TEST_ARGS) -c
+
+# Please only add options used by CI, otherwise just run `cargo app-tool` directly
+# (from sdk/apps).
+APP_TOOL = cd sdk/apps && cargo app-tool
+APP_TOOL_BUILD_OPTS ?=
+APP_TOOL_BUILD_OPTS += -p $(EXTAPP)
+APP_TOOL_BUILD_OPTS += -m $(EXTAPP_MODEL)
+APP_TOOL_BUILD_OPTS += --lang $(EXTAPP_LANG)
+ifeq ($(PRODUCTION),1)
+APP_TOOL_BUILD_OPTS += --production
+endif
+
+extapp_build_firmware: ## build an extapp's firmware (set EXTAPP/EXTAPP_MODEL/EXTAPP_LANG)
+	@echo [EXTAPP-BUILD-FIRMWARE]
+	@$(APP_TOOL) build $(APP_TOOL_BUILD_OPTS)
+
+extapp_build_emu: ## build an extapp's emulator (set EXTAPP/EXTAPP_MODEL/EXTAPP_LANG)
+	@echo [EXTAPP-BUILD-EMU]
+	@$(APP_TOOL) build $(APP_TOOL_BUILD_OPTS) -e
+
+extapp_unit_tests: ## run unit tests for an extapp (set EXTAPP/EXTAPP_MODEL/EXTAPP_LANG)
+	@echo [EXTAPP-UNIT-TESTS]
+	@$(APP_TOOL) test -p $(EXTAPP) -m $(EXTAPP_MODEL) --lang $(EXTAPP_LANG)
+
+extapp_test_emu: ## run device tests for an extapp against a universal firmware emulator (set EXTAPP/EXTAPP_MODEL/TEST_LANG)
+	@echo [EXTAPP-TEST-EMU]
+	$(EMU_TEST) env -C sdk/apps cargo app-tool device-test -p $(EXTAPP) -m $(EXTAPP_MODEL) -e --lang $(TEST_LANG)
+
+extapp_test_emu_ui: ## run device tests with UI screenshot testing for an extapp against a universal firmware emulator (set EXTAPP/EXTAPP_MODEL/TEST_LANG)
+	@echo [EXTAPP-TEST-EMU-UI]
+	$(EMU_TEST) env -C sdk/apps cargo app-tool device-test -p $(EXTAPP) -m $(EXTAPP_MODEL) -e --ui test --lang $(TEST_LANG)
+
+extapp_test_emu_ui_record: ## record and hash screens for an extapp's device tests against a universal firmware emulator (set EXTAPP/EXTAPP_MODEL/TEST_LANG)
+	@echo [EXTAPP-TEST-EMU-UI-RECORD]
+	$(EMU_TEST) env -C sdk/apps cargo app-tool device-test -p $(EXTAPP) -m $(EXTAPP_MODEL) -e --ui record --lang $(TEST_LANG)
+
+extapp_fmt: ## apply rust, python and translation style on all extapps
+	@echo [EXTAPP-RUSTFMT]
+	@$(APP_TOOL) fmt
+
+extapp_fmt_check: ## run rust, python and translation style check on all extapps
+	@echo [EXTAPP-RUSTFMT]
+	@$(APP_TOOL) fmt --check
+
+extapp_clippy: ## run clippy on an extapp (set EXTAPP/EXTAPP_MODEL/EXTAPP_LANG)
+	@echo [EXTAPP-CLIPPY]
+	@$(APP_TOOL) clippy -p $(EXTAPP) -m $(EXTAPP_MODEL) --lang $(EXTAPP_LANG)
+
+extapp_vet: ## run cargo vet on all extapps' dependencies
+	@echo [EXTAPP-VET]
+	@cd sdk/apps ; cargo vet --locked
 
 typecheck: pyright
 
@@ -243,6 +314,14 @@ python_doc_check: ## check that trezorctl OPTIONS.rst is up to date
 gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_config hsm_keys prodtest_error_codes certs python_doc ## regenerate auto-generated files from sources
 
 gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_config_check hsm_keys_check prodtest_error_codes_check certs_check python_doc_check ## check validity of auto-generated files
+
+api:
+	@echo [API-BINDINGS]
+	xtask api-bindings
+
+api_check:
+	@echo [API-BINDINGS-CHECK]
+	xtask api-bindings --check-only
 
 uvlock_check: ## check that uv.lock is up to date
 	@echo [UVLOCK-CHECK]
