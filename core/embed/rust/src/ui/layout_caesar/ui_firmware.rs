@@ -1032,25 +1032,20 @@ impl FirmwareUI for UICaesar {
     }
 
     fn show_mismatch(title: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
-        let get_page = move |page_index| {
-            assert!(page_index == 0);
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_NORMAL, TR::addr_mismatch__contact_support_at),
+            Paragraph::new(&theme::TEXT_BOLD, TR::addr_mismatch__support_url),
+        ]);
 
-            let btn_layout = ButtonLayout::arrow_none_text(TR::buttons__quit.into());
-            let btn_actions = ButtonActions::cancel_none_confirm();
-            let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
-            ops.add_text_with_font(title, fonts::FONT_BOLD_UPPER)
-                .add_newline()
-                .add_newline_half()
-                .add_text_with_font(TR::addr_mismatch__contact_support_at, fonts::FONT_NORMAL)
-                .add_newline()
-                .add_text_with_font(TR::addr_mismatch__support_url, fonts::FONT_BOLD);
-            let formatted = FormattedText::new(ops);
-            Page::new(btn_layout, btn_actions, formatted)
-        };
-        let pages = FlowPages::new(get_page, 1);
-
-        let obj = RootComponent::new(Flow::new(pages));
-        Ok(obj)
+        content_in_button_page(
+            title,
+            paragraphs,
+            TR::buttons__quit.into(),
+            Some("<".into()),
+            false,
+            None,
+            false,
+        )
     }
 
     fn show_progress(

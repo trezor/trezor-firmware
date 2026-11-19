@@ -509,7 +509,7 @@ class InputFlowSignMessageInfo(InputFlowBase):
         self.debug.press_left()
         self.debug.button_actions.navigate_to_menu_item(1)
         # address mismatch? - "Quit" button aborts the flow
-        self.debug.synchronize_at("Flow")
+        self.debug.synchronize_at("Paragraphs")
         self.debug.press_right()
         yield
 
