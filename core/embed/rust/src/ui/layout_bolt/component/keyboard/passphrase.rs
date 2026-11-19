@@ -474,16 +474,10 @@ impl Input {
         // Compute how many characters fit in the available width. The characters
         // are centered, so the eye icon margin is kept free on both sides. Account
         // for the pending marker, which draws itself one pixel longer than the last
-        // char, for the overflow twitch, and for a last char wider than an asterisk.
+        // char, and for the overflow twitch.
         let available_width = self.area.width() - 2 * Self::TEXT_MARGIN - Self::TWITCH - 1;
         let asterisk_width = style.text_font.char_width('*').max(1);
-        let last_char_width = "MW@%"
-            .chars()
-            .map(|c| style.text_font.char_width(c))
-            .max()
-            .unwrap_or(asterisk_width);
-        let max_visible =
-            ((available_width - last_char_width) / asterisk_width + 1).max(1) as usize;
+        let max_visible = (available_width / asterisk_width).max(1) as usize;
         let visible_count = pp_len.min(max_visible);
         let asterisk_count = visible_count.saturating_sub(last_char_visible.into());
 
