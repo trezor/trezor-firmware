@@ -69,6 +69,8 @@ fn ui_request(request: TrezorUiEnum) -> Result<TrezorUiResult, CallError> {
                 let source = data_field(&request, asked.field)
                     .ok_or_else(|| call_failed("UI chunk request names no data field"))?;
                 chunk.resize(asked.len as usize, 0);
+                // The source runs inside this call: an `ipc_call` from it would
+                // be a second call in flight, and Core stops the app for it.
                 // A source that cannot produce the range answers with the
                 // chunk-failed id; core stops the layout, and its next message
                 // is the cancel.
