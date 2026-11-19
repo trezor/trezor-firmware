@@ -1,0 +1,1 @@
+trezorctl: forget THP pairing credentials that were removed from the OS keyring, instead of failing to connect.
