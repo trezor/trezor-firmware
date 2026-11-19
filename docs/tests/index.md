@@ -35,6 +35,12 @@ These tests test upgrade from one firmware version to another. They initialize a
 
 See the [upgrade-tests.md](upgrade-tests.md) for instructions how to run it.
 
+## Monero tests
+
+These tests run Monero's own Trezor test suite against the emulator. The suite is built from `ph4r05/monero` with the patches in `core/tests/monero/`.
+
+See [monero-tests.md](monero-tests.md) for details.
+
 ## Persistence tests
 
 These tests test the Persistence mode, which is currently used in the device recovery. These tests launch the emulator themselves and they are capable of restarting or stopping it simulating user's plugging in or plugging out the device.
