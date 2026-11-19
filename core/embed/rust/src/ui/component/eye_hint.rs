@@ -1,7 +1,7 @@
 use sys::time::Duration;
 
 use crate::time::Stopwatch;
-use crate::ui::component::{Event, EventCtx};
+use crate::ui::component::{Event, EventCtx, Timer};
 use crate::ui::util::animation_disabled;
 
 /// Slide-in of the eye icon hinting that the hidden passphrase can be
@@ -9,10 +9,21 @@ use crate::ui::util::animation_disabled;
 ///
 /// Once the first hidden character appears, the icon slides in from the left
 /// while the hidden characters move right to make room for it.
-#[derive(Default)]
 pub struct EyeHintAnimation {
+    /// One-shot timer for the pause before the slide-in.
+    delay: Timer,
     timer: Stopwatch,
     visible: bool,
+}
+
+impl Default for EyeHintAnimation {
+    fn default() -> Self {
+        Self {
+            delay: Timer::new(),
+            timer: Stopwatch::new_stopped(),
+            visible: false,
+        }
+    }
 }
 
 impl EyeHintAnimation {
@@ -31,24 +42,27 @@ impl EyeHintAnimation {
             return;
         }
         self.visible = visible;
+        self.delay.stop();
         self.timer = Stopwatch::new_stopped();
         if visible && !animation_disabled() {
-            self.timer.start();
-            ctx.request_anim_frame();
+            self.delay.start(ctx, Self::START_DELAY);
         }
         ctx.request_paint();
     }
 
-    /// Keep requesting animation frames while the slide-in runs. Returns
-    /// `true` when the input should be repainted.
+    /// Start the slide-in once the pause is over and keep requesting animation
+    /// frames while it runs. Returns `true` when the input should be
+    /// repainted.
     pub fn process(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
+        if self.delay.expire(event) {
+            self.timer.start();
+            ctx.request_anim_frame();
+            return false;
+        }
         if !matches!(event, Event::Timer(EventCtx::ANIM_FRAME_TIMER)) || !self.timer.is_running() {
             return false;
         }
-        if self
-            .timer
-            .is_running_within(Self::START_DELAY.saturating_add(Self::DURATION))
-        {
+        if self.timer.is_running_within(Self::DURATION) {
             ctx.request_anim_frame();
         } else {
             self.timer = Stopwatch::new_stopped();
@@ -73,7 +87,7 @@ impl EyeHintAnimation {
     }
 
     fn progress(&self, delay: Duration) -> f32 {
-        if !self.visible {
+        if !self.visible || self.delay.is_running() {
             return 0.0;
         }
         if !self.timer.is_running() {
@@ -81,7 +95,7 @@ impl EyeHintAnimation {
         }
         let elapsed = self.timer.elapsed();
         match (
-            elapsed.checked_sub(Self::START_DELAY.saturating_add(delay)),
+            elapsed.checked_sub(delay),
             Self::DURATION.checked_sub(delay),
         ) {
             (Some(elapsed), Some(duration)) => (elapsed / duration).min(1.0),
