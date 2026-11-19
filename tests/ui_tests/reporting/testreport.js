@@ -243,7 +243,9 @@ async function onLoad() {
 
     if (document.body.dataset.index) {
         onLoadIndex()
-    } else {
+    } else if (document.getElementById("markbox")) {
+        // only the pages of failed test cases have the controls used there,
+        // other pages (e.g. the summary pages) would throw if opened by a script
         // TODO: this is triggering some exception in console:
         // Uncaught DOMException: Permission denied to access property "document" on cross-origin object
         onLoadTestCase()
