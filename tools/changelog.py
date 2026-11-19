@@ -10,6 +10,9 @@ from pathlib import Path
 import click
 
 LINK_RE = re.compile(r"\[#(\d+)\]")
+# Markdown strips surrounding whitespace from reference labels, so "[#123 ]"
+# also refers to the "[#123]" link definition.
+LINK_LABEL_RE = re.compile(r"\[\s*#(\d+)\s*\]")
 ISSUE_URL = "https://github.com/trezor/trezor-firmware/pull/{issue}"
 
 VERSION_HEADER_RE = re.compile(r"## \[([.0-9]+)\]")
@@ -52,6 +55,7 @@ def linkify_changelog(
 ) -> bool:
     links = {}
     orig_links = {}
+    referenced = set()
     result_lines = []
 
     with open(changelog_file, "r+") as changelog:
@@ -63,6 +67,7 @@ def linkify_changelog(
             else:
                 for issue in LINK_RE.findall(line):
                     links[int(issue)] = ISSUE_URL.format(issue=issue)
+                referenced.update(int(issue) for issue in LINK_LABEL_RE.findall(line))
                 result_lines.append(line)
 
         if only_check:
@@ -75,7 +80,7 @@ def linkify_changelog(
 
         if drop_unused:
             # keep only the existing links that are referenced in the text
-            orig_links = {k: v for k, v in orig_links.items() if k in links}
+            orig_links = {k: v for k, v in orig_links.items() if k in referenced}
         links.update(orig_links)
 
         changelog.seek(0)
