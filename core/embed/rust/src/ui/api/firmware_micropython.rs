@@ -279,21 +279,6 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_firmware_update(
-    n_args: usize,
-    args: *const Obj,
-    kwargs: *mut Map,
-) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
-        let fingerprint: TString = kwargs.get(Qstr::MP_QSTR_fingerprint)?.try_into()?;
-
-        let layout = ModelUI::confirm_firmware_update(description, fingerprint)?;
-        Ok(LayoutObj::new_root(layout)?.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1579,14 +1564,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     Returns page index in case of confirmation and CANCELLED otherwise.
     ///     """
     Qstr::MP_QSTR_confirm_fido => obj_fn_kw!(0, new_confirm_fido).as_obj(),
-
-    /// def confirm_firmware_update(
-    ///     *,
-    ///     description: str,
-    ///     fingerprint: str,
-    /// ) -> LayoutContext[UiResult]:
-    ///     """Ask whether to update firmware, optionally show fingerprint."""
-    Qstr::MP_QSTR_confirm_firmware_update => obj_fn_kw!(0, new_confirm_firmware_update).as_obj(),
 
     /// def confirm_homescreen(
     ///     *,

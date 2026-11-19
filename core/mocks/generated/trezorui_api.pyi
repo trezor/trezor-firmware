@@ -273,15 +273,6 @@ def confirm_fido(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def confirm_firmware_update(
-    *,
-    description: str,
-    fingerprint: str,
-) -> LayoutContext[UiResult]:
-    """Ask whether to update firmware, optionally show fingerprint."""
-
-
-# rust/src/ui/api/firmware_micropython.rs
 def confirm_homescreen(
     *,
     title: str,

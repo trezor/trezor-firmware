@@ -26,7 +26,7 @@ use crate::ui::component::text::paragraphs::{
 };
 use crate::ui::component::text::TextStyle;
 use crate::ui::component::{
-    Border, ComponentExt, Empty, FlowMsg, FormattedText, Jpeg, Label, Never, Timeout,
+    Border, ComponentExt, Empty, FlowMsg, FormattedText, Jpeg, Never, Timeout,
 };
 use crate::ui::layout::obj::{LayoutMaybeTrace, LayoutObj, RootComponent};
 use crate::ui::layout::util::{ConfirmValueParams, PropsList, RecoveryType};
@@ -250,29 +250,6 @@ impl FirmwareUI for UIBolt {
         let fido_page = FidoConfirm::new(app_name, get_page, page_count, icon, controls);
 
         let layout = RootComponent::new(Frame::centered(theme::label_title(), title, fido_page));
-        Ok(layout)
-    }
-
-    fn confirm_firmware_update(
-        description: TString<'static>,
-        fingerprint: TString<'static>,
-    ) -> Result<impl LayoutMaybeTrace, Error> {
-        use super::component::bl_confirm::{Confirm, ConfirmTitle};
-
-        let title_str = TR::firmware_update__title.into();
-        let title = Label::left_aligned(title_str, theme::TEXT_BOLD).vertically_centered();
-        let msg = Label::left_aligned(description, theme::TEXT_NORMAL);
-
-        let left = Button::with_text(TR::buttons__cancel.into()).styled(theme::button_default());
-        let right = Button::with_text(TR::buttons__install.into()).styled(theme::button_confirm());
-
-        let layout = RootComponent::new(
-            Confirm::new(theme::BG, left, right, ConfirmTitle::Text(title), msg).with_info(
-                TR::firmware_update__title_fingerprint.into(),
-                fingerprint,
-                theme::button_moreinfo(),
-            ),
-        );
         Ok(layout)
     }
 
