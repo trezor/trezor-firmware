@@ -49,6 +49,8 @@ DEBUG_QM_SEED = b"AUTHDB QM DEBUG KEY SEED v1 ...."
 # WARD attestation domains (must match apps.ward.service).
 _WARD_FINAL_DOMAIN = b"WARD FINAL v1"
 _WARD_ATTEST_DOMAIN = b"WARD ATTEST v1"
+# The acceptance time the emulated WM signs into every finalization.
+WM_ACCEPTED_AT = 1700000000
 _WARD_ATTEST_VERSION = 1
 
 # Transition-auth domains + empty-root sentinel (must match apps.ward.service). Used
@@ -172,13 +174,15 @@ def sign_wm_final_transition(
     authorization: bytes,
     kind: str = "commit",
     qm_seed: bytes = DEBUG_QM_SEED,
+    timestamp: int = WM_ACCEPTED_AT,
 ) -> bytes:
-    """Produce the WM finalization of an accepted transition, which the device
-    verifies in WARDConfirmBatchByWM / WARDConfirmRevertByWM:
+    """Produce the WM finalization of a transition accepted at `timestamp`, which the
+    device verifies in WARDConfirmBatchByWM / WARDConfirmRevertByWM, and on the revert
+    screen in WARDPerformRevert:
 
         Ed25519-Sign(qm_seed, b"WARD FINAL v1" || kind || ward_id
             || from_counter(4B BE) || from_root || to_counter(4B BE) || to_root
-            || mac || authorization)
+            || mac || authorization || timestamp(8B BE))
     """
     message = (
         _WARD_FINAL_DOMAIN
@@ -190,6 +194,7 @@ def sign_wm_final_transition(
         + (_EMPTY_ROOT_HASH if to_root is None else to_root)
         + (mac if mac is not None else ZERO_MAC)
         + authorization
+        + timestamp.to_bytes(8, "big")
     )
     return _ed25519_sign(message, qm_seed)
 

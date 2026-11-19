@@ -81,8 +81,9 @@ def sha256d(data: bytes) -> bytes:
 #       b"WARD ATTEST v1" || 0x01 || nonce || ward_id || counter(4B BE) || mac
 #       || timestamp(8B BE)
 #   - final/install of an accepted transition (WARDConfirmBatchByWM,
-#     WARDConfirmRevertByWM):
+#     WARDConfirmRevertByWM), and the stuck head's acceptance in WARDPerformRevert:
 #       b"WARD FINAL v1" || <transition body, see wm_transition_body>
+#       || timestamp(8B BE)
 #   - legacy single-candidate install (WARDConfirmedByWM):
 #       b"WARD FINAL v1" || ward_id || counter(4B BE) || mac
 # ---------------------------------------------------------------------------
@@ -183,14 +184,22 @@ def verify_ward_final(
     return _verify(message, signature)
 
 
-def verify_wm_final_transition(env: dict, ward_id: bytes, signature: bytes) -> bool:
-    """Verify the WM's signature over the transition it accepted, rebuilt from the
-    device's own batch envelope:
+def verify_wm_acceptance(body: bytes, timestamp: int, signature: bytes) -> bool:
+    """Verify the WM's signature over a transition it accepted and when:
 
-        b"WARD FINAL v1" || wm_transition_body(...)
+    b"WARD FINAL v1" || wm_transition_body(...) || timestamp(8B BE)
+    """
+    if timestamp <= 0 or timestamp >= 1 << 63:
+        return False
+    return _verify(_WARD_FINAL_DOMAIN + body + timestamp.to_bytes(8, "big"), signature)
 
-    The WM can only finalize the exact transition this device performed: the same
-    predecessor, successor, kind and AuthCommit/AuthRevert."""
+
+def verify_wm_final_transition(
+    env: dict, ward_id: bytes, timestamp: int, signature: bytes
+) -> bool:
+    """Verify the WM's finalization of the transition this device performed, rebuilt
+    from its own batch envelope. The WM can only finalize that exact transition: the
+    same predecessor, successor, kind and AuthCommit/AuthRevert."""
     import storage.ward_store as ward_store
 
     body = wm_transition_body(
@@ -203,7 +212,7 @@ def verify_wm_final_transition(env: dict, ward_id: bytes, signature: bytes) -> b
         env["auth_commit"],
         env["kind"] == ward_store.BATCH_REVERT,
     )
-    return _verify(_WARD_FINAL_DOMAIN + body, signature)
+    return verify_wm_acceptance(body, timestamp, signature)
 
 
 async def _confirm_export_keys(key_type: str) -> None:
@@ -227,19 +236,29 @@ async def _confirm_export_keys(key_type: str) -> None:
     )
 
 
-async def _confirm_revert(stuck_counter: int) -> None:
-    """Trusted confirmation before undoing the most recent WARD change. The device
+async def _confirm_revert(stuck_counter: int, accepted_timestamp: int | None) -> None:
+    """Trusted confirmation before reverting the latest WARD change. wardd asks for this
+    when the latest head cannot be rebuilt from the data in sync (Evolu). The device
     cannot name the entries the reverted transition touched -- it holds only roots --
-    so the screen identifies the change by its counter. Raises ActionCancelled if the
+    so the screen identifies the change by its counter and, when the host supplied the
+    WM's verified acceptance, by when the WM accepted it. Raises ActionCancelled if the
     user rejects."""
     from trezor.enums import ButtonRequestType
+    from trezor.strings import format_timestamp
     from trezor.ui.layouts import confirm_properties
 
+    accepted = (
+        format_timestamp(accepted_timestamp) + " UTC"
+        if accepted_timestamp is not None
+        else "Unknown"
+    )
     await confirm_properties(
         "ward_revert",
-        "Undo WARD change",
+        "Revert WARD change",
         [
             ("Change", "#" + str(stuck_counter), False),
+            ("Accepted", accepted, False),
+            ("Reason", "Its data cannot be recovered from sync.", False),
             ("Warning", "Your entries return to their state before it.", False),
         ],
         hold=True,
@@ -1265,6 +1284,7 @@ async def finalize_batch(
     counter_msg: int,
     mac_msg: bytes | None,
     wm_signature: bytes,
+    timestamp: int,
 ) -> tuple:
     """Install a committed BATCH after the WM co-signs its head, then drop the whole
     pending set. The single counter-advancing step for a batch (uniform +1).
@@ -1294,7 +1314,7 @@ async def finalize_batch(
         raise DataError("confirmation does not match the committed batch")
 
     ward_id = await get_ward_id()
-    if not verify_wm_final_transition(env, ward_id, wm_signature):
+    if not verify_wm_final_transition(env, ward_id, timestamp, wm_signature):
         raise DataError("WM final attestation verification failed")
 
     # Re-verify the transition authorization (F7: AuthCommit binds from->to).
@@ -1348,6 +1368,8 @@ async def perform_revert(
     stuck_root: bytes,
     prev_root: bytes,
     forward_auth_commit: bytes,
+    accepted_timestamp: int | None = None,
+    accepted_signature: bytes | None = None,
 ) -> tuple:
     """Prepare a constrained one-step rollback (ward-design.md §8.2, batch-update).
 
@@ -1362,8 +1384,11 @@ async def perform_revert(
     MAC-preimage form (EMPTY_ROOT_HASH for empty).
 
     The user confirms on a trusted screen after the AuthCommit verifies and before
-    K_sig signs. Stores a BATCH_REVERT envelope and returns `(to_counter, from_root,
-    to_root, mac_t, head_mac, auth_revert, sig, ward_id)`."""
+    K_sig signs. When the host supplies the WM's acceptance of the stuck head
+    (`accepted_timestamp`, `accepted_signature`), it must verify over that exact
+    transition, and the screen shows when the WM accepted it. Stores a BATCH_REVERT
+    envelope and returns `(to_counter, from_root, to_root, mac_t, head_mac,
+    auth_revert, sig, ward_id)`."""
     import storage.ward_head as ward_head
     import storage.ward_store as ward_store
     from trezor.wire import DataError
@@ -1396,15 +1421,35 @@ async def perform_revert(
     ):
         raise DataError("forward AuthCommit invalid; cannot prove the predecessor")
 
+    mac_key = await derive_mac_key(b"root_mac")
+    if (accepted_timestamp is None) != (accepted_signature is None):
+        raise DataError("the stuck head's acceptance needs a timestamp and a signature")
+    if accepted_timestamp is not None:
+        # The stuck head's own transition, as the WM finalized it: the device knows
+        # every field, so a host cannot attach another transition's acceptance.
+        stuck_mac = compute_mac(
+            mac_key, wallet_id, stuck_counter.to_bytes(4, "big"), stuck_root
+        )
+        stuck_body = wm_transition_body(
+            ward_id,
+            stuck_counter - 1,
+            prev_root,
+            stuck_counter,
+            stuck_root,
+            stuck_mac,
+            forward_auth_commit,
+        )
+        if not verify_wm_acceptance(stuck_body, accepted_timestamp, accepted_signature):
+            raise DataError("WM acceptance of the stuck head verification failed")
+
     # Only a verified revert reaches the screen; a bogus one fails above without one.
     # Confirmed BEFORE K_sig signs: that signature is what the WM accepts, so signing
-    # unasked would let any host undo the user's last approved change.
-    await _confirm_revert(stuck_counter)
+    # unasked would let any host revert the user's last approved change.
+    await _confirm_revert(stuck_counter, accepted_timestamp)
 
     to_counter = stuck_counter + 1  # forward-increment (F1), even though root goes back
     to_root = None if prev_root == EMPTY_ROOT_HASH else prev_root
 
-    mac_key = await derive_mac_key(b"root_mac")
     mac_t = compute_mac(
         mac_key, wallet_id, to_counter.to_bytes(4, "big"), _root_or_empty(to_root)
     )
@@ -1477,6 +1522,7 @@ async def finalize_revert(
     counter_msg: int,
     mac_msg: bytes | None,
     wm_signature: bytes,
+    timestamp: int,
 ) -> tuple:
     """Install a one-step rollback after the WM co-signs the demoted head. Mirrors
     `finalize_batch` but verifies the stored **AuthRevert** and requires a
@@ -1502,7 +1548,7 @@ async def finalize_revert(
         raise DataError("confirmation does not match the committed rollback")
 
     ward_id = await get_ward_id()
-    if not verify_wm_final_transition(env, ward_id, wm_signature):
+    if not verify_wm_final_transition(env, ward_id, timestamp, wm_signature):
         raise DataError("WM final attestation verification failed")
 
     k_auth = await derive_ward_key(b"K_auth")

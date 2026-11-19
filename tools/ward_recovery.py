@@ -80,6 +80,7 @@ def run_recovery(
         "counter": candidate["counter"],
         "mac": candidate["mac"],
         "wm_signature": accepted["signature"],
+        "timestamp": accepted["timestamp"],
     }
     # Delete the journal row containing the leaf, not merely the redundant current-entry cache.
     assert debug_request(
@@ -122,6 +123,7 @@ def run_recovery(
                 counter=cached["counter"],
                 mac=bytes.fromhex(cached["mac"]),
                 wm_signature=b"\x00" * 64,
+                timestamp=cached["timestamp"],
             )
         )
     except exceptions.TrezorFailure as error:

@@ -8687,6 +8687,8 @@ pub struct WARDConfirmBatchByWM {
     pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDConfirmBatchByWM.wm_signature)
     pub wm_signature: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDConfirmBatchByWM.timestamp)
+    pub timestamp: ::std::option::Option<u64>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDConfirmBatchByWM.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -8794,8 +8796,27 @@ impl WARDConfirmBatchByWM {
         self.wm_signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // required uint64 timestamp = 4;
+
+    pub fn timestamp(&self) -> u64 {
+        self.timestamp.unwrap_or(0)
+    }
+
+    pub fn clear_timestamp(&mut self) {
+        self.timestamp = ::std::option::Option::None;
+    }
+
+    pub fn has_timestamp(&self) -> bool {
+        self.timestamp.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_timestamp(&mut self, v: u64) {
+        self.timestamp = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "counter",
@@ -8811,6 +8832,11 @@ impl WARDConfirmBatchByWM {
             "wm_signature",
             |m: &WARDConfirmBatchByWM| { &m.wm_signature },
             |m: &mut WARDConfirmBatchByWM| { &mut m.wm_signature },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "timestamp",
+            |m: &WARDConfirmBatchByWM| { &m.timestamp },
+            |m: &mut WARDConfirmBatchByWM| { &mut m.timestamp },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDConfirmBatchByWM>(
             "WARDConfirmBatchByWM",
@@ -8830,6 +8856,9 @@ impl ::protobuf::Message for WARDConfirmBatchByWM {
         if self.wm_signature.is_none() {
             return false;
         }
+        if self.timestamp.is_none() {
+            return false;
+        }
         true
     }
 
@@ -8844,6 +8873,9 @@ impl ::protobuf::Message for WARDConfirmBatchByWM {
                 },
                 26 => {
                     self.wm_signature = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                32 => {
+                    self.timestamp = ::std::option::Option::Some(is.read_uint64()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -8866,6 +8898,9 @@ impl ::protobuf::Message for WARDConfirmBatchByWM {
         if let Some(v) = self.wm_signature.as_ref() {
             my_size += ::protobuf::rt::bytes_size(3, &v);
         }
+        if let Some(v) = self.timestamp {
+            my_size += ::protobuf::rt::uint64_size(4, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -8880,6 +8915,9 @@ impl ::protobuf::Message for WARDConfirmBatchByWM {
         }
         if let Some(v) = self.wm_signature.as_ref() {
             os.write_bytes(3, v)?;
+        }
+        if let Some(v) = self.timestamp {
+            os.write_uint64(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -8901,6 +8939,7 @@ impl ::protobuf::Message for WARDConfirmBatchByWM {
         self.counter = ::std::option::Option::None;
         self.mac = ::std::option::Option::None;
         self.wm_signature = ::std::option::Option::None;
+        self.timestamp = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -8909,6 +8948,7 @@ impl ::protobuf::Message for WARDConfirmBatchByWM {
             counter: ::std::option::Option::None,
             mac: ::std::option::Option::None,
             wm_signature: ::std::option::Option::None,
+            timestamp: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -9250,6 +9290,10 @@ pub struct WARDPerformRevert {
     pub prev_root: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDPerformRevert.forward_auth_commit)
     pub forward_auth_commit: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDPerformRevert.accepted_timestamp)
+    pub accepted_timestamp: ::std::option::Option<u64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDPerformRevert.accepted_signature)
+    pub accepted_signature: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDPerformRevert.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -9393,8 +9437,63 @@ impl WARDPerformRevert {
         self.forward_auth_commit.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional uint64 accepted_timestamp = 5;
+
+    pub fn accepted_timestamp(&self) -> u64 {
+        self.accepted_timestamp.unwrap_or(0)
+    }
+
+    pub fn clear_accepted_timestamp(&mut self) {
+        self.accepted_timestamp = ::std::option::Option::None;
+    }
+
+    pub fn has_accepted_timestamp(&self) -> bool {
+        self.accepted_timestamp.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_accepted_timestamp(&mut self, v: u64) {
+        self.accepted_timestamp = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes accepted_signature = 6;
+
+    pub fn accepted_signature(&self) -> &[u8] {
+        match self.accepted_signature.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_accepted_signature(&mut self) {
+        self.accepted_signature = ::std::option::Option::None;
+    }
+
+    pub fn has_accepted_signature(&self) -> bool {
+        self.accepted_signature.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_accepted_signature(&mut self, v: ::std::vec::Vec<u8>) {
+        self.accepted_signature = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_accepted_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.accepted_signature.is_none() {
+            self.accepted_signature = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.accepted_signature.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_accepted_signature(&mut self) -> ::std::vec::Vec<u8> {
+        self.accepted_signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut fields = ::std::vec::Vec::with_capacity(6);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "stuck_counter",
@@ -9415,6 +9514,16 @@ impl WARDPerformRevert {
             "forward_auth_commit",
             |m: &WARDPerformRevert| { &m.forward_auth_commit },
             |m: &mut WARDPerformRevert| { &mut m.forward_auth_commit },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "accepted_timestamp",
+            |m: &WARDPerformRevert| { &m.accepted_timestamp },
+            |m: &mut WARDPerformRevert| { &mut m.accepted_timestamp },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "accepted_signature",
+            |m: &WARDPerformRevert| { &m.accepted_signature },
+            |m: &mut WARDPerformRevert| { &mut m.accepted_signature },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDPerformRevert>(
             "WARDPerformRevert",
@@ -9452,6 +9561,12 @@ impl ::protobuf::Message for WARDPerformRevert {
                 34 => {
                     self.forward_auth_commit = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                40 => {
+                    self.accepted_timestamp = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                50 => {
+                    self.accepted_signature = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -9476,6 +9591,12 @@ impl ::protobuf::Message for WARDPerformRevert {
         if let Some(v) = self.forward_auth_commit.as_ref() {
             my_size += ::protobuf::rt::bytes_size(4, &v);
         }
+        if let Some(v) = self.accepted_timestamp {
+            my_size += ::protobuf::rt::uint64_size(5, v);
+        }
+        if let Some(v) = self.accepted_signature.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(6, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -9493,6 +9614,12 @@ impl ::protobuf::Message for WARDPerformRevert {
         }
         if let Some(v) = self.forward_auth_commit.as_ref() {
             os.write_bytes(4, v)?;
+        }
+        if let Some(v) = self.accepted_timestamp {
+            os.write_uint64(5, v)?;
+        }
+        if let Some(v) = self.accepted_signature.as_ref() {
+            os.write_bytes(6, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -9515,6 +9642,8 @@ impl ::protobuf::Message for WARDPerformRevert {
         self.stuck_root = ::std::option::Option::None;
         self.prev_root = ::std::option::Option::None;
         self.forward_auth_commit = ::std::option::Option::None;
+        self.accepted_timestamp = ::std::option::Option::None;
+        self.accepted_signature = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -9524,6 +9653,8 @@ impl ::protobuf::Message for WARDPerformRevert {
             stuck_root: ::std::option::Option::None,
             prev_root: ::std::option::Option::None,
             forward_auth_commit: ::std::option::Option::None,
+            accepted_timestamp: ::std::option::Option::None,
+            accepted_signature: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -10122,6 +10253,8 @@ pub struct WARDConfirmRevertByWM {
     pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDConfirmRevertByWM.wm_signature)
     pub wm_signature: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WARDConfirmRevertByWM.timestamp)
+    pub timestamp: ::std::option::Option<u64>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WARDConfirmRevertByWM.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -10229,8 +10362,27 @@ impl WARDConfirmRevertByWM {
         self.wm_signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // required uint64 timestamp = 4;
+
+    pub fn timestamp(&self) -> u64 {
+        self.timestamp.unwrap_or(0)
+    }
+
+    pub fn clear_timestamp(&mut self) {
+        self.timestamp = ::std::option::Option::None;
+    }
+
+    pub fn has_timestamp(&self) -> bool {
+        self.timestamp.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_timestamp(&mut self, v: u64) {
+        self.timestamp = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "counter",
@@ -10246,6 +10398,11 @@ impl WARDConfirmRevertByWM {
             "wm_signature",
             |m: &WARDConfirmRevertByWM| { &m.wm_signature },
             |m: &mut WARDConfirmRevertByWM| { &mut m.wm_signature },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "timestamp",
+            |m: &WARDConfirmRevertByWM| { &m.timestamp },
+            |m: &mut WARDConfirmRevertByWM| { &mut m.timestamp },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WARDConfirmRevertByWM>(
             "WARDConfirmRevertByWM",
@@ -10265,6 +10422,9 @@ impl ::protobuf::Message for WARDConfirmRevertByWM {
         if self.wm_signature.is_none() {
             return false;
         }
+        if self.timestamp.is_none() {
+            return false;
+        }
         true
     }
 
@@ -10279,6 +10439,9 @@ impl ::protobuf::Message for WARDConfirmRevertByWM {
                 },
                 26 => {
                     self.wm_signature = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                32 => {
+                    self.timestamp = ::std::option::Option::Some(is.read_uint64()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -10301,6 +10464,9 @@ impl ::protobuf::Message for WARDConfirmRevertByWM {
         if let Some(v) = self.wm_signature.as_ref() {
             my_size += ::protobuf::rt::bytes_size(3, &v);
         }
+        if let Some(v) = self.timestamp {
+            my_size += ::protobuf::rt::uint64_size(4, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -10315,6 +10481,9 @@ impl ::protobuf::Message for WARDConfirmRevertByWM {
         }
         if let Some(v) = self.wm_signature.as_ref() {
             os.write_bytes(3, v)?;
+        }
+        if let Some(v) = self.timestamp {
+            os.write_uint64(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -10336,6 +10505,7 @@ impl ::protobuf::Message for WARDConfirmRevertByWM {
         self.counter = ::std::option::Option::None;
         self.mac = ::std::option::Option::None;
         self.wm_signature = ::std::option::Option::None;
+        self.timestamp = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -10344,6 +10514,7 @@ impl ::protobuf::Message for WARDConfirmRevertByWM {
             counter: ::std::option::Option::None,
             mac: ::std::option::Option::None,
             wm_signature: ::std::option::Option::None,
+            timestamp: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -14890,77 +15061,80 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0cR\nauthCommit\x12\x1d\n\nsig_commit\x18\x08\x20\x01(\x0cR\tsigCommit\
     \x12>\n\x06leaves\x18\t\x20\x03(\x0b2&.hw.trezor.messages.ward.WARDBatch\
     LeafR\x06leaves\x12'\n\x0fservice_applied\x18P\x20\x01(\x08R\x0eserviceA\
-    pplied\"e\n\x14WARDConfirmBatchByWM\x12\x18\n\x07counter\x18\x01\x20\x02\
-    (\rR\x07counter\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0c\
-    wm_signature\x18\x03\x20\x02(\x0cR\x0bwmSignature\"\x82\x01\n\x17WARDCon\
-    firmBatchByWMAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\
-    \x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x17\n\x07ward_id\
-    \x18\x03\x20\x01(\x0cR\x06wardId\x12\x19\n\x08root_mac\x18\x04\x20\x01(\
-    \x0cR\x07rootMac\"\xa4\x01\n\x11WARDPerformRevert\x12#\n\rstuck_counter\
-    \x18\x01\x20\x02(\rR\x0cstuckCounter\x12\x1d\n\nstuck_root\x18\x02\x20\
-    \x01(\x0cR\tstuckRoot\x12\x1b\n\tprev_root\x18\x03\x20\x01(\x0cR\x08prev\
-    Root\x12.\n\x13forward_auth_commit\x18\x04\x20\x02(\x0cR\x11forwardAuthC\
-    ommit\"\x97\x02\n\x14WARDPerformRevertAck\x12\x18\n\x07counter\x18\x01\
-    \x20\x02(\rR\x07counter\x12\x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fr\
-    omRoot\x12\x19\n\x08new_root\x18\x03\x20\x01(\x0cR\x07newRoot\x12\x10\n\
-    \x03mac\x18\x04\x20\x01(\x0cR\x03mac\x12\x17\n\x07ward_id\x18\x05\x20\
-    \x01(\x0cR\x06wardId\x12\x19\n\x08head_mac\x18\x06\x20\x02(\x0cR\x07head\
-    Mac\x12\x1f\n\x0bauth_revert\x18\x07\x20\x02(\x0cR\nauthRevert\x12\x1d\n\
-    \nsig_commit\x18\x08\x20\x01(\x0cR\tsigCommit\x12'\n\x0fservice_applied\
-    \x18P\x20\x01(\x08R\x0eserviceApplied\"f\n\x15WARDConfirmRevertByWM\x12\
-    \x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x10\n\x03mac\x18\
-    \x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x02(\x0cR\
-    \x0bwmSignature\"\x83\x01\n\x18WARDConfirmRevertByWMAck\x12\x18\n\x07cou\
-    nter\x18\x01\x20\x02(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\
-    \x01(\x0cR\x07newRoot\x12\x17\n\x07ward_id\x18\x03\x20\x01(\x0cR\x06ward\
-    Id\x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMac\"\xc7\x01\n\rW\
-    ARDChainLink\x12!\n\x0cfrom_counter\x18\x01\x20\x02(\rR\x0bfromCounter\
-    \x12\x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fromRoot\x12\x1d\n\nto_co\
-    unter\x18\x03\x20\x02(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x04\x20\
-    \x01(\x0cR\x06toRoot\x12\x1f\n\x0bauth_commit\x18\x05\x20\x02(\x0cR\naut\
-    hCommit\x12\x1d\n\nsig_commit\x18\x06\x20\x01(\x0cR\tsigCommit\"O\n\x0fW\
-    ARDVerifyChain\x12<\n\x05links\x18\x01\x20\x03(\x0b2&.hw.trezor.messages\
-    .ward.WARDChainLinkR\x05links\"}\n\x12WARDVerifyChainAck\x12\x18\n\x07co\
-    unter\x18\x01\x20\x02(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\
-    \x01(\x0cR\x07newRoot\x12\x17\n\x07ward_id\x18\x03\x20\x01(\x0cR\x06ward\
-    Id\x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMac\"\xc5\x01\n\rW\
-    ARDWalkEntry\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12\
-    \x14\n\x05proof\x18\x02\x20\x03(\x0cR\x05proof\x12>\n\x07content\x18\x03\
-    \x20\x01(\x0b2$.hw.trezor.messages.ward.LeafContentR\x07content\x12A\n\
-    \x08identity\x18\x04\x20\x01(\x0b2%.hw.trezor.messages.ward.LeafIdentity\
-    R\x08identity\"`\n\x0fWARDListEntries\x12\x15\n\x06app_id\x18\x01\x20\
-    \x01(\tR\x05appId\x12\x19\n\x08key_type\x18\x02\x20\x01(\tR\x07keyType\
-    \x12\x1b\n\tdevice_id\x18\x03\x20\x01(\rR\x08deviceId\"-\n\x0fWARDNodeRe\
-    quest\x12\x14\n\x05after\x18\x02\x20\x01(\x0cR\x05afterJ\x04\x08\x01\x10\
-    \x02\"U\n\x0bWARDNodeAck\x12@\n\x07entries\x18\x02\x20\x03(\x0b2&.hw.tre\
-    zor.messages.ward.WARDWalkEntryR\x07entriesJ\x04\x08\x01\x10\x02\"z\n\
-    \x12WARDListEntriesAck\x12\x14\n\x05shown\x18\x01\x20\x02(\rR\x05shown\
-    \x12\x18\n\x07entries\x18\x02\x20\x02(\rR\x07entries\x12\x18\n\x07counte\
-    r\x18\x03\x20\x02(\rR\x07counter\x12\x1a\n\x08complete\x18\x04\x20\x02(\
-    \x08R\x08complete\"E\n\x0eWARDCacheEntry\x12\x1b\n\tentry_key\x18\x01\
-    \x20\x02(\x0cR\x08entryKey\x12\x16\n\x06sticky\x18\x02\x20\x01(\x08R\x06\
-    sticky\"I\n\x11WARDCacheEntryAck\x12\x1a\n\x08replaced\x18\x01\x20\x02(\
-    \x08R\x08replaced\x12\x18\n\x07counter\x18\x02\x20\x02(\rR\x07counter\"\
-    \x11\n\x0fWARDCacheExport\".\n\x12WARDCacheExportAck\x12\x18\n\x07entrie\
-    s\x18\x01\x20\x03(\x0cR\x07entries\"+\n\x0fWARDCacheImport\x12\x18\n\x07\
-    entries\x18\x01\x20\x03(\x0cR\x07entries\"J\n\x12WARDCacheImportAck\x12\
-    \x1a\n\x08imported\x18\x01\x20\x02(\rR\x08imported\x12\x18\n\x07skipped\
-    \x18\x02\x20\x02(\rR\x07skipped\"\x13\n\x11WARDValidateCache\"\xa2\x01\n\
-    \x14WARDValidateCacheAck\x12\x18\n\x07checked\x18\x01\x20\x02(\rR\x07che\
-    cked\x12\x1c\n\tunchanged\x18\x02\x20\x02(\rR\tunchanged\x12\x18\n\x07up\
-    dated\x18\x03\x20\x02(\rR\x07updated\x12\x18\n\x07removed\x18\x04\x20\
-    \x02(\rR\x07removed\x12\x18\n\x07counter\x18\x06\x20\x02(\rR\x07counterJ\
-    \x04\x08\x05\x10\x06\"R\n\x0fWARDServiceOpen\x12)\n\x10protocol_version\
-    \x18\x01\x20\x02(\rR\x0fprotocolVersion\x12\x14\n\x05close\x18\x02\x20\
-    \x01(\x08R\x05close\"`\n\x12WARDServiceOpenAck\x12)\n\x10protocol_versio\
-    n\x18\x01\x20\x02(\rR\x0fprotocolVersion\x12\x1f\n\x0bbuffer_size\x18\
-    \x02\x20\x02(\rR\nbufferSize\"'\n\x0fWARDServiceDone\x12\x14\n\x05error\
-    \x18\x01\x20\x01(\tR\x05error\"\x11\n\x0fWARDServiceSync\"~\n\x12WARDSer\
-    viceSyncAck\x12!\n\x0cused_service\x18\x01\x20\x02(\x08R\x0busedService\
-    \x12\x18\n\x07counter\x18\x02\x20\x01(\rR\x07counter\x12\x12\n\x04root\
-    \x18\x03\x20\x01(\x0cR\x04root\x12\x17\n\x07ward_id\x18\x04\x20\x01(\x0c\
-    R\x06wardIdB8\n#com.satoshilabs.trezor.lib.protobufB\x11TrezorMessageWar\
-    d\
+    pplied\"\x83\x01\n\x14WARDConfirmBatchByWM\x12\x18\n\x07counter\x18\x01\
+    \x20\x02(\rR\x07counter\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\
+    \x12!\n\x0cwm_signature\x18\x03\x20\x02(\x0cR\x0bwmSignature\x12\x1c\n\t\
+    timestamp\x18\x04\x20\x02(\x04R\ttimestamp\"\x82\x01\n\x17WARDConfirmBat\
+    chByWMAck\x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x19\n\
+    \x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x17\n\x07ward_id\x18\
+    \x03\x20\x01(\x0cR\x06wardId\x12\x19\n\x08root_mac\x18\x04\x20\x01(\x0cR\
+    \x07rootMac\"\x82\x02\n\x11WARDPerformRevert\x12#\n\rstuck_counter\x18\
+    \x01\x20\x02(\rR\x0cstuckCounter\x12\x1d\n\nstuck_root\x18\x02\x20\x01(\
+    \x0cR\tstuckRoot\x12\x1b\n\tprev_root\x18\x03\x20\x01(\x0cR\x08prevRoot\
+    \x12.\n\x13forward_auth_commit\x18\x04\x20\x02(\x0cR\x11forwardAuthCommi\
+    t\x12-\n\x12accepted_timestamp\x18\x05\x20\x01(\x04R\x11acceptedTimestam\
+    p\x12-\n\x12accepted_signature\x18\x06\x20\x01(\x0cR\x11acceptedSignatur\
+    e\"\x97\x02\n\x14WARDPerformRevertAck\x12\x18\n\x07counter\x18\x01\x20\
+    \x02(\rR\x07counter\x12\x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fromRo\
+    ot\x12\x19\n\x08new_root\x18\x03\x20\x01(\x0cR\x07newRoot\x12\x10\n\x03m\
+    ac\x18\x04\x20\x01(\x0cR\x03mac\x12\x17\n\x07ward_id\x18\x05\x20\x01(\
+    \x0cR\x06wardId\x12\x19\n\x08head_mac\x18\x06\x20\x02(\x0cR\x07headMac\
+    \x12\x1f\n\x0bauth_revert\x18\x07\x20\x02(\x0cR\nauthRevert\x12\x1d\n\ns\
+    ig_commit\x18\x08\x20\x01(\x0cR\tsigCommit\x12'\n\x0fservice_applied\x18\
+    P\x20\x01(\x08R\x0eserviceApplied\"\x84\x01\n\x15WARDConfirmRevertByWM\
+    \x12\x18\n\x07counter\x18\x01\x20\x02(\rR\x07counter\x12\x10\n\x03mac\
+    \x18\x02\x20\x01(\x0cR\x03mac\x12!\n\x0cwm_signature\x18\x03\x20\x02(\
+    \x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\x04\x20\x02(\x04R\ttimesta\
+    mp\"\x83\x01\n\x18WARDConfirmRevertByWMAck\x12\x18\n\x07counter\x18\x01\
+    \x20\x02(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07n\
+    ewRoot\x12\x17\n\x07ward_id\x18\x03\x20\x01(\x0cR\x06wardId\x12\x19\n\
+    \x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMac\"\xc7\x01\n\rWARDChainLink\
+    \x12!\n\x0cfrom_counter\x18\x01\x20\x02(\rR\x0bfromCounter\x12\x1b\n\tfr\
+    om_root\x18\x02\x20\x01(\x0cR\x08fromRoot\x12\x1d\n\nto_counter\x18\x03\
+    \x20\x02(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x04\x20\x01(\x0cR\x06to\
+    Root\x12\x1f\n\x0bauth_commit\x18\x05\x20\x02(\x0cR\nauthCommit\x12\x1d\
+    \n\nsig_commit\x18\x06\x20\x01(\x0cR\tsigCommit\"O\n\x0fWARDVerifyChain\
+    \x12<\n\x05links\x18\x01\x20\x03(\x0b2&.hw.trezor.messages.ward.WARDChai\
+    nLinkR\x05links\"}\n\x12WARDVerifyChainAck\x12\x18\n\x07counter\x18\x01\
+    \x20\x02(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07n\
+    ewRoot\x12\x17\n\x07ward_id\x18\x03\x20\x01(\x0cR\x06wardId\x12\x19\n\
+    \x08root_mac\x18\x04\x20\x01(\x0cR\x07rootMac\"\xc5\x01\n\rWARDWalkEntry\
+    \x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12\x14\n\x05pro\
+    of\x18\x02\x20\x03(\x0cR\x05proof\x12>\n\x07content\x18\x03\x20\x01(\x0b\
+    2$.hw.trezor.messages.ward.LeafContentR\x07content\x12A\n\x08identity\
+    \x18\x04\x20\x01(\x0b2%.hw.trezor.messages.ward.LeafIdentityR\x08identit\
+    y\"`\n\x0fWARDListEntries\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05app\
+    Id\x12\x19\n\x08key_type\x18\x02\x20\x01(\tR\x07keyType\x12\x1b\n\tdevic\
+    e_id\x18\x03\x20\x01(\rR\x08deviceId\"-\n\x0fWARDNodeRequest\x12\x14\n\
+    \x05after\x18\x02\x20\x01(\x0cR\x05afterJ\x04\x08\x01\x10\x02\"U\n\x0bWA\
+    RDNodeAck\x12@\n\x07entries\x18\x02\x20\x03(\x0b2&.hw.trezor.messages.wa\
+    rd.WARDWalkEntryR\x07entriesJ\x04\x08\x01\x10\x02\"z\n\x12WARDListEntrie\
+    sAck\x12\x14\n\x05shown\x18\x01\x20\x02(\rR\x05shown\x12\x18\n\x07entrie\
+    s\x18\x02\x20\x02(\rR\x07entries\x12\x18\n\x07counter\x18\x03\x20\x02(\r\
+    R\x07counter\x12\x1a\n\x08complete\x18\x04\x20\x02(\x08R\x08complete\"E\
+    \n\x0eWARDCacheEntry\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entry\
+    Key\x12\x16\n\x06sticky\x18\x02\x20\x01(\x08R\x06sticky\"I\n\x11WARDCach\
+    eEntryAck\x12\x1a\n\x08replaced\x18\x01\x20\x02(\x08R\x08replaced\x12\
+    \x18\n\x07counter\x18\x02\x20\x02(\rR\x07counter\"\x11\n\x0fWARDCacheExp\
+    ort\".\n\x12WARDCacheExportAck\x12\x18\n\x07entries\x18\x01\x20\x03(\x0c\
+    R\x07entries\"+\n\x0fWARDCacheImport\x12\x18\n\x07entries\x18\x01\x20\
+    \x03(\x0cR\x07entries\"J\n\x12WARDCacheImportAck\x12\x1a\n\x08imported\
+    \x18\x01\x20\x02(\rR\x08imported\x12\x18\n\x07skipped\x18\x02\x20\x02(\r\
+    R\x07skipped\"\x13\n\x11WARDValidateCache\"\xa2\x01\n\x14WARDValidateCac\
+    heAck\x12\x18\n\x07checked\x18\x01\x20\x02(\rR\x07checked\x12\x1c\n\tunc\
+    hanged\x18\x02\x20\x02(\rR\tunchanged\x12\x18\n\x07updated\x18\x03\x20\
+    \x02(\rR\x07updated\x12\x18\n\x07removed\x18\x04\x20\x02(\rR\x07removed\
+    \x12\x18\n\x07counter\x18\x06\x20\x02(\rR\x07counterJ\x04\x08\x05\x10\
+    \x06\"R\n\x0fWARDServiceOpen\x12)\n\x10protocol_version\x18\x01\x20\x02(\
+    \rR\x0fprotocolVersion\x12\x14\n\x05close\x18\x02\x20\x01(\x08R\x05close\
+    \"`\n\x12WARDServiceOpenAck\x12)\n\x10protocol_version\x18\x01\x20\x02(\
+    \rR\x0fprotocolVersion\x12\x1f\n\x0bbuffer_size\x18\x02\x20\x02(\rR\nbuf\
+    ferSize\"'\n\x0fWARDServiceDone\x12\x14\n\x05error\x18\x01\x20\x01(\tR\
+    \x05error\"\x11\n\x0fWARDServiceSync\"~\n\x12WARDServiceSyncAck\x12!\n\
+    \x0cused_service\x18\x01\x20\x02(\x08R\x0busedService\x12\x18\n\x07count\
+    er\x18\x02\x20\x01(\rR\x07counter\x12\x12\n\x04root\x18\x03\x20\x01(\x0c\
+    R\x04root\x12\x17\n\x07ward_id\x18\x04\x20\x01(\x0cR\x06wardIdB8\n#com.s\
+    atoshilabs.trezor.lib.protobufB\x11TrezorMessageWard\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

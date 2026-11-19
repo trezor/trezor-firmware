@@ -164,13 +164,15 @@ def confirmed_batch_by_wm(
     counter: int,
     mac: Optional[bytes],
     wm_signature: bytes,
+    timestamp: int,
 ) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
-    """Install a committed batch with the WM's Ed25519 signature over the exact
-    device-derived (to_counter, mac_t). Advances the counter by 1 and drops the whole
-    pending set. Returns (counter, new_root, ward_id, root_mac)."""
+    """Install a committed batch with the WM's Ed25519 finalization over the exact
+    device-performed transition and its acceptance `timestamp`. Advances the counter
+    by 1 and drops the whole pending set. Returns (counter, new_root, ward_id,
+    root_mac)."""
     resp = session.call(
         messages.WARDConfirmBatchByWM(
-            counter=counter, mac=mac, wm_signature=wm_signature
+            counter=counter, mac=mac, wm_signature=wm_signature, timestamp=timestamp
         ),
         expect=messages.WARDConfirmBatchByWMAck,
     )
@@ -183,18 +185,24 @@ def perform_revert(
     stuck_root: Optional[bytes],
     prev_root: Optional[bytes],
     forward_auth_commit: bytes,
+    accepted_timestamp: Optional[int] = None,
+    accepted_signature: Optional[bytes] = None,
 ) -> tuple:
     """Prepare a constrained one-step rollback (ward-design §8.2). Presents the
     FORWARD AuthCommit that created the current stuck head plus the predecessor root
     it encodes; the device verifies that MAC to prove the predecessor and demotes with
-    a FORWARD-incrementing counter (to_counter = stuck_counter + 1). Returns (counter,
-    from_root, new_root, mac, ward_id, head_mac, auth_revert, sig_commit)."""
+    a FORWARD-incrementing counter (to_counter = stuck_counter + 1). The WM's stored
+    acceptance of the stuck head, when given, is verified and shown on the revert
+    screen. Returns (counter, from_root, new_root, mac, ward_id, head_mac,
+    auth_revert, sig_commit)."""
     resp = session.call(
         messages.WARDPerformRevert(
             stuck_counter=stuck_counter,
             stuck_root=stuck_root,
             prev_root=prev_root,
             forward_auth_commit=forward_auth_commit,
+            accepted_timestamp=accepted_timestamp,
+            accepted_signature=accepted_signature,
         ),
         expect=messages.WARDPerformRevertAck,
     )
@@ -215,12 +223,14 @@ def confirmed_revert_by_wm(
     counter: int,
     mac: Optional[bytes],
     wm_signature: bytes,
+    timestamp: int,
 ) -> tuple[int, Optional[bytes], Optional[bytes], Optional[bytes]]:
-    """Install a one-step rollback with the WM's signature over (to_counter, mac_t).
-    Returns (counter, new_root, ward_id, root_mac)."""
+    """Install a one-step rollback with the WM's finalization over the rollback
+    transition and its acceptance `timestamp`. Returns (counter, new_root, ward_id,
+    root_mac)."""
     resp = session.call(
         messages.WARDConfirmRevertByWM(
-            counter=counter, mac=mac, wm_signature=wm_signature
+            counter=counter, mac=mac, wm_signature=wm_signature, timestamp=timestamp
         ),
         expect=messages.WARDConfirmRevertByWMAck,
     )

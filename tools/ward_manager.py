@@ -436,10 +436,12 @@ class WardManager:
                         candidate.timestamp,
                     ),
                 )
+            message = finalization_message(record, candidate.timestamp)
             response = {
                 "wardId": ward_id,
                 "transition": record,
-                "signature": self.key.sign(finalization_message(record)).hex(),
+                "timestamp": candidate.timestamp,
+                "signature": self.key.sign(message).hex(),
             }
         # The durable transaction commits before the signature leaves this method.
         return response

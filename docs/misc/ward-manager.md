@@ -107,14 +107,24 @@ The manager processes a commit in these steps.
    HTTP 409 with the latest transition.
 5. Store the proposed transition as the latest accepted one, together with the
    recovery leaves if provided.
-6. Respond with `wardId`, the accepted `transition`, and the manager's
-   finalization `signature` over that transition:
-   `"WARD FINAL v1" || kindByte || wardId || fromCounter:u32 || fromRoot || counter:u32 || root || mac || authCommit`.
-   These are the bytes the wallet signed, under the manager's domain tag.
+6. Respond with `wardId`, the accepted `transition`, the acceptance
+   `timestamp` (UTC seconds), and the manager's finalization `signature` over
+   both:
+   `"WARD FINAL v1" || kindByte || wardId || fromCounter:u32 || fromRoot || counter:u32 || root || mac || authCommit || timestamp:u64`.
+   These are the bytes the wallet signed, under the manager's domain tag,
+   followed by when the manager accepted them. A retry returns the same
+   timestamp and signature.
 
-`wardd` passes the finalization `signature` to the device in
+`wardd` passes the finalization `signature` and `timestamp` to the device in
 `WARDConfirmBatchByWM` for a commit or `WARDConfirmRevertByWM` for a revert.
 The device rebuilds the transition from its own pending batch and verifies the
 signature before it installs the new head. A manager can therefore finalize
 only the exact transition the device performed: the same predecessor,
-successor, kind, and `authCommit`.
+successor, kind, and `authCommit`. The device does not display the time here.
+
+`wardd` also stores the `timestamp` and `signature` in Evolu, in a
+`wardAcceptance` row keyed like the transition by `(wardId, counter, root)`.
+When the latest head cannot be rebuilt from the data in Evolu, `wardd` asks the
+device to revert it and sends the stored acceptance in `WARDPerformRevert`. The
+device rebuilds the stuck head's transition, verifies the signature, and shows
+when the manager accepted that change on the revert screen.

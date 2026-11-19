@@ -208,6 +208,7 @@ def run_races(
                 "counter": candidates[winner]["counter"],
                 "mac": bytes.fromhex(candidates[winner]["mac"]),
                 "wm_signature": bytes.fromhex(accepted["signature"]),
+                "timestamp": accepted["timestamp"],
             }
             for index in range(3):
                 if index == winner:

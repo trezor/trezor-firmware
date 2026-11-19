@@ -8,7 +8,7 @@ async def perform_revert(msg: WARDPerformRevert) -> WARDPerformRevertAck:
     """WARDPerformRevert wire handler (TA): prepare a constrained one-step rollback
     (ward-design §8.2). The trust anchor verifies the host-supplied forward AuthCommit
     to prove the predecessor, checks the stuck head is the current authenticated head,
-    and demotes with a forward-incrementing counter once the user confirms the undo.
+    and demotes with a forward-incrementing counter once the user confirms the revert.
     Not advanced here.
     """
     from trezor import utils
@@ -37,7 +37,12 @@ async def perform_revert(msg: WARDPerformRevert) -> WARDPerformRevertAck:
         sig,
         ward_id,
     ) = await core.perform_revert(
-        msg.stuck_counter, stuck_root, prev_root, bytes(msg.forward_auth_commit)
+        msg.stuck_counter,
+        stuck_root,
+        prev_root,
+        bytes(msg.forward_auth_commit),
+        msg.accepted_timestamp,
+        (bytes(msg.accepted_signature) if msg.accepted_signature is not None else None),
     )
 
     candidate = WARDPerformRevertAck(

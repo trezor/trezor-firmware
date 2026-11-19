@@ -13,6 +13,8 @@ Multi-leaf batches support shape-preserving updates over the pre-batch root.
 Inserts and deletes must use single-leaf commits.
 """
 
+from datetime import datetime, timezone
+
 import pytest
 
 from trezorlib import messages, ward
@@ -33,6 +35,10 @@ from .test_ward import (
 pytestmark = pytest.mark.models("core")
 
 ENTRIES = {b"alice": b"data_alice", b"bob": b"data_bob"}
+ACCEPTED_AT = 1700000500  # the WM acceptance time the emulated WM signs
+# The WM acceptance (timestamp, signature) of each committed head, by counter: what
+# wardd stores beside the transition and presents when a revert is requested.
+_ACCEPTED: dict[int, tuple[int, bytes]] = {}
 
 
 def _seeded():
@@ -66,23 +72,36 @@ def _commit_batch(session: Session, tree: WARDTree, pending_ids: list) -> tuple:
     ) = ward.perform_batch(session, pending_ids)
     assert ward_id is not None
     sig = sign_wm_final_transition(
-        ward_id, counter - 1, from_root, counter, new_root, mac, auth_commit
+        ward_id,
+        counter - 1,
+        from_root,
+        counter,
+        new_root,
+        mac,
+        auth_commit,
+        timestamp=ACCEPTED_AT,
     )
+    _ACCEPTED[counter] = (ACCEPTED_AT, sig)
     out_counter, out_root, _wid, _root_mac = ward.confirmed_batch_by_wm(
-        session, counter, mac, sig
+        session, counter, mac, sig, ACCEPTED_AT
     )
     for lf in leaves:  # (entry_key, LeafBlob)
         _apply_device_leaf(tree, (None,) * 4 + lf)
     return out_counter, out_root, from_root, auth_commit
 
 
-def _perform_revert(session: Session, *args, approve: bool = True) -> tuple:
-    """WARDPerformRevert through its trusted "Undo WARD change" screen."""
+def _perform_revert(
+    session: Session, *args, approve: bool = True, screen: list | None = None
+) -> tuple:
+    """WARDPerformRevert through its trusted "Revert WARD change" screen. Appends the
+    screen's layout to `screen` when given."""
     with session.test_ctx as client:
         with BackgroundDeviceHandler(client) as dev:
             dev.run_with_provided_session(
                 session, lambda s: ward.perform_revert(s, *args)
             )
+            if screen is not None:
+                screen.append(dev.debuglink().read_layout().json_str)
             if approve:
                 dev.debuglink().press_yes()
             else:
@@ -229,7 +248,9 @@ def test_ward_rollback_one_step(session: Session) -> None:
     c2, r2, from_root2, ac2 = _commit_batch(session, tree, [p2])
     assert c2 == c0 + 2 and from_root2 == r1
 
-    # Roll back commit #2. The predecessor (R1) is proven by ac2, not host-named.
+    # Roll back commit #2. The predecessor (R1) is proven by ac2, not host-named. The
+    # WM's stored acceptance of commit #2 is verified and its time shown.
+    screen: list = []
     (
         to_counter,
         from_root,
@@ -239,14 +260,27 @@ def test_ward_rollback_one_step(session: Session) -> None:
         _hm,
         auth_revert,
         _sig,
-    ) = _perform_revert(session, c2, r2, from_root2, ac2)
+    ) = _perform_revert(session, c2, r2, from_root2, ac2, *_ACCEPTED[c2], screen=screen)
     assert to_counter == c2 + 1  # forward-increment
     assert from_root == r2
+    accepted = datetime.fromtimestamp(ACCEPTED_AT, timezone.utc)
+    # The date and the time wrap onto separate lines of the "Accepted" property.
+    assert '"Accepted"' in screen[0]
+    assert accepted.strftime("%Y-%m-%d") in screen[0]
+    assert accepted.strftime("%H:%M:%S") + " UTC" in screen[0]
     sig = sign_wm_final_transition(
-        ward_id, c2, from_root, to_counter, new_root, mac, auth_revert, "revert"
+        ward_id,
+        c2,
+        from_root,
+        to_counter,
+        new_root,
+        mac,
+        auth_revert,
+        "revert",
+        timestamp=ACCEPTED_AT + 60,
     )
     out_counter, out_root, _w, _rm = ward.confirmed_revert_by_wm(
-        session, to_counter, mac, sig
+        session, to_counter, mac, sig, ACCEPTED_AT + 60
     )
 
     assert out_counter == c0 + 3
@@ -269,7 +303,7 @@ def test_ward_rollback_rejects_wrong_predecessor(session: Session) -> None:
 
 
 def test_ward_rollback_requires_user_confirmation(session: Session) -> None:
-    """Undoing a change is the user's decision: the device asks before K_sig signs the
+    """Reverting a change is the user's decision: the device asks before K_sig signs the
     revert (the signature the WM accepts). Declining leaves nothing to install."""
     tree = _seeded()
     _seed_device(session, tree)
@@ -280,4 +314,22 @@ def test_ward_rollback_requires_user_confirmation(session: Session) -> None:
         _perform_revert(session, c1, r1, from_root1, ac1, approve=False)
 
     with pytest.raises(TrezorFailure, match="no committed rollback"):
-        ward.confirmed_revert_by_wm(session, c1 + 1, None, b"\x01" * 64)
+        ward.confirmed_revert_by_wm(session, c1 + 1, None, b"\x01" * 64, ACCEPTED_AT)
+
+
+def test_ward_rollback_rejects_another_acceptance(session: Session) -> None:
+    """The WM acceptance shown on the revert screen must be the stuck head's own: a
+    shifted time or another head's signature fails before the screen."""
+    tree = _seeded()
+    _seed_device(session, tree)
+    p1 = _queue_update(session, b"carol", b"", b"data_carol")
+    c1, _r1, _f1, _ac1 = _commit_batch(session, tree, [p1])
+    p2 = _queue_update(session, b"dave", b"", b"data_dave")
+    c2, r2, from_root2, ac2 = _commit_batch(session, tree, [p2])
+
+    timestamp, signature = _ACCEPTED[c2]
+    for accepted in [(timestamp + 1, signature), _ACCEPTED[c1]]:
+        with pytest.raises(TrezorFailure, match="acceptance of the stuck head"):
+            ward.perform_revert(session, c2, r2, from_root2, ac2, *accepted)
+    with pytest.raises(TrezorFailure, match="needs a timestamp and a signature"):
+        ward.perform_revert(session, c2, r2, from_root2, ac2, timestamp)

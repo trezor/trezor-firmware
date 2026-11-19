@@ -195,7 +195,10 @@ def test_adversarial_wm_final_signature_requires_a_device_candidate(
         "batch": messages.WARDConfirmBatchByWM,
         "revert": messages.WARDConfirmRevertByWM,
     }[kind]
-    _reject(session, request_type(counter=1, mac=mac, wm_signature=signature))
+    fields = {"counter": 1, "mac": mac, "wm_signature": signature}
+    if kind != "single":
+        fields["timestamp"] = TIMESTAMP
+    _reject(session, request_type(**fields))
     _genesis_still_usable(session, before)
 
 

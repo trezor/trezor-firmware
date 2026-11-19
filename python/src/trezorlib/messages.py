@@ -5778,6 +5778,7 @@ class WARDConfirmBatchByWM(protobuf.MessageType):
         1: protobuf.Field("counter", "uint32", repeated=False, required=True),
         2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
+        4: protobuf.Field("timestamp", "uint64", repeated=False, required=True),
     }
 
     def __init__(
@@ -5785,10 +5786,12 @@ class WARDConfirmBatchByWM(protobuf.MessageType):
         *,
         counter: int,
         wm_signature: bytes,
+        timestamp: int,
         mac: bytes | None = None,
     ) -> None:
         self.counter = counter
         self.wm_signature = wm_signature
+        self.timestamp = timestamp
         self.mac = mac
 
 
@@ -5822,6 +5825,8 @@ class WARDPerformRevert(protobuf.MessageType):
         2: protobuf.Field("stuck_root", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("prev_root", "bytes", repeated=False, required=False, default=None),
         4: protobuf.Field("forward_auth_commit", "bytes", repeated=False, required=True),
+        5: protobuf.Field("accepted_timestamp", "uint64", repeated=False, required=False, default=None),
+        6: protobuf.Field("accepted_signature", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5831,11 +5836,15 @@ class WARDPerformRevert(protobuf.MessageType):
         forward_auth_commit: bytes,
         stuck_root: bytes | None = None,
         prev_root: bytes | None = None,
+        accepted_timestamp: int | None = None,
+        accepted_signature: bytes | None = None,
     ) -> None:
         self.stuck_counter = stuck_counter
         self.forward_auth_commit = forward_auth_commit
         self.stuck_root = stuck_root
         self.prev_root = prev_root
+        self.accepted_timestamp = accepted_timestamp
+        self.accepted_signature = accepted_signature
 
 
 class WARDPerformRevertAck(protobuf.MessageType):
@@ -5882,6 +5891,7 @@ class WARDConfirmRevertByWM(protobuf.MessageType):
         1: protobuf.Field("counter", "uint32", repeated=False, required=True),
         2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("wm_signature", "bytes", repeated=False, required=True),
+        4: protobuf.Field("timestamp", "uint64", repeated=False, required=True),
     }
 
     def __init__(
@@ -5889,10 +5899,12 @@ class WARDConfirmRevertByWM(protobuf.MessageType):
         *,
         counter: int,
         wm_signature: bytes,
+        timestamp: int,
         mac: bytes | None = None,
     ) -> None:
         self.counter = counter
         self.wm_signature = wm_signature
+        self.timestamp = timestamp
         self.mac = mac
 
 

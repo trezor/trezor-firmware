@@ -4131,12 +4131,14 @@ if TYPE_CHECKING:
         counter: "int"
         mac: "AnyBytes | None"
         wm_signature: "AnyBytes"
+        timestamp: "int"
 
         def __init__(
             self,
             *,
             counter: "int",
             wm_signature: "AnyBytes",
+            timestamp: "int",
             mac: "AnyBytes | None" = None,
         ) -> None:
             pass
@@ -4170,6 +4172,8 @@ if TYPE_CHECKING:
         stuck_root: "AnyBytes | None"
         prev_root: "AnyBytes | None"
         forward_auth_commit: "AnyBytes"
+        accepted_timestamp: "int | None"
+        accepted_signature: "AnyBytes | None"
 
         def __init__(
             self,
@@ -4178,6 +4182,8 @@ if TYPE_CHECKING:
             forward_auth_commit: "AnyBytes",
             stuck_root: "AnyBytes | None" = None,
             prev_root: "AnyBytes | None" = None,
+            accepted_timestamp: "int | None" = None,
+            accepted_signature: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -4219,12 +4225,14 @@ if TYPE_CHECKING:
         counter: "int"
         mac: "AnyBytes | None"
         wm_signature: "AnyBytes"
+        timestamp: "int"
 
         def __init__(
             self,
             *,
             counter: "int",
             wm_signature: "AnyBytes",
+            timestamp: "int",
             mac: "AnyBytes | None" = None,
         ) -> None:
             pass

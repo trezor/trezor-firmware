@@ -103,12 +103,14 @@ def test_attest_commit_and_empty_tree(service: tuple[WardManager, str]) -> None:
     first = signed()
     committed = requests.post(f"{url}/ward/commit", json=commit_body(first), timeout=3)
     assert committed.status_code == 200
-    assert committed.json().keys() == {"wardId", "transition", "signature"}
+    assert committed.json().keys() == {"wardId", "transition", "timestamp", "signature"}
     assert committed.json()["transition"] == first
-    # The finalization signs the whole accepted transition, not only its head.
-    final = finalization_message(first)
+    # The finalization signs the whole accepted transition and when it was accepted.
+    accepted_at = committed.json()["timestamp"]
+    assert accepted_at >= attested.json()["timestamp"]
+    final = finalization_message(first, accepted_at)
     assert final.startswith(b"WARD FINAL v1") and final.endswith(
-        bytes.fromhex(first["authCommit"])
+        bytes.fromhex(first["authCommit"]) + accepted_at.to_bytes(8, "big")
     )
     public_key.verify(bytes.fromhex(committed.json()["signature"]), final)
 

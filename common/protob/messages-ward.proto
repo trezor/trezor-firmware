@@ -544,7 +544,8 @@ message WARDPerformBatchAck {
 message WARDConfirmBatchByWM {
     required uint32 counter      = 1;  // to_counter; must equal the committed batch
     optional bytes  mac          = 2;  // root MAC; must equal the committed batch (including an empty-tree candidate)
-    required bytes  wm_signature = 3;  // WM Ed25519 over b"WARD FINAL v1"||kind||ward_id||from_counter||from_root||counter||root||mac||auth_commit, rebuilt from the device's pending batch
+    required bytes  wm_signature = 3;  // WM Ed25519 over b"WARD FINAL v1"||kind||ward_id||from_counter||from_root||counter||root||mac||auth_commit||timestamp, rebuilt from the device's pending batch
+    required uint64 timestamp    = 4;  // WM acceptance time (UTC seconds), covered by wm_signature; verified, not shown
 }
 
 /**
@@ -574,6 +575,8 @@ message WARDPerformRevert {
     optional bytes  stuck_root          = 2;  // current head root (empty-tree sentinel if empty)
     optional bytes  prev_root           = 3;  // predecessor to restore (empty-tree sentinel if empty)
     required bytes  forward_auth_commit = 4;  // AuthCommit that created the stuck head: (stuck_counter-1, prev_root)->(stuck_counter, stuck_root)
+    optional uint64 accepted_timestamp  = 5;  // WM acceptance time of the stuck head; shown on the revert screen once verified
+    optional bytes  accepted_signature  = 6;  // WM finalization of the stuck head over its transition and accepted_timestamp
 }
 
 /**
@@ -605,7 +608,8 @@ message WARDPerformRevertAck {
 message WARDConfirmRevertByWM {
     required uint32 counter      = 1;  // to_counter; must equal the committed rollback
     optional bytes  mac          = 2;  // root MAC; must equal the committed rollback (including an empty-tree candidate)
-    required bytes  wm_signature = 3;  // WM Ed25519 over b"WARD FINAL v1"||kind||ward_id||from_counter||from_root||counter||root||mac||auth_commit, rebuilt from the device's pending batch
+    required bytes  wm_signature = 3;  // WM Ed25519 over b"WARD FINAL v1"||kind||ward_id||from_counter||from_root||counter||root||mac||auth_commit||timestamp, rebuilt from the device's pending batch
+    required uint64 timestamp    = 4;  // WM acceptance time (UTC seconds), covered by wm_signature; verified, not shown
 }
 
 /**

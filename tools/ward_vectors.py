@@ -102,8 +102,11 @@ def vectors() -> dict:
         "attestation": attestation,
         "attestationMessage": message.hex(),
         "attestationSignature": wm_key.sign(message).hex(),
-        "finalizationMessage": finalization_message(record).hex(),
-        "finalizationSignature": wm_key.sign(finalization_message(record)).hex(),
+        "finalizationTimestamp": 1700000000,
+        "finalizationMessage": finalization_message(record, 1700000000).hex(),
+        "finalizationSignature": wm_key.sign(
+            finalization_message(record, 1700000000)
+        ).hex(),
         "managerPublicKey": wm_key.public_key().public_bytes_raw().hex(),
     }
 

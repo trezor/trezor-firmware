@@ -18,6 +18,7 @@ async def confirm_revert(msg: WARDConfirmRevertByWM) -> WARDConfirmRevertByWMAck
         msg.counter,
         bytes(msg.mac) if msg.mac is not None else None,
         bytes(msg.wm_signature),
+        msg.timestamp,
     )
 
     return WARDConfirmRevertByWMAck(

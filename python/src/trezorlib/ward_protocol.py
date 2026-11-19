@@ -54,6 +54,6 @@ def transition_message(record: Mapping[str, Any]) -> bytes:
     return TRANSITION_DOMAIN + transition_body(record)
 
 
-def finalization_message(record: Mapping[str, Any]) -> bytes:
-    """The bytes the manager signs after accepting a transition."""
-    return FINAL_DOMAIN + transition_body(record)
+def finalization_message(record: Mapping[str, Any], timestamp: int) -> bytes:
+    """The bytes the manager signs after accepting a transition at `timestamp`."""
+    return FINAL_DOMAIN + transition_body(record) + timestamp.to_bytes(8, "big")
