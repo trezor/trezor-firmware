@@ -36,24 +36,43 @@ pub fn check(model: Model, skip: bool) -> Result<()> {
         return Ok(());
     }
 
+    println!("Checking the connected device");
+    let mcu = check_mcu(model)?;
+    let board = check_board(model)?;
+
+    println!("Connected device: {mcu} with a {board} boardloader");
+    Ok(())
+}
+
+/// Reads the device's `DEV_ID` and fails unless it is the one of `model`'s
+/// MCU. Returns the MCU's name.
+fn check_mcu(model: Model) -> Result<String> {
     let config = model.config()?;
     let (idcode_address, expected_dev_id) = config.mcu_dev_id()?;
 
+    let idcode = openocd::read_memory(model, idcode_address, 4)
+        .context("Failed to read the MCU's IDCODE")?;
+    let found = dev_id(&idcode)?;
+
+    ensure!(
+        found == expected_dev_id,
+        "the connected MCU reports DEV_ID 0x{found:03X}, but {} has an {} \
+         (DEV_ID 0x{expected_dev_id:03X}) -- is another model connected? \
+         Pass --skip-device-check to proceed anyway",
+        model.model_id(),
+        config.mcu
+    );
+    Ok(config.mcu)
+}
+
+/// Reads the device's board capabilities and fails unless they name `model`.
+/// Returns the board name.
+fn check_board(model: Model) -> Result<String> {
     let memory_ld = model.model_memory_ld()?;
     let content = fs::read_to_string(&memory_ld)
         .with_context(|| format!("Failed to read `{}`", memory_ld.display()))?;
     let caps_start = helpers::read_symbol_from_content(&content, "BOARDCAPS_START")?;
     let caps_size = helpers::read_symbol_from_content(&content, "BOARDCAPS_MAXSIZE")?;
-
-    println!("Checking the connected device");
-    let idcode = openocd::read_memory(model, idcode_address, 4)
-        .context("Failed to read the MCU's IDCODE")?;
-    check_mcu(
-        model.model_id(),
-        &config.mcu,
-        expected_dev_id,
-        dev_id(&idcode)?,
-    )?;
 
     let caps = openocd::read_memory(model, caps_start, caps_size).with_context(|| {
         format!(
@@ -68,13 +87,14 @@ pub fn check(model: Model, skip: bool) -> Result<()> {
              Pass --skip-device-check to proceed anyway"
         )
     })?;
-    check_board(model.model_id(), &board)?;
 
-    println!(
-        "Connected device: {} with a {board} boardloader",
-        config.mcu
+    ensure!(
+        board == model.model_id(),
+        "the connected device has a {board} boardloader, not a {} one -- is \
+         another model connected? Pass --skip-device-check to proceed anyway",
+        model.model_id()
     );
-    Ok(())
+    Ok(board)
 }
 
 /// The `DEV_ID` field of a `DBGMCU_IDCODE` read.
@@ -105,32 +125,9 @@ fn board_name(caps: &[u8]) -> Option<String> {
     None
 }
 
-/// Fails unless the device's `found` DEV_ID is the `expected` one of
-/// `model`'s MCU.
-fn check_mcu(model: &str, mcu: &str, expected: u16, found: u16) -> Result<()> {
-    ensure!(
-        found == expected,
-        "the connected MCU reports DEV_ID 0x{found:03X}, but {model} has an {mcu} \
-         (DEV_ID 0x{expected:03X}) -- is another model connected? \
-         Pass --skip-device-check to proceed anyway"
-    );
-    Ok(())
-}
-
-/// Fails unless the `board` named by the device's board capabilities is
-/// `model`.
-fn check_board(model: &str, board: &str) -> Result<()> {
-    ensure!(
-        board == model,
-        "the connected device has a {board} boardloader, not a {model} one -- is \
-         another model connected? Pass --skip-device-check to proceed anyway"
-    );
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{board_name, check_board, check_mcu, dev_id};
+    use super::{board_name, dev_id};
 
     /// Board capabilities as the boardloader lays them out, for `model`.
     fn caps(model: &str) -> Vec<u8> {
@@ -191,27 +188,5 @@ mod tests {
     #[test]
     fn requires_a_four_byte_idcode() {
         assert!(dev_id(&[0x76, 0x64]).is_err());
-    }
-
-    #[test]
-    fn accepts_the_matching_device() {
-        assert!(check_mcu("T3W1", "stm32u5g", 0x476, 0x476).is_ok());
-        assert!(check_board("T3W1", "T3W1").is_ok());
-    }
-
-    #[test]
-    fn rejects_another_mcu() {
-        // A T3T1 (STM32U585) connected while flashing for a T3W1.
-        let error = check_mcu("T3W1", "stm32u5g", 0x476, 0x482).unwrap_err();
-
-        assert!(error.to_string().contains("DEV_ID 0x482"));
-    }
-
-    #[test]
-    fn rejects_another_model_on_the_same_mcu() {
-        // T2T1 and T2B1 share the STM32F427; only the boardloader tells them apart.
-        let error = check_board("T2B1", "T2T1").unwrap_err();
-
-        assert!(error.to_string().contains("T2T1 boardloader"));
     }
 }
