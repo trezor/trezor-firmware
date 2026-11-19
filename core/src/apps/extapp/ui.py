@@ -131,6 +131,10 @@ def _pull(session: Session, field: int) -> "Callable[[int, int], Awaitable[bytes
             encode_chunk_request(field=field, offset=offset, length=length),
         )
         msg = await loop.wait(io.IPC2_EVENT | io.POLL_READ, timeout_ms=IPC_TIMEOUT_MS)
+        # Only the chunk can come here. `run._serve` is parked in `handle` until
+        # the review is decided, and an app has one call in flight at a time, so
+        # a message for another service is the app's source calling out from
+        # inside this call.
         if msg.service != SERVICE_UI:
             session.die("Unexpected message while pulling data")
         if msg.message_id == MSG_CHUNK_FAILED:
