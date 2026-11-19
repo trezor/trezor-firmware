@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import secrets
 from hashlib import sha256
@@ -112,3 +113,20 @@ def test_delete_with_missing(passwords: Passwords, tmp_path: Path) -> None:
     store.delete(public_keys_for(valid))
     assert not passwords
     assert stored_ids(store) == []
+
+
+def test_failed_lookup_forgets_missing(passwords: Passwords, tmp_path: Path) -> None:
+    store, _, stale_id = setup_store(passwords, tmp_path, ALL_KEYS)
+
+    with pytest.raises(KeyError):
+        store[public_keys_for(make_credential())]
+    assert stale_id not in stored_ids(store)
+
+
+def test_lookup_by_id(passwords: Passwords, tmp_path: Path) -> None:
+    store, valid, stale_id = setup_store(passwords, tmp_path, ALL_KEYS)
+    valid_id = stored_ids(store)[1]
+
+    assert base64.b64decode(stale_id) not in store
+    assert stale_id not in stored_ids(store)
+    assert store[base64.b64decode(valid_id)].trezor_pubkey == valid.trezor_pubkey

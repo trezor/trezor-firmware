@@ -133,14 +133,16 @@ class CredentialStore:
         app_data_b64 = data.get(self.app_name, ())
         app_data = [base64.b64decode(id) for id in app_data_b64]
         original = app_data[:]
-        yield app_data
-        if original != app_data:
-            modified_b64 = [base64.b64encode(id).decode() for id in app_data]
-            if modified_b64:
-                data[self.app_name] = modified_b64
-            else:
-                data.pop(self.app_name, None)
-            self._save(data)
+        try:
+            yield app_data
+        finally:
+            if original != app_data:
+                modified_b64 = [base64.b64encode(id).decode() for id in app_data]
+                if modified_b64:
+                    data[self.app_name] = modified_b64
+                else:
+                    data.pop(self.app_name, None)
+                self._save(data)
 
     def _load(self) -> dict[str, t.Any]:
         if not self.config_path.exists():
@@ -185,11 +187,10 @@ class CredentialStore:
     def _get(
         self, app_data: list[bytes], id_or_key: bytes | TrezorPublicKeys
     ) -> KeyringCredential | None:
-        if isinstance(id_or_key, bytes):
-            if id_or_key in app_data:
-                # found by the unique identifier
-                return KeyringCredential(self.app_name, id_or_key)
         for credential in self._load_and_forget_missing(app_data):
+            if id_or_key == credential.id:
+                # found by the unique identifier
+                return credential
             if isinstance(id_or_key, TrezorPublicKeys) and matches(
                 credential.as_credential(), id_or_key
             ):
