@@ -12,7 +12,7 @@ use_std = []
 log = "0.4.29"
 
 [dependencies.heapless]
-version = "0.9.2"
+version = "0.9.4"
 default-features = false
 
 [dependencies.trezor-noise-protocol]

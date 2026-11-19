@@ -68,7 +68,7 @@ strip = true
 cfg-if = "1.0"
 cty = "0.2.2"
 easer = { version = "0.3.0", default-features = false, features = ["libm"] }
-heapless = { version = "0.9.2", features = ["ufmt"], default-features = false }
+heapless = { version = "0.9.4", features = ["ufmt"], default-features = false }
 log = { version = "0.4.29" }
 minicbor = { version = "1.0.0", default-features = false }
 num-derive = "0.4.2"
