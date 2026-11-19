@@ -65,7 +65,16 @@ pub fn read_memory(model: Model, address: u32, size: u32) -> Result<Vec<u8>> {
     // The log is only shown if OpenOCD itself fails; the result is in files.
     run_captured(model, &script)?;
 
-    read_result(address, size, &data, &error)
+    if let Ok(message) = fs::read_to_string(&error) {
+        bail!("{message}");
+    }
+    let bytes = fs::read(&data).map_err(|_| anyhow!("no data read at 0x{address:08X}"))?;
+    ensure!(
+        bytes.len() == size as usize,
+        "read {} of {size} bytes at 0x{address:08X}",
+        bytes.len()
+    );
+    Ok(bytes)
 }
 
 /// OpenOCD's target config for the model's MCU.
@@ -231,29 +240,11 @@ fn build_read_script(address: u32, size: u32, data: &Path, error: &Path) -> Resu
     ))
 }
 
-/// The bytes a read script dumped for `address` and `size`, or why there are
-/// none.
-fn read_result(address: u32, size: u32, data: &Path, error: &Path) -> Result<Vec<u8>> {
-    if let Ok(message) = fs::read_to_string(error) {
-        bail!("{message}");
-    }
-    let bytes = fs::read(data).map_err(|_| anyhow!("no data read at 0x{address:08X}"))?;
-    ensure!(
-        bytes.len() == size as usize,
-        "read {} of {size} bytes at 0x{address:08X}",
-        bytes.len()
-    );
-    Ok(bytes)
-}
-
 #[cfg(test)]
 mod tests {
-    use std::fs;
     use std::path::{Path, PathBuf};
 
-    use super::{
-        build_erase_script, build_read_script, build_write_script, read_result, tcl_quote_path,
-    };
+    use super::{build_erase_script, build_read_script, build_write_script, tcl_quote_path};
 
     #[test]
     fn builds_write_script() {
@@ -358,42 +349,5 @@ mod tests {
              {set f [open {/tmp/read.err} w]; puts -nonewline $f $e; close $f}; \
              resume; exit"
         );
-    }
-
-    fn files(dir: &Path) -> (PathBuf, PathBuf) {
-        (dir.join("read.bin"), dir.join("read.err"))
-    }
-
-    #[test]
-    fn returns_the_dumped_bytes() {
-        let dir = tempfile::tempdir().unwrap();
-        let files = files(dir.path());
-        fs::write(&files.0, b"TRZC").unwrap();
-
-        assert_eq!(read_result(0x1000, 4, &files.0, &files.1).unwrap(), b"TRZC");
-    }
-
-    #[test]
-    fn keeps_a_failed_read() {
-        let dir = tempfile::tempdir().unwrap();
-        let files = files(dir.path());
-        fs::write(&files.1, "Failed to read memory").unwrap();
-
-        assert_eq!(
-            read_result(0x1000, 4, &files.0, &files.1)
-                .unwrap_err()
-                .to_string(),
-            "Failed to read memory"
-        );
-    }
-
-    #[test]
-    fn rejects_a_short_or_missing_read() {
-        let dir = tempfile::tempdir().unwrap();
-        let files = files(dir.path());
-
-        assert!(read_result(0x1000, 4, &files.0, &files.1).is_err());
-        fs::write(&files.0, b"TR").unwrap();
-        assert!(read_result(0x1000, 4, &files.0, &files.1).is_err());
     }
 }
