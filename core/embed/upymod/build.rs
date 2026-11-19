@@ -1217,6 +1217,7 @@ impl<'a> MpyBuilder<'a> {
 
         if cfg!(feature = "app_loading") {
             files.add(src, "apps/extapp/*.py")?;
+            files.add(src.join("trezor/ui/modui"), "*.py")?;
         }
 
         if cfg!(feature = "universal_fw") {

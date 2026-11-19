@@ -163,13 +163,70 @@ The wire functions at the crate root are:
 
 | Module | Contents |
 | ------ | -------- |
-| `ui` | Screens and user interaction: confirmations, warnings, progress, and more |
+| `modui` | Screens: one typed function per decision an app asks, from a review to a progress bar; a refusal is `Err(Error::Cancelled)` |
 | `crypto` | Key derivation and signing (done by Core), plus hashing, HMAC, Base58, signature verification and CoSi (done locally) |
 | `log` | The `error!`, `warn!`, `info!` and `debug!` macros |
 | `error` | The `Error` and `Result` types, and `ResultExt` for call-site context |
 | `util` | Small helpers, such as `Timeout` and `systick_ms` |
 | `structs`, `traits` | The types and interfaces shared with Core |
 | `mock` | Mock implementations of Core's services (`test` feature) |
+
+## UI
+
+An app names the facts and the steps; Core draws them. `modui` turns one
+call into one request, and Core owns the rest: how each kind of fact looks on
+each model, the extras menu, the paging, whether a yes is a tap, a hold, or a
+deliberate detour, and where the way out sits. The app never picks a style, a
+font or a screen.
+
+| Call | Asks the person | Answer |
+| ---- | --------------- | ------ |
+| `review(step, title, &fields).confirm()` | to read facts and say yes | `Result<()>` |
+| `review(…).confirm_strong()` | the same, with a strong yes | `Result<()>` |
+| `review(…).confirm_danger()` | to go on with something risky | `Result<()>` |
+| `review(…).details()` | to accept the short version, or see the details | `Result<Details>` |
+| `summary(step, title).amount(…).fee(…).confirm_strong()` | to sign a transfer: its amount and fee, with the values of core's own summary | `Result<()>` |
+| `verify_address(step, address, account, path)` | to check one of their own addresses | `Result<()>` |
+| `verify_pubkey(step, pubkey, account, path)` | to check one of their own public keys | `Result<()>` |
+| `done(step, text)` | nothing: the flow has ended | — |
+| `progress(label, total, work)` | nothing: the app is working | what `work` returns, or the start's error |
+
+Facts are `Field`s, named by what the value *is* rather than by how it
+should look: `text`, `amount`, `address`, `data`, `data_source`, `note` and
+`warning`; `data` and `data_source` are two ways to hand over the same kind,
+so one list may mix all six kinds. A review can also offer extras, each a label
+and its own facts, passed as one `.extras(&[Extra::new(label, &fields), ...])`
+call; an extra with no facts is not offered, and the menu's room for extras
+depends on the answer (see `Review::extras`).
+
+```rust
+use trezor_app_sdk::modui::{self, Extra, Field};
+
+fn confirm_send(recipient: &str, amount: &str) -> trezor_app_sdk::Result<()> {
+    let account = [Field::text("Account", "TRX #1")];
+    modui::review("send", "Send", &[Field::address("Recipient", recipient)])
+        .extras(&[Extra::new("Account info", &account)])
+        .confirm()?;
+    modui::summary("summary", "Send")
+        .amount("Amount", amount, "TRX")
+        .account("Account info", &account)
+        .confirm_strong()
+}
+```
+
+`data` takes bytes the app already holds. `data_source` takes a `DataSource`
+and the total length instead, for bytes the app hands out one range at a time,
+hashing them on the way out, say. The bytes come from the app itself, not from
+the host; see `DataSource` for how core reads it and why.
+
+A refusal is `Err(Error::Cancelled)`, so `?` ends the flow on it. `details`
+answers `Details::Show` when the person picks "Show all", and `Details::Skip`
+when they accept without the details. Every call that waits takes a step name relative
+to the app; Core prefixes the app's identity, its image ID, so `"send"` reaches
+the host as `"tron.trezor.com/send"` in the `ButtonRequest`.
+
+See the [`modui` rustdoc](src/modui/mod.rs) for the full contract: layouts,
+facts, extras, long content and progress.
 
 ## Logging
 
