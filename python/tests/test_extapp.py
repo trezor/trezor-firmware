@@ -17,11 +17,12 @@
 from __future__ import annotations
 
 from hashlib import sha256
+from unittest.mock import Mock
 
 import construct as c
 import pytest
 
-from trezorlib.extapp import AppHeader, AppImage
+from trezorlib.extapp import AppHeader, AppImage, load
 
 HEADER_SIZE = 512
 CHUNK_SIZE = 4
@@ -84,6 +85,14 @@ def test_parse_trailing_bytes() -> None:
     data = header_bytes(4) + PAYLOAD
     with pytest.raises(c.TerminatedError):
         AppImage.parse(data)
+
+
+def test_load_corrupt_payload_before_device_call() -> None:
+    session = Mock()
+    data = header_bytes(len(PAYLOAD)) + PAYLOAD[:-1] + b"\xff"
+    with pytest.raises(ValueError, match="hash"):
+        load(session, data, proof=b"", root_packet=b"", min_version=None)
+    session.call.assert_not_called()
 
 
 def test_build_payload_size_mismatch() -> None:
