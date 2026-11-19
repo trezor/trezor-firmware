@@ -4229,6 +4229,40 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             br = yield
 
 
+class InputFlowEthereumApproveAccountInfo(InputFlowConfirmAllWarnings):
+    """Confirm an Ethereum approve/revoke flow and store the content
+    of its summary's account info in `account_info`."""
+
+    def __init__(self, client: Client | DebugSession) -> None:
+        super().__init__(client, on_page=self.read_account_info)
+        self.account_info: str | None = None
+
+    def read_account_info(self, layout: LayoutContent) -> None:
+        if self.account_info is not None:
+            return
+        if TR.send__maximum_fee not in layout.text_content():
+            return  # not the summary
+
+        if self.layout_type is LayoutType.Bolt:
+            # account and fee details share the info screen
+            self.debug.press_info()
+            self.account_info = self.debug.read_layout().text_content()
+            self.debug.press_no()
+        elif self.layout_type is LayoutType.Caesar:
+            # menu items: fee info, account info, cancel
+            self.account_info = read_caesar_menu_item(self.debug, 1)
+        else:
+            # menu items: account info, fee info, cancel (Eckhart)
+            # or fee info, account info, cancel (Delizia)
+            idx = 0 if self.layout_type is LayoutType.Eckhart else 1
+            self.debug.click(self.debug.screen_buttons.menu())
+            self.debug.synchronize_at("VerticalMenu")
+            self.debug.button_actions.navigate_to_menu_item(idx)
+            self.account_info = self.debug.read_layout().text_content()
+            self.debug.click(self.debug.screen_buttons.menu())
+            self.debug.click(self.debug.screen_buttons.menu())
+
+
 class InputFlowFidoConfirm(InputFlowBase):
     def __init__(self, client: Client | DebugSession, cancel: bool = False):
         super().__init__(client)

@@ -28,10 +28,15 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.protobuf import MessageType
 from trezorlib.tools import parse_path, unharden
 
-from ...common import COMMON_FIXTURES_DIR, parametrize_using_common_fixtures
+from ...common import (
+    COMMON_FIXTURES_DIR,
+    MNEMONIC12,
+    parametrize_using_common_fixtures,
+)
 from ...definitions import JsonSource, encode_eth_network
 from ...input_flows import (
     InputFlowConfirmAllWarnings,
+    InputFlowEthereumApproveAccountInfo,
     InputFlowEthereumSignTxData,
     InputFlowEthereumSignTxGoBackFromSummary,
     InputFlowEthereumSignTxShowFeeInfo,
@@ -256,6 +261,43 @@ def test_signtx_go_back_from_summary(session: Session):
         example_input_data["result"],
         input_flow,
     )
+
+
+# Data taken from sign_tx_erc20.json (approve_uniswap_unknown_token)
+example_input_data_approve = {
+    "parameters": {
+        "chain_id": 1,
+        "path": "m/44'/60'/0'/0/0",
+        "nonce": "0x0",
+        "gas_price": "0x14",
+        "gas_limit": "0x14",
+        "value": "0x0",
+        "to_address": "0xfc6b5d6af8a13258f7cbd0d39e11b35e01a32f93",
+        "tx_type": None,
+        "data": "095ea7b3000000000000000000000000e592427a0aece92de3edee1f18e0157c058615640000000000000000000000000000000000000000000000000000000000000064",
+    },
+    "result": {
+        "sig_v": 37,
+        "sig_r": "2854b6fd729e66f2fde19da60442612ae775aa3950cf2b7702a925b584b9e520",
+        "sig_s": "1dae1dfe009ba01edb3b96d61490c2eeea12dc20ef71c31fb846c5b60283310a",
+    },
+}
+
+
+@pytest.mark.models("core")
+@pytest.mark.setup_client(mnemonic=MNEMONIC12)
+def test_signtx_approve_account_info(session: Session):
+    # The account info of the approve summary shows the account name, not only the path.
+    input_flow = InputFlowEthereumApproveAccountInfo(session)
+    _do_test_signtx(
+        session,
+        example_input_data_approve["parameters"],
+        example_input_data_approve["result"],
+        input_flow.get(),
+    )
+    assert input_flow.account_info is not None
+    assert "ETH #1" in input_flow.account_info
+    assert "m/44'/60'/0'/0/0" in input_flow.account_info
 
 
 @parametrize_using_common_fixtures("ethereum/sign_tx_eip1559.json")

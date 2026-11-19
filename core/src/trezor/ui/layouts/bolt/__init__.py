@@ -1213,6 +1213,7 @@ if not utils.BITCOIN_ONLY:
             None,
             verb=TR.buttons__continue,
             br_name="confirm_ethereum_approve",
+            is_data=not recipient_str,
             chunkify=False if recipient_str else chunkify,
         )
 
@@ -1268,11 +1269,13 @@ if not utils.BITCOIN_ONLY:
             False,
         )
 
-        account_items: tuple[StrPropertyType] | None = (
-            ((TR.address_details__derivation_path, account_path, None),)
-            if account_path
-            else None
-        )
+        account_items: list[StrPropertyType] = []
+        if account:
+            account_items.append((TR.words__account, account, None))
+        if account_path:
+            account_items.append(
+                (TR.address_details__derivation_path, account_path, None)
+            )
 
         await _confirm_summary(
             native_amount,
@@ -1281,7 +1284,7 @@ if not utils.BITCOIN_ONLY:
             TR.send__maximum_fee,
             TR.words__title_summary,
             None,
-            account_items,
+            account_items or None,
             fee_info_items,
             TR.confirm_total__title_fee,
         )
