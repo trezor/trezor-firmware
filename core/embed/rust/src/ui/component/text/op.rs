@@ -214,11 +214,6 @@ impl<'a> OpTextLayout<'a> {
         self.add_text_with_font("\n", font)
     }
 
-    pub fn add_newline_half(&mut self) -> &mut Self {
-        let font = self.layout.style.text_font;
-        self.add_text_with_font("\r", font)
-    }
-
     pub fn add_next_page(&mut self) -> &mut Self {
         self.add_new_item(Op::NextPage)
     }

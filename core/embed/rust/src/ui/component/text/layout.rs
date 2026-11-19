@@ -332,8 +332,6 @@ impl TextLayout {
                 sink.prev_page_ellipsis(*cursor, self);
                 cursor.x += self.style.prev_page_ellipsis_width();
             }
-            // Ignore leading '\r' character if the above ellipsis has been drawn
-            remaining_text = remaining_text.strip_prefix('\r').unwrap_or(remaining_text);
         }
 
         while !remaining_text.is_empty() {
@@ -709,12 +707,11 @@ impl Span {
         chunks: Option<Chunks>,
     ) -> Self {
         const ASCII_LF: char = '\n';
-        const ASCII_CR: char = '\r';
         const ASCII_SPACE: char = ' ';
         const ASCII_HYPHEN: char = '-';
 
         fn is_whitespace(ch: char) -> bool {
-            ch == ASCII_SPACE || ch == ASCII_LF || ch == ASCII_CR
+            ch == ASCII_SPACE || ch == ASCII_LF
         }
 
         // Checking if the trimmed text fits the line - the whitespace is not being
@@ -800,12 +797,7 @@ impl Span {
                 line.advance.x = span_width;
                 line.insert_hyphen_before_line_break = false;
                 line.skip_next_chars = 1;
-                if ch == ASCII_CR {
-                    // We'll be breaking the line, but advancing the cursor only by a half of the
-                    // regular line height.
-                    line.advance.y = text_font.line_height() / 2;
-                }
-                if ch == ASCII_LF || ch == ASCII_CR {
+                if ch == ASCII_LF {
                     // End of line, break immediately.
                     return line;
                 }
