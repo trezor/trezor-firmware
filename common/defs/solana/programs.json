@@ -2413,9 +2413,10 @@
       "id": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
       "name": "Associated Token Account Program",
       "instruction_id_length": 1,
+      "empty_data_instruction_id": 0,
       "instructions": [
         {
-          "id": null,
+          "id": 0,
           "name": "Create",
           "trailing_references": false,
           "parameters": [],

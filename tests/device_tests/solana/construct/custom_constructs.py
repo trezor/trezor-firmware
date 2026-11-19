@@ -106,3 +106,8 @@ def OptionalParameter(subcon: Construct):
         "is_included" / Byte,
         "value" / Optional(If(this.is_included == 1, subcon)),
     )
+
+
+def OptionalInstructionId(subcon: Construct):
+    # An `instruction_id` of None leaves the instruction data empty.
+    return If(lambda ctx: ctx.instruction_id is not None, subcon)
