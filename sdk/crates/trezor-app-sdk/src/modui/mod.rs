@@ -75,8 +75,9 @@
 //!
 //! A `data` field carries bytes the app already holds. A
 //! [`data_source`](Field::data_source) field carries a length and a
-//! [`DataSource`] instead, for bytes the app hands out one range at a time — a
-//! host stream it hashes on the way out, say.
+//! [`DataSource`] instead, for bytes the app hands out one range at a time,
+//! hashing them on the way out, say. The bytes come from the app itself, not
+//! from the host; see [`DataSource`].
 //!
 //! # Outcomes
 //!
