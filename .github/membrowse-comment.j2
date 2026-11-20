@@ -1,0 +1,12 @@
+{% for target in targets %}
+{% if target.has_changes %}
+- **{% if target.comparison_url %}[{{ target.name }}]({{ target.comparison_url }}){% else %}{{ target.name }}{% endif %}**:{% for region in target.regions %}{% set region_sections = target.sections_by_region.get(region.name, []) %} {{ region.name }}: **{{ region.delta_str }} B** ({{ region.delta_pct_str }}{% if region.limit_size > 0 %}, {{ region.utilization_pct | round | int }}% used{% endif %}){% if not loop.last %}, {% endif %}{% endfor %}
+
+{% endif %}
+{% endfor %}
+{% set targets_without_changes = [] %}
+{% for target in targets %}{% if not target.has_changes %}{% set _ = targets_without_changes.append(target) %}{% endif %}{% endfor %}
+{% if targets_without_changes %}
+
+No memory changes: {% for target in targets_without_changes %}{% if target.comparison_url %}[{{ target.name }}]({{ target.comparison_url }}){% else %}{{ target.name }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}

@@ -26,10 +26,13 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           persist-credentials: false
-      - uses: membrowse/membrowse-action/comment-action@14677ae592be153b43eb7dbe4f542cf0c7d098ed  # membrowse/membrowse-action@v1.2.18
+      - uses: membrowse/membrowse-action/comment-action@e96401eefb1c32f1f9aff0fcd18c73288c081808  # membrowse/membrowse-action@v1.3.3
         with:
           api_key: ${{ secrets.MEMBROWSE_API_KEY }}
           commit: ${{ github.event.workflow_run.head_sha }}
+          comment_template: .github/membrowse-comment.j2
+          footer: false
+          skip_unchanged: true
         env:
           MEMBROWSE_API_KEY: ${{ secrets.MEMBROWSE_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
