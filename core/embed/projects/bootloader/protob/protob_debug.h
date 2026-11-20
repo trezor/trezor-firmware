@@ -34,4 +34,7 @@ secbool recv_msg_debug_link_screen_record(protob_io_t *iface,
 secbool recv_msg_debug_link_get_state(protob_io_t *iface,
                                       DebugLinkGetState *msg);
 
-secbool send_msg_debug_link_state(protob_io_t *iface);
+// Sends DebugLinkState with `layout` (a JSON trace of the screen, `len`
+// bytes) as its only token; no token when `len` is 0.
+secbool send_msg_debug_link_state(protob_io_t *iface, const char *layout,
+                                  size_t len);

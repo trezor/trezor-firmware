@@ -50,3 +50,16 @@ pub fn debuglink_process() -> DebuglinkResult {
 pub fn debuglink_notify_layout_change() {
     unsafe { ffi::debuglink_notify_layout_change() }
 }
+
+/// Replace the layout that the debug link reports with the JSON trace of
+/// `component`.
+#[cfg(feature = "ui_debug")]
+pub fn debuglink_set_layout(component: &impl crate::trace::Trace) {
+    use crate::trace::JsonTracer;
+
+    unsafe { ffi::debuglink_layout_begin() };
+    let mut tracer = JsonTracer::new(|text: &str| unsafe {
+        ffi::debuglink_layout_append(text.as_ptr() as _, text.len())
+    });
+    tracer.root(&|t| component.trace(t));
+}
