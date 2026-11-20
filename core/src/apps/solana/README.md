@@ -196,6 +196,7 @@ The `programs.json` file serves as a structured configuration file in the Solana
   - `id`: A unique identifier (program ID) for a specific Solana program, represented as base58 encoded string.
   - `name`: The name of the program, providing a human-readable label for the program.
   - `instruction_id_length`: Specifies the length of the instruction ID, used for parsing.
+  - `empty_data_instruction_id`: Optional, the ID of the instruction that the program runs when the instruction data is empty (e.g. the Associated Token Account program runs `Create` both for empty data and for the explicit ID `0`).
   - `instructions`: An array of instructions associated with the Solana program.
     - `id`: A numeric identifier for the instruction derived from the Rust implementation of the corresponding program.
     - `name`: The name of the instruction, providing a human-readable label.

@@ -347,6 +347,39 @@ class TestSolanaTransactionInstructions(unittest.TestCase):
         self.assertEqual(transfer.instruction_id, 2)
         self.assertEqual(transfer.lamports, 1000)
 
+    def test_empty_data(self):
+        ata_program = base58.decode("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
+        token_program = base58.decode("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+        token_account = b"a" * 32
+        accounts = (
+            SIGNER,
+            token_account,
+            SYSTEM_PROGRAM,
+            b"m" * 32,  # token mint
+            ata_program,
+            token_program,
+        )
+        # The Associated Token Account program runs Create (0) on empty data,
+        # just as if the instruction id was given (#4387).
+        for data, instruction_id in ((b"\x00", 0), (b"", 0), (b"\x01", 1)):
+            transaction = Transaction(
+                build_tx((1, 0, 4), accounts, [(4, (0, 1, 0, 3, 2, 5), data)])
+            )
+            (create,) = transaction.instructions
+            self.assertEqual(create.instruction_id, instruction_id)
+            self.assertTrue(create.is_instruction_supported)
+            self.assertEqual(create.associated_token_account[0], token_account)
+            self.assertFalse(transaction.blind_signing)
+
+        # Other programs don't run any instruction on empty data.
+        transaction = Transaction(
+            build_tx((1, 0, 1), TRANSFER_ACCOUNTS, [(2, (0, 1), b"")])
+        )
+        (instruction,) = transaction.instructions
+        self.assertIsNone(instruction.instruction_id)
+        self.assertFalse(instruction.is_instruction_supported)
+        self.assertTrue(transaction.blind_signing)
+
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestSolanaTransactionAlts(unittest.TestCase):

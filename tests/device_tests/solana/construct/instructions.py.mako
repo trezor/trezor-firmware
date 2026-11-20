@@ -39,7 +39,11 @@ def instruction_subcon(program, instruction):
     if instruction.id is None:
         return "Pass"
     instruction_id_type = INSTRUCTION_TYPES[program.instruction_id_length]
-    return f"Const({instruction.id}, {instruction_id_type})"
+    subcon = f"Const({instruction.id}, {instruction_id_type})"
+    if instruction.id == program.get("empty_data_instruction_id"):
+        # the program runs this instruction on empty data as well
+        return f"OptionalInstructionId({subcon})"
+    return subcon
 
 %>\
 from enum import Enum
@@ -60,6 +64,7 @@ from .custom_constructs import (
     CompactStruct,
     HexStringAdapter,
     Memo,
+    OptionalInstructionId,
     OptionalParameter,
     PublicKey,
     String,

@@ -116,7 +116,7 @@ _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2 = const(16)
 _TOKEN_2022_PROGRAM_ID_INS_SYNC_NATIVE = const(17)
 _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3 = const(18)
 _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER = const(22)
-_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE = None
+_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE = const(0)
 _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT = const(1)
 _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED = const(2)
 _MEMO_PROGRAM_ID_INS_MEMO = None
@@ -856,6 +856,14 @@ def get_instruction_id_length(program_id: str) -> int:
         return 0
 
     return 0
+
+
+def get_empty_data_instruction_id(program_id: str) -> InstructionId:
+    # Some programs run a default instruction when the instruction data is empty.
+    if program_id == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID:
+        return _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE
+
+    return None
 
 
 def format_StakeAuthorize(value: int) -> str:

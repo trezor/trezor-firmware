@@ -21,6 +21,7 @@ from .instructions import (
     COMPUTE_BUDGET_PROGRAM_ID,
     COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT,
     COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
+    get_empty_data_instruction_id,
     get_instruction,
     get_instruction_id_length,
 )
@@ -272,6 +273,10 @@ class Transaction:
                     instruction_data[:instruction_id_length], "little"
                 )
                 instruction_data = instruction_data[instruction_id_length:]
+            elif not instruction_data:
+                # Some programs run a default instruction on empty data, e.g. the
+                # Associated Token Account program treats it as Create.
+                instruction_id = get_empty_data_instruction_id(program_id)
             else:
                 # The program has no instruction ids, or the data is too short
                 # to contain one. The latter is shown as an unsupported instruction.
