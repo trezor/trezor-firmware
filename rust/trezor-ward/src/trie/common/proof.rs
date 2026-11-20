@@ -143,11 +143,6 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
         self.bytes
     }
 
-    /// Whether this is the proof of the empty map.
-    pub fn is_empty(&self) -> bool {
-        self.as_bytes().is_empty()
-    }
-
     /// The leaf the lookup ended at; `None` for the empty map.
     pub fn leaf(&self) -> Option<Leaf<K, H>> {
         let bytes = self.as_bytes();
@@ -427,7 +422,6 @@ mod tests {
     #[test]
     fn the_empty_proof() {
         let proof = P::parse(&[][..]).unwrap();
-        assert!(proof.is_empty());
         assert_eq!(proof.leaf(), None);
         assert_eq!(proof.steps().len(), 0);
         assert_eq!(proof, P::parse(Vec::new()).unwrap());

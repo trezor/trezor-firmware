@@ -347,7 +347,7 @@ mod tests {
         assert!(tree.is_empty());
         assert_eq!(tree.get(&[0]), None);
         assert_eq!(tree.iter().count(), 0);
-        assert!(tree.prove(&[0]).is_empty());
+        assert!(tree.prove(&[0]).as_bytes().is_empty());
         assert_eq!(T::from_entries([]).root(), tree.root());
     }
 
