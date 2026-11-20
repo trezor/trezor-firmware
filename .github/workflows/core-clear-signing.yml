@@ -209,12 +209,8 @@ jobs:
           GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
           COMMIT_SHA: ${{ github.sha }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CLEAR_SIGNING_WEBHOOK }}  # zizmor: ignore[secrets-outside-env] a repository secret, like SLACK_HW_TESTS_WEBHOOK in core-hw.yml
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HW_TESTS_WEBHOOK }}  # zizmor: ignore[secrets-outside-env] a repository secret, shared with core-hw.yml
         run: |
-          if [ -z "$SLACK_WEBHOOK_URL" ]; then
-            echo "::warning::SLACK_CLEAR_SIGNING_WEBHOOK is not set, not notifying Slack"
-            exit 0
-          fi
           JOBS=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs?per_page=100")
           # cancelled also covers jobs that hit timeout-minutes
           FAILED=$(jq -r '.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled") | "• <\(.html_url)|\(.name)>"' <<< "$JOBS")
