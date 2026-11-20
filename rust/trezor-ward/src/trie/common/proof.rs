@@ -390,8 +390,8 @@ mod tests {
 
     type P<B> = Proof<B, [u8; 1], Sha256>;
 
-    const LEAF: usize = 1 + 32;
-    const STEP: usize = 1 + 32;
+    const LEAF_LEN: usize = 1 + 32;
+    const STEP_LEN: usize = 1 + 32;
 
     fn pos(i: usize) -> BitPos<[u8; 1]> {
         BitPos::new(i).unwrap()
@@ -399,7 +399,7 @@ mod tests {
 
     /// A leaf for key `key`, then `bits` as steps leaf-to-root, all digests zero.
     fn bytes(key: u8, bits: &[u8]) -> Vec<u8> {
-        let mut out = vec![0; LEAF];
+        let mut out = vec![0; LEAF_LEN];
         out[0] = key;
         for bit in bits {
             out.push(*bit);
@@ -410,14 +410,14 @@ mod tests {
 
     #[test]
     fn layout_constants() {
-        assert_eq!(Leaf::<[u8; 1], Sha256>::LEN, LEAF);
-        assert_eq!(Step::<[u8; 1], Sha256>::LEN, STEP);
+        assert_eq!(Leaf::<[u8; 1], Sha256>::LEN, LEAF_LEN);
+        assert_eq!(Step::<[u8; 1], Sha256>::LEN, STEP_LEN);
         assert_eq!(
-            Leaf::<[u8; 1], Sha256>::try_from(&[0; LEAF - 1][..]).unwrap_err(),
+            Leaf::<[u8; 1], Sha256>::try_from(&[0; LEAF_LEN - 1][..]).unwrap_err(),
             Error::Length
         );
         assert_eq!(
-            Step::<[u8; 1], Sha256>::try_from(&[0; STEP + 1][..]).unwrap_err(),
+            Step::<[u8; 1], Sha256>::try_from(&[0; STEP_LEN + 1][..]).unwrap_err(),
             Error::Length
         );
     }
@@ -433,11 +433,17 @@ mod tests {
 
     #[test]
     fn lengths_are_checked_before_anything_is_read() {
-        for len in [1, LEAF - 1, LEAF + 1, LEAF + STEP - 1, LEAF + STEP + 1] {
+        for len in [
+            1,
+            LEAF_LEN - 1,
+            LEAF_LEN + 1,
+            LEAF_LEN + STEP_LEN - 1,
+            LEAF_LEN + STEP_LEN + 1,
+        ] {
             assert_eq!(P::parse(vec![0; len]).unwrap_err(), Error::Length);
         }
-        for len in [LEAF, LEAF + STEP, LEAF + 2 * STEP] {
-            assert!(P::parse(vec![0; len]).is_ok() || len > LEAF);
+        for len in [LEAF_LEN, LEAF_LEN + STEP_LEN, LEAF_LEN + 2 * STEP_LEN] {
+            assert!(P::parse(vec![0; len]).is_ok() || len > LEAF_LEN);
         }
         assert!(P::parse(bytes(0, &[])).is_ok());
         assert!(P::parse(bytes(0, &[0])).is_ok());
@@ -460,8 +466,8 @@ mod tests {
     #[test]
     fn fields_are_read_where_the_layout_puts_them() {
         let mut raw = bytes(0b0100_0000, &[4, 1, 0]);
-        raw[1..LEAF].copy_from_slice(&[0xaa; 32]);
-        raw[LEAF + 1..LEAF + STEP].copy_from_slice(&[0xbb; 32]);
+        raw[1..LEAF_LEN].copy_from_slice(&[0xaa; 32]);
+        raw[LEAF_LEN + 1..LEAF_LEN + STEP_LEN].copy_from_slice(&[0xbb; 32]);
         let proof = P::parse(raw.as_slice()).unwrap();
 
         assert_eq!(
@@ -526,13 +532,13 @@ mod tests {
         // Below the branch at 1: the steps at 7 and 4, which are deeper in the tree.
         let below = proof.below(pos(1));
         assert_eq!(steps(&below), [7, 4]);
-        assert_eq!(below.as_bytes(), &raw[..LEAF + 2 * STEP]);
+        assert_eq!(below.as_bytes(), &raw[..LEAF_LEN + 2 * STEP_LEN]);
         assert_eq!(below.leaf(), proof.leaf());
         // At a bit no branch tests, the cut falls between the branches around it.
         assert_eq!(steps(&proof.below(pos(5))), [7]);
         // Below the deepest branch there is only the leaf; above the root, the whole path.
         assert_eq!(steps(&proof.below(pos(7))), []);
-        assert_eq!(proof.below(pos(7)).as_bytes(), &raw[..LEAF]);
+        assert_eq!(proof.below(pos(7)).as_bytes(), &raw[..LEAF_LEN]);
         assert_eq!(steps(&proof.below(pos(0))), [7, 4, 1]);
         assert_eq!(
             P::parse(&[][..]).unwrap().below(pos(0)),

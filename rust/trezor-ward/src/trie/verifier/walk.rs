@@ -387,7 +387,8 @@ mod tests {
         let mut root = trusted(&tree);
         let mut walk: W<'_> = root.walk();
         assert!(!walk.is_done());
-        assert!(walk.current().is_none() && walk.proof().is_none());
+        assert!(walk.current().is_none());
+        assert!(walk.proof().is_none());
         for (key, proof) in KEYS.iter().zip(&proofs) {
             let entry = walk.next(proof).unwrap();
             assert_eq!(entry.key(), key);
@@ -465,7 +466,9 @@ mod tests {
         assert_eq!(walk.next(&empty()).unwrap_err(), Error::OutOfOrder);
         // The proof of the empty map describes the whole tree: nothing to walk, nothing held.
         let walk = root.walk_at(empty()).unwrap();
-        assert!(walk.is_done() && walk.proof().is_none() && walk.current().is_none());
+        assert!(walk.is_done());
+        assert!(walk.proof().is_none());
+        assert!(walk.current().is_none());
     }
 
     #[test]

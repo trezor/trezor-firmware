@@ -201,15 +201,12 @@ mod tests {
 
     #[test]
     fn bits_are_msb_first() {
-        let key = [0b1000_0000u8, 0b0000_0001];
+        let key = [0b1100_0000u8, 0b0000_0001];
         assert_eq!(key_bits::<[u8; 2]>(), 16);
-        let bits: Vec<bool> = (0..16)
-            .map(|i| bit(&key, BitPos::new(i).unwrap()))
+        let bits: Vec<u8> = (0..16)
+            .map(|i| u8::from(bit(&key, BitPos::new(i).unwrap())))
             .collect();
-        let expected = [true, false, false, false, false, false, false, false]
-            .into_iter()
-            .chain([false, false, false, false, false, false, false, true]);
-        assert!(bits.into_iter().eq(expected));
+        assert_eq!(bits, [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
     }
 
     #[test]
@@ -234,7 +231,8 @@ mod tests {
         assert_eq!(Pos::try_from(&[15][..]), Ok(last));
         assert_eq!(Pos::try_from(&[16][..]), Err(Error::Shape));
         assert_eq!(Pos::try_from(&[0, 15][..]), Err(Error::Length));
-        assert_eq!((last.index(), last.as_bytes()), (15, &[15][..]));
+        assert_eq!(last.index(), 15);
+        assert_eq!(last.as_bytes(), [15]);
         assert!(Pos::new(3) < Pos::new(4));
     }
 
@@ -271,9 +269,11 @@ mod tests {
             }
         }
         let key = Wrapped::from_bytes([0b0000_0001, 0]);
-        assert_eq!((key_len::<Wrapped>(), key_bits::<Wrapped>()), (2, 16));
+        assert_eq!(key_len::<Wrapped>(), 2);
+        assert_eq!(key_bits::<Wrapped>(), 16);
         let (seven, eight) = (BitPos::new(7).unwrap(), BitPos::new(8).unwrap());
-        assert!(bit(&key, seven) && !bit(&key, eight));
+        assert!(bit(&key, seven));
+        assert!(!bit(&key, eight));
         assert_eq!(crit_bit(&key, &Wrapped([0, 0])), Some(seven));
     }
 }
