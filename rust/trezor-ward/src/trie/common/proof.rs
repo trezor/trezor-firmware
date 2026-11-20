@@ -254,8 +254,10 @@ pub struct Steps<'a, K, H> {
 impl<'a, K: Key, H: HashFn> Steps<'a, K, H> {
     /// The steps encoded in `bytes`: a whole number of them, as `parse` checked.
     fn new(bytes: &'a [u8]) -> Self {
+        let chunks = bytes.chunks_exact(Step::<K, H>::LEN);
+        debug_assert!(chunks.remainder().is_empty());
         Self {
-            chunks: bytes.chunks_exact(Step::<K, H>::LEN),
+            chunks,
             _marker: PhantomData,
         }
     }
