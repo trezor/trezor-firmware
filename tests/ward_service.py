@@ -499,8 +499,7 @@ class MockWardService:
         answer = ward.store_provider(self.store)(request.entry_key)
         leaf = answer.leaf
         return messages.WardEntryAck(
-            identity=leaf.identity if leaf is not None else None,
-            content=leaf.content if leaf is not None else None,
+            sealed_content=leaf.content if leaf is not None else None,
             proof=answer.proof or [],
             witness_entry_key=answer.witness_entry_key,
             witness_commit=answer.witness_commit,
@@ -612,7 +611,7 @@ class MockWardService:
             ward.WardResult(
                 request,
                 request.entry_key,
-                ward.Leaf(request.identity, request.content),
+                ward.Leaf(request.sealed_identity, request.sealed_content),
                 counter=request.counter,
                 auth_commit=request.auth_commit,
             ),

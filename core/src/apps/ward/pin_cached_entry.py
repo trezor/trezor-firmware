@@ -16,18 +16,18 @@ async def pin_cached_entry(msg: WardPinCachedEntry) -> Success:
     from trezor.wire import DataError
 
     from . import offline_store
-    from .common import display_bytes, entry_props, online, pull_leaf, require_key
-    from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
+    from .common import display_bytes, entry_props, online, read_entry, require_key
+    from .keys import ENTRY_TYPE_ADDRESS
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
     key_type = ENTRY_TYPE_ADDRESS
-    entry_key = await entry_key_for(app_id, identifier, key_type)
 
     if not await online():
         raise DataError("WARD: sync first; an entry is kept offline only once it is proved")
 
-    value, _leaf, _material = await pull_leaf(entry_key, key_type)
+    # A pointer is kept as the value it resolves to: the offline copy is what a read returns.
+    value, _target = await read_entry(app_id, identifier)
     if value is None:
         raise DataError("WARD: no entry to keep offline")
 

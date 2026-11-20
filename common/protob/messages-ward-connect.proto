@@ -33,8 +33,7 @@ import "messages-ward.proto";
  * cannot steer a read or a write at a slot of its choosing:
  *
  *   K_path    = SLIP21(seed, ["ward", "K_path"])
- *   scope     = app_id || 0x00 || key_type || 0x00 || device_id(1B)
- *   entry_key = HMAC-SHA256(K_path, scope || identifier)
+ *   entry_key = HMAC-SHA256(K_path, "WARD PATH v1" || leaf_identity)   -- docs/ward/ward-leaf.md
  *
  * K_path is passphrase-dependent, so every hidden wallet has its own key space and the
  * same identifier maps to different paths under different passphrases.
@@ -56,16 +55,17 @@ message WardEntryRequest {
  */
 message WardStagedLeaf {
     optional bytes entry_key = 1;  // 32B
-    optional bytes commit    = 2;  // 32B; the leaf is sha256(0x00 || entry_key || commit)
+    optional bytes commit    = 2;  // 32B value_digest; the leaf is sha256(0x00 || entry_key || commit)
 }
 
 /**
  * One leaf of a batched flush, exactly as a single flush would carry it.
  */
 message WardBatchedLeaf {
-    optional bytes            entry_key = 1;
-    optional WardLeafIdentity identity  = 2;
-    optional WardLeafContent  content   = 3;
+    optional bytes entry_key       = 1;
+    reserved 2, 3;                       // were the framed identity and content parts
+    optional bytes sealed_identity = 4;
+    optional bytes sealed_content  = 5;
 }
 
 /**
@@ -84,9 +84,10 @@ message WardBatchedLeaf {
  * them out is why this one can promise a leaf and a path at all.
  */
 message WardLeafAck {
-    required bytes        entry_key = 1;  // 32B keyed path this leaf belongs at; ALWAYS set
-    optional WardLeafIdentity identity  = 2;
-    optional WardLeafContent  content   = 3;  // empty part = the entry was deleted
+    required bytes entry_key       = 1;   // 32B keyed path this leaf belongs at; ALWAYS set
+    reserved 2, 3;                        // were the framed identity and content parts
+    optional bytes sealed_identity = 11;  // stored beside the leaf; empty for a delete
+    optional bytes sealed_content  = 12;  // empty = the entry was deleted
 
     // The state this write produced. The DEVICE is the counter authority -- it derived
     // the new root and stamped the next counter on it -- and the host must publish this
@@ -151,9 +152,10 @@ message WardLeafAck {
  * @end
  */
 message WardFlushQueueAck {
-    optional bytes            entry_key = 1;  // absent when the queue was already empty
-    optional WardLeafIdentity identity  = 2;
-    optional WardLeafContent  content   = 3;
+    optional bytes entry_key       = 1;   // absent when the queue was already empty
+    reserved 2, 3;                        // were the framed identity and content parts
+    optional bytes sealed_identity = 12;
+    optional bytes sealed_content  = 13;
 
     // The state this publication claimed, as on WardLeafAck: the device derived the new root and
     // stamped the next counter, and the host must publish the pair to the WM.

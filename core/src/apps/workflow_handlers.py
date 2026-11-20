@@ -174,6 +174,8 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.ward.set_entry"
         if msg_type == MessageType.WardDeleteEntry:
             return "apps.ward.delete_entry"
+        if msg_type == MessageType.WardSetPointer:
+            return "apps.ward.set_pointer"
         if msg_type == MessageType.WardSync:
             return "apps.ward.sync"
         if msg_type == MessageType.WardIngestAttestation:

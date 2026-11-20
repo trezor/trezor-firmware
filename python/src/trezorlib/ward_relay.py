@@ -332,15 +332,14 @@ class WarddProvider:
                 "staged": [[k.hex(), c.hex()] for k, c in self.staged],
             },
         )
-        identity, content = ack.get("identity"), ack.get("content")
-        identity = identity and protobuf.dict_to_proto(messages.WardLeafIdentity, identity)
-        content = content and protobuf.dict_to_proto(messages.WardLeafContent, content)
 
         def unhex(name: str) -> bytes | None:
             return bytes.fromhex(ack[name]) if ack.get(name) else None
 
+        # A read never needs the identity: only the sealed content is served.
+        content = unhex("sealed_content")
         return Answer(
-            leaf=Leaf(identity or None, content or None) if identity or content else None,
+            leaf=Leaf(None, content) if content else None,
             proof=[bytes.fromhex(p) for p in ack.get("proof") or []],
             witness_entry_key=unhex("witness_entry_key"),
             witness_commit=unhex("witness_commit"),

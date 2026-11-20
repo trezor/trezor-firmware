@@ -20,15 +20,13 @@ Spec: `docs/ward/ward-trie.md`. Must stay byte-for-byte identical to the firmwar
 `core/src/apps/ward/trie.py`; the conformance vectors in `python/tests/test_ward_trie.py` pin both.
 
     leaf     = sha256(0x00 || entry_key || commit)
-    commit   = sha256(0x02 || len8(key_type) || key_type
-                           || len32(id_part) || id_part || len32(val_part) || val_part)
-    internal = sha256(0x01 || u16be(split_bit) || left || right)
-    empty    = sha256(0x03)
-    part     = encoding(1B) || len8(nonce) || nonce || len8(tag) || tag || len32(body) || body
+    commit   = value_digest = sha256(0x03 || sealed_content)      -- docs/ward/ward-leaf.md
+    internal = sha256(0x01 || u8(split_bit) || left || right)
+    empty    = sha256(0x02)
 
 A path-compressed binary trie keyed MSB-first by the 32-byte entry_key; children are positional and
-a node's hash commits to its split bit, never its depth. A proof is a LEAF-TO-ROOT list of 34-byte
-`u16be(split_bit) || sibling` elements. Serving proofs needs no key.
+a node's hash commits to its split bit, never its depth. A proof is a LEAF-TO-ROOT list of 33-byte
+`u8(split_bit) || sibling` elements. Serving proofs needs no key.
 """
 
 from __future__ import annotations
@@ -43,7 +41,7 @@ __all__ = [
     "PROOF_ELEM_LEN",
     "WardTrieError",
     "addr_bit",
-    "commit_of",
+    "value_digest",
     "leaf_hash",
     "internal_hash",
     "proof_elem",
@@ -62,10 +60,10 @@ __all__ = [
 
 # --- primitives ---------------------------------------------------------------------------------
 
-EMPTY_ROOT = hashlib.sha256(b"\x03").digest()
+EMPTY_ROOT = hashlib.sha256(b"\x02").digest()
 """The root of the empty tree: a value no leaf or node can take (different domain byte)."""
 
-PROOF_ELEM_LEN = 34
+PROOF_ELEM_LEN = 33
 _KEY_BITS = 256
 
 # What a transition DID, recorded because it cannot be recovered -- see `TransitionLog`.
@@ -81,8 +79,9 @@ def _sha256(b: bytes) -> bytes:
     return hashlib.sha256(b).digest()
 
 
-def _u16(n: int) -> bytes:
-    return n.to_bytes(2, "big")
+def _bit_pos(n: int) -> bytes:
+    """A split bit in one byte: every position of a 256-bit key (`rust/trezor-ward`'s BitPos)."""
+    return bytes([n])
 
 
 def _lp(width: int, data: bytes) -> bytes:
@@ -110,47 +109,10 @@ def addr_bit(entry_key: bytes, bit: int) -> int:
     return (entry_key[bit // 8] >> (7 - (bit % 8))) & 1
 
 
-def _part_arms(part: object, what: str = "part") -> tuple:
-    """`(encoding, clear, sealed)` of a wire leaf part, refusing what the firmware refuses: an
-    unknown encoding, or both arms set. Dispatch is on `encoding`, never on field presence."""
-    encoding = getattr(part, "encoding", None)
-    encoding = 0 if encoding is None else encoding
-    if encoding not in (0, 1, 2):
-        raise ValueError("unknown leaf %s encoding: %r" % (what, encoding))
-    clear = getattr(part, "plaintext", None)
-    if clear is None:
-        clear = getattr(part, "plain", None)
-    sealed = getattr(part, "encrypted", None)
-    if sealed is not None and clear is not None:
-        raise ValueError("leaf %s sets both encodings" % what)
-    return encoding, clear, sealed
-
-
-def _part_bytes(part: object) -> bytes:
-    """A wire leaf part -> its canonical framing, for the commit preimage. Any disagreement with
-    the firmware would be a different root."""
-    encoding, clear, sealed = (1, None, None) if part is None else _part_arms(part)
-    # 0 = AEAD (12-byte nonce), 2 = SIV (no nonce): the same sealed framing, own encoding byte
-    if encoding in (0, 2) and sealed is not None:
-        return (
-            bytes([encoding])
-            + _lp(1, sealed.nonce or b"")
-            + _lp(1, sealed.tag or b"")
-            + _lp(4, sealed.ct or b"")
-        )
-    # plaintext, or the empty (deleted) part: no nonce, no tag
-    body = (getattr(clear, "content", None) or b"") if encoding == 1 else b""
-    return bytes([1]) + _lp(1, b"") + _lp(1, b"") + _lp(4, body)
-
-
-def commit_of(key_type: str, identity: object, content: object) -> bytes:
-    """The leaf commitment over a leaf's wire parts. `identity`/`content` may be None (empty)."""
-    return _sha256(
-        b"\x02"
-        + _lp(1, key_type.encode())
-        + _lp(4, _part_bytes(identity))
-        + _lp(4, _part_bytes(content))
-    )
+def value_digest(sealed_content: bytes) -> bytes:
+    """The leaf commitment: sha256(0x03 || sealed_content), over sealed bytes only, so a host
+    with no keys can compute it. The identity is not committed; entry_key authenticates it."""
+    return _sha256(b"\x03" + sealed_content)
 
 
 def leaf_hash(entry_key: bytes, commit: bytes) -> bytes:
@@ -160,8 +122,8 @@ def leaf_hash(entry_key: bytes, commit: bytes) -> bytes:
 
 
 def internal_hash(split_bit: int, left: bytes, right: bytes) -> bytes:
-    """internal = sha256(0x01 || u16be(split_bit) || left || right). Children are positional."""
-    return _sha256(b"\x01" + _u16(split_bit) + left + right)
+    """internal = sha256(0x01 || u8(split_bit) || left || right). Children are positional."""
+    return _sha256(b"\x01" + _bit_pos(split_bit) + left + right)
 
 
 def _join(split_bit: int, side: int, node: bytes, sibling: bytes) -> bytes:
@@ -172,17 +134,17 @@ def _join(split_bit: int, side: int, node: bytes, sibling: bytes) -> bytes:
 
 
 def proof_elem(split_bit: int, sibling: bytes) -> bytes:
-    """One proof element: u16be(split_bit) || sibling(32B)."""
+    """One proof element: u8(split_bit) || sibling(32B)."""
     _require32(sibling)
-    return _u16(split_bit) + sibling
+    return _bit_pos(split_bit) + sibling
 
 
 def parse_proof_elem(elem: bytes) -> tuple[int, bytes]:
-    """(split_bit, sibling). Exactly 34 bytes, or a sibling of the wrong width would shift the
+    """(split_bit, sibling). Exactly 33 bytes, or a sibling of the wrong width would shift the
     next node's preimage."""
     if len(elem) != PROOF_ELEM_LEN:
         raise WardTrieError("invalid proof element length")
-    return int.from_bytes(elem[0:2], "big"), bytes(elem[2:])
+    return elem[0], bytes(elem[1:])
 
 
 # --- verifier: the device's own rules ------------------------------------------------------------
@@ -435,14 +397,10 @@ class WardTrie(TransitionLog):
 
     # --- leaves ---
 
-    def set(self, entry_key: bytes, leaf: object, key_type: Optional[str] = None) -> None:
-        """Store the leaf the device built. `key_type` (inside the commitment) defaults to the one
-        its identity names, else "address"."""
-        if key_type is None:
-            key_type = getattr(leaf.identity, "key_type", None)
-        if key_type is None:
-            key_type = "address"
-        commit = commit_of(key_type, leaf.identity, leaf.content)
+    def set(self, entry_key: bytes, leaf: object) -> None:
+        """Store the leaf the device built. Only its sealed content is committed; the sealed
+        identity is kept beside it."""
+        commit = value_digest(leaf.content)
         self._commits[entry_key] = commit
         self._leaves[entry_key] = leaf_hash(entry_key, commit)
         self.blobs[entry_key] = leaf

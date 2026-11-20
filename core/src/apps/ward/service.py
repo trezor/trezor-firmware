@@ -21,6 +21,8 @@ if __debug__:
 if TYPE_CHECKING:
     from trezorio import WireInterface
 
+    from storage.cache_common import SessionlessCache
+
     from trezor import protobuf
     from trezor.messages import WardEntryAck, WardServiceOpen, WardServiceOpenAck
     from trezor.protobuf import MessageType as LoadedMessageType
@@ -40,7 +42,7 @@ RPC_TIMEOUT_MS = const(30_000)
 PROTOCOL_VERSION = 1
 
 
-def _binding_cache():
+def _binding_cache() -> "SessionlessCache":
     from storage.cache import get_sessionless_cache
 
     return get_sessionless_cache()
@@ -499,8 +501,8 @@ if utils.USE_WARD_SERVICE_THP:
 
 async def publish(
     entry_key: bytes,
-    identity: "protobuf.MessageType | None",
-    content: "protobuf.MessageType | None",
+    sealed_identity: bytes,
+    sealed_content: bytes,
     from_root: bytes | None,
     counter: int,
     new_root: bytes | None,
@@ -533,8 +535,8 @@ async def publish(
     answer = await _rpc(
         WardPublish(
             entry_key=entry_key,
-            identity=identity,
-            content=content,
+            sealed_identity=sealed_identity,
+            sealed_content=sealed_content,
             counter=counter,
             from_root=from_root,
             new_root=new_root,

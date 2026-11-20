@@ -7,6 +7,14 @@ enumerable); both names are tried. `get` never collapses "cannot read" into "abs
 """
 
 from micropython import const
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from trezor.messages import (
+        WardEraseCachedEntry,
+        WardQueueDeleteEntry,
+        WardQueueGetEntry,
+    )
 
 MISS = const(0)
 VALID = const(1)
@@ -480,7 +488,9 @@ def existing_value(status: int, entry: "StoredEntry | None") -> "tuple[str, bool
     return None
 
 
-async def lookup(msg) -> tuple:
+async def lookup(
+    msg: "WardQueueGetEntry | WardQueueDeleteEntry | WardEraseCachedEntry",
+) -> tuple:
     """`(app_id, identifier, key_type, status, entry)` for a request naming an entry. The key_type
     is the device's own, so a host cannot aim at another key space."""
     from .common import require_key

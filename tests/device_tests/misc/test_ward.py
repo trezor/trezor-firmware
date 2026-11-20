@@ -184,6 +184,7 @@ def _expected(br_name: str, final=m.Success, reveals: type | None = None) -> lis
 _WRITE_MSG = {
     "ward_set_entry": m.WardSetEntry,
     "ward_delete_entry": m.WardDeleteEntry,
+    "ward_set_pointer": m.WardSetPointer,
 }
 
 
@@ -436,18 +437,6 @@ def test_ward_pull_key_is_deterministic_and_domain_separated(session: Session):
     assert first != other
 
 
-@pytest.mark.models("core")
-def test_ward_rejects_nul_in_app_id(session: Session):
-    """The scope's 0x00 delimiters are only unambiguous while the fields exclude 0x00.
-
-    Otherwise the same preimage re-splits into a different tuple and two distinct
-    entries collide on one key. app_id arrives as a protobuf string and 0x00 is valid
-    UTF-8, so this is reachable input. Fails before any pull or screen.
-    """
-    with pytest.raises(exceptions.TrezorFailure, match="NUL"):
-        ward.get_entry(session, "bad\x00app", b"addr1", lambda _k: ward.Answer())
-
-
 # --- the leaf ---------------------------------------------------------------------
 
 
@@ -474,26 +463,18 @@ def test_ward_leaf_is_sealed_and_hides_what_it_holds(session: Session):
     """What the host ends up holding must reveal neither the identifier nor the value.
 
     This is the confidentiality property, asserted on the actual stored bytes rather than
-    inferred from the encoding byte -- a build that set encoding=0 while forgetting to
-    seal would pass a weaker check.
+    inferred from the scheme byte -- a build that set it while forgetting to seal would pass
+    a weaker check.
     """
     store = WardTrie()
     key = _seed(session, store, b"addr1", b"Petr_label")
     leaf = store.blobs[key]
 
-    # both parts sealed: the encrypted arm is set, the readable arm is not
+    # both parts sealed: scheme 0x01 (AES-256-GCM), a 12-byte nonce and a 16-byte tag
     for part in (leaf.identity, leaf.content):
-        # 0 = AEAD with a 12-byte nonce, 2 = SIV with none
-        assert (part.encoding or 0) in (0, 2)
-        assert len(part.encrypted.nonce or b"") == (12 if not part.encoding else 0)
-    assert leaf.identity.encrypted is not None and leaf.identity.plain is None
-    assert leaf.content.encrypted is not None and leaf.content.plaintext is None
-    assert len(leaf.identity.encrypted.tag) == 16
+        assert part[0] == 0x01 and len(part) >= 1 + 12 + 16
 
-    # key_type stays clear -- it has to, since it selects the keys that open the parts
-    assert leaf.identity.key_type == "address"
-
-    blob = leaf.identity.encrypted.ct + leaf.content.encrypted.ct
+    blob = leaf.identity + leaf.content
     assert b"addr1" not in blob
     assert b"Petr_label" not in blob
     assert _APP.encode() not in blob
@@ -512,12 +493,13 @@ def test_ward_sealed_leaf_really_contains_the_preimage(session: Session):
     key = _seed(session, store, b"addr1", b"Petr_label")
     leaf = store.blobs[key]
 
-    identity = open_identity(_K_IDENT, key, "address", leaf.identity)
+    identity = open_identity(_K_IDENT, leaf.identity)
     assert unpack_identity(identity) == (b"addr1", _APP.encode(), 0)
+    assert expected_entry_key(_K_PATH, _APP, b"addr1") == key
 
-    content = open_content(_K_DATA, key, "address", leaf.content)
-    c_leaf, value = unpack_content(content)
-    assert value == b"Petr_label"
+    content = open_content(_K_DATA, leaf.content)
+    entry_type, c_leaf, value = unpack_content(content)
+    assert (entry_type, value) == ("address", b"Petr_label")
     # the leaf is stamped with the counter it was written at, so a later per-leaf
     # staleness check has something to compare; nothing reads it yet
     assert c_leaf >= 1
@@ -525,18 +507,20 @@ def test_ward_sealed_leaf_really_contains_the_preimage(session: Session):
 
 @pytest.mark.models("core")
 def test_ward_sealed_part_is_bound_to_its_path(session: Session):
-    """A leaf sealed for one path cannot be opened as another's.
+    """A leaf cannot be served for another entry's path.
 
-    That binding is what stops a host from answering a request for one entry with a
-    different entry's leaf -- a swap the keyed path alone would not catch, since the host
-    chooses which stored bytes to hand back.
+    The AAD no longer names the path; the trie does: the leaf hash commits to the path and
+    the sealed content together, so a host answering a request for one entry with another
+    entry's leaf and genuine proof is refused against the root.
     """
     store = WardTrie()
     key = _seed(session, store, b"addr1", b"Petr_label")
-    other_key = expected_entry_key(_K_PATH, _APP, b"addr2")
 
-    with pytest.raises(Exception):
-        open_content(_K_DATA, other_key, "address", store.blobs[key].content)
+    def swapped(_entry_key: bytes) -> ward.Answer:
+        return ward.Answer(leaf=store.blobs[key], proof=store.membership_proof(key))
+
+    with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
+        ward.get_entry(session, _APP, b"addr2", swapped)
 
 
 @pytest.mark.models("core")
@@ -557,15 +541,157 @@ def test_ward_delete_returns_a_leaf_with_both_parts_empty(session: Session):
     )
     assert res.entry_key == key
     assert res.leaf is not None
-    # An empty part carries nothing, so there is nothing to seal and its encoding byte is
-    # immaterial -- it is plaintext-encoded even in a sealed build. The codec has to accept
-    # that, or a build would reject its own delete leaf.
-    assert res.leaf.content.plaintext.content == b""
-    assert res.leaf.identity.plain.identifier is None
+    # An empty sealed_content is the delete marker; a delete carries no identity either.
+    assert not res.leaf.content
+    assert not res.leaf.identity
 
     ward.apply(store, res)
     _confirm(session, store)
     assert len(store) == 0
+
+
+# --- pointers ----------------------------------------------------------------------
+
+
+def _point(
+    session: Session, store: WardTrie, identifier: bytes, target: bytes
+) -> tuple:
+    """Make `identifier` a pointer to `target` and adopt it, as `_seed` does for a value."""
+    _go_online(session, store)
+    res, rec = _write(
+        session,
+        store,
+        lambda p: ward.set_pointer(session, _APP, identifier, target, p),
+        "ward_set_pointer",
+    )
+    ward.apply(store, res)
+    _confirm(session, store)
+    return res, rec
+
+
+@pytest.mark.models("core")
+def test_ward_pointer_is_a_sealed_leaf_naming_its_target(session: Session):
+    """A pointer is an ordinary leaf at its own path whose content is entry_type "pointer"
+    and whose value is the target's leaf_identity, in the same app_id."""
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"Petr_label")
+    res, rec = _point(session, store, b"alias", b"addr1")
+
+    assert "add pointer" in rec.title
+    assert "addr1" in rec.squashed
+    assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"alias")
+    entry_type, _c_leaf, value = unpack_content(open_content(_K_DATA, res.leaf.content))
+    assert entry_type == "pointer"
+    assert unpack_identity(value) == (b"addr1", _APP.encode(), 0)
+    assert unpack_identity(open_identity(_K_IDENT, res.leaf.identity)) == (
+        b"alias",
+        _APP.encode(),
+        0,
+    )
+
+
+@pytest.mark.models("core")
+def test_ward_read_follows_a_pointer_one_hop(session: Session):
+    """A read of the pointer pulls the pointer, then its target against the same root, and
+    shows the target's value with what it points to."""
+    store = WardTrie()
+    target_key = _seed(session, store, b"addr1", b"Petr_label")
+    _point(session, store, b"alias", b"addr1")
+
+    asked: list = []
+
+    def provider(entry_key: bytes) -> ward.Answer:
+        asked.append(entry_key)
+        return ward.store_provider(store)(entry_key)
+
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(
+            reveal_prefix(m.WardGetEntry)
+            + [
+                m.WardEntryRequest,
+                m.WardEntryRequest,
+                m.ButtonRequest(name="ward_get_entry"),
+                m.Success,
+            ]
+        )
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
+        ward.get_entry(session, _APP, b"alias", provider)
+
+    assert asked == [expected_entry_key(_K_PATH, _APP, b"alias"), target_key]
+    assert "Petr_label" in rec.squashed
+    assert "addr1" in rec.squashed
+
+
+@pytest.mark.models("core")
+def test_ward_pointer_to_an_absent_target_reads_as_not_found(session: Session):
+    """The target need not exist when the pointer is written; reading it is then a proven
+    absence, not an error."""
+    store = WardTrie()
+    _seed(session, store, b"other", b"unrelated")
+    _point(session, store, b"alias", b"missing")
+
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(
+            reveal_prefix(m.WardGetEntry)
+            + [
+                m.WardEntryRequest,
+                m.WardEntryRequest,
+                m.ButtonRequest(name="ward_get_entry"),
+                m.Success,
+            ]
+        )
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
+        ward.get_entry(session, _APP, b"alias", ward.store_provider(store))
+    assert "not found" in rec.title
+
+
+@pytest.mark.models("core")
+def test_ward_pointer_to_a_pointer_is_refused(session: Session):
+    """Only one hop is followed: a chain fails the read rather than being walked."""
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"Petr_label")
+    _point(session, store, b"hop1", b"addr1")
+    _point(session, store, b"hop2", b"hop1")
+
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(
+            reveal_prefix(m.WardGetEntry)
+            + [m.WardEntryRequest, m.WardEntryRequest, m.Failure]
+        )
+        with pytest.raises(exceptions.TrezorFailure, match="another pointer"):
+            ward.get_entry(session, _APP, b"hop2", ward.store_provider(store))
+
+
+@pytest.mark.models("core")
+def test_ward_pointer_cannot_point_at_itself(session: Session):
+    store = WardTrie()
+    _go_online(session, store)
+    with pytest.raises(exceptions.TrezorFailure, match="itself"):
+        ward.set_pointer(session, _APP, b"loop", b"loop", ward.store_provider(store))
+
+
+@pytest.mark.models("core")
+def test_ward_overwriting_a_pointer_shows_what_it_pointed_to(session: Session):
+    """A value written over a pointer names the replaced target, not raw identity bytes."""
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"Petr_label")
+    _point(session, store, b"alias", b"addr1")
+
+    _go_online(session, store)
+    _res, rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"alias", b"plain_now", p),
+        "ward_set_entry",
+    )
+    assert "update entry" in rec.title
+    assert "->addr1" in rec.squashed
 
 
 @pytest.mark.models("core")
@@ -580,20 +706,9 @@ def test_ward_rejects_a_tampered_leaf(session: Session):
     store = WardTrie()
     key = _seed(session, store, b"addr1", b"Petr_label")
 
-    sealed = store.blobs[key].content.encrypted
-    flipped = bytes([sealed.ct[0] ^ 1]) + sealed.ct[1:]
-    store.set(
-        key,
-        ward.Leaf(
-            store.blobs[key].identity,
-            m.WardLeafContent(
-                encoding=store.blobs[key].content.encoding,
-                encrypted=m.WardEncryptedLeaf(
-                    nonce=sealed.nonce, tag=sealed.tag, ct=flipped
-                ),
-            ),
-        ),
-    )
+    sealed = store.blobs[key].content
+    flipped = sealed[:-1] + bytes([sealed[-1] ^ 1])
+    store.set(key, ward.Leaf(store.blobs[key].identity, flipped))
 
     with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
         ward.get_entry(session, _APP, b"addr1", ward.store_provider(store))
@@ -816,7 +931,7 @@ def test_ward_delete_entry_is_idempotent_on_a_proved_absence(session: Session):
 
     # the same empty leaf a real delete returns, so a host applies both the same way
     assert res.leaf is not None
-    assert res.leaf.content.plaintext.content == b""
+    assert not res.leaf.content
     # ...but nothing moved: no transition happened, so none was authorised
     assert res.auth_commit is None
     assert res.counter == before
@@ -3032,8 +3147,7 @@ def test_ward_batched_flush_publishes_one_transition_for_several_changes(session
     ]
     assert (res.from_counter, res.counter, res.remaining) == (start, start + 3, 0)
     stamps = [
-        unpack_content(open_content(_K_DATA, k, "address", leaf.content))[0]
-        for k, leaf in res.leaves
+        unpack_content(open_content(_K_DATA, leaf.content))[1] for k, leaf in res.leaves
     ]
     assert stamps == [start + 1, start + 2, start + 3]
 
@@ -3425,7 +3539,7 @@ def _branch_sibling_case(session: Session):
                 continue
             # the collapsing sibling is a branch exactly when removing this leaf leaves
             # more than one key on the other side of the deepest branch
-            split0 = int.from_bytes(proof[0][0:2], "big")
+            split0 = proof[0][0]  # one byte: u8(split_bit) || sibling
             others = [
                 k
                 for k in store.blobs
@@ -3755,10 +3869,9 @@ def test_ward_pin_needs_a_synced_session(session: Session):
 
     Refused before the device pulls at all, and flash is untouched.
     """
-    key = expected_entry_key(_K_PATH, _APP, b"addr1")
     leaf = ward.Leaf(
-        seal_identity(_K_IDENT, key, "address", b"addr1", _APP),
-        seal_content(_K_DATA, key, "address", b"replayed_value"),
+        seal_identity(_K_IDENT, b"addr1", _APP),
+        seal_content(_K_DATA, b"replayed_value"),
     )
     pulls = []
 
@@ -3786,14 +3899,8 @@ def test_ward_pin_rejects_a_forged_leaf(session: Session):
 
     key = expected_entry_key(_K_PATH, _APP, b"addr1")
     good = store.blobs[key]
-    forged = m.WardLeafContent(
-        encoding=0,
-        encrypted=m.WardEncryptedLeaf(
-            nonce=good.content.encrypted.nonce,
-            tag=good.content.encrypted.tag,
-            ct=bytes(len(good.content.encrypted.ct)),  # replaced ciphertext
-        ),
-    )
+    # same scheme, nonce and tag; replaced ciphertext
+    forged = good.content[:29] + bytes(len(good.content) - 29)
 
     def provider(entry_key: bytes) -> ward.Answer:
         answer = ward.store_provider(store)(entry_key)
@@ -4069,9 +4176,7 @@ def test_ward_flush_publishes_the_queued_change_sealed(session: Session):
     assert res.remaining == 0
 
     # the content really is sealed, and opens to what was queued
-    value = unpack_content(
-        open_content(_K_DATA, res.entry_key, "address", res.leaf.content)
-    )[1]
+    value = unpack_content(open_content(_K_DATA, res.leaf.content))[2]
     assert value == b"published_value"
 
 
@@ -4417,9 +4522,7 @@ def test_ward_a_restored_change_still_publishes(session: Session):
     _go_online(session, store)
     res = ward.flush_queue(session, ward.store_provider(store))
     assert res.remaining == 0
-    value = unpack_content(
-        open_content(_K_DATA, res.entry_key, "address", res.leaf.content)
-    )[1]
+    value = unpack_content(open_content(_K_DATA, res.leaf.content))[2]
     assert value == b"from_backup"
 
 
@@ -4789,9 +4892,7 @@ def test_ward_a_compact_record_is_published_when_it_is_named(session: Session):
     )
     assert res.remaining == 0
     assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr1")
-    value = unpack_content(
-        open_content(_K_DATA, res.entry_key, "address", res.leaf.content)
-    )[1]
+    value = unpack_content(open_content(_K_DATA, res.leaf.content))[2]
     assert value == b"needs_a_name"
 
 
@@ -4925,9 +5026,7 @@ def test_ward_a_named_flush_may_hand_over_the_same_change_twice(session: Session
     )
 
     assert first.entry_key == again.entry_key
-    value = unpack_content(
-        open_content(_K_DATA, again.entry_key, "address", again.leaf.content)
-    )[1]
+    value = unpack_content(open_content(_K_DATA, again.leaf.content))[2]
     assert value == b"offered_twice"
 
     # ...while the unnamed loop still considers it handed over

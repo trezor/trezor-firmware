@@ -6,24 +6,18 @@ from trezor.wire import DataError
 from ward_trie_model import CanonicalTrie
 
 from apps.ward.attest import EMPTY_ROOT
-from apps.ward.leaf import ENC_PLAINTEXT, commit_of
+from apps.ward.leaf import value_digest
 from apps.ward.trie import compute_new_root
-
-_KT = "address"
-
-
-def _part(body):
-    """A firmware Part: (encoding, nonce, tag, body). Plaintext, so no nonce or tag."""
-    return (ENC_PLAINTEXT, b"", b"", body)
 
 
 def _leaf(body):
-    """(key_type, id_part, val_part), the shape compute_new_root takes."""
-    return (_KT, None, _part(body))
+    """A sealed_content, the shape compute_new_root takes: scheme, nonce and tag, then `body`.
+    Never opened, so the bytes only need to be distinct."""
+    return b"\x01" + bytes(28) + body
 
 
 def _commit(body):
-    return commit_of(_KT, None, _part(body))
+    return value_digest(_leaf(body))
 
 
 class _Rng:
@@ -135,7 +129,7 @@ class TestWardTrieCanonicity(unittest.TestCase):
             proof = model.membership_proof(key) if key in live else None
             if proof:
                 for elem in proof:
-                    sb = int.from_bytes(elem[0:2], "big")
+                    sb = elem[0]
                     if sb > max_split_bit:
                         max_split_bit = sb
 
@@ -185,7 +179,7 @@ class TestWardTrieCanonicity(unittest.TestCase):
             key = sorted(live)[rng.below(len(live))]
             proof = model.membership_proof(key)
             for elem in proof:
-                sb = int.from_bytes(elem[0:2], "big")
+                sb = elem[0]
                 if sb > max_split_bit:
                     max_split_bit = sb
             counts["delete_last" if not proof else "delete"] += 1
@@ -278,7 +272,7 @@ class TestWardTrieCanonicity(unittest.TestCase):
     def test_the_model_agrees_with_the_firmware_on_an_empty_tree(self):
         """Both sides must spell "empty" the same way, or D2 reopens on one of them."""
         self.assertEqual(CanonicalTrie().root(), EMPTY_ROOT)
-        self.assertEqual(EMPTY_ROOT, sha256(b"\x03").digest())
+        self.assertEqual(EMPTY_ROOT, sha256(b"\x02").digest())
 
 
 if __name__ == "__main__":

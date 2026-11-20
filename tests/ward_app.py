@@ -69,6 +69,7 @@ _REVEALING_MESSAGES = frozenset(
         "WardGetEntry",
         "WardSetEntry",
         "WardDeleteEntry",
+        "WardSetPointer",
         "WardQueueGetEntry",
         "WardQueueSetEntry",
         "WardQueueDeleteEntry",

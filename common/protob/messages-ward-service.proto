@@ -190,8 +190,9 @@ message WardSyncRequired {
  */
 message WardPublish {
     optional bytes  entry_key   = 1;
-    optional WardLeafIdentity identity = 2;
-    optional WardLeafContent  content  = 3;
+    reserved 2, 3;                     // were the framed identity and content parts
+    optional bytes  sealed_identity = 11;
+    optional bytes  sealed_content  = 12;
     optional uint32 counter     = 4;   // the counter this transition reaches
 
     // 5 was `mac`, the K_mac commitment to the state reached. The WM holds roots now, and the

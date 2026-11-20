@@ -17,12 +17,13 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
         WARNING_UNVERIFIED,
         commit_change,
         display_bytes,
+        display_content,
         entry_props,
         online,
         pull_leaf,
         require_key,
     )
-    from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
+    from .keys import entry_key_for
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
@@ -31,25 +32,22 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
     if value is None:
         raise DataError("value is required")
 
-    key_type = ENTRY_TYPE_ADDRESS
-    entry_key = await entry_key_for(app_id, identifier, key_type)
+    entry_key = await entry_key_for(app_id, identifier)
 
     if not await online():
         raise DataError("WARD: sync first, or queue the change with WardQueueSetEntry")
 
-    old, old_leaf, material = await pull_leaf(entry_key, key_type)
+    old, old_leaf, material = await pull_leaf(entry_key)
 
     props = entry_props(app_id, identifier)
     if old is None:
         title = "Add entry"
     else:
         title = "Update entry"
-        props.append(("Replaces", display_bytes(old), True))
+        props.append(("Replaces", display_content(old), True))
     props.append(("New value", display_bytes(value), True))
     props.append(WARNING_UNVERIFIED)
 
     await confirm_properties("ward_set_entry", title, props)
 
-    return await commit_change(
-        entry_key, key_type, app_id, identifier, value, old_leaf, material
-    )
+    return await commit_change(entry_key, app_id, identifier, value, old_leaf, material)

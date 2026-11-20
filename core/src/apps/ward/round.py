@@ -164,7 +164,7 @@ def require_head_nonce() -> bytes:
 # callers pass the empty tree as None or EMPTY_ROOT and a raw comparison would never match.
 
 
-def _demotion_record(stored_counter: int, *step) -> bytes:
+def _demotion_record(stored_counter: int, *step: "int | bytes") -> bytes:
     from .codec import step_bytes, u32
 
     return b"\x01" + u32(stored_counter) + step_bytes(*step)

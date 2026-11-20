@@ -33,23 +33,20 @@ failure mode this specification exists to prevent.
 
 ## Hashing
 
-All hashes are SHA-256. `len8`/`len32` are unsigned big-endian length prefixes of that width;
-`u16be` is an unsigned 16-bit big-endian integer.
+All hashes are SHA-256. `u8(split_bit)` is the bit position in one byte, which holds every
+position of a 32-byte key; this is `rust/trezor-ward`'s `BitPos` encoding.
 
 ```
-part      = encoding(1B) ‖ len8(nonce) ‖ nonce ‖ len8(tag) ‖ tag ‖ len32(body) ‖ body
-            encoding: 0 = AEAD (12-byte nonce), 1 = plaintext, 2 = SIV (empty nonce)
+sealed_content = 0x01 ‖ nonce(12B) ‖ tag(16B) ‖ AES-256-GCM ciphertext   (ward-leaf.md)
 
-commit    = sha256( 0x02 ‖ len8(key_type) ‖ key_type
-                         ‖ len32(id_part)  ‖ id_part
-                         ‖ len32(val_part) ‖ val_part )
+commit    = value_digest = sha256( 0x03 ‖ sealed_content )
 
 leaf      = sha256( 0x00 ‖ entry_key ‖ commit )
 
-internal  = sha256( 0x01 ‖ u16be(split_bit) ‖ left ‖ right )
+internal  = sha256( 0x01 ‖ u8(split_bit) ‖ left ‖ right )
 
-EMPTY_ROOT = sha256( 0x03 )
-           = 084fed08b978af4d7d196a7446a86b58009e636b611db16211b65a9aadff29c5
+EMPTY_ROOT = sha256( 0x02 )
+           = dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986
 ```
 
 **Every opaque operand is exactly 32 bytes, and that is load-bearing.** `entry_key`,
@@ -62,11 +59,13 @@ routing reads bits 0..255. A host could therefore pass the target's own **member
 off as proof of **absence**, hiding any present entry on every read. Implementations must
 reject wrong-width operands in the hashing primitives themselves rather than at call sites.
 
-The four tags `0x00`–`0x03` are disjoint, so no node can be reinterpreted as a node of
-another kind, so a leaf hash can never be passed off as an internal one or the reverse.
+The four tags `0x00`–`0x03` (leaf, internal, empty, value) are disjoint, so a leaf hash can
+never be passed off as an internal one or the reverse, and no fold or value digest can produce
+the empty root. These are the tags of `rust/trezor-ward` on `jjanku/ward/trie`.
 
-`commit` is over the **encoded parts**, not the plaintext value. That is what lets a host
-serve proofs for entries it cannot read.
+`commit` is over the **sealed content** only, not the plaintext value, and not the sealed
+identity, which is stored beside the leaf: `entry_key` already authenticates the identity. That
+is what lets a host serve proofs for entries it cannot read.
 
 ## Bit order
 
@@ -122,10 +121,10 @@ is needed to say so, because there is no leaf to exhibit.
 
 ## Proofs
 
-A proof is a list of 34-byte elements, ordered **leaf-to-root**:
+A proof is a list of 33-byte elements, ordered **leaf-to-root**:
 
 ```
-element = u16be(split_bit) ‖ sibling(32B)
+element = u8(split_bit) ‖ sibling(32B)
 ```
 
 Walking the list in reverse (root-to-leaf), a well-formed proof has `split_bit` strictly
@@ -206,9 +205,9 @@ Two consequences, and they are why this shape was chosen over a WARD-owned log:
 
 **The membership rule is the store's, not ours.** "Build the trie over rows with
 `isDeleted = false`" is the same filter every other consumer of that store applies. A
-WARD-specific rule — *"a row with an empty content part is not a leaf"* — would be a second,
-private rule that can disagree with the first. The device's empty-parts leaf (`WardLeafAck`
-with both parts empty) is the **signal to set the flag**, never an independent test for tree
+WARD-specific rule — *"a row with an empty sealed content is not a leaf"* — would be a second,
+private rule that can disagree with the first. The device's empty leaf (`WardLeafAck` with an
+empty `sealed_content`) is the **signal to set the flag**, never an independent test for tree
 membership.
 
 **The tombstone is not a WARD decision.** The store retains history however we encode a
@@ -224,7 +223,7 @@ what lets a replica rebuild after losing its materialised state. Two requirement
   clock, and once two devices write, that order is not the WARD counter's order. "State at
   counter *N*" means, per row, the latest history value whose counter ≤ *N*.
 - **Rows carry full sealed leaves, not diffs.** Replay must reconstruct each live leaf's
-  `commit`, which is computed over the encoded parts. `isDeleted` is itself a column with
+  `commit`, which is computed over the sealed content. `isDeleted` is itself a column with
   history, so replay knows whether a row was deleted at counter *N* without anything extra.
 
 ### What replay does and does not prove

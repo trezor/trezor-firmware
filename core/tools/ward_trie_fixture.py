@@ -80,22 +80,17 @@ sys.path.insert(0, str(ROOT / "core" / "tests"))
 from ward_trie_model import CanonicalTrie  # noqa: E402
 
 from apps.ward.attest import EMPTY_ROOT  # noqa: E402
-from apps.ward.leaf import ENC_PLAINTEXT, commit_of  # noqa: E402
+from apps.ward.leaf import value_digest  # noqa: E402
 from apps.ward.trie import compute_new_root  # noqa: E402
 
-KT = "address"
 
-
-def part(body: bytes):
-    return (ENC_PLAINTEXT, b"", b"", body)
-
-
-def leaf(body: bytes):
-    return (KT, None, part(body))
+def leaf(body: bytes) -> bytes:
+    """The value IS the leaf's sealed_content: the trie never opens it."""
+    return body
 
 
 def commit(body: bytes) -> bytes:
-    return commit_of(KT, None, part(body))
+    return value_digest(body)
 
 
 # --- key geometries -----------------------------------------------------------------
@@ -171,7 +166,7 @@ SCRIPT = (
 def build(keys: list[bytes]) -> list[dict]:
     """Replay SCRIPT, deriving and rebuilding in lockstep. Returns the recorded steps."""
     model = CanonicalTrie()
-    root = None
+    root = EMPTY_ROOT  # no root is ever read as empty: the empty tree has its own
     live: dict[bytes, bytes] = {}
     steps = []
 
@@ -230,17 +225,14 @@ def generate() -> dict:
             "docs/ward/ward-trie.md for the hashing and structure rules, and "
             "core/tools/ward_trie_fixture.py to regenerate."
         ),
-        "key_type": KT,
         "empty_root": EMPTY_ROOT.hex(),
         "leaf_encoding": {
             "note": (
-                "Each value below is the body of a PLAINTEXT content part; the identity "
-                "part is empty. commit = sha256(0x02 || len8(key_type) || key_type || "
-                "len32(id_part) || id_part || len32(val_part) || val_part), where a part is "
-                "encoding(1B) || len8(nonce) || nonce || len8(tag) || tag || len32(body) || "
-                "body. Values are ASCII so an implementer can encode them directly."
+                "Each value below is a leaf's sealed_content bytes, used as they are: the "
+                "trie never opens them. commit = value_digest = sha256(0x03 || "
+                "sealed_content); leaf = sha256(0x00 || entry_key || commit). Values are "
+                "ASCII so an implementer can encode them directly."
             ),
-            "encoding_plaintext": ENC_PLAINTEXT,
         },
         "geometries": {
             name: {

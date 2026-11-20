@@ -8053,115 +8053,26 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WardDeleteEntry"]:
             return isinstance(msg, cls)
 
-    class WardEncryptedLeaf(protobuf.MessageType):
-        nonce: "AnyBytes | None"
-        tag: "AnyBytes | None"
-        ct: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            nonce: "AnyBytes | None" = None,
-            tag: "AnyBytes | None" = None,
-            ct: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WardEncryptedLeaf"]:
-            return isinstance(msg, cls)
-
-    class WardPlaintextLeaf(protobuf.MessageType):
-        content: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            content: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WardPlaintextLeaf"]:
-            return isinstance(msg, cls)
-
-    class WardLeafContent(protobuf.MessageType):
-        encoding: "int | None"
-        encrypted: "WardEncryptedLeaf | None"
-        plaintext: "WardPlaintextLeaf | None"
-
-        def __init__(
-            self,
-            *,
-            encoding: "int | None" = None,
-            encrypted: "WardEncryptedLeaf | None" = None,
-            plaintext: "WardPlaintextLeaf | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WardLeafContent"]:
-            return isinstance(msg, cls)
-
-    class WardPlainIdentity(protobuf.MessageType):
-        identifier: "AnyBytes | None"
+    class WardSetPointer(protobuf.MessageType):
         app_id: "str | None"
-        device_id: "int | None"
+        identifier: "AnyBytes | None"
+        target_identifier: "AnyBytes | None"
 
         def __init__(
             self,
             *,
-            identifier: "AnyBytes | None" = None,
             app_id: "str | None" = None,
-            device_id: "int | None" = None,
+            identifier: "AnyBytes | None" = None,
+            target_identifier: "AnyBytes | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WardPlainIdentity"]:
-            return isinstance(msg, cls)
-
-    class WardEncryptedIdentity(protobuf.MessageType):
-        nonce: "AnyBytes | None"
-        tag: "AnyBytes | None"
-        ct: "AnyBytes | None"
-
-        def __init__(
-            self,
-            *,
-            nonce: "AnyBytes | None" = None,
-            tag: "AnyBytes | None" = None,
-            ct: "AnyBytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WardEncryptedIdentity"]:
-            return isinstance(msg, cls)
-
-    class WardLeafIdentity(protobuf.MessageType):
-        encoding: "int | None"
-        key_type: "str | None"
-        encrypted: "WardEncryptedIdentity | None"
-        plain: "WardPlainIdentity | None"
-
-        def __init__(
-            self,
-            *,
-            encoding: "int | None" = None,
-            key_type: "str | None" = None,
-            encrypted: "WardEncryptedIdentity | None" = None,
-            plain: "WardPlainIdentity | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["WardLeafIdentity"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardSetPointer"]:
             return isinstance(msg, cls)
 
     class WardEntryAck(protobuf.MessageType):
-        identity: "WardLeafIdentity | None"
-        content: "WardLeafContent | None"
+        sealed_content: "AnyBytes | None"
         proof: "list[AnyBytes]"
         witness_entry_key: "AnyBytes | None"
         witness_commit: "AnyBytes | None"
@@ -8170,8 +8081,7 @@ if TYPE_CHECKING:
             self,
             *,
             proof: "list[AnyBytes] | None" = None,
-            identity: "WardLeafIdentity | None" = None,
-            content: "WardLeafContent | None" = None,
+            sealed_content: "AnyBytes | None" = None,
             witness_entry_key: "AnyBytes | None" = None,
             witness_commit: "AnyBytes | None" = None,
         ) -> None:
@@ -8407,15 +8317,15 @@ if TYPE_CHECKING:
 
     class WardBatchedLeaf(protobuf.MessageType):
         entry_key: "AnyBytes | None"
-        identity: "WardLeafIdentity | None"
-        content: "WardLeafContent | None"
+        sealed_identity: "AnyBytes | None"
+        sealed_content: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             entry_key: "AnyBytes | None" = None,
-            identity: "WardLeafIdentity | None" = None,
-            content: "WardLeafContent | None" = None,
+            sealed_identity: "AnyBytes | None" = None,
+            sealed_content: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8425,8 +8335,8 @@ if TYPE_CHECKING:
 
     class WardLeafAck(protobuf.MessageType):
         entry_key: "AnyBytes"
-        identity: "WardLeafIdentity | None"
-        content: "WardLeafContent | None"
+        sealed_identity: "AnyBytes | None"
+        sealed_content: "AnyBytes | None"
         counter: "int | None"
         auth_commit: "AnyBytes | None"
         wm_sig: "AnyBytes | None"
@@ -8435,8 +8345,8 @@ if TYPE_CHECKING:
             self,
             *,
             entry_key: "AnyBytes",
-            identity: "WardLeafIdentity | None" = None,
-            content: "WardLeafContent | None" = None,
+            sealed_identity: "AnyBytes | None" = None,
+            sealed_content: "AnyBytes | None" = None,
             counter: "int | None" = None,
             auth_commit: "AnyBytes | None" = None,
             wm_sig: "AnyBytes | None" = None,
@@ -8449,8 +8359,8 @@ if TYPE_CHECKING:
 
     class WardFlushQueueAck(protobuf.MessageType):
         entry_key: "AnyBytes | None"
-        identity: "WardLeafIdentity | None"
-        content: "WardLeafContent | None"
+        sealed_identity: "AnyBytes | None"
+        sealed_content: "AnyBytes | None"
         counter: "int | None"
         auth_commit: "AnyBytes | None"
         remaining: "int"
@@ -8464,8 +8374,8 @@ if TYPE_CHECKING:
             remaining: "int",
             leaves: "list[WardBatchedLeaf] | None" = None,
             entry_key: "AnyBytes | None" = None,
-            identity: "WardLeafIdentity | None" = None,
-            content: "WardLeafContent | None" = None,
+            sealed_identity: "AnyBytes | None" = None,
+            sealed_content: "AnyBytes | None" = None,
             counter: "int | None" = None,
             auth_commit: "AnyBytes | None" = None,
             wm_sig: "AnyBytes | None" = None,
@@ -8813,8 +8723,8 @@ if TYPE_CHECKING:
 
     class WardPublish(protobuf.MessageType):
         entry_key: "AnyBytes | None"
-        identity: "WardLeafIdentity | None"
-        content: "WardLeafContent | None"
+        sealed_identity: "AnyBytes | None"
+        sealed_content: "AnyBytes | None"
         counter: "int | None"
         auth_commit: "AnyBytes | None"
         wm_sig: "AnyBytes | None"
@@ -8826,8 +8736,8 @@ if TYPE_CHECKING:
             self,
             *,
             entry_key: "AnyBytes | None" = None,
-            identity: "WardLeafIdentity | None" = None,
-            content: "WardLeafContent | None" = None,
+            sealed_identity: "AnyBytes | None" = None,
+            sealed_content: "AnyBytes | None" = None,
             counter: "int | None" = None,
             auth_commit: "AnyBytes | None" = None,
             wm_sig: "AnyBytes | None" = None,

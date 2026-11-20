@@ -2,11 +2,12 @@
 
 A path-compressed binary trie keyed by the 32-byte entry_key:
 
-    leaf     = sha256(0x00 || entry_key || commit)          -- see leaf.py
-    internal = sha256(0x01 || u16be(split_bit) || left || right)
+    leaf     = sha256(0x00 || entry_key || value_digest)    -- see leaf.py
+    internal = sha256(0x01 || u8(split_bit) || left || right)
 
-Children are positional (left = 0 branch). A proof is a list of 34-byte elements,
-`u16be(split_bit) || sibling(32B)`, in LEAF-TO-ROOT order. The device only verifies proofs
+Children are positional (left = 0 branch). A proof is a list of 33-byte elements,
+`u8(split_bit) || sibling(32B)`, in LEAF-TO-ROOT order. One byte holds every bit position of a
+32-byte key; this is `rust/trezor-ward`'s `BitPos` encoding. The device only verifies proofs
 against a root it already trusts; conformance vectors are pinned in `core/tests/test_apps.ward.py`.
 
 split_bit is IN THE HASH, which is what stops a host relabelling the bits a proof claims to
@@ -19,12 +20,7 @@ adopted through `rollback` was not derived here, so a genuine old leaf on the wr
 branch proves absent until a later delete promotes it back.
 """
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .leaf import Part
-
-PROOF_ELEM_LEN = 34
+PROOF_ELEM_LEN = 33
 _MAX_BITS = 256
 
 
@@ -36,7 +32,7 @@ def addr_bit(entry_key: bytes, bit: int) -> int:
 def internal_hash(split_bit: int, left: bytes, right: bytes) -> bytes:
     from trezor.crypto.hashlib import sha256
 
-    return sha256(b"\x01" + split_bit.to_bytes(2, "big") + left + right).digest()
+    return sha256(b"\x01" + bytes([split_bit]) + left + right).digest()
 
 
 def _parse_proof_elem(elem: bytes) -> "tuple[int, bytes]":
@@ -44,7 +40,7 @@ def _parse_proof_elem(elem: bytes) -> "tuple[int, bytes]":
 
     if len(elem) != PROOF_ELEM_LEN:
         raise DataError("WARD: invalid proof element length")
-    return int.from_bytes(elem[0:2], "big"), bytes(elem[2:])
+    return elem[0], bytes(elem[1:])
 
 
 def validate_proof_shape(proof: "list[bytes]") -> "list[tuple[int, bytes]]":
@@ -78,7 +74,7 @@ def reconstruct(start_hash: bytes, proof: "list[bytes]", entry_key: bytes) -> by
     return _fold(start_hash, reversed(validate_proof_shape(proof)), entry_key)
 
 
-def _fold(node: bytes, steps, path: bytes) -> bytes:
+def _fold(node: bytes, steps: "list[tuple[int, bytes]]", path: bytes) -> bytes:
     """Hash `node` up through leaf-to-root `(split_bit, sibling)` steps, sided by `path`."""
     for split_bit, sibling in steps:
         if addr_bit(path, split_bit) == 0:
@@ -90,16 +86,14 @@ def _fold(node: bytes, steps, path: bytes) -> bytes:
 
 def verify_membership(
     entry_key: bytes,
-    key_type: str,
-    id_part: "Part | None",
-    val_part: "Part | None",
+    sealed_content: bytes,
     proof: "list[bytes]",
     expected_root: bytes,
 ) -> bool:
     """Is this leaf in the tree with this root? False if wrong; DataError if malformed."""
     from .leaf import leaf_hash
 
-    node = leaf_hash(entry_key, key_type, id_part, val_part)
+    node = leaf_hash(entry_key, sealed_content)
     return reconstruct(node, proof, entry_key) == expected_root
 
 
@@ -160,16 +154,16 @@ def verify_nonmembership(
     )
 
 
-def _leaf_of(entry_key: bytes, leaf) -> bytes:
+def _leaf_of(entry_key: bytes, sealed_content: bytes) -> bytes:
     from .leaf import leaf_hash
 
-    return leaf_hash(entry_key, leaf[0], leaf[1], leaf[2])
+    return leaf_hash(entry_key, sealed_content)
 
 
 def compute_new_root(
     entry_key: bytes,
-    old_leaf,
-    new_leaf,
+    old_leaf: "bytes | None",
+    new_leaf: "bytes | None",
     proof: "list[bytes]",
     stored_root: bytes,
     witness_entry_key: bytes | None = None,
@@ -177,8 +171,7 @@ def compute_new_root(
 ) -> bytes:
     """Verify the CURRENT state against `stored_root`, then derive the root replacing it.
 
-    `old_leaf`/`new_leaf` are (key_type, id_part, val_part) or None (None old = insert, None
-    new = delete). Returns a root (EMPTY_ROOT when emptied, never None); raises on failure.
+    `old_leaf`/`new_leaf` are the sealed_content or None (None old = insert, None new = delete). Returns a root (EMPTY_ROOT when emptied, never None); raises on failure.
     Except for the first insert into an empty tree, the host must prove the current leaf or
     absence before anything is derived.
     """

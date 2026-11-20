@@ -348,6 +348,7 @@ if not utils.BITCOIN_ONLY:
     WardChainLinkAck = 2346
     WardRejoin = 2347
     WardRejoinAck = 2348
+    WardSetPointer = 2349
     WardResetApp = 2343
     WardResetAppAck = 2344
     DisplayAddress = 2322

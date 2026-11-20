@@ -874,6 +874,7 @@ class MessageType(IntEnum):
     WardChainLinkAck = 2346
     WardRejoin = 2347
     WardRejoinAck = 2348
+    WardSetPointer = 2349
     WardResetApp = 2343
     WardResetAppAck = 2344
     DisplayAddress = 2322
@@ -10143,128 +10144,30 @@ class WardDeleteEntry(protobuf.MessageType):
         self.identifier = identifier
 
 
-class WardEncryptedLeaf(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+class WardSetPointer(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2349
     FIELDS = {
-        1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("tag", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("ct", "bytes", repeated=False, required=False, default=None),
+        1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("target_identifier", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        nonce: Optional["bytes"] = None,
-        tag: Optional["bytes"] = None,
-        ct: Optional["bytes"] = None,
-    ) -> None:
-        self.nonce = nonce
-        self.tag = tag
-        self.ct = ct
-
-
-class WardPlaintextLeaf(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("content", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        content: Optional["bytes"] = None,
-    ) -> None:
-        self.content = content
-
-
-class WardLeafContent(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("encoding", "uint32", repeated=False, required=False, default=None),
-        2: protobuf.Field("encrypted", "WardEncryptedLeaf", repeated=False, required=False, default=None),
-        3: protobuf.Field("plaintext", "WardPlaintextLeaf", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        encoding: Optional["int"] = None,
-        encrypted: Optional["WardEncryptedLeaf"] = None,
-        plaintext: Optional["WardPlaintextLeaf"] = None,
-    ) -> None:
-        self.encoding = encoding
-        self.encrypted = encrypted
-        self.plaintext = plaintext
-
-
-class WardPlainIdentity(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
-        3: protobuf.Field("device_id", "uint32", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        identifier: Optional["bytes"] = None,
         app_id: Optional["str"] = None,
-        device_id: Optional["int"] = None,
+        identifier: Optional["bytes"] = None,
+        target_identifier: Optional["bytes"] = None,
     ) -> None:
-        self.identifier = identifier
         self.app_id = app_id
-        self.device_id = device_id
-
-
-class WardEncryptedIdentity(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("tag", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("ct", "bytes", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        nonce: Optional["bytes"] = None,
-        tag: Optional["bytes"] = None,
-        ct: Optional["bytes"] = None,
-    ) -> None:
-        self.nonce = nonce
-        self.tag = tag
-        self.ct = ct
-
-
-class WardLeafIdentity(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("encoding", "uint32", repeated=False, required=False, default=None),
-        2: protobuf.Field("key_type", "string", repeated=False, required=False, default=None),
-        3: protobuf.Field("encrypted", "WardEncryptedIdentity", repeated=False, required=False, default=None),
-        4: protobuf.Field("plain", "WardPlainIdentity", repeated=False, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        encoding: Optional["int"] = None,
-        key_type: Optional["str"] = None,
-        encrypted: Optional["WardEncryptedIdentity"] = None,
-        plain: Optional["WardPlainIdentity"] = None,
-    ) -> None:
-        self.encoding = encoding
-        self.key_type = key_type
-        self.encrypted = encrypted
-        self.plain = plain
+        self.identifier = identifier
+        self.target_identifier = target_identifier
 
 
 class WardEntryAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2302
     FIELDS = {
-        2: protobuf.Field("identity", "WardLeafIdentity", repeated=False, required=False, default=None),
-        3: protobuf.Field("content", "WardLeafContent", repeated=False, required=False, default=None),
+        12: protobuf.Field("sealed_content", "bytes", repeated=False, required=False, default=None),
         4: protobuf.Field("proof", "bytes", repeated=True, required=False, default=None),
         5: protobuf.Field("witness_entry_key", "bytes", repeated=False, required=False, default=None),
         6: protobuf.Field("witness_commit", "bytes", repeated=False, required=False, default=None),
@@ -10274,14 +10177,12 @@ class WardEntryAck(protobuf.MessageType):
         self,
         *,
         proof: Optional[Sequence["bytes"]] = None,
-        identity: Optional["WardLeafIdentity"] = None,
-        content: Optional["WardLeafContent"] = None,
+        sealed_content: Optional["bytes"] = None,
         witness_entry_key: Optional["bytes"] = None,
         witness_commit: Optional["bytes"] = None,
     ) -> None:
         self.proof: Sequence["bytes"] = proof if proof is not None else []
-        self.identity = identity
-        self.content = content
+        self.sealed_content = sealed_content
         self.witness_entry_key = witness_entry_key
         self.witness_commit = witness_commit
 
@@ -10532,28 +10433,28 @@ class WardBatchedLeaf(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("identity", "WardLeafIdentity", repeated=False, required=False, default=None),
-        3: protobuf.Field("content", "WardLeafContent", repeated=False, required=False, default=None),
+        4: protobuf.Field("sealed_identity", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("sealed_content", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         entry_key: Optional["bytes"] = None,
-        identity: Optional["WardLeafIdentity"] = None,
-        content: Optional["WardLeafContent"] = None,
+        sealed_identity: Optional["bytes"] = None,
+        sealed_content: Optional["bytes"] = None,
     ) -> None:
         self.entry_key = entry_key
-        self.identity = identity
-        self.content = content
+        self.sealed_identity = sealed_identity
+        self.sealed_content = sealed_content
 
 
 class WardLeafAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2305
     FIELDS = {
         1: protobuf.Field("entry_key", "bytes", repeated=False, required=True),
-        2: protobuf.Field("identity", "WardLeafIdentity", repeated=False, required=False, default=None),
-        3: protobuf.Field("content", "WardLeafContent", repeated=False, required=False, default=None),
+        11: protobuf.Field("sealed_identity", "bytes", repeated=False, required=False, default=None),
+        12: protobuf.Field("sealed_content", "bytes", repeated=False, required=False, default=None),
         4: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
         6: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
         10: protobuf.Field("wm_sig", "bytes", repeated=False, required=False, default=None),
@@ -10563,15 +10464,15 @@ class WardLeafAck(protobuf.MessageType):
         self,
         *,
         entry_key: "bytes",
-        identity: Optional["WardLeafIdentity"] = None,
-        content: Optional["WardLeafContent"] = None,
+        sealed_identity: Optional["bytes"] = None,
+        sealed_content: Optional["bytes"] = None,
         counter: Optional["int"] = None,
         auth_commit: Optional["bytes"] = None,
         wm_sig: Optional["bytes"] = None,
     ) -> None:
         self.entry_key = entry_key
-        self.identity = identity
-        self.content = content
+        self.sealed_identity = sealed_identity
+        self.sealed_content = sealed_content
         self.counter = counter
         self.auth_commit = auth_commit
         self.wm_sig = wm_sig
@@ -10581,8 +10482,8 @@ class WardFlushQueueAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2329
     FIELDS = {
         1: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("identity", "WardLeafIdentity", repeated=False, required=False, default=None),
-        3: protobuf.Field("content", "WardLeafContent", repeated=False, required=False, default=None),
+        12: protobuf.Field("sealed_identity", "bytes", repeated=False, required=False, default=None),
+        13: protobuf.Field("sealed_content", "bytes", repeated=False, required=False, default=None),
         4: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
         6: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
         8: protobuf.Field("remaining", "uint32", repeated=False, required=True),
@@ -10597,8 +10498,8 @@ class WardFlushQueueAck(protobuf.MessageType):
         remaining: "int",
         leaves: Optional[Sequence["WardBatchedLeaf"]] = None,
         entry_key: Optional["bytes"] = None,
-        identity: Optional["WardLeafIdentity"] = None,
-        content: Optional["WardLeafContent"] = None,
+        sealed_identity: Optional["bytes"] = None,
+        sealed_content: Optional["bytes"] = None,
         counter: Optional["int"] = None,
         auth_commit: Optional["bytes"] = None,
         wm_sig: Optional["bytes"] = None,
@@ -10607,8 +10508,8 @@ class WardFlushQueueAck(protobuf.MessageType):
         self.leaves: Sequence["WardBatchedLeaf"] = leaves if leaves is not None else []
         self.remaining = remaining
         self.entry_key = entry_key
-        self.identity = identity
-        self.content = content
+        self.sealed_identity = sealed_identity
+        self.sealed_content = sealed_content
         self.counter = counter
         self.auth_commit = auth_commit
         self.wm_sig = wm_sig
@@ -10988,8 +10889,8 @@ class WardPublish(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2336
     FIELDS = {
         1: protobuf.Field("entry_key", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("identity", "WardLeafIdentity", repeated=False, required=False, default=None),
-        3: protobuf.Field("content", "WardLeafContent", repeated=False, required=False, default=None),
+        11: protobuf.Field("sealed_identity", "bytes", repeated=False, required=False, default=None),
+        12: protobuf.Field("sealed_content", "bytes", repeated=False, required=False, default=None),
         4: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
         6: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
         7: protobuf.Field("wm_sig", "bytes", repeated=False, required=False, default=None),
@@ -11002,8 +10903,8 @@ class WardPublish(protobuf.MessageType):
         self,
         *,
         entry_key: Optional["bytes"] = None,
-        identity: Optional["WardLeafIdentity"] = None,
-        content: Optional["WardLeafContent"] = None,
+        sealed_identity: Optional["bytes"] = None,
+        sealed_content: Optional["bytes"] = None,
         counter: Optional["int"] = None,
         auth_commit: Optional["bytes"] = None,
         wm_sig: Optional["bytes"] = None,
@@ -11012,8 +10913,8 @@ class WardPublish(protobuf.MessageType):
         new_root: Optional["bytes"] = None,
     ) -> None:
         self.entry_key = entry_key
-        self.identity = identity
-        self.content = content
+        self.sealed_identity = sealed_identity
+        self.sealed_content = sealed_content
         self.counter = counter
         self.auth_commit = auth_commit
         self.wm_sig = wm_sig

@@ -1,10 +1,8 @@
 {
   "_comment": "WARD trie canonicity conformance vectors. Replay `steps` in order against your own implementation and compare `root` after each one. See docs/ward/ward-trie.md for the hashing and structure rules, and core/tools/ward_trie_fixture.py to regenerate.",
-  "key_type": "address",
-  "empty_root": "084fed08b978af4d7d196a7446a86b58009e636b611db16211b65a9aadff29c5",
+  "empty_root": "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986",
   "leaf_encoding": {
-    "note": "Each value below is the body of a PLAINTEXT content part; the identity part is empty. commit = sha256(0x02 || len8(key_type) || key_type || len32(id_part) || id_part || len32(val_part) || val_part), where a part is encoding(1B) || len8(nonce) || nonce || len8(tag) || tag || len32(body) || body. Values are ASCII so an implementer can encode them directly.",
-    "encoding_plaintext": 1
+    "note": "Each value below is a leaf's sealed_content bytes, used as they are: the trie never opens them. commit = value_digest = sha256(0x03 || sealed_content); leaf = sha256(0x00 || entry_key || commit). Values are ASCII so an implementer can encode them directly."
   },
   "geometries": {
     "random": {
@@ -24,136 +22,136 @@
           "key_index": 0,
           "value": "a0",
           "witness_key_index": null,
-          "root": "9ce13c87eb7ec937d94e556191edc6bb94e159f44a7c8e4f4ef00e8ea8b564fb"
+          "root": "0134d6a205fa4f619f400bbe9beae1f922d6b7947a12b9a85b93c6c3fb130651"
         },
         {
           "op": "insert",
           "key_index": 5,
           "value": "a5",
           "witness_key_index": 0,
-          "root": "363402ba21245114d51be515b7b4ac3a7c0db471d446a81430f05fbf8437c2ac"
+          "root": "43616c04b1a5ae8b459bb955e7133f73b40d70d213a3a57ac5bd95ff80754271"
         },
         {
           "op": "insert",
           "key_index": 2,
           "value": "a2",
           "witness_key_index": 5,
-          "root": "f28b61716bed461a62496bc8785f58e23d1982c59973675c69887fd0a80b5aaa"
+          "root": "2af46ec28e5359aaec1ca9a5720fb86921e14353f79c13b03c53ce10304c0b32"
         },
         {
           "op": "insert",
           "key_index": 7,
           "value": "a7",
           "witness_key_index": 2,
-          "root": "e996a86bef9a947ede3dc102a6b0b134998b42474778d134a606695595258b63"
+          "root": "1f9f4780f20aca86a6a2d7bf79f9254c6a0341c3ff25e76dd564b626c8f2f88c"
         },
         {
           "op": "insert",
           "key_index": 1,
           "value": "a1",
           "witness_key_index": 0,
-          "root": "56cfd005db9c35351eb2c98e218a49b72b8a0e4036ac5375c3139b9b471ba3a7"
+          "root": "72927ce9a01d3ea5b8502f6c732b425191726e36680cea02402aa47b800235b8"
         },
         {
           "op": "insert",
           "key_index": 3,
           "value": "a3",
           "witness_key_index": 1,
-          "root": "fe4608277b838a596acc6e3e00142f1a6cb168ba444cab58d8f74cbee53c639c"
+          "root": "a7696c8084e3863b6cf6c17fee3e92d799324869173a92f5fb6ff6578c8fe3fe"
         },
         {
           "op": "insert",
           "key_index": 6,
           "value": "a6",
           "witness_key_index": 0,
-          "root": "d06ee935cd2273bdf752d60d1d72fa7490c10de210f8137fbc1a7c76bf798af8"
+          "root": "30cf2ff1020c2d16fd4dd7836bed8c05ad69f7a8b1e4d46ddf093a00c40f54a6"
         },
         {
           "op": "insert",
           "key_index": 4,
           "value": "a4",
           "witness_key_index": 5,
-          "root": "17cadb79fa903526fd276b9d255649c86995be1df2cbcd8d4981e4928629514c"
+          "root": "2c04f3a9c3e893b309f36fbd3d3cf19e5dffa30e7190558c369f288b74b5c844"
         },
         {
           "op": "update",
           "key_index": 5,
           "value": "b5",
-          "root": "a1fa18ac0b0a7a3c55b771138b6da627fbea54cd84510657ca15259090264318"
+          "root": "dac591f94a5a9dc33afca07d472678b4ce948ea96f819b223d7682ae94537f93"
         },
         {
           "op": "delete",
           "key_index": 2,
           "last": false,
-          "root": "083d1e229e8d31f9f5c2894c607e2c82c1a613cc5c88c287b829526933c1abf5"
+          "root": "c0b3699255a77818335ebb4172b39b4cec02dae9c279cbe225a2fb0fc3e50e2b"
         },
         {
           "op": "update",
           "key_index": 0,
           "value": "c0",
-          "root": "63eeed8eca8b14f5c3a8dabdd46ccd3e5de826b5f3e66cee30c04ed98d3f551f"
+          "root": "7d3c4df3acb22c8519261ffa834458c8a442d9dc511445ca90ea249e58d10190"
         },
         {
           "op": "delete",
           "key_index": 6,
           "last": false,
-          "root": "e2bbc4bc5528a9ce17027f67d612df675b96aa245ab6ec0a55307c493b66678d"
+          "root": "a402011fb0b18fb5f4006ae4eafd74ef6a396eb6c1e8bc0f58bf1a22158ba3ae"
         },
         {
           "op": "insert",
           "key_index": 2,
           "value": "a2_again",
           "witness_key_index": 7,
-          "root": "1b74f3b3677fa48c31b29bfcb7e54ed2a1c00b52aac55d97f5182112786175e5"
+          "root": "7c2676221777d9465fcd2ec86b12826baa10861c0ef09cf79e28bb9b1682618c"
         },
         {
           "op": "delete",
           "key_index": 7,
           "last": false,
-          "root": "a826e61e649123d4200be29bbb1392ce20ec6291a0c232f7f40cb136226b2027"
+          "root": "ca1cce43874b1d80ac855b9ad6aea1d55901d34723f569fb495cf7dbd748dc2a"
         },
         {
           "op": "delete",
           "key_index": 0,
           "last": false,
-          "root": "9acc7d28156f9d082fb4a9613451209c98f374542c0346fad1cdf10c5b891995"
+          "root": "6f0d4e24a16c36aee4e63069039bd3808c3e7e038505e45d70ca78e696af8215"
         },
         {
           "op": "delete",
           "key_index": 1,
           "last": false,
-          "root": "b92e8d4650490d77715966ac5e356b2eac2ff767bf2a19070fdd79f495c96bff"
+          "root": "b20a71d896e805939a98e04fdd5ed6cd1824f83e77ffde3587a23c4cb479cedc"
         },
         {
           "op": "delete",
           "key_index": 2,
           "last": false,
-          "root": "f1fa7541c6e0de0e9172ac7067ba5dda32b0aad823881f8f126b2b05cf691bc9"
+          "root": "529c7b8b8bf5561cf16b2a0954fa9f578fe642502fbde64ab8b16a9c4c9476b7"
         },
         {
           "op": "delete",
           "key_index": 3,
           "last": false,
-          "root": "344721ba3cf58a4b472be754bf1fd238b2dcd11d09b070f3862e60570c66cc59"
+          "root": "6617d3c7e3d19248617d6131b71b61e0807ac2c58c578965f4fa8565537506c6"
         },
         {
           "op": "delete",
           "key_index": 4,
           "last": false,
-          "root": "2712e54414e7f9d7a22d6d1f3815f6c3366922cce9767dff0622f4b9a81ecc04"
+          "root": "6cf8a1d30124f9cb6b8de1714f5c6ac00f2ec0f3ae69a32220e97489b69c0e4f"
         },
         {
           "op": "delete",
           "key_index": 5,
           "last": true,
-          "root": "084fed08b978af4d7d196a7446a86b58009e636b611db16211b65a9aadff29c5"
+          "root": "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986"
         },
         {
           "op": "insert",
           "key_index": 2,
           "value": "after_empty",
           "witness_key_index": null,
-          "root": "93d9d258c3c0ebba710c46f03bbe37ae35ad6d764af30f434ec647263ab8d7f3"
+          "root": "9351886bf3f8bcefa8be73393d309dd62c4a77dfdfe40821cdd87ad403f3c4ff"
         }
       ]
     },
@@ -174,136 +172,136 @@
           "key_index": 0,
           "value": "a0",
           "witness_key_index": null,
-          "root": "fb817db0cf51c6adc03f4440aa5762c0ebc8a76ecf8155729d1046f194a92fcd"
+          "root": "5fa8ed6e172f251db2d2e6abaf0a859ccfb01ffb04ae6e9806b9e0d3d50062f4"
         },
         {
           "op": "insert",
           "key_index": 5,
           "value": "a5",
           "witness_key_index": 0,
-          "root": "459b90bafa895735b62e07eb4a540b1216aada10925e1327bb44cff9bc60f58e"
+          "root": "f38418720b5954a37f6bdd5b2a2503a81542ebb89cb463d80ff0c0bcfc12cab4"
         },
         {
           "op": "insert",
           "key_index": 2,
           "value": "a2",
           "witness_key_index": 5,
-          "root": "3d02e11a4aa3c03be71e387c7e828e397250f113054b73eda33a6e4751908c3a"
+          "root": "c2c3aa5cc0dcd2045d424d63cb43c889a61285d9f47224bd870b89f7f800ebb1"
         },
         {
           "op": "insert",
           "key_index": 7,
           "value": "a7",
           "witness_key_index": 2,
-          "root": "801a754d4d53f5b350fb466fcb61b7a547cac495c49718f95f85bba70b7eb09d"
+          "root": "3c1d4e66518a1e99957c5064c60d60faa94464ed6b17148b701432823baa6db4"
         },
         {
           "op": "insert",
           "key_index": 1,
           "value": "a1",
           "witness_key_index": 0,
-          "root": "4cc8b21207b098608a04982467876b0475848e91e6070b89af9679b37a3695a9"
+          "root": "0e7cdb677f5b720931849c86f0210ca826efd492f118f9b7cdbb0f490ce4bf5f"
         },
         {
           "op": "insert",
           "key_index": 3,
           "value": "a3",
           "witness_key_index": 1,
-          "root": "a331b3915461131ef8ecfb486fe559cdeca73d33270a2d33932e99bc23af3a69"
+          "root": "523bffaf110521ece0228ab2d064cef571edd0dec03f8911f0f02300f809909e"
         },
         {
           "op": "insert",
           "key_index": 6,
           "value": "a6",
           "witness_key_index": 0,
-          "root": "11d1f08b91fed26c3edcd7a056919c52ab4687a8fc4d205a8e77c5969090a58e"
+          "root": "50d56f1058872df90bf6dd61db50c4cab279c7482ee50279dba859ae05153641"
         },
         {
           "op": "insert",
           "key_index": 4,
           "value": "a4",
           "witness_key_index": 5,
-          "root": "4b5a4ce984745a75e26446a397b0634417065164004257c3d895c1f75b1ce7f9"
+          "root": "bdc276fd5ce2f5dfb98fab34c4371fdc84e904325b4f98a2ef21ed109993103d"
         },
         {
           "op": "update",
           "key_index": 5,
           "value": "b5",
-          "root": "b988e36e28676d7f328cfdd2857dd11a0a9e8d82e980d94cedd07a79a0c977f9"
+          "root": "69608a95426424dbc0ba2ac8a834e6d95c40120c9f852a0863be7a7fd6c117be"
         },
         {
           "op": "delete",
           "key_index": 2,
           "last": false,
-          "root": "a030c9da3147c18ed42094d521ce5dfb5c483ba6f79394c26ff440d563f8cc9f"
+          "root": "af677df71c8260cd0263237025e0debc3f9f0b14730c77ebdbe6c60e0eb660ff"
         },
         {
           "op": "update",
           "key_index": 0,
           "value": "c0",
-          "root": "9d066d92e51ea4d69495ac8ea5c12bc3b6fdd02a5433afffb6a07c4a1f1f9568"
+          "root": "4c2dc7921869565ab13d39755eb9a1f5d9c6c46907a1052643d98f1390c679f9"
         },
         {
           "op": "delete",
           "key_index": 6,
           "last": false,
-          "root": "69ad3d80378dd1f8cec24c69ec684e1def22c4f34d623cea55cb5f033ea294a4"
+          "root": "7fb18448cba61a8c43c9246342e35a625b36dabcfb1ac5f6f123684ba0d0cab0"
         },
         {
           "op": "insert",
           "key_index": 2,
           "value": "a2_again",
           "witness_key_index": 7,
-          "root": "f1ef85e6299ad0280bca2246bdaf4c982b628d2742d1b70e880a788e29eaf570"
+          "root": "19203739f72c3cfe583375572afc0b9551c760bce5c0ce1eb769a02c5301db70"
         },
         {
           "op": "delete",
           "key_index": 7,
           "last": false,
-          "root": "015028fd93ccde130b0ca3192985a243ab416386bdea8fb27025fec9cc9dd1bc"
+          "root": "366b348e7a824f203b5b9d51b34c799ef9eb8930bc57ed88ecd0e941c5386adb"
         },
         {
           "op": "delete",
           "key_index": 0,
           "last": false,
-          "root": "69a7d3d2694a098a90ab946d99c8db3c1b2ca4faef1dde29908aa21f62ee50a6"
+          "root": "860608b1f9636bc5c3317d5ee2222ef65ce765b81fdb22e2f8dda7429debab48"
         },
         {
           "op": "delete",
           "key_index": 1,
           "last": false,
-          "root": "44023029a218a770eba32f89fc61e03903bd80146e4911162e485320128356b6"
+          "root": "2b6d06f0fb9cd560db291fb90c7c8694061540bb9afcca23fada5739c3911f9d"
         },
         {
           "op": "delete",
           "key_index": 2,
           "last": false,
-          "root": "386c87b66bc87ab2d7fcf6edc2514549cfb6101d10e1d08cde7a4de96e2a5b4c"
+          "root": "05a352a9dbc6da1080cb728509c265536cd18d5cfa9f294149f926928a29e138"
         },
         {
           "op": "delete",
           "key_index": 3,
           "last": false,
-          "root": "220ee0012deb5a623abfbe45569e736a8fa5b51e229f0143775b7a7f7ea0e633"
+          "root": "e74dd3a2c0b04a77928be4077f29563ed07206dbe45475ff3de0346d389fe98e"
         },
         {
           "op": "delete",
           "key_index": 4,
           "last": false,
-          "root": "4148c7f613be280d5366a60f15c8dc450c23c7265a143d4954dfd5bb1cf25e17"
+          "root": "8df6b5bbd9fd60527fd669c7f920a78c0e14eecdfc4df10bd4f794b540d58ada"
         },
         {
           "op": "delete",
           "key_index": 5,
           "last": true,
-          "root": "084fed08b978af4d7d196a7446a86b58009e636b611db16211b65a9aadff29c5"
+          "root": "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986"
         },
         {
           "op": "insert",
           "key_index": 2,
           "value": "after_empty",
           "witness_key_index": null,
-          "root": "a8c6588376b38705c1891995008a346e394078ab6545151e55239b52524e394e"
+          "root": "b6e64a6e9d9fe6c60fe5908b3c5a3865656f22ac7e6a2bccc093f1de756223d4"
         }
       ]
     },
@@ -324,136 +322,136 @@
           "key_index": 0,
           "value": "a0",
           "witness_key_index": null,
-          "root": "1373e33bfa59f392cc4d1b2ba81c2abceadb41700266101a4d4a006c2de31229"
+          "root": "c054a82f9fc683a9d2bc654e34bc09226239120d8433fe31c4eebc04a9a71e16"
         },
         {
           "op": "insert",
           "key_index": 5,
           "value": "a5",
           "witness_key_index": 0,
-          "root": "b9f02f2c676e89157b9d4befd7c1023108bc3bb8bf712bdf06957c8765d552ba"
+          "root": "52114e73dca7bccddb6e0d9fc389cc1a345630f8ef374c533768870fca353d0b"
         },
         {
           "op": "insert",
           "key_index": 2,
           "value": "a2",
           "witness_key_index": 5,
-          "root": "54a52e61556e9e5f79af498b5c4ab91b326594306a731a85a32a90620f3e8fa3"
+          "root": "187be1c10cd94ddedb44b9c0f9b712413ce2b2e795532da50a68b7751cb402d0"
         },
         {
           "op": "insert",
           "key_index": 7,
           "value": "a7",
           "witness_key_index": 5,
-          "root": "a249b4529df545adaec214f365d5167384ebb024ab392f9319c8c189cff874a9"
+          "root": "1be3694e36f14bdc9b1dd98cf2c305c66be3d895e88a62d5325f1f6fecce8f34"
         },
         {
           "op": "insert",
           "key_index": 1,
           "value": "a1",
           "witness_key_index": 2,
-          "root": "1837bd4686a19fd84f7345201659d977d1dacf2f193ed6e30104a4ccd34ca97c"
+          "root": "242c32ab215737bd967389d411e0d5a030dd9f6b80b3b92dfa319778448c194d"
         },
         {
           "op": "insert",
           "key_index": 3,
           "value": "a3",
           "witness_key_index": 5,
-          "root": "c52aaaff9186aff2aab37f316fa16d200f1ec97754e4bd336f97f42b53eb72d6"
+          "root": "4055778ef075971480f3d01e039287d824f3c1632617caa43695399e4ae62f05"
         },
         {
           "op": "insert",
           "key_index": 6,
           "value": "a6",
           "witness_key_index": 7,
-          "root": "b63362422bec7e03e18c54ec60ea2a24038cbbd09e1ef85426c6830982292ce2"
+          "root": "4969f18c27021ffb986dce5f125f5189c208993f78e30f09286364c79b64a139"
         },
         {
           "op": "insert",
           "key_index": 4,
           "value": "a4",
           "witness_key_index": 5,
-          "root": "b2c5ec228e9a1fde2c4eece79794af17332cc9ae0a33b53e0d13a677047392ea"
+          "root": "9172c75eb8e3b6bf2542822a502cd6a2315763f1d5dea792ebd81a42240f86c0"
         },
         {
           "op": "update",
           "key_index": 5,
           "value": "b5",
-          "root": "05203ff6c6a9a266a3e4f441afdb829bd0c7c71d7ad5fa8f66e6929b58f3c996"
+          "root": "d0626ddf89e2c894147a2fe0059f5ba36ebb743f567c4c3066571cc7e4abd424"
         },
         {
           "op": "delete",
           "key_index": 2,
           "last": false,
-          "root": "b5eb670dc71f01e8cc1b763f365433bfe5267612588d94f6d5c3293ce1a7841d"
+          "root": "84438898dd88e08d672ae41baaf0aabf9fb07d1496a116145d0146f171fad8fc"
         },
         {
           "op": "update",
           "key_index": 0,
           "value": "c0",
-          "root": "8101158ec5f077c5cd08d30782a33f4f6a6ee396ad86383636adfab676d0199d"
+          "root": "0252cd6920d15488e3627496f73112a905d8471d876fa581b5be527b552c0d1a"
         },
         {
           "op": "delete",
           "key_index": 6,
           "last": false,
-          "root": "8510f76a78ddd5d375f6b90a10cbe4816deed671f6c0d22ffe5a53d287396cb6"
+          "root": "12863c34edb27faf0720338105efb1c88672332971c9de59481c44d6aa9ca674"
         },
         {
           "op": "insert",
           "key_index": 2,
           "value": "a2_again",
           "witness_key_index": 3,
-          "root": "a3c39299a723ded86999aba3ca712906b16aac289a95c5df77e4b2bf0e28e247"
+          "root": "fead95b591c9de3677637a24129e2529e67cef8f9ec0ccd025decc7b8054d282"
         },
         {
           "op": "delete",
           "key_index": 7,
           "last": false,
-          "root": "f647b1ad17196060562bcb555119f88b819dedbfd3a4a462c8191420e5d2dcf5"
+          "root": "cff025592e2be0d6dea6540f55c86f9c82d449a0004b4e9724caf4df1e5ff46f"
         },
         {
           "op": "delete",
           "key_index": 0,
           "last": false,
-          "root": "c01a4de3c0e693530cb88552d6359ca46e9c1572b08c7224654c25b93bcc0133"
+          "root": "a5e1cba8695e28a95676d463c1cc1a9e4aa9f822e2f6e401e9819d3e5f96c7ed"
         },
         {
           "op": "delete",
           "key_index": 1,
           "last": false,
-          "root": "75c45b34ded2d6d4800f75a66b1b8ff97f762cc18e0e983b7bddb4531a6fbe37"
+          "root": "945145b1ca45a9093b1dbb5cf25cc635d7d9b8f96758a7948f9f1cd79010d68c"
         },
         {
           "op": "delete",
           "key_index": 2,
           "last": false,
-          "root": "40c375e2e4e9c945912bbc8ae8dd54ab3bc114dd21ae5420052326879604cd8b"
+          "root": "f528043d15add9f2408e2b5bf844ad5eda019b3675029cdbc2108fff919d6fbd"
         },
         {
           "op": "delete",
           "key_index": 3,
           "last": false,
-          "root": "53d7b905236606f3dcef1dd1ba8c24fb75435a51b90efc5e63195938c906b04d"
+          "root": "89f4aa0268603e3391187622c20542fd2d4076437a8b9c2949afdfc59f238b89"
         },
         {
           "op": "delete",
           "key_index": 4,
           "last": false,
-          "root": "49e60378603fda8879bf67e36f5e60ba1596871574c035264f82f334c48025d1"
+          "root": "fd7e8514302f82745d9a6a0078d2d79e293e2edc44e375eba7a68c187f7fb912"
         },
         {
           "op": "delete",
           "key_index": 5,
           "last": true,
-          "root": "084fed08b978af4d7d196a7446a86b58009e636b611db16211b65a9aadff29c5"
+          "root": "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986"
         },
         {
           "op": "insert",
           "key_index": 2,
           "value": "after_empty",
           "witness_key_index": null,
-          "root": "1a42c077dd0e40906c310b989b27e616f16aae227835c5163abaeaaa8fae2f51"
+          "root": "805eb8aa3ca6c380c6de658996864ae643b7696a3d3ca680a8cb257b070e433f"
         }
       ]
     }

@@ -391,6 +391,7 @@ trezor_message_impl! {
     WardChainLinkAck => MessageType_WardChainLinkAck,
     WardRejoin => MessageType_WardRejoin,
     WardRejoinAck => MessageType_WardRejoinAck,
+    WardSetPointer => MessageType_WardSetPointer,
     WardResetApp => MessageType_WardResetApp,
     WardResetAppAck => MessageType_WardResetAppAck,
     DisplayAddress => MessageType_DisplayAddress,

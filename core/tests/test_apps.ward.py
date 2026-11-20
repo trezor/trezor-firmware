@@ -1,6 +1,7 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
+from trezor.crypto.hashlib import sha256
 from trezor.wire import DataError
 
 from apps.ward import attest as A
@@ -11,20 +12,19 @@ from apps.ward import offline_store as OS
 from apps.ward.attest import EMPTY_ROOT
 from apps.ward.keys import _scope, entry_key
 from apps.ward.leaf import (
-    EMPTY_PART,
-    ENC_ENCRYPTED,
-    ENC_PLAINTEXT,
-    commit_of,
-    decode_content,
-    encode_content,
-    encode_identity,
+    EMPTY,
     is_delete,
+    leaf_hash,
     leaf_hash_of,
+    open_content,
+    open_identity,
     pack_content,
     pack_identity,
-    part_bytes,
+    seal_content,
+    seal_identity,
     unpack_content,
     unpack_identity,
+    value_digest,
 )
 from apps.ward.root import root_for_write
 from apps.ward.trie import (
@@ -56,13 +56,6 @@ def verify_head_init_sig(ward_id, counter, root, sig):
     """What the WM checks before adopting a wallet it has never seen."""
     return verify_wm_sig(
         ward_id, counter, root, counter, root, CAS.NO_HEAD_NONCE, sig, CAS.TAG_WM_INIT
-    )
-
-
-def decode_identity(k_ident, entry_key, key_type, part):
-    """Open an identity part; the firmware never does, so the opener lives here."""
-    return L._decode_part(
-        k_ident, L._AAD_IDENTITY, entry_key, key_type, part, unpack_identity
     )
 
 
@@ -110,27 +103,32 @@ class TestWardKeys(unittest.TestCase):
         )
         self.assertEqual(k_path, K_PATH)
 
-        # entry_key(K_path, app_id="bitcoin", identifier=b"alice", "address", device_id=7)
+        # entry_key(K_path, app_id="bitcoin", identifier=b"alice", device_id=7); the same bytes
+        # as common/tests/fixtures/ward/protocol_v2.json on the service-channel branch
         ENTRY_KEY = bytes.fromhex(
-            "20f3088c1a70e4749e21b2f1969b6f982ced4f8d1983cdda856b292bbb51750a"
+            "7e2d23212a3a9f322da778bf26528bf3e99be8eb163b57b359c93c37fa124a37"
         )
+        self.assertEqual(entry_key(k_path, "bitcoin", b"alice", 7), ENTRY_KEY)
         self.assertEqual(
-            entry_key(k_path, "bitcoin", b"alice", "address", 7), ENTRY_KEY
+            entry_key(k_path, "bitcoin", b"alice"),
+            bytes.fromhex(
+                "9f0e735dcfd702a6db339f59d2bca670c9810ccf8300987a3b9502fdfc8448f4"
+            ),
         )
 
-        # The sibling keys that seal the two leaf parts once leaves stop being plaintext.
-        # Not used yet; pinned now so the labels cannot drift before they are.
+        # The one global key set that seals the two leaf parts.
         K_IDENT = bytes.fromhex(
-            "5d9542d7e3ca96a17077ea4889ad6461ae63a78cd3e0779a4135d6feeb0ea3b4"
+            "308afbfccfbadb30d40cf6bdb2aeee95f893327583bceb9c8e2ffa1533e41b32"
         )
         K_DATA = bytes.fromhex(
-            "9ae3bc6866b853cffc237fa11437e68d41ed91c9b8811e2b50a3f4f1cd0aa3e5"
+            "8e274334f32b92bdf59969a3be5edac66deaaf1b9c6df46b772fa526ccef78e1"
         )
-        self.assertEqual(slip21_key(SEED, [b"ward", b"K_ident", b"address"]), K_IDENT)
-        self.assertEqual(slip21_key(SEED, [b"ward", b"K_data", b"address"]), K_DATA)
+        self.assertEqual(slip21_key(SEED, [b"ward", b"K_ident"]), K_IDENT)
+        self.assertEqual(slip21_key(SEED, [b"ward", b"K_data"]), K_DATA)
 
     def test_scope_layout(self):
-        """scope = app_id || 0x00 || key_type || 0x00 || device_id(1B)."""
+        """The offline store's record name (not the trie path):
+        scope = app_id || 0x00 || key_type || 0x00 || device_id(1B)."""
         self.assertEqual(_scope("bitcoin", "address", 7), b"bitcoin\x00address\x00\x07")
         # app_id=None is the empty string, not an omission or a placeholder
         self.assertEqual(_scope(None, "address", 0), b"\x00address\x00\x00")
@@ -174,6 +172,17 @@ class TestWardKeys(unittest.TestCase):
         self.assertEqual(_scope("a", "b", 0)[-1:], b"\x00")
         self.assertEqual(_scope("a", "b", 255)[-1:], b"\xff")
 
+    def test_nul_in_app_id_is_unambiguous(self):
+        """leaf_identity length-prefixes every field, so NUL is ordinary data in app_id too: the
+        re-split that the offline store's NUL-delimited scope must refuse cannot happen here."""
+        k_path = slip21_key(SEED, [b"ward", b"K_path"])
+        self.assertNotEqual(
+            entry_key(k_path, "a\x00b", b"c"), entry_key(k_path, "a", b"\x00bc")
+        )
+        self.assertEqual(
+            pack_identity(b"c", "a\x00b"), b"\x00\x03a\x00b\x00\x01c"
+        )
+
     def test_identifier_may_contain_nul(self):
         """identifier is the terminal field, so NUL in it is unambiguous and allowed."""
         k_path = slip21_key(SEED, [b"ward", b"K_path"])
@@ -183,397 +192,124 @@ class TestWardKeys(unittest.TestCase):
         self.assertEqual(len(a), 32)
 
     def test_domain_separation(self):
-        """Changing any scope field must change the path."""
+        """Changing any leaf_identity field must change the path."""
         k_path = slip21_key(SEED, [b"ward", b"K_path"])
         base = entry_key(k_path, "app", b"id")
         self.assertNotEqual(base, entry_key(k_path, "other", b"id"))
         self.assertNotEqual(base, entry_key(k_path, "app", b"other"))
-        self.assertNotEqual(base, entry_key(k_path, "app", b"id", "label"))
-        self.assertNotEqual(base, entry_key(k_path, "app", b"id", "address", 1))
+        self.assertNotEqual(base, entry_key(k_path, "app", b"id", 1))
         # and a different K_path (i.e. a different wallet/passphrase) must too
         other = slip21_key(bytes.fromhex("22" * 64), [b"ward", b"K_path"])
         self.assertNotEqual(base, entry_key(other, "app", b"id"))
 
 
 class TestWardLeaf(unittest.TestCase):
-    EK = bytes(range(32))
-    KT = "address"
-    K_IDENT = bytes(range(32, 64))
-    K_DATA = bytes(range(64, 96))
+    """The leaf format of docs/ward/ward-leaf.md: AES-256-GCM parts, domain-only AAD, and a
+    commitment to the sealed content alone. The known answers are byte-identical to the
+    service-channel branch's `test_apps.ward.security.py::test_leaf_known_answer`."""
 
-    def test_part_framing(self):
-        """part = encoding(1B) || len8(nonce) || nonce || len8(tag) || tag
-        || len32(body) || body."""
-        self.assertEqual(
-            part_bytes((ENC_ENCRYPTED, b"\xaa" * 12, b"\xbb" * 16, b"body")),
-            bytes([0])
-            + bytes([12])
-            + b"\xaa" * 12
-            + bytes([16])
-            + b"\xbb" * 16
-            + (4).to_bytes(4, "big")
-            + b"body",
-        )
-        # plaintext carries no nonce or tag, so both length bytes are zero
-        self.assertEqual(
-            part_bytes((ENC_PLAINTEXT, b"", b"", b"xy")),
-            bytes([1]) + bytes([0]) + bytes([0]) + (2).to_bytes(4, "big") + b"xy",
-        )
-        # None is the empty part, not a crash
-        self.assertEqual(part_bytes(None), part_bytes(EMPTY_PART))
-
-    def test_pack_identity_layout(self):
-        """len16(identifier) || identifier || len8(app_id) || app_id || device_id(1B)."""
-        self.assertEqual(
-            pack_identity(b"alice", "bitcoin", 7),
-            (5).to_bytes(2, "big") + b"alice" + bytes([7]) + b"bitcoin" + bytes([7]),
-        )
-        self.assertEqual(
-            unpack_identity(pack_identity(b"alice", "bitcoin", 7)),
-            (b"alice", b"bitcoin", 7),
-        )
-        # empty identifier and empty app_id are representable
-        self.assertEqual(unpack_identity(pack_identity(b"", b"", 0)), (b"", b"", 0))
-        # padding past the end is tolerated, which is what sealing will add
-        padded = pack_identity(b"alice", "bitcoin", 7) + b"\x00" * 40
-        self.assertEqual(unpack_identity(padded), (b"alice", b"bitcoin", 7))
-
-    def test_pack_identity_rejects_oversized_fields(self):
-        """The length prefixes are 2 bytes and 1 byte, so longer fields have no encoding."""
-        with self.assertRaises(DataError):
-            pack_identity(b"x", "a" * 256, 0)
-        with self.assertRaises(DataError):
-            pack_identity(b"x", "a", 256)
-
-    def test_pack_content_layout(self):
-        """C_leaf(4B BE) || len32(value) || value."""
-        self.assertEqual(
-            pack_content(5, b"data_alice"),
-            (5).to_bytes(4, "big") + (10).to_bytes(4, "big") + b"data_alice",
-        )
-        self.assertEqual(
-            unpack_content(pack_content(5, b"data_alice")), (5, b"data_alice")
-        )
-        padded = pack_content(5, b"v") + b"\x00" * 50
-        self.assertEqual(unpack_content(padded), (5, b"v"))
-
-    def test_empty_value_is_not_a_delete(self):
-        """The divergence from the reference, which returns an empty part for any empty
-        value and so cannot tell an empty entry from a deleted one.
-
-        These two must stay distinguishable, or an entry whose value is empty can neither
-        be represented nor deleted.
-        """
-        empty_value = encode_content(self.K_DATA, self.EK, self.KT, b"")
-        deleted = encode_content(self.K_DATA, self.EK, self.KT, None)
-
-        self.assertFalse(is_delete(empty_value))
-        self.assertTrue(is_delete(deleted))
-        self.assertNotEqual(part_bytes(empty_value), part_bytes(deleted))
-        self.assertEqual(deleted, EMPTY_PART)
-
-        # ...and an empty value survives the round trip AS an empty value
-        self.assertEqual(
-            decode_content(self.K_DATA, self.EK, self.KT, empty_value), (0, b"")
-        )
-        self.assertIsNone(decode_content(self.K_DATA, self.EK, self.KT, deleted))
-
-    def test_content_round_trip(self):
-        part = encode_content(self.K_DATA, self.EK, self.KT, b"hello", c_leaf=9)
-        self.assertEqual(
-            decode_content(self.K_DATA, self.EK, self.KT, part), (9, b"hello")
-        )
-
-    def test_identity_round_trip(self):
-        part = encode_identity(self.K_IDENT, self.EK, self.KT, b"alice", "bitcoin", 7)
-        self.assertEqual(
-            decode_identity(self.K_IDENT, self.EK, self.KT, part),
-            (b"alice", b"bitcoin", 7),
-        )
-        self.assertIsNone(decode_identity(self.K_IDENT, self.EK, self.KT, EMPTY_PART))
-
-    def test_a_delete_empties_both_parts(self):
-        """A full delete leaves no tombstone. The reference keeps the identity part
-        alive, which preserves a record of which entries once existed."""
-        self.assertTrue(is_delete(EMPTY_PART))
-        self.assertIsNone(decode_identity(self.K_IDENT, self.EK, self.KT, EMPTY_PART))
-        self.assertIsNone(decode_content(self.K_DATA, self.EK, self.KT, EMPTY_PART))
-
-
-class TestWardSealedLeaf(unittest.TestCase):
-    """The sealed leaf, pinned against the reference's own published vectors.
-
-    The nonce is passed explicitly so these are known-answer tests; production leaves it
-    None and a fresh one is generated per write.
-    """
-
-    NONCE = b"\x5a" * 12
-    KT = "address"
-
-    def setUp(self):
-        self.k_path = slip21_key(SEED, [b"ward", b"K_path"])
-        self.k_ident = slip21_key(SEED, [b"ward", b"K_ident", b"address"])
-        self.k_data = slip21_key(SEED, [b"ward", b"K_data", b"address"])
-        self.ek = entry_key(self.k_path, "bitcoin", b"alice", "address", 7)
-
-    def _leaf(self):
-        id_part = encode_identity(
-            self.k_ident, self.ek, self.KT, b"alice", "bitcoin", 7, nonce=self.NONCE
-        )
-        val_part = encode_content(
-            self.k_data, self.ek, self.KT, b"data_alice", c_leaf=5, nonce=self.NONCE
-        )
-        return id_part, val_part
-
-    def test_frozen_commit_and_leaf_hash(self):
-        """The whole sealed leaf, byte-for-byte against the reference.
-
-        This is the strongest cross-implementation check available: it pins the SLIP-21
-        labels, the scope, both plaintext layouts, the part framing, the AAD, the bucket
-        padding and the commitment in a single pair of constants. If any one of them
-        drifts, this fails.
-        """
-        id_part, val_part = self._leaf()
-        commit = commit_of(self.KT, id_part, val_part)
-        self.assertEqual(
-            commit,
-            bytes.fromhex(
-                "4e2f5c55548a63a56e10eed9b00b4eaebe7b27ece484aefe319ffdd5b8c3e534"
-            ),
-        )
-        self.assertEqual(
-            leaf_hash_of(self.ek, commit),
-            bytes.fromhex(
-                "ff2d92fe3997f4c2201aa3060c3b2f2fa8bf7e72f463caa63489c95122c57400"
-            ),
-        )
-
-    def test_seal_then_open(self):
-        id_part, val_part = self._leaf()
-        self.assertEqual(id_part[0], ENC_ENCRYPTED)
-        self.assertEqual(val_part[0], ENC_ENCRYPTED)
-        self.assertEqual(len(id_part[1]), 12)  # nonce
-        self.assertEqual(len(id_part[2]), 16)  # Poly1305 tag
-        self.assertEqual(
-            decode_identity(self.k_ident, self.ek, self.KT, id_part),
-            (b"alice", b"bitcoin", 7),
-        )
-        self.assertEqual(
-            decode_content(self.k_data, self.ek, self.KT, val_part), (5, b"data_alice")
-        )
-
-    def test_ciphertext_hides_the_plaintext(self):
-        """Neither the identifier nor the value may appear in what the host receives."""
-        id_part, val_part = self._leaf()
-        for part in (id_part, val_part):
-            self.assertTrue(b"alice" not in part[3])
-            self.assertTrue(b"data_alice" not in part[3])
-            self.assertTrue(b"bitcoin" not in part[3])
-
-    def test_padding_hides_the_length(self):
-        """Ciphertext is padded to a bucket, so its length leaks only a coarse band."""
-        short = encode_content(self.k_data, self.ek, self.KT, b"x", nonce=self.NONCE)
-        longer = encode_content(
-            self.k_data, self.ek, self.KT, b"y" * 40, nonce=self.NONCE
-        )
-        self.assertEqual(len(short[3]), 64)
-        self.assertEqual(len(longer[3]), 64)  # same bucket => same ciphertext length
-        big = encode_content(
-            self.k_data, self.ek, self.KT, b"z" * 200, nonce=self.NONCE
-        )
-        self.assertEqual(len(big[3]), 256)
-
-    def test_a_tampered_part_is_rejected(self):
-        """Any edit to the tag or the ciphertext must fail the tag check."""
-        _id_part, val_part = self._leaf()
-        encoding, nonce, tag, ct = val_part
-
-        bad_tag = (encoding, nonce, bytes([tag[0] ^ 1]) + tag[1:], ct)
-        with self.assertRaises(DataError):
-            decode_content(self.k_data, self.ek, self.KT, bad_tag)
-
-        bad_ct = (encoding, nonce, tag, bytes([ct[0] ^ 1]) + ct[1:])
-        with self.assertRaises(DataError):
-            decode_content(self.k_data, self.ek, self.KT, bad_ct)
-
-    def test_a_part_cannot_be_moved_to_another_path(self):
-        """The AAD binds a part to its entry_key, so replaying it elsewhere fails.
-
-        This is what stops a host from answering a request for one entry with another
-        entry's leaf -- the swap that the keyed path alone would not catch.
-        """
-        _id_part, val_part = self._leaf()
-        other_ek = entry_key(self.k_path, "bitcoin", b"bob", "address", 7)
-        with self.assertRaises(DataError):
-            decode_content(self.k_data, other_ek, self.KT, val_part)
-
-    def test_a_part_cannot_be_consumed_as_the_other_part(self):
-        """Distinct AAD domains stop an identity part being opened as a content part."""
-        id_part, val_part = self._leaf()
-        with self.assertRaises(DataError):
-            decode_content(self.k_ident, self.ek, self.KT, id_part)
-        with self.assertRaises(DataError):
-            decode_identity(self.k_data, self.ek, self.KT, val_part)
-
-    def test_a_part_cannot_be_opened_under_another_key_type(self):
-        """key_type is in the AAD as well as selecting the key."""
-        id_part, _val_part = self._leaf()
-        with self.assertRaises(DataError):
-            decode_identity(self.k_ident, self.ek, "label", id_part)
-
-    def test_fresh_nonce_per_write(self):
-        """Sealing the same value twice must not reuse a nonce.
-
-        Reuse under ChaCha20-Poly1305 loses confidentiality AND tag unforgeability, and a
-        rollback legitimately revisits a leaf, so the nonce must never be derived from it.
-        """
-        a = encode_content(self.k_data, self.ek, self.KT, b"same")
-        b = encode_content(self.k_data, self.ek, self.KT, b"same")
-        self.assertNotEqual(a[1], b[1])
-        self.assertNotEqual(a[3], b[3])
-
-    def test_plaintext_mode_round_trips(self):
-        """The per-part dev switch works, and independently per part.
-
-        The reference has these flags but never exercises them, so its plaintext branches
-        were unreachable and untested.
-        """
-        try:
-            L.WARD_PLAINTEXT_CONTENT = True
-            part = encode_content(self.k_data, self.ek, self.KT, b"readable")
-            self.assertEqual(part[0], ENC_PLAINTEXT)
-            self.assertEqual(part[1], b"")  # no nonce
-            self.assertTrue(b"readable" in part[3])  # host-inspectable, as intended
-            self.assertEqual(
-                decode_content(self.k_data, self.ek, self.KT, part), (0, b"readable")
-            )
-            # ...and the other part is unaffected
-            id_part = encode_identity(
-                self.k_ident, self.ek, self.KT, b"alice", "bitcoin", 7
-            )
-            self.assertEqual(id_part[0], ENC_ENCRYPTED)
-        finally:
-            L.WARD_PLAINTEXT_CONTENT = False
-
-    def test_an_empty_part_survives_a_sealed_build(self):
-        """A delete's empty part is plaintext-encoded by construction, so the codec must
-        accept it even in a sealed build -- otherwise a build rejects its own delete."""
-        from trezor.messages import WardLeafContent, WardPlaintextLeaf
-
-        wire = WardLeafContent(
-            encoding=ENC_PLAINTEXT, plaintext=WardPlaintextLeaf(content=b"")
-        )
-        self.assertTrue(is_delete(L.read_leaf_content(wire)))
-
-        # a NON-empty plaintext part, by contrast, must be refused
-        wire = WardLeafContent(
-            encoding=ENC_PLAINTEXT, plaintext=WardPlaintextLeaf(content=b"x")
-        )
-        with self.assertRaises(DataError):
-            L.read_leaf_content(wire)
-
-
-class TestWardSivLeaf(unittest.TestCase):
-    """ENC_SIV: no stored nonce, so a repeated (entry_key, C_leaf) cannot reuse a keystream.
-
-    Writes pick the scheme by WARD_SEAL_ENCODING; reads dispatch on the part's own encoding.
-    """
-
-    KT = "address"
-
-    def setUp(self):
-        self.k_ident = slip21_key(SEED, [b"ward", b"K_ident", b"address"])
-        self.k_data = slip21_key(SEED, [b"ward", b"K_data", b"address"])
-        self.ek = b"\x11" * 32
-        L.WARD_SEAL_ENCODING = L.ENC_SIV
-
-    def tearDown(self):
-        L.WARD_SEAL_ENCODING = ENC_ENCRYPTED
-
-    def _content(self, value=b"hello", c_leaf=7, key=None, ek=None):
-        return encode_content(
-            key or self.k_data, ek or self.ek, self.KT, value, c_leaf=c_leaf
-        )
+    K_IDENT = bytes.fromhex(
+        "308afbfccfbadb30d40cf6bdb2aeee95f893327583bceb9c8e2ffa1533e41b32"
+    )
+    K_DATA = bytes.fromhex(
+        "8e274334f32b92bdf59969a3be5edac66deaaf1b9c6df46b772fa526ccef78e1"
+    )
+    SEALED_CONTENT = bytes.fromhex(
+        "015a5a5a5a5a5a5a5a5a5a5a5aaea42289df08d668e7ebc4f7505773b1b86985acabee6c38"
+        "ee32ae912cf36b441766be2b98dd"
+    )
+    SEALED_IDENTITY = bytes.fromhex(
+        "01595959595959595959595959b3e3fb506f6c0d0cde017a3a00205ff1aa9ca5f24384802f"
+        "3b04c4ad233d9a6f47"
+    )
 
     def test_known_answer(self):
-        """Pinned against an independent CPython implementation (HMAC-SHA256 + ChaCha20 at
-        block counter 1, `cryptography`), so the AEAD-as-stream-cipher reuse is checked."""
-        part = encode_content(bytes(range(32)), self.ek, self.KT, b"hello", c_leaf=7)
-        self.assertEqual(part[0], L.ENC_SIV)
-        self.assertEqual(part[1], b"")  # no nonce is stored
-        self.assertEqual(part[2], bytes.fromhex("d97fc6bb13d006c69dacd9e1feeea918"))
         self.assertEqual(
-            part[3],
-            bytes.fromhex(
-                "038d8b5497e7f82ff6c098ef57ec12fa56804ede424eacf388a4100416cc86fc"
-                "101e9809d6c4b3e84e6cb495fcb07009104ba1f6a19ede6536d2c1ffb679d663"
-            ),
+            seal_content(self.K_DATA, "address", 5, b"data_alice", b"Z" * 12),
+            self.SEALED_CONTENT,
+        )
+        self.assertEqual(
+            seal_identity(self.K_IDENT, b"alice", "bitcoin", 7, b"Y" * 12),
+            self.SEALED_IDENTITY,
+        )
+        self.assertEqual(
+            open_content(self.K_DATA, self.SEALED_CONTENT),
+            ("address", 5, b"data_alice"),
+        )
+        self.assertEqual(
+            open_identity(self.K_IDENT, self.SEALED_IDENTITY), (b"alice", b"bitcoin", 7)
+        )
+        self.assertEqual(
+            value_digest(self.SEALED_CONTENT),
+            sha256(b"\x03" + self.SEALED_CONTENT).digest(),
         )
 
-    def test_round_trip_both_parts(self):
+    def test_pack_layouts(self):
         self.assertEqual(
-            decode_content(self.k_data, self.ek, self.KT, self._content()), (7, b"hello")
+            pack_content("address", 5, b"data_alice"),
+            b"\x07address\x00\x00\x00\x05data_alice",
         )
-        id_part = encode_identity(self.k_ident, self.ek, self.KT, b"alice", "bitcoin", 7)
-        self.assertEqual(id_part[0], L.ENC_SIV)
         self.assertEqual(
-            decode_identity(self.k_ident, self.ek, self.KT, id_part),
-            (b"alice", b"bitcoin", 7),
+            pack_identity(b"alice", "bitcoin", 7), b"\x01\x07\x07bitcoin\x00\x05alice"
+        )
+        # device slot 0 is an EMPTY device_id, never b"\x00"
+        self.assertEqual(pack_identity(b"a", "b"), b"\x00\x01b\x00\x01a")
+        self.assertEqual(unpack_identity(pack_identity(b"a", "b", 9)), (b"a", b"b", 9))
+        self.assertEqual(
+            unpack_content(pack_content("pointer", 3, b"")), ("pointer", 3, b"")
         )
 
-    def test_deterministic_and_bound_to_the_value(self):
-        """The same inputs seal identically; a different value OR counter changes the IV, which
-        is the whole point -- a retried write at one C_leaf gets a fresh keystream."""
-        a = self._content()
-        self.assertEqual(a, self._content())
-        self.assertNotEqual(a[2], self._content(value=b"other")[2])
-        self.assertNotEqual(a[2], self._content(c_leaf=8)[2])
-
-    def test_tampering_and_moving_are_refused(self):
-        part = self._content()
-        bad_ct = (part[0], part[1], part[2], part[3][:-1] + bytes([part[3][-1] ^ 1]))
-        bad_tag = (part[0], part[1], bytes([part[2][0] ^ 1]) + part[2][1:], part[3])
-        for p in (bad_ct, bad_tag):
+    def test_non_canonical_identity_is_refused(self):
+        for bad in (
+            b"\x01\x00\x01b\x00\x01a",  # device_id 0 spelled as a byte
+            b"\x02\x01\x02\x01b\x00\x01a",  # a two-byte device_id
+            pack_identity(b"a", "b") + b"x",  # trailing bytes
+            pack_identity(b"a", "b")[:-1],  # short
+        ):
             with self.assertRaises(DataError):
-                decode_content(self.k_data, self.ek, self.KT, p)
-        with self.assertRaises(DataError):
-            decode_content(self.k_data, b"\x22" * 32, self.KT, part)
-        with self.assertRaises(DataError):
-            decode_content(self.k_data, self.ek, "label", part)
-        with self.assertRaises(DataError):  # the other part's key and domain
-            decode_identity(self.k_ident, self.ek, self.KT, part)
+                unpack_identity(bad)
 
-    def test_an_aead_part_still_opens_while_writes_are_siv(self):
-        L.WARD_SEAL_ENCODING = ENC_ENCRYPTED
-        old = self._content()
-        L.WARD_SEAL_ENCODING = L.ENC_SIV
-        self.assertEqual(old[0], ENC_ENCRYPTED)
-        self.assertEqual(decode_content(self.k_data, self.ek, self.KT, old), (7, b"hello"))
-
-    def test_the_wire_keeps_the_encoding_and_its_widths(self):
-        """Encoding 2 travels in the sealed arm with an empty nonce; the encoding byte is in
-        the commit, so the root fixes which scheme opens a leaf."""
-        part = self._content()
-        self.assertEqual(L.read_leaf_content(L.make_leaf_content(part)), part)
-        id_part = encode_identity(self.k_ident, self.ek, self.KT, b"alice", "bitcoin", 7)
-        self.assertEqual(
-            L.read_leaf_identity(L.make_leaf_identity(self.KT, id_part)),
-            (self.KT, id_part),
-        )
-        self.assertNotEqual(
-            part_bytes(part), part_bytes((ENC_ENCRYPTED,) + tuple(part[1:]))
-        )
-        from trezor.messages import WardEncryptedLeaf, WardLeafContent
-
-        for encoding, nonce in ((L.ENC_SIV, b"\x00" * 12), (ENC_ENCRYPTED, b"")):
-            wire = WardLeafContent(
-                encoding=encoding,
-                encrypted=WardEncryptedLeaf(nonce=nonce, tag=part[2], ct=part[3]),
-            )
+    def test_pack_identity_rejects_oversized_fields(self):
+        for args in ((b"x" * 65536, "a", 0), (b"x", "a" * 256, 0), (b"x", "a", 256)):
             with self.assertRaises(DataError):
-                L.read_leaf_content(wire)
-        with self.assertRaises(DataError):
-            L.read_leaf_content(WardLeafContent(encoding=3))
+                pack_identity(*args)
+
+    def test_parts_are_bound_to_key_domain_and_bytes(self):
+        content = seal_content(self.K_DATA, "address", 1, b"v")
+        identity = seal_identity(self.K_IDENT, b"id", "bitcoin")
+        self.assertEqual(open_identity(self.K_IDENT, identity), (b"id", b"bitcoin", 0))
+        for opener in (
+            lambda: open_content(self.K_IDENT, content),  # wrong key
+            lambda: open_identity(self.K_DATA, identity),
+            lambda: L.open_sealed(
+                self.K_DATA, L.DOMAIN_IDENTITY, content
+            ),  # wrong domain
+            lambda: open_content(self.K_DATA, content[:-1] + bytes([content[-1] ^ 1])),
+            lambda: open_content(self.K_DATA, content[:28]),  # short
+            lambda: open_content(self.K_DATA, b"\x02" + content[1:]),  # unknown scheme
+        ):
+            with self.assertRaises(DataError):
+                opener()
+
+    def test_empty_value_is_not_a_delete(self):
+        """b"" is a present value: its sealing is non-empty. Only EMPTY deletes."""
+        sealed = seal_content(self.K_DATA, "address", 7, b"")
+        self.assertEqual(len(sealed), 1 + 12 + 16 + 1 + 7 + 4)
+        self.assertFalse(is_delete(sealed))
+        self.assertTrue(is_delete(EMPTY))
+        self.assertEqual(open_content(self.K_DATA, sealed), ("address", 7, b""))
+
+    def test_fresh_nonce_per_write(self):
+        a = seal_content(self.K_DATA, "address", 1, b"v")
+        b = seal_content(self.K_DATA, "address", 1, b"v")
+        self.assertNotEqual(a, b)
+
+    def test_only_the_sealed_content_is_committed(self):
+        key = bytes([7]) * 32
+        self.assertEqual(
+            leaf_hash(key, self.SEALED_CONTENT),
+            leaf_hash_of(key, value_digest(self.SEALED_CONTENT)),
+        )
 
 
 class TestWardTrie(unittest.TestCase):
@@ -590,35 +326,48 @@ class TestWardTrie(unittest.TestCase):
     implementations is what keeps everyone building the same shape.
     """
 
+    # The shared four-leaf vectors of `common/tests/fixtures/ward/trie.json` on the
+    # service-channel branch (tools/ward_vectors.py), which `rust/trezor-ward` also folds.
     ROOT = bytes.fromhex(
-        "2b4e46b341ecf5ebbb506bb6878e1523dff181e103ede3c683c955d34302fa1e"
+        "6c2ec0a1be361cf8e8afcc1822b087bd8b9888a70821a1f62dd2546e9f382526"
     )
     MEMBER = bytes.fromhex(
-        "358b7591f24d313e523c7b34b8bd513e4310e08d058aee11d679ba41958853fe"
+        "be2974546978e3739e6d6da85c4be9f334ce32df2b9fd4b6ff1b55c0d57e9d44"
     )
+    MEMBER_CONTENT = bytes.fromhex(
+        "0131313131313131313131313141414141414141414141414141414141636970686572746578742d31"
+    )
+    MEMBER_PROOF = [
+        bytes.fromhex(
+            "0184355da313cb77a710c6f53429e8573c59c1394260e80fcabc7019b5fc7eda63"
+        ),
+        bytes.fromhex(
+            "007a271d3b377de23bfd6cd7d07923eb57514b44357a92535609890f60109785a6"
+        ),
+    ]
     ABSENT = bytes.fromhex(
-        "5ad38304b535c2987dbd24657c1a11b884984ff600d9f389deb0d4e634fee792"
+        "ffa63583dfa6706b87d284b86b0d693a161e4840aad2c5cf6b5d27c3b9621f7d"
+    )
+    WITNESS = bytes.fromhex(
+        "d9ef8196557c9da69806fb5d777f4e5ad6d5c18593039e0ff62f9fdf003b0198"
     )
     WITNESS_COMMIT = bytes.fromhex(
-        "2a36629301c9f5965be929bdbb741bbf5980f3829349748045ce20130496bb54"
+        "e655f0c657f295b8b6cc120741675218f512aee8bd7e2e868cea2de3387215a4"
     )
     PROOF = [
         bytes.fromhex(
-            "0000e96a5c3627be9ad15ae404da1ac72b42f1a602039dbc46fa22eb52e6071949d3"
-        )
+            "04a7757969f25dee0994042284b80c92ae39d8045607a483b71c51155f3b104d6b"
+        ),
+        bytes.fromhex(
+            "010761c463fa1be75daeb38784a70aebdc51defee3ff879f83d42611b0b007a43b"
+        ),
+        bytes.fromhex(
+            "007a271d3b377de23bfd6cd7d07923eb57514b44357a92535609890f60109785a6"
+        ),
     ]
-    ID_PART = (
-        0,
-        bytes.fromhex("111111111111111111111111"),
-        bytes.fromhex("21212121212121212121212121212121"),
-        bytes.fromhex("6964656e746974792d31"),
-    )
-    VAL_PART = (
-        0,
-        bytes.fromhex("313131313131313131313131"),
-        bytes.fromhex("41414141414141414141414141414141"),
-        bytes.fromhex("636970686572746578742d31"),
-    )
+    # A one-leaf tree for the sealed-content checks: its root is the leaf itself.
+    SOLO_KEY = bytes([0x5A]) * 32
+    SOLO_CONTENT = b"\x01" + bytes(28) + b"ciphertext"
 
     def test_bit_order_is_msb_first(self):
         """bit 0 is the TOP bit of byte 0. Getting this backwards would still produce a
@@ -632,67 +381,45 @@ class TestWardTrie(unittest.TestCase):
         self.assertEqual(addr_bit(bytes.fromhex("00" + "80" + "00" * 30), 8), 1)
 
     def test_frozen_membership_proof(self):
-        """The commit, the proof and the root, byte-for-byte across three impls."""
-        self.assertEqual(
-            commit_of("address", self.ID_PART, self.VAL_PART), self.WITNESS_COMMIT
-        )
-        self.assertEqual(len(self.PROOF[0]), 34)
+        """The sealed content, the proof and the root, byte-for-byte across implementations."""
+        self.assertEqual(len(self.MEMBER_PROOF[0]), 33)
         self.assertTrue(
             verify_membership(
-                self.MEMBER,
-                "address",
-                self.ID_PART,
-                self.VAL_PART,
-                self.PROOF,
-                self.ROOT,
+                self.MEMBER, self.MEMBER_CONTENT, self.MEMBER_PROOF, self.ROOT
             )
         )
+        root = leaf_hash(self.SOLO_KEY, self.SOLO_CONTENT)
+        self.assertTrue(verify_membership(self.SOLO_KEY, self.SOLO_CONTENT, [], root))
 
     def test_frozen_nonmembership_proof(self):
         """Absence is proved by the leaf that occupies the absent key's path."""
         self.assertTrue(
             verify_nonmembership(
-                self.ABSENT, self.MEMBER, self.WITNESS_COMMIT, self.PROOF, self.ROOT
+                self.ABSENT, self.WITNESS, self.WITNESS_COMMIT, self.PROOF, self.ROOT
             )
         )
 
     def test_membership_against_a_wrong_root_fails(self):
         self.assertFalse(
-            verify_membership(
-                self.MEMBER,
-                "address",
-                self.ID_PART,
-                self.VAL_PART,
-                self.PROOF,
-                bytes(32),
-            )
+            verify_membership(self.SOLO_KEY, self.SOLO_CONTENT, [], bytes(32))
         )
 
     def test_membership_of_a_mutated_leaf_fails(self):
-        """Any edit to either part changes the commit, hence the leaf, hence the root."""
-        for part in ("id", "val"):
-            idp, valp = self.ID_PART, self.VAL_PART
-            if part == "id":
-                idp = (idp[0], idp[1], idp[2], idp[3] + b"x")
-            else:
-                valp = (valp[0], valp[1], valp[2], valp[3] + b"x")
-            self.assertFalse(
-                verify_membership(
-                    self.MEMBER, "address", idp, valp, self.PROOF, self.ROOT
-                )
-            )
-        # ...and so does the key_type, which is why it is inside the commit
+        """Any edit to the sealed content changes the commitment, hence the leaf and root;
+        so does moving it to another path."""
+        root = leaf_hash(self.SOLO_KEY, self.SOLO_CONTENT)
         self.assertFalse(
-            verify_membership(
-                self.MEMBER, "label", self.ID_PART, self.VAL_PART, self.PROOF, self.ROOT
-            )
+            verify_membership(self.SOLO_KEY, self.SOLO_CONTENT + b"x", [], root)
+        )
+        self.assertFalse(
+            verify_membership(bytes([0x5B]) * 32, self.SOLO_CONTENT, [], root)
         )
 
     def test_witness_equal_to_target_proves_nothing(self):
         """Otherwise a membership proof would double as a proof of absence."""
         self.assertFalse(
             verify_nonmembership(
-                self.MEMBER, self.MEMBER, self.WITNESS_COMMIT, self.PROOF, self.ROOT
+                self.WITNESS, self.WITNESS, self.WITNESS_COMMIT, self.PROOF, self.ROOT
             )
         )
 
@@ -709,11 +436,11 @@ class TestWardTrie(unittest.TestCase):
         present entry on every read, and a delete of it would report the idempotent success
         reserved for a proved absence.
         """
-        shifted_key = self.MEMBER + self.WITNESS_COMMIT[:1]
+        shifted_key = self.WITNESS + self.WITNESS_COMMIT[:1]
         shifted_commit = self.WITNESS_COMMIT[1:]
-        self.assertTrue(shifted_key != self.MEMBER)
+        self.assertTrue(shifted_key != self.WITNESS)
         self.assertEqual(
-            shifted_key + shifted_commit, self.MEMBER + self.WITNESS_COMMIT
+            shifted_key + shifted_commit, self.WITNESS + self.WITNESS_COMMIT
         )
 
         # the primitive refuses to hash operands of the wrong width at all
@@ -726,7 +453,7 @@ class TestWardTrie(unittest.TestCase):
         # the host's tree for what is a malformed message.
         with self.assertRaises(DataError):
             verify_nonmembership(
-                self.MEMBER, shifted_key, shifted_commit, self.PROOF, self.ROOT
+                self.WITNESS, shifted_key, shifted_commit, self.PROOF, self.ROOT
             )
 
     def test_preimage_operands_are_fixed_width(self):
@@ -769,11 +496,12 @@ class TestWardTrie(unittest.TestCase):
         that could relabel hops could manufacture a witness relationship and prove a
         PRESENT key absent.
         """
-        relabelled = [bytes([0, 1]) + self.PROOF[0][2:]]
+        # the leaf-most step branches on bit 4; relabel it 5, still a well-shaped path
+        relabelled = [bytes([5]) + self.PROOF[0][1:]] + self.PROOF[1:]
         try:
             self.assertFalse(
                 verify_nonmembership(
-                    self.ABSENT, self.MEMBER, self.WITNESS_COMMIT, relabelled, self.ROOT
+                    self.ABSENT, self.WITNESS, self.WITNESS_COMMIT, relabelled, self.ROOT
                 )
             )
         except DataError:
@@ -782,10 +510,7 @@ class TestWardTrie(unittest.TestCase):
     def test_proof_shape_is_enforced(self):
         """A proof must describe a real root-to-leaf path before anything is hashed."""
         good = self.PROOF[0]
-        for bad in (
-            good[:33],  # wrong element length
-            bytes([1, 0]) + good[2:],  # split_bit >= 256
-        ):
+        for bad in (good[:32], good + b"\x00"):  # wrong element length either way
             with self.assertRaises(DataError):
                 validate_proof_shape([bad])
 
@@ -794,25 +519,25 @@ class TestWardTrie(unittest.TestCase):
         # that backwards writes a test that asserts nothing, which is what happened here
         # while the skiplen arithmetic was doing the rejecting instead.
         with self.assertRaises(DataError):
-            validate_proof_shape([bytes([0, 2]) + good[2:], bytes([0, 5]) + good[2:]])
+            validate_proof_shape([bytes([2]) + good[1:], bytes([5]) + good[1:]])
 
         # ...and the same two, the right way round, are accepted
         self.assertEqual(
             len(
                 validate_proof_shape(
-                    [bytes([0, 5]) + good[2:], bytes([0, 2]) + good[2:]]
+                    [bytes([5]) + good[1:], bytes([2]) + good[1:]]
                 )
             ),
             2,
         )
 
     def test_proof_length_is_bounded_by_the_key_space(self):
-        """No cap is needed: split_bit strictly increases and stays under 256, so a valid
-        proof cannot exceed 256 elements however many the host sends."""
-        full = [bytes([0, b]) + bytes(32) for b in range(255, -1, -1)]
+        """No cap is needed: split_bit is one byte and strictly increases, so a valid proof
+        cannot exceed 256 elements however many the host sends."""
+        full = [bytes([b]) + bytes(32) for b in range(255, -1, -1)]
         self.assertEqual(len(validate_proof_shape(full)), 256)
         with self.assertRaises(DataError):
-            validate_proof_shape(full + [bytes([1, 0]) + bytes(32)])
+            validate_proof_shape(full + [bytes([0]) + bytes(32)])
 
 
 class TestWardComputeNewRoot(unittest.TestCase):
@@ -825,9 +550,6 @@ class TestWardComputeNewRoot(unittest.TestCase):
     "some root came back" would not have caught either bug below.
     """
 
-    KT = "address"
-    EMPTY = (1, b"", b"", b"")
-
     def _key(self, bits):
         """A 32-byte path beginning with `bits`, padded with zeros."""
         out = bytearray(32)
@@ -837,17 +559,18 @@ class TestWardComputeNewRoot(unittest.TestCase):
         return bytes(out)
 
     def _leaf(self, tag):
-        return (self.KT, self.EMPTY, (1, b"", b"", tag))
+        """A sealed_content-shaped leaf; never opened, so only distinctness matters."""
+        return b"\x01" + bytes(28) + tag
 
     def _commit(self, tag):
-        return commit_of(self.KT, self.EMPTY, (1, b"", b"", tag))
+        return value_digest(self._leaf(tag))
 
     def _lh(self, key, tag):
         return leaf_hash_of(key, self._commit(tag))
 
     @staticmethod
     def _elem(split_bit, sibling):
-        return split_bit.to_bytes(2, "big") + sibling
+        return bytes([split_bit]) + sibling
 
     def test_first_insert_needs_an_empty_device(self):
         """With no proof and no witness the device's own record is the only authority."""
@@ -1174,14 +897,45 @@ class TestWardAttestation(unittest.TestCase):
         empty5 = A.attestation_preimage(self.WARD_ID, self.NONCE, 4, self.PREV, HEAD_NONCE_FROM, 5, None, HEAD_NONCE, self.TIME)
         self.assertEqual(
             empty5,
-            A.attestation_preimage(self.WARD_ID, self.NONCE, 4, self.PREV, HEAD_NONCE_FROM, 5, A.EMPTY_ROOT, HEAD_NONCE, self.TIME),
-        )
-        self.assertNotEqual(
-            empty5, A.attestation_preimage(self.WARD_ID, self.NONCE, 5, self.PREV, HEAD_NONCE_FROM, 6, None, HEAD_NONCE, self.TIME)
+            A.attestation_preimage(
+                self.WARD_ID,
+                self.NONCE,
+                4,
+                self.PREV,
+                HEAD_NONCE_FROM,
+                5,
+                A.EMPTY_ROOT,
+                HEAD_NONCE,
+                self.TIME,
+            ),
         )
         self.assertNotEqual(
             empty5,
-            A.attestation_preimage(self.WARD_ID, self.NONCE, 4, self.PREV, HEAD_NONCE_FROM, 5, self.ROOT, HEAD_NONCE, self.TIME),
+            A.attestation_preimage(
+                self.WARD_ID,
+                self.NONCE,
+                5,
+                self.PREV,
+                HEAD_NONCE_FROM,
+                6,
+                None,
+                HEAD_NONCE,
+                self.TIME,
+            ),
+        )
+        self.assertNotEqual(
+            empty5,
+            A.attestation_preimage(
+                self.WARD_ID,
+                self.NONCE,
+                4,
+                self.PREV,
+                HEAD_NONCE_FROM,
+                5,
+                self.ROOT,
+                HEAD_NONCE,
+                self.TIME,
+            ),
         )
 
     def test_attestation_preimage_layout(self):
@@ -1222,9 +976,27 @@ class TestWardAttestation(unittest.TestCase):
         confused with a real transition: every one of those advances the counter by exactly one,
         so no genuine step has from == to."""
         self.assertEqual(
-            A.attestation_preimage(self.WARD_ID, self.NONCE, 0, None, HEAD_NONCE_FROM, 0, None, HEAD_NONCE, self.TIME),
             A.attestation_preimage(
-                self.WARD_ID, self.NONCE, 0, A.EMPTY_ROOT, HEAD_NONCE_FROM, 0, A.EMPTY_ROOT, HEAD_NONCE, self.TIME
+                self.WARD_ID,
+                self.NONCE,
+                0,
+                None,
+                HEAD_NONCE_FROM,
+                0,
+                None,
+                HEAD_NONCE,
+                self.TIME,
+            ),
+            A.attestation_preimage(
+                self.WARD_ID,
+                self.NONCE,
+                0,
+                A.EMPTY_ROOT,
+                HEAD_NONCE_FROM,
+                0,
+                A.EMPTY_ROOT,
+                HEAD_NONCE,
+                self.TIME,
             ),
         )
 
@@ -1284,14 +1056,44 @@ class TestWardAttestation(unittest.TestCase):
     def test_a_malformed_signature_is_refused(self):
         mac = self.ROOT  # the attested 32 bytes ARE the root now
         sig = self._sign(
-            A.attestation_preimage(self.WARD_ID, self.NONCE, 4, self.PREV, HEAD_NONCE_FROM, 5, mac, HEAD_NONCE, self.TIME)
-        )
-        self.assertFalse(
-            A.verify_attestation(self.WARD_ID, self.NONCE, 4, self.PREV, HEAD_NONCE_FROM, 5, mac, HEAD_NONCE, self.TIME, sig[:63])
+            A.attestation_preimage(
+                self.WARD_ID,
+                self.NONCE,
+                4,
+                self.PREV,
+                HEAD_NONCE_FROM,
+                5,
+                mac,
+                HEAD_NONCE,
+                self.TIME,
+            )
         )
         self.assertFalse(
             A.verify_attestation(
-                self.WARD_ID, self.NONCE, 4, self.PREV, HEAD_NONCE_FROM, 5, mac, HEAD_NONCE, self.TIME, sig + b"\x00"
+                self.WARD_ID,
+                self.NONCE,
+                4,
+                self.PREV,
+                HEAD_NONCE_FROM,
+                5,
+                mac,
+                HEAD_NONCE,
+                self.TIME,
+                sig[:63],
+            )
+        )
+        self.assertFalse(
+            A.verify_attestation(
+                self.WARD_ID,
+                self.NONCE,
+                4,
+                self.PREV,
+                HEAD_NONCE_FROM,
+                5,
+                mac,
+                HEAD_NONCE,
+                self.TIME,
+                sig + b"\x00",
             )
         )
 
@@ -1352,11 +1154,11 @@ class TestWardCas(unittest.TestCase):
 
     def test_empty_root_sentinel(self):
         """A root inside a preimage is fixed-width, so the empty tree needs an encoding no
-        real root can take. sha256(0x03), domain-separated from the leaf/internal/commit
-        tags -- and spelled as a literal, so this asserts it really is that hash."""
+        real root can take. sha256(0x02), domain-separated from the leaf (0x00), internal (0x01)
+        and value (0x03) tags -- spelled as a literal, so this asserts it really is that hash."""
         from trezor.crypto.hashlib import sha256
 
-        self.assertEqual(A.EMPTY_ROOT, sha256(b"\x03").digest())
+        self.assertEqual(A.EMPTY_ROOT, sha256(b"\x02").digest())
 
     def test_preimage_names_both_endpoints(self):
         """Binding only the destination would let a link be lifted out of its place in the
@@ -1763,12 +1565,18 @@ class TestWardWmAuthorisation(unittest.TestCase):
 
     def test_a_malformed_signature_is_refused_not_raised(self):
         wid = self._ward_id()
-        self.assertFalse(verify_wm_sig(wid, 0, self._ROOT_A, 1, self._ROOT_B, HEAD_NONCE, b""))
         self.assertFalse(
-            verify_wm_sig(wid, 0, self._ROOT_A, 1, self._ROOT_B, HEAD_NONCE, b"\x00" * 63)
+            verify_wm_sig(wid, 0, self._ROOT_A, 1, self._ROOT_B, HEAD_NONCE, b"")
         )
         self.assertFalse(
-            verify_wm_sig(wid, 0, self._ROOT_A, 1, self._ROOT_B, HEAD_NONCE, b"\x00" * 64)
+            verify_wm_sig(
+                wid, 0, self._ROOT_A, 1, self._ROOT_B, HEAD_NONCE, b"\x00" * 63
+            )
+        )
+        self.assertFalse(
+            verify_wm_sig(
+                wid, 0, self._ROOT_A, 1, self._ROOT_B, HEAD_NONCE, b"\x00" * 64
+            )
         )
 
 
@@ -1820,64 +1628,21 @@ class TestWardRecordCommit(unittest.TestCase):
         self.assertEqual(len(OS.record_commit(self._rec())), 32)
 
 
-class TestWardLeafOneofIsStrict(unittest.TestCase):
-    """`leaf.read_leaf_*`: the manual oneof is read canonically, or refused.
+class TestWardSealedPartIsStrict(unittest.TestCase):
+    """`leaf.check_sealed`: a part that is not a well-formed sealing is refused before it is
+    hashed or opened, so every implementation commits to the same bytes."""
 
-    The codegen has no `oneof`, so `encoding` is a plain field. Two implementations could
-    therefore disagree about which arm a message is -- and the disagreement lands on the commit
-    preimage, which is what the trie hashes, so it is a different leaf and a different root.
-    Not a forgery: the device computes its own commit and trusts only its own root. It is
-    divergence, and divergence here is a proof the device cannot reproduce.
-    """
-
-    class _Sealed:
-        def __init__(self, nonce=None, tag=None, ct=b"x"):
-            self.nonce = b"\x00" * 12 if nonce is None else nonce
-            self.tag = b"\x00" * 16 if tag is None else tag
-            self.ct = ct
-
-    class _Clear:
-        def __init__(self, content=b"v"):
-            self.content = content
-
-    class _Content:
-        def __init__(self, encoding=None, encrypted=None, plaintext=None):
-            self.encoding = encoding
-            self.encrypted = encrypted
-            self.plaintext = plaintext
-
-    def test_an_unknown_encoding_is_refused_rather_than_normalised(self):
-        """It used to read as "not plaintext" and therefore as sealed. A later build that gives
-        encoding 2 a meaning would frame those bytes differently and commit to a different leaf
-        for a message this build had already accepted."""
-        msg = self._Content(encoding=2, encrypted=self._Sealed())
-        with self.assertRaises(DataError):
-            L.read_leaf_content(msg)
-
-    def test_setting_both_arms_is_refused(self):
-        """Firmware dispatched on the discriminator, the host twins on field presence, so this
-        framed one way on the device and the other way on the host."""
-        msg = self._Content(encoding=0, encrypted=self._Sealed(), plaintext=self._Clear())
-        with self.assertRaises(DataError):
-            L.read_leaf_content(msg)
-
-    def test_a_sealed_part_must_carry_a_real_nonce_and_tag(self):
-        """Both are fixed by the AEAD. A short one reached the cipher before."""
-        for bad in (self._Sealed(nonce=b"\x00" * 11), self._Sealed(tag=b"\x00" * 15)):
+    def test_short_or_unknown_scheme_is_refused(self):
+        good = b"\x01" + bytes(28)
+        L.check_sealed(good)
+        for bad in (good[:-1], b"\x02" + good[1:], b"\x00" + good[1:]):
             with self.assertRaises(DataError):
-                L.read_leaf_content(self._Content(encoding=0, encrypted=bad))
+                L.check_sealed(bad)
 
-    def test_the_canonical_forms_still_read(self):
-        """The strictness must not cost the two shapes that actually travel: a sealed part, and
-        the empty content that is how a delete is represented."""
-        part = L.read_leaf_content(self._Content(encoding=0, encrypted=self._Sealed()))
-        self.assertEqual(part[0], L.ENC_ENCRYPTED)
-        self.assertEqual(part[3], b"x")
-
-        empty = L.read_leaf_content(self._Content(encoding=1, plaintext=self._Clear(b"")))
-        self.assertTrue(L.is_delete(empty))
-
-        self.assertEqual(L.read_leaf_content(None), None)
+    def test_an_empty_part_is_a_delete(self):
+        self.assertTrue(is_delete(EMPTY))
+        self.assertTrue(is_delete(None))
+        self.assertFalse(is_delete(b"\x01" + bytes(28)))
 
 
 class TestWardDemotionConsent(TestCaseWithContext):

@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from trezor.messages import WardLeafAck, WardMutationApplied
     from trezor.ui.layouts import StrPropertyType
 
-# Every screen carries this. The AEAD stops a host forging a value or moving a leaf between
+# Every screen carries this. Sealing and the trie stop a host forging a value or moving a leaf between
 # paths, but it can still serve an OLDER sealed leaf or deny holding one: the value is
 # authentic, its freshness is not proven.
 # FIXME(ward): do NOT remove until proofs against an attested root land.
@@ -101,21 +101,21 @@ async def online_or_offline() -> bool:
 
 async def pull_leaf(
     entry_key: bytes,
-    key_type: str,
     root: "bytes | None" = None,
     staged: "tuple | None" = None,
 ) -> tuple:
     """Ask the backend for its leaf at `entry_key`, verify it against the trusted root, open it.
 
-    Returns `(value, old_leaf, (proof, witness_entry_key, witness_commit))`; value and old_leaf
-    are None when nothing is there. `root`/`staged` are given only by a batched flush, to prove
-    against its running root.
+    Returns `(content, old_leaf, (proof, witness_entry_key, witness_commit))`: `content` is the
+    opened `(entry_type, value)` and `old_leaf` the sealed_content, both None when nothing is
+    there. A pointer is returned as it is; `read_entry` follows it. `root`/`staged` are given only
+    to prove against a root other than the stored one (a batched flush, a pointer's second hop).
     """
     from trezor.wire import DataError
 
     from .attest import EMPTY_ROOT
     from .keys import derive_k_data
-    from .leaf import decode_content, is_delete, read_leaf_content, read_leaf_identity
+    from .leaf import check_sealed, is_delete, open_content
     from .root import get_counter, get_root
     from .trie import verify_membership, verify_nonmembership
 
@@ -134,13 +134,10 @@ async def pull_leaf(
             request.staged = WardStagedLeaf(entry_key=staged[0], commit=staged[1])
         ack = await context.call(request, expected_type=WardEntryAck)
 
-    val_part = read_leaf_content(ack.content)
-    wire_key_type, id_part = read_leaf_identity(ack.identity)
-    present = val_part is not None and not is_delete(val_part)
-
-    # The key_type is an input to entry_key, so the host does not get to name it.
-    if wire_key_type is not None and wire_key_type != key_type:
-        raise DataError("WARD: leaf key_type does not match the requested path")
+    sealed = ack.sealed_content
+    present = not is_delete(sealed)
+    if present:
+        check_sealed(sealed)
 
     # Verified BEFORE opening anything; an absence has to be proved too. No root at counter 0 is
     # a genuinely empty wallet; at a non-zero counter "cannot verify" must never read as
@@ -153,7 +150,7 @@ async def pull_leaf(
         if present:
             raise DataError("WARD: the tree is empty; no entry can be in it")
     elif present:
-        if not verify_membership(entry_key, key_type, id_part, val_part, ack.proof, root):
+        if not verify_membership(entry_key, sealed, ack.proof, root):
             raise DataError("WARD: entry does not match the trusted root")
     elif ack.witness_entry_key is None or ack.witness_commit is None:
         raise DataError("WARD: absence claimed without a witness")
@@ -166,22 +163,65 @@ async def pull_leaf(
     if not present:
         return None, None, material
 
-    # The AAD binds the part to this path and key type, so a successful open is authenticity.
-    decoded = decode_content(
-        await derive_k_data(key_type), entry_key, key_type, val_part
-    )
-    value = None if decoded is None else decoded[1]
-    return value, (key_type, id_part, val_part), material
+    # The trie binds the sealed content to this path, so a successful open is authenticity.
+    entry_type, _c_leaf, value = open_content(await derive_k_data(), sealed)
+    return (entry_type, value), sealed, material
+
+
+async def read_entry(
+    app_id: str, identifier: bytes
+) -> "tuple[bytes | None, bytes | None]":
+    """`(value, target)` for a read of (app_id, identifier), following a pointer ONE hop.
+
+    `target` is the identifier a pointer named, else None; `value` is None when the entry, or the
+    pointer's target, is proven absent. Both pulls prove against the same root. A pointer that
+    leaves its app_id, or points at another pointer, fails the read.
+    """
+    from trezor.wire import DataError
+
+    from .keys import ENTRY_TYPE_POINTER, entry_key_for
+    from .leaf import unpack_identity
+    from .root import get_root
+
+    content = (await pull_leaf(await entry_key_for(app_id, identifier)))[0]
+    if content is None:
+        return None, None
+    entry_type, value = content
+    if entry_type != ENTRY_TYPE_POINTER:
+        return value, None
+
+    target, target_app, target_device = unpack_identity(value)
+    if target_app != app_id.encode():
+        raise DataError("WARD: a pointer must stay in its own domain")
+    target_key = await entry_key_for(app_id, target, target_device)
+    # The pull above may have synced (service builds); the hop proves against the same root.
+    hop = (await pull_leaf(target_key, root=await get_root()))[0]
+    if hop is None:
+        return None, target
+    if hop[0] == ENTRY_TYPE_POINTER:
+        raise DataError("WARD: a pointer may not point at another pointer")
+    return hop[1], target
+
+
+def display_content(content: "tuple[str, bytes]") -> str:
+    """An opened entry as a screen shows it: a pointer names its target."""
+    from .keys import ENTRY_TYPE_POINTER
+    from .leaf import unpack_identity
+
+    entry_type, value = content
+    if entry_type == ENTRY_TYPE_POINTER:
+        return "-> " + display_bytes(unpack_identity(value)[0])
+    return display_bytes(value)
 
 
 async def commit_change(
     entry_key: bytes,
-    key_type: str,
     app_id: str,
     identifier: bytes,
     value: "bytes | None",
-    old_leaf: "tuple | None",
+    old_leaf: "bytes | None",
     material: tuple,
+    entry_type: str = "address",
 ) -> "WardLeafAck | WardMutationApplied":
     """Seal `value` (None: delete), derive the new root from the proven pull, authorise
     `(counter - 1, from_root) -> (counter, new_root)` and hand it on. Called after the screen.
@@ -190,33 +230,23 @@ async def commit_change(
     rather than being told one. NOT COMMITTED HERE: the head moves only when a WM attestation
     names this transition and the device re-verifies it. A connect build returns the leaf and
     authorisations; a service build publishes and adopts, returning no leaf -- a replica owner
-    reads an absent content body as a deletion.
+    reads an empty sealed_content as a deletion.
     """
     from .cas import authorise
     from .keys import derive_k_data, derive_k_ident
-    from .leaf import (
-        EMPTY_PART,
-        encode_content,
-        encode_identity,
-        make_leaf_content,
-        make_leaf_identity,
-    )
+    from .leaf import EMPTY, seal_content, seal_identity
     from .root import get_counter, get_root, root_for_write
     from .trie import compute_new_root
 
     from_root = await get_root()
     counter = await get_counter() + 1
     if value is None:
-        id_part = val_part = EMPTY_PART
+        sealed_identity = sealed_content = EMPTY
         new_leaf = None
     else:
-        id_part = encode_identity(
-            await derive_k_ident(key_type), entry_key, key_type, identifier, app_id
-        )
-        val_part = encode_content(
-            await derive_k_data(key_type), entry_key, key_type, value, c_leaf=counter
-        )
-        new_leaf = (key_type, id_part, val_part)
+        sealed_identity = seal_identity(await derive_k_ident(), identifier, app_id)
+        sealed_content = seal_content(await derive_k_data(), entry_type, counter, value)
+        new_leaf = sealed_content
 
     # A delete has an old leaf, so it is never an insert and the witness goes unused.
     proof, witness_entry_key, witness_commit = material
@@ -229,8 +259,6 @@ async def commit_change(
         witness_entry_key=witness_entry_key,
         witness_commit=witness_commit,
     )
-    identity = make_leaf_identity(key_type, id_part)
-    content = make_leaf_content(val_part)
     step, advance = await authorise(counter - 1, from_root, counter, new_root)
 
     if utils.USE_WARD_SERVICE_CHANNEL:
@@ -239,7 +267,14 @@ async def commit_change(
         from .service import publish
 
         await publish(
-            entry_key, identity, content, from_root, counter, new_root, step, advance
+            entry_key,
+            sealed_identity,
+            sealed_content,
+            from_root,
+            counter,
+            new_root,
+            step,
+            advance,
         )
         return WardMutationApplied(entry_key=entry_key, counter=counter)
 
@@ -247,8 +282,8 @@ async def commit_change(
 
     return WardLeafAck(
         entry_key=entry_key,
-        identity=identity,
-        content=content,
+        sealed_identity=sealed_identity,
+        sealed_content=sealed_content,
         counter=counter,
         auth_commit=step,
         wm_sig=advance,

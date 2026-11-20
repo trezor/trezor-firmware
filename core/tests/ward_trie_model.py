@@ -23,9 +23,9 @@ device, which never rebuilds. Hence this file.
 
 from trezor.crypto.hashlib import sha256
 
-# sha256(0x03): the root of the empty tree. Domain-separated from the leaf (0x00), internal
-# (0x01) and commit (0x02) tags, so no real root can take this value.
-EMPTY_ROOT = sha256(b"\x03").digest()
+# sha256(0x02): the root of the empty tree. Domain-separated from the leaf (0x00), internal
+# (0x01) and value (0x03) tags, so no real root can take this value.
+EMPTY_ROOT = sha256(b"\x02").digest()
 
 _MAX_BITS = 256
 
@@ -40,11 +40,11 @@ def leaf_hash(entry_key: bytes, commit: bytes) -> bytes:
 
 
 def internal_hash(split_bit: int, left: bytes, right: bytes) -> bytes:
-    return sha256(b"\x01" + split_bit.to_bytes(2, "big") + left + right).digest()
+    return sha256(b"\x01" + bytes([split_bit]) + left + right).digest()
 
 
 def proof_elem(split_bit: int, sibling: bytes) -> bytes:
-    return split_bit.to_bytes(2, "big") + sibling
+    return bytes([split_bit]) + sibling
 
 
 class CanonicalTrie:

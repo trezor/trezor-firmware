@@ -58,7 +58,7 @@ _ATTEST_VERSION = 6
 import hashlib as _hashlib
 from os import urandom as _urandom
 
-EMPTY_ROOT = _hashlib.sha256(b"\x03").digest()
+EMPTY_ROOT = _hashlib.sha256(b"\x02").digest()
 
 
 def _or_empty(root):

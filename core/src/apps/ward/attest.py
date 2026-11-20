@@ -21,11 +21,11 @@ _ATTEST_VERSION = 6
 
 NONCE_LENGTH = 32
 
-# The empty-tree stand-in inside fixed-width preimages: sha256(0x03), domain-separated from the
-# leaf/internal/commit tags. A unit test asserts the value.
+# The empty-tree stand-in inside fixed-width preimages: sha256(0x02), domain-separated from the
+# leaf (0x00), internal (0x01) and value (0x03) tags. A unit test asserts the value.
 EMPTY_ROOT = (
-    b"\x08\x4f\xed\x08\xb9\x78\xaf\x4d\x7d\x19\x6a\x74\x46\xa8\x6b\x58"
-    b"\x00\x9e\x63\x6b\x61\x1d\xb1\x62\x11\xb6\x5a\x9a\xad\xff\x29\xc5"
+    b"\xdb\xc1\xb4\xc9\x00\xff\xe4\x8d\x57\x5b\x5d\xa5\xc6\x38\x04\x01"
+    b"\x25\xf6\x5d\xb0\xfe\x3e\x24\x49\x4b\x76\xea\x98\x64\x57\xd9\x86"
 )
 
 

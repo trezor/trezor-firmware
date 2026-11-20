@@ -27,19 +27,22 @@ import typing as t
 from typing import TYPE_CHECKING, Callable, NamedTuple, Optional
 
 from . import messages
-from .ward_trie import OP_COMMIT, OP_REVERT, Link, _part_arms
+from .ward_trie import OP_COMMIT, OP_REVERT, Link
 
 if TYPE_CHECKING:
     import protobuf
 
     from .client import Session
+    from .ward_trie import WardTrie
 
 
 class Leaf(NamedTuple):
-    """A stored leaf, exactly as the device handed it over. Both parts empty means deleted."""
+    """A stored leaf, exactly as the device handed it over: `identity` is the sealed_identity
+    (kept beside the leaf, not committed) and `content` the sealed_content. An empty content
+    means deleted."""
 
-    identity: Optional[messages.WardLeafIdentity]
-    content: Optional[messages.WardLeafContent]
+    identity: Optional[bytes]
+    content: Optional[bytes]
 
 
 class Answer(NamedTuple):
@@ -106,8 +109,7 @@ def _call_answering_pulls(
         leaf = answer.leaf or Leaf(None, None)
         res = session.call(
             messages.WardEntryAck(
-                identity=leaf.identity,
-                content=leaf.content,
+                sealed_content=leaf.content or None,
                 proof=answer.proof or [],
                 witness_entry_key=answer.witness_entry_key,
                 witness_commit=answer.witness_commit,
@@ -130,12 +132,19 @@ def _call_answering_pulls(
     return WardResult(
         res,
         b"" if batch else (res.entry_key or entry_key),
-        Leaf(res.identity, res.content) if carries_leaf else None,
+        Leaf(res.sealed_identity, res.sealed_content) if carries_leaf else None,
         res.counter,
         getattr(res, "auth_commit", None),
         getattr(res, "wm_sig", None),
         getattr(res, "remaining", None),
-        leaves=[(bl.entry_key, Leaf(bl.identity, bl.content)) for bl in batch] if batch else None,
+        leaves=(
+            [
+                (bl.entry_key, Leaf(bl.sealed_identity, bl.sealed_content))
+                for bl in batch
+            ]
+            if batch
+            else None
+        ),
         from_counter=res.from_counter if batch else None,
     )
 
@@ -183,6 +192,25 @@ def set_entry(
     return _call_answering_pulls(
         session,
         messages.WardSetEntry(app_id=app_id, identifier=identifier, value=value),
+        provider,
+    )
+
+
+def set_pointer(
+    session: "Session",
+    app_id: str,
+    identifier: bytes,
+    target_identifier: bytes,
+    provider: EntryProvider,
+) -> WardResult:
+    """Make an entry point at `target_identifier` in the same `app_id`, on confirmation. Needs a
+    synced session. A read of the pointer returns the target's value. Store the returned leaf with
+    `apply`."""
+    return _call_answering_pulls(
+        session,
+        messages.WardSetPointer(
+            app_id=app_id, identifier=identifier, target_identifier=target_identifier
+        ),
         provider,
     )
 
@@ -416,7 +444,7 @@ def _log(store, *link: object, wm_sig: Optional[bytes]) -> None:  # noqa: ANN001
 
 
 def apply_rollback(
-    store,
+    store: "WardTrie",
     ack: messages.WardRollbackAck,
     from_counter: int,
     from_root: Optional[bytes],
@@ -439,16 +467,11 @@ def apply_rollback(
 
 
 def leaf_is_delete(leaf: Optional[Leaf]) -> bool:
-    """An empty content body is a deletion. Dispatches on `encoding`, as the firmware does."""
-    if leaf is None or leaf.content is None:
-        return True
-    encoding, clear, sealed = _part_arms(leaf.content, "content")
-    if encoding == 1:
-        return not (clear is not None and clear.content)
-    return not (sealed is not None and sealed.ct)
+    """An empty sealed_content is a deletion."""
+    return leaf is None or not leaf.content
 
 
-def store_provider(store) -> EntryProvider:
+def store_provider(store: "WardTrie") -> EntryProvider:
     """An `EntryProvider` backed by anything with the `WardTrie` shape. Needs no key."""
 
     def provider(entry_key: bytes) -> Answer:
@@ -466,7 +489,7 @@ def store_provider(store) -> EntryProvider:
     return provider
 
 
-def apply(store, result: WardResult) -> None:
+def apply(store: "WardTrie", result: WardResult) -> None:
     """Apply a confirmed write, delete or batched flush to the caller's store.
 
     Raises on a service-build result, which carries no leaf. No `auth_commit` means nothing

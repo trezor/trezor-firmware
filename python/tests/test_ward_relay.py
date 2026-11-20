@@ -289,7 +289,7 @@ def test_a_message_outside_the_sync_conversation_never_reaches_the_device(
 
 
 @pytest.mark.parametrize("params", [{}, {"masked": True}])
-def test_an_oversized_or_masked_frame_is_refused(stub: StubWardd, params) -> None:
+def test_an_oversized_or_masked_frame_is_refused(stub: StubWardd, params: t.Any) -> None:
     with WarddClient("good", stub.url) as client:
         with pytest.raises(WarddError) as e:
             client.call("hostile", params)
@@ -328,7 +328,7 @@ def test_the_provider_converts_wardds_answer_and_sends_the_staged_set(
             {
                 "id": frame["id"],
                 "result": {
-                    "content": {"encoding": 1, "plaintext": {"content": "aa"}},
+                    "sealed_content": "aa",
                     "proof": ["00" * 34],
                     "staged_seen": frame["params"]["staged"],
                 },
@@ -341,9 +341,7 @@ def test_the_provider_converts_wardds_answer_and_sends_the_staged_set(
             b"\x03" * 32
         )
     assert answer.leaf is not None and answer.leaf.identity is None
-    assert answer.leaf.content == messages.WardLeafContent(
-        encoding=1, plaintext=messages.WardPlaintextLeaf(content=b"\xaa")
-    )
+    assert answer.leaf.content == b"\xaa"
     assert answer.proof == [b"\x00" * 34]
     assert stub.received[-1]["params"]["staged"] == [["01" * 32, "02" * 32]]
 
@@ -387,7 +385,7 @@ class FakeDevice:
         self.root: bytes | None = None
         self.head_nonce: bytes = b"\x00" * 32
         self.inflight: int | None = None  # the counter the change in flight would reach
-        self.queue: list[tuple[bytes, messages.WardLeafContent]] = []
+        self.queue: list[tuple[bytes, bytes]] = []  # (entry_key, sealed_content)
 
     def _sign(self, preimage: bytes) -> bytes:
         return _ed25519.signature_unsafe(preimage, self.k_sig, self.ward_id)
@@ -429,9 +427,7 @@ class FakeDevice:
             # the tree is empty in this scenario, so the new root is the one leaf
             entry_key, content = self.queue[0]
             assert msg.proof == [] and msg.witness_entry_key is None
-            root = ward_trie.leaf_hash(
-                entry_key, ward_trie.commit_of("address", None, content)
-            )
+            root = ward_trie.leaf_hash(entry_key, ward_trie.value_digest(content))
             to = self.counter + 1
             self.inflight = to
             wm_sig = self._sign(
@@ -440,7 +436,8 @@ class FakeDevice:
             )
             return messages.WardFlushQueueAck(
                 entry_key=entry_key,
-                content=content,
+                sealed_identity=b"\x01" + bytes(28) + b"id",
+                sealed_content=content,
                 counter=to,
                 auth_commit=os.urandom(32),
                 wm_sig=wm_sig,
@@ -502,9 +499,7 @@ def test_against_wardd_sync_flush_status(wardd: str) -> None:
     device.queue.append(
         (
             os.urandom(32),
-            messages.WardLeafContent(
-                encoding=1, plaintext=messages.WardPlaintextLeaf(content=b"bc1q")
-            ),
+            b"\x01" + bytes(28) + b"bc1q",  # sealed-shaped; never opened
         )
     )
     with WarddClient("relay-test", wardd) as client:

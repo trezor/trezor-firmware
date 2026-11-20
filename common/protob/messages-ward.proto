@@ -26,12 +26,12 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
  * one pull. On a write the device pulls the CURRENT value first, so it can show the
  * user what is about to be replaced or removed rather than only what is arriving.
  *
- * The stored unit is a two-part LEAF (see WardLeafIdentity / WardLeafContent), which the DEVICE
+ * The stored unit is a two-part LEAF (sealed_identity + sealed_content), which the DEVICE
  * builds and returns (WardLeafAck); the host stores it verbatim and applies the change
  * to its own store. The device still keeps nothing of its own.
  *
- * Both leaf parts are SEALED under device-only keys, with the AAD binding each part to
- * its path, so the host cannot forge a leaf, read one, or move one between paths.
+ * Both leaf parts are SEALED under device-only keys, so the host cannot forge or read a leaf.
+ * The trie binds sealed_content to its path; entry_key binds the identity.
  *
  * It can still return an OLDER sealed leaf for a path, or claim it holds none at all.
  * Neither is detectable without a proof against an attested root, so what reaches a
@@ -122,68 +122,42 @@ message WardDeleteEntry {
 }
 
 /**
- * A leaf is TWO independently encoded parts, each a self-describing "manual oneof":
- * trezor's protobuf codegen has no `oneof`, so mutual exclusivity is a code invariant
- * and `encoding` selects which submessage is meaningful. (Same pattern as
- * PaymentRequestMemo in messages-common.proto.)
+ * Request: make (app_id, identifier) a POINTER to (app_id, target_identifier).
  *
- *   WardLeafIdentity  the keyed-path preimage: identifier + app_id + device_id
- *   WardLeafContent   C_leaf + value
+ * A pointer's value is the target's leaf_identity; a read follows it one hop against the same
+ * root, so the caller receives the target's value. The target is always in the caller's own
+ * app_id. A separate message, like WardDeleteEntry, so a pointer write cannot degrade into a
+ * value write by a dropped field.
  *
- * `key_type` is ALWAYS CLEAR -- it selects both of the keys that seal the parts, so it
- * cannot itself be sealed -- and lives on WardLeafIdentity so it is not repeated per part.
- *
- *   part(p) = encoding(1B)||len8(nonce)||nonce||len8(tag)||tag||len32(body)||body
- *
- * Each part's encoding byte sits inside that framing, so a sealed and an unsealed part
- * can never collide -- and the commit fixes which scheme opens a part:
- *   0 = AEAD: ChaCha20-Poly1305, random 12-byte nonce, Poly1305 tag
- *   1 = plaintext (dev builds, and the empty delete part)
- *   2 = SIV: no nonce (empty); tag = HMAC-SHA256 synthetic IV, also the ChaCha20 nonce
- *
- * THE DEVICE PRODUCES THE LEAF and the host stores it verbatim. This is not a convention
- * the host is asked to respect -- it holds neither K_ident nor K_data, so it cannot
- * produce a part at all.
- *
- * An EMPTY part (empty body) means DELETED. Note this differs from an entry whose value
- * merely happens to be empty, which is a PRESENT part whose body carries a zero-length
- * value -- see WardEntryAck. Conflating the two would make empty-valued entries
- * indistinguishable from deleted ones, and so impossible to represent or to delete.
+ * The device pulls the current entry first and shows what is replaced. The target need not
+ * exist yet: a read of a pointer to an absent target is "not found".
+ * @start
+ * @next WardLeafAck
+ * @next Failure
  */
-message WardEncryptedLeaf {
-    optional bytes nonce = 1;  // 12B AEAD nonce (encoding 0); empty for SIV (encoding 2)
-    optional bytes tag   = 2;  // 16B Poly1305 tag (0) or synthetic IV (2)
-    optional bytes ct    = 3;  // AEAD ciphertext (empty = delete)
+message WardSetPointer {
+    optional string app_id            = 1;  // domain that owns the pointer and its target
+    optional bytes  identifier        = 2;  // the pointer's own key
+    optional bytes  target_identifier = 3;  // the key it points to, in the same domain
 }
 
-message WardPlaintextLeaf {
-    optional bytes content = 1;  // C_leaf(4B)||len32(value)||value (empty = delete)
-}
-
-message WardLeafContent {
-    optional uint32 encoding         = 1;  // 0 = AEAD (default), 1 = plaintext, 2 = SIV
-    optional WardEncryptedLeaf encrypted = 2;  // set when encoding = 0 or 2
-    optional WardPlaintextLeaf plaintext = 3;  // set when encoding = 1
-}
-
-message WardPlainIdentity {
-    optional bytes  identifier = 1;  // the otherwise-hidden identifier, in the clear
-    optional string app_id     = 2;  // domain that owns the entry
-    optional uint32 device_id  = 3;  // scope device slot; 0 = global
-}
-
-message WardEncryptedIdentity {
-    optional bytes nonce = 1;  // 12B AEAD nonce (encoding 0); empty for SIV (encoding 2)
-    optional bytes tag   = 2;  // 16B Poly1305 tag (0) or synthetic IV (2)
-    optional bytes ct    = 3;  // AEAD over len16(identifier)||identifier||len8(app_id)||app_id||device_id(1B)
-}
-
-message WardLeafIdentity {
-    optional uint32 encoding             = 1;  // 0 = AEAD (default), 1 = plaintext, 2 = SIV
-    optional string key_type             = 2;  // ALWAYS CLEAR -- selects both leaf keys
-    optional WardEncryptedIdentity encrypted = 3;  // set when encoding = 0 or 2
-    optional WardPlainIdentity     plain     = 4;  // set when encoding = 1
-}
+/**
+ * A leaf is TWO independently sealed parts (docs/ward/ward-leaf.md), each `bytes`:
+ *
+ *   sealed_content   = seal(K_data,  0x02, leaf_content)    -- in the trie
+ *   sealed_identity  = seal(K_ident, 0x04, leaf_identity)   -- stored BESIDE the leaf
+ *   seal(K, d, pt)   = 0x01 || nonce(12B) || tag(16B) || AES-256-GCM(K, nonce, aad=d, pt)
+ *
+ * The trie commits to sealed_content only: leaf = sha256(0x00 || entry_key ||
+ * sha256(0x03 || sealed_content)). The identity is not committed, because entry_key already
+ * authenticates it; a lookup never needs it.
+ *
+ * THE DEVICE PRODUCES THE LEAF and the host stores it verbatim -- it holds neither K_ident nor
+ * K_data, so it cannot produce a part at all.
+ *
+ * An EMPTY sealed_content means DELETED. An entry whose value is empty is a present, non-empty
+ * sealing of an empty value -- see WardEntryAck.
+ */
 
 /**
  * Request: host -> device. The leaf the host holds for the path the device just asked
@@ -197,15 +171,15 @@ message WardLeafIdentity {
  */
 message WardEntryAck {
     reserved 1;                            // was a bare `value`; the unit is a leaf now
-    optional WardLeafIdentity identity = 2;    // absent together with content = no such entry
-    optional WardLeafContent  content  = 3;
+    reserved 2, 3;                         // were the framed identity and content parts
+    optional bytes sealed_content = 12;    // absent = no such entry; see the leaf note above
 
     // Proof that this answer matches the tree the device already trusts. Elements are
-    // 34 bytes each -- u16be(split_bit) || sibling(32B) -- in
+    // 33 bytes each -- u8(split_bit) || sibling(32B) -- in
     // LEAF-TO-ROOT order.
     //
-    //   membership     : identity + content + proof
-    //   non-membership : no identity/content; proof + witness_entry_key + witness_commit
+    //   membership     : sealed_content + proof
+    //   non-membership : no sealed_content; proof + witness_entry_key + witness_commit
     //   empty tree     : nothing at all
     //
     // Absence needs a witness because a binary trie has no "absent" node to point at:
@@ -214,7 +188,7 @@ message WardEntryAck {
     // the witness's own identifier or value.
     repeated bytes proof             = 4;
     optional bytes witness_entry_key = 5;
-    optional bytes witness_commit    = 6;
+    optional bytes witness_commit    = 6;  // the witness leaf's value_digest
 
     // 7-11 were the sibling witness a DELETE had to present: a branch decomposition or a
     // leaf's (entry_key, commit), so the device could re-derive a re-parented sibling at its

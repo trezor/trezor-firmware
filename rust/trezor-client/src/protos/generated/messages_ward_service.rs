@@ -1487,10 +1487,10 @@ pub struct WardPublish {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardPublish.entry_key)
     pub entry_key: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardPublish.identity)
-    pub identity: ::protobuf::MessageField<super::messages_ward::WardLeafIdentity>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardPublish.content)
-    pub content: ::protobuf::MessageField<super::messages_ward::WardLeafContent>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardPublish.sealed_identity)
+    pub sealed_identity: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardPublish.sealed_content)
+    pub sealed_content: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardPublish.counter)
     pub counter: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardPublish.auth_commit)
@@ -1553,6 +1553,78 @@ impl WardPublish {
     // Take field
     pub fn take_entry_key(&mut self) -> ::std::vec::Vec<u8> {
         self.entry_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes sealed_identity = 11;
+
+    pub fn sealed_identity(&self) -> &[u8] {
+        match self.sealed_identity.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_sealed_identity(&mut self) {
+        self.sealed_identity = ::std::option::Option::None;
+    }
+
+    pub fn has_sealed_identity(&self) -> bool {
+        self.sealed_identity.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_sealed_identity(&mut self, v: ::std::vec::Vec<u8>) {
+        self.sealed_identity = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_sealed_identity(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.sealed_identity.is_none() {
+            self.sealed_identity = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.sealed_identity.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_sealed_identity(&mut self) -> ::std::vec::Vec<u8> {
+        self.sealed_identity.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes sealed_content = 12;
+
+    pub fn sealed_content(&self) -> &[u8] {
+        match self.sealed_content.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_sealed_content(&mut self) {
+        self.sealed_content = ::std::option::Option::None;
+    }
+
+    pub fn has_sealed_content(&self) -> bool {
+        self.sealed_content.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_sealed_content(&mut self, v: ::std::vec::Vec<u8>) {
+        self.sealed_content = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_sealed_content(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.sealed_content.is_none() {
+            self.sealed_content = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.sealed_content.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_sealed_content(&mut self) -> ::std::vec::Vec<u8> {
+        self.sealed_content.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     // optional uint32 counter = 4;
@@ -1762,15 +1834,15 @@ impl WardPublish {
             |m: &WardPublish| { &m.entry_key },
             |m: &mut WardPublish| { &mut m.entry_key },
         ));
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::messages_ward::WardLeafIdentity>(
-            "identity",
-            |m: &WardPublish| { &m.identity },
-            |m: &mut WardPublish| { &mut m.identity },
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "sealed_identity",
+            |m: &WardPublish| { &m.sealed_identity },
+            |m: &mut WardPublish| { &mut m.sealed_identity },
         ));
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::messages_ward::WardLeafContent>(
-            "content",
-            |m: &WardPublish| { &m.content },
-            |m: &mut WardPublish| { &mut m.content },
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "sealed_content",
+            |m: &WardPublish| { &m.sealed_content },
+            |m: &mut WardPublish| { &mut m.sealed_content },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "counter",
@@ -1823,11 +1895,11 @@ impl ::protobuf::Message for WardPublish {
                 10 => {
                     self.entry_key = ::std::option::Option::Some(is.read_bytes()?);
                 },
-                18 => {
-                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.identity)?;
+                90 => {
+                    self.sealed_identity = ::std::option::Option::Some(is.read_bytes()?);
                 },
-                26 => {
-                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.content)?;
+                98 => {
+                    self.sealed_content = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 32 => {
                     self.counter = ::std::option::Option::Some(is.read_uint32()?);
@@ -1862,13 +1934,11 @@ impl ::protobuf::Message for WardPublish {
         if let Some(v) = self.entry_key.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
-        if let Some(v) = self.identity.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        if let Some(v) = self.sealed_identity.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(11, &v);
         }
-        if let Some(v) = self.content.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        if let Some(v) = self.sealed_content.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(12, &v);
         }
         if let Some(v) = self.counter {
             my_size += ::protobuf::rt::uint32_size(4, v);
@@ -1897,11 +1967,11 @@ impl ::protobuf::Message for WardPublish {
         if let Some(v) = self.entry_key.as_ref() {
             os.write_bytes(1, v)?;
         }
-        if let Some(v) = self.identity.as_ref() {
-            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        if let Some(v) = self.sealed_identity.as_ref() {
+            os.write_bytes(11, v)?;
         }
-        if let Some(v) = self.content.as_ref() {
-            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
+        if let Some(v) = self.sealed_content.as_ref() {
+            os.write_bytes(12, v)?;
         }
         if let Some(v) = self.counter {
             os.write_uint32(4, v)?;
@@ -1939,8 +2009,8 @@ impl ::protobuf::Message for WardPublish {
 
     fn clear(&mut self) {
         self.entry_key = ::std::option::Option::None;
-        self.identity.clear();
-        self.content.clear();
+        self.sealed_identity = ::std::option::Option::None;
+        self.sealed_content = ::std::option::Option::None;
         self.counter = ::std::option::Option::None;
         self.auth_commit = ::std::option::Option::None;
         self.wm_sig = ::std::option::Option::None;
@@ -1953,8 +2023,8 @@ impl ::protobuf::Message for WardPublish {
     fn default_instance() -> &'static WardPublish {
         static instance: WardPublish = WardPublish {
             entry_key: ::std::option::Option::None,
-            identity: ::protobuf::MessageField::none(),
-            content: ::protobuf::MessageField::none(),
+            sealed_identity: ::std::option::Option::None,
+            sealed_content: ::std::option::Option::None,
             counter: ::std::option::Option::None,
             auth_commit: ::std::option::Option::None,
             wm_sig: ::std::option::Option::None,
@@ -3157,29 +3227,29 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x02J\x04\x08\x02\x10\x03\"{\n\x10WardServiceFetch\x12\x1b\n\tentry_key\
     \x18\x01\x20\x01(\x0cR\x08entryKey\x12'\n\x0fcurrent_counter\x18\x02\x20\
     \x01(\rR\x0ecurrentCounter\x12!\n\x0ccurrent_root\x18\x03\x20\x01(\x0cR\
-    \x0bcurrentRoot\"\x12\n\x10WardSyncRequired\"\xdb\x02\n\x0bWardPublish\
-    \x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12E\n\x08identi\
-    ty\x18\x02\x20\x01(\x0b2).hw.trezor.messages.ward.WardLeafIdentityR\x08i\
-    dentity\x12B\n\x07content\x18\x03\x20\x01(\x0b2(.hw.trezor.messages.ward\
-    .WardLeafContentR\x07content\x12\x18\n\x07counter\x18\x04\x20\x01(\rR\
-    \x07counter\x12\x1f\n\x0bauth_commit\x18\x06\x20\x01(\x0cR\nauthCommit\
-    \x12\x15\n\x06wm_sig\x18\x07\x20\x01(\x0cR\x05wmSig\x12\x14\n\x05nonce\
-    \x18\x08\x20\x01(\x0cR\x05nonce\x12\x1b\n\tfrom_root\x18\t\x20\x01(\x0cR\
-    \x08fromRoot\x12\x19\n\x08new_root\x18\n\x20\x01(\x0cR\x07newRootJ\x04\
-    \x08\x05\x10\x06\"\xa9\x01\n\x0eWardPublishAck\x12\x1c\n\ttimestamp\x18\
-    \x03\x20\x01(\x04R\ttimestamp\x12!\n\x0cwm_signature\x18\x04\x20\x01(\
-    \x0cR\x0bwmSignature\x12&\n\x0ffrom_head_nonce\x18\x06\x20\x01(\x0cR\rfr\
-    omHeadNonce\x12\"\n\rto_head_nonce\x18\x05\x20\x01(\x0cR\x0btoHeadNonceJ\
-    \x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03\"8\n\x13WardPublishConflict\
-    \x12!\n\x0chead_counter\x18\x01\x20\x01(\rR\x0bheadCounter\"L\n\x13WardM\
-    utationApplied\x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08entryKey\
-    \x12\x18\n\x07counter\x18\x02\x20\x01(\rR\x07counter\"l\n\x15WardFlushQu\
-    eueApplied\x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12\
-    \x18\n\x07counter\x18\x02\x20\x01(\rR\x07counter\x12\x1c\n\tremaining\
-    \x18\x03\x20\x01(\rR\tremaining\"(\n\x10WardResetService\x12\x14\n\x05fo\
-    rce\x18\x01\x20\x01(\x08R\x05force\"5\n\x13WardResetServiceAck\x12\x1e\n\
-    \nunresolved\x18\x01\x20\x01(\rR\nunresolvedB?\n#com.satoshilabs.trezor.\
-    lib.protobufB\x18TrezorMessageWardService\
+    \x0bcurrentRoot\"\x12\n\x10WardSyncRequired\"\xac\x02\n\x0bWardPublish\
+    \x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12'\n\x0fsealed\
+    _identity\x18\x0b\x20\x01(\x0cR\x0esealedIdentity\x12%\n\x0esealed_conte\
+    nt\x18\x0c\x20\x01(\x0cR\rsealedContent\x12\x18\n\x07counter\x18\x04\x20\
+    \x01(\rR\x07counter\x12\x1f\n\x0bauth_commit\x18\x06\x20\x01(\x0cR\nauth\
+    Commit\x12\x15\n\x06wm_sig\x18\x07\x20\x01(\x0cR\x05wmSig\x12\x14\n\x05n\
+    once\x18\x08\x20\x01(\x0cR\x05nonce\x12\x1b\n\tfrom_root\x18\t\x20\x01(\
+    \x0cR\x08fromRoot\x12\x19\n\x08new_root\x18\n\x20\x01(\x0cR\x07newRootJ\
+    \x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x05\x10\x06\"\xa9\x01\
+    \n\x0eWardPublishAck\x12\x1c\n\ttimestamp\x18\x03\x20\x01(\x04R\ttimesta\
+    mp\x12!\n\x0cwm_signature\x18\x04\x20\x01(\x0cR\x0bwmSignature\x12&\n\
+    \x0ffrom_head_nonce\x18\x06\x20\x01(\x0cR\rfromHeadNonce\x12\"\n\rto_hea\
+    d_nonce\x18\x05\x20\x01(\x0cR\x0btoHeadNonceJ\x04\x08\x01\x10\x02J\x04\
+    \x08\x02\x10\x03\"8\n\x13WardPublishConflict\x12!\n\x0chead_counter\x18\
+    \x01\x20\x01(\rR\x0bheadCounter\"L\n\x13WardMutationApplied\x12\x1b\n\te\
+    ntry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12\x18\n\x07counter\x18\x02\
+    \x20\x01(\rR\x07counter\"l\n\x15WardFlushQueueApplied\x12\x1b\n\tentry_k\
+    ey\x18\x01\x20\x01(\x0cR\x08entryKey\x12\x18\n\x07counter\x18\x02\x20\
+    \x01(\rR\x07counter\x12\x1c\n\tremaining\x18\x03\x20\x01(\rR\tremaining\
+    \"(\n\x10WardResetService\x12\x14\n\x05force\x18\x01\x20\x01(\x08R\x05fo\
+    rce\"5\n\x13WardResetServiceAck\x12\x1e\n\nunresolved\x18\x01\x20\x01(\r\
+    R\nunresolvedB?\n#com.satoshilabs.trezor.lib.protobufB\x18TrezorMessageW\
+    ardService\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

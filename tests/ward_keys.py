@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import os
 
 __all__ = [
     "bip39_seed",
@@ -51,6 +52,11 @@ __all__ = [
     "open_identity",
     "unpack_content",
     "unpack_identity",
+    "pack_content",
+    "pack_identity",
+    "seal_content",
+    "seal_identity",
+    "value_digest",
     "wm_sig",
     "verify_wm_sig",
     "head_init_sig",
@@ -96,9 +102,9 @@ def derive_ward_id(seed: bytes) -> bytes:
     return _ed25519.publickey_unsafe(derive_k_sig(seed))
 
 
-# The empty-tree stand-in used wherever a root appears in a preimage: sha256(0x03),
-# domain-separated from the leaf/internal/commit tags. Mirrors apps.ward.attest.EMPTY_ROOT.
-EMPTY_ROOT = hashlib.sha256(b"\x03").digest()
+# The empty-tree stand-in used wherever a root appears in a preimage: sha256(0x02),
+# domain-separated from the leaf/internal/value tags. Mirrors apps.ward.attest.EMPTY_ROOT.
+EMPTY_ROOT = hashlib.sha256(b"\x02").digest()
 
 
 def _root_or_empty(root):
@@ -294,187 +300,115 @@ def verify_head_init_sig(ward_id: bytes, counter: int, root, sig: bytes) -> bool
         return False
 
 
-def derive_k_ident(seed: bytes, key_type: str = "address") -> bytes:
-    """K_ident(key_type) = SLIP21(seed, ["ward", "K_ident", key_type])."""
-    return slip21_key(seed, [b"ward", b"K_ident", key_type.encode()])
+def derive_k_ident(seed: bytes) -> bytes:
+    """K_ident = SLIP21(seed, ["ward", "K_ident"])."""
+    return slip21_key(seed, [b"ward", b"K_ident"])
 
 
-def derive_k_data(seed: bytes, key_type: str = "address") -> bytes:
-    """K_data(key_type) = SLIP21(seed, ["ward", "K_data", key_type])."""
-    return slip21_key(seed, [b"ward", b"K_data", key_type.encode()])
+def derive_k_data(seed: bytes) -> bytes:
+    """K_data = SLIP21(seed, ["ward", "K_data"])."""
+    return slip21_key(seed, [b"ward", b"K_data"])
+
+
+def pack_identity(identifier: bytes, app_id: str | bytes, device_id: int = 0) -> bytes:
+    """leaf_identity = len8(device_id) || device_id || len8(app_id) || app_id
+    || len16(identifier) || identifier; slot 0 is an empty device_id."""
+    if isinstance(app_id, str):
+        app_id = app_id.encode()
+    dev = bytes([device_id]) if device_id else b""
+    return (
+        bytes([len(dev)])
+        + dev
+        + bytes([len(app_id)])
+        + app_id
+        + len(identifier).to_bytes(2, "big")
+        + identifier
+    )
+
+
+def unpack_identity(pt: bytes) -> tuple[bytes, bytes, int]:
+    """Inverse of `pack_identity`: (identifier, app_id, device_id)."""
+    dev_len = pt[0]
+    device_id = pt[1] if dev_len else 0
+    off = 1 + dev_len
+    app_len = pt[off]
+    app_id = pt[off + 1 : off + 1 + app_len]
+    off += 1 + app_len
+    id_len = int.from_bytes(pt[off : off + 2], "big")
+    return pt[off + 2 : off + 2 + id_len], app_id, device_id
 
 
 def entry_key(
     k_path: bytes,
     app_id: str,
     identifier: bytes,
-    key_type: str = "address",
     device_id: int = 0,
 ) -> bytes:
-    """entry_key = HMAC-SHA256(K_path, app_id || 0x00 || key_type || 0x00 || dev || id)."""
-    scope = app_id.encode() + b"\x00" + key_type.encode() + b"\x00" + bytes([device_id])
-    return hmac.new(k_path, scope + identifier, hashlib.sha256).digest()
+    """entry_key = HMAC-SHA256(K_path, "WARD PATH v1" || leaf_identity)."""
+    preimage = b"WARD PATH v1" + pack_identity(identifier, app_id, device_id)
+    return hmac.new(k_path, preimage, hashlib.sha256).digest()
 
 
-# --- opening a sealed part -------------------------------------------------------
-# Also test-only. A real host holds neither K_ident nor K_data and cannot open a part;
-# these exist so a test can prove that what the device sealed really does contain what it
-# claimed, and that the AAD really is bound to the path.
-
-_AAD_IDENTITY = b"\x03"
-_AAD_CONTENT = b"\x02"
+def pack_content(entry_type: str, c_leaf: int, value: bytes) -> bytes:
+    """leaf_content = len8(entry_type) || entry_type || C_leaf(4B BE) || value."""
+    et = entry_type.encode()
+    return bytes([len(et)]) + et + c_leaf.to_bytes(4, "big") + value
 
 
-def _open(key: bytes, domain: bytes, entry_key_: bytes, key_type: str, part) -> bytes:
-    """Open a sealed wire part (WardLeafContent / WardLeafIdentity), dispatching on its
-    `encoding` as the firmware does: 0 is the AEAD, 2 is SIV -- written out independently."""
-    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms
-    from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
-
-    encoding, sealed = part.encoding or 0, part.encrypted
-    if encoding == 0:
-        aad = domain + entry_key_ + key_type.encode()
-        # `cryptography` expects the tag appended to the ciphertext; the wire keeps them apart
-        return ChaCha20Poly1305(key).decrypt(sealed.nonce, sealed.ct + sealed.tag, aad)
-    if encoding != 2:
-        raise ValueError("not a sealed part: encoding %r" % encoding)
-
-    k_enc = hmac.new(key, b"WARD SIV enc", hashlib.sha256).digest()
-    k_mac = hmac.new(key, b"WARD SIV mac", hashlib.sha256).digest()
-    # the RFC 7539 keystream the device's AEAD object yields starts at block 1
-    nonce = (1).to_bytes(4, "little") + sealed.tag[:12]
-    pt = Cipher(algorithms.ChaCha20(k_enc, nonce), mode=None).decryptor().update(sealed.ct)
-    ctx = domain + entry_key_ + bytes([len(key_type)]) + key_type.encode()
-    siv = hmac.new(k_mac, b"WARD SIV v1" + ctx + pt, hashlib.sha256).digest()[:16]
-    if not hmac.compare_digest(siv, sealed.tag):
-        raise ValueError("SIV mismatch")
-    return pt
+def unpack_content(pt: bytes) -> tuple[str, int, bytes]:
+    """Inverse of `pack_content`: (entry_type, c_leaf, value)."""
+    off = 1 + pt[0]
+    return pt[1:off].decode(), int.from_bytes(pt[off : off + 4], "big"), pt[off + 4 :]
 
 
-def open_identity(k_ident: bytes, entry_key_: bytes, key_type: str, part) -> bytes:
-    return _open(k_ident, _AAD_IDENTITY, entry_key_, key_type, part)
-
-
-def open_content(k_data: bytes, entry_key_: bytes, key_type: str, part) -> bytes:
-    return _open(k_data, _AAD_CONTENT, entry_key_, key_type, part)
-
-
-def unpack_identity(pt: bytes) -> tuple[bytes, bytes, int]:
-    """len16(identifier) || identifier || len8(app_id) || app_id || device_id(1B)."""
-    id_len = int.from_bytes(pt[0:2], "big")
-    off = 2 + id_len
-    identifier = pt[2:off]
-    aid_len = pt[off]
-    off += 1
-    app_id = pt[off : off + aid_len]
-    off += aid_len
-    return identifier, app_id, pt[off]
-
-
-def unpack_content(pt: bytes) -> tuple[int, bytes]:
-    """C_leaf(4B BE) || len32(value) || value."""
-    c_leaf = int.from_bytes(pt[0:4], "big")
-    val_len = int.from_bytes(pt[4:8], "big")
-    return c_leaf, pt[8 : 8 + val_len]
-
-
-# --- sealing, for the one case the device cannot stage for itself -------------------
+# --- sealed parts ----------------------------------------------------------------
+# Test-only. A real host holds neither K_ident nor K_data and cannot open or build a part;
+# these exist so a test can prove what the device sealed, and stage the one state a
+# single-device harness cannot reach: a never-synced device whose host already holds an
+# entry. Only a test may hold these keys, and only because it knows the device's seed.
 #
-# The device is normally the only party that can build a leaf, and every other fixture in
-# these tests goes through a real confirmed write for exactly that reason. ONE state cannot
-# be reached that way: a device that has NEVER synced, whose host already holds an entry.
-# That is not exotic -- it is Suite before the trie lands, and a second device of the same
-# wallet having written the entry -- but a single-device harness cannot produce it, because
-# the first sync teaches the device the tree is EMPTY and it then rightly refuses any leaf
-# claiming to be in it.
-#
-# So the oracle seals one here. Same warning as the rest of this file: only a test may hold
-# these keys, and only because it knows the device's seed.
+#   seal(K, d, pt) = 0x01 || nonce(12B) || tag(16B) || AES-256-GCM(K, nonce, aad=d, pt)
+
+DOMAIN_CONTENT = 0x02
+DOMAIN_IDENTITY = 0x04
 
 
-def pack_identity(identifier: bytes, app_id: str | bytes, device_id: int = 0) -> bytes:
-    """Inverse of `unpack_identity`."""
-    if isinstance(app_id, str):
-        app_id = app_id.encode()
-    return (
-        len(identifier).to_bytes(2, "big")
-        + identifier
-        + bytes([len(app_id)])
-        + app_id
-        + bytes([device_id])
-    )
+def seal(key: bytes, domain: int, pt: bytes, nonce: bytes | None = None) -> bytes:
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+    nonce = nonce or os.urandom(12)
+    sealed = AESGCM(key).encrypt(nonce, pt, bytes([domain]))
+    return b"\x01" + nonce + sealed[-16:] + sealed[:-16]
 
 
-def pack_content(c_leaf: int, value: bytes) -> bytes:
-    """Inverse of `unpack_content`."""
-    return c_leaf.to_bytes(4, "big") + len(value).to_bytes(4, "big") + value
+def open_sealed(key: bytes, domain: int, sealed: bytes) -> bytes:
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+    assert sealed[0] == 0x01, "unknown sealing scheme"
+    nonce, tag, ct = sealed[1:13], sealed[13:29], sealed[29:]
+    return AESGCM(key).decrypt(nonce, ct + tag, bytes([domain]))
 
 
-_AEAD_BUCKETS = (64, 256, 1024, 4096)
+def open_identity(k_ident: bytes, sealed_identity: bytes) -> bytes:
+    return open_sealed(k_ident, DOMAIN_IDENTITY, sealed_identity)
 
 
-def _pad_bucket(pt: bytes) -> bytes:
-    """Pad to the next bucket, as the device does, so a length leaks only a coarse band."""
-    for bucket in _AEAD_BUCKETS:
-        if len(pt) <= bucket:
-            return pt + bytes(bucket - len(pt))
-    return pt
-
-
-def _seal(
-    key: bytes, domain: bytes, entry_key_: bytes, key_type: str, pt: bytes, nonce: bytes
-):
-    from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
-
-    aad = domain + entry_key_ + key_type.encode()
-    sealed = ChaCha20Poly1305(key).encrypt(nonce, _pad_bucket(pt), aad)
-    # the wire keeps ciphertext and tag apart; `cryptography` returns them joined
-    return sealed[:-16], sealed[-16:]
+def open_content(k_data: bytes, sealed_content: bytes) -> bytes:
+    return open_sealed(k_data, DOMAIN_CONTENT, sealed_content)
 
 
 def seal_identity(
-    k_ident: bytes,
-    entry_key_: bytes,
-    key_type: str,
-    identifier: bytes,
-    app_id: str | bytes,
-    device_id: int = 0,
-    nonce: bytes = b"\x11" * 12,
-):
-    """A sealed identity part, as protobuf. Fixed nonce: a test wants reproducibility, and
-    nonce freshness is asserted where it matters (the device's own writes)."""
-    from trezorlib import messages
-
-    ct, tag = _seal(
-        k_ident,
-        _AAD_IDENTITY,
-        entry_key_,
-        key_type,
-        pack_identity(identifier, app_id, device_id),
-        nonce,
-    )
-    return messages.WardLeafIdentity(
-        encoding=0,
-        key_type=key_type,
-        encrypted=messages.WardEncryptedIdentity(nonce=nonce, tag=tag, ct=ct),
-    )
+    k_ident: bytes, identifier: bytes, app_id: str | bytes, device_id: int = 0
+) -> bytes:
+    return seal(k_ident, DOMAIN_IDENTITY, pack_identity(identifier, app_id, device_id))
 
 
 def seal_content(
-    k_data: bytes,
-    entry_key_: bytes,
-    key_type: str,
-    value: bytes,
-    c_leaf: int = 0,
-    nonce: bytes = b"\x22" * 12,
-):
-    """A sealed content part, as protobuf."""
-    from trezorlib import messages
+    k_data: bytes, value: bytes, c_leaf: int = 0, entry_type: str = "address"
+) -> bytes:
+    return seal(k_data, DOMAIN_CONTENT, pack_content(entry_type, c_leaf, value))
 
-    ct, tag = _seal(
-        k_data, _AAD_CONTENT, entry_key_, key_type, pack_content(c_leaf, value), nonce
-    )
-    return messages.WardLeafContent(
-        encoding=0,
-        encrypted=messages.WardEncryptedLeaf(nonce=nonce, tag=tag, ct=ct),
-    )
+
+def value_digest(sealed_content: bytes) -> bytes:
+    """The leaf commitment: sha256(0x03 || sealed_content)."""
+    return hashlib.sha256(b"\x03" + sealed_content).digest()
