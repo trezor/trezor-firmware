@@ -16,8 +16,7 @@ use crate::ui::{CommonUI, ModelUI};
 /// Component showing a task instruction, e.g. "Swipe up", and an optional
 /// content consisting of one of these:
 ///     - a task description e.g. "Confirm transaction", or
-///     - a page counter e.g. "1 / 3", meaning the first screen of three total,
-///       or
+///     - a page counter e.g. "1 / 3", meaning the first screen of three total, or
 ///     - a page hint e.g. "Go back" if you are on the last page.
 /// A host of this component is responsible of providing the exact area
 /// considering also the spacing. The height must be 18px (only instruction) or

@@ -1,4 +1,5 @@
 wrap_comments = true
+comment_width = 100
 imports_granularity = "Module"
 reorder_imports = true
 group_imports = "StdExternalCrate"

@@ -15,9 +15,7 @@ pub fn main() -> i32 {
 
     // Call the Rust test harness main function
     // The function panics if any test fails.
-    // Asserting that it returns () to ensure that if a future Rust version
-    // changes the signature and behavior, we'll be notified.
-    assert_eq!(test_main(), ());
+    assert_eq!(test_main(), std::process::ExitCode::SUCCESS);
 
     // Return 0 to indicate success
     0

@@ -3,8 +3,7 @@
 /// # Errors
 /// - `OutputBufferTooSmall` if the provided output buffer is too short.
 /// - `InvalidLength` if the input length is not a multiple of 4 for decoding.
-/// - `InvalidCharacter` if an invalid Base64 character is encountered during
-///   decoding.
+/// - `InvalidCharacter` if an invalid Base64 character is encountered during decoding.
 #[cfg_attr(test, derive(Debug))]
 pub enum Base64Error {
     OutputBufferTooSmall,

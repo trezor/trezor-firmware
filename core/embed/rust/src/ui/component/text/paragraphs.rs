@@ -428,10 +428,10 @@ impl PageOffset {
     /// Given a `PageOffset` and a `Rect` area, returns:
     ///
     /// - The next offset.
-    /// - Part of `area` that remains free after the current offset is rendered
-    ///   into it, or `None` if we've reached the end of the page.
-    /// - The `TextLayout` for the current offset, or `None` if `area` is too
-    ///   small to render any text.
+    /// - Part of `area` that remains free after the current offset is rendered into it, or `None`
+    ///   if we've reached the end of the page.
+    /// - The `TextLayout` for the current offset, or `None` if `area` is too small to render any
+    ///   text.
     ///
     /// If the returned remaining area is not None then it holds that
     /// `next_offset.par == self.par + 1`.

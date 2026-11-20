@@ -136,8 +136,7 @@ impl FullType {
         let type_ptr = self as *const Self as *const ffi::mp_obj_type_t;
         // SAFETY:
         //  - aligned, non-null, and dereferanceable because it came from a reference
-        //  - pointee is valid because the initial part of FullType has the same layout
-        //    as Type
+        //  - pointee is valid because the initial part of FullType has the same layout as Type
         //  - aliasing the same as source reference
         unsafe { type_ptr.as_ref_unchecked() }
     }

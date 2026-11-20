@@ -362,10 +362,9 @@ impl TestContext {
 
 /// Every test must start by calling this function and not discarding the
 /// MutexGuard until the end.
-/// - By default `cargo test` uses multiple threads but we only have one
-///   THP_CONTEXT.
-/// - If we somehow get rid of THP_AUX we can stop with this circus and just
-///   make a new ThpContext instance.
+/// - By default `cargo test` uses multiple threads but we only have one THP_CONTEXT.
+/// - If we somehow get rid of THP_AUX we can stop with this circus and just make a new ThpContext
+///   instance.
 fn setup(ifaces: &[u8]) -> TestContext {
     unsafe { mpy_init() };
 

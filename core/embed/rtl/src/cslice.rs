@@ -117,10 +117,9 @@ impl<T> CSlicePtr<T> {
     ///
     /// Caller is responsible for:
     ///
-    /// 1. Making sure that `from_raw_parts` requirements are met: `ptr` is
-    ///    aligned, valid for reads of the appropriate array length, there are
-    ///    no live mutable references to the same memory, and the memory is not
-    ///    mutated during the lifetime of the returned slice.
+    /// 1. Making sure that `from_raw_parts` requirements are met: `ptr` is aligned, valid for reads
+    ///    of the appropriate array length, there are no live mutable references to the same memory,
+    ///    and the memory is not mutated during the lifetime of the returned slice.
     /// 2. Properly bounding the lifetime of the returned slice.
     const unsafe fn make_unbounded_slice<'b>(&self) -> &'b [T] {
         if self.is_empty() {
@@ -144,14 +143,12 @@ impl<T> CSlicePtr<T> {
     /// If the `CSlicePtr` is non-null and non-zero, constructs a mutable slice
     /// via [`core::slice::from_raw_parts_mut`]. Caller is responsible for:
     ///
-    /// 1. Making sure that the internal pointer has the correct provenance
-    ///    (that is, if from a Rust slice, it's `from_slice_mut()` rather than
-    ///    `from_slice()`)
-    /// 2. Making sure that `from_raw_parts_mut` requirements are met: `ptr` is
-    ///    aligned, valid for reads and writes of the appropriate array length,
-    ///    there are no other live references to the same memory, and the memory
-    ///    is not accessed except through the returned slice, for the duration
-    ///    of the slice's lifetime.
+    /// 1. Making sure that the internal pointer has the correct provenance (that is, if from a Rust
+    ///    slice, it's `from_slice_mut()` rather than `from_slice()`)
+    /// 2. Making sure that `from_raw_parts_mut` requirements are met: `ptr` is aligned, valid for
+    ///    reads and writes of the appropriate array length, there are no other live references to
+    ///    the same memory, and the memory is not accessed except through the returned slice, for
+    ///    the duration of the slice's lifetime.
     /// 3. Properly bounding the lifetime of the returned slice.
     const unsafe fn make_unbounded_slice_mut<'b>(&self) -> &'b mut [T] {
         if self.is_empty() {
@@ -238,8 +235,7 @@ impl<T> CSlice<'_, T> {
     /// * be correctly aligned for type `T`,
     /// * point to a valid slice of `len` elements of type `T`,
     /// * be valid for reads for the lifetime of the constructed `CSlice`,
-    /// * the pointed-to memory not be mutated for the lifetime of the
-    ///   constructed `CSlice`.
+    /// * the pointed-to memory not be mutated for the lifetime of the constructed `CSlice`.
     ///
     /// The lifetime parameter `'a` of the returned `CSlice` is unbounded. The
     /// caller should typically discard the `CSlice` when the enclosing function
@@ -449,12 +445,11 @@ impl<T> CSliceMut<'_, T> {
     ///
     /// * be correctly aligned for type `T`,
     /// * point to a valid slice of `len` elements of type `T`,
-    /// * be valid for reads and writes during the lifetime of the constructed
-    ///   `CSliceMut`,
-    /// * be exclusive: no other Rust reference (shared or exclusive) to the
-    ///   same memory may be alive while the `CSliceMut` exists,
-    /// * the pointed-to memory must not be accessed except through the returned
-    ///   `CSliceMut` instance during its lifetime.
+    /// * be valid for reads and writes during the lifetime of the constructed `CSliceMut`,
+    /// * be exclusive: no other Rust reference (shared or exclusive) to the same memory may be
+    ///   alive while the `CSliceMut` exists,
+    /// * the pointed-to memory must not be accessed except through the returned `CSliceMut`
+    ///   instance during its lifetime.
     ///
     /// The lifetime parameter `'a` of the returned `CSliceMut` is
     /// unbounded. The caller should typically discard the `CSliceMut` when the

@@ -194,14 +194,12 @@ fn run_openocd(model: Model, instructions: &str) -> Result<()> {
 /// What still has to be rejected, since brace quoting cannot express it:
 ///
 /// * Braces, which would close or unbalance the group itself.
-/// * Newlines: backslash-newline is the one substitution Tcl *does* perform
-///   inside braces, and a raw newline would also break the `;`-separated
-///   script.
-/// * A path ENDING in a backslash. Interior backslashes are literal inside
-///   braces, but Tcl does not count a brace that a backslash quotes when it
-///   looks for the matching close brace -- and the close brace here is the one
-///   this function appends. `foo\` would become `{foo\}`, whose `\}` is not the
-///   terminator, so the rest of the command gets swallowed into the word.
+/// * Newlines: backslash-newline is the one substitution Tcl *does* perform inside braces, and a
+///   raw newline would also break the `;`-separated script.
+/// * A path ENDING in a backslash. Interior backslashes are literal inside braces, but Tcl does not
+///   count a brace that a backslash quotes when it looks for the matching close brace -- and the
+///   close brace here is the one this function appends. `foo\` would become `{foo\}`, whose `\}` is
+///   not the terminator, so the rest of the command gets swallowed into the word.
 ///
 /// Interior backslashes are therefore allowed: rejecting them would refuse
 /// every Windows-style path for no reason.

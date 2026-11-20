@@ -283,7 +283,7 @@ pub fn publish_artifact(
         project.binary_name(),
         model.model_id(),
         infix,
-        &helpers::parse_version_file(version_file)?,
+        helpers::parse_version_file(version_file)?,
         &helpers::git_revision()?[..8],
         if helpers::git_modified()? {
             "-dirty"

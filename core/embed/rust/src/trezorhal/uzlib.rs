@@ -40,8 +40,7 @@ impl<'a> SourceReadContext<'a> {
     /// Fill the uncomp struct with the appropriate pointers to the source data
     pub fn prepare_uncomp(&self, uncomp: &mut ffi::uzlib_uncomp_t) {
         // SAFETY: the offsets are within the buffer bounds.
-        // - buf_head is either 0 or advanced by uzlib to at most buf_tail (via
-        //   advance())
+        // - buf_head is either 0 or advanced by uzlib to at most buf_tail (via advance())
         // - buf_tail is at most the buffer size (via reader_callback())
         unsafe {
             uncomp.source = self.buf.as_ptr().add(self.buf_head);

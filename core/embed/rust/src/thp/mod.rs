@@ -476,8 +476,7 @@ impl ThpContext {
     }
 
     /// Returns information for a channel:
-    /// - duration between now and the last time a (non-ACK) packet has been
-    ///   sent
+    /// - duration between now and the last time a (non-ACK) packet has been sent
     /// - phase of the channel, possibly with initial pairing state
     pub fn channel_info(&self, channel_id: u16) -> Result<(Option<u32>, Phase), Error> {
         let ChannelEntry {

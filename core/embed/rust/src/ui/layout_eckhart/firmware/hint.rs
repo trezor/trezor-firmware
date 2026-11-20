@@ -10,8 +10,7 @@ use crate::ui::shape::{self, Renderer, Text};
 use crate::ui::util::Pager;
 
 /// Component rendered above ActionBar, showing one of these:
-///     - a task instruction/hint with optional icon, e.g. "Confirm
-///       transaction",
+///     - a task instruction/hint with optional icon, e.g. "Confirm transaction",
 ///     - a page counter e.g. "1 / 3", meaning the first screen of three total.
 ///
 /// The instruction has adaptive height, depending on the text length. The

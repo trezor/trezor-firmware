@@ -38,8 +38,8 @@ impl ffi::gfx_bitblt_t {
     /// Sets the destination bitmap pointer and stride.
     ///
     /// # SAFETY
-    /// 1) Ensure that caller holds mutable reference to the destination bitmap
-    ///    until the `gfx_bitblt_t` is dropped.
+    /// 1) Ensure that caller holds mutable reference to the destination bitmap until the
+    ///    `gfx_bitblt_t` is dropped.
     unsafe fn with_dst(self, dst: &mut Bitmap) -> Self {
         // This ensures that the destination rectangle is
         // completely inside the destination bitmap
@@ -60,10 +60,9 @@ impl ffi::gfx_bitblt_t {
     /// bitmap.
     ///
     /// # SAFETY
-    /// 1) Ensure that the rectangle is completely inside the destination
-    ///    bitmap.
-    /// 2) If the copy or blend operation is used, ensure that the rectangle is
-    ///    completely filled with source bitmap or its part.
+    /// 1) Ensure that the rectangle is completely inside the destination bitmap.
+    /// 2) If the copy or blend operation is used, ensure that the rectangle is completely filled
+    ///    with source bitmap or its part.
     unsafe fn with_rect(self, r: Rect) -> Self {
         Self {
             width: r.width() as u16,
@@ -81,8 +80,8 @@ impl ffi::gfx_bitblt_t {
     /// # SAFETY
     /// 1) Ensure that `x` and `y` are inside the source bitmap.
     /// 2) Source bitmap complete covers destination rectangle.
-    /// 3) Ensure that caller holds immutable reference to the source bitmap.
-    ///    until the `gfx_bitblt_t` is dropped.
+    /// 3) Ensure that caller holds immutable reference to the source bitmap. until the
+    ///    `gfx_bitblt_t` is dropped.
     unsafe fn with_src(self, bitmap: &Bitmap, x: i16, y: i16) -> Self {
         let bitmap_stride = match bitmap.format() {
             BitmapFormat::MONO1P => bitmap.width() as u16, // packed bits
@@ -145,8 +144,7 @@ impl BitBltFill {
     /// Prepares bitblt **fill** operation
     ///
     /// - `r` is the rectangle to fill.
-    /// - `clip` is the clipping rectangle and must be completely inside the
-    ///   destination bitmap.
+    /// - `clip` is the clipping rectangle and must be completely inside the destination bitmap.
     /// - `color` is the color to fill the rectangle with.
     /// - `alpha` is the alpha value to use for blending.
     ///
@@ -230,8 +228,7 @@ impl<'a> BitBltCopy<'a> {
     /// source bitmap to the destination bitmap or display.
     ///
     /// - `r` is the rectangle in the destination bitmap.
-    /// - `clip` is the clipping rectangle and must be completely inside the
-    ///   destination bitmap.
+    /// - `clip` is the clipping rectangle and must be completely inside the destination bitmap.
     /// - `src` represents the source bitmap.
     ///
     /// The function ensures proper clipping and returns `None` if the copy

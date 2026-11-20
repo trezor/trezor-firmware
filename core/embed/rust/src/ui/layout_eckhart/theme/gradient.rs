@@ -25,8 +25,8 @@ impl Gradient {
     /// # Arguments
     /// * `target` - The renderer to draw to
     /// * `area` - The rectangle to fill with gradient
-    /// * `step_size` - Step size for speed tuning (1 = full quality, higher =
-    ///   faster but lower quality)
+    /// * `step_size` - Step size for speed tuning (1 = full quality, higher = faster but lower
+    ///   quality)
     pub fn render<'s>(&self, target: &mut impl Renderer<'s>, area: Rect, step_size: u16) {
         render_gradient(target, area, *self, step_size);
     }

@@ -89,8 +89,7 @@ impl CLibrary {
     ///
     /// # Parameters
     ///
-    /// - `src`: Path to the source file, relative to the crate root or
-    ///   absolute.
+    /// - `src`: Path to the source file, relative to the crate root or absolute.
     pub fn add_source(&mut self, src: impl AsRef<Path>) {
         self.add_source_with_attrs(src, None);
     }
@@ -99,8 +98,7 @@ impl CLibrary {
     ///
     /// # Parameters
     ///
-    /// - `sources`: Iterator of paths to source files, each relative to the
-    ///   crate root or absolute.
+    /// - `sources`: Iterator of paths to source files, each relative to the crate root or absolute.
     pub fn add_sources<I, P>(&mut self, sources: I)
     where
         I: IntoIterator<Item = P>,
@@ -114,8 +112,7 @@ impl CLibrary {
     /// # Parameters
     ///
     /// - `dir`: Path to the directory containing the sources.
-    /// - `sources`: Iterator of source file paths, each relative to the
-    ///   directory or absolute.
+    /// - `sources`: Iterator of source file paths, each relative to the directory or absolute.
     pub fn add_sources_in_dir<I, P>(&mut self, dir: impl AsRef<Path>, sources: I)
     where
         I: IntoIterator<Item = P>,
@@ -132,8 +129,7 @@ impl CLibrary {
     ///
     /// # Parameters
     ///
-    /// - `src`: Path to the source file, relative to the crate root or
-    ///   absolute.
+    /// - `src`: Path to the source file, relative to the crate root or absolute.
     /// - `attrs`: Optional compile attributes specific to this source file.
     pub fn add_source_with_attrs(&mut self, src: impl AsRef<Path>, attrs: Option<CompileAttrs>) {
         let src = relative_to_manifest(src);
@@ -150,8 +146,7 @@ impl CLibrary {
     ///
     /// # Parameters
     ///
-    /// - `sources`: Iterator of source file paths, each relative to the crate
-    ///   root or absolute.
+    /// - `sources`: Iterator of source file paths, each relative to the crate root or absolute.
     /// - `attrs`: Optional compile attributes to apply to all sources.
     pub fn add_sources_with_attrs<I, P>(&mut self, sources: I, attrs: Option<CompileAttrs>)
     where
@@ -172,8 +167,7 @@ impl CLibrary {
     /// # Parameters
     ///
     /// - `dir`: Path to the directory containing the sources.
-    /// - `sources`: Iterator of source file paths, each relative to the
-    ///   directory or absolute.
+    /// - `sources`: Iterator of source file paths, each relative to the directory or absolute.
     /// - `attrs`: Optional compile attributes to apply to all sources.
     pub fn add_sources_in_dir_with_attrs<I, P>(
         &mut self,
@@ -210,8 +204,7 @@ impl CLibrary {
     ///
     /// # Parameters
     ///
-    /// - `path`: Path to the include directory, relative to the crate root or
-    ///   absolute.
+    /// - `path`: Path to the include directory, relative to the crate root or absolute.
     pub fn add_private_include(&mut self, path: impl AsRef<Path>) {
         self.private_attrs.add_include(path);
     }
@@ -220,8 +213,7 @@ impl CLibrary {
     ///
     /// # Parameters
     ///
-    /// - `paths`: Iterator of include directory paths, each relative to the
-    ///   crate root or absolute.
+    /// - `paths`: Iterator of include directory paths, each relative to the crate root or absolute.
     pub fn add_private_includes<I, P>(&mut self, paths: I)
     where
         I: IntoIterator<Item = P>,
@@ -239,8 +231,7 @@ impl CLibrary {
     ///
     /// # Parameters
     ///
-    /// - `path`: Path to the public include directory, relative to the crate
-    ///   root or absolute.
+    /// - `path`: Path to the public include directory, relative to the crate root or absolute.
     pub fn add_include(&mut self, path: impl AsRef<Path>) {
         self.public_attrs.add_include(path);
     }
@@ -252,8 +243,8 @@ impl CLibrary {
     ///
     /// # Parameters
     ///
-    /// - `paths`: Iterator of public include directory paths, each relative to
-    ///   the crate root or absolute.
+    /// - `paths`: Iterator of public include directory paths, each relative to the crate root or
+    ///   absolute.
     pub fn add_includes<I, P>(&mut self, paths: I)
     where
         I: IntoIterator<Item = P>,
@@ -269,8 +260,7 @@ impl CLibrary {
     /// # Parameters
     ///
     /// - `name`: The name of the define (do not include `-D` or `=`).
-    /// - `value`: Optional value for the define. If `None`, treated as
-    ///   `-DNAME`.
+    /// - `value`: Optional value for the define. If `None`, treated as `-DNAME`.
     pub fn add_private_define(&mut self, name: &str, value: Option<&str>) {
         self.private_attrs.add_define(name, value);
     }
@@ -279,8 +269,7 @@ impl CLibrary {
     ///
     /// # Parameters
     ///
-    /// - `defines`: Iterator of (name, optional value) tuples. Names must not
-    ///   include `-D` or `=`.
+    /// - `defines`: Iterator of (name, optional value) tuples. Names must not include `-D` or `=`.
     pub fn add_private_defines<I, N, V>(&mut self, defines: I)
     where
         I: IntoIterator<Item = (N, Option<V>)>,
@@ -299,8 +288,7 @@ impl CLibrary {
     /// # Parameters
     ///
     /// - `name`: The name of the define (do not include `-D` or `=`).
-    /// - `value`: Optional value for the define. If `None`, treated as
-    ///   `-DNAME`.
+    /// - `value`: Optional value for the define. If `None`, treated as `-DNAME`.
     pub fn add_define(&mut self, name: &str, value: Option<&str>) {
         self.public_attrs.add_define(name, value);
     }
@@ -311,8 +299,7 @@ impl CLibrary {
     ///
     /// # Parameters
     ///
-    /// - `defines`: Iterator of (name, optional value) tuples. Names must not
-    ///   include `-D` or `=`.
+    /// - `defines`: Iterator of (name, optional value) tuples. Names must not include `-D` or `=`.
     pub fn add_defines<I, N, V>(&mut self, defines: I)
     where
         I: IntoIterator<Item = (N, Option<V>)>,
@@ -406,8 +393,8 @@ impl CLibrary {
     /// # Parameters
     ///
     /// - `library_name`: The name of the external library to import.
-    /// - `make_public`: If `true`, include paths are treated as public (visible
-    ///   to downstream crates); otherwise, they are private.
+    /// - `make_public`: If `true`, include paths are treated as public (visible to downstream
+    ///   crates); otherwise, they are private.
     ///
     /// # Errors
     ///
@@ -497,8 +484,7 @@ impl CLibrary {
     ///
     /// # Parameters
     ///
-    /// - `crate_name`: The name of the crate whose public C library attributes
-    ///   should be imported.
+    /// - `crate_name`: The name of the crate whose public C library attributes should be imported.
     ///
     /// If the crate has already been imported, this function does nothing.
     pub fn import_lib(&mut self, lib_name: &str) -> Result<()> {
