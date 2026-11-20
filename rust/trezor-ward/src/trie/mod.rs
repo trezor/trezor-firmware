@@ -14,10 +14,7 @@ pub mod verifier;
 
 #[cfg(feature = "sha2")]
 pub use common::Sha256;
-pub use common::{
-    BitPos, ByteArray, Error, HashFn, Hashable, Key, Leaf, Proof, Step, Steps, bit, branch_digest,
-    crit_bit, empty_root, key_bits, key_len, leaf_digest,
-};
+pub use common::{ByteArray, Error, HashFn, Hashable, Key, Proof};
 #[cfg(feature = "use_std")]
 pub use prover::Tree;
 pub use verifier::{Entry, OccupiedEntry, Root, VacantEntry, Walk};

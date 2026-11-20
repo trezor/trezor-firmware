@@ -19,7 +19,7 @@ use super::error::Error;
 /// terminal key of a proof comes from the host. Deferred until a caller needs it.
 ///
 /// Bits are numbered MSB-first: bit 0 is the top bit of byte 0. The tree routes by these
-/// bits. A branch names its crit bit as a [`BitPos`], encoded in as many bytes as the key's
+/// bits. A branch names the position of its crit bit, encoded in as many bytes as the key's
 /// width needs, so a key may be of any width.
 pub trait Key: Copy + Eq {
     /// The array the key is.
@@ -45,12 +45,12 @@ impl<const N: usize> Key for [u8; N] {
 }
 
 /// Width of `K` in bytes.
-pub const fn key_len<K: Key>() -> usize {
+pub(crate) const fn key_len<K: Key>() -> usize {
     K::Bytes::LEN
 }
 
 /// Width of `K` in bits.
-pub const fn key_bits<K: Key>() -> usize {
+pub(crate) const fn key_bits<K: Key>() -> usize {
     8 * key_len::<K>()
 }
 
@@ -62,7 +62,7 @@ pub const fn key_bits<K: Key>() -> usize {
 /// that hold every position of the key, one for a key of up to 256 bits, two up to 65536,
 /// and so on.
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub struct BitPos<K: Key>(
+pub(crate) struct BitPos<K: Key>(
     /// The number's big-endian bytes, so that `as_bytes` can lend their tail as the encoding.
     /// With a `usize` here it would be returned by value, as `[u8; Self::LEN]`, and a length
     /// that depends on `K` needs the unstable `generic_const_exprs`.
@@ -76,7 +76,7 @@ impl<K: Key> BitPos<K> {
     const BITS: usize = key_bits::<K>();
 
     /// Width in the encodings and on the wire.
-    pub const LEN: usize = match Self::BITS.checked_sub(1) {
+    pub(crate) const LEN: usize = match Self::BITS.checked_sub(1) {
         // The bytes of the key's last position.
         Some(last) => (usize::BITS - last.leading_zeros()).div_ceil(8) as usize,
         // A key without bits has no positions.
@@ -84,7 +84,7 @@ impl<K: Key> BitPos<K> {
     };
 
     /// Position `i`, or `None` if the key has no such bit.
-    pub const fn new(i: usize) -> Option<Self> {
+    pub(crate) const fn new(i: usize) -> Option<Self> {
         if i < Self::BITS {
             Some(Self(i.to_be_bytes(), PhantomData))
         } else {
@@ -93,12 +93,12 @@ impl<K: Key> BitPos<K> {
     }
 
     /// The position as a number.
-    pub const fn index(self) -> usize {
+    pub(crate) const fn index(self) -> usize {
         usize::from_be_bytes(self.0)
     }
 
     /// The position's encoding, [`LEN`](Self::LEN) bytes.
-    pub fn as_bytes(&self) -> &[u8] {
+    pub(crate) fn as_bytes(&self) -> &[u8] {
         &self.0[size_of::<usize>() - Self::LEN..]
     }
 }
@@ -140,7 +140,7 @@ impl<K: Key> fmt::Debug for BitPos<K> {
 }
 
 /// Bit `i` of `key`.
-pub fn bit<K: Key>(key: &K, i: BitPos<K>) -> bool {
+pub(crate) fn bit<K: Key>(key: &K, i: BitPos<K>) -> bool {
     let i = i.index();
     (key.as_bytes().as_ref()[i / 8] >> (7 - i % 8)) & 1 == 1
 }
@@ -182,7 +182,7 @@ impl Side {
 }
 
 /// The first bit on which two keys differ, or `None` if they are equal.
-pub fn crit_bit<K: Key>(a: &K, b: &K) -> Option<BitPos<K>> {
+pub(crate) fn crit_bit<K: Key>(a: &K, b: &K) -> Option<BitPos<K>> {
     a.as_bytes()
         .as_ref()
         .iter()

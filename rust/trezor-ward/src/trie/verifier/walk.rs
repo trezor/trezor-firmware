@@ -164,8 +164,8 @@ impl<'r, B: AsRef<[u8]>, K: Key, H: HashFn> Walk<'r, B, K, H> {
     /// the current proof, and the entry is returned, for reading.
     ///
     /// `proof` is either the entry's full proof or the part of its path below the branch
-    /// where it parts from the current entry ([`Proof::below`]), at the host's choice on
-    /// every step; the walk tells the two apart by whether every step lies below that
+    /// where it parts from the current entry, as `Tree::walk` yields it, at the host's choice
+    /// on every step; the walk tells the two apart by whether every step lies below that
     /// branch, which a full proof of the next entry never does, since it has a step at the
     /// branch itself. The first entry has nothing to be cut below and comes in full. A proof
     /// that does not fold to the root, once completed, is [`Error::RootMismatch`]; one that

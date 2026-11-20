@@ -22,17 +22,17 @@ pub(crate) const TAG_EMPTY: u8 = 0x02;
 pub(crate) const TAG_VALUE: u8 = 0x03;
 
 /// The root of the empty map.
-pub fn empty_root<H: HashFn>() -> H::Output {
+pub(crate) fn empty_root<H: HashFn>() -> H::Output {
     H::digest(&[&[TAG_EMPTY]])
 }
 
 /// The digest of a leaf.
-pub fn leaf_digest<K: Key, H: HashFn>(key: &K, value: &H::Output) -> H::Output {
+pub(crate) fn leaf_digest<K: Key, H: HashFn>(key: &K, value: &H::Output) -> H::Output {
     H::digest(&[&[TAG_LEAF], key.as_bytes().as_ref(), value.as_ref()])
 }
 
 /// The digest of a branch. Children are positional: `left` holds the keys whose crit bit is 0.
-pub fn branch_digest<K: Key, H: HashFn>(
+pub(crate) fn branch_digest<K: Key, H: HashFn>(
     crit_bit: BitPos<K>,
     left: &H::Output,
     right: &H::Output,

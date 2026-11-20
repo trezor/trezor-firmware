@@ -19,7 +19,7 @@ leaf. The key is present exactly when that leaf's key equals it.
 ### Encodings
 
 `H` is the hash function and `‖` is concatenation. `key` is the key's bytes, `crit_bit` is the
-position of the bit the branch splits on, encoded by `BitPos` big-endian in the fewest bytes
+position of the bit the branch splits on, encoded big-endian in the fewest bytes
 that hold every position of the key (one byte for keys of up to 256 bits, two up to 65536),
 and the rest are digests. Every operand has a fixed width, so no length prefixes are needed.
 
@@ -79,13 +79,13 @@ branch where it turned left and then turns left all the way down, and the last e
 nowhere, which is how the walk knows it is done without any word from the host.
 
 The walk holds the current entry's full proof. For the next entry the host sends either its
-full proof or only the part of its path below the branch where the two entries part
-(`Proof::below`), which is a prefix of the full proof's bytes; the walk splices that onto the
-steps it already holds, folds the one sibling that changes itself, and holds the result against
-the root with `Root::get` like any other proof, so every entry comes out as an
-`OccupiedEntry`. Over a whole walk the truncated form sends each branch's step once. The walk
-allocates nothing: the caller provides the storage for each proof, sized by `Walk::next_len`,
-and `Tree::walk` produces exactly what a `Walk` accepts.
+full proof or only the part of its path below the branch where the two entries part, which is
+a prefix of the full proof's bytes; the walk splices that onto the steps it already holds,
+folds the one sibling that changes itself, and holds the result against the root with
+`Root::get` like any other proof, so every entry comes out as an `OccupiedEntry`. Over a whole
+walk the truncated form sends each branch's step once. The walk allocates nothing: the caller
+provides the storage for each proof, sized by `Walk::next_len`, and `Tree::walk` produces
+exactly what a `Walk` accepts.
 
 A walk borrows its root for as long as it is open, so the tree cannot change under it, and the
 entries it steps over are for reading. To change the entry a search has stopped at,

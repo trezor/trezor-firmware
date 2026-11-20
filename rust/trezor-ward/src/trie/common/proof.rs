@@ -28,16 +28,16 @@ use super::hash::HashFn;
 use super::key::{BitPos, Key, key_len};
 
 /// One step of a path: the branch's crit bit and the digest of the child not taken.
-pub struct Step<K: Key, H: HashFn> {
+pub(crate) struct Step<K: Key, H: HashFn> {
     /// The bit the branch splits on.
-    pub crit_bit: BitPos<K>,
+    pub(crate) crit_bit: BitPos<K>,
     /// The digest of the child the path does not take.
-    pub sibling: H::Output,
+    pub(crate) sibling: H::Output,
 }
 
 impl<K: Key, H: HashFn> Step<K, H> {
     /// Wire width: a position and a digest.
-    pub const LEN: usize = BitPos::<K>::LEN + H::Output::LEN;
+    pub(crate) const LEN: usize = BitPos::<K>::LEN + H::Output::LEN;
 }
 
 /// A step from exactly [`LEN`](Step::LEN) bytes; any other length is [`Error::Length`], and a
@@ -59,16 +59,16 @@ impl<K: Key, H: HashFn> TryFrom<&[u8]> for Step<K, H> {
 }
 
 /// The leaf a lookup ended at: its key and its value digest.
-pub struct Leaf<K, H: HashFn> {
+pub(crate) struct Leaf<K, H: HashFn> {
     /// The leaf's key.
-    pub key: K,
+    pub(crate) key: K,
     /// The digest of the leaf's value.
-    pub value: H::Output,
+    pub(crate) value: H::Output,
 }
 
 impl<K: Key, H: HashFn> Leaf<K, H> {
     /// Wire width: a key and a digest.
-    pub const LEN: usize = key_len::<K>() + H::Output::LEN;
+    pub(crate) const LEN: usize = key_len::<K>() + H::Output::LEN;
 }
 
 /// A leaf from exactly [`LEN`](Leaf::LEN) bytes; any other length is [`Error::Length`].
@@ -144,7 +144,7 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
     }
 
     /// The leaf the lookup ended at; `None` for the empty map.
-    pub fn leaf(&self) -> Option<Leaf<K, H>> {
+    pub(crate) fn leaf(&self) -> Option<Leaf<K, H>> {
         // `parse` checked the length: the bytes are empty or begin with a whole leaf.
         let bytes = self.as_bytes().get(..Leaf::<K, H>::LEN)?;
         Leaf::try_from(bytes).ok()
@@ -159,7 +159,7 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
     }
 
     /// The steps, leaf-to-root.
-    pub fn steps(&self) -> Steps<'_, K, H> {
+    pub(crate) fn steps(&self) -> Steps<'_, K, H> {
         let bytes = self.as_bytes();
         Steps::new(if bytes.is_empty() {
             bytes
@@ -169,6 +169,7 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
     }
 
     /// The wire width of a non-empty proof with `steps` steps.
+    #[cfg(feature = "use_std")]
     pub(crate) const fn len_with(steps: usize) -> usize {
         Leaf::<K, H>::LEN + steps * Step::<K, H>::LEN
     }
@@ -176,8 +177,10 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
     /// The part of the path below the branch at `c`: the leaf and the steps whose crit bit is
     /// above `c`. The steps are leaf-to-root, so this is a prefix of the bytes, and it is what
     /// a host sends for the entry after one that parts from it at `c`, since a walk holds the
-    /// rest (see [`Walk`](crate::trie::Walk)). The empty proof is its own part.
-    pub fn below(&self, c: BitPos<K>) -> Proof<&[u8], K, H> {
+    /// rest (see [`Walk`](crate::trie::Walk)). The empty proof is its own part. Only the
+    /// prover cuts proofs.
+    #[cfg(feature = "use_std")]
+    pub(crate) fn below(&self, c: BitPos<K>) -> Proof<&[u8], K, H> {
         let bytes = self.as_bytes();
         if bytes.is_empty() {
             return self.view();
@@ -241,7 +244,7 @@ impl<K: Key, H: HashFn> Proof<Vec<u8>, K, H> {
 }
 
 /// The steps of a proof, leaf-to-root; reversed, root-to-leaf.
-pub struct Steps<'a, K, H> {
+pub(crate) struct Steps<'a, K, H> {
     chunks: ChunksExact<'a, u8>,
     _marker: PhantomData<(K, H)>,
 }
