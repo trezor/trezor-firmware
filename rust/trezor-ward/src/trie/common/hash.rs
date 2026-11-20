@@ -23,9 +23,11 @@ pub trait HashFn {
 /// since its byte encoding is unspecified and platform-dependent, and the two sides of a proof
 /// must agree on every byte.
 ///
-/// Unlike a key, a value need not be a byte string. The tree routes on a key's bits, but of a
-/// value it only ever sees the digest, which never occupies a node position, so no choice of
-/// digest can be confused with a node.
+/// Unlike a key, a value need not be a byte string. The tree routes on a key's bits, but it
+/// only ever sees a value's digest, and uses it in one place: as the last operand of the
+/// leaf, `H(0x00 ‖ key ‖ value_digest)`. It never reads it as a node's digest (a child, a
+/// sibling or the root), so a type may choose its digest freely: even one that equals some
+/// node's digest cannot stand in for that node.
 ///
 /// Anything that is `AsRef<[u8]>` is hashable already, as `H(0x03 ‖ bytes)`; the tag keeps
 /// this default in the same domain-separated namespace as the node encodings. The default is

@@ -199,8 +199,8 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
 
 /// Writes a proof, `leaf` then `steps` leaf-to-root, into `out`, which must be exactly
 /// [`Proof::len_with`] of the number of steps; the callers, the prover's `build` and the
-/// walk, size it so. The bytes are not parsed here, the caller does that, so that a `Proof`
-/// value is well formed whatever its origin.
+/// walk, size it so. The `out` bytes are not parsed here, the caller does that, so that a
+/// `Proof` value is well formed whatever its origin.
 pub(crate) fn write_into<K: Key, H: HashFn>(
     out: &mut [u8],
     leaf: &Leaf<K, H>,
@@ -232,8 +232,8 @@ impl<K: Key, H: HashFn> Proof<Vec<u8>, K, H> {
         }
     }
 
-    /// A proof from its parts, `steps` leaf-to-root, checked like bytes from anywhere else:
-    /// a path no tree has is [`Error::Shape`], not the caller's word.
+    /// A proof from its parts, `steps` leaf-to-root. It goes through [`parse`](Self::parse)
+    /// like bytes from anywhere else, so a path no tree has is still [`Error::Shape`].
     pub(crate) fn build(
         leaf: &Leaf<K, H>,
         steps: impl IntoIterator<Item = Step<K, H>, IntoIter: ExactSizeIterator>,
