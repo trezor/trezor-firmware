@@ -98,3 +98,15 @@ impl Component for BldMenu {
         self.render_separators(target);
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for BldMenu {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Menu");
+        t.in_list("items", &|l| {
+            for button in &self.buttons {
+                l.child(button);
+            }
+        });
+    }
+}

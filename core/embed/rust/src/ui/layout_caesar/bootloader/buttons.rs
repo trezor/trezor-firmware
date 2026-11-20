@@ -274,3 +274,30 @@ impl Component for Buttons {
         }
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for Button {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Button");
+        match self {
+            Self::Icon(icon, _) | Self::ArmedIcon(icon) => t.string("icon", icon.name.into()),
+            Self::Text(text) | Self::ArmedText(text) => t.string("text", (*text).into()),
+        }
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for Buttons {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Buttons");
+        if let Some(button) = &self.left {
+            t.child("left_btn", button);
+        }
+        if let Some(button) = &self.middle {
+            t.child("middle_btn", button);
+        }
+        if let Some(button) = &self.right {
+            t.child("right_btn", button);
+        }
+    }
+}

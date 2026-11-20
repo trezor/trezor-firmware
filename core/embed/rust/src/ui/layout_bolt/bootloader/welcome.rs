@@ -88,3 +88,11 @@ impl Component for Welcome {
             .render(target);
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for Welcome {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Welcome");
+        t.child("menu", &self.menu);
+    }
+}

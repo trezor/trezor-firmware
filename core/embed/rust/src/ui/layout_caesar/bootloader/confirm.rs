@@ -203,5 +203,32 @@ impl Component for Confirm<'_> {
 impl crate::trace::Trace for Confirm<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("BlConfirm");
+        match self.state {
+            ConfirmState::Main => {
+                t.string("state", "main".into());
+                t.child("title", &self.title);
+                t.string("screen_content", *self.message.text());
+                if let Some(alert) = &self.alert {
+                    t.child("alert", alert);
+                }
+                t.child("buttons", &self.buttons);
+            }
+            ConfirmState::Menu => {
+                t.string("state", "menu".into());
+                if let Some(menu) = &self.menu {
+                    t.child("menu", menu);
+                }
+            }
+            ConfirmState::Info => {
+                t.string("state", "info".into());
+                if let Some(title) = &self.info_title {
+                    t.child("title", title);
+                }
+                if let Some(text) = &self.info_text {
+                    t.string("screen_content", *text.text());
+                }
+                t.child("buttons", &self.buttons);
+            }
+        }
     }
 }

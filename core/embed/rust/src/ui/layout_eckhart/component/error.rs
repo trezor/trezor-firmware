@@ -82,3 +82,14 @@ impl<'a> Component for ErrorScreen<'a> {
         target.set_led_state(LedState::Static(LED_RED));
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for ErrorScreen<'_> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("ErrorScreen");
+        t.child("header", &self.header);
+        t.child("title", &self.title);
+        t.string("screen_content", *self.message.text());
+        t.child("footer", &self.footer);
+    }
+}
