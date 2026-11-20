@@ -63,7 +63,7 @@ from ...ward_app import (  # noqa: F401  -- ward_app_pinned is an autouse fixtur
 )
 from ...ward_keys import derive_k_sig
 from ...ward_keys import wm_sig as oracle_wm_sig
-from ...ward_keys import TAG_REVERT
+from ...ward_keys import EMPTY_ROOT, TAG_REVERT
 from ...ward_keys import (
     auth_commit,
     bip39_seed,
@@ -548,6 +548,61 @@ def test_ward_delete_returns_a_leaf_with_both_parts_empty(session: Session):
     ward.apply(store, res)
     _confirm(session, store)
     assert len(store) == 0
+
+
+def _delete(session: Session, store: WardTrie, identifier: bytes) -> None:
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.delete_entry(session, _APP, identifier, p),
+        "ward_delete_entry",
+    )
+    ward.apply(store, res)
+    # the device adopts only the root it derived itself, so this is the DEVICE's root too
+    _confirm(session, store)
+
+
+@pytest.mark.models("core")
+def test_ward_add_then_delete_from_genesis_is_the_empty_tree(session: Session):
+    store = WardTrie()
+    _seed(session, store, b"temp", b"short_lived")
+    assert store.root() is not None
+
+    _delete(session, store, b"temp")
+    # the wire's absent root, and in preimage form the same EMPTY_ROOT as a wallet never written
+    assert store.root() is None
+    assert store.root_or_empty() == EMPTY_ROOT
+
+
+@pytest.mark.models("core")
+def test_ward_add_then_delete_restores_the_root_exactly(session: Session):
+    """History independence: the tree depends on what it holds, not on what it once held."""
+    store = WardTrie()
+    keys = [_seed(session, store, name, b"v_" + name) for name in (b"a", b"b", b"c")]
+    before = store.root()
+
+    _seed(session, store, b"temp", b"short_lived")
+    assert store.root() != before
+    _delete(session, store, b"temp")
+
+    assert store.root() == before
+    # and the device proves against it: a read of an untouched entry still verifies
+    _res, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"b", p))
+    assert "v_b" in rec.text
+    assert len(store) == len(keys)
+
+
+@pytest.mark.models("core")
+def test_ward_an_entry_added_first_and_deleted_last_leaves_no_trace(session: Session):
+    """The same root as a tree the entry was NEVER added to, whatever came in between."""
+    store = WardTrie()
+    _seed(session, store, b"temp", b"short_lived")
+    keys = [_seed(session, store, name, b"v_" + name) for name in (b"a", b"b", b"c")]
+
+    _delete(session, store, b"temp")
+
+    # a tree holding only the other three, assembled from scratch from the same sealed leaves
+    assert store.root() == _subset(store, keys).root()
 
 
 # --- pointers ----------------------------------------------------------------------
