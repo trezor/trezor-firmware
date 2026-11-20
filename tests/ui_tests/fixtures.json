@@ -28111,7 +28111,7 @@
 "T3B1_pt_stellar-test_stellar.py::test_sign_tx[StellarAccountMergeOp]": "659048488d00226124c7d724794a7a2cf25f2286b038de90ac959e5beade7786",
 "T3B1_pt_stellar-test_stellar.py::test_sign_tx[StellarAllowTrustOp-allow]": "0faa6bbf81eec1f37d47441e3bd1dfcdd1efdaaddd88d59a41aaf414b224641a",
 "T3B1_pt_stellar-test_stellar.py::test_sign_tx[StellarAllowTrustOp-revoke]": "610c9aa1b3135fee63cfaa16d926813b22b776aa89e36dac66732b91100f53ae",
-"T3B1_pt_stellar-test_stellar.py::test_sign_tx[StellarBumpSequenceOp]": "a261efccf0c804b250980858d59429bf467da801ad22e19c46f6fe87560de3f7",
+"T3B1_pt_stellar-test_stellar.py::test_sign_tx[StellarBumpSequenceOp]": "7e3974436379bf7a6c63876cea3b48c8e70b5113bd9a477521263e92453e2eb1",
 "T3B1_pt_stellar-test_stellar.py::test_sign_tx[StellarChangeTrustOp-add]": "f11f42c259de1d1bf2a2ee4ba703153d93154d603b2bdbb22b6891be85c49e5a",
 "T3B1_pt_stellar-test_stellar.py::test_sign_tx[StellarChangeTrustOp-delete]": "b85767a43b2ee0a5558b611041b20fd2253ae4cd837d031cc2cbd35a26cb8382",
 "T3B1_pt_stellar-test_stellar.py::test_sign_tx[StellarClaimClaimableBalanceOp]": "4eb0fc48964e63c7414d6023007c28059756eacd70e41d13e49f3d1c1dc91d3c",

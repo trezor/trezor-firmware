@@ -20,7 +20,11 @@
 #   features           OpenType features applied to all glyphs (e.g. "tnum")
 #   max_advance        upper limit of glyph advances
 #   min_spacing        minimal number of empty columns after each glyph
-#   bitmaps            hand-drawn glyph bitmaps ('#' = pixel on)
+#   bitmaps            hand-drawn glyph bitmaps ('#' = pixel on), either a list of rows
+#                      (keeping the rendered glyph's metrics) or a table with `bitmap` and
+#                      optional `bearing_x`, `bearing_y` and `advance` overrides (all three
+#                      required for characters missing in the font); characters missing in
+#                      the font without a bitmap are shown as the font's unknown glyph
 #   notes              written as `// NOTE:` comments into the Rust file
 
 # ---------------------------------------------------------------------------
@@ -64,6 +68,19 @@ shave_x = 1
 font_idx = 1
 font_idx_upper = 6
 
+[caesar.bitmaps."º"]
+bearing_x = 0
+bearing_y = 7
+advance = 5
+bitmap = [
+    ".##.",
+    "#..#",
+    "#..#",
+    ".##.",
+    "....",
+    "####",
+]
+
 [[caesar]]
 name = "PixelOperator"
 style = "Bold"
@@ -72,6 +89,19 @@ bpp = 1
 shave_x = 1
 font_idx = 2
 font_idx_upper = 7
+
+[caesar.bitmaps."º"]
+bearing_x = 0
+bearing_y = 7
+advance = 6
+bitmap = [
+    ".###.",
+    "##.##",
+    "##.##",
+    ".###.",
+    ".....",
+    "#####",
+]
 
 [[caesar]]
 name = "PixelOperatorMono"
@@ -121,6 +151,19 @@ w = [
     ".#.#.",
 ]
 
+[caesar.bitmaps."º"]
+bearing_x = 1
+bearing_y = 7
+advance = 7
+bitmap = [
+    ".##.",
+    "#..#",
+    "#..#",
+    ".##.",
+    "....",
+    "####",
+]
+
 [[caesar]]
 name = "Unifont"
 style = "Regular"
@@ -139,6 +182,20 @@ size = 16
 bpp = 1
 shave_x = 1
 font_idx = 5
+
+[caesar.bitmaps."º"]
+bearing_x = 1
+bearing_y = 12
+advance = 8
+bitmap = [
+    ".####.",
+    "##..##",
+    "##..##",
+    "##..##",
+    ".####.",
+    "......",
+    "######",
+]
 
 # ---------------------------------------------------------------------------
 # Delizia
