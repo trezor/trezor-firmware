@@ -57,7 +57,7 @@ MULTICORE ?= "auto"
 RANDOM=$(shell python -c 'import random; print(random.randint(0, 1000000))')
 
 # Please only add options used by CI, otherwise just run xtask directly.
-XTASK_BUILD_OPTS += --model $(TREZOR_MODEL)
+XTASK_BUILD_OPTS += --model $(TREZOR_MODEL) --log-level debug
 ifeq ($(ADDRESS_SANITIZER),1)
 XTASK_BUILD_OPTS += --asan
 endif
@@ -80,7 +80,7 @@ ifeq ($(PYOPT),1)
 XTASK_BUILD_OPTS += --pyopt true
 else ifeq ($(PYOPT),0)
 XTASK_BUILD_OPTS += --pyopt false
-XTASK_BUILD_OPTS += --disable-animation
+# XTASK_BUILD_OPTS += --disable-animation
 XTASK_BUILD_OPTS += --dbg-console vcp
 XTASK_BUILD_OPTS += --debug-link
 endif
