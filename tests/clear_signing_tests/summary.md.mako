@@ -43,14 +43,13 @@ ${total} mainnet cases of all registry providers: ${run} run on each model, ${to
 
 The UI report compares the screens of each model with those of the last nightly run (`fixtures.json` when there is none). There is nothing to accept: the screens of this run are what the next one compares with.
 
-<details><summary>Skipped cases (${sum(count for _, count in skipped)})</summary>
+<details><summary>Skipped cases (${sum(len(lines) for _, lines in skipped)})</summary>
 
-| Reason | Cases |
-|---|---:|
-% for reason, count in skipped:
-| ${reason} | ${count} |
+% for reason, lines in skipped:
+**${reason}** (${len(lines)})
+
+${capped(lines)}
 % endfor
-
 </details>
 
 <details><summary>Failed or not run (${len(problems)})</summary>

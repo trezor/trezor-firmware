@@ -38,7 +38,12 @@ from pathlib import Path
 import click
 import requests
 from mako.template import Template
-from registry import definitions_source, load_cases, read_results
+from registry import (
+    RegistryCase,
+    definitions_source,
+    load_cases,
+    read_results,
+)
 
 from trezorlib import definitions
 
@@ -334,6 +339,14 @@ SUMMARY_TEMPLATE = Path(__file__).resolve().parent / "summary.md.mako"
 MAX_LINES = 300
 
 
+def _skipped_line(case: RegistryCase) -> str:
+    """A skipped case, with the registry test file (descriptor) it comes from."""
+    line = f"- `{case.test_id}` in `{case.test_file}`"
+    if case.tx is not None:
+        line += f": {len(case.tx.data)} bytes of calldata"
+    return line
+
+
 @dataclass
 class _ModelRow:
     model: str
@@ -430,13 +443,17 @@ def summarize(
             _ModelRow(model, counts, report_url, differing_url, baseline.get(model))
         )
 
-    skipped = Counter(case.skip_reason for case in cases if case.skip_reason)
+    # skip reason -> cases
+    skipped: dict[str, list[str]] = defaultdict(list)
+    for case in cases:
+        if case.skip_reason:
+            skipped[case.skip_reason].append(_skipped_line(case))
     summary = Template(filename=str(SUMMARY_TEMPLATE), strict_undefined=True).render(
         inputs=inputs,
         total=len(cases),
         run=len(to_run),
         rows=rows,
-        skipped=skipped.most_common(),
+        skipped=sorted(skipped.items(), key=lambda item: -len(item[1])),
         problems=sorted(problems.items()),
         blind=sorted(blind.items()),
         no_format=sorted(no_format.items()),
