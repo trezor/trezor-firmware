@@ -372,11 +372,24 @@ impl<B: AsRef<[u8]>, B2: AsRef<[u8]>, K, H> PartialEq<Proof<B2, K, H>> for Proof
 impl<B: AsRef<[u8]>, K, H> Eq for Proof<B, K, H> {}
 
 #[cfg(feature = "debug")]
-impl<B: AsRef<[u8]>, K, H> fmt::Debug for Proof<B, K, H> {
+impl<B: AsRef<[u8]>, K: Key, H: HashFn> fmt::Debug for Proof<B, K, H> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Proof")
-            .field("bytes", &self.bytes.as_ref())
+            .field("leaf", &self.leaf())
+            .field("steps", &self.steps())
             .finish()
+    }
+}
+
+/// The steps not yet yielded, as a list.
+#[cfg(feature = "debug")]
+impl<K: Key, H: HashFn> fmt::Debug for Steps<'_, K, H> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let steps = Self {
+            chunks: self.chunks.clone(),
+            _marker: PhantomData,
+        };
+        f.debug_list().entries(steps).finish()
     }
 }
 
