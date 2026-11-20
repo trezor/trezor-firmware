@@ -1979,7 +1979,7 @@
     "reset__select_threshold": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Sélectionnez le nombre de fragments minimum requis pour récupérer votre portefeuille.",
+      "Delizia": "Fragments minimum requis pour récupérer votre portefeuille.",
       "Eckhart": "Sélectionnez le nombre de fragments minimum requis pour récupérer votre portefeuille."
     },
     "reset__select_word_from_share_template": {
@@ -2045,8 +2045,8 @@
     "reset__slip39_checklist_num_groups_x_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Nombre de groupes : {0}",
-      "Eckhart": "Nombre de groupes : {0}"
+      "Delizia": "Nombre de groupes : {0}",
+      "Eckhart": "Nombre de groupes : {0}"
     },
     "reset__slip39_checklist_num_shares": {
       "Bolt": "",
@@ -2057,8 +2057,8 @@
     "reset__slip39_checklist_num_shares_x_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Nombre de fragm. : {0}",
-      "Eckhart": "Nombre de fragments : {0}"
+      "Delizia": "Nombre de fragments : {0}",
+      "Eckhart": "Nombre de fragments : {0}"
     },
     "reset__slip39_checklist_set_num_groups": {
       "Bolt": "Définir le nombre de groupes",
@@ -2812,7 +2812,7 @@
     },
     "tutorial__press_and_hold": {
       "Bolt": "",
-      "Caesar": "Maintenez enfoncé le bouton de droite pour approuver les opérations importantes.",
+      "Caesar": "Maintenez le bouton droit pour valider les opérations importantes.",
       "Delizia": "",
       "Eckhart": ""
     },

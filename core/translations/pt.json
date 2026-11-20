@@ -1834,7 +1834,7 @@
     "reset__select_threshold": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Selecione o nº mínimo de shares para recuperar sua carteira.",
+      "Delizia": "Selecione o número mínimo de shares para recuperar sua carteira.",
       "Eckhart": "Selecione o número mínimo de shares para recuperar sua carteira."
     },
     "reset__select_word_from_share_template": {
@@ -1916,16 +1916,16 @@
       "Eckhart": "Número de shares: {0}"
     },
     "reset__slip39_checklist_set_num_groups": {
-      "Bolt": "Definir nº de grupos",
+      "Bolt": "Definir número de grupos",
       "Caesar": "",
-      "Delizia": "Definir nº de grupos",
-      "Eckhart": "Definir nº de grupos"
+      "Delizia": "Definir número de grupos",
+      "Eckhart": "Definir número de grupos"
     },
     "reset__slip39_checklist_set_num_shares": {
-      "Bolt": "Definir nº de shares",
+      "Bolt": "Definir número de shares",
       "Caesar": "",
-      "Delizia": "Definir nº de shares",
-      "Eckhart": "Definir nº de shares"
+      "Delizia": "Definir número de shares",
+      "Eckhart": "Definir número de shares"
     },
     "reset__slip39_checklist_set_sizes": {
       "Bolt": "",
@@ -2009,7 +2009,7 @@
       "Eckhart": "Def. limite mín. do grupo"
     },
     "reset__title_set_number_of_groups": {
-      "Bolt": "Definir nº de grupos",
+      "Bolt": "Definir número de grupos",
       "Caesar": "",
       "Delizia": "Definir número de grupos",
       "Eckhart": "Definir número de grupos"
@@ -2322,7 +2322,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Permitir que o dispositivo conectado leia o nº de série da sua Trezor Safe 7?"
+      "Eckhart": "Permitir que o dispositivo conectado leia o número de série da sua Trezor Safe 7?"
     },
     "sn__title": {
       "Bolt": "",
@@ -2430,7 +2430,7 @@
     "stellar__selling": "Vendendo",
     "stellar__set_data": "Definir dados",
     "stellar__set_flags": "Definir flags",
-    "stellar__set_sequence_to_template": "Definir nº de sequência como {0}?",
+    "stellar__set_sequence_to_template": "Definir número de sequência como {0}?",
     "stellar__sign_authorization": "Assinar autorização",
     "stellar__sign_with": "Assinar com",
     "stellar__source_account": "Conta de origem",
