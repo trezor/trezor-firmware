@@ -8827,7 +8827,7 @@ START_TEST(test_bip32_babyjubjub) {
        "034093301480ebdabeac56a0a64c7db1c339603468a50f878c0f29d5762c4199"},
   };
   HDNode node;
-  uint8_t sig[64];
+  uint8_t sig[64], pkh[20];
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
     ck_assert_int_eq(
@@ -8848,6 +8848,7 @@ START_TEST(test_bip32_babyjubjub) {
     ck_assert_int_ne(hdnode_fill_public_key(&node), 0);
     ck_assert_int_ne(
         hdnode_sign_digest(&node, node.chain_code, sig, NULL, NULL), 0);
+    ck_assert_int_eq(hdnode_get_ethereum_pubkeyhash(&node, pkh), 0);
     ck_assert_int_eq(hdnode_private_ckd(&node, 0), 0);
   }
 }
