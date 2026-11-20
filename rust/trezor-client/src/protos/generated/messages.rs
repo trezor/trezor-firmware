@@ -643,10 +643,6 @@ pub enum MessageType {
     MessageType_WardRollback = 2315,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardRollbackAck)
     MessageType_WardRollbackAck = 2316,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardRecoverCounter)
-    MessageType_WardRecoverCounter = 2317,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardRecoverCounterAck)
-    MessageType_WardRecoverCounterAck = 2318,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardPinCachedEntry)
     MessageType_WardPinCachedEntry = 2319,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardEraseCachedEntry)
@@ -697,6 +693,10 @@ pub enum MessageType {
     MessageType_WardChainRequest = 2345,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardChainLinkAck)
     MessageType_WardChainLinkAck = 2346,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardRejoin)
+    MessageType_WardRejoin = 2347,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardRejoinAck)
+    MessageType_WardRejoinAck = 2348,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardResetApp)
     MessageType_WardResetApp = 2343,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WardResetAppAck)
@@ -1034,8 +1034,6 @@ impl ::protobuf::Enum for MessageType {
             2314 => ::std::option::Option::Some(MessageType::MessageType_WardVerifyChainAck),
             2315 => ::std::option::Option::Some(MessageType::MessageType_WardRollback),
             2316 => ::std::option::Option::Some(MessageType::MessageType_WardRollbackAck),
-            2317 => ::std::option::Option::Some(MessageType::MessageType_WardRecoverCounter),
-            2318 => ::std::option::Option::Some(MessageType::MessageType_WardRecoverCounterAck),
             2319 => ::std::option::Option::Some(MessageType::MessageType_WardPinCachedEntry),
             2320 => ::std::option::Option::Some(MessageType::MessageType_WardEraseCachedEntry),
             2321 => ::std::option::Option::Some(MessageType::MessageType_WardFlushQueue),
@@ -1061,6 +1059,8 @@ impl ::protobuf::Enum for MessageType {
             2342 => ::std::option::Option::Some(MessageType::MessageType_WardResetServiceAck),
             2345 => ::std::option::Option::Some(MessageType::MessageType_WardChainRequest),
             2346 => ::std::option::Option::Some(MessageType::MessageType_WardChainLinkAck),
+            2347 => ::std::option::Option::Some(MessageType::MessageType_WardRejoin),
+            2348 => ::std::option::Option::Some(MessageType::MessageType_WardRejoinAck),
             2343 => ::std::option::Option::Some(MessageType::MessageType_WardResetApp),
             2344 => ::std::option::Option::Some(MessageType::MessageType_WardResetAppAck),
             2322 => ::std::option::Option::Some(MessageType::MessageType_DisplayAddress),
@@ -1384,8 +1384,6 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_WardVerifyChainAck" => ::std::option::Option::Some(MessageType::MessageType_WardVerifyChainAck),
             "MessageType_WardRollback" => ::std::option::Option::Some(MessageType::MessageType_WardRollback),
             "MessageType_WardRollbackAck" => ::std::option::Option::Some(MessageType::MessageType_WardRollbackAck),
-            "MessageType_WardRecoverCounter" => ::std::option::Option::Some(MessageType::MessageType_WardRecoverCounter),
-            "MessageType_WardRecoverCounterAck" => ::std::option::Option::Some(MessageType::MessageType_WardRecoverCounterAck),
             "MessageType_WardPinCachedEntry" => ::std::option::Option::Some(MessageType::MessageType_WardPinCachedEntry),
             "MessageType_WardEraseCachedEntry" => ::std::option::Option::Some(MessageType::MessageType_WardEraseCachedEntry),
             "MessageType_WardFlushQueue" => ::std::option::Option::Some(MessageType::MessageType_WardFlushQueue),
@@ -1411,6 +1409,8 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_WardResetServiceAck" => ::std::option::Option::Some(MessageType::MessageType_WardResetServiceAck),
             "MessageType_WardChainRequest" => ::std::option::Option::Some(MessageType::MessageType_WardChainRequest),
             "MessageType_WardChainLinkAck" => ::std::option::Option::Some(MessageType::MessageType_WardChainLinkAck),
+            "MessageType_WardRejoin" => ::std::option::Option::Some(MessageType::MessageType_WardRejoin),
+            "MessageType_WardRejoinAck" => ::std::option::Option::Some(MessageType::MessageType_WardRejoinAck),
             "MessageType_WardResetApp" => ::std::option::Option::Some(MessageType::MessageType_WardResetApp),
             "MessageType_WardResetAppAck" => ::std::option::Option::Some(MessageType::MessageType_WardResetAppAck),
             "MessageType_DisplayAddress" => ::std::option::Option::Some(MessageType::MessageType_DisplayAddress),
@@ -1733,8 +1733,6 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_WardVerifyChainAck,
         MessageType::MessageType_WardRollback,
         MessageType::MessageType_WardRollbackAck,
-        MessageType::MessageType_WardRecoverCounter,
-        MessageType::MessageType_WardRecoverCounterAck,
         MessageType::MessageType_WardPinCachedEntry,
         MessageType::MessageType_WardEraseCachedEntry,
         MessageType::MessageType_WardFlushQueue,
@@ -1760,6 +1758,8 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_WardResetServiceAck,
         MessageType::MessageType_WardChainRequest,
         MessageType::MessageType_WardChainLinkAck,
+        MessageType::MessageType_WardRejoin,
+        MessageType::MessageType_WardRejoinAck,
         MessageType::MessageType_WardResetApp,
         MessageType::MessageType_WardResetAppAck,
         MessageType::MessageType_DisplayAddress,
@@ -2088,33 +2088,33 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_WardVerifyChainAck => 305,
             MessageType::MessageType_WardRollback => 306,
             MessageType::MessageType_WardRollbackAck => 307,
-            MessageType::MessageType_WardRecoverCounter => 308,
-            MessageType::MessageType_WardRecoverCounterAck => 309,
-            MessageType::MessageType_WardPinCachedEntry => 310,
-            MessageType::MessageType_WardEraseCachedEntry => 311,
-            MessageType::MessageType_WardFlushQueue => 312,
-            MessageType::MessageType_WardQueueSetEntry => 313,
-            MessageType::MessageType_WardQueueSetAck => 314,
-            MessageType::MessageType_WardQueueDeleteEntry => 315,
-            MessageType::MessageType_WardQueueDeleteAck => 316,
-            MessageType::MessageType_WardQueueGetEntry => 317,
-            MessageType::MessageType_WardQueueGetAck => 318,
-            MessageType::MessageType_WardFlushQueueAck => 319,
-            MessageType::MessageType_WardServiceOpen => 320,
-            MessageType::MessageType_WardServiceOpenAck => 321,
-            MessageType::MessageType_WardSyncRequest => 322,
-            MessageType::MessageType_WardSyncResponse => 323,
-            MessageType::MessageType_WardServiceFetch => 324,
-            MessageType::MessageType_WardSyncRequired => 325,
-            MessageType::MessageType_WardPublish => 326,
-            MessageType::MessageType_WardPublishAck => 327,
-            MessageType::MessageType_WardPublishConflict => 328,
-            MessageType::MessageType_WardMutationApplied => 329,
-            MessageType::MessageType_WardFlushQueueApplied => 330,
-            MessageType::MessageType_WardResetService => 331,
-            MessageType::MessageType_WardResetServiceAck => 332,
-            MessageType::MessageType_WardChainRequest => 333,
-            MessageType::MessageType_WardChainLinkAck => 334,
+            MessageType::MessageType_WardPinCachedEntry => 308,
+            MessageType::MessageType_WardEraseCachedEntry => 309,
+            MessageType::MessageType_WardFlushQueue => 310,
+            MessageType::MessageType_WardQueueSetEntry => 311,
+            MessageType::MessageType_WardQueueSetAck => 312,
+            MessageType::MessageType_WardQueueDeleteEntry => 313,
+            MessageType::MessageType_WardQueueDeleteAck => 314,
+            MessageType::MessageType_WardQueueGetEntry => 315,
+            MessageType::MessageType_WardQueueGetAck => 316,
+            MessageType::MessageType_WardFlushQueueAck => 317,
+            MessageType::MessageType_WardServiceOpen => 318,
+            MessageType::MessageType_WardServiceOpenAck => 319,
+            MessageType::MessageType_WardSyncRequest => 320,
+            MessageType::MessageType_WardSyncResponse => 321,
+            MessageType::MessageType_WardServiceFetch => 322,
+            MessageType::MessageType_WardSyncRequired => 323,
+            MessageType::MessageType_WardPublish => 324,
+            MessageType::MessageType_WardPublishAck => 325,
+            MessageType::MessageType_WardPublishConflict => 326,
+            MessageType::MessageType_WardMutationApplied => 327,
+            MessageType::MessageType_WardFlushQueueApplied => 328,
+            MessageType::MessageType_WardResetService => 329,
+            MessageType::MessageType_WardResetServiceAck => 330,
+            MessageType::MessageType_WardChainRequest => 331,
+            MessageType::MessageType_WardChainLinkAck => 332,
+            MessageType::MessageType_WardRejoin => 333,
+            MessageType::MessageType_WardRejoinAck => 334,
             MessageType::MessageType_WardResetApp => 335,
             MessageType::MessageType_WardResetAppAck => 336,
             MessageType::MessageType_DisplayAddress => 337,
@@ -2495,35 +2495,35 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x90\xb5\x18\x01\x12)\n\x1eMessageType_WardVerifyChainAck\x10\x8a\x12\
     \x1a\x04\x98\xb5\x18\x01\x12#\n\x18MessageType_WardRollback\x10\x8b\x12\
     \x1a\x04\x90\xb5\x18\x01\x12&\n\x1bMessageType_WardRollbackAck\x10\x8c\
-    \x12\x1a\x04\x98\xb5\x18\x01\x12)\n\x1eMessageType_WardRecoverCounter\
-    \x10\x8d\x12\x1a\x04\x90\xb5\x18\x01\x12,\n!MessageType_WardRecoverCount\
-    erAck\x10\x8e\x12\x1a\x04\x98\xb5\x18\x01\x12)\n\x1eMessageType_WardPinC\
-    achedEntry\x10\x8f\x12\x1a\x04\x90\xb5\x18\x01\x12+\n\x20MessageType_War\
-    dEraseCachedEntry\x10\x90\x12\x1a\x04\x90\xb5\x18\x01\x12%\n\x1aMessageT\
-    ype_WardFlushQueue\x10\x91\x12\x1a\x04\x90\xb5\x18\x01\x12(\n\x1dMessage\
-    Type_WardQueueSetEntry\x10\x93\x12\x1a\x04\x90\xb5\x18\x01\x12&\n\x1bMes\
-    sageType_WardQueueSetAck\x10\x94\x12\x1a\x04\x98\xb5\x18\x01\x12+\n\x20M\
-    essageType_WardQueueDeleteEntry\x10\x95\x12\x1a\x04\x90\xb5\x18\x01\x12)\
-    \n\x1eMessageType_WardQueueDeleteAck\x10\x96\x12\x1a\x04\x98\xb5\x18\x01\
-    \x12(\n\x1dMessageType_WardQueueGetEntry\x10\x97\x12\x1a\x04\x90\xb5\x18\
-    \x01\x12&\n\x1bMessageType_WardQueueGetAck\x10\x98\x12\x1a\x04\x98\xb5\
-    \x18\x01\x12(\n\x1dMessageType_WardFlushQueueAck\x10\x99\x12\x1a\x04\x98\
-    \xb5\x18\x01\x12&\n\x1bMessageType_WardServiceOpen\x10\x9a\x12\x1a\x04\
-    \x90\xb5\x18\x01\x12)\n\x1eMessageType_WardServiceOpenAck\x10\x9b\x12\
-    \x1a\x04\x98\xb5\x18\x01\x12&\n\x1bMessageType_WardSyncRequest\x10\x9c\
-    \x12\x1a\x04\x98\xb5\x18\x01\x12'\n\x1cMessageType_WardSyncResponse\x10\
-    \x9d\x12\x1a\x04\x90\xb5\x18\x01\x12'\n\x1cMessageType_WardServiceFetch\
-    \x10\x9e\x12\x1a\x04\x98\xb5\x18\x01\x12'\n\x1cMessageType_WardSyncRequi\
-    red\x10\x9f\x12\x1a\x04\x90\xb5\x18\x01\x12\"\n\x17MessageType_WardPubli\
-    sh\x10\xa0\x12\x1a\x04\x98\xb5\x18\x01\x12%\n\x1aMessageType_WardPublish\
-    Ack\x10\xa1\x12\x1a\x04\x90\xb5\x18\x01\x12*\n\x1fMessageType_WardPublis\
-    hConflict\x10\xa2\x12\x1a\x04\x90\xb5\x18\x01\x12*\n\x1fMessageType_Ward\
-    MutationApplied\x10\xa3\x12\x1a\x04\x98\xb5\x18\x01\x12,\n!MessageType_W\
-    ardFlushQueueApplied\x10\xa4\x12\x1a\x04\x98\xb5\x18\x01\x12'\n\x1cMessa\
-    geType_WardResetService\x10\xa5\x12\x1a\x04\x90\xb5\x18\x01\x12*\n\x1fMe\
-    ssageType_WardResetServiceAck\x10\xa6\x12\x1a\x04\x98\xb5\x18\x01\x12'\n\
+    \x12\x1a\x04\x98\xb5\x18\x01\x12)\n\x1eMessageType_WardPinCachedEntry\
+    \x10\x8f\x12\x1a\x04\x90\xb5\x18\x01\x12+\n\x20MessageType_WardEraseCach\
+    edEntry\x10\x90\x12\x1a\x04\x90\xb5\x18\x01\x12%\n\x1aMessageType_WardFl\
+    ushQueue\x10\x91\x12\x1a\x04\x90\xb5\x18\x01\x12(\n\x1dMessageType_WardQ\
+    ueueSetEntry\x10\x93\x12\x1a\x04\x90\xb5\x18\x01\x12&\n\x1bMessageType_W\
+    ardQueueSetAck\x10\x94\x12\x1a\x04\x98\xb5\x18\x01\x12+\n\x20MessageType\
+    _WardQueueDeleteEntry\x10\x95\x12\x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMess\
+    ageType_WardQueueDeleteAck\x10\x96\x12\x1a\x04\x98\xb5\x18\x01\x12(\n\
+    \x1dMessageType_WardQueueGetEntry\x10\x97\x12\x1a\x04\x90\xb5\x18\x01\
+    \x12&\n\x1bMessageType_WardQueueGetAck\x10\x98\x12\x1a\x04\x98\xb5\x18\
+    \x01\x12(\n\x1dMessageType_WardFlushQueueAck\x10\x99\x12\x1a\x04\x98\xb5\
+    \x18\x01\x12&\n\x1bMessageType_WardServiceOpen\x10\x9a\x12\x1a\x04\x90\
+    \xb5\x18\x01\x12)\n\x1eMessageType_WardServiceOpenAck\x10\x9b\x12\x1a\
+    \x04\x98\xb5\x18\x01\x12&\n\x1bMessageType_WardSyncRequest\x10\x9c\x12\
+    \x1a\x04\x98\xb5\x18\x01\x12'\n\x1cMessageType_WardSyncResponse\x10\x9d\
+    \x12\x1a\x04\x90\xb5\x18\x01\x12'\n\x1cMessageType_WardServiceFetch\x10\
+    \x9e\x12\x1a\x04\x98\xb5\x18\x01\x12'\n\x1cMessageType_WardSyncRequired\
+    \x10\x9f\x12\x1a\x04\x90\xb5\x18\x01\x12\"\n\x17MessageType_WardPublish\
+    \x10\xa0\x12\x1a\x04\x98\xb5\x18\x01\x12%\n\x1aMessageType_WardPublishAc\
+    k\x10\xa1\x12\x1a\x04\x90\xb5\x18\x01\x12*\n\x1fMessageType_WardPublishC\
+    onflict\x10\xa2\x12\x1a\x04\x90\xb5\x18\x01\x12*\n\x1fMessageType_WardMu\
+    tationApplied\x10\xa3\x12\x1a\x04\x98\xb5\x18\x01\x12,\n!MessageType_War\
+    dFlushQueueApplied\x10\xa4\x12\x1a\x04\x98\xb5\x18\x01\x12'\n\x1cMessage\
+    Type_WardResetService\x10\xa5\x12\x1a\x04\x90\xb5\x18\x01\x12*\n\x1fMess\
+    ageType_WardResetServiceAck\x10\xa6\x12\x1a\x04\x98\xb5\x18\x01\x12'\n\
     \x1cMessageType_WardChainRequest\x10\xa9\x12\x1a\x04\x98\xb5\x18\x01\x12\
     '\n\x1cMessageType_WardChainLinkAck\x10\xaa\x12\x1a\x04\x90\xb5\x18\x01\
+    \x12!\n\x16MessageType_WardRejoin\x10\xab\x12\x1a\x04\x90\xb5\x18\x01\
+    \x12$\n\x19MessageType_WardRejoinAck\x10\xac\x12\x1a\x04\x98\xb5\x18\x01\
     \x12#\n\x18MessageType_WardResetApp\x10\xa7\x12\x1a\x04\x90\xb5\x18\x01\
     \x12&\n\x1bMessageType_WardResetAppAck\x10\xa8\x12\x1a\x04\x98\xb5\x18\
     \x01\x12%\n\x1aMessageType_DisplayAddress\x10\x92\x12\x1a\x04\x90\xb5\
@@ -2543,8 +2543,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x06\x08\xec\x01\x10\xec\x01\"\x06\x08\xed\x01\x10\xed\x01\"\x06\x08\xac\
     \x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\
     \x05\"\x06\x08\xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08\"\x06\
-    \x08\x82\x12\x10\x82\x12B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezo\
-    rMessage\x80\xa6\x1d\x01\
+    \x08\x82\x12\x10\x82\x12\"\x06\x08\x8d\x12\x10\x8d\x12\"\x06\x08\x8e\x12\
+    \x10\x8e\x12B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezorMessage\x80\
+    \xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
