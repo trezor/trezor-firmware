@@ -324,7 +324,9 @@ fn generate_trezorhal_bindings(lib: &mut CLibrary) -> Result<()> {
             .allowlist_function("bootloader_process_ble")
             .allowlist_function("bootloader_process_usb")
             .allowlist_function("debuglink_process")
-            .allowlist_function("debuglink_notify_layout_change"))
+            .allowlist_function("debuglink_notify_layout_change")
+            .allowlist_function("debuglink_layout_begin")
+            .allowlist_function("debuglink_layout_append"))
     })
 }
 

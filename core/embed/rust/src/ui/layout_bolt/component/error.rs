@@ -87,3 +87,13 @@ impl<'a> Component for ErrorScreen<'a> {
         self.footer.render(target);
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for ErrorScreen<'_> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("ErrorScreen");
+        t.child("title", &self.title);
+        t.string("screen_content", *self.message.inner().text());
+        t.child("footer", &self.footer);
+    }
+}

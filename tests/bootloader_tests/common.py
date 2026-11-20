@@ -17,28 +17,48 @@
 """Screen interaction shared by the bootloader tests.
 
 The bootloader's confirmation screens (wipe, install, unlock) put the
-confirming button bottom-right on touch layouts; on Caesar both physical
-buttons together confirm. Until DebugLinkState carries layout tokens, the
-positions are fixed per layout from recordings.
+confirming button bottom-right on touch layouts, where trezorlib's
+`ScreenButtons` finds it as it does in firmware tests; on Caesar both
+physical buttons together confirm. Which screen is up comes from the layout
+tokens in DebugLinkState, see `wait_for_screen()`.
 """
 
 from __future__ import annotations
 
+import time
 import typing as t
 
-from trezorlib.debuglink import LayoutType
+from trezorlib.debuglink import LayoutContent, LayoutType
 
 if t.TYPE_CHECKING:
     from trezorlib._internal.bootloader_emulator import BootloaderTestContext
 
 
+def wait_for_screen(
+    ctx: "BootloaderTestContext",
+    accept: t.Callable[[LayoutContent], bool],
+    timeout: float = 10,
+) -> LayoutContent:
+    """Read the screen until `accept` takes it, and return it.
+
+    The bootloader reports the screen on display, also while a workflow keeps
+    it busy, so polling sees every screen that stays up long enough to read.
+    """
+    deadline = time.monotonic() + timeout
+    while True:
+        layout = ctx.debug.read_layout(wait=False)
+        if accept(layout):
+            return layout
+        if time.monotonic() >= deadline:
+            raise TimeoutError(f"screen not reached, showing: {layout.dict}")
+        time.sleep(0.05)
+
+
 def confirm(ctx: "BootloaderTestContext") -> None:
     """Press the confirming button of a bootloader confirmation screen."""
     layout = ctx.layout_type
-    if layout in (LayoutType.Bolt, LayoutType.Delizia):
-        ctx.debug.click((180, 212))
-    elif layout is LayoutType.Eckhart:
-        ctx.debug.click((285, 475))
+    if layout in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
+        ctx.debug.click(ctx.debug.screen_buttons.ok())
     elif layout is LayoutType.Caesar:
         ctx.debug.press_middle()
     else:
@@ -48,10 +68,8 @@ def confirm(ctx: "BootloaderTestContext") -> None:
 def cancel(ctx: "BootloaderTestContext") -> None:
     """Press the cancelling button of a bootloader confirmation screen."""
     layout = ctx.layout_type
-    if layout in (LayoutType.Bolt, LayoutType.Delizia):
-        ctx.debug.click((60, 212))
-    elif layout is LayoutType.Eckhart:
-        ctx.debug.click((95, 475))
+    if layout in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
+        ctx.debug.click(ctx.debug.screen_buttons.cancel())
     elif layout is LayoutType.Caesar:
         ctx.debug.press_left()
     else:
