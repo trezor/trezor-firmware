@@ -330,14 +330,17 @@ class WarddProvider:
         self.client = client
         self.staged = staged or []
 
-    def __call__(self, entry_key: bytes) -> Answer:
-        ack = self.client.call(
+    def _serve(self, entry_key: bytes) -> dict:
+        return self.client.call(
             "serveEntry",
             {
                 "request": {"entry_key": entry_key.hex()},
                 "staged": [[k.hex(), c.hex()] for k, c in self.staged],
             },
         )
+
+    def __call__(self, entry_key: bytes) -> Answer:
+        ack = self._serve(entry_key)
 
         def unhex(name: str) -> bytes | None:
             return bytes.fromhex(ack[name]) if ack.get(name) else None
