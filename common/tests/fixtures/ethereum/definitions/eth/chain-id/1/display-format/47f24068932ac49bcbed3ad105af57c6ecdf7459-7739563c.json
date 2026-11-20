@@ -25,7 +25,8 @@
           "container_path": "VALUE"
         },
         "label": "ETH Amount",
-        "formatter": "FORMATTER_AMOUNT"
+        "formatter": "FORMATTER_AMOUNT",
+        "lookup_address": false
       },
       {
         "path": {
@@ -34,7 +35,8 @@
           ]
         },
         "label": "Output Token",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       },
       {
         "path": {
@@ -48,7 +50,8 @@
           "path": [
             2
           ]
-        }
+        },
+        "lookup_address": false
       },
       {
         "path": {
@@ -57,9 +60,10 @@
           ]
         },
         "label": "Router",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       }
     ],
-    "provider_name": "TeraSwap"
+    "provider_name": "TeraSwap: TeraSwapFeeCollector"
   }
 }

@@ -27,7 +27,8 @@
           ]
         },
         "label": "Validator public key",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
@@ -36,16 +37,18 @@
           ]
         },
         "label": "Withdraw credentials",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
           "container_path": "VALUE"
         },
         "label": "Amount to deposit",
-        "formatter": "FORMATTER_AMOUNT"
+        "formatter": "FORMATTER_AMOUNT",
+        "lookup_address": false
       }
     ],
-    "provider_name": "Ethereum Foundation"
+    "provider_name": "Ethereum Foundation: DepositContract"
   }
 }

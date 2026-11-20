@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "00000000219ab540356cbb839cbe05303d7705fa",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "Ethereum Foundation: DepositContract"
+  }
+}

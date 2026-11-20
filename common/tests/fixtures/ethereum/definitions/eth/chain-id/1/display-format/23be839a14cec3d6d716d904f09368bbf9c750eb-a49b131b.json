@@ -54,7 +54,8 @@
           "slice_start": -20
         },
         "label": "Withdrawal address",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       },
       {
         "path": {
@@ -64,7 +65,8 @@
           "slice_end": 1
         },
         "label": "Credential type",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
@@ -73,14 +75,16 @@
           ]
         },
         "label": "ETH per validator",
-        "formatter": "FORMATTER_AMOUNT"
+        "formatter": "FORMATTER_AMOUNT",
+        "lookup_address": false
       },
       {
         "path": {
           "container_path": "VALUE"
         },
         "label": "Amount to deposit",
-        "formatter": "FORMATTER_AMOUNT"
+        "formatter": "FORMATTER_AMOUNT",
+        "lookup_address": false
       },
       {
         "path": {
@@ -89,7 +93,8 @@
           ]
         },
         "label": "Fee Distributor",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       },
       {
         "path": {
@@ -101,7 +106,8 @@
         "label": "Client share (bps)",
         "formatter": "FORMATTER_UNIT",
         "decimals": 0,
-        "base": "bps"
+        "base": "bps",
+        "lookup_address": false
       },
       {
         "path": {
@@ -111,9 +117,10 @@
           ]
         },
         "label": "Client recipient",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       }
     ],
-    "provider_name": "P2P Staking"
+    "provider_name": "P2P Staking: P2pOrgUnlimitedEthDepositor"
   }
 }

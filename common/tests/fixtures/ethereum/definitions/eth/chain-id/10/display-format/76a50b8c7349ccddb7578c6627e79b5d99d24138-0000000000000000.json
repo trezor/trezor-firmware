@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 10,
+    "address": "76a50b8c7349ccddb7578c6627e79b5d99d24138",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "Lido DAO: stETH"
+  }
+}

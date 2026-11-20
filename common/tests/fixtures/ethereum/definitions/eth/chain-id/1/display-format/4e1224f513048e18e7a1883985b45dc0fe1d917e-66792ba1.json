@@ -18,9 +18,10 @@
           ]
         },
         "label": "Public keys",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       }
     ],
-    "provider_name": "P2P Staking"
+    "provider_name": "P2P Staking: P2pMessageSender"
   }
 }

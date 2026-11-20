@@ -94,7 +94,8 @@
         },
         "native_currency_address": [
           "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-        ]
+        ],
+        "lookup_address": false
       },
       {
         "path": {
@@ -115,7 +116,8 @@
         },
         "native_currency_address": [
           "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-        ]
+        ],
+        "lookup_address": false
       },
       {
         "path": {
@@ -126,9 +128,10 @@
           ]
         },
         "label": "Beneficiary",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       }
     ],
-    "provider_name": "KyberSwap"
+    "provider_name": "KyberSwap: MetaAggregationRouterV2"
   }
 }

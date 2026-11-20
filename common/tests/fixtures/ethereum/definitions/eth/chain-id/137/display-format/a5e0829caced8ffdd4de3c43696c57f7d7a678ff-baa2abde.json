@@ -41,7 +41,8 @@
           "path": [
             0
           ]
-        }
+        },
+        "lookup_address": false
       },
       {
         "path": {
@@ -55,7 +56,8 @@
           "path": [
             1
           ]
-        }
+        },
+        "lookup_address": false
       },
       {
         "path": {
@@ -64,7 +66,8 @@
           ]
         },
         "label": "Beneficiary",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": false
       },
       {
         "path": {
@@ -73,7 +76,8 @@
           ]
         },
         "label": "Deadline",
-        "formatter": "FORMATTER_DATE"
+        "formatter": "FORMATTER_DATE",
+        "lookup_address": false
       }
     ],
     "provider_name": "QuickSwap"

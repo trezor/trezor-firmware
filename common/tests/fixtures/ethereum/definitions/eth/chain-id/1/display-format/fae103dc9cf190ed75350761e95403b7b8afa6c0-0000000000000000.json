@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "fae103dc9cf190ed75350761e95403b7b8afa6c0",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "Swell"
+  }
+}

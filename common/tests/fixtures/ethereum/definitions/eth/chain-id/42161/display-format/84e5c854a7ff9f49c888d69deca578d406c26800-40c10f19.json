@@ -21,7 +21,8 @@
           ]
         },
         "label": "Token",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       },
       {
         "path": {
@@ -35,9 +36,10 @@
           "path": [
             0
           ]
-        }
+        },
+        "lookup_address": false
       }
     ],
-    "provider_name": "Bedrock"
+    "provider_name": "Bedrock uniBTC Vault(Wrapped BTC)"
   }
 }

@@ -24,9 +24,10 @@
         "formatter": "FORMATTER_CALLDATA",
         "callee_path": {
           "container_path": "TO"
-        }
+        },
+        "lookup_address": false
       }
     ],
-    "provider_name": "1inch Network"
+    "provider_name": "1inch Network: AggregationRouterV6"
   }
 }

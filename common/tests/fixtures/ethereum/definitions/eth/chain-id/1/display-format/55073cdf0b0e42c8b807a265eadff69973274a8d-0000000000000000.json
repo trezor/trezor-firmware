@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "55073cdf0b0e42c8b807a265eadff69973274a8d",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "Tesseract Earn Oy: Tesseract Vault Deployer (WBTC)"
+  }
+}

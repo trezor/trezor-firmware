@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "5e4861a80b55f035d899f66772117f00fa0e8e7b",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "Threshold Network: tBTC Bridge"
+  }
+}
