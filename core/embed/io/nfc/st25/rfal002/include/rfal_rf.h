@@ -1191,11 +1191,12 @@ ReturnCode rfalISO14443ATransceiveShortFrame( rfal14443AShortFrameCmd txCmd, uin
 
 /*!
  *****************************************************************************
- * \brief Transceives a single custom ISO14443A frame (blocking)
+ * \brief Starts transceiving single custom ISO14443A frame
  *
- * This sends exactly one custom frame using the given flags and waits for
- * the response. The caller provides Tx/Rx lengths in bits, allowing custom
- * parity/CRC handling through the flags.
+ * This sends exactly one custom frame using the given flags.
+ * The caller provides Tx/Rx lengths in bits, allowing custom parity/CRC
+ * handling through the flags. Buffers need to stay valid until operation
+ * finishes.
  *
  * \param[in]  txBuf      : buffer containing the frame to be transmitted
  * \param[in]  txBufLen   : transmit length in bits
@@ -1215,7 +1216,7 @@ ReturnCode rfalISO14443ATransceiveShortFrame( rfal14443AShortFrameCmd txCmd, uin
  * \return RFAL_ERR_NOTSUPP     : Unsupported flags combination
  *****************************************************************************
  */
-ReturnCode rfalISO14443ATransceiveCustomFrame( uint8_t *txBuf, uint16_t txBufLen, uint8_t *rxBuf, uint16_t rxBufLen, uint16_t *rxRcvdLen, uint32_t flags, uint32_t fwt );
+ReturnCode rfalISO14443AStartTransceiveCustomFrame( uint8_t *txBuf, uint16_t txBufLen, uint8_t *rxBuf, uint16_t rxBufLen, uint16_t *rxRcvdLen, uint32_t flags, uint32_t fwt );
 
 /*!
  *****************************************************************************

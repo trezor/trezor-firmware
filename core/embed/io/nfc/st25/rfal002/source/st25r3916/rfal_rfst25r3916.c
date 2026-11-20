@@ -2979,9 +2979,8 @@ ReturnCode rfalISO14443ATransceiveShortFrame( rfal14443AShortFrameCmd txCmd, uin
 }
 
 /*******************************************************************************/
-ReturnCode rfalISO14443ATransceiveCustomFrame( uint8_t *txBuf, uint16_t txBufLen, uint8_t *rxBuf, uint16_t rxBufLen, uint16_t *rxRcvdLen, uint32_t flags, uint32_t fwt )
+ReturnCode rfalISO14443AStartTransceiveCustomFrame( uint8_t *txBuf, uint16_t txBufLen, uint8_t *rxBuf, uint16_t rxBufLen, uint16_t *rxRcvdLen, uint32_t flags, uint32_t fwt )
 {
-    ReturnCode            ret;
     rfalTransceiveContext ctx;
 
     /* Check if RFAL is properly initialized and in NFCA poll mode */
@@ -3010,10 +3009,7 @@ ReturnCode rfalISO14443ATransceiveCustomFrame( uint8_t *txBuf, uint16_t txBufLen
     ctx.flags     = flags;
     ctx.fwt       = fwt;
 
-    RFAL_EXIT_ON_ERR( ret, rfalStartTransceive( &ctx ) );
-    RFAL_EXIT_ON_ERR( ret, rfalTransceiveRunBlockingTx() );
-
-    return rfalTransceiveBlockingRx();
+    return rfalStartTransceive( &ctx );
 }
 
 /*******************************************************************************/
