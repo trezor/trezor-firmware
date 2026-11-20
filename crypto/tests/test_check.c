@@ -8811,6 +8811,48 @@ static void test_bip32_ecdh(const char *curve_name, size_t expected_key_size,
   ck_assert_mem_eq(session_key2, expected_key, key_size);
 }
 
+// vectors from @railgun-community/engine 9.9.1 (src/key-derivation),
+// mnemonic "all all all all all all all all all all all all"
+START_TEST(test_bip32_babyjubjub) {
+  static const struct {
+    uint32_t purpose;
+    const char *chain_code;
+    const char *private_key;
+  } tests[] = {
+      // spending key m/44'/1984'/0'/0'/0'
+      {44, "bc8d915086d4ee1ce01d678b87756842a5ca556941e1ec3313f57a1d2187ac6e",
+       "cea6cda3e5633e753b25a524e4d1508d95d50bcf071dd23c6693ea371a267700"},
+      // viewing key m/420'/1984'/0'/0'/0'
+      {420, "2c7172e2b298013725f49d2d8ccf575d2b031b56c4a788e3b939419fe5d8a95e",
+       "034093301480ebdabeac56a0a64c7db1c339603468a50f878c0f29d5762c4199"},
+  };
+  HDNode node;
+  uint8_t sig[64];
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    ck_assert_int_eq(
+        hdnode_from_seed(
+            fromhex("c76c4ac4f4e4a00d6b274d5c39c700bb4a7ddc04fbc6f78e85ca75007b"
+                    "5b495f74a9043eeb77bdd53aa6fc3a0e31462270316fa04b8c19114c"
+                    "8798706cd02ac8"),
+            64, BABYJUBJUB_NAME, &node),
+        1);
+    const uint32_t path[] = {tests[i].purpose, 1984, 0, 0, 0};
+    for (size_t j = 0; j < sizeof(path) / sizeof(*path); j++) {
+      ck_assert_int_eq(hdnode_private_ckd_prime(&node, path[j]), 1);
+    }
+    ck_assert_mem_eq(node.chain_code, fromhex(tests[i].chain_code), 32);
+    ck_assert_mem_eq(node.private_key, fromhex(tests[i].private_key), 32);
+
+    // private keys only: no public key, signature or non-hardened derivation
+    ck_assert_int_ne(hdnode_fill_public_key(&node), 0);
+    ck_assert_int_ne(
+        hdnode_sign_digest(&node, node.chain_code, sig, NULL, NULL), 0);
+    ck_assert_int_eq(hdnode_private_ckd(&node, 0), 0);
+  }
+}
+END_TEST
+
 START_TEST(test_bip32_ecdh_nist256p1) {
   test_bip32_ecdh(
       NIST256P1_NAME, 65,
@@ -11511,6 +11553,10 @@ Suite *test_suite(void) {
   tc = tcase_create("bip32-curve25519");
   tcase_add_test(tc, test_bip32_curve25519_vector_1);
   tcase_add_test(tc, test_bip32_curve25519_vector_2);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("bip32-babyjubjub");
+  tcase_add_test(tc, test_bip32_babyjubjub);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("bip32-ecdh");
