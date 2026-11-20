@@ -49,21 +49,28 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Node<K, V, H> {
         }
     }
 
-    /// The leaf a lookup for `key` ends at, reporting one step per branch passed, root-to-leaf.
-    fn descend<'a>(&'a self, key: &K, mut visit: impl FnMut(Step<K, H>)) -> &'a Self {
+    /// The entry a lookup for `key` ends at, reporting one step per branch passed, root-to-leaf.
+    fn descend<'a>(&'a self, key: &K, mut visit: impl FnMut(Step<K, H>)) -> (&'a K, &'a V) {
         let mut node = self;
-        while let Self::Branch {
-            crit_bit, children, ..
-        } = node
-        {
-            let (next, other) = Side::of(key, *crit_bit).pick(children.each_ref());
-            visit(Step {
-                crit_bit: *crit_bit,
-                sibling: *other.digest(),
-            });
-            node = next;
+        loop {
+            match node {
+                Self::Leaf {
+                    key: terminal_key,
+                    value,
+                    ..
+                } => return (terminal_key, value),
+                Self::Branch {
+                    crit_bit, children, ..
+                } => {
+                    let (next, other) = Side::of(key, *crit_bit).pick(children.each_ref());
+                    visit(Step {
+                        crit_bit: *crit_bit,
+                        sibling: *other.digest(),
+                    });
+                    node = next;
+                }
+            }
         }
-        node
     }
 }
 
@@ -141,10 +148,8 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Tree<K, V, H> {
 
     /// The value stored under `key`.
     pub fn get(&self, key: &K) -> Option<&V> {
-        match self.top.as_ref()?.descend(key, |_| ()) {
-            Node::Leaf { key: k, value, .. } if k == key => Some(value),
-            _ => None,
-        }
+        let (terminal_key, value) = self.top.as_ref()?.descend(key, |_| ());
+        (terminal_key == key).then_some(value)
     }
 
     /// Stores `value` under `key`, returning the value it replaces.
@@ -156,10 +161,8 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Tree<K, V, H> {
         };
         // The first bit on which the key differs from the leaf its lookup ends at: where the
         // new branch goes; `None`: the key is present.
-        let c = match top.descend(&key, |_| ()) {
-            Node::Leaf { key: k, .. } => crit_bit(&key, k),
-            Node::Branch { .. } => unreachable!("a lookup ends at a leaf"),
-        };
+        let (terminal_key, _) = top.descend(&key, |_| ());
+        let c = crit_bit(&key, terminal_key);
         let (top, old) = Self::set_at(*top, key, value, c);
         self.top = Some(top);
         if old.is_none() {
@@ -239,11 +242,9 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Tree<K, V, H> {
             return Proof::empty();
         };
         let mut steps = Vec::new();
-        let Node::Leaf { key, value, .. } = top.descend(key, |step| steps.push(step)) else {
-            unreachable!("a lookup ends at a leaf");
-        };
+        let (terminal_key, value) = top.descend(key, |step| steps.push(step));
         let leaf = Leaf {
-            key: *key,
+            key: *terminal_key,
             value: value.digest(),
         };
         Proof::build(&leaf, steps.into_iter().rev())
