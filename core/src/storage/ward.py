@@ -262,11 +262,21 @@ def store_put(
     return True
 
 
+def _drop_claims_for_slot(index: int) -> None:
+    """A freed slot takes its claims with it, so a claim that survives always names the entry it
+    was filed for: a record replaced in place keeps its slot, another entry only takes a freed
+    one. `offline_store.reconcile_pending` relies on that."""
+    for i, rec in list(_CLAIMS.items()):
+        if len(rec) == CLAIM_LEN and rec[_CLAIM_SLOT_OFF] == index:
+            _CLAIMS.delete(i)
+
+
 def store_delete(wallet_id: bytes, candidates: "list[tuple[int, bytes]]") -> None:
     """Remove this wallet's matching record, if any. The caller must hold the user's consent."""
     index = store_find(wallet_id, candidates)
     if index is not None:
         _STORE.delete(index)
+        _drop_claims_for_slot(index)
 
 
 def store_find_unreadable(wallet_id: bytes) -> int | None:
@@ -281,6 +291,7 @@ def store_delete_slot(index: int) -> None:
     """Remove whatever occupies one slot. Unreadable-record path only; caller holds consent."""
     _check_index(index)
     _STORE.delete(index)
+    _drop_claims_for_slot(index)
 
 
 def store_read_slot(index: int) -> bytes | None:

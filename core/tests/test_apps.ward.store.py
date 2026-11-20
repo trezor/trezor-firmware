@@ -618,6 +618,41 @@ class TestWardStore(unittest.TestCase):
         self.assertIsNone(ward_store.claim_find(_WALLET_A, 3))
         self.assertIsNone(ward_store.claim_read(i))
 
+    def test_freeing_a_record_slot_drops_its_claim(self):
+        """A claim that survives always names the entry it was filed for.
+
+        Settlement may move a newer queued change's base up when this claim landed, which is only
+        right for the SAME entry; another entry can take the slot only after it was freed.
+        """
+        rec = _record(_WALLET_A, _ID_1, pending=True)
+        self.assertTrue(ward_store.store_put(_WALLET_A, ward_store.STORE_VERSION, _ID_1, rec))
+        slot = ward_store.store_find(_WALLET_A, [(ward_store.STORE_VERSION, _ID_1)])
+        claim = ward_store.claim_encode(_WALLET_A, slot, 7, b"\xa1" * 32, b"\xa2" * 32)
+        self.assertTrue(ward_store.claim_put(claim))
+
+        # replacing the record in place keeps both the slot and the claim
+        again = _record(_WALLET_A, _ID_1, payload=b"newer", pending=True)
+        self.assertTrue(ward_store.store_put(_WALLET_A, ward_store.STORE_VERSION, _ID_1, again))
+        self.assertIsNotNone(ward_store.claim_find(_WALLET_A, slot))
+
+        # freeing the slot, by either delete, takes the claim with it
+        ward_store.store_delete(_WALLET_A, [(ward_store.STORE_VERSION, _ID_1)])
+        self.assertIsNone(ward_store.claim_find(_WALLET_A, slot))
+
+        self.assertTrue(
+            ward_store.store_put(
+                _WALLET_A, ward_store.STORE_VERSION, _ID_2, _record(_WALLET_A, _ID_2)
+            )
+        )
+        slot = ward_store.store_find(_WALLET_A, [(ward_store.STORE_VERSION, _ID_2)])
+        self.assertTrue(
+            ward_store.claim_put(
+                ward_store.claim_encode(_WALLET_A, slot, 7, b"\xa1" * 32, b"\xa2" * 32)
+            )
+        )
+        ward_store.store_delete_slot(slot)
+        self.assertIsNone(ward_store.claim_find(_WALLET_A, slot))
+
     def test_claims_survive_a_reboot_and_cover_every_record_slot(self):
         """Claims are in flash BECAUSE the session is where they used to be lost.
 

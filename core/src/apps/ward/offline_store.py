@@ -35,6 +35,7 @@ class StoredEntry:
         compact: bool = False,
         slot: "int | None" = None,
         raw: bytes = b"",
+        base: "int | None" = None,
     ) -> None:
         self.key_type = key_type
         self.app_id = app_id
@@ -46,6 +47,10 @@ class StoredEntry:
         self.compact = compact
         self.slot = slot
         self.raw = raw
+        # the stored counter this change was queued at: a published leaf written after it was
+        # written without this change in view (`flush_queue` resolves the conflict). None for a
+        # pinned copy, a restored change, and a record from before the field existed.
+        self.base = base
 
 
 def _flags(pending: bool, offered: bool) -> int:
@@ -101,14 +106,17 @@ def encode_record(
     pending: bool,
     offered: bool = False,
     compact: bool = False,
+    base: "int | None" = None,
 ) -> bytes:
     """The canonical bytes of one record -- the only encoder, so an unchanged refresh is a no-op.
 
     prefix || (identity_block | wallet_entry(16)) || flags(1) || len16(value) || value
+           [|| base(4B BE)]   -- a queued change's base counter; the value's length prefix
+                                 makes the optional tail unambiguous
     """
     from storage.ward import STORE_VERSION, STORE_VERSION_COMPACT, store_prefix
 
-    from .codec import lp
+    from .codec import lp, u32
     from .keys import wallet_entry
 
     # the value is checked before the name, as it always was
@@ -121,7 +129,11 @@ def encode_record(
         name = identity_block(key_type, app_id, identifier)
 
     return (
-        store_prefix(wallet_id, version) + name + bytes([_flags(pending, offered)]) + value_field
+        store_prefix(wallet_id, version)
+        + name
+        + bytes([_flags(pending, offered)])
+        + value_field
+        + (b"" if base is None else u32(base))
     )
 
 
@@ -156,6 +168,9 @@ def _parse(
         key_type, app_id, identifier = name
     flags = r.uint(1)
     value = r.lp(2)
+    base = None
+    if len(record) - r.off == 4:
+        base = r.uint(4)
     if not r.done():
         raise DataError("WARD: trailing bytes in record")
 
@@ -169,6 +184,7 @@ def _parse(
         compact=name is None,
         slot=slot,
         raw=record,
+        base=base,
     )
 
 
@@ -190,6 +206,17 @@ def record_commit(record: bytes) -> bytes:
     h.update(b"\x00")
     h.update(record[off + 1 :])
     return h.digest()
+
+
+def _set_base(entry: StoredEntry, base: int) -> None:
+    """Rewrite a queued record's base counter in place: the tail, so the length is unchanged."""
+    from storage import ward as ward_store
+
+    from .codec import u32
+
+    if entry.slot is None or entry.base is None:
+        raise ValueError  # only a listed record that carries a base can have it moved
+    ward_store.store_write_slot(entry.slot, entry.raw[:-4] + u32(base))
 
 
 async def _set_flags(entry: StoredEntry, pending: bool, offered: bool) -> None:
@@ -245,6 +272,7 @@ def ensure_storable(
     offered: bool = False,
     compact: bool = False,
     wallet_id: bytes = bytes(16),
+    base: "int | None" = None,
 ) -> bytes:
     """The record, or raise if it would not fit -- called before a screen, so one is never shown
     for something that cannot then be stored."""
@@ -254,7 +282,7 @@ def ensure_storable(
     if len(value) > ward_store.MAX_VALUE_LEN:
         raise DataError("WARD: value too large to keep offline")
     record = encode_record(
-        wallet_id, key_type, app_id, identifier, value, pending, offered, compact
+        wallet_id, key_type, app_id, identifier, value, pending, offered, compact, base
     )
     # the identity framing counts too
     if len(record) > ward_store.MAX_RECORD_LEN:
@@ -270,6 +298,7 @@ async def put(
     pending: bool,
     offered: bool = False,
     compact: bool = False,
+    base: "int | None" = None,
 ) -> None:
     """Write a record, taking over the slot of the same entry in the other form. Raises when the
     store is full -- it never makes room."""
@@ -280,7 +309,7 @@ async def put(
 
     wallet_id = await derive_wallet_id()
     record = ensure_storable(
-        key_type, app_id, identifier, value, pending, offered, compact, wallet_id
+        key_type, app_id, identifier, value, pending, offered, compact, wallet_id, base
     )
     full, short = await _candidates(key_type, app_id, identifier)
     version, name = short if compact else full
@@ -427,7 +456,12 @@ async def reconcile_pending(
     Landed means its `auth_commit` is in `landed_commits` (transitions the caller verified), else
     `_claim_produced` -- never a counter comparison, which another device's change can satisfy.
     Landed: both flags cleared (a cached copy). Not landed: OFFERED cleared, offered again.
-    Record replaced or erased since: untouched.
+    Record erased since: untouched (erasing drops the claim too).
+
+    REPLACED SINCE by a newer queued change of the same entry: its flags stay, but if the claim
+    LANDED, the newer change's base moves up to the claimed counter. It was queued over this
+    device's own unconfirmed change, so that leaf is no conflict -- without this, `flush_queue`
+    would ask the user to choose between two of their own values.
     """
     from storage import ward as ward_store
 
@@ -457,17 +491,20 @@ async def reconcile_pending(
         )
 
     for index, entry, claimed, auth_commit, commit in claims:
-        if (
-            entry is not None
-            and entry.pending
-            and entry.offered
-            and record_commit(entry.raw) == commit
-        ):
+        if entry is not None and entry.pending:
             if landed_commits is not None:
                 landed = auth_commit in landed_commits
             else:
                 landed = await _claim_produced(claimed, adopted, adopted_root, auth_commit)
-            await _set_flags(entry, not landed, False)
+            if entry.offered and record_commit(entry.raw) == commit:
+                await _set_flags(entry, not landed, False)
+            elif (
+                landed
+                and not entry.offered
+                and entry.base is not None
+                and entry.base < claimed
+            ):
+                _set_base(entry, claimed)
         ward_store.claim_delete(index)
 
 

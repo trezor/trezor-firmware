@@ -10,6 +10,8 @@ if TYPE_CHECKING:
         WardFlushQueueApplied,
     )
 
+    from .offline_store import StoredEntry
+
 
 async def _seal(
     key_type: str,
@@ -47,6 +49,125 @@ def _derive(
     )
 
 
+async def _in_conflict(entry: StoredEntry, old_leaf: bytes) -> bool:
+    """Whether `_publish_or_settle` would ask the user about this change (equal values do not)."""
+    from .keys import derive_k_data
+    from .leaf import open_content
+
+    entry_type, c_leaf, theirs = open_content(await derive_k_data(), old_leaf)
+    if entry.base is not None and c_leaf <= entry.base:
+        return False
+    return not (entry_type == entry.key_type and theirs == entry.value)
+
+
+async def _publish_or_settle(
+    entry: StoredEntry, key_type: str, app_id: str, identifier: bytes, old_leaf: "bytes | None"
+) -> bool:
+    """Whether to publish this queued change now. False: it was settled here instead.
+
+    A CONFLICT is a published leaf written after the head the change was queued on (`entry.base`;
+    a restored change has none, so any differing value counts): another device changed the entry
+    without this change in view. The same value settles silently. A real conflict goes to the
+    user, never resolved for them: keep yours (publish it over theirs), keep the published value
+    (discard yours, held), or cancel (it stays pending and the flush stops).
+    """
+    from trezor import log
+    from trezor.enums import ButtonRequestType
+    from trezor.ui.layouts import confirm_action, confirm_properties
+    from trezor.wire import ActionCancelled
+
+    from . import offline_store
+    from .common import display_bytes, display_content, entry_props
+    from .keys import derive_k_data, entry_key_for
+    from .leaf import open_content
+
+    # the path, as wardd logs it; values never reach the log
+    shown = (await entry_key_for(app_id, identifier))[:6].hex()
+    base = "none (restored)" if entry.base is None else "#%d" % entry.base
+    if old_leaf is None:
+        log.info(__name__, "flush: entry=%s base=%s: nothing published there", shown, base)
+        return True  # nothing published here, so nothing to overwrite
+    entry_type, c_leaf, theirs = open_content(await derive_k_data(), old_leaf)
+    if entry.base is not None and c_leaf <= entry.base:
+        log.info(
+            __name__,
+            "flush: entry=%s base=%s: published at #%d, before it was queued: no conflict",
+            shown,
+            base,
+            c_leaf,
+        )
+        return True  # written before the change was queued: the user formed it in view of that
+
+    async def keep_theirs() -> None:
+        # the queued record becomes an offline copy of what is published, as a landed one would
+        await offline_store.put(
+            key_type, app_id, identifier, theirs, False, compact=entry.compact
+        )
+
+    if entry_type == key_type and theirs == entry.value:
+        await keep_theirs()
+        log.info(
+            __name__,
+            "flush: entry=%s base=%s: published at #%d with the same value: settled",
+            shown,
+            base,
+            c_leaf,
+        )
+        return False
+
+    log.info(
+        __name__,
+        "flush: CONFLICT entry=%s: published at #%d, after this change was queued at %s",
+        shown,
+        c_leaf,
+        base,
+    )
+
+    props = entry_props(app_id, identifier)
+    props.append(
+        ("Published (change #%d)" % c_leaf, display_content((entry_type, theirs)), True)
+    )
+    props.append(("Yours (queued offline)", display_bytes(entry.value), True))
+    props.append(
+        ("Warning", "Another device changed this entry after you queued yours.", False)
+    )
+    await confirm_properties("ward_conflict", "Conflicting change", props)
+
+    try:
+        await confirm_action(
+            "ward_conflict_keep_new",
+            "Keep your value?",
+            "Publish your queued value over the published one.",
+            verb="Keep yours",
+            br_code=ButtonRequestType.Other,
+        )
+        log.info(__name__, "flush: conflict entry=%s resolved: KEEP NEW (publish the queued value)", shown)
+        return True
+    except ActionCancelled:
+        pass
+
+    # Declining both leaves the change pending: ActionCancelled ends the flush here.
+    try:
+        await confirm_action(
+            "ward_conflict_keep_original",
+            "Keep published value?",
+            "Your queued value will be discarded.",
+            verb="Keep published",
+            hold=True,
+            br_code=ButtonRequestType.Other,
+        )
+    except ActionCancelled:
+        log.info(__name__, "flush: conflict entry=%s left unresolved: stays pending", shown)
+        raise
+    await keep_theirs()
+    log.info(
+        __name__,
+        "flush: conflict entry=%s resolved: KEEP ORIGINAL (queued value discarded)",
+        shown,
+    )
+    return False
+
+
 async def flush_queue(
     msg: WardFlushQueue,
 ) -> "WardFlushQueueAck | WardFlushQueueApplied":
@@ -78,33 +199,45 @@ async def flush_queue(
 
         return await _flush_batch(min(max_batch, MAX_BATCH))
 
-    app_id, identifier = msg.app_id, msg.identifier
-    key_type = ENTRY_TYPE_ADDRESS
+    def nothing_published(
+        remaining: int,
+    ) -> "WardFlushQueueAck | WardFlushQueueApplied":
+        if utils.USE_WARD_SERVICE_CHANNEL:
+            from trezor.messages import WardFlushQueueApplied
 
-    if named:
-        status, entry = await offline_store.get(key_type, app_id, identifier)
-        if status != offline_store.VALID or entry is None or not entry.pending:
-            raise DataError("WARD: no queued change for this entry")
-        # A named change may be re-offered: that is how a lost response (and any compact record)
-        # gets back.
-    else:
-        entry = await offline_store.next_unsent()
-        if entry is None:
-            if utils.USE_WARD_SERVICE_CHANNEL:
-                from trezor.messages import WardFlushQueueApplied
+            return WardFlushQueueApplied(remaining=remaining)
+        return WardFlushQueueAck(remaining=remaining)
 
-                return WardFlushQueueApplied(remaining=0)
-            return WardFlushQueueAck(remaining=0)
-        if entry.compact:
-            raise DataError(
-                "WARD: the next queued change is stored compactly; name it with app_id and identifier"
-            )
-        app_id, identifier = entry.app_id, entry.identifier
-        key_type = entry.key_type
-    entry_key = await entry_key_for(app_id, identifier)
+    # One change is published; one settled by `_publish_or_settle` moves on to the next.
+    while True:
+        app_id, identifier = msg.app_id, msg.identifier
+        key_type = ENTRY_TYPE_ADDRESS
 
-    # The pull may sync (service builds), so the head is read only after it.
-    _old_value, old_leaf, material = await pull_leaf(entry_key)
+        if named:
+            status, entry = await offline_store.get(key_type, app_id, identifier)
+            if status != offline_store.VALID or entry is None or not entry.pending:
+                raise DataError("WARD: no queued change for this entry")
+            # A named change may be re-offered: that is how a lost response (and any compact
+            # record) gets back.
+        else:
+            entry = await offline_store.next_unsent()
+            if entry is None:
+                return nothing_published(0)
+            if entry.compact:
+                raise DataError(
+                    "WARD: the next queued change is stored compactly; name it with app_id and identifier"
+                )
+            app_id, identifier = entry.app_id, entry.identifier
+            key_type = entry.key_type
+        entry_key = await entry_key_for(app_id, identifier)
+
+        # The pull may sync (service builds), so the head is read only after it.
+        _old_value, old_leaf, material = await pull_leaf(entry_key)
+
+        if await _publish_or_settle(entry, key_type, app_id, identifier, old_leaf):
+            break
+        if named:
+            return nothing_published(await offline_store.count_unsent())
 
     from_root = await get_root()
     counter = await get_counter() + 1
@@ -117,6 +250,10 @@ async def flush_queue(
 
     # Claim and OFFERED flag go to flash before anything leaves the device.
     await offline_store.mark_offered(entry, counter, step)
+
+    from trezor import log
+
+    log.info(__name__, "flush: publishing entry=%s as change #%d", entry_key[:6].hex(), counter)
 
     remaining = await offline_store.count_unsent()
 
@@ -186,6 +323,12 @@ async def _flush_batch(limit: int) -> "WardFlushQueueAck":
         _value, old_leaf, material = await pull_leaf(
             entry_key, root=running, staged=staged
         )
+        if folded and old_leaf is not None and await _in_conflict(entry, old_leaf):
+            break  # resolved at the head of the next flush, never in the middle of a batch
+        if not await _publish_or_settle(
+            entry, key_type, entry.app_id, entry.identifier, old_leaf
+        ):
+            continue
         parts = await _seal(
             key_type,
             entry.app_id,
@@ -201,6 +344,9 @@ async def _flush_batch(limit: int) -> "WardFlushQueueAck":
         used += size
         staged = (entry_key, value_digest(parts[1]))
 
+    if not folded:
+        return WardFlushQueueAck(remaining=await offline_store.count_unsent())
+
     to_counter = from_counter + len(folded)
     step, advance = await authorise(from_counter, from_root, to_counter, running)
 
@@ -211,6 +357,16 @@ async def _flush_batch(limit: int) -> "WardFlushQueueAck":
     # every claim names the batch's one authorisation, so one adopted link settles them all
     for entry, *_rest in folded:
         await offline_store.mark_offered(entry, to_counter, step)
+
+    from trezor import log
+
+    log.info(
+        __name__,
+        "flush: publishing %d change(s) as #%d -> #%d",
+        len(folded),
+        from_counter,
+        to_counter,
+    )
 
     return WardFlushQueueAck(
         counter=to_counter,

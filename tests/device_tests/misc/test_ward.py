@@ -4210,6 +4210,154 @@ def test_ward_flush_publishes_the_queued_change_sealed(session: Session):
     assert value == b"published_value"
 
 
+# --- conflicts between changes queued offline ---------------------------------------
+
+
+def _queue_offline(session: Session, identifier: bytes, value: bytes) -> None:
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ward.queue_set_entry(session, _APP, identifier, value)
+
+
+def _resolving(session: Session, rec: "_Recorded", keep_new: bool, keep_original: bool):
+    """Confirm every screen, paging through each, but answer the two conflict questions.
+
+    Delizia only: declining is a different gesture per layout.
+    """
+    debug = session.test_ctx.debug
+    answers = {
+        "ward_conflict_keep_new": keep_new,
+        "ward_conflict_keep_original": keep_original,
+    }
+
+    def flow():
+        br = yield
+        while True:
+            for _ in range((br.pages or 1) - 1):
+                rec.on_page(debug.read_layout())
+                debug.swipe_up()
+            rec.on_page(debug.read_layout())
+            if answers.get(br.name, True):
+                debug.press_yes()
+            else:
+                debug.press_no()
+            br = yield
+
+    return flow
+
+
+def _flush_conflict(
+    session: Session, store: WardTrie, keep_new: bool, keep_original: bool = True
+) -> "tuple":
+    """Flush with the conflict answered; return (result, recorder)."""
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(_resolving(session, rec, keep_new, keep_original))
+        res = ward.flush_queue(session, ward.store_provider(store))
+    return res, rec
+
+
+@pytest.mark.models("delizia")
+def test_ward_conflict_keep_original_discards_the_queued_change(session: Session):
+    """Queued offline at #0; another device publishes the same entry at #1. Keeping the published
+    value publishes nothing, and the queued record becomes an offline copy of what is published."""
+    store = WardTrie()
+    _queue_offline(session, b"contact", b"mine_offline")
+    _seed(session, store, b"contact", b"theirs_published")
+
+    res, rec = _flush_conflict(session, store, keep_new=False)
+
+    assert "conflicting change" in rec.title
+    assert "theirs_published" in rec.squashed and "mine_offline" in rec.squashed
+    assert "keep published value" in rec.title
+    assert res.leaf.content is None and res.response.remaining == 0
+    copy = _offline_read(session.test_ctx.get_session(), b"contact")
+    assert copy.ack.pending is not True
+    assert copy.ack.value == b"theirs_published"
+
+
+@pytest.mark.models("delizia")
+def test_ward_conflict_keep_new_publishes_over_the_other_device(session: Session):
+    store = WardTrie()
+    _queue_offline(session, b"contact", b"mine_offline")
+    _seed(session, store, b"contact", b"theirs_published")
+
+    res, rec = _flush_conflict(session, store, keep_new=True)
+
+    assert "conflicting change" in rec.title
+    assert "keep published value" not in rec.title
+    assert unpack_content(open_content(_K_DATA, res.leaf.content))[2] == b"mine_offline"
+    ward.apply(store, res)
+    _confirm(session, store)
+    _res, shown = _read(
+        session, store, lambda p: ward.get_entry(session, _APP, b"contact", p)
+    )
+    assert "mine_offline" in shown.text
+
+
+@pytest.mark.models("delizia")
+def test_ward_conflict_declined_twice_stays_pending(session: Session):
+    """Neither answer: the flush stops and the change is still queued, unresolved."""
+    store = WardTrie()
+    _queue_offline(session, b"contact", b"mine_offline")
+    _seed(session, store, b"contact", b"theirs_published")
+
+    with pytest.raises(exceptions.Cancelled):
+        _flush_conflict(session, store, keep_new=False, keep_original=False)
+
+    copy = _offline_read(session.test_ctx.get_session(), b"contact")
+    assert copy.ack.pending is True
+    assert copy.ack.value == b"mine_offline"
+
+
+@pytest.mark.models("core")
+def test_ward_conflict_with_the_same_value_settles_without_a_screen(session: Session):
+    store = WardTrie()
+    _queue_offline(session, b"contact", b"same_name")
+    _seed(session, store, b"contact", b"same_name")
+
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses([m.WardEntryRequest, m.WardFlushQueueAck])
+        res = ward.flush_queue(session, ward.store_provider(store))
+    assert res.leaf.content is None
+    assert _offline_read(session.test_ctx.get_session(), b"contact").ack.pending is not True
+
+
+@pytest.mark.models("core")
+def test_ward_a_change_queued_over_its_own_unconfirmed_change_is_no_conflict(
+    session: Session,
+):
+    """Queued over this device's OWN change while that one was still unconfirmed: once it lands,
+    it is not "another device's" value, and the flush must not ask the user to choose."""
+    store = WardTrie()
+    _go_online(session, store)
+    _queue_offline(session, b"contact", b"first")
+    first = ward.flush_queue(session, ward.store_provider(store))  # offered, claim filed
+
+    _queue_offline(session, b"contact", b"second")  # replaces the offered record
+    ward.apply(store, first)
+    _confirm(session, store)  # the first one lands
+
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses([m.WardEntryRequest, m.WardFlushQueueAck])
+        res = ward.flush_queue(session, ward.store_provider(store))
+    assert unpack_content(open_content(_K_DATA, res.leaf.content))[2] == b"second"
+
+
+@pytest.mark.models("core")
+def test_ward_no_conflict_when_the_entry_was_published_before_queueing(session: Session):
+    """Queued at #1 over a value published at #1: formed in view of it, so no question."""
+    store = WardTrie()
+    _seed(session, store, b"contact", b"theirs_published")
+    _queue_offline(session, b"contact", b"mine_offline")
+    _go_online(session, store)
+
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses([m.WardEntryRequest, m.WardFlushQueueAck])
+        res = ward.flush_queue(session, ward.store_provider(store))
+    assert unpack_content(open_content(_K_DATA, res.leaf.content))[2] == b"mine_offline"
+
+
 @pytest.mark.models("core")
 def test_ward_flush_needs_a_synced_session(session: Session):
     """With no trusted root there is nothing to derive against and nothing to prove the

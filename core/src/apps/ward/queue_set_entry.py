@@ -34,7 +34,11 @@ async def queue_set_entry(msg: WardQueueSetEntry) -> WardQueueSetAck:
     if msg.mac is not None:
         return await _restore(app_id, identifier, key_type, value, msg.mac, compact)
 
-    offline_store.ensure_storable(key_type, app_id, identifier, value)
+    from .root import get_counter
+
+    # the head this change is formed on: a leaf published after it is a conflict at the flush
+    base = await get_counter()
+    offline_store.ensure_storable(key_type, app_id, identifier, value, base=base)
 
     status, existing = await offline_store.get(key_type, app_id, identifier)
 
@@ -52,7 +56,22 @@ async def queue_set_entry(msg: WardQueueSetEntry) -> WardQueueSetAck:
     await confirm_properties("ward_queue_entry", title, props)
 
     # PENDING, not offered: `flush_queue` marks it handed over
-    await offline_store.put(key_type, app_id, identifier, value, True, compact=compact)
+    await offline_store.put(
+        key_type, app_id, identifier, value, True, compact=compact, base=base
+    )
+
+    from trezor import log
+
+    from .keys import entry_key_for
+
+    # the path, as wardd logs it; never the identifier or the value
+    log.info(
+        __name__,
+        "queued offline: entry=%s domain=%s base=#%d",
+        (await entry_key_for(app_id, identifier))[:6].hex(),
+        app_id,
+        base,
+    )
 
     return WardQueueSetAck()
 
