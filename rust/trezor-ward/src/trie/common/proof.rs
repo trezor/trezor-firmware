@@ -145,9 +145,9 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
 
     /// The leaf the lookup ended at; `None` for the empty map.
     pub fn leaf(&self) -> Option<Leaf<K, H>> {
-        let bytes = self.as_bytes();
-        // `parse` checked the length, so a non-empty proof holds a whole leaf.
-        (!bytes.is_empty()).then(|| Leaf::try_from(&bytes[..Leaf::<K, H>::LEN]).unwrap())
+        // `parse` checked the length: the bytes are empty or begin with a whole leaf.
+        let bytes = self.as_bytes().get(..Leaf::<K, H>::LEN)?;
+        Leaf::try_from(bytes).ok()
     }
 
     /// A proof borrowing this one's bytes. Already validated, so there is nothing to parse.
@@ -259,7 +259,8 @@ impl<'a, K: Key, H: HashFn> Steps<'a, K, H> {
 
     fn step(chunk: &[u8]) -> Step<K, H> {
         // `chunks_exact` yields whole steps only, and `parse` checked their crit bits.
-        Step::try_from(chunk).unwrap()
+        // Through `ok`, since unwrapping the `Result` would need `Error: Debug`.
+        Step::try_from(chunk).ok().unwrap()
     }
 }
 

@@ -8,7 +8,8 @@ edition = "2024"
 use_std = ["debug"]
 # A ready `Hash` implementation over the `sha2` crate, for hosts.
 sha2 = ["dep:sha2"]
-# `Debug` for the proof, entry and walk types (`Error` has it regardless); on with `use_std`.
+# `Debug` for the crate's types, and `Display` and `core::error::Error` for `Error`; on with
+# `use_std`.
 debug = []
 
 [dependencies]

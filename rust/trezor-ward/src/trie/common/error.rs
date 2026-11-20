@@ -4,7 +4,8 @@
 /// a proof at all, a malformed message. The rest are raised when a well-formed proof is held
 /// against a root, by a lookup ([`Root::get`](crate::trie::Root::get),
 /// [`Root::entry`](crate::trie::Root::entry)) or by a walk: a claim that does not hold.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub enum Error {
     /// The bytes do not fit the proof layout: neither empty, nor a terminal leaf followed by
     /// whole steps.
@@ -25,6 +26,7 @@ pub enum Error {
     OutOfOrder,
 }
 
+#[cfg(feature = "debug")]
 impl core::fmt::Display for Error {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.write_str(match self {
@@ -38,4 +40,5 @@ impl core::fmt::Display for Error {
     }
 }
 
+#[cfg(feature = "debug")]
 impl core::error::Error for Error {}
