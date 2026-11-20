@@ -290,9 +290,9 @@ impl FirmwareUI for UIEckhart {
             info_hint,
             None,
             false,
-            Some(TR::confirm_total__title_fee.into()),
             None,
-            false,
+            None,
+            true,
         )?;
         Ok(flow)
     }
@@ -582,6 +582,7 @@ impl FirmwareUI for UIEckhart {
         verb_view_all: Option<TString<'static>>,
         hold: bool,
         chunkify: bool,
+        external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let flow = flow::new_confirm_value_intro(
             title,
@@ -592,6 +593,7 @@ impl FirmwareUI for UIEckhart {
             verb,
             hold,
             chunkify,
+            external_menu,
         )?;
 
         LayoutObj::new_root(flow)
@@ -604,7 +606,7 @@ impl FirmwareUI for UIEckhart {
         verb: TString<'static>,
         verb_info: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
-        _external_menu: bool,
+        external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
@@ -635,7 +637,7 @@ impl FirmwareUI for UIEckhart {
             false,
             verb_info,
             None,
-            false,
+            external_menu,
         )?;
         LayoutObj::new_root(flow)
     }
