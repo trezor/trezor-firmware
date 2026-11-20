@@ -138,6 +138,7 @@ Multiple emulators coexist only if each has its own port block and profile. Each
 ## Generated files
 
 - `make gen` regenerates all generated files; `make gen_check` (CI gate) verifies they are up to date.
+  Both run `tools/gen.py` (parallel; `tools/gen.py [--check] <step>...` runs single steps, `-v` or `V=1` shows details).
 - **Never hand-edit or resolve merge conflicts in generated files.** Run `make gen` and commit the result,
   e.g. right after a rebase/merge.
 - Generated artifacts include: `core/mocks/generated/*` (from C module comments), every `*.py`/`*.rs` next to a

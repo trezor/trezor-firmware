@@ -1,13 +1,14 @@
 #!/bin/sh
 set -e
 
-CWD=`dirname "$0"`
-RENDER="$CWD/../vendor/trezor-common/tools/cointool.py render -M T1B1"
+# work from the repository root, so that paths in the output start with `core/`
+cd "$(dirname "$0")/../.."
+RENDER="core/vendor/trezor-common/tools/cointool.py render -M T1B1"
 
 # Search both in `core/src` and `core/embed`
 # - Solana templates are excluded since those are handled separately
 # - `gen_font.mako` is excluded as it's used from `gen_font.py`
-FIND_TEMPLATES="find $CWD/.. -name *.mako -not -name _proto* -not -path *solana* -not -name gen_font.mako"
+FIND_TEMPLATES="find core -name *.mako -not -name _proto* -not -path *solana* -not -name gen_font.mako"
 
 check_results() {
     CHECK_FAIL=0
@@ -25,5 +26,5 @@ check_results() {
 if [ "$1" = "--check" ]; then
     check_results
 else
-    $FIND_TEMPLATES | xargs $RENDER
+    $FIND_TEMPLATES | xargs $RENDER -v
 fi

@@ -15,7 +15,7 @@ else
     messages_out=$messages
 fi
 
-cargo run --manifest-path "$crate_root/build/Cargo.toml" -- "$protos_out"
+cargo run --quiet --manifest-path "$crate_root/build/Cargo.toml" -- "$protos_out"
 
 "$crate_root/scripts/build_messages" > "$messages_out"
 rustfmt "$messages_out"
