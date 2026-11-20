@@ -16,16 +16,14 @@
 
 from __future__ import annotations
 
-import subprocess
 import typing as t
 
 from trezorlib import messages
 from trezorlib._internal.bootargs import BootCommand
 from trezorlib._internal.bootloader_emulator import BootloaderStartup, ExitKind
 from trezorlib.debuglink import LayoutType
-from trezorlib.messages import DebugWaitType
 
-from .common import confirm
+from .common import confirm, wait_for_screen
 
 if t.TYPE_CHECKING:
     from .conftest import BootloaderRunner
@@ -45,22 +43,14 @@ def test_host_wipe_empty_device(bootloader: "BootloaderRunner") -> None:
     confirm(ctx)
     assert isinstance(reply.result(timeout=60), messages.Success)
 
-    # Success is sent 100 ms before the success screen is drawn; without
-    # layout tokens the test cannot wait for that screen by name
-    ctx.debug.state(DebugWaitType.IMMEDIATE)
+    # Success goes out just before the success screen is drawn
+    done = wait_for_screen(ctx, lambda s: "trezor reset" in s.text_content().lower())
 
     if ctx.layout_type is LayoutType.Eckhart:
-        # the success screen offers a restart button; a tap that lands on
-        # the progress screen before it is ignored, so tap until the run ends
-        record = None
-        for _ in range(10):
-            ctx.debug.click((190, 475))
-            try:
-                record = bootloader.wait_exit(timeout=2)
-                break
-            except subprocess.TimeoutExpired:
-                continue
-        assert record is not None, "the restart button did not end the run"
+        # the success screen offers a restart button
+        assert "Restart" in done.action_bar()
+        ctx.debug.click(ctx.debug.screen_buttons.ok())
+        record = bootloader.wait_exit()
         assert record.kind is ExitKind.REBOOT
         assert record.bootargs is not None
         assert record.bootargs.command == BootCommand.REBOOT
