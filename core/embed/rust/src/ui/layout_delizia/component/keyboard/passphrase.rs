@@ -10,6 +10,7 @@ use super::super::super::constant::SCREEN;
 use super::super::super::cshape;
 use crate::strutil::{ShortString, TString};
 use crate::ui::component::base::ComponentExt;
+use crate::ui::component::eye_hint::EyeHintAnimation;
 use crate::ui::component::swipe_detect::SwipeConfig;
 use crate::ui::component::text::common::TextBox;
 use crate::ui::component::text::layout::{LayoutFit, LineBreaking};
@@ -211,6 +212,8 @@ impl PassphraseKeyboard {
 
     /// Possibly changing the buttons' state after change of the input.
     fn after_edit(&mut self, ctx: &mut EventCtx) {
+        self.input.update_eye_hint(ctx);
+
         // When the input is empty, enable cancel button. Otherwise show erase and
         // confirm button.
         let is_empty = self.input.textbox.is_empty();
@@ -506,6 +509,7 @@ struct Input {
     last_char_timer: Timer,
     pad: Pad,
     shown_area: Rect,
+    eye_hint: EyeHintAnimation,
 }
 
 impl Input {
@@ -516,6 +520,17 @@ impl Input {
     const STYLE: TextStyle =
         theme::label_keyboard().with_line_breaking(LineBreaking::BreakWordsNoHyphen);
     const SHOWN_INSETS: Insets = Insets::new(8, 10, 8, 10);
+    /// Space between the left edge of the input area and the eye icon
+    const EYE_ICON_PADDING: i16 = 4;
+    /// Space between the eye icon and the first dot
+    const EYE_ICON_SPACE: i16 = 8;
+    /// Horizontal offset of the first dot, leaving room for the eye icon
+    const DOTS_OFFSET: i16 =
+        Self::EYE_ICON_PADDING + theme::ICON_EYE.toif.width() + Self::EYE_ICON_SPACE;
+    /// Distance the eye icon travels when sliding in, starting off the screen
+    const EYE_ICON_SLIDE: i16 = 40;
+    /// Distance the dots travel to make room for the sliding eye icon
+    const DOTS_SLIDE: i16 = 30;
 
     fn new(max_len: usize) -> Self {
         Self {
@@ -526,14 +541,28 @@ impl Input {
             last_char_timer: Timer::new(),
             pad: Pad::with_background(theme::BG),
             shown_area: Rect::zero(),
+            eye_hint: EyeHintAnimation::default(),
         }
     }
 
+    /// Slide the eye icon in once the first character is hidden behind a dot,
+    /// and reset it when the input is cleared.
+    fn update_eye_hint(&mut self, ctx: &mut EventCtx) {
+        let count = self.textbox.count();
+        let visible = match count {
+            0 => false,
+            1 => self.eye_hint.is_visible() || self.display_style == DisplayStyle::Hidden,
+            _ => true,
+        };
+        self.eye_hint.set_visible(ctx, visible);
+    }
+
     /// Maximum number of dots that fit in the input area (accounting for the
-    /// confirm button taking the right portion of the row).
+    /// eye icon on the left and the confirm button taking the right portion of
+    /// the row).
     fn max_shown_dots(&self) -> usize {
         let step = Self::DOT_ICON_WIDTH + Self::DOT_ICON_SPACING;
-        let dots_space = (self.area.width() + Self::DOT_ICON_SPACING) / step;
+        let dots_space = (self.area.width() - Self::DOTS_OFFSET + Self::DOT_ICON_SPACING) / step;
         // reduce by one to create more space between the written dots and `confirm_btn`
         let dots_space = dots_space - 1;
         (dots_space).max(1) as usize
@@ -583,7 +612,9 @@ impl Input {
         debug_assert_ne!(self.display_style, DisplayStyle::Shown);
 
         let style = theme::label_keyboard();
-        let mut cursor = self.area.left_center();
+        let dots_offset = Self::DOTS_OFFSET
+            + EyeHintAnimation::offset(self.eye_hint.content_progress(), Self::DOTS_SLIDE);
+        let mut cursor = self.area.left_center().ofs(Offset::x(dots_offset));
 
         let pp_len = self.textbox.count();
         let last_char = self.display_style == DisplayStyle::LastOnly
@@ -593,6 +624,19 @@ impl Input {
 
         if pp_len == 0 {
             return;
+        }
+
+        // Eye icon hinting that holding the input reveals the passphrase
+        if self.eye_hint.is_visible() {
+            let eye_offset = Self::EYE_ICON_PADDING
+                + EyeHintAnimation::offset(self.eye_hint.icon_progress(), Self::EYE_ICON_SLIDE);
+            ToifImage::new(
+                self.area.left_center().ofs(Offset::x(eye_offset)),
+                theme::ICON_EYE.toif,
+            )
+            .with_align(Alignment2D::CENTER_LEFT)
+            .with_fg(theme::GREY_LIGHT)
+            .render(target);
         }
 
         let visible_len = pp_len.min(max_dots);
@@ -667,7 +711,12 @@ impl Component for Input {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if self.eye_hint.process(ctx, event) {
+            self.pad.clear();
+        }
+
         if self.textbox.is_empty() {
+            self.update_eye_hint(ctx);
             return None;
         }
 
@@ -695,6 +744,7 @@ impl Component for Input {
             }
             _ => {}
         }
+        self.update_eye_hint(ctx);
         None
     }
 
