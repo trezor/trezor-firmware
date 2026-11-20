@@ -335,6 +335,8 @@ async def _get_next_chunk(data_left: int) -> AnyBytes:
     data_chunk = resp.data_chunk
     if len(data_chunk) > req.data_length:
         raise DataError("Too much data")
+    if not data_chunk:
+        raise DataError("Empty data chunk")
     return data_chunk
 
 
