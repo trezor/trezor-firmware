@@ -92,7 +92,9 @@ pub fn collect_artifacts(args: &ResolvedBuildArgs, is_dependency: bool) -> Resul
     ];
 
     if !args.emulator {
-        if !is_dependency {
+        // Also publish secmon/kernel dependency binaries of a pq_secure_boot
+        // build: a custom build reuses the committed prebuilt secmon from here.
+        if !is_dependency || matches!(args.project, Project::Secmon | Project::Kernel) {
             let ubin = elf.with_extension("ubin");
             let bin = elf.with_extension("bin");
             // Prefer .ubin (firmware on T2T1/T2B1), fall back to .bin
@@ -104,6 +106,10 @@ pub fn collect_artifacts(args: &ResolvedBuildArgs, is_dependency: bool) -> Resul
                 let filename = "secmon_api.o";
                 artifacts.push((elf.with_file_name(filename), filename.to_owned()));
             }
+        }
+        // The veneer object stays paired with secmon.bin; the kernel links it.
+        if matches!(args.project, Project::Secmon) {
+            artifacts.push((profile_dir.join("secmon_api.o"), "secmon_api.o".to_string()));
         }
         artifacts.push((
             profile_dir.join(format!("{binary_name}.map")),

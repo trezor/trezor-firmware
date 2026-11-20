@@ -65,12 +65,4 @@ ts_t firmware_get_vendor(char* buff, size_t buff_size);
 
 #ifdef SECURE_MODE
 
-/**
- * @brief Invalidates the firmware by erasing the first 1 KiB of the firmware
- * area.
- *
- * Requires MPU write access to the firmware area.
- */
-void firmware_invalidate_header(void);
-
 #endif  // SECURE_MODE

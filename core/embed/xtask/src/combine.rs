@@ -5,7 +5,7 @@ use anyhow::{Context, Result, ensure};
 use clap::ValueEnum;
 
 use crate::args::{CombineArgs, Model, Project};
-use crate::{helpers, postbuild};
+use crate::{helpers, postbuild, pq};
 
 const COMBINED_PREFIX: &str = "combined-";
 
@@ -44,10 +44,12 @@ const ERASED_PADDING: u8 = 0xFF;
 
 fn load_binary(model: Model, project: Project) -> Result<Vec<u8>> {
     let path = helpers::artifacts_dir(model)?.join(format!("{}.bin", project.binary_name()));
+    load_path(&path)
+}
+
+fn load_path(path: &Path) -> Result<Vec<u8>> {
     println!("Loading `{}`", path.display());
-    let data = fs::read(&path)
-        .with_context(|| format!("Failed to read binary file `{}`", path.display()))?;
-    Ok(data)
+    fs::read(path).with_context(|| format!("Failed to read binary file `{}`", path.display()))
 }
 
 /// Overwrite the UCB region with the erased byte, if this model has one.
@@ -129,7 +131,8 @@ pub fn supported_projects() -> String {
 ///
 /// The combined image starts at `BOARDLOADER_START` (the address it is flashed
 /// to) and places every project at its real offset within flash, padding the
-/// gaps between them. Which projects those are comes from [`projects`].
+/// gaps between them. Which projects those are comes from [`projects`]; on a
+/// Merkle-tree model the bootloader and firmware come from the signed release.
 pub fn combine(args: CombineArgs) -> Result<()> {
     let memory_ld = args.model.model_memory_ld()?;
     let content = fs::read_to_string(&memory_ld)
@@ -138,6 +141,37 @@ pub fn combine(args: CombineArgs) -> Result<()> {
     // All offsets are relative to the boardloader, which sits at the start of
     // the combined image.
     let base = combined_start(&content)?;
+
+    // On a Merkle-tree model the bootloader and firmware come from the signed
+    // release, with the bootloader stamped for the variant being combined.
+    let install = if args.model.config()?.has_feature("pq_secure_boot")
+        && matches!(
+            args.project,
+            Project::Bootloader | Project::Firmware | Project::Prodtest
+        ) {
+        Some(pq::resolve_install(args.model, args.project, args.variant)?)
+    } else {
+        ensure!(
+            args.variant.is_none(),
+            "--variant applies only to a pq_secure release, which `{}` on this model is not",
+            args.project.binary_name()
+        );
+        None
+    };
+
+    if let Some(install) = &install {
+        match install.variant {
+            Some(variant) => println!(
+                "Combining the {} release, provisioned for `{}`",
+                args.model.model_id(),
+                variant.name()
+            ),
+            None => println!(
+                "Combining a BARE bootloader: the device will read as unprovisioned and \
+                 needs its firmware over the wire. Pass --variant to provision it instead."
+            ),
+        }
+    }
 
     let projects = projects(args.project).ok_or_else(|| {
         anyhow::anyhow!(
@@ -150,7 +184,17 @@ pub fn combine(args: CombineArgs) -> Result<()> {
     let mut binary = Vec::new();
 
     for project in [Project::Boardloader].iter().chain(projects) {
-        let data = load_binary(args.model, *project)?;
+        let data = match (&install, project) {
+            (None, _) | (Some(_), Project::Boardloader) => load_binary(args.model, *project)?,
+            // Bootloader and firmware must come from the same signed release.
+            (Some(install), Project::Bootloader) => load_path(&install.bootloader)?,
+            (Some(install), _) => load_path(install.firmware.as_ref().with_context(|| {
+                format!(
+                    "the release has no firmware for `{}`",
+                    project.binary_name()
+                )
+            })?)?,
+        };
         for (address, segment) in helpers::project_segments(&content, *project, &data)? {
             place_section(&mut binary, (address - base) as usize, segment)?;
         }
