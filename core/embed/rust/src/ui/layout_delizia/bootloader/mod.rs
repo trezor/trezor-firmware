@@ -260,7 +260,7 @@ impl BootloaderUI for UIDelizia {
             "Are you sure you want to factory reset the device?".into(),
             TEXT_WIPE_NORMAL,
         );
-        let alert = Label::centered("SEED AND FIRMWARE\nWILL BE ERASED!".into(), TEXT_WIPE_BOLD);
+        let alert = Label::centered("SEED AND FIRMWARE\nWILL BE DELETED!".into(), TEXT_WIPE_BOLD);
 
         let right = Button::with_text("RESET".into())
             .styled(button_wipe_confirm())
