@@ -83,6 +83,12 @@ const curve_info curve25519_info = {
     .hasher_script = HASHER_SHA2,
 };
 
+// Railgun derivation: SLIP-10 hardened tree, private key only
+const curve_info babyjubjub_info = {
+    .bip32_name = "babyjubjub seed",
+    .params = NULL,
+};
+
 bool hdnode_validate_private_key(const curve_info *curve,
                                  const uint8_t private_key[32]) {
   if (curve->params == NULL) {
@@ -484,6 +490,8 @@ int hdnode_fill_public_key(HDNode *node) {
     } else if (node->curve == &ed25519_cardano_info) {
       ed25519_publickey_ext(node->private_key, node->public_key + 1);
 #endif
+    } else {
+      return 1;  // no public key for this curve
     }
   }
 #else
@@ -501,6 +509,10 @@ int hdnode_fill_public_key(HDNode *node) {
 int hdnode_get_ethereum_pubkeyhash(const HDNode *node, uint8_t *pubkeyhash) {
   uint8_t buf[65] = {0};
   SHA3_CTX ctx = {0};
+
+  if (node->curve->params == NULL) {
+    return 0;  // not an ECDSA curve
+  }
 
   /* get uncompressed public key */
   if (ecdsa_get_public_key65(node->curve->params, node->private_key, buf) !=
@@ -715,6 +727,9 @@ const curve_info *get_curve_by_name(const char *curve_name) {
 #endif
   if (strcmp(curve_name, CURVE25519_NAME) == 0) {
     return &curve25519_info;
+  }
+  if (strcmp(curve_name, BABYJUBJUB_NAME) == 0) {
+    return &babyjubjub_info;
   }
   return 0;
 }

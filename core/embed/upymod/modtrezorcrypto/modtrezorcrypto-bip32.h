@@ -375,7 +375,10 @@ static mp_obj_t mod_trezorcrypto_HDNode_ethereum_pubkeyhash(mp_obj_t self) {
 
   vstr_t pkh = {0};
   vstr_init_len(&pkh, 20);
-  hdnode_get_ethereum_pubkeyhash(&o->hdnode, (uint8_t *)pkh.buf);
+  if (!hdnode_get_ethereum_pubkeyhash(&o->hdnode, (uint8_t *)pkh.buf)) {
+    vstr_clear(&pkh);
+    mp_raise_ValueError(MP_ERROR_TEXT("Failed to get address"));
+  }
   return mp_obj_new_bytes_from_vstr(&pkh);
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(
