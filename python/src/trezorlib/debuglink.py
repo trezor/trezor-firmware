@@ -917,6 +917,20 @@ class DebugLink:
             messages.DebugLinkEraseSdCard(format=format), expect=messages.Success
         )
 
+    def k1n1_tap(self, uid: bytes, exchange: t.Callable[[bytes, bool], bytes]) -> None:
+        """Place an emulated K1N1 tag in the NFC field. Only works on emulator.
+
+        Every frame the device sends to the tag is passed to `exchange(data, is_psk)`,
+        which returns the tag's response. `is_psk` marks the reader's PSK share, which
+        is sent instead of a command APDU. Returns when the device ends the NFC
+        session.
+        """
+        req = self._call(messages.DebugLinkK1N1Connected(uid=uid))
+        while not isinstance(req, messages.Success):
+            command = messages.DebugLinkK1N1Command.ensure_isinstance(req)
+            response = exchange(command.data, bool(command.psk))
+            req = self._call(messages.DebugLinkK1N1Response(data=response))
+
     def set_battery_state(
         self,
         soc: int | None = None,
