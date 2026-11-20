@@ -28,6 +28,8 @@
 #include "fuel_gauge.h"
 #include "math.h"
 
+#define BAT_FG_SAMPLE_BUF_SIZE 10
+
 typedef struct {
   float voltage_V;
   float current_mA;
@@ -59,11 +61,11 @@ bat_driver_t g_bat_driver = {
     .initialized = false,
 };
 
-void bat_init(void) {
+ts_t bat_init(void) {
   bat_driver_t* drv = &g_bat_driver;
 
   if (drv->initialized) {
-    return;  // Already initialized
+    return TS_OK;  // Already initialized
   }
   memset(drv, 0, sizeof(bat_driver_t));
 
@@ -72,6 +74,37 @@ void bat_init(void) {
 
   drv->fg_locked = false;
   drv->initialized = true;
+
+  return TS_OK;
+}
+
+void bat_deinit(void) {}
+
+void bat_deinit(void) {}
+
+ts_t bat_fg_recovery(const bat_fg_recovery_data_t* data) {
+  if (data == NULL) {
+    return TS_EINVAL;
+  }
+
+  return bat_fg_set_soc(data->soc, data->P);
+}
+
+ts_t bat_fg_get_recovery_data(bat_fg_recovery_data_t* data) {
+  bat_driver_t* drv = &g_bat_driver;
+
+  if (!drv->initialized) {
+    return TS_ENOINIT;
+  }
+
+  if (data == NULL) {
+    return TS_EINVAL;
+  }
+
+  data->soc = drv->fg_state.soc;
+  data->P = drv->fg_state.P;
+
+  return TS_OK;
 }
 
 ts_t bat_fg_set_soc(float soc, float P) {

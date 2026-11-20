@@ -530,6 +530,7 @@ static void npm2100_calculate_report(npm2100_driver_t* drv,
 
   // Calculate the die temperature from the die ADC reading.
   report->die_temp = NPM2100_ADC_DIETEMP_C(r->adc_temp_result);
+  report->ntc_temp = report->die_temp;
 
   // Calculate the system voltage (VSYS) from the ADC value.
   report->vsys = NPM2100_ADC_VOUT_V(r->adc_vsys_result);

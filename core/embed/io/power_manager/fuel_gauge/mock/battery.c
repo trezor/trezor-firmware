@@ -42,7 +42,29 @@
 // backup-RAM recovery path) is consistent.
 static float g_soc = 1.0f;
 
-void bat_init(void) { g_soc = 1.0f; }
+ts_t bat_init(void) {
+  g_soc = 1.0f;
+  return TS_OK;
+}
+
+void bat_deinit(void) {}
+  
+ts_t bat_fg_recovery(const bat_fg_recovery_data_t* data) {
+  if (data == NULL) {
+    return TS_EINVAL;
+  }
+  return bat_fg_set_soc(data->soc, data->P);
+}
+
+ts_t bat_fg_get_recovery_data(bat_fg_recovery_data_t* data) {
+  if (data == NULL) {
+    return TS_EINVAL;
+  }
+  data->soc = g_soc;
+  data->P = 0.0f;
+
+  return TS_OK;
+}
 
 ts_t bat_fg_set_soc(float soc, float P) {
   (void)P;
@@ -68,6 +90,7 @@ ts_t bat_fg_get_state(bat_fg_state_t* data) {
   data->soc = g_soc;
   data->soc_latched = g_soc;
   data->P = 0.0f;
+
   return TS_OK;
 }
 

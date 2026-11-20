@@ -109,15 +109,17 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         // chemistry-neutral fuel_gauge/battery.h interface; the board picks a
         // concrete implementation via `fuel_gauge = "io/fuel_gauge_..."`.
         //
-        // (feature name, sources) for each enabled gauge, then the same
-        // "exactly one" check as the PMIC selector above. The sources come from
-        // the table rather than a trailing `else`, so adding a gauge without
-        // wiring up its sources is a build error instead of silently linking
-        // another implementation.
-        let mut gauges: Vec<(&str, &[&str])> = Vec::new();
+        // (feature name, define, sources) for each enabled gauge, then the
+        // same "exactly one" check as the PMIC selector above. The sources come
+        // from the table rather than a trailing `else`, so adding a gauge
+        // without wiring up its sources is a build error instead of silently
+        // linking another implementation. The define selects the gauge's
+        // backup-RAM recovery data layout in battery.h.
+        let mut gauges: Vec<(&str, &str, &[&str])> = Vec::new();
         if cfg!(feature = "fuel_gauge_lifepo4") {
             gauges.push((
                 "fuel_gauge_lifepo4",
+                "USE_FUEL_GAUGE_LIFEPO4",
                 &[
                     "power_manager/fuel_gauge/lifepo4/battery.c",
                     "power_manager/fuel_gauge/lifepo4/fuel_gauge.c",
@@ -125,9 +127,24 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
                 ],
             ));
         }
+        if cfg!(feature = "fuel_gauge_alkaline") {
+            gauges.push((
+                "fuel_gauge_alkaline",
+                "USE_FUEL_GAUGE_ALKALINE",
+                &[
+                    "power_manager/fuel_gauge/alkaline/battery.c",
+                    "power_manager/fuel_gauge/alkaline/fuel_gauge.c",
+                    "power_manager/fuel_gauge/alkaline/dummy_load.c",
+                    "power_manager/fuel_gauge/alkaline/battery_model/src/soc_ocv_data.c",
+                    "power_manager/fuel_gauge/alkaline/battery_model/src/soc_ocv_temp.c",
+                    "power_manager/fuel_gauge/alkaline/battery_model/src/soc_ocv_lut.c",
+                ],
+            ));
+        }
         if cfg!(feature = "fuel_gauge_mock") {
             gauges.push((
                 "fuel_gauge_mock",
+                "USE_FUEL_GAUGE_MOCK",
                 &["power_manager/fuel_gauge/mock/battery.c"],
             ));
         }
@@ -138,9 +155,10 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
              (set `fuel_gauge = \"io/fuel_gauge_...\"` in the board's \
              [power_manager] section), found {}: {:?}",
             gauges.len(),
-            gauges.iter().map(|(f, _)| *f).collect::<Vec<_>>()
+            gauges.iter().map(|(f, _, _)| *f).collect::<Vec<_>>()
         );
-        let (_feature, sources) = gauges[0];
+        let (_feature, define, sources) = gauges[0];
+        lib.add_define(define, Some("1"));
         lib.add_sources(sources);
     }
 
