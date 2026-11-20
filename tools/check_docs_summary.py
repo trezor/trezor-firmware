@@ -13,6 +13,8 @@ from typing import Generator, Iterable, Set
 
 DOCS_DIR = "docs/"
 SUMMARY_FILENAME = "SUMMARY.md"
+# Documented outside the main page: `docs/ward/index.md` is the entry point for WARD.
+SKIP_DIRS = ("ward/",)
 RE_MARKDOWN_LINK = r"\[.*?\]\((.+.md)\)"
 
 
@@ -70,6 +72,7 @@ def main() -> None:
     md_files_in_docs_dir = gen_convert_to_str(md_files_in_docs_dir)
     md_files_in_docs_dir = gen_ltrim_pat(md_files_in_docs_dir, DOCS_DIR)
     md_files_in_docs_dir = gen_skip(md_files_in_docs_dir, SUMMARY_FILENAME)
+    md_files_in_docs_dir = (f for f in md_files_in_docs_dir if not f.startswith(SKIP_DIRS))
 
     md_files_linked_in_summary = gen_pat_in_file(
         DOCS_DIR + SUMMARY_FILENAME, re_md_link, 1

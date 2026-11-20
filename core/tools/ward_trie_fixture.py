@@ -227,7 +227,7 @@ def generate() -> dict:
         "_comment": (
             "WARD trie canonicity conformance vectors. Replay `steps` in order against your "
             "own implementation and compare `root` after each one. See "
-            "docs/core/misc/ward-trie.md for the hashing and structure rules, and "
+            "docs/ward/ward-trie.md for the hashing and structure rules, and "
             "core/tools/ward_trie_fixture.py to regenerate."
         ),
         "key_type": KT,

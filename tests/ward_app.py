@@ -19,7 +19,7 @@
 WHAT THE DEVICE DOES. The first host to send a user-facing WARD message is pinned in flash by its
 static key, after the user holds to confirm, and every other host is refused from then on -- one
 party operates WARD per device, chosen by the user. See `apps.ward.app_role` and
-`docs/core/misc/ward-channels.md`.
+`docs/ward/ward-channels.md`.
 
 WHY THAT NEEDS A FIXTURE. Every test starts from a wiped device, so every test's first WARD request
 would raise that confirmation -- and roughly a hundred existing tests pin an exact ButtonRequest

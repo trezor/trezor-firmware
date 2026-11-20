@@ -16,7 +16,7 @@
 
 """The WARD Merkle trie, host side: build it, serve proofs, and check them.
 
-Spec: `docs/core/misc/ward-trie.md`. Must stay byte-for-byte identical to the firmware's
+Spec: `docs/ward/ward-trie.md`. Must stay byte-for-byte identical to the firmware's
 `core/src/apps/ward/trie.py`; the conformance vectors in `python/tests/test_ward_trie.py` pin both.
 
     leaf     = sha256(0x00 || entry_key || commit)

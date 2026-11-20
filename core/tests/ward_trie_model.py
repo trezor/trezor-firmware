@@ -1,6 +1,6 @@
 """A canonical WARD trie, rebuilt from scratch. The reference the deriver is checked against.
 
-This is the spec of `docs/core/misc/ward-trie.md` transcribed into code, and it is
+This is the spec of `docs/ward/ward-trie.md` transcribed into code, and it is
 deliberately the SLOW, OBVIOUS implementation: every query rebuilds the whole tree from the
 sorted key set, there is no incremental update path and no cached state. That is the point.
 `apps.ward.trie.compute_new_root` derives each new root from the previous one plus a proof,

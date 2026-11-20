@@ -7,7 +7,7 @@ history leaves the device out of sync with nothing to do about it.
 What it buys: the device can ASK rather than only answer, at any point in any workflow.
 `WardServiceOpen` is the last host-initiated message; afterwards the device is the sole initiator,
 because one stream without request ids cannot carry two conversations. Binding names WHICH daemon
-and nothing else -- readiness comes from a sync. See `docs/core/misc/ward-channels.md`.
+and nothing else -- readiness comes from a sync. See `docs/ward/ward-channels.md`.
 """
 
 from micropython import const

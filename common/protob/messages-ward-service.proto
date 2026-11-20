@@ -43,7 +43,7 @@ import "messages-ward.proto";
  * THE APP, NOT THE WALLET, and that is the boundary this channel exists to draw. The party that
  * invokes WardGetEntry / WardSetEntry is the application the user is using WARD through; a wallet
  * may be connected at the same time on the ordinary interface, is not part of this protocol, and
- * proxies none of it. See `docs/core/misc/ward-channels.md`.
+ * proxies none of it. See `docs/ward/ward-channels.md`.
  */
 
 /**

@@ -1,5 +1,5 @@
 {
-  "_comment": "WARD trie canonicity conformance vectors. Replay `steps` in order against your own implementation and compare `root` after each one. See docs/core/misc/ward-trie.md for the hashing and structure rules, and core/tools/ward_trie_fixture.py to regenerate.",
+  "_comment": "WARD trie canonicity conformance vectors. Replay `steps` in order against your own implementation and compare `root` after each one. See docs/ward/ward-trie.md for the hashing and structure rules, and core/tools/ward_trie_fixture.py to regenerate.",
   "key_type": "address",
   "empty_root": "084fed08b978af4d7d196a7446a86b58009e636b611db16211b65a9aadff29c5",
   "leaf_encoding": {
