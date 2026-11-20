@@ -1,21 +1,27 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-KEY_BOOL = 0
+from storage.cache_common import APP_COMMON_SEED_WITHOUT_PASSPHRASE, DataCache
+
+SESSIONLESS_KEY = APP_COMMON_SEED_WITHOUT_PASSPHRASE
+
+
+def _copy_data(dc: DataCache) -> bytearray:
+    return dc.data + dc.value_lengths
+
 
 if utils.USE_THP:
     import thp_common
     from mock_wire_interface import MockHID
     from storage import cache, cache_thp, cache_thp_keys
-    from storage.cache_common import SESSION_STATE, DataCache
+    from storage.cache_common import SESSION_STATE
     from trezor.wire.thp.session_context import SessionContext
 
     _PROTOCOL_CACHE = cache_thp
 
     KEY = cache_thp_keys.APP_COMMON_SEED
-
-    def _copy_data(dc: DataCache) -> list[bytearray]:
-        return [bytearray(f) for f in dc.data]
+    if not utils.BITCOIN_ONLY:
+        KEY_BOOL = cache_thp_keys.APP_COMMON_DERIVE_CARDANO
 
 else:
     from mock_storage import mock_storage
@@ -42,13 +48,11 @@ class TestStorageCache(TestCaseWithContext):
             self.interface = MockHID()
             cache.clear_all()
 
-        def assertEqualExceptLastUsage(
-            self, x: list[bytearray], y: list[bytearray], msg=""
-        ):
-            skip = cache_thp_keys.LAST_USAGE
-            x1 = [bytearray(b) for i, b in enumerate(x) if i != skip]
-            y1 = [bytearray(b) for i, b in enumerate(y) if i != skip]
-            self.assertEqual(x1, y1, msg)
+        def assertEqualExceptLastUsage(self, x: bytearray, y: bytearray, msg=""):
+            session = cache_thp._SESSIONS[0]
+            start = session._field_start(cache_thp_keys.LAST_USAGE)
+            end = start + session.field_sizes[cache_thp_keys.LAST_USAGE]
+            self.assertEqual(x[:start] + x[end:], y[:start] + y[end:], msg)
 
         def test_new_channel_and_session(self):
             channel = thp_common.get_new_channel(self.interface)
@@ -131,16 +135,16 @@ class TestStorageCache(TestCaseWithContext):
                 sessions_B.append(_copy_data(s))
 
             for i in range(3):
-                self.assertEqual(sesions_A[i], cache_thp._SESSIONS[i].data)
+                self.assertEqual(sesions_A[i], _copy_data(cache_thp._SESSIONS[i]))
             for i in range(3, cache_thp._MAX_SESSIONS_COUNT):
-                self.assertEqual(sessions_B[i - 3], cache_thp._SESSIONS[i].data)
+                self.assertEqual(sessions_B[i - 3], _copy_data(cache_thp._SESSIONS[i]))
 
             # Assert that new session replaces the oldest (least used) one (_SESSIONS[0])
             new_session = cache_thp.create_or_replace_session(
                 channel_B.channel_id_bytes(), b"\xab"
             )
             self.assertEqual(new_session, cache_thp._SESSIONS[0])
-            self.assertNotEqual(new_session.data, sesions_A[0])
+            self.assertNotEqual(_copy_data(new_session), sesions_A[0])
 
             # Assert that creating a new session on channel B shifts the "last usage" again
             # and that _SESSIONS[1] was not replaced, but that _SESSIONS[2] was replaced
@@ -150,9 +154,11 @@ class TestStorageCache(TestCaseWithContext):
                     channel_B.channel_id_bytes(), b"\xaa"
                 )
             )
-            self.assertEqualExceptLastUsage(sesions_A[1], cache_thp._SESSIONS[1].data)
-            self.assertNotEqual(sesions_A[2], cache_thp._SESSIONS[2].data)
-            self.assertEqual(new_new_session, cache_thp._SESSIONS[2].data)
+            self.assertEqualExceptLastUsage(
+                sesions_A[1], _copy_data(cache_thp._SESSIONS[1])
+            )
+            self.assertNotEqual(sesions_A[2], _copy_data(cache_thp._SESSIONS[2]))
+            self.assertEqual(new_new_session, _copy_data(cache_thp._SESSIONS[2]))
 
         def test_clear(self):
             channel_A = thp_common.get_new_channel(self.interface)
@@ -181,6 +187,7 @@ class TestStorageCache(TestCaseWithContext):
             for i in range(3):
                 self.assertEqual(cache_thp._SESSIONS[2 * i].last_usage, 0)
                 self.assertEqual(cache_thp._SESSIONS[2 * i].channel_id, b"")
+                self.assertFalse(any(_copy_data(cache_thp._SESSIONS[2 * i])))
 
                 self.assertNotEqual(cache_thp._SESSIONS[2 * i + 1].last_usage, 0)
                 self.assertEqual(cache_thp._SESSIONS[2 * i + 1].channel_id, cid_B)
@@ -233,6 +240,7 @@ class TestStorageCache(TestCaseWithContext):
             self.assertIsNone(session_1.get_int(KEY))
             self.assertIsNone(session_2.get_int(KEY))
 
+        @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
         def test_get_set_bool(self):
             channel = thp_common.get_new_channel(self.interface)
 
@@ -240,20 +248,14 @@ class TestStorageCache(TestCaseWithContext):
                 channel.channel_id_bytes(), b"\x01"
             )
             with self.assertRaises(AssertionError):
-                session_1.set_bool(KEY_BOOL, True)
+                session_1.set_bool(KEY, True)
 
-            # Change length of first session field to 0 so that the length check passes
-            orig_fields = session_1.fields
-            session_1.fields = (0,) + session_1.fields[1:]
-
-            # with self.assertRaises(AssertionError) as e:
             session_1.set_bool(KEY_BOOL, True)
             self.assertEqual(session_1.get_bool(KEY_BOOL), True)
 
             session_2 = cache_thp.create_or_replace_session(
                 channel.channel_id_bytes(), b"\x02"
             )
-            session_2.fields = (0,) + session_2.fields[1:]
             session_2.set_bool(KEY_BOOL, False)
             self.assertEqual(session_2.get_bool(KEY_BOOL), False)
 
@@ -264,10 +266,6 @@ class TestStorageCache(TestCaseWithContext):
             # Default value is False
             self.assertFalse(session_1.get_bool(KEY_BOOL))
             self.assertFalse(session_2.get_bool(KEY_BOOL))
-
-            # Restore fields for next testcases
-            session_1.fields = orig_fields
-            session_2.fields = orig_fields
 
         def test_delete(self):
             channel = thp_common.get_new_channel(self.interface)
@@ -315,7 +313,9 @@ class TestStorageCache(TestCaseWithContext):
             session_id = cache_codec.start_session()
             self.assertTrue(is_session_started())
             get_active_session().set(KEY, b"A")
+            session = get_active_session()
             cache_codec.end_current_session()
+            self.assertFalse(any(_copy_data(session)))
             self.assertFalse(is_session_started())
             self.assertIsNone(get_active_session())
 
@@ -348,6 +348,25 @@ class TestStorageCache(TestCaseWithContext):
                 cache_codec.start_session()
             self.assertNotEqual(cache_codec.start_session(session_id), session_id)
             self.assertIsNone(get_active_session().get(KEY))
+
+        def test_session_eviction_keeps_other_sessions(self):
+            session_ids = []
+            for i in range(_PROTOCOL_CACHE._MAX_SESSIONS_COUNT):
+                session_ids.append(cache_codec.start_session())
+                get_active_session().set(KEY, bytes([i + 1]))
+            # make session 1 the least recently used one
+            cache_codec.start_session(session_ids[0])
+            snapshots = [_copy_data(s) for s in cache_codec._SESSIONS]
+
+            cache_codec.start_session()
+
+            for i, session in enumerate(cache_codec._SESSIONS):
+                if i == 1:
+                    self.assertIsNone(session.get(KEY))
+                    self.assertNotEqual(session_ids[1], session.session_id)
+                else:
+                    self.assertEqual(snapshots[i], _copy_data(session))
+                    self.assertEqual(session_ids[i], session.session_id)
 
         def test_get_set(self):
             session_id1 = cache_codec.start_session()
@@ -493,6 +512,32 @@ class TestStorageCache(TestCaseWithContext):
             await_result(handle_EndSession(EndSession()))
             self.assertFalse(is_session_started())
             self.assertIsNone(cache_codec.get_active_session())
+
+    def test_set_shorter_value_zeroes_rest_of_field(self):
+        sessionless = cache.get_sessionless_cache()
+        sessionless.set(SESSIONLESS_KEY, b"\x01")
+        expected = _copy_data(sessionless)
+
+        size = sessionless._get_field_size(SESSIONLESS_KEY)
+        sessionless.set(SESSIONLESS_KEY, b"\xff" * size)
+        sessionless.set(SESSIONLESS_KEY, b"\x01")
+        self.assertEqual(expected, _copy_data(sessionless))
+
+    def test_set_too_long_value_refused(self):
+        sessionless = cache.get_sessionless_cache()
+        before = _copy_data(sessionless)
+        size = sessionless._get_field_size(SESSIONLESS_KEY)
+        with self.assertRaises(AssertionError):
+            sessionless.set(SESSIONLESS_KEY, b"\x01" * (size + 1))
+        # the next field must not be overwritten
+        self.assertEqual(before, _copy_data(sessionless))
+
+    def test_delete_wipes_data(self):
+        sessionless = cache.get_sessionless_cache()
+        size = sessionless._get_field_size(SESSIONLESS_KEY)
+        sessionless.set(SESSIONLESS_KEY, b"\xff" * size)
+        sessionless.delete(SESSIONLESS_KEY)
+        self.assertFalse(any(_copy_data(sessionless)))
 
 
 if __name__ == "__main__":

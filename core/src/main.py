@@ -18,7 +18,7 @@ utils.presize_module(trezor, 30)
 # trezor.utils, and each other.
 import storage
 # we will need space for XX items in the storage module
-utils.presize_module(storage, 20)
+utils.presize_module(storage, 24)
 
 if not utils.BITCOIN_ONLY:
     # storage.fido2 only imports C modules

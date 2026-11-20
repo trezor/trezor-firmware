@@ -2,11 +2,11 @@
 from common import *  # isort:skip
 
 from trezor.crypto import bip39
+from trezor.crypto.slip21 import Slip21Node
 from trezor.wire import DataError
 
 from apps.common.keychain import ForbiddenKeyPath, Keychain
 from apps.common.paths import address_n_slip21_to_str
-from apps.common.seed import Slip21Node
 
 
 class TestSeed(unittest.TestCase):

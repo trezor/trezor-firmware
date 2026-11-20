@@ -2,12 +2,14 @@ import builtins
 from micropython import const
 from typing import TYPE_CHECKING
 
-from storage.cache_common import (
+from storage.cache_common import DataCache
+from storage.cache_thp_keys import (
+    APP_COMMON_AUTHORIZATION_TYPE,
+    CACHE_ENCRYPTED_COUNT_THP,
     CHANNEL_ID,
     LAST_USAGE,
     SESSION_ID,
     SESSION_STATE,
-    DataCache,
 )
 
 if TYPE_CHECKING:
@@ -25,33 +27,43 @@ _SEEDLESS_STATE = const(2)
 
 
 class SessionThpCache(DataCache):
+    # The first fields in the `field_sizes` tuple are encrypted while the device is
+    # locked. The rest of the fields are kept unencrypted.
+    encrypted_count = CACHE_ENCRYPTED_COUNT_THP
+
     def __init__(self) -> None:
         from trezor import utils
 
         if utils.BITCOIN_ONLY:
-            self.fields = (
+            self.field_sizes = (
+                # Fields that are encrypted under soft lock:
+                64,  # APP_COMMON_SEED
+                32,  # APP_COMMON_NONCE
+                0,  # APP_CARDANO_ICARUS_SECRET (unused)
+                0,  # APP_CARDANO_ICARUS_TREZOR_SECRET (unused)
+                # Fields kept in plaintext:
                 2,  # CHANNEL_ID
                 1,  # SESSION_ID
                 1,  # SESSION_STATE
                 4,  # LAST_USAGE
-                64,  # APP_COMMON_SEED
                 2,  # APP_COMMON_AUTHORIZATION_TYPE
                 128,  # APP_COMMON_AUTHORIZATION_DATA
-                32,  # APP_COMMON_NONCE
             )
         else:
-            self.fields = (
+            self.field_sizes = (
+                # Fields that are encrypted under soft lock:
+                64,  # APP_COMMON_SEED
+                32,  # APP_COMMON_NONCE
+                96,  # APP_CARDANO_ICARUS_SECRET
+                96,  # APP_CARDANO_ICARUS_TREZOR_SECRET
+                # Fields kept in plaintext:
                 2,  # CHANNEL_ID
                 1,  # SESSION_ID
                 1,  # SESSION_STATE
                 4,  # LAST_USAGE
-                64,  # APP_COMMON_SEED
                 2,  # APP_COMMON_AUTHORIZATION_TYPE
                 128,  # APP_COMMON_AUTHORIZATION_DATA
-                32,  # APP_COMMON_NONCE
                 0,  # APP_COMMON_DERIVE_CARDANO
-                96,  # APP_CARDANO_ICARUS_SECRET
-                96,  # APP_CARDANO_ICARUS_TREZOR_SECRET
                 0,  # APP_MONERO_LIVE_REFRESH
                 4 + 4,  # APP_EXTAPP_IDS
             )
@@ -72,6 +84,9 @@ class SessionThpCache(DataCache):
     def clear(self) -> None:
         super().clear()
 
+    def is_preauthorized(self) -> bool:
+        return self.is_set(APP_COMMON_AUTHORIZATION_TYPE)
+
 
 _SESSIONS: list[SessionThpCache] = []
 
@@ -83,8 +98,9 @@ def initialize() -> None:
     for _ in range(_MAX_SESSIONS_COUNT):
         _SESSIONS.append(SessionThpCache())
 
-    for session in _SESSIONS:
-        session.clear()
+
+def get_sessions() -> list[SessionThpCache]:
+    return _SESSIONS
 
 
 def update_channel_last_used(channel_id: AnyBytes) -> None:

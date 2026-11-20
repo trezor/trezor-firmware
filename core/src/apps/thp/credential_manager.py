@@ -25,8 +25,7 @@ def derive_cred_auth_key() -> bytes:
     Derive the current THP credential authentication mac-ing key from the device secret.
     """
     from storage.device import get_cred_auth_key_counter, get_device_secret
-
-    from apps.common.seed import Slip21Node
+    from trezor.crypto.slip21 import Slip21Node
 
     # Derive the key using SLIP-21 https://github.com/satoshilabs/slips/blob/master/slip-0021.md,
     # the derivation path is m/"TREZOR"/"THP credential authentication key"/(counter 4-byte BE)
