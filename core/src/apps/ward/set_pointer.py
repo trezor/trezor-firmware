@@ -16,7 +16,7 @@ async def set_pointer(msg: WardSetPointer) -> "WardLeafAck | WardMutationApplied
     from trezor.wire import DataError
 
     from .common import (
-        WARNING_UNVERIFIED,
+        add_freshness,
         commit_change,
         display_bytes,
         display_content,
@@ -51,7 +51,7 @@ async def set_pointer(msg: WardSetPointer) -> "WardLeafAck | WardMutationApplied
         title = "Update pointer"
         props.append(("Replaces", display_content(old), True))
     props.append(("Points to", display_bytes(target), True))
-    props.append(WARNING_UNVERIFIED)
+    add_freshness(props)
 
     await confirm_properties("ward_set_pointer", title, props)
 

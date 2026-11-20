@@ -6,10 +6,10 @@ if TYPE_CHECKING:
     from trezor.messages import WardLeafAck, WardMutationApplied
     from trezor.ui.layouts import StrPropertyType
 
-# Every screen carries this. Sealing and the trie stop a host forging a value or moving a leaf between
-# paths, but it can still serve an OLDER sealed leaf or deny holding one: the value is
-# authentic, its freshness is not proven.
-# FIXME(ward): do NOT remove until proofs against an attested root land.
+# Sealing and the trie stop a host forging a value or moving a leaf between paths, but against a
+# root this session has not had attested it can still serve an OLDER tree: the value is authentic,
+# its freshness is not proven. Shown unless the WM attested the head in this session -- see
+# `add_freshness`.
 WARNING_UNVERIFIED: "StrPropertyType" = (
     "Warning",
     "Not proven current; may be out of date.",
@@ -69,6 +69,24 @@ def require_key(app_id: str | None, identifier: bytes | None) -> "tuple[str, byt
     if not app_id or not identifier:
         raise DataError("app_id and identifier are required")
     return app_id, identifier
+
+
+def is_fresh() -> bool:
+    """Whether the root reads prove against is the WM's head as of this session.
+
+    True only after this session adopted a head the WM attested against a nonce the device minted
+    for it, and the device's root moves only by such an adoption: a proof against it is a proof
+    against the WM's current head, not merely against a head that once was.
+    """
+    from . import round as sync_round
+
+    return sync_round.is_online()
+
+
+def add_freshness(props: list) -> None:
+    """Append the warning unless the WM attested this session's head (`is_fresh`)."""
+    if not is_fresh():
+        props.append(WARNING_UNVERIFIED)
 
 
 async def online() -> bool:

@@ -10,7 +10,8 @@ for `show_address(warning=...)`. Failures are labelling failures, for the caller
 """
 
 # Short and blunt: they land in a `warning` slot next to an address.
-NOTE_UNVERIFIED = "Label not proven current."
+# Online means the WM attested this session's head (`common.is_fresh`), so a pulled label is current.
+NOTE_CURRENT = "Label proven current."
 NOTE_ABSENT = "No label for this address."
 NOTE_OFFLINE = "Offline label; not checked with the host."
 NOTE_PENDING = "Label not published yet."
@@ -58,7 +59,7 @@ async def resolve_label(
         # ABSENT is proven (a witness was checked); an EMPTY value is a deliberate blank.
         if value is None:
             return None, NOTE_ABSENT
-        return value, NOTE_UNVERIFIED
+        return value, NOTE_CURRENT
 
     status, entry = await offline_store.get(key_type, app_id, identifier)
 

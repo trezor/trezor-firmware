@@ -750,11 +750,41 @@ def test_ward_get_entry_pulls_and_shows(session: Session):
     assert res.response.message == "WARD entry shown"
     assert res.leaf is None  # a read builds no leaf
 
+    # proved against the head the WM attested in THIS session: authentic and current, so the
+    # screen carries no freshness warning
+    assert "unverified" not in rec.title
+    assert "Petr_label" in rec.text
+    assert "not proven current" not in rec.text.lower()
+
+
+@pytest.mark.models("core")
+def test_ward_get_entry_without_the_wm_proves_against_the_stored_head_and_warns(
+    session: Session,
+):
+    """No WM this session (a new session that never synced): the read is still PROVED, against
+    the head this device last adopted, but its freshness is not -- so it says so.
+
+    A host that skips or fails the sync on purpose can therefore put only a value from the
+    device's own last head on screen, and only under the warning; a leaf from any other tree is
+    refused, as in the synced session.
+    """
+    store = WardTrie()
+    _seed(session, store, b"addr1", b"Petr_label")
+
+    fresh = session.test_ctx.get_session()
+    _res, rec = _read(fresh, store, lambda p: ward.get_entry(fresh, _APP, b"addr1", p))
     assert "unverified entry" in rec.title
     assert "Petr_label" in rec.text
-    # the warning narrowed when the leaf was sealed -- the value is now authentic, but its
-    # freshness is still unproven, and the screen has to say which of the two it means
     assert "not proven current" in rec.text.lower()
+
+    # the same leaf in another tree: authentic content, but not under the stored head
+    key = expected_entry_key(_K_PATH, _APP, b"addr1")
+    other = WardTrie()
+    other.set(key, store.blobs[key])
+    other.set(expected_entry_key(_K_PATH, _APP, b"addr2"), store.blobs[key])
+    another = session.test_ctx.get_session()
+    with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
+        ward.get_entry(another, _APP, b"addr1", ward.store_provider(other))
 
 
 @pytest.mark.models("core")
@@ -786,7 +816,7 @@ def test_ward_get_entry_empty_value_is_shown_as_an_entry(session: Session):
         session, store, lambda p: ward.get_entry(session, _APP, b"addr1", p)
     )
 
-    assert "unverified entry" in rec.title
+    assert "entry" in rec.title
     assert "not found" not in rec.title
     assert "no entry" not in rec.text.lower()
 
@@ -4371,11 +4401,13 @@ def test_ward_set_entry_refuses_offline_and_names_the_queue_request(session: Ses
 
 @pytest.mark.models("core")
 def test_ward_get_entry_refuses_offline_and_names_the_queue_request(session: Session):
-    """Same for the read, and here the refusal is also the security property.
+    """Same for a read with NO stored head: nothing to prove against, so it refuses.
 
     A device that pulled first and used its own copy whenever the pull failed would let a
     hostile host force an old value onto the screen by answering badly on purpose: fail the
-    proof, get the cache. Now the local read is a request the host had to ask for by name.
+    proof, get the cache. The local read is a request the host has to ask for by name; with a
+    stored head the read proves against it and warns instead (see
+    `test_ward_get_entry_without_the_wm_proves_against_the_stored_head_and_warns`).
     """
     with pytest.raises(exceptions.TrezorFailure, match="WardQueueGetEntry"):
         ward.get_entry(session, _APP, b"addr1", lambda _k: ward.Answer())

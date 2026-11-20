@@ -7,8 +7,11 @@ if TYPE_CHECKING:
 async def get_entry(msg: WardGetEntry) -> Success:
     """WardGetEntry handler: pull the entry, verify it, show it; returns only Success.
 
-    REFUSES WITHOUT A SYNCED SESSION rather than falling back to the local copy -- a fallback
-    would let a host force an old value onto the screen by failing the proof. The local read is
+    FRESH when this session adopted a WM-attested head: the screen then carries no warning. With no
+    WM to attest (a failed or skipped sync) the entry is still proved, against the head this
+    device last adopted, and shown as unverified with the warning -- a host that fails the sync
+    on purpose gets an old value onto the screen only under that warning. With no stored head at
+    all there is nothing to prove against, and it refuses. The device-local read is
     `WardQueueGetEntry`. The value is on screen before the user acts, which is safe only because
     `app_role` limits who may trigger a read.
     """
@@ -17,19 +20,28 @@ async def get_entry(msg: WardGetEntry) -> Success:
     from trezor.wire import DataError
 
     from .common import (
-        WARNING_UNVERIFIED,
+        add_freshness,
         display_bytes,
         entry_props,
+        is_fresh,
         online,
         read_entry,
         require_key,
     )
+    from .root import get_root
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
     props = entry_props(app_id, identifier)
 
-    if not await online():
+    # A service build drives a sync here. A failed one leaves the read on the stored head; with no
+    # head to fall back on, why the sync failed is the answer.
+    try:
+        await online()
+    except Exception:
+        if await get_root() is None:
+            raise
+    if not is_fresh() and await get_root() is None:
         raise DataError("WARD: sync first, or read the local copy with WardQueueGetEntry")
 
     value, target = await read_entry(app_id, identifier)
@@ -40,9 +52,9 @@ async def get_entry(msg: WardGetEntry) -> Success:
         title = "Entry not found"
         props.append(("Result", "The host holds no entry for this key.", False))
     else:
-        title = "Unverified entry"
+        title = "Entry" if is_fresh() else "Unverified entry"
         props.append(("Value", display_bytes(value), True))
-    props.append(WARNING_UNVERIFIED)
+    add_freshness(props)
 
     await confirm_properties("ward_get_entry", title, props)
 

@@ -25,7 +25,7 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
     from trezor.wire import DataError
 
     from .common import (
-        WARNING_UNVERIFIED,
+        add_freshness,
         commit_change,
         display_content,
         entry_props,
@@ -62,7 +62,7 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
 
     props = entry_props(app_id, identifier)
     props.append(("Deleting value", display_content(current), True))
-    props.append(WARNING_UNVERIFIED)
+    add_freshness(props)
 
     await confirm_properties("ward_delete_entry", "Delete entry", props, hold=True)
 
