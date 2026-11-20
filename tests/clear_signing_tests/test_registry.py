@@ -89,6 +89,7 @@ def test_registry_case(session: Session, case: RegistryCase) -> None:
         "description": case.description,
         "to": tx.to,
         "selector": tx.data[:4].hex(),
+        "has_display_format": case.has_display_format,
     }
     recorder = FlowRecorder()
     definitions = messages.EthereumDefinitions(

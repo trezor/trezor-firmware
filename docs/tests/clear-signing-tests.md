@@ -33,22 +33,31 @@ deploy.
 
 ## What fails
 
-Each registry case with a chain ID 1 transaction is one test. A case is skipped when the
-dev definitions have no display format for its contract and function (the definitions
-converter dropped it, or it is not deployed there), or when its calldata is longer than
-the firmware clear-signs (6144 bytes).
+Each registry case with a chain ID 1 transaction is one test, of every provider, whether
+trezor/definitions supports it or not. A case is skipped only when its calldata is longer
+than the firmware clear-signs (6144 bytes), or when the test cannot sign its transaction
+(e.g. contract creation, transaction types other than legacy and EIP-1559).
+
+A case runs even when the dev definitions have no display format for its contract and
+function: trezor/definitions does not convert that provider, the converter dropped the
+format (an unsupported feature, an override by another descriptor), or the descriptor does
+not cover that contract on mainnet. The firmware then clear-signs it only with a built-in
+display format (ERC-20 `approve` and `transfer`), and otherwise blind-signs it. The summary
+lists the latter as "blind-signed, no display format": the cases that the definitions do
+not cover.
 
 A test fails when:
 
 - signing fails,
 - its screens differ from those of the last nightly run, or the test did not run then
   (`UI_FAILED`, `UI_MISSING`),
-- a test of the last nightly run no longer runs, e.g. because a display format disappeared.
+- a test of the last nightly run no longer runs, e.g. because its registry case was
+  removed.
 
-Blind signing (the firmware shows the `confirm_data` screen although the dev
-definitions have a display format) is not a failure. It is recorded like clear signing,
-and listed in the summary. A case that changes from one to the other fails on its
-screens.
+Blind signing (the firmware shows the `confirm_data` screen), with or without a display
+format in the dev definitions, is not a failure. It is recorded like clear signing, and
+listed in the summary. A case that changes from one to the other fails on its screens,
+e.g. when a display format is dropped from, or added to, the definitions.
 
 Since the next run compares with this one, a UI change fails only the one run that
 brings it. In the UI report, a new test shows *missing* in place of the previous screens,
@@ -85,7 +94,7 @@ each failed test shows its screens next to those of the last run, with a diff, a
 ## Running locally
 
 From the internal network, the dev definitions can be used by their URL. Check out the
-registry at the commit from `resolve_inputs.py`:
+registry at the commit from `nightly.py resolve-inputs`:
 
 ```sh
 tests/clear_signing_tests/nightly.py resolve-inputs   # prints registry_sha

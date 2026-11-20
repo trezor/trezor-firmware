@@ -33,12 +33,12 @@ Definitions: \
 % endif
  · Registry: [${short(inputs.get("registry_sha"))}](https://github.com/${inputs.get("registry_repo")}/tree/${inputs.get("registry_sha")})
 
-${total} mainnet cases: ${run} run on each model, ${total - run} skipped.
+${total} mainnet cases of all registry providers: ${run} run on each model, ${total - run} skipped.
 
-| Model | Clear-signed | Blind-signed | Error | Not run | Text not found | UI report | Compared with |
-|---|---:|---:|---:|---:|---:|---|---|
+| Model | Clear-signed | Blind-signed | Blind-signed, no format | Error | Not run | Text not found | UI report | Compared with |
+|---|---:|---:|---:|---:|---:|---:|---|---|
 % for row in rows:
-| ${row.model} | ${row.counts["clear_signed"]} | ${row.counts["blind"]} | ${row.counts["error"]} | ${row.counts["not run"]} | ${row.counts["text not found"]} | [report](${row.report_url}) · [differing screens](${row.differing_url}) | ${baseline_link(row.baseline)} |
+| ${row.model} | ${row.counts["clear_signed"]} | ${row.counts["blind"]} | ${row.counts["blind, no format"]} | ${row.counts["error"]} | ${row.counts["not run"]} | ${row.counts["text not found"]} | [report](${row.report_url}) · [differing screens](${row.differing_url}) | ${baseline_link(row.baseline)} |
 % endfor
 
 The UI report compares the screens of each model with those of the last nightly run (`fixtures.json` when there is none). There is nothing to accept: the screens of this run are what the next one compares with.
@@ -56,6 +56,13 @@ The UI report compares the screens of each model with those of the last nightly 
 <details><summary>Failed or not run (${len(problems)})</summary>
 
 ${capped([f"- `{test_id}`: {'; '.join(lines)}" for test_id, lines in problems])}
+</details>
+
+<details><summary>Blind-signed, no display format (${len(no_format)})</summary>
+
+The dev definitions have no display format for the contract and function: trezor/definitions does not convert this provider, the converter dropped the format (an unsupported feature, an override by another descriptor), or the descriptor does not cover this contract on mainnet. Not a failure.
+
+${capped([f"- `{test_id}` ({', '.join(models)})" for test_id, models in no_format])}
 </details>
 
 <details><summary>Blind-signed (${len(blind)})</summary>
