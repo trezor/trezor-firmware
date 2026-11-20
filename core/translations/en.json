@@ -397,8 +397,8 @@
     },
     "buttons__continue": "Continue",
     "buttons__continue_anyway": {
-      "Bolt": "",
-      "Caesar": "",
+      "Bolt": "Continue anyway",
+      "Caesar": "Continue anyway",
       "Delizia": "Continue anyway",
       "Eckhart": "Continue anyway"
     },

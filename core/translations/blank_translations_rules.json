@@ -406,7 +406,6 @@
       "address__cancel_contact_support",
       "address__cancel_receive",
       "address__public_key_confirmed",
-      "buttons__continue_anyway",
       "buttons__view_all_data",
       "ethereum__auth_done",
       "ethereum__delegate_done",
