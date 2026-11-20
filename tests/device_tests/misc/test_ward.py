@@ -2094,6 +2094,98 @@ def test_ward_catches_up_across_transitions_it_never_saw(session: Session):
     assert "two" in rec.text
 
 
+def _away(session: Session, store: WardTrie) -> tuple:
+    """Two transitions another device made: `(links, head_tree, target, base_root)`."""
+    k1 = _seed(session, store, b"a", b"one")
+    k2 = _seed(session, store, b"b", b"two")
+    base_counter, base_root = store.counter, store.root()
+    mid = _subset(store, [k1])
+    head = _subset(store, [k2])
+    links = [
+        _link(base_counter, base_root, base_counter + 1, mid.root()),
+        _link(base_counter + 1, mid.root(), base_counter + 2, head.root()),
+    ]
+    head.counter = base_counter + 2
+    return links, head, base_counter + 2, base_root
+
+
+@pytest.mark.models("core")
+def test_ward_catch_up_without_the_wm_reads_the_newer_head_with_the_warning(session: Session):
+    """No WM: the chain alone moves the session's reads forward, and the screen says unproven."""
+    store = WardTrie()
+    links, head, target, _base_root = _away(session, store)
+
+    offline = session.test_ctx.get_session()
+    ack = ward.catch_up(offline, target, head.root(), _serves(links))
+    assert ack.counter == target
+
+    _res, rec = _read(offline, head, lambda p: ward.get_entry(offline, _APP, b"b", p))
+    assert "two" in rec.text
+    assert "unverified entry" in rec.title
+    assert "not proven current" in rec.text.lower()
+
+
+@pytest.mark.models("core")
+def test_ward_catch_up_persists_nothing(session: Session):
+    """The next session reads the STORED head again: a proof against the caught-up tree fails."""
+    store = WardTrie()
+    links, head, target, _base_root = _away(session, store)
+    ward.catch_up(session.test_ctx.get_session(), target, head.root(), _serves(links))
+
+    later = session.test_ctx.get_session()
+    with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
+        ward.get_entry(later, _APP, b"b", ward.store_provider(head))
+
+
+@pytest.mark.models("core")
+def test_ward_catch_up_refuses_a_head_older_than_the_stored_one(session: Session):
+    """Serving a device an older head without the WM is detected before any link is asked."""
+    store = WardTrie()
+    _seed(session, store, b"a", b"one")
+    old_counter, old_root = store.counter, store.root()
+    _seed(session, store, b"b", b"two")
+
+    offline = session.test_ctx.get_session()
+
+    def no_links(*_args):
+        raise AssertionError("the device must refuse before asking for links")
+
+    with pytest.raises(exceptions.TrezorFailure, match="older than this device"):
+        ward.catch_up(offline, old_counter, old_root, no_links)
+
+
+@pytest.mark.models("core")
+def test_ward_without_the_wm_a_read_from_an_older_tree_is_refused(session: Session):
+    """The other way to serve an older root: answer a read with a proof from an earlier tree."""
+    store = WardTrie()
+    _seed(session, store, b"a", b"one")
+    older = _subset(store, [expected_entry_key(_K_PATH, _APP, b"a")])
+    older.counter = store.counter
+    _seed(session, store, b"b", b"two")
+
+    offline = session.test_ctx.get_session()
+    with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
+        ward.get_entry(offline, _APP, b"a", ward.store_provider(older))
+
+
+@pytest.mark.models("core")
+def test_ward_catch_up_refuses_a_chain_that_does_not_reach_the_stored_head(session: Session):
+    store = WardTrie()
+    links, head, target, _base_root = _away(session, store)
+    forged = [links[0][:1] + (links[0][1][:-1] + b"\x00",) + links[0][2:], links[1]]
+
+    with pytest.raises(exceptions.TrezorFailure):
+        ward.catch_up(session.test_ctx.get_session(), target, head.root(), _serves(forged))
+
+
+@pytest.mark.models("core")
+def test_ward_catch_up_is_refused_with_an_attested_head(session: Session):
+    store = WardTrie()
+    links, head, target, _base_root = _away(session, store)
+    with pytest.raises(exceptions.TrezorFailure, match="already has a WM-attested head"):
+        ward.catch_up(session, target, head.root(), _serves(links))
+
+
 @pytest.mark.models("core")
 def test_ward_catches_up_further_than_one_ack_can_carry(session: Session):
     """THE REASON THE WALK IS A PULL, and the case the old forward push could not express.

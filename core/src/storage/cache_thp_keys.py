@@ -21,3 +21,4 @@ if utils.USE_THP:
         APP_WARD_ONLINE = const(13)
         APP_WARD_DEMOTION = const(14)
         APP_WARD_WM_HEAD = const(15)
+        APP_WARD_PROVISIONAL = const(16)

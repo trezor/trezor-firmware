@@ -8441,6 +8441,38 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WardVerifyChainAck"]:
             return isinstance(msg, cls)
 
+    class WardCatchUp(protobuf.MessageType):
+        to_counter: "int"
+        to_root: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            to_counter: "int",
+            to_root: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardCatchUp"]:
+            return isinstance(msg, cls)
+
+    class WardCatchUpAck(protobuf.MessageType):
+        counter: "int | None"
+        reverts_crossed: "int | None"
+
+        def __init__(
+            self,
+            *,
+            counter: "int | None" = None,
+            reverts_crossed: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardCatchUpAck"]:
+            return isinstance(msg, cls)
+
     class WardRejoin(protobuf.MessageType):
         fork_counter: "int | None"
 

@@ -13,6 +13,18 @@ async def get_root() -> bytes | None:
     return ward_store.get_root(await derive_wallet_id())
 
 
+async def read_root() -> bytes | None:
+    """The root a READ proves against: the stored one, or -- in a session with no attested head --
+    the head `WardCatchUp` followed this wallet's chain to. Never for a write."""
+    from . import round as sync_round
+
+    if not sync_round.is_online():
+        caught_up = sync_round.provisional()
+        if caught_up is not None:
+            return caught_up[1]
+    return await get_root()
+
+
 def root_for_write(root: bytes | None) -> bytes:
     """The root a write derives from, or refuse. None is never the empty tree, even at counter 0:
     an empty tree accepts an insert with no witness, which would let the host replace the tree."""

@@ -875,6 +875,8 @@ class MessageType(IntEnum):
     WardRejoin = 2347
     WardRejoinAck = 2348
     WardSetPointer = 2349
+    WardCatchUp = 2350
+    WardCatchUpAck = 2351
     WardResetApp = 2343
     WardResetAppAck = 2344
     DisplayAddress = 2322
@@ -10568,6 +10570,40 @@ class WardVerifyChainAck(protobuf.MessageType):
     ) -> None:
         self.counter = counter
         self.new_root = new_root
+        self.reverts_crossed = reverts_crossed
+
+
+class WardCatchUp(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2350
+    FIELDS = {
+        1: protobuf.Field("to_counter", "uint32", repeated=False, required=True),
+        2: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        to_counter: "int",
+        to_root: Optional["bytes"] = None,
+    ) -> None:
+        self.to_counter = to_counter
+        self.to_root = to_root
+
+
+class WardCatchUpAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2351
+    FIELDS = {
+        1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("reverts_crossed", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        counter: Optional["int"] = None,
+        reverts_crossed: Optional["int"] = None,
+    ) -> None:
+        self.counter = counter
         self.reverts_crossed = reverts_crossed
 
 

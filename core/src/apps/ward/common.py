@@ -117,6 +117,18 @@ async def online_or_offline() -> bool:
         return False
 
 
+def _refused(entry_key: bytes, what: str) -> None:
+    """Say on the debug log that a host served a proof against another tree (an older one, say)."""
+    from trezor import log
+
+    log.info(
+        __name__,
+        "read REFUSED: entry=%s: %s does not prove against the trusted root",
+        entry_key[:6].hex(),
+        what,
+    )
+
+
 async def pull_leaf(
     entry_key: bytes,
     root: "bytes | None" = None,
@@ -134,7 +146,7 @@ async def pull_leaf(
     from .attest import EMPTY_ROOT
     from .keys import derive_k_data
     from .leaf import check_sealed, is_delete, open_content
-    from .root import get_counter, get_root
+    from .root import get_counter
     from .trie import verify_membership, verify_nonmembership
 
     if utils.USE_WARD_SERVICE_CHANNEL:
@@ -160,7 +172,10 @@ async def pull_leaf(
     # Verified BEFORE opening anything; an absence has to be proved too. No root at counter 0 is
     # a genuinely empty wallet; at a non-zero counter "cannot verify" must never read as
     # "verified". An EMPTY_ROOT tree admits only absence, with no witness needed.
-    root = await get_root() if root is None else root
+    if root is None:
+        from .root import read_root
+
+        root = await read_root()
     if root is None:
         if await get_counter() > 0:
             raise DataError("no trusted root; sync before reading")
@@ -169,12 +184,14 @@ async def pull_leaf(
             raise DataError("WARD: the tree is empty; no entry can be in it")
     elif present:
         if not verify_membership(entry_key, sealed, ack.proof, root):
+            _refused(entry_key, "the entry")
             raise DataError("WARD: entry does not match the trusted root")
     elif ack.witness_entry_key is None or ack.witness_commit is None:
         raise DataError("WARD: absence claimed without a witness")
     elif not verify_nonmembership(
         entry_key, ack.witness_entry_key, ack.witness_commit, ack.proof, root
     ):
+        _refused(entry_key, "its absence")
         raise DataError("WARD: absence does not match the trusted root")
 
     material = (ack.proof, ack.witness_entry_key, ack.witness_commit)
@@ -199,7 +216,6 @@ async def read_entry(
 
     from .keys import ENTRY_TYPE_POINTER, entry_key_for
     from .leaf import unpack_identity
-    from .root import get_root
 
     content = (await pull_leaf(await entry_key_for(app_id, identifier)))[0]
     if content is None:
@@ -213,7 +229,9 @@ async def read_entry(
         raise DataError("WARD: a pointer must stay in its own domain")
     target_key = await entry_key_for(app_id, target, target_device)
     # The pull above may have synced (service builds); the hop proves against the same root.
-    hop = (await pull_leaf(target_key, root=await get_root()))[0]
+    from .root import read_root
+
+    hop = (await pull_leaf(target_key, root=await read_root()))[0]
     if hop is None:
         return None, target
     if hop[0] == ENTRY_TYPE_POINTER:

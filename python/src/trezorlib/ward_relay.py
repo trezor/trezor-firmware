@@ -55,7 +55,7 @@ DEFAULT_TOKEN_FILE = Path.home() / ".trezor-ward" / "token"
 # GetPublicKey, a silent GetAddress -- is answered as a Failure without reaching the device, so
 # whatever answers on the wardd port cannot drive the wallet.
 DEVICE_CALLS = frozenset(
-    "WardSync WardIngestAttestation WardReconcile WardVerifyChain WardRejoin "
+    "WardSync WardIngestAttestation WardReconcile WardVerifyChain WardCatchUp WardRejoin "
     "WardFlushQueue WardEntryAck WardChainLinkAck".split()
 )
 
@@ -309,6 +309,12 @@ def flush(session: "Session", client: WarddClient, max_batch: int = 1) -> dict:
     transition, or up to `max_batch` folded into one. One session for the whole drain: the device's
     sync state belongs to the session."""
     return client.call("flush", {"maxBatch": max_batch}, session_device(session))
+
+
+def catch_up(session: "Session", client: WarddClient) -> dict:
+    """Walk the device up to the replica's head WITHOUT the WM, for this session only: what a
+    host can do while the WM is down. Run `open_store` first, on the same session."""
+    return client.call("catchUp", {}, session_device(session))
 
 
 def status(client: WarddClient) -> dict:

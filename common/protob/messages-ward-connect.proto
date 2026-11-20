@@ -283,6 +283,38 @@ message WardVerifyChainAck {
 }
 
 /**
+ * Request: follow this wallet's own chain to the head the host names, WITH NO WARD MANAGER, for
+ * this session only.
+ *
+ * The device walks back from the named head (WardChainRequest, as in WardVerifyChain) and must
+ * land exactly on its stored head; every link is authorised by a device of this wallet. A head
+ * below the stored counter is refused before any link is asked for.
+ *
+ * NOTHING IS PERSISTED. Reads in this session prove against the named head, under the "not proven
+ * current" warning; the stored root and counter move only by a WM-attested adoption. Persisting
+ * would reintroduce what WardVerifyChain's archived anchor was removed for: a host walking a
+ * device back up a branch the user had discarded.
+ *
+ * @start
+ * @next WardChainRequest
+ * @next WardCatchUpAck
+ * @next Failure
+ */
+message WardCatchUp {
+    required uint32 to_counter = 1;
+    optional bytes  to_root    = 2;  // absent: the empty tree
+}
+
+/**
+ * Response: this session now reads from the named head. Nothing was persisted.
+ * @end
+ */
+message WardCatchUpAck {
+    optional uint32 counter         = 1;
+    optional uint32 reverts_crossed = 2;
+}
+
+/**
  * Request: rejoin the WM's history after it lost the branch this device stands on.
  *
  * FOR A FORK, NOTHING ELSE. A device only adopts WM-attested heads, so if it stands on a state

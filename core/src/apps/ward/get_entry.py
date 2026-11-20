@@ -28,7 +28,7 @@ async def get_entry(msg: WardGetEntry) -> Success:
         read_entry,
         require_key,
     )
-    from .root import get_root
+    from .root import read_root
 
     app_id, identifier = require_key(msg.app_id, msg.identifier)
 
@@ -39,9 +39,9 @@ async def get_entry(msg: WardGetEntry) -> Success:
     try:
         await online()
     except Exception:
-        if await get_root() is None:
+        if await read_root() is None:
             raise
-    if not is_fresh() and await get_root() is None:
+    if not is_fresh() and await read_root() is None:
         raise DataError("WARD: sync first, or read the local copy with WardQueueGetEntry")
 
     value, target = await read_entry(app_id, identifier)

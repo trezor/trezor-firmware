@@ -460,6 +460,8 @@ enum MessageType {
     MessageType_WardRejoin = 2347 [(wire_in) = true];
     MessageType_WardRejoinAck = 2348 [(wire_out) = true];
     MessageType_WardSetPointer = 2349 [(wire_in) = true];
+    MessageType_WardCatchUp = 2350 [(wire_in) = true];
+    MessageType_WardCatchUpAck = 2351 [(wire_out) = true];
 
     MessageType_WardResetApp = 2343 [(wire_in) = true];
     MessageType_WardResetAppAck = 2344 [(wire_out) = true];

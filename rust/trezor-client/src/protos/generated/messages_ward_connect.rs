@@ -2258,6 +2258,382 @@ impl ::protobuf::reflect::ProtobufValue for WardVerifyChainAck {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WardCatchUp)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WardCatchUp {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardCatchUp.to_counter)
+    pub to_counter: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardCatchUp.to_root)
+    pub to_root: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardCatchUp.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WardCatchUp {
+    fn default() -> &'a WardCatchUp {
+        <WardCatchUp as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WardCatchUp {
+    pub fn new() -> WardCatchUp {
+        ::std::default::Default::default()
+    }
+
+    // required uint32 to_counter = 1;
+
+    pub fn to_counter(&self) -> u32 {
+        self.to_counter.unwrap_or(0)
+    }
+
+    pub fn clear_to_counter(&mut self) {
+        self.to_counter = ::std::option::Option::None;
+    }
+
+    pub fn has_to_counter(&self) -> bool {
+        self.to_counter.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_to_counter(&mut self, v: u32) {
+        self.to_counter = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes to_root = 2;
+
+    pub fn to_root(&self) -> &[u8] {
+        match self.to_root.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_to_root(&mut self) {
+        self.to_root = ::std::option::Option::None;
+    }
+
+    pub fn has_to_root(&self) -> bool {
+        self.to_root.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_to_root(&mut self, v: ::std::vec::Vec<u8>) {
+        self.to_root = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_to_root(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.to_root.is_none() {
+            self.to_root = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.to_root.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_to_root(&mut self) -> ::std::vec::Vec<u8> {
+        self.to_root.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "to_counter",
+            |m: &WardCatchUp| { &m.to_counter },
+            |m: &mut WardCatchUp| { &mut m.to_counter },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "to_root",
+            |m: &WardCatchUp| { &m.to_root },
+            |m: &mut WardCatchUp| { &mut m.to_root },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardCatchUp>(
+            "WardCatchUp",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WardCatchUp {
+    const NAME: &'static str = "WardCatchUp";
+
+    fn is_initialized(&self) -> bool {
+        if self.to_counter.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.to_counter = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                18 => {
+                    self.to_root = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.to_counter {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        if let Some(v) = self.to_root.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.to_counter {
+            os.write_uint32(1, v)?;
+        }
+        if let Some(v) = self.to_root.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WardCatchUp {
+        WardCatchUp::new()
+    }
+
+    fn clear(&mut self) {
+        self.to_counter = ::std::option::Option::None;
+        self.to_root = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WardCatchUp {
+        static instance: WardCatchUp = WardCatchUp {
+            to_counter: ::std::option::Option::None,
+            to_root: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WardCatchUp {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardCatchUp").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WardCatchUp {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WardCatchUp {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WardCatchUpAck)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WardCatchUpAck {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardCatchUpAck.counter)
+    pub counter: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardCatchUpAck.reverts_crossed)
+    pub reverts_crossed: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardCatchUpAck.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WardCatchUpAck {
+    fn default() -> &'a WardCatchUpAck {
+        <WardCatchUpAck as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WardCatchUpAck {
+    pub fn new() -> WardCatchUpAck {
+        ::std::default::Default::default()
+    }
+
+    // optional uint32 counter = 1;
+
+    pub fn counter(&self) -> u32 {
+        self.counter.unwrap_or(0)
+    }
+
+    pub fn clear_counter(&mut self) {
+        self.counter = ::std::option::Option::None;
+    }
+
+    pub fn has_counter(&self) -> bool {
+        self.counter.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_counter(&mut self, v: u32) {
+        self.counter = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 reverts_crossed = 2;
+
+    pub fn reverts_crossed(&self) -> u32 {
+        self.reverts_crossed.unwrap_or(0)
+    }
+
+    pub fn clear_reverts_crossed(&mut self) {
+        self.reverts_crossed = ::std::option::Option::None;
+    }
+
+    pub fn has_reverts_crossed(&self) -> bool {
+        self.reverts_crossed.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_reverts_crossed(&mut self, v: u32) {
+        self.reverts_crossed = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "counter",
+            |m: &WardCatchUpAck| { &m.counter },
+            |m: &mut WardCatchUpAck| { &mut m.counter },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "reverts_crossed",
+            |m: &WardCatchUpAck| { &m.reverts_crossed },
+            |m: &mut WardCatchUpAck| { &mut m.reverts_crossed },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardCatchUpAck>(
+            "WardCatchUpAck",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WardCatchUpAck {
+    const NAME: &'static str = "WardCatchUpAck";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.counter = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                16 => {
+                    self.reverts_crossed = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.counter {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        if let Some(v) = self.reverts_crossed {
+            my_size += ::protobuf::rt::uint32_size(2, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.counter {
+            os.write_uint32(1, v)?;
+        }
+        if let Some(v) = self.reverts_crossed {
+            os.write_uint32(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WardCatchUpAck {
+        WardCatchUpAck::new()
+    }
+
+    fn clear(&mut self) {
+        self.counter = ::std::option::Option::None;
+        self.reverts_crossed = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WardCatchUpAck {
+        static instance: WardCatchUpAck = WardCatchUpAck {
+            counter: ::std::option::Option::None,
+            reverts_crossed: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WardCatchUpAck {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardCatchUpAck").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WardCatchUpAck {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WardCatchUpAck {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.ward.WardRejoin)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct WardRejoin {
@@ -4984,43 +5360,47 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x03(\x0b2&.hw.trezor.messages.ward.WardChainLinkR\x05links\"r\n\x12\
     WardVerifyChainAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\
     \x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12'\n\x0frevert\
-    s_crossed\x18\x03\x20\x01(\rR\x0erevertsCrossed\"/\n\nWardRejoin\x12!\n\
-    \x0cfork_counter\x18\x01\x20\x01(\rR\x0bforkCounter\"\x8b\x01\n\rWardRej\
-    oinAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08\
-    new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x1c\n\tdiscarded\x18\x03\
-    \x20\x01(\rR\tdiscarded\x12'\n\x0freverts_crossed\x18\x04\x20\x01(\rR\
-    \x0erevertsCrossed\"\n\n\x08WardSync\"\x8e\x01\n\x0bWardSyncAck\x12\x14\
-    \n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x17\n\x07ward_id\x18\x02\
-    \x20\x01(\x0cR\x06wardId\x12\x18\n\x07counter\x18\x03\x20\x01(\rR\x07cou\
-    nter\x12\x12\n\x04root\x18\x04\x20\x01(\x0cR\x04root\x12\"\n\rhead_init_\
-    sig\x18\x05\x20\x01(\x0cR\x0bheadInitSig\"\xa8\x02\n\x15WardIngestAttest\
-    ation\x12!\n\x0cwm_signature\x18\x03\x20\x01(\x0cR\x0bwmSignature\x12\
-    \x1c\n\ttimestamp\x18\x04\x20\x01(\x04R\ttimestamp\x12\x1d\n\nto_counter\
-    \x18\x05\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x06\x20\x01(\
-    \x0cR\x06toRoot\x12!\n\x0cfrom_counter\x18\x07\x20\x01(\rR\x0bfromCounte\
-    r\x12\x1b\n\tfrom_root\x18\x08\x20\x01(\x0cR\x08fromRoot\x12&\n\x0ffrom_\
-    head_nonce\x18\n\x20\x01(\x0cR\rfromHeadNonce\x12\"\n\rto_head_nonce\x18\
-    \t\x20\x01(\x0cR\x0btoHeadNonceJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\
-    \x03\"4\n\x18WardIngestAttestationAck\x12\x18\n\x07counter\x18\x01\x20\
-    \x01(\rR\x07counter\"B\n\rWardReconcile\x12\x1f\n\x0bauth_commit\x18\x04\
-    \x20\x01(\x0cR\nauthCommitJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\
-    \x04\x08\x03\x10\x04\"G\n\x10WardReconcileAck\x12\x18\n\x07counter\x18\
-    \x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\
-    \x07newRoot\"\xea\x02\n\x0cWardRollback\x12!\n\x0cfrom_counter\x18\t\x20\
-    \x01(\rR\x0bfromCounter\x12\x1b\n\tfrom_root\x18\n\x20\x01(\x0cR\x08from\
-    Root\x12\x1d\n\nto_counter\x18\x0b\x20\x01(\rR\ttoCounter\x12\x17\n\x07t\
-    o_root\x18\x0c\x20\x01(\x0cR\x06toRoot\x12!\n\x0cwm_signature\x18\r\x20\
-    \x01(\x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\x0e\x20\x01(\x04R\tti\
-    mestamp\x12&\n\x0ffrom_head_nonce\x18\x11\x20\x01(\x0cR\rfromHeadNonce\
-    \x12\"\n\rto_head_nonce\x18\x10\x20\x01(\x0cR\x0btoHeadNonce\x12%\n\x0er\
-    ecovered_root\x18\x0f\x20\x01(\x0cR\rrecoveredRootJ\x04\x08\x01\x10\x02J\
-    \x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\x05J\x04\x08\
-    \x05\x10\x06J\x04\x08\x06\x10\x07J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\
-    \t\"\x84\x01\n\x0fWardRollbackAck\x12\x18\n\x07counter\x18\x01\x20\x01(\
-    \rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\
-    \x12\x1f\n\x0bauth_commit\x18\x03\x20\x01(\x0cR\nauthCommit\x12\x15\n\
-    \x06wm_sig\x18\x05\x20\x01(\x0cR\x05wmSigJ\x04\x08\x04\x10\x05B?\n#com.s\
-    atoshilabs.trezor.lib.protobufB\x18TrezorMessageWardConnect\
+    s_crossed\x18\x03\x20\x01(\rR\x0erevertsCrossed\"E\n\x0bWardCatchUp\x12\
+    \x1d\n\nto_counter\x18\x01\x20\x02(\rR\ttoCounter\x12\x17\n\x07to_root\
+    \x18\x02\x20\x01(\x0cR\x06toRoot\"S\n\x0eWardCatchUpAck\x12\x18\n\x07cou\
+    nter\x18\x01\x20\x01(\rR\x07counter\x12'\n\x0freverts_crossed\x18\x02\
+    \x20\x01(\rR\x0erevertsCrossed\"/\n\nWardRejoin\x12!\n\x0cfork_counter\
+    \x18\x01\x20\x01(\rR\x0bforkCounter\"\x8b\x01\n\rWardRejoinAck\x12\x18\n\
+    \x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\
+    \x20\x01(\x0cR\x07newRoot\x12\x1c\n\tdiscarded\x18\x03\x20\x01(\rR\tdisc\
+    arded\x12'\n\x0freverts_crossed\x18\x04\x20\x01(\rR\x0erevertsCrossed\"\
+    \n\n\x08WardSync\"\x8e\x01\n\x0bWardSyncAck\x12\x14\n\x05nonce\x18\x01\
+    \x20\x01(\x0cR\x05nonce\x12\x17\n\x07ward_id\x18\x02\x20\x01(\x0cR\x06wa\
+    rdId\x12\x18\n\x07counter\x18\x03\x20\x01(\rR\x07counter\x12\x12\n\x04ro\
+    ot\x18\x04\x20\x01(\x0cR\x04root\x12\"\n\rhead_init_sig\x18\x05\x20\x01(\
+    \x0cR\x0bheadInitSig\"\xa8\x02\n\x15WardIngestAttestation\x12!\n\x0cwm_s\
+    ignature\x18\x03\x20\x01(\x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\
+    \x04\x20\x01(\x04R\ttimestamp\x12\x1d\n\nto_counter\x18\x05\x20\x01(\rR\
+    \ttoCounter\x12\x17\n\x07to_root\x18\x06\x20\x01(\x0cR\x06toRoot\x12!\n\
+    \x0cfrom_counter\x18\x07\x20\x01(\rR\x0bfromCounter\x12\x1b\n\tfrom_root\
+    \x18\x08\x20\x01(\x0cR\x08fromRoot\x12&\n\x0ffrom_head_nonce\x18\n\x20\
+    \x01(\x0cR\rfromHeadNonce\x12\"\n\rto_head_nonce\x18\t\x20\x01(\x0cR\x0b\
+    toHeadNonceJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03\"4\n\x18WardIngest\
+    AttestationAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\"B\n\
+    \rWardReconcile\x12\x1f\n\x0bauth_commit\x18\x04\x20\x01(\x0cR\nauthComm\
+    itJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04\"G\n\
+    \x10WardReconcileAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\
+    \x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\"\xea\x02\n\x0cW\
+    ardRollback\x12!\n\x0cfrom_counter\x18\t\x20\x01(\rR\x0bfromCounter\x12\
+    \x1b\n\tfrom_root\x18\n\x20\x01(\x0cR\x08fromRoot\x12\x1d\n\nto_counter\
+    \x18\x0b\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x0c\x20\x01(\
+    \x0cR\x06toRoot\x12!\n\x0cwm_signature\x18\r\x20\x01(\x0cR\x0bwmSignatur\
+    e\x12\x1c\n\ttimestamp\x18\x0e\x20\x01(\x04R\ttimestamp\x12&\n\x0ffrom_h\
+    ead_nonce\x18\x11\x20\x01(\x0cR\rfromHeadNonce\x12\"\n\rto_head_nonce\
+    \x18\x10\x20\x01(\x0cR\x0btoHeadNonce\x12%\n\x0erecovered_root\x18\x0f\
+    \x20\x01(\x0cR\rrecoveredRootJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\
+    \x04\x08\x03\x10\x04J\x04\x08\x04\x10\x05J\x04\x08\x05\x10\x06J\x04\x08\
+    \x06\x10\x07J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\t\"\x84\x01\n\x0fWard\
+    RollbackAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\
+    \n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x1f\n\x0bauth_commit\
+    \x18\x03\x20\x01(\x0cR\nauthCommit\x12\x15\n\x06wm_sig\x18\x05\x20\x01(\
+    \x0cR\x05wmSigJ\x04\x08\x04\x10\x05B?\n#com.satoshilabs.trezor.lib.proto\
+    bufB\x18TrezorMessageWardConnect\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -5039,7 +5419,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::messages_ward::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(19);
+            let mut messages = ::std::vec::Vec::with_capacity(21);
             messages.push(WardEntryRequest::generated_message_descriptor_data());
             messages.push(WardStagedLeaf::generated_message_descriptor_data());
             messages.push(WardBatchedLeaf::generated_message_descriptor_data());
@@ -5049,6 +5429,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(WardChainRequest::generated_message_descriptor_data());
             messages.push(WardChainLinkAck::generated_message_descriptor_data());
             messages.push(WardVerifyChainAck::generated_message_descriptor_data());
+            messages.push(WardCatchUp::generated_message_descriptor_data());
+            messages.push(WardCatchUpAck::generated_message_descriptor_data());
             messages.push(WardRejoin::generated_message_descriptor_data());
             messages.push(WardRejoinAck::generated_message_descriptor_data());
             messages.push(WardSync::generated_message_descriptor_data());

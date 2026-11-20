@@ -359,6 +359,28 @@ def verify_chain(
     )
 
 
+def catch_up(
+    session: "Session",
+    to_counter: int,
+    to_root: Optional[bytes],
+    link_source: LinkSource,
+    max_links_per_ack: int = 64,
+) -> messages.WardCatchUpAck:
+    """Follow the wallet's own chain to `(to_counter, to_root)` WITHOUT the WM, for this session.
+
+    The device walks back to its stored head and reads from the named head under the "not proven
+    current" warning; nothing is persisted. A head below the stored counter is refused.
+    """
+    return _chain_walk(
+        session,
+        messages.WardCatchUp(to_counter=to_counter, to_root=to_root),
+        link_source,
+        max_links_per_ack,
+        messages.WardCatchUpAck,
+        "the catch-up",
+    )
+
+
 def rejoin(
     session: "Session",
     fork_counter: int,

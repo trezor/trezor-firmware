@@ -197,6 +197,8 @@ async def adopt(
         )
 
     sync_round.mark_online()
+    # an attested head supersedes any head this session caught up to without the WM
+    sync_round.clear_provisional()
 
     # Any adoption spends a pending demotion consent: it was given for a descent from the old head.
     sync_round.clear_demotion()

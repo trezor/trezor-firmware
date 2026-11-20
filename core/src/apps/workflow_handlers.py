@@ -184,6 +184,8 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.ward.reconcile"
         if msg_type == MessageType.WardVerifyChain:
             return "apps.ward.verify_chain"
+        if msg_type == MessageType.WardCatchUp:
+            return "apps.ward.catch_up"
         if msg_type == MessageType.WardRollback:
             return "apps.ward.rollback"
         if msg_type == MessageType.WardRejoin:

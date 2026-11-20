@@ -112,6 +112,35 @@ def is_online() -> bool:
     return bool(raw) and raw[0] == _ONLINE
 
 
+# --- the provisional head: caught up without the WM -------------------------------------
+#
+# `WardCatchUp`'s result: a head on this wallet's own chain above the stored one, which reads in
+# THIS SESSION prove against. Never persisted, never "online": only a WM-attested adoption moves
+# the stored head, and `adopt` drops this. Layout: flag(1B) || counter(4B BE) || root(32B).
+
+
+def set_provisional(counter: int, root: bytes) -> None:
+    from .codec import u32
+
+    assert len(root) == _ROOT_LEN
+    _set(_cc.APP_WARD_PROVISIONAL, b"\x01" + u32(counter) + root)
+
+
+def provisional() -> "tuple[int, bytes] | None":
+    """`(counter, root)` this session caught up to without the WM, or None."""
+    from .codec import Reader
+
+    raw = _get(_cc.APP_WARD_PROVISIONAL)
+    if not raw or len(raw) != 1 + 4 + _ROOT_LEN or raw[0] != 1:
+        return None
+    r = Reader(raw, 1)
+    return r.uint(4), bytes(r.take(_ROOT_LEN))
+
+
+def clear_provisional() -> None:
+    _set(_cc.APP_WARD_PROVISIONAL, bytes(1 + 4 + _ROOT_LEN))
+
+
 # --- the WM's head, as this device last saw it ----------------------------------------
 #
 # `(counter, root, head_nonce)`, overwritten by every verified attestation whether or not it is

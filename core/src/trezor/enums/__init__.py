@@ -810,6 +810,8 @@ if TYPE_CHECKING:
         WardRejoin = 2347
         WardRejoinAck = 2348
         WardSetPointer = 2349
+        WardCatchUp = 2350
+        WardCatchUpAck = 2351
         WardResetApp = 2343
         WardResetAppAck = 2344
         DisplayAddress = 2322

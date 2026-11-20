@@ -45,6 +45,7 @@ class SessionCache(DataCache):
                 1,  # APP_WARD_ONLINE
                 77,  # APP_WARD_DEMOTION
                 69,  # APP_WARD_WM_HEAD
+                37,  # APP_WARD_PROVISIONAL
             )
         self.last_usage = 0
         super().__init__()
