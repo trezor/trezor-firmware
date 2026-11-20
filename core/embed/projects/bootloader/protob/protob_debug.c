@@ -22,6 +22,7 @@
 
 #include <pb.h>
 #include <pb_decode.h>
+#include <pb_encode.h>
 
 #include "protob_common.h"
 
@@ -91,8 +92,28 @@ secbool recv_msg_debug_link_screen_record(protob_io_t *iface,
   return result;
 }
 
-secbool send_msg_debug_link_state(protob_io_t *iface) {
+typedef struct {
+  const char *text;
+  size_t len;
+} layout_token_t;
+
+static bool write_layout_token(pb_ostream_t *stream, const pb_field_t *field,
+                               void *const *arg) {
+  const layout_token_t *token = (const layout_token_t *)*arg;
+  if (token->len == 0) {
+    return true;
+  }
+  return pb_encode_tag_for_field(stream, field) &&
+         pb_encode_string(stream, (const pb_byte_t *)token->text, token->len);
+}
+
+secbool send_msg_debug_link_state(protob_io_t *iface, const char *layout,
+                                  size_t len) {
   MSG_SEND_INIT(DebugLinkState);
+
+  layout_token_t token = {.text = layout, .len = len};
+  msg_send.tokens.funcs.encode = &write_layout_token;
+  msg_send.tokens.arg = &token;
 
   return MSG_SEND(DebugLinkState);
 }

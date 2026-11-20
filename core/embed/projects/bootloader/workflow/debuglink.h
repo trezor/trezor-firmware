@@ -33,3 +33,10 @@ void debuglink_deinit(void);
 debuglink_result_t debuglink_process(void);
 
 void debuglink_notify_layout_change(void);
+
+// Replace the layout reported in DebugLinkState.tokens: begin, then append
+// the JSON trace of the screen in pieces. A trace that does not fit is
+// dropped, so the host never parses a truncated one.
+void debuglink_layout_begin(void);
+
+void debuglink_layout_append(const char *text, size_t len);
