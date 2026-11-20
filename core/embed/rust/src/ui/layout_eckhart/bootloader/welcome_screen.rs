@@ -105,3 +105,14 @@ impl Component for BldWelcomeScreen {
         self.action_bar.render(target);
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for BldWelcomeScreen {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("BldWelcomeScreen");
+        if let Some(header) = &self.header {
+            t.child("Header", header);
+        }
+        t.child("ActionBar", &self.action_bar);
+    }
+}

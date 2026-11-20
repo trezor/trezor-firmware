@@ -234,5 +234,30 @@ impl Component for Confirm<'_> {
 impl crate::trace::Trace for Confirm<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("BlConfirm");
+        match &self.info {
+            Some(info) if self.show_info => {
+                t.bool("show_info", true);
+                t.child("title", &info.title);
+                t.string("screen_content", *info.text.inner().text());
+                t.child("close", &info.close_button);
+            }
+            _ => {
+                if let ConfirmTitle::Text(title) = &self.title {
+                    t.child("title", title);
+                }
+                t.string("screen_content", *self.message.inner().text());
+                if let Some(alert) = &self.alert {
+                    t.child("alert", alert);
+                }
+                if let Some(info) = &self.info {
+                    t.child("info", &info.info_button);
+                }
+            }
+        }
+        // the action buttons stay on screen also with the info shown
+        t.in_child("buttons", &|t| {
+            t.child("left_btn", &self.left_button);
+            t.child("right_btn", &self.right_button);
+        });
     }
 }

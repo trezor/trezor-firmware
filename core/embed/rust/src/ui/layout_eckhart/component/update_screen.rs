@@ -63,3 +63,13 @@ impl Component for UpdateScreen {
         self.text_footer.render(target);
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for UpdateScreen {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("UpdateScreen");
+        t.child("title", &self.text_header);
+        t.string("screen_content", *self.text_message.text());
+        t.child("footer", &self.text_footer);
+    }
+}

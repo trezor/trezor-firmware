@@ -99,3 +99,17 @@ impl<'a> Component for Intro<'a> {
         self.menu.render(target);
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for Intro<'_> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Intro");
+        t.child("title", &self.title);
+        t.string("screen_content", *self.text.text());
+        if let Some(warn) = &self.warn {
+            t.child("warning", warn);
+        }
+        t.child("menu", &self.menu);
+        t.child("host", &self.host);
+    }
+}

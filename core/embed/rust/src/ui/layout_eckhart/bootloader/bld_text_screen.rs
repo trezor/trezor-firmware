@@ -181,5 +181,27 @@ impl<'a> Component for BldTextScreen<'a> {
 impl crate::trace::Trace for BldTextScreen<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("BldTextScreen");
+        match &self.more_info {
+            Some(more_info) if self.more_info_showing => {
+                t.bool("more_info", true);
+                t.child("Header", &more_info.header);
+                t.string("screen_content", *more_info.text.text());
+            }
+            _ => {
+                if let Some(header) = &self.header {
+                    t.child("Header", header);
+                }
+                t.string("screen_content", *self.text_main.text());
+                if let Some(text) = &self.text_secondary {
+                    t.child("secondary", text);
+                }
+                if let Some(action_bar) = &self.action_bar {
+                    t.child("ActionBar", action_bar);
+                }
+                if let Some(footer) = &self.footer {
+                    t.child("footer", footer);
+                }
+            }
+        }
     }
 }

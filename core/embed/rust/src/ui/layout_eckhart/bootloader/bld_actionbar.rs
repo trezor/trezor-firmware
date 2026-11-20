@@ -129,3 +129,14 @@ impl Component for BldActionBar {
         }
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for BldActionBar {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("ActionBar");
+        if let Some(button) = &self.left_button {
+            t.child("left_button", button);
+        }
+        t.child("right_button", &self.right_button);
+    }
+}

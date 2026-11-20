@@ -106,3 +106,12 @@ impl Component for ResultScreen<'_> {
         self.message_bottom.render(target);
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for ResultScreen<'_> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("ResultScreen");
+        t.string("screen_content", *self.message_top.inner().text());
+        t.child("footer", &self.message_bottom);
+    }
+}

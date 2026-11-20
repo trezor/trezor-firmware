@@ -168,3 +168,20 @@ impl<'a> Component for ResultScreen<'a> {
         self.footer.render(target);
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for ResultScreen<'_> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("ResultScreen");
+        t.string("screen_content", *self.message.inner().text());
+        t.child("footer", &self.footer);
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for ResultFooter<'_> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("ResultFooter");
+        t.string("text", *self.text.text());
+    }
+}
