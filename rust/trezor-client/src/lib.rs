@@ -37,6 +37,8 @@ pub use client::{
 pub use error::{Error, Result};
 pub use messages::TrezorMessage;
 
+#[cfg(feature = "ethereum")]
+pub use client::{DefinitionSource, FilesystemSource};
 #[cfg(feature = "bitcoin")]
 pub use flows::sign_tx::SignTxProgress;
 #[cfg(feature = "bitcoin")]
@@ -297,5 +299,59 @@ mod tests {
         assert_eq!(signature.r.len(), 32);
         assert_eq!(signature.s.len(), 32);
         assert_eq!(signature.v, 38);
+    }
+
+    #[test]
+    #[serial]
+    fn test_ethereum_sign_tx_with_definition_source() {
+        use std::cell::RefCell;
+
+        struct RecordingSource {
+            token_requests: RefCell<Vec<(u64, Vec<u8>)>>,
+        }
+
+        impl crate::DefinitionSource for RecordingSource {
+            fn get_eth_token(&self, chain_id: u64, token_address: &[u8]) -> Option<Vec<u8>> {
+                self.token_requests.borrow_mut().push((chain_id, token_address.to_vec()));
+                None
+            }
+        }
+
+        let mut emulator = init_emulator();
+        let source = RecordingSource { token_requests: RefCell::new(Vec::new()) };
+
+        // An ERC20 `transfer` to an unknown token, which makes the firmware ask
+        // for the token definition once the host advertises support for it.
+        let token = [0xaa_u8; 20];
+        let mut data = Vec::new();
+        data.extend_from_slice(&[0xa9, 0x05, 0x9c, 0xbb]); // transfer(address,uint256)
+        data.extend_from_slice(&[0u8; 12]);
+        data.extend_from_slice(&[0xbb_u8; 20]); // recipient
+        data.extend_from_slice(&[0u8; 31]);
+        data.push(1); // amount
+
+        let signature = with_auto_approve(|| {
+            emulator
+                .ethereum_sign_tx_with_source(
+                    vec![44 | (1 << 31), 60 | (1 << 31), 1 << 31, 0, 0],
+                    vec![],
+                    hex::decode("04a817c800").unwrap(), // 20 gwei
+                    hex::decode("0186a0").unwrap(),     // 100000
+                    format!("0x{}", hex::encode(token)),
+                    vec![],
+                    data,
+                    Some(1),
+                    &source,
+                )
+                .expect("Failed to sign with a definition source")
+        });
+
+        assert!(signature.v == 37 || signature.v == 38);
+
+        let requests = source.token_requests.into_inner();
+        assert!(
+            requests.iter().any(|(chain_id, addr)| *chain_id == 1 && addr == &token[..]),
+            "expected a token definition request for the unknown token, got {requests:?}"
+        );
     }
 }
