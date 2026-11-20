@@ -82,7 +82,7 @@ jobs:
       TT_UHUB_PORT: all
     timeout-minutes: 360  # 6h CI job timeout
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
           persist-credentials: false
@@ -106,7 +106,7 @@ jobs:
           --durations=50 --session-timeout 19800 --warn-on-gc-leak
       - run: tail -n50 trezor.log || true
         if: failure()
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: core-hardware-${{ matrix.model }}-${{ matrix.coins }}
           path: |
@@ -138,7 +138,7 @@ jobs:
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T2T1' && '0' || '1' }}
       TT_UHUB_PORT: all
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
           persist-credentials: false
@@ -155,7 +155,7 @@ jobs:
           $NIX_RUN ./core/tests/run_tests_device_emu_monero.sh --trezor-path webusb:
       - run: tail -n50 trezor.log || true
         if: failure()
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: core-hardware-monero-${{ matrix.model }}
           path: trezor.log
@@ -183,7 +183,7 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       DEBUG_LINK: 1
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
           persist-credentials: false
@@ -199,7 +199,7 @@ jobs:
         env:
           PRODUCTION: 0
       - run: $NIX_RUN ci/hardware_tests/t1_hw_test.sh
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: legacy-hardware-${{ matrix.coins }}
           path: |

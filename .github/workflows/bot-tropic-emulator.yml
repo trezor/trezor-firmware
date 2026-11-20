@@ -39,7 +39,7 @@ jobs:
     steps:
       - name: Find existing pull request comment
         id: find-comment
-        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad  # peter-evans/find-comment@v4
+        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad  # v4.0.0
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
@@ -47,7 +47,7 @@ jobs:
 
       - name: Post a comment to the pull request
         if: steps.find-comment.outputs.comment-id == 0
-        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9  # peter-evans/create-or-update-comment@v5
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9  # v5.0.0
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
@@ -65,7 +65,7 @@ jobs:
     steps:
       - name: Generate GitHub App token
         id: trezor-bot-token
-        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3  # actions/create-github-app-token@v3.1.1
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3  # v3.1.1
         with:
           client-id: ${{ secrets.TREZOR_BOT_CLIENT_ID }}
           private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}

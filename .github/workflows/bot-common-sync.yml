@@ -17,14 +17,14 @@ jobs:
       BOT_EMAIL: "208941332+trezor-bot[bot]@users.noreply.github.com"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           fetch-depth: 0
           persist-credentials: false
 
       - name: Generate GitHub App token
         id: trezor-bot-token
-        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3  # actions/create-github-app-token@v3.1.1
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3  # v3.1.1
         with:
           client-id: ${{ secrets.TREZOR_BOT_CLIENT_ID }}
           private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
