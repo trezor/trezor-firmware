@@ -18,7 +18,8 @@
 
 The cases come from the `registry/<entity>/testsv2/calldata-*.tests.json` files of
 https://github.com/ethereum/clear-signing-erc7730-registry, at the commit that the last
-unsigned dev deploy of trezor/definitions used. The network, display formats and tokens
+unsigned dev deploy of trezor/definitions used, of all providers (entities), whether the
+definitions have display formats for them or not. The network, display formats and tokens
 come from that deploy: a local copy of its `eth/chain-id/<id>/...` tree (CI), or its URL
 (only reachable from the internal network).
 
@@ -267,28 +268,32 @@ class RegistryCase:
     expected: dict[str, t.Any]
     tx: Transaction | None
     skip_reason: str | None
+    # Whether the dev definitions have a display format for the contract and function.
+    # A case without one still runs: the firmware blind-signs it.
+    has_display_format: bool = False
 
 
 def _slug(text: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]+", "_", text).strip("_")
 
 
-def _skip_reason(tx: Transaction, source: Source) -> str | None:
+def _skip_reason(tx: Transaction) -> str | None:
     if len(tx.data) < 4:
         return "calldata has no function selector"
     if len(tx.data) > MAX_CLEAR_SIGNED_DATA:
         return (
             f"calldata longer than {MAX_CLEAR_SIGNED_DATA} bytes is never clear-signed"
         )
-    if source.get_eth_display_format(tx.chain_id, tx.to, tx.data[:4]) is None:
-        return "no display format in the dev definitions"
     return None
 
 
 def load_cases(registry_root: Path, source: Source) -> list[RegistryCase]:
-    """Load the mainnet calldata test cases, in a stable order.
+    """Load the mainnet calldata test cases of all providers, in a stable order.
 
-    A case that cannot run gets a `skip_reason`. Cases on other chains are left out.
+    A case that cannot run gets a `skip_reason`. Cases on other chains are left out. A
+    case without a display format in the dev definitions runs too (and blind-signs,
+    unless the firmware has a built-in one), so that the summary shows which cases the
+    definitions do not cover.
     """
     cases: list[RegistryCase] = []
     seen_ids: set[str] = set()
@@ -344,7 +349,19 @@ def load_cases(registry_root: Path, source: Source) -> list[RegistryCase]:
                 continue
             if tx.chain_id not in CHAIN_IDS:
                 continue
-            add(case_id, tx=tx, skip_reason=_skip_reason(tx, source), **case)
+            skip_reason = _skip_reason(tx)
+            has_display_format = (
+                skip_reason is None
+                and source.get_eth_display_format(tx.chain_id, tx.to, tx.data[:4])
+                is not None
+            )
+            add(
+                case_id,
+                tx=tx,
+                skip_reason=skip_reason,
+                has_display_format=has_display_format,
+                **case,
+            )
 
     return cases
 

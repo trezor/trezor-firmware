@@ -395,8 +395,10 @@ def summarize(
     rows: list[_ModelRow] = []
     # test_id -> ["T3W1: error DataError: ...", ...]
     problems: dict[str, list[str]] = defaultdict(list)
-    # test_id -> models
+    # test_id -> models; blind-signed although the dev definitions have a display format
     blind: dict[str, list[str]] = defaultdict(list)
+    # test_id -> models; blind-signed, the dev definitions have no display format
+    no_format: dict[str, list[str]] = defaultdict(list)
     # test_id -> (models, missing texts)
     not_found: dict[str, tuple[list[str], list[str]]] = {}
     for model in models:
@@ -405,12 +407,16 @@ def summarize(
         for case in to_run:
             result = model_results.get(case.test_id)
             status = result["status"] if result else "not run"
+            if status == "blind" and not case.has_display_format:
+                status = "blind, no format"
             counts[status] += 1
             if status == "clear_signed":
                 if result and (missing := result.get("missing")):
                     counts["text not found"] += 1
                     entry = not_found.setdefault(case.test_id, ([], missing))
                     entry[0].append(model)
+            elif status == "blind, no format":
+                no_format[case.test_id].append(model)
             elif status == "blind":
                 blind[case.test_id].append(model)
             else:
@@ -433,6 +439,7 @@ def summarize(
         skipped=skipped.most_common(),
         problems=sorted(problems.items()),
         blind=sorted(blind.items()),
+        no_format=sorted(no_format.items()),
         not_found=sorted(not_found.items()),
         max_lines=MAX_LINES,
     )
