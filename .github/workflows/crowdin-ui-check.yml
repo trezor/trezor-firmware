@@ -21,6 +21,9 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 jobs:
   core_emu:
     name: Build emulator (${{ matrix.model }}, universal, debuglink, noasan)
@@ -37,13 +40,13 @@ jobs:
       ADDRESS_SANITIZER: 0
       QUIET_MODE: 1
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
           persist-credentials: false
       - uses: $/.github/actions/environment
       - run: $UV_RUN make -C core build_unix_frozen
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
           path: |

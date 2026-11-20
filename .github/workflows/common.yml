@@ -28,9 +28,10 @@ jobs:
       CC: gcc
       ADDRESS_SANITIZER: 1
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/environment
       - run: cp -r crypto crypto_noasan
       - run: $UV_RUN make -C crypto
@@ -38,7 +39,7 @@ jobs:
         env:
           ADDRESS_SANITIZER: 0
       - run: mv crypto_noasan/tests/test_check crypto/tests/test_check_noasan
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: crypto-build
           path: |
@@ -58,11 +59,12 @@ jobs:
       ASAN_OPTIONS: "verify_asan_link_order=0"
       CK_TIMEOUT_MULTIPLIER: 5
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/environment
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           name: crypto-build
           path: crypto/tests
@@ -85,9 +87,10 @@ jobs:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/environment
       # LD_LIBRARY_PATH workaround: https://discourse.nixos.org/t/nixpkgs-nixos-unstable-many-package-fail-with-glibc-2-38-not-found/35078 https://github.com/NixOS/nixpkgs/issues/287764
       # Allow uv to use any python version for python tests
@@ -98,9 +101,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/environment
       - run: $NIX_RUN make -C rust check
 
@@ -110,9 +114,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/environment
       - run: unset PYTEST_TIMEOUT
       - run: $UV_RUN make -C storage/tests build
@@ -123,14 +128,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
       - uses: $/.github/actions/environment
         with:
           pre-download: false
       - run: |
           cd docs
           nix-shell -p mdbook mdbook-mermaid --run "mdbook build"
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: docs-html
           path: |
@@ -151,9 +158,10 @@ jobs:
     env:
       REF: ${{ github.head_ref || github.ref_name }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - run: git checkout ${REF}
 
@@ -206,7 +214,7 @@ jobs:
           cat $GITHUB_STEP_SUMMARY
         if: always()
 
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: reproducible-${{ matrix.model }}
           path: |

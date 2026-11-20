@@ -50,7 +50,7 @@ jobs:
         run: |
           echo test_lang=${{ (github.event_name == 'schedule' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'translations'))) && '[\"en\", \"cs\", \"fr\", \"de\", \"es\", \"id\", \"pt\"]' || '[\"en\"]' }} >> $GITHUB_OUTPUT
           # TODO: fix ASAN tests on nightly CI runs (#5143)
-          echo asan=${{ '[\"noasan\"]' }} >> $GITHUB_OUTPUT
+          echo asan=[\"noasan\"] >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
 
   core_build_tools_test:
@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
           persist-credentials: false
@@ -109,9 +109,10 @@ jobs:
       PRODUCTION: ${{ matrix.type == 'production' && '1' || '0' }}
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T3W1' && '1' || '0' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/environment
       - if: matrix.coins == 'universal' && matrix.type != 'debuglink'
         run: |
@@ -130,7 +131,7 @@ jobs:
       # - run: $UV_RUN ./tools/print-rust-type-sizes.sh core/build/firmware/rust-type-sizes.log | awk '$1 >= 1000' | sort -k1 -n
       - run: $UV_RUN ./tools/check-bitcoin-only core/build/artifacts/latest/firmware.bin
         if: matrix.coins == 'btconly' && matrix.type != 'debuglink'
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: core-firmware-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}${{ matrix.miniscript && '-miniscript' || '' }}${{ matrix.k1n1 && '-k1n1' || '' }}
           path: |
@@ -191,9 +192,10 @@ jobs:
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/environment
       - run: $UV_RUN make -C core build_bootloader_emu
         if: matrix.coins == 'universal' && matrix.asan == 'noasan'
@@ -201,7 +203,7 @@ jobs:
       - run: $UV_RUN ./tools/check-insecure-prng.py --present --model $TREZOR_MODEL core/build/artifacts/latest/firmware-emu
       - run: $UV_RUN make -C core test_emu_sanity
       - run: cp core/build/artifacts/latest/firmware-emu core/build/artifacts/latest/firmware-emu-${{ matrix.model }}-${{ matrix.coins }}${{ matrix.miniscript && '-miniscript' || '' }}${{ matrix.k1n1 && '-k1n1' || '' }}
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}${{ matrix.miniscript && '-miniscript' || '' }}${{ matrix.k1n1 && '-k1n1' || '' }}
           path: |
@@ -238,15 +240,16 @@ jobs:
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/environment
       - run: $UV_RUN make -C core build_bootloader_emu
         if: matrix.coins == 'universal'
       - run: $UV_RUN make -C core build_unix_frozen
       - run: mv core/build/artifacts/latest/firmware-emu core/build/artifacts/latest/firmware-emu-arm-${{ matrix.model }}-${{ matrix.coins }}${{ matrix.k1n1 && '-k1n1' || '' }}
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: core-emu-arm-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}${{ matrix.k1n1 && '-k1n1' || '' }}
           path: |
@@ -269,7 +272,7 @@ jobs:
       PYTEST_TIMEOUT: 400
       TESTOPTS: "--durations 10"
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
           persist-credentials: false
@@ -277,7 +280,7 @@ jobs:
       - name: Build prodtest emulator
         run: $UV_RUN xtask build prodtest --model ${{ matrix.model }} --emulator
       - name: Upload prodtest emulator artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: prodtest-emu-${{ matrix.model }}
           path: |
@@ -311,9 +314,10 @@ jobs:
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
       PYOPT: 0
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/environment
       - run: $UV_RUN make -C core build_unix
       - run: $UV_RUN make -C core test_emu_sanity  # sanity check non-frozen emulator
@@ -343,9 +347,10 @@ jobs:
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
       DISABLE_TROPIC: 1
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/environment
       - run: $UV_RUN make -C core test_rust
       - run: $UV_RUN make -C core clippy
@@ -360,10 +365,11 @@ jobs:
       matrix:
         model: [T2T1, T3B1]
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+          persist-credentials: false
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
           path: core/build/artifacts/latest
@@ -415,10 +421,11 @@ jobs:
       id-token: write  # for fetching the OIDC token for AWS
       contents: read   # for actions/checkout
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+          persist-credentials: false
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-debuglink-${{ matrix.asan }}${{ matrix.miniscript && '-miniscript' || '' }}${{ matrix.k1n1 && '-k1n1' || '' }}
           path: core/build/artifacts/latest
@@ -432,7 +439,7 @@ jobs:
         run: $UV_RUN make -C core ${{ env.ACTIONS_DO_UI_TEST == 'true' && 'test_emu_multicore' || 'test_emu' }}
       - run: tail -v -n50 tests/trezor*.log || true
         if: failure()
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: core-test-device-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.lang }}-${{ matrix.asan }}${{ matrix.miniscript && '-miniscript' || '' }}${{ matrix.k1n1 && '-k1n1' || '' }}
           path: tests/trezor*.log
@@ -473,10 +480,11 @@ jobs:
       id-token: write  # for fetching the OIDC token for AWS
       contents: read   # for actions/checkout
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+          persist-credentials: false
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build/artifacts/latest
@@ -486,7 +494,7 @@ jobs:
         if: ${{ matrix.asan == 'noasan' }}
       - run: $UV_RUN make -C core test_emu_click
         if: ${{ matrix.asan == 'asan' }}
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: core-test-click-${{ matrix.model }}-${{ matrix.lang }}-${{ matrix.asan }}
           path: tests/trezor*.log
@@ -523,15 +531,16 @@ jobs:
       id-token: write  # for fetching the OIDC token for AWS
       contents: read   # for actions/checkout
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/environment
       - run: $UV_RUN make -C core build_bootloader_emu
       - run: $UV_RUN make -C core test_emu_bootloader_ui
       - run: tail -v -n50 tests/trezor*.log || true
         if: failure()
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: core-test-bootloader-${{ matrix.model }}
           path: tests/trezor*.log
@@ -565,13 +574,14 @@ jobs:
       TESTOPTS: "--durations 10  --session-timeout 1500"  # pytest timeout = 25m
     timeout-minutes: 30  # CI job timeout
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - name: Set upgrade selector
         run: |
           echo "TREZOR_UPGRADE_TEST=${{ matrix.model }}" >> "$GITHUB_ENV"
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build/artifacts/latest
@@ -579,7 +589,7 @@ jobs:
       - uses: $/.github/actions/environment
       - run: $NIX_RUN tests/download_emulators.sh ${{ matrix.model }}
       - run: $UV_RUN make -C core test_emu_upgrade
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: core-test-upgrade-${{ matrix.model }}-${{ matrix.asan }}
           path: |
@@ -607,13 +617,14 @@ jobs:
       id-token: write  # for fetching the OIDC token for AWS
       contents: read   # for actions/checkout
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - name: Set upgrade selector
         run: |
           echo "TREZOR_UPGRADE_TEST=${{ matrix.model }}" >> "$GITHUB_ENV"
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build/artifacts/latest
@@ -631,7 +642,7 @@ jobs:
         if: always()
         continue-on-error: true
       - uses: $/.github/actions/upload-coverage
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: core-test-persistence-${{ matrix.model }}-${{ matrix.asan }}
           path: |
@@ -713,10 +724,11 @@ jobs:
       matrix:
         model: [T2T1]  # FIXME: checker.py lacks awareness of U5 flash layout
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+          persist-credentials: false
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           name: core-firmware-${{ matrix.model }}-universal-normal  # FIXME: s/normal/debuglink/
           path: core/build/artifacts
@@ -740,10 +752,11 @@ jobs:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+          persist-credentials: false
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build/artifacts/latest
@@ -752,7 +765,7 @@ jobs:
         with:
           nix-dev-shell: everything
       - run: $UV_RUN make -C core test_emu_monero
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: core-test-monero-${{ matrix.model }}-${{ matrix.asan }}
           path: |
@@ -780,10 +793,11 @@ jobs:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+          persist-credentials: false
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build/artifacts/latest
@@ -791,7 +805,7 @@ jobs:
       - uses: $/.github/actions/environment
       - run: $UV_RUN make -C tests/fido_tests/u2f-tests-hid
       - run: $UV_RUN make -C core test_emu_u2f
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: core-test-u2f-${{ matrix.model }}-${{ matrix.asan }}
           path: tests/trezor*.log
@@ -816,17 +830,18 @@ jobs:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+          persist-credentials: false
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build/artifacts/latest
       - run: chmod +x core/build/artifacts/latest/firmware-emu*
       - uses: $/.github/actions/environment
       - run: $UV_RUN make -C core test_emu_fido2
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: core-test-fido2-${{ matrix.model }}-${{ matrix.asan }}
           path: |
@@ -854,10 +869,11 @@ jobs:
     env:
       COVERAGE_THRESHOLD: 85
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+          persist-credentials: false
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           pattern: core-coverage-${{ matrix.model }}-*
           path: core
@@ -865,14 +881,14 @@ jobs:
       # Reuse the frozen-build artifact produced by `core_emu` (noasan variant
       # matches the test jobs that set TREZOR_PROFILING=1) so the preprocessed
       # .i sources are available without rebuilding.
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
           path: core/build/artifacts/latest
       - uses: $/.github/actions/environment
       # `make coverage` uses .i files downloaded above
       - run: $UV_RUN make -C core coverage
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: core-coverage-report-${{ matrix.model }}
           path: core/htmlcov
@@ -881,26 +897,30 @@ jobs:
         if: always()
 
   binaries_size_report:
-    name: Binaries' size report
-    if: github.event_name != 'push' || github.ref != 'refs/heads/main'  # not for reference builds
+    name: MemBrowse size report
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs:
       - core_firmware
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
-          pattern: core-firmware-*
-          path: artifacts
-      - run: |
-          for build_type in normal debuglink
-          do
-            (echo '##' ${build_type}; \
-             echo '```'; \
-             find artifacts/core-firmware-*-${build_type}/ -name '*-*-*.bin' -printf "%10s %f\n" | sort -k 2; \
-             echo '```') >> $GITHUB_STEP_SUMMARY
-          done
-
+          persist-credentials: false
+      - uses: membrowse/membrowse-action/comment-action@e96401eefb1c32f1f9aff0fcd18c73288c081808  # v1.3.3
+        with:
+          api_key: ${{ secrets.MEMBROWSE_API_KEY }}
+          commit: ${{ github.event.pull_request.head.sha }}
+          comment_template: .github/membrowse-comment.j2
+          footer: false
+          skip_unchanged: true
+        env:
+          MEMBROWSE_API_KEY: ${{ secrets.MEMBROWSE_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: env.MEMBROWSE_API_KEY != ''
 
   core_ui_comment:
     name: Post comment with UI diff URLs
@@ -910,25 +930,29 @@ jobs:
     timeout-minutes: 10
     needs:
       - param
+    env:
+      TEST_LANG: ${{ needs.param.outputs.test_lang }}
     permissions:
       id-token: write       # for fetching the OIDC token for AWS
       contents: read        # for actions/checkout
       pull-requests: write  # for dflook comments on PR
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
       - run: sleep 1m  # try avoiding github api rate limit
       - run: |
-          python ci/make_pull_comment.py "${{ github.run_id }}" '${{ needs.param.outputs.test_lang }}' > ${{ env.PULL_COMMENT_PATH }}
-          cat ${{ env.PULL_COMMENT_PATH }} >> $GITHUB_STEP_SUMMARY
+          python ci/make_pull_comment.py "${{ github.run_id }}" "${TEST_LANG}" > ${PULL_COMMENT_PATH}
+          cat ${PULL_COMMENT_PATH} >> $GITHUB_STEP_SUMMARY
       - uses: $/.github/actions/ui-comment
         if: github.event_name == 'pull_request'
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # v6.0.0
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1
-      - run: python ci/make_summary_htmls.py "index" '${{ needs.param.outputs.test_lang }}' "tests/ui_tests/reporting/"
-      - run: python ci/make_summary_htmls.py "diff" '${{ needs.param.outputs.test_lang }}' "tests/ui_tests/reporting/"
+      - run: python ci/make_summary_htmls.py "index" "${TEST_LANG}" "tests/ui_tests/reporting/"
+      - run: python ci/make_summary_htmls.py "diff" "${TEST_LANG}" "tests/ui_tests/reporting/"
       - name: Upload per-language HTML summaries to S3
         run: |
           cd tests/ui_tests/reporting/
@@ -948,13 +972,13 @@ jobs:
     permissions:
       id-token: write  # for fetching the OIDC token for AWS
     steps:
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           pattern: core-emu*debuglink-noasan*
           merge-multiple: true
           path: emulators
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # v6.0.0
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1
@@ -983,13 +1007,13 @@ jobs:
     permissions:
       id-token: write  # for fetching the OIDC token for AWS
     steps:
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           pattern: core-emu*debuglink-noasan*
           merge-multiple: true
           path: emulators
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # v6.0.0
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1
@@ -997,9 +1021,9 @@ jobs:
       - name: Determine branch name
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            branch_name=${{ github.head_ref }}
+            branch_name=${GITHUB_HEAD_REF}
           else
-            branch_name=${{ github.ref_name }}
+            branch_name=${GITHUB_REF_NAME}
           fi
           echo "branch_name=$branch_name" >> $GITHUB_ENV
       - name: Upload artifacts to branch directory
@@ -1023,9 +1047,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/environment
       - run: $UV_RUN make -C core audit_rust
       - run: $UV_RUN make -C core vet_rust
@@ -1037,14 +1062,14 @@ jobs:
     timeout-minutes: 60
     needs: core_firmware
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
           persist-credentials: false
       - uses: $/.github/actions/environment
       - name: Generate translation blobs
         run: $UV_RUN make -C core translations
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           pattern: core-firmware-*-*-normal
           path: downloaded-artifacts
@@ -1056,7 +1081,7 @@ jobs:
               --translations core/translations \
               --output to-upload/firmware/unsigned \
               downloaded-artifacts
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: unsigned
           path: to-upload/firmware*  # path hierarchy preserved after the first wildcard
@@ -1072,14 +1097,14 @@ jobs:
       id-token: write  # for fetching the OIDC token for AWS
       contents: read   # for actions/checkout
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
           persist-credentials: false
       - uses: $/.github/actions/environment
       - name: Generate translation blobs
         run: $UV_RUN make -C core translations
-      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # v8.0.0
         with:
           pattern: core-firmware-*-*-normal
           path: downloaded-artifacts
@@ -1104,7 +1129,7 @@ jobs:
           find firmware-nightly | sort
           cat firmware-nightly/t*/universal/*.json || true
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # v6.0.0
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1

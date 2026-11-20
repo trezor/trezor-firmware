@@ -25,8 +25,8 @@ on:
         default: "[\"T2B1\",\"T2T1\",\"T3B1\",\"T3T1\",\"T3W1\"]"
 
 permissions:
-  id-token: write       # for fetching the OIDC token
-  contents: read        # for actions/checkout
+  id-token: write  # zizmor: ignore[excessive-permissions] no point in copying this to every step
+  contents: read
 
 jobs:
   get_models:
@@ -37,7 +37,9 @@ jobs:
       models: ${{ steps.get_models.outputs.models }}
       version: ${{ steps.get_models.outputs.version }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
       - name: Get models from releases.json
         id: get_models
         run: |
@@ -48,12 +50,15 @@ jobs:
             VERSION=${GITHUB_REF#refs/tags/legacy/v}
             MODELS=$(jq -cr --arg version "$VERSION" '.firmware[$version]' ./common/releases.json)
           else
-            VERSION="${{ inputs.version }}"
-            MODELS='${{ inputs.models_json }}'
+            VERSION="${INPUTS_VERSION}"
+            MODELS="${INPUTS_MODELS_JSON}"
           fi
           echo "models=$MODELS" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
+        env:
+          INPUTS_VERSION: ${{ inputs.version }}
+          INPUTS_MODELS_JSON: ${{ inputs.models_json }}
 
   core_emu:
     if: startsWith(github.ref, 'refs/tags/core/v') || inputs.project == 'core'
@@ -72,9 +77,10 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/build-core-emu
         with:
           model: ${{ matrix.model }}
@@ -98,9 +104,10 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/build-core-emu
         with:
           model: ${{ matrix.model }}
@@ -124,9 +131,10 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/build-legacy-emu
         with:
           version: ${{ needs.get_models.outputs.version }}
@@ -147,9 +155,10 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: $/.github/actions/build-legacy-emu
         with:
           version: ${{ needs.get_models.outputs.version }}

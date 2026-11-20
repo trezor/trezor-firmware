@@ -15,8 +15,7 @@ on:
         default: 'Thalarion'
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: crowdin-pull
@@ -28,9 +27,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
 
       - name: Setup environment
         uses: $/.github/actions/environment
@@ -41,7 +41,7 @@ jobs:
         run: $UV_RUN python core/translations/crowdin.py split
 
       - name: Download translations from Crowdin
-        uses: crowdin/github-action@8818ff65bfc4322384f983ea37e3926948c11745  # crowdin/github-action@v2.15.0
+        uses: crowdin/github-action@8818ff65bfc4322384f983ea37e3926948c11745  # v2.15.0
         with:
           config: core/translations/crowdin.yml
           upload_sources: false
@@ -61,13 +61,15 @@ jobs:
 
       - name: Generate GitHub App token
         id: trezor-bot-token
-        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3  # actions/create-github-app-token@v3.1.1
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3  # v3.1.1
         with:
           client-id: ${{ secrets.TREZOR_BOT_CLIENT_ID }}
           private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
 
       - name: Create PR
-        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0  # peter-evans/create-pull-request@v8.1.0
+        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0  # v8.1.0
         with:
           token: ${{ steps.trezor-bot-token.outputs.token }}
           commit-message: |

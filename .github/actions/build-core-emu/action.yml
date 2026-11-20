@@ -36,10 +36,14 @@ runs:
 
     - id: prepare_binary
       run: |
-        TARGET="core/build/artifacts/latest/trezor-emu-core-${{ inputs.model }}-v${{ inputs.version }}${{ inputs.binary-suffix }}"
+        TARGET="core/build/artifacts/latest/trezor-emu-core-${INPUTS_MODEL}-v${INPUTS_VERSION}${INPUTS_BINARY_SUFFIX}"
         mv core/build/artifacts/latest/firmware-emu "$TARGET"
         echo "binary_path=$TARGET" >> "$GITHUB_OUTPUT"
       shell: sh
+      env:
+        INPUTS_MODEL: ${{ inputs.model }}
+        INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_BINARY_SUFFIX: ${{ inputs.binary-suffix }}
 
     - name: Configure aws credentials
       if: github.repository == 'trezor/trezor-firmware'
@@ -51,8 +55,11 @@ runs:
     - name: Upload emulator binaries
       if: github.repository == 'trezor/trezor-firmware'
       run: |
-        aws s3 cp "${{ steps.prepare_binary.outputs.binary_path }}" "s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ inputs.model }}/"
+        aws s3 cp "${STEPS_PREPARE_BINARY_OUTPUTS_BINARY_PATH}" "s3://data.trezor.io/dev/firmware/releases/emulators-new/${INPUTS_MODEL}/"
       shell: sh
+      env:
+        STEPS_PREPARE_BINARY_OUTPUTS_BINARY_PATH: ${{ steps.prepare_binary.outputs.binary_path }}
+        INPUTS_MODEL: ${{ inputs.model }}
 
     - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
       with:
