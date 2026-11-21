@@ -76,6 +76,7 @@ exclude-newer = "30 days"
 
 [tool.uv.exclude-newer-package]
 virtualenv = "2026-10-22T20:10:16.953Z"
+pyasn1 = "2026-10-27T06:32:49.126Z"
 fonttools = "2026-10-27T16:30:26.452Z"
 
 [tool.uv.sources]
