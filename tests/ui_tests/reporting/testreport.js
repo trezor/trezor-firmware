@@ -216,15 +216,31 @@ async function loadIncludes() {
     //
     // `node` is the element currently standing in for the include (the original
     // <include> on the first try, or the error block we inserted on a retry).
-    async function loadInclude(src, node) {
+    // `isRetry` is true when called from a Retry button: the initial inserts are
+    // wired up by `initImageLinks(document)` in `onLoad()` after `loadIncludes()`
+    // returns, but a retry runs later, so it must wire up its own content (scoped
+    // to just the inserted nodes, so earlier reports get no second listener).
+    async function loadInclude(src, node, isRetry = false) {
         try {
             const response = await fetch(src);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
             // Fetched report HTML is trusted local content.
+            const stop = node.nextSibling;
             node.insertAdjacentHTML("afterend", await response.text());
+            const inserted = [];
+            for (let n = node.nextSibling; n && n !== stop; n = n.nextSibling) {
+                inserted.push(n);
+            }
             node.remove();
+            if (isRetry) {
+                for (const root of inserted) {
+                    if (root.nodeType === Node.ELEMENT_NODE) {
+                        initImageLinks(root);
+                    }
+                }
+            }
         } catch (error) {
             console.error(error);
             // Build a visible error block with the failing src, the error
@@ -241,7 +257,7 @@ async function loadIncludes() {
             retryButton.type = "button";
             retryButton.textContent = "Retry";
             retryButton.addEventListener("click", () => {
-                loadInclude(src, errorBlock);
+                loadInclude(src, errorBlock, true);
             });
             errorBlock.appendChild(retryButton);
 
@@ -285,14 +301,7 @@ async function onLoad() {
     document.querySelectorAll('a.show-all-hidden').forEach(a => {
         a.addEventListener("click", function(e) { return showAllHidden() });
     });
-    document.querySelectorAll('.image-link').forEach(img => {
-        if (img.complete && img.naturalWidth !== 0) {
-            // already loaded, e.g. visible images delay `window.onload`
-            imageLoaded(img);
-        } else {
-            img.addEventListener('load', async function() { await imageLoaded(this) });
-        }
-    });
+    initImageLinks(document);
     onClick('reset-state-all', () => resetState('all'));
     onClick('reset-state-ok', () => resetState('ok'));
     onClick('reset-state-bad', () => resetState('bad'));
@@ -332,6 +341,20 @@ async function getImageData(image) {
     return context.getImageData(0, 0, width, height);
 }
 
+
+function initImageLinks(root) {
+    // Wire each `.image-link` image within `root` to build its row diff once it
+    // has loaded. `root` is the whole document on initial load, or just the
+    // nodes a retry inserted.
+    root.querySelectorAll('.image-link').forEach(img => {
+        if (img.complete && img.naturalWidth !== 0) {
+            // already loaded, e.g. visible images delay `window.onload`
+            imageLoaded(img);
+        } else {
+            img.addEventListener('load', async function() { await imageLoaded(this) });
+        }
+    });
+}
 
 async function imageLoaded(img) {
     let row = img.closest("tr");
