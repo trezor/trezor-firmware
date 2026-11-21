@@ -24,6 +24,9 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         if cfg!(feature = "pmic_npm1300") {
             drivers.push(("pmic_npm1300", "power_manager/pmic/npm1300/npm1300.c"));
         }
+        if cfg!(feature = "pmic_npm2100") {
+            drivers.push(("pmic_npm2100", "power_manager/pmic/npm2100/npm2100.c"));
+        }
 
         ensure!(
             drivers.len() == 1,

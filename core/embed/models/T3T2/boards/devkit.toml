@@ -8,11 +8,19 @@ panel = "io/display_panel_lx200b4501ctp03"
 [backlight]
 driver = "io/backlight_pwm"
 
+[button]
+
+[suspend]
+
 [touch]
 driver = "io/touch_ft6x36"
 panel = "io/touch_panel_lx200b4501ctp03"
 
 [optiga]
+
+[power_manager]
+pmic = "io/pmic_npm2100"
+fuel_gauge = "io/fuel_gauge_mock"
 
 [ble]
 
