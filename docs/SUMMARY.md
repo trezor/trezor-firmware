@@ -47,6 +47,7 @@
   - [Reproducible builds](common/reproducible-build.md)
   - [Message Workflows](common/message-workflows.md)
   - [External definitions](common/external-definitions.md)
+  - [Safety checks](common/safety-checks.md)
 - [Storage](storage/index.md)
 - [Tests](tests/index.md)
   - [Device Tests](tests/device-tests.md)

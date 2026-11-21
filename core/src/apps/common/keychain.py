@@ -97,6 +97,10 @@ class Keychain:
         del self.seed
 
     def verify_path(self, path: paths.Bip32Path) -> None:
+        # When safety checks are disabled, this function accepts any path without
+        # showing a warning. A handler which signs, derives a change address or
+        # displays an address or a public key has to show the warning itself,
+        # usually by calling paths.validate_path().
         if "ed25519" in self.curve and not paths.path_is_hardened(path):
             raise DataError("Non-hardened paths unsupported on Ed25519")
 
