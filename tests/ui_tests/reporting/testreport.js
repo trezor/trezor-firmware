@@ -210,8 +210,72 @@ function onClick(id, handler) {
     }
 }
 
-function onLoad() {
+async function loadIncludes() {
+    // Replace <include src="..."> elements by the content of the referenced pages
+    // (used by the per-language summary pages, see `ci/make_summary_htmls.py`)
+    //
+    // `node` is the element currently standing in for the include (the original
+    // <include> on the first try, or the error block we inserted on a retry).
+    // `isRetry` is true when called from a Retry button: the initial inserts are
+    // wired up by `initImageLinks(document)` in `onLoad()` after `loadIncludes()`
+    // returns, but a retry runs later, so it must wire up its own content (scoped
+    // to just the inserted nodes, so earlier reports get no second listener).
+    async function loadInclude(src, node, isRetry = false) {
+        try {
+            const response = await fetch(src);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            // Fetched report HTML is trusted local content.
+            const stop = node.nextSibling;
+            node.insertAdjacentHTML("afterend", await response.text());
+            const inserted = [];
+            for (let n = node.nextSibling; n && n !== stop; n = n.nextSibling) {
+                inserted.push(n);
+            }
+            node.remove();
+            if (isRetry) {
+                for (const root of inserted) {
+                    if (root.nodeType === Node.ELEMENT_NODE) {
+                        initImageLinks(root);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            // Build a visible error block with the failing src, the error
+            // message and a Retry button. Use textContent to escape the
+            // (potentially untrusted) src and error strings.
+            const errorBlock = document.createElement("div");
+            errorBlock.style.cssText = "border: 1px solid #c00; background: #fee; color: #900; padding: 8px; margin: 8px 0;";
+
+            const message = document.createElement("div");
+            message.textContent = `Failed to load report ${src}: ${error.message}`;
+            errorBlock.appendChild(message);
+
+            const retryButton = document.createElement("button");
+            retryButton.type = "button";
+            retryButton.textContent = "Retry";
+            retryButton.addEventListener("click", () => {
+                loadInclude(src, errorBlock, true);
+            });
+            errorBlock.appendChild(retryButton);
+
+            node.insertAdjacentElement("afterend", errorBlock);
+            node.remove();
+        }
+    }
+
+    const includes = Array.from(document.getElementsByTagName("include"));
+    await Promise.all(includes.map(include =>
+        loadInclude(include.getAttribute("src"), include)
+    ));
+}
+
+async function onLoad() {
     if (window.location.protocol === "file") return
+
+    await loadIncludes()
 
     for (let elem of document.getElementsByClassName("script-hidden")) {
         elem.classList.remove("script-hidden")
@@ -226,7 +290,9 @@ function onLoad() {
 
     if (document.body.dataset.index) {
         onLoadIndex()
-    } else {
+    } else if (document.getElementById("markbox")) {
+        // only the pages of failed test cases have the controls used there,
+        // other pages (e.g. the summary pages) would throw if opened by a script
         // TODO: this is triggering some exception in console:
         // Uncaught DOMException: Permission denied to access property "document" on cross-origin object
         onLoadTestCase()
@@ -235,9 +301,7 @@ function onLoad() {
     document.querySelectorAll('a.show-all-hidden').forEach(a => {
         a.addEventListener("click", function(e) { return showAllHidden() });
     });
-    document.querySelectorAll('.image-link').forEach(img => {
-        img.addEventListener('load', async function() { await imageLoaded(this) });
-    });
+    initImageLinks(document);
     onClick('reset-state-all', () => resetState('all'));
     onClick('reset-state-ok', () => resetState('ok'));
     onClick('reset-state-bad', () => resetState('bad'));
@@ -278,6 +342,20 @@ async function getImageData(image) {
 }
 
 
+function initImageLinks(root) {
+    // Wire each `.image-link` image within `root` to build its row diff once it
+    // has loaded. `root` is the whole document on initial load, or just the
+    // nodes a retry inserted.
+    root.querySelectorAll('.image-link').forEach(img => {
+        if (img.complete && img.naturalWidth !== 0) {
+            // already loaded, e.g. visible images delay `window.onload`
+            imageLoaded(img);
+        } else {
+            img.addEventListener('load', async function() { await imageLoaded(this) });
+        }
+    });
+}
+
 async function imageLoaded(img) {
     let row = img.closest("tr");
     await createRowDiff(row);
@@ -285,17 +363,17 @@ async function imageLoaded(img) {
 
 async function createRowDiff(row) {
     // Find an element with recorded image
-    recImg = row.querySelector("td:nth-child(1) > img");
+    const recImg = row.querySelector("td:nth-child(1) > img");
     // Find an element with the current image
-    curImg = row.querySelector("td:nth-child(2) > img");
+    const curImg = row.querySelector("td:nth-child(2) > img");
     // Skip if we haven't found two images
     if (recImg == null || curImg == null) {
         return;
     }
 
     // Get images's raw data
-    recData = await getImageData(recImg);
-    curData = await getImageData(curImg);
+    const recData = await getImageData(recImg);
+    const curData = await getImageData(curImg);
 
     const width = recImg.naturalWidth;
     const height = recImg.naturalHeight;
@@ -308,7 +386,7 @@ async function createRowDiff(row) {
 
     // Process differences
     const difData = difCtx.createImageData(width, height);
-    options = {threshold: 0.0, includeAA: true, diffColor: [0, 255, 0], diffColorAlt: [255, 0, 0]};
+    const options = {threshold: 0.0, includeAA: true, diffColor: [0, 255, 0], diffColorAlt: [255, 0, 0]};
     pixelmatch(recData.data, curData.data, difData.data, width, height, options);
     difCtx.putImageData(difData, 0, 0);
 
