@@ -43,6 +43,10 @@ const char* get_word(uint16_t index) {
  * Returns true on success and stores result in `index`.
  */
 bool word_index(uint16_t* index, const char* word, uint8_t word_length) {
+  if (!index || !word || word_length == 0) {
+    return false;
+  }
+
   uint16_t lo = 0;
   uint16_t hi = SLIP39_WORD_COUNT;
   uint16_t mid = 0;
@@ -55,7 +59,8 @@ bool word_index(uint16_t* index, const char* word, uint8_t word_length) {
       lo = mid;
     }
   }
-  if (strncmp(SLIP39_WORDLIST[lo], word, word_length) != 0) {
+  const char* entry = SLIP39_WORDLIST[lo];
+  if (strlen(entry) != word_length || strncmp(entry, word, word_length) != 0) {
     return false;
   }
   *index = lo;
