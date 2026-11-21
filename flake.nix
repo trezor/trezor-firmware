@@ -208,6 +208,11 @@
             devTools = true;
             fullDeps = true;
           };
+        }
+        # The shells of the trezor-ward crate, `ward` and `ward-msrv`, defined next to it.
+        // import ./rust/trezor-ward/shells.nix {
+          inherit pkgs;
+          rust = rustProfiles;
         };
       }
     );

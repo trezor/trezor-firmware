@@ -1,0 +1,4 @@
+# Test binaries built for WASI run under wasmtime, so that
+# `cargo test --target wasm32-wasip1` works as it is.
+[target.wasm32-wasip1]
+runner = "wasmtime"
