@@ -2,6 +2,7 @@
 name = "trezor-ward"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.87"
 
 [features]
 # The prover (host side); the rest of the crate is no_std and allocation-free.
