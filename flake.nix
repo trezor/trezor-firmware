@@ -52,12 +52,12 @@
           '';
         # NOTE: don't forget to update Minimum Supported Rust Version in docs/core/build/emulator.md
         rustProfiles = pkgs.rust-bin.nightly."2026-03-16";
-        rustNightlyWith = extraTargets: rustProfiles.minimal.override {
+        rustNightly = rustProfiles.minimal.override {
           targets = [
             "thumbv8m.main-none-eabihf" # T3
             "thumbv7em-none-eabihf" # T2
             "thumbv7m-none-eabi" # T1
-          ] ++ extraTargets;
+          ];
           # we use rustfmt from nixpkgs because it's built with the nighly flag needed for wrap_comments
           # to use official binary, remove rustfmt from buildInputs and add it to extensions:
           extensions = [
@@ -66,11 +66,6 @@
             "rustfmt"
           ];
         };
-        # Only in the wasm shell, so that no other shell has to download them.
-        wasmTargets = [
-          "wasm32-wasip1" # runs the tests: the test harness needs a system interface
-          "wasm32-unknown-unknown" # what a browser loads
-        ];
         openocd-stm = pkgs.openocd.overrideAttrs (oldAttrs: {
           src = pkgs.fetchFromGitHub {
             owner = "STMicroelectronics";
@@ -95,7 +90,6 @@
           {
             fullDeps ? false,
             devTools ? false,
-            wasm ? false,
           }:
           with pkgs;
           pkgs.mkShellNoCC ({
@@ -133,7 +127,7 @@
               pyright
               python3
               ruff
-              (mkBinOnlyWrapper (rustNightlyWith (lib.optionals wasm wasmTargets)))
+              (mkBinOnlyWrapper rustNightly)
               s5cmd # CI S3 upload
               sccache
               uv
@@ -150,9 +144,6 @@
             ]
             ++ lib.optionals (isDarwin) [
               libiconv
-            ]
-            ++ lib.optionals wasm [
-              wasmtime.out # runs the wasm32-wasip1 tests; only the binary, not the C API
             ]
             ++ lib.optionals devTools [
               tio
@@ -209,9 +200,6 @@
           # Only necessary dependencies for building and running tests in CI.
           minimal = mkShellFromParams { };
 
-          # The minimal shell plus what `make -C rust test_wasm` needs.
-          wasm = mkShellFromParams { wasm = true; };
-
           # Includes various development and testing tools.
           default = mkShellFromParams { devTools = true; };
 
@@ -220,6 +208,11 @@
             devTools = true;
             fullDeps = true;
           };
+        }
+        # The shells of the trezor-ward crate, `ward` and `ward-msrv`, defined next to it.
+        // import ./rust/trezor-ward/shells.nix {
+          inherit pkgs;
+          rust = rustProfiles;
         };
       }
     );

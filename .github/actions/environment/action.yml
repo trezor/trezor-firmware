@@ -8,7 +8,8 @@ inputs:
     type: "choice"
     options:
       - "minimal"
-      - "wasm"
+      - "ward"
+      - "ward-msrv"
       - "default"
       - "everything"
   pre-download:

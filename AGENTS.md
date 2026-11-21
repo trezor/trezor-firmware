@@ -19,8 +19,7 @@ Makefiles if in doubt; this file only captures what is non-obvious.
   ```
   For a one-off command without an interactive shell: `nix-shell --run "uv run <command>"` (this is what CI does).
 - Extra deps: `nix-shell --arg fullDeps true` (upgrade/monero tests: bitcoind, old emulators),
-  `--arg devTools true` (OpenOCD, gdb, arm-gcc), `--arg pythonTest true` (Python interpreters for `tox`),
-  `--arg wasm true` (WebAssembly Rust targets and `wasmtime`; the other arguments take precedence over it).
+  `--arg devTools true` (OpenOCD, gdb, arm-gcc), `--arg pythonTest true` (Python interpreters for `tox`).
 
 ## Builds (core)
 
@@ -101,8 +100,9 @@ Makefiles if in doubt; this file only captures what is non-obvious.
 - Python client: `make -C python test` (quick, current interpreter); full matrix as CI:
   `nix-shell --arg pythonTest true --run "unset LD_LIBRARY_PATH && cd python && uv run tox"`.
 - Rust: `make -C core test_rust` (embedded crates), `make -C core clippy`, `make -C rust check` (standalone crates).
-  WebAssembly: `nix-shell --arg wasm true --run "make -C rust test_wasm"` (tests on `wasm32-wasip1` under
-  `wasmtime`, compile-only for `wasm32-unknown-unknown`); the default shell has neither the targets nor `wasmtime`.
+  `rust/trezor-ward` has more checks, the steps of `.github/workflows/ward.yml`. Run them from the crate's
+  directory in its own shells: `nix develop .#ward --command <step>` (pinned nightly, embedded and WebAssembly
+  targets, `cargo-hack`, `wasmtime`) or `nix develop .#ward-msrv --command <step>` (its `rust-version`).
 - Crypto: `make -C crypto` then e.g. `crypto/tests/test_check`. Storage: `make -C storage/tests build tests_all`.
 - Coverage: `make -C core coverage` (builds a frozen emulator if needed). CI threshold is 85%.
 
