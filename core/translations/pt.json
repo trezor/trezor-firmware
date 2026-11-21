@@ -109,6 +109,7 @@
       "Delizia": "XPUB",
       "Eckhart": "Chave pública (XPUB)"
     },
+    "address__xpub_export_warning": "",
     "address_details__account_info": "Informações da conta",
     "address_details__derivation_path": "Caminho de derivação",
     "address_details__title_receive_address": "Endereço de destino",
@@ -785,19 +786,9 @@
       "Eckhart": "Dados:\n{0} / {1} bytes"
     },
     "ethereum__title_signing_address": "Endereço signatário",
-    "ethereum__title_token_contract": {
-      "Bolt": "Contrato do token",
-      "Caesar": "Endereço do contrato de token",
-      "Delizia": "Contrato do token",
-      "Eckhart": "Endereço do contrato de token"
-    },
+    "ethereum__title_token_contract": "Endereço do contrato",
     "ethereum__to": "A",
-    "ethereum__token_contract": {
-      "Bolt": "Endereço do contrato de token",
-      "Caesar": "Contrato do token",
-      "Delizia": "Endereço do contrato de token",
-      "Eckhart": "Endereço do contrato de token"
-    },
+    "ethereum__token_contract": "Endereço do contrato",
     "ethereum__units_template": "{0} unidades",
     "ethereum__unknown_contract_address": {
       "Bolt": "Endereço de contrato desconhecido.",
@@ -1127,7 +1118,14 @@
     "k1n1__writing": "",
     "language__change_to_template": "Alterar idioma para {0}?",
     "language__changed": "Idioma alterado com sucesso.",
+    "language__czech": "",
+    "language__english": "",
+    "language__french": "",
+    "language__german": "",
+    "language__indonesian": "",
+    "language__portuguese": "",
     "language__progress": "Alterando idioma...",
+    "language__spanish": "",
     "language__title": "Configuração de idioma",
     "led__disable": {
       "Bolt": "",
@@ -1522,7 +1520,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "O share não corresponde"
+      "Eckhart": "O share não corresponde."
     },
     "recovery__share_from_another_multi_share_backup": "Você informou um share de um backup diferente.",
     "recovery__share_from_group_entered_template": {
@@ -1569,18 +1567,8 @@
       "Delizia": "Mais {count} {plural} começando com",
       "Eckhart": "Você precisa de mais {count} {plural} começando com"
     },
-    "recovery__x_more_shares_needed_template_plural": {
-      "Bolt": "Mais {count} {plural} necessários",
-      "Caesar": "Mais {count} {plural} necessários.",
-      "Delizia": "Mais {count} {plural} necessários",
-      "Eckhart": "Mais {count} {plural} necessários."
-    },
-    "recovery__x_of_y_entered_template": {
-      "Bolt": "{0} de {1} shares inseridos",
-      "Caesar": "{0} de {1} shares inseridos.",
-      "Delizia": "{0} de {1} shares inseridos",
-      "Eckhart": "{0} de {1} shares inseridos."
-    },
+    "recovery__x_more_shares_needed_template_plural": "Mais {count} {plural} necessários.",
+    "recovery__x_of_y_entered_template": "{0} de {1} shares inseridos.",
     "recovery__you_have_entered": {
       "Bolt": "Você inseriu",
       "Caesar": "Você inseriu",
@@ -1846,7 +1834,7 @@
     "reset__select_threshold": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Selecione o nº mínimo de shares para recuperar sua carteira.",
+      "Delizia": "Selecione o número mínimo de shares para recuperar sua carteira.",
       "Eckhart": "Selecione o número mínimo de shares para recuperar sua carteira."
     },
     "reset__select_word_from_share_template": {
@@ -1928,16 +1916,16 @@
       "Eckhart": "Número de shares: {0}"
     },
     "reset__slip39_checklist_set_num_groups": {
-      "Bolt": "Definir nº de grupos",
+      "Bolt": "Definir número de grupos",
       "Caesar": "",
-      "Delizia": "Definir nº de grupos",
-      "Eckhart": "Definir nº de grupos"
+      "Delizia": "Definir número de grupos",
+      "Eckhart": "Definir número de grupos"
     },
     "reset__slip39_checklist_set_num_shares": {
-      "Bolt": "Definir nº de shares",
+      "Bolt": "Definir número de shares",
       "Caesar": "",
-      "Delizia": "Definir nº de shares",
-      "Eckhart": "Definir nº de shares"
+      "Delizia": "Definir número de shares",
+      "Eckhart": "Definir número de shares"
     },
     "reset__slip39_checklist_set_sizes": {
       "Bolt": "",
@@ -2021,7 +2009,7 @@
       "Eckhart": "Def. limite mín. do grupo"
     },
     "reset__title_set_number_of_groups": {
-      "Bolt": "Definir nº de grupos",
+      "Bolt": "Definir número de grupos",
       "Caesar": "",
       "Delizia": "Definir número de grupos",
       "Eckhart": "Definir número de grupos"
@@ -2334,7 +2322,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Permitir que o dispositivo conectado leia o nº de série da sua Trezor Safe 7?"
+      "Eckhart": "Permitir que o dispositivo conectado leia o número de série da sua Trezor Safe 7?"
     },
     "sn__title": {
       "Bolt": "",
@@ -2442,7 +2430,7 @@
     "stellar__selling": "Vendendo",
     "stellar__set_data": "Definir dados",
     "stellar__set_flags": "Definir flags",
-    "stellar__set_sequence_to_template": "Definir nº de sequência como {0}?",
+    "stellar__set_sequence_to_template": "Definir número de sequência como {0}?",
     "stellar__sign_authorization": "Assinar autorização",
     "stellar__sign_with": "Assinar com",
     "stellar__source_account": "Conta de origem",

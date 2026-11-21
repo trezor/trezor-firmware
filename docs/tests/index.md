@@ -25,6 +25,12 @@ See [ui-tests.md](ui-tests.md) for more info.
 
 Click tests are a next-generation of the Device tests. The tests are quite similar, but they are capable of imitating user's interaction with the screen.
 
+### Clear-signing tests
+
+Nightly UI tests that sign the test transactions of the ERC-7730 clear-signing registry with the unsigned dev definitions. They are separate from the device tests, and compare their screens with those of the previous nightly run.
+
+See [clear-signing-tests.md](clear-signing-tests.md) for more info.
+
 ## Fido tests
 
 Implement U2F/FIDO2 tests.
@@ -38,6 +44,12 @@ See the [upgrade-tests.md](upgrade-tests.md) for instructions how to run it.
 ## Persistence tests
 
 These tests test the Persistence mode, which is currently used in the device recovery. These tests launch the emulator themselves and they are capable of restarting or stopping it simulating user's plugging in or plugging out the device.
+
+## Bootloader tests
+
+These tests run the bootloader emulator, one or more runs per test, with explicit startup parameters, and check both the screens and how the run ended. They are located in `bootloader_tests/` and have their own `conftest.py`.
+
+See [bootloader-tests.md](bootloader-tests.md) for instructions how to run it.
 
 ## Prodtest tests
 

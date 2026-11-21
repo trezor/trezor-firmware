@@ -63,9 +63,9 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Ověřte adresu podle zdroje."
+      "Eckhart": "Ověřte tuto adresu s jejím zdrojem."
     },
-    "address__coin_address_template": "Adresa {0}",
+    "address__coin_address_template": "{0} adresa",
     "address__confirmed": {
       "Bolt": "Přijímací adresa potvrzena",
       "Caesar": "Přijímací adresa potvrzena",
@@ -99,6 +99,7 @@
       "Delizia": "XPUB",
       "Eckhart": "Veřejný klíč (XPUB)"
     },
+    "address__xpub_export_warning": "Kvantový počítač by mohl použít tento veřejný klíč k odhalení všech klíčů z něj odvozených.",
     "address_details__account_info": "Informace o účtu",
     "address_details__derivation_path": "Derivační cesta",
     "address_details__title_receive_address": "Přijímací adresa",
@@ -510,7 +511,7 @@
     "cardano__cost": "Náklady",
     "cardano__credential_intro_template": "{0} pověření je {1}",
     "cardano__credential_mismatch": "Údaje neodpovídají platebním údajům.",
-    "cardano__datum_hash": "Hash dat",
+    "cardano__datum_hash": "Hash datové položky",
     "cardano__delegating_to": "Delegování na",
     "cardano__delegating_to_key_hash": "Delegování na hash klíče",
     "cardano__delegating_to_script": "Delegování na skript",
@@ -519,7 +520,7 @@
     "cardano__for_account_template": "Pro účet {0}",
     "cardano__for_key_hash": "Pro hash klíče",
     "cardano__for_script": "Pro skript",
-    "cardano__inline_datum": "Inline data",
+    "cardano__inline_datum": "Vložená datová položka",
     "cardano__input_id": "Vstupní ID",
     "cardano__input_index": "Vstupní index",
     "cardano__intro_text_change": "Následující adresa je adresa na drobné. Její",
@@ -535,7 +536,7 @@
     "cardano__no_output_tx": "Transakce nemá žádné výstupy, síť nelze ověřit.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Jiné",
-    "cardano__output_contains_datum_or_ref_script": "",
+    "cardano__output_contains_datum_or_ref_script": "Výstup obsahuje datovou položku nebo referenční skript.",
     "cardano__path": "cesta",
     "cardano__pledge": "Závazek",
     "cardano__pointer": "ukazatel",
@@ -577,10 +578,10 @@
     "cardano__total_collateral": "Celková zástava",
     "cardano__transaction": "Transakce",
     "cardano__transaction_contains_minting_or_burning": "Transakce obsahuje vytváření nebo pálení tokenů.",
-    "cardano__transaction_contains_script_address_no_datum": "Následující výstup transakce obsahuje adresu skriptu, ale neobsahuje datum.",
+    "cardano__transaction_contains_script_address_no_datum": "Následující výstup transakce obsahuje adresu skriptu, ale neobsahuje datovou položku.",
     "cardano__transaction_id": "ID transakce",
     "cardano__transaction_no_collateral_input": "Transakce neobsahuje žádné vstupy zástavy. Skript Plutus nebude možné spustit.",
-    "cardano__transaction_no_script_data_hash": "Transakce neobsahuje žádný datový hash skriptu. Skript Plutus nebude možné spustit.",
+    "cardano__transaction_no_script_data_hash": "Transakce neobsahuje žádný hash dat skriptu. Skript Plutus nebude možné spustit.",
     "cardano__transaction_output_contains_tokens": "Následující výstup transakce obsahuje tokeny.",
     "cardano__ttl": "TTL",
     "cardano__unknown_collateral_amount": "Neznámá částka zástavy.",
@@ -1057,7 +1058,14 @@
     "k1n1__writing": "",
     "language__change_to_template": "Změnit jazyk na {0}?",
     "language__changed": "Jazyk byl úspěšně změněn.",
+    "language__czech": "češtinu",
+    "language__english": "angličtinu",
+    "language__french": "francouzštinu",
+    "language__german": "němčinu",
+    "language__indonesian": "indonéštinu",
+    "language__portuguese": "portugalštinu",
     "language__progress": "Změna jazyka...",
+    "language__spanish": "španělštinu",
     "language__title": "Nastavení jazyka",
     "led__disable": {
       "Bolt": "",
@@ -1439,25 +1447,20 @@
     },
     "recovery__invalid_share_entered": "Zadali jste neplatný podíl zálohy.",
     "recovery__invalid_wallet_backup_entered": "Zadali jste neplatnou zálohu.",
-    "recovery__more_shares_needed": {
-      "Bolt": "Jsou nutné další podíly.",
-      "Caesar": "Jsou nutné další podíly.",
-      "Delizia": "Jsou nutné další podíly.",
-      "Eckhart": "Je potřeba více podílů."
-    },
+    "recovery__more_shares_needed": "Jsou nutné další podíly.",
     "recovery__num_of_words": "Vyberte počet slov v záloze.",
     "recovery__progress_will_be_lost": "Veškerý postup bude ztracen.",
     "recovery__share_already_entered": {
-      "Bolt": "Podíl byl už zadán.",
-      "Caesar": "Podíl byl už zadán",
-      "Delizia": "Podíl byl už zadán",
+      "Bolt": "Tento podíl byl už zadán.",
+      "Caesar": "Tento podíl byl už zadán",
+      "Delizia": "Tento podíl byl už zadán",
       "Eckhart": "Tento podíl byl už zadán. Zadejte jiný podíl."
     },
     "recovery__share_does_not_match": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Podíl se neshoduje"
+      "Eckhart": "Podíl se neshoduje."
     },
     "recovery__share_from_another_multi_share_backup": "Zadali jste podíl z jiné zálohy.",
     "recovery__share_from_group_entered_template": {
@@ -1499,18 +1502,8 @@
       "Delizia": "Ještě {count} {plural} začínající",
       "Eckhart": "Je potřeba ještě {count} {plural} začínající"
     },
-    "recovery__x_more_shares_needed_template_plural": {
-      "Bolt": "Zadejte ještě {count} {plural}",
-      "Caesar": "Zadejte ještě {count} {plural}.",
-      "Delizia": "Zadejte ještě {count} {plural}",
-      "Eckhart": "Zadejte ještě {count} {plural}."
-    },
-    "recovery__x_of_y_entered_template": {
-      "Bolt": "Zadáno {0} ze {1} podílů",
-      "Caesar": "Zadáno {0} ze {1} podílů.",
-      "Delizia": "Zadáno {0} ze {1} podílů",
-      "Eckhart": "Zadáno {0} ze {1} podílů."
-    },
+    "recovery__x_more_shares_needed_template_plural": "Zadejte ještě {count} {plural}.",
+    "recovery__x_of_y_entered_template": "Zadáno {0} ze {1} podílů.",
     "recovery__you_have_entered": {
       "Bolt": "Byl zadán",
       "Caesar": "Byl zadán",
@@ -2264,7 +2257,12 @@
     "solana__claim_question": "Vybrat SOL ze stake účtu?",
     "solana__claim_recipient_warning": "Vybrat SOL na adresu mimo tuto peněženku.",
     "solana__confirm_multisig": "Potvrďte multisig",
-    "solana__details_not_reviewed": "",
+    "solana__details_not_reviewed": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Chystáte se podepsat transakci bez zkontrolování jejích podrobností."
+    },
     "solana__expected_fee": "Očekávaný poplatek",
     "solana__instruction_accounts_template": "Pokyn obsahuje účty ({0}) a jeho data mají velikost {1} bajtů.",
     "solana__instruction_data": "Pokyny",
@@ -2275,15 +2273,30 @@
     "solana__multiple_signers": "Více podepisujících",
     "solana__offchain_is_multisig": "Následující zpráva vyžaduje více podepisujících.",
     "solana__priority_fee": "Poplatek za prioritu",
-    "solana__skip_details": "",
-    "solana__skip_details_hint": "",
+    "solana__skip_details": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Přeskočit podrobnosti",
+      "Eckhart": "Přeskočit podrobnosti"
+    },
+    "solana__skip_details_hint": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Pokud vám opakovaně vypršel čas, přejděte pomocí menu přímo k podpisu.",
+      "Eckhart": "Pokud vám opakovaně vypršel čas, přejděte pomocí menu přímo k podpisu."
+    },
     "solana__stake": "Stakovat",
     "solana__stake_account": "Stake účet",
     "solana__stake_on_question": "Stakovat SOL na {0}?",
     "solana__stake_question": "Stakovat SOL?",
     "solana__stake_withdrawal_warning": "Tato peněženka nemůže být použita pro výběr z tohoto stakingu.",
     "solana__stake_withdrawal_warning_title": "Adresa autority oprávněné k výběru",
-    "solana__title_blind_signing": "",
+    "solana__title_blind_signing": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Podepisování na slepo",
+      "Eckhart": "Podepisování na slepo"
+    },
     "solana__transaction_contains_unknown_instructions": "Transakce obsahuje neznámé instrukce.",
     "solana__transaction_requires_x_signers_template": "Počet osob podepisujících transakci je {0}, což zvyšuje poplatek.",
     "solana__unknown_token": "Neznámý token",
@@ -2295,7 +2308,12 @@
     },
     "solana__unstake": "Zrušit staking",
     "solana__unstake_question": "Zrušit staking SOL ze stake účtu?",
-    "solana__view_details_in_menu": "",
+    "solana__view_details_in_menu": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Podrobnosti lze zobrazit v menu."
+    },
     "solana__vote_account": "Hlasovací účet",
     "stellar__account_merge": "Sloučení účtů",
     "stellar__account_thresholds": "Prahové hodnoty účtu",
@@ -2771,7 +2789,7 @@
     "u2f__get": "Zvýšit a načíst čítač U2F?",
     "u2f__set_template": "Nastavit počítadlo U2F na {0}?",
     "u2f__title_get": "Získat čítač U2F",
-    "u2f__title_set": "Nastavit počítadlo U2F",
+    "u2f__title_set": "Nastavení počítadla U2F",
     "wipe__info": "Všechna data budou smazána.",
     "wipe__start_again": "Vymažte svůj Trezor a začněte proces nastavení znovu.",
     "wipe__title": "Vymazat zařízení",

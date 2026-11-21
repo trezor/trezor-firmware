@@ -89,8 +89,13 @@ def screen_recording(
         client.sync_responses()
         client.debug.stop_recording()
 
+    record_result(testcase, request)
+
+
+def record_result(testcase: TestCase, request: pytest.FixtureRequest) -> None:
+    """Hash the screens recorded for `testcase` and file the result."""
     result = testcase.build_result(request)
-    if test_ui == "record":
+    if request.config.getoption("ui") == "record":
         _process_recorded(result)
     else:
         _process_tested(result, request.node)
@@ -107,12 +112,16 @@ def setup(main_runner: bool) -> None:
     testreport.setup(main_runner)
 
 
-def list_missing() -> set[str]:
+def _missing_tests() -> set[TestCase]:
     # Only listing the ones for the current model
     _, missing = common.prepare_fixtures(
         TestResult.recent_results(), remove_missing=True
     )
-    return {test.id for test in missing}
+    return missing
+
+
+def list_missing() -> set[str]:
+    return {test.id for test in _missing_tests()}
 
 
 def update_fixtures(remove_missing: bool = False) -> int:
@@ -172,11 +181,15 @@ def terminal_summary(
                     println(f"UI_MISSING: {result.test.id} ({result.actual_hash})")
                 else:
                     println(f"UI_FAILED: {result.test.id} ({result.actual_hash})")
-        println("Run ./tests/show_results.py to open test summary")
+        # tests with their own fixtures file need it for these commands too
+        env = ""
+        if common.FIXTURES_FILE != UI_TESTS_DIR / "fixtures.json":
+            env = f"TREZOR_UI_FIXTURES={common.FIXTURES_FILE} "
+        println(f"Run {env}./tests/show_results.py to open test summary")
         println("")
 
         println("-------- Accepting all recent UI changes: --------")
-        println("Run ./tests/update_fixtures.py to apply all changes")
+        println(f"Run {env}./tests/update_fixtures.py to apply all changes")
         println("")
 
 
@@ -189,6 +202,11 @@ def sessionfinish(
     if not _should_write_ui_report(exitstatus):
         return exitstatus
 
+    if test_ui == "test" and check_missing:
+        fixtures = common.get_current_fixtures()
+        for test in _missing_tests():
+            expected_hash = fixtures[test.model][test.group][test.fixtures_name]
+            testreport.removed(test, expected_hash)
     testreport.generate_reports(do_master_diff)
 
     recents = list(TestResult.recent_results())

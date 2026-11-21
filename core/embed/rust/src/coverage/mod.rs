@@ -38,7 +38,7 @@ impl core::cmp::PartialEq for Key {
 
 impl core::cmp::Eq for Key {}
 
-static COVERAGE_DATA: RwLock<FnvIndexMap<Key, u64, { 1024 * 1024 }>> =
+static COVERAGE_DATA: RwLock<FnvIndexMap<Key, u64, { 64 * 1024 }>> =
     RwLock::new(FnvIndexMap::new());
 
 struct Item<'a>((&'a Key, &'a u64));

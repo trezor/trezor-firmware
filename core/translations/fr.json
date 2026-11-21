@@ -114,6 +114,7 @@
       "Delizia": "XPUB",
       "Eckhart": "Clé publique (XPUB)"
     },
+    "address__xpub_export_warning": "",
     "address_details__account_info": {
       "Bolt": "Infos compte",
       "Caesar": "Infos du compte",
@@ -467,7 +468,7 @@
     },
     "buttons__back": "Retour",
     "buttons__back_up": {
-      "Bolt": "Sauveg.",
+      "Bolt": "Sauve- garder",
       "Caesar": "Sauvegarder",
       "Delizia": "Sauvegarder",
       "Eckhart": "Sauvegarder"
@@ -885,19 +886,9 @@
       "Eckhart": "Données :\n{0} / {1} octets"
     },
     "ethereum__title_signing_address": "Adresse de signature",
-    "ethereum__title_token_contract": {
-      "Bolt": "Adresse de token",
-      "Caesar": "Adresse de contrat du jeton",
-      "Delizia": "Adresse de token",
-      "Eckhart": "Adresse de contrat du jeton"
-    },
+    "ethereum__title_token_contract": "Adresse du contrat",
     "ethereum__to": "À",
-    "ethereum__token_contract": {
-      "Bolt": "Adresse de contrat du jeton",
-      "Caesar": "Contrat du jeton",
-      "Delizia": "Adresse de contrat du jeton",
-      "Eckhart": "Adresse de contrat du jeton"
-    },
+    "ethereum__token_contract": "Adresse du contrat",
     "ethereum__units_template": "{0} unités",
     "ethereum__unknown_contract_address": {
       "Bolt": "Adresse de contrat inconnue.",
@@ -1252,7 +1243,14 @@
     "k1n1__writing": "",
     "language__change_to_template": "Changer la langue en {0} ?",
     "language__changed": "La langue a été changée avec succès.",
+    "language__czech": "",
+    "language__english": "",
+    "language__french": "",
+    "language__german": "",
+    "language__indonesian": "",
+    "language__portuguese": "",
     "language__progress": "Changement de langue...",
+    "language__spanish": "",
     "language__title": "Paramètres de langue",
     "led__disable": {
       "Bolt": "",
@@ -1650,12 +1648,7 @@
     "recovery__invalid_share_entered": "Fragment de récupération saisi invalide.",
     "recovery__invalid_wallet_backup_entered": "Sauvegarde de portefeuille saisie invalide.",
     "recovery__more_shares_needed": "Plus de fragments requis.",
-    "recovery__num_of_words": {
-      "Bolt": "Choisir le nbre de mots de la sauveg.",
-      "Caesar": "Sélectionnez le nombre de mots de votre sauvegarde.",
-      "Delizia": "Sélectionnez le nombre de mots de votre sauvegarde.",
-      "Eckhart": "Sélectionnez le nombre de mots de votre sauvegarde."
-    },
+    "recovery__num_of_words": "Sélectionnez le nombre de mots de votre sauvegarde.",
     "recovery__progress_will_be_lost": "Toute progression sera perdue.",
     "recovery__share_already_entered": {
       "Bolt": "Fragment déjà saisi.",
@@ -1667,7 +1660,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Le fragment ne correspond pas"
+      "Eckhart": "Le fragment ne correspond pas."
     },
     "recovery__share_from_another_multi_share_backup": "Vous avez saisi un fragment d'une autre sauvegarde.",
     "recovery__share_from_group_entered_template": {
@@ -1720,17 +1713,12 @@
       "Eckhart": "Il vous faut {count} {plural} supplémentaires commençant par"
     },
     "recovery__x_more_shares_needed_template_plural": {
-      "Bolt": "{count} {plural} supplémentaire(s) requis",
+      "Bolt": "{count} {plural} supplémentaire(s) requis.",
       "Caesar": "{count} {plural} restant(s).",
-      "Delizia": "{count} {plural} supplémentaire(s) requis",
+      "Delizia": "{count} {plural} supplémentaire(s) requis.",
       "Eckhart": "{count} {plural} supplémentaire(s) requis."
     },
-    "recovery__x_of_y_entered_template": {
-      "Bolt": "{0} sur {1} fragments saisi(s)",
-      "Caesar": "{0} sur {1} fragments saisi(s).",
-      "Delizia": "{0} sur {1} fragments saisi(s)",
-      "Eckhart": "{0} sur {1} fragments saisi(s)."
-    },
+    "recovery__x_of_y_entered_template": "{0} sur {1} fragments saisi(s).",
     "recovery__you_have_entered": {
       "Bolt": "Vous avez saisi",
       "Caesar": "Vous avez saisi",
@@ -1977,7 +1965,7 @@
       "Eckhart": "Répéter pour tous les fragments."
     },
     "reset__required_number_of_groups": {
-      "Bolt": "Nombre de groupes requis pour la récup.",
+      "Bolt": "Le nombre de groupes requis pour la récupération.",
       "Caesar": "",
       "Delizia": "Le nombre de groupes requis pour la récupération.",
       "Eckhart": "Le nombre de groupes requis pour la récupération."
@@ -1991,7 +1979,7 @@
     "reset__select_threshold": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Sélectionnez le nbre de fragm. min requis pour la récupération.",
+      "Delizia": "Fragments minimum requis pour récupérer votre portefeuille.",
       "Eckhart": "Sélectionnez le nombre de fragments minimum requis pour récupérer votre portefeuille."
     },
     "reset__select_word_from_share_template": {
@@ -2057,8 +2045,8 @@
     "reset__slip39_checklist_num_groups_x_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Nombre de groupes : {0}",
-      "Eckhart": "Nombre de groupes : {0}"
+      "Delizia": "Nombre de groupes : {0}",
+      "Eckhart": "Nombre de groupes : {0}"
     },
     "reset__slip39_checklist_num_shares": {
       "Bolt": "",
@@ -2069,8 +2057,8 @@
     "reset__slip39_checklist_num_shares_x_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Nombre de fragm. : {0}",
-      "Eckhart": "Nombre de fragments : {0}"
+      "Delizia": "Nombre de fragments : {0}",
+      "Eckhart": "Nombre de fragments : {0}"
     },
     "reset__slip39_checklist_set_num_groups": {
       "Bolt": "Définir le nombre de groupes",
@@ -2192,7 +2180,7 @@
       "Eckhart": "Plus d'infos sur trezor.io/tos."
     },
     "reset__total_number_of_shares_in_group_template": {
-      "Bolt": "Nombre total de fragments du groupe {0}.",
+      "Bolt": "Définir le nombre total de fragments dans le groupe {0}.",
       "Caesar": "",
       "Delizia": "Définir le nombre total de fragments dans le groupe {0}.",
       "Eckhart": "Définir le nombre total de fragments dans le groupe {0}."
@@ -2824,7 +2812,7 @@
     },
     "tutorial__press_and_hold": {
       "Bolt": "",
-      "Caesar": "Maintenez DROITE pour valider les opérations importantes.",
+      "Caesar": "Maintenez le bouton droit pour valider les opérations importantes.",
       "Delizia": "",
       "Eckhart": ""
     },

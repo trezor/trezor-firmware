@@ -318,6 +318,11 @@ if TYPE_CHECKING:
         ABI_UINT8 = 15
         ABI_BOOL = 16
         ABI_INT160 = 17
+        ABI_INT128 = 18
+        ABI_INT64 = 19
+        ABI_INT32 = 40
+        ABI_INT24 = 41
+        ABI_INT256 = 42
         ABI_BYTES32 = 20
         ABI_BYTES16 = 21
         ABI_BYTES8 = 22
@@ -336,11 +341,13 @@ if TYPE_CHECKING:
         FORMATTER_CALLDATA = 6
         FORMATTER_ENUM = 7
         FORMATTER_DURATION = 8
+        FORMATTER_NFT_NAME = 9
 
     class EthereumERC7730ContainerPath(IntEnum):
         FROM = 1
         VALUE = 2
         TO = 3
+        CHAIN_ID = 4
 
     class EthereumDataType(IntEnum):
         UINT = 1

@@ -73,6 +73,7 @@
       "Delizia": "XPUB",
       "Eckhart": "Kunci publik (XPUB)"
     },
+    "address__xpub_export_warning": "",
     "address_details__account_info": "Info akun",
     "address_details__derivation_path": "Derivation path",
     "address_details__title_receive_address": "Alamat penerimaan",
@@ -709,19 +710,9 @@
       "Eckhart": "Data:\n{0} / {1} byte"
     },
     "ethereum__title_signing_address": "Alamat penandatanganan",
-    "ethereum__title_token_contract": {
-      "Bolt": "Kontrak token",
-      "Caesar": "Alamat kontrak token",
-      "Delizia": "Kontrak token",
-      "Eckhart": "Alamat kontrak token"
-    },
+    "ethereum__title_token_contract": "Alamat kontrak",
     "ethereum__to": "Ke",
-    "ethereum__token_contract": {
-      "Bolt": "Alamat kontrak token",
-      "Caesar": "Kontrak token",
-      "Delizia": "Alamat kontrak token",
-      "Eckhart": "Alamat kontrak token"
-    },
+    "ethereum__token_contract": "Alamat kontrak",
     "ethereum__units_template": "{0} unit",
     "ethereum__unknown_contract_address": {
       "Bolt": "Alamat kontrak tidak dikenal.",
@@ -1051,7 +1042,14 @@
     "k1n1__writing": "",
     "language__change_to_template": "Ubah bahasa ke {0}?",
     "language__changed": "Bahasa berhasil diubah.",
+    "language__czech": "",
+    "language__english": "",
+    "language__french": "",
+    "language__german": "",
+    "language__indonesian": "",
+    "language__portuguese": "",
     "language__progress": "Mengubah bahasa...",
+    "language__spanish": "",
     "language__title": "Pengaturan bahasa",
     "led__disable": {
       "Bolt": "",
@@ -1426,7 +1424,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Bagian tidak cocok"
+      "Eckhart": "Bagian tidak cocok."
     },
     "recovery__share_from_another_multi_share_backup": "Anda telah memasukkan bagian dari cadangan berbeda.",
     "recovery__share_from_group_entered_template": {
@@ -1468,18 +1466,8 @@
       "Delizia": "{count} {plural} lagi dimulai",
       "Eckhart": "Anda perlu {count} {plural} lagi yang dimulai dengan"
     },
-    "recovery__x_more_shares_needed_template_plural": {
-      "Bolt": "{count} {plural} lagi diperlukan",
-      "Caesar": "{count} {plural} lagi diperlukan.",
-      "Delizia": "{count} {plural} lagi diperlukan",
-      "Eckhart": "{count} {plural} lagi diperlukan."
-    },
-    "recovery__x_of_y_entered_template": {
-      "Bolt": "{0} dari {1} bagian dimasukkan",
-      "Caesar": "{0} dari {1} bagian dimasukkan.",
-      "Delizia": "{0} dari {1} bagian dimasukkan",
-      "Eckhart": "{0} dari {1} bagian dimasukkan."
-    },
+    "recovery__x_more_shares_needed_template_plural": "{count} {plural} lagi diperlukan.",
+    "recovery__x_of_y_entered_template": "{0} dari {1} bagian dimasukkan.",
     "recovery__you_have_entered": {
       "Bolt": "Anda telah memasukkan",
       "Caesar": "Anda telah memasukkan",
@@ -1553,7 +1541,12 @@
       "Delizia": "Periksa bagian {0}",
       "Eckhart": ""
     },
-    "reset__check_wallet_backup_title": "Periksa cadangan",
+    "reset__check_wallet_backup_title": {
+      "Bolt": "Periksa cadangan",
+      "Caesar": "Periksa cadangan dompet",
+      "Delizia": "Periksa cadangan",
+      "Eckhart": "Periksa cadangan dompet"
+    },
     "reset__continue_with_next_share": {
       "Bolt": "Lanjutkan dengan bagian berikutnya.",
       "Caesar": "Lanjutkan dengan bagian berikutnya.",

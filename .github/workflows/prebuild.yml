@@ -41,7 +41,7 @@ jobs:
           git submodule update --init --recursive vendor/ts-tvl
       - name: Initialize and update QR-Code-generator (needed for cargo fmt)
         run: git submodule update --init --recursive vendor/QR-Code-generator
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - name: "Run style check"
         run: $UV_RUN make style_check
       - name: "Run .editorconfig check"
@@ -56,7 +56,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: "recursive"
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - name: "Run defs check"
         run: $UV_RUN make defs_check
 
@@ -69,7 +69,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: "recursive"
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
       - name: "Run gen check"
         run: $UV_RUN make gen_check
 
@@ -82,7 +82,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: "recursive"
-      - uses: ./.github/actions/environment
+      - uses: $/.github/actions/environment
         with:
           pre-download: false
       - name: "Run uv.lock check"

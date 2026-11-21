@@ -1,0 +1,191 @@
+[
+  {
+    "target_name": "T2T1-firmware",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T2T1 PYOPT=1\"",
+    "elf": "core/build/artifacts/T2T1/firmware.elf",
+    "ld": "core/embed/models/T2T1/memory.ld core/embed/sys/linker/stm32f4/firmware.ld",
+    "map_file": "core/build/artifacts/T2T1/firmware.map",
+    "linker_vars": "",
+    "skip_sections": ".heap"
+  },
+  {
+    "target_name": "T2T1-firmware-btconly",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T2T1 PYOPT=1 BITCOIN_ONLY=1\"",
+    "elf": "core/build/artifacts/T2T1/firmware.elf",
+    "ld": "core/embed/models/T2T1/memory.ld core/embed/sys/linker/stm32f4/firmware.ld",
+    "map_file": "core/build/artifacts/T2T1/firmware.map",
+    "linker_vars": "",
+    "skip_sections": ".heap"
+  },
+  {
+    "target_name": "T2T1-kernel",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T2T1 PYOPT=1\"",
+    "elf": "core/build/artifacts/T2T1/kernel.elf",
+    "ld": "core/embed/models/T2T1/memory.ld core/embed/sys/linker/stm32f4/kernel.ld",
+    "map_file": "core/build/artifacts/T2T1/kernel.map",
+    "linker_vars": "",
+    "skip_sections": ""
+  },
+  {
+    "target_name": "T2T1-bootloader",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_bootloader TREZOR_MODEL=T2T1 PYOPT=1\"",
+    "elf": "core/build/artifacts/T2T1/bootloader.elf",
+    "ld": "core/embed/models/T2T1/memory.ld core/embed/sys/linker/stm32f4/bootloader.ld",
+    "map_file": "core/build/artifacts/T2T1/bootloader.map",
+    "linker_vars": "",
+    "skip_sections": ""
+  },
+  {
+    "target_name": "T2B1-firmware",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T2B1 PYOPT=1\"",
+    "elf": "core/build/artifacts/T2B1/firmware.elf",
+    "ld": "core/embed/models/T2B1/memory.ld core/embed/sys/linker/stm32f4/firmware.ld",
+    "map_file": "core/build/artifacts/T2B1/firmware.map",
+    "linker_vars": "",
+    "skip_sections": ".heap"
+  },
+  {
+    "target_name": "T2B1-firmware-btconly",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T2B1 PYOPT=1 BITCOIN_ONLY=1\"",
+    "elf": "core/build/artifacts/T2B1/firmware.elf",
+    "ld": "core/embed/models/T2B1/memory.ld core/embed/sys/linker/stm32f4/firmware.ld",
+    "map_file": "core/build/artifacts/T2B1/firmware.map",
+    "linker_vars": "",
+    "skip_sections": ".heap"
+  },
+  {
+    "target_name": "T2B1-kernel",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T2B1 PYOPT=1\"",
+    "elf": "core/build/artifacts/T2B1/kernel.elf",
+    "ld": "core/embed/models/T2B1/memory.ld core/embed/sys/linker/stm32f4/kernel.ld",
+    "map_file": "core/build/artifacts/T2B1/kernel.map",
+    "linker_vars": "",
+    "skip_sections": ""
+  },
+  {
+    "target_name": "T2B1-bootloader",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_bootloader TREZOR_MODEL=T2B1 PYOPT=1\"",
+    "elf": "core/build/artifacts/T2B1/bootloader.elf",
+    "ld": "core/embed/models/T2B1/memory.ld core/embed/sys/linker/stm32f4/bootloader.ld",
+    "map_file": "core/build/artifacts/T2B1/bootloader.map",
+    "linker_vars": "",
+    "skip_sections": ""
+  },
+  {
+    "target_name": "T3B1-firmware",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T3B1 PYOPT=1\"",
+    "elf": "core/build/artifacts/T3B1/firmware.elf",
+    "ld": "core/embed/models/T3B1/memory.ld core/embed/sys/linker/stm32u58/firmware.ld",
+    "map_file": "core/build/artifacts/T3B1/firmware.map",
+    "linker_vars": "",
+    "skip_sections": ".heap"
+  },
+  {
+    "target_name": "T3B1-firmware-btconly",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T3B1 PYOPT=1 BITCOIN_ONLY=1\"",
+    "elf": "core/build/artifacts/T3B1/firmware.elf",
+    "ld": "core/embed/models/T3B1/memory.ld core/embed/sys/linker/stm32u58/firmware.ld",
+    "map_file": "core/build/artifacts/T3B1/firmware.map",
+    "linker_vars": "",
+    "skip_sections": ".heap"
+  },
+  {
+    "target_name": "T3B1-kernel",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T3B1 PYOPT=1\"",
+    "elf": "core/build/artifacts/T3B1/kernel.elf",
+    "ld": "core/embed/models/T3B1/memory.ld core/embed/sys/linker/stm32u58/kernel.ld",
+    "map_file": "core/build/artifacts/T3B1/kernel.map",
+    "linker_vars": "",
+    "skip_sections": ""
+  },
+  {
+    "target_name": "T3B1-bootloader",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_bootloader TREZOR_MODEL=T3B1 PYOPT=1\"",
+    "elf": "core/build/artifacts/T3B1/bootloader.elf",
+    "ld": "core/embed/models/T3B1/memory.ld core/embed/sys/linker/stm32u58/bootloader.ld",
+    "map_file": "core/build/artifacts/T3B1/bootloader.map",
+    "linker_vars": "",
+    "skip_sections": ""
+  },
+  {
+    "target_name": "T3T1-firmware",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T3T1 PYOPT=1\"",
+    "elf": "core/build/artifacts/T3T1/firmware.elf",
+    "ld": "core/embed/models/T3T1/memory.ld core/embed/sys/linker/stm32u58/firmware.ld",
+    "map_file": "core/build/artifacts/T3T1/firmware.map",
+    "linker_vars": "",
+    "skip_sections": ".heap"
+  },
+  {
+    "target_name": "T3T1-firmware-btconly",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T3T1 PYOPT=1 BITCOIN_ONLY=1\"",
+    "elf": "core/build/artifacts/T3T1/firmware.elf",
+    "ld": "core/embed/models/T3T1/memory.ld core/embed/sys/linker/stm32u58/firmware.ld",
+    "map_file": "core/build/artifacts/T3T1/firmware.map",
+    "linker_vars": "",
+    "skip_sections": ".heap"
+  },
+  {
+    "target_name": "T3T1-kernel",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T3T1 PYOPT=1\"",
+    "elf": "core/build/artifacts/T3T1/kernel.elf",
+    "ld": "core/embed/models/T3T1/memory.ld core/embed/sys/linker/stm32u58/kernel.ld",
+    "map_file": "core/build/artifacts/T3T1/kernel.map",
+    "linker_vars": "",
+    "skip_sections": ""
+  },
+  {
+    "target_name": "T3T1-bootloader",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_bootloader TREZOR_MODEL=T3T1 PYOPT=1\"",
+    "elf": "core/build/artifacts/T3T1/bootloader.elf",
+    "ld": "core/embed/models/T3T1/memory.ld core/embed/sys/linker/stm32u58/bootloader.ld",
+    "map_file": "core/build/artifacts/T3T1/bootloader.map",
+    "linker_vars": "",
+    "skip_sections": ""
+  },
+  {
+    "target_name": "T3W1-firmware",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T3W1 PYOPT=1 BOOTLOADER_DEVEL=1\"",
+    "elf": "core/build/artifacts/T3W1/firmware.elf",
+    "ld": "core/embed/models/T3W1/memory_secmon.ld core/embed/sys/linker/stm32u5g/firmware.ld",
+    "map_file": "core/build/artifacts/T3W1/firmware.map",
+    "linker_vars": "",
+    "skip_sections": ".heap"
+  },
+  {
+    "target_name": "T3W1-firmware-btconly",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T3W1 PYOPT=1 BOOTLOADER_DEVEL=1 BITCOIN_ONLY=1\"",
+    "elf": "core/build/artifacts/T3W1/firmware.elf",
+    "ld": "core/embed/models/T3W1/memory_secmon.ld core/embed/sys/linker/stm32u5g/firmware.ld",
+    "map_file": "core/build/artifacts/T3W1/firmware.map",
+    "linker_vars": "",
+    "skip_sections": ".heap"
+  },
+  {
+    "target_name": "T3W1-kernel",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T3W1 PYOPT=1 BOOTLOADER_DEVEL=1\"",
+    "elf": "core/build/artifacts/T3W1/kernel.elf",
+    "ld": "core/embed/models/T3W1/memory_secmon.ld core/embed/sys/linker/stm32u5g/kernel.ld",
+    "map_file": "core/build/artifacts/T3W1/kernel.map",
+    "linker_vars": "",
+    "skip_sections": ""
+  },
+  {
+    "target_name": "T3W1-secmon",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_firmware TREZOR_MODEL=T3W1 PYOPT=1 BOOTLOADER_DEVEL=1\"",
+    "elf": "core/build/artifacts/T3W1/secmon.elf",
+    "ld": "core/embed/models/T3W1/memory_secmon.ld core/embed/sys/linker/stm32u5g/secmon.ld",
+    "map_file": "core/build/artifacts/T3W1/secmon.map",
+    "linker_vars": "",
+    "skip_sections": ""
+  },
+  {
+    "target_name": "T3W1-bootloader",
+    "build_cmd": "nix-shell --run \"uv run make -C core build_bootloader TREZOR_MODEL=T3W1 PYOPT=1 BOOTLOADER_DEVEL=1\"",
+    "elf": "core/build/artifacts/T3W1/bootloader.elf",
+    "ld": "core/embed/models/T3W1/memory.ld core/embed/sys/linker/stm32u5g/bootloader.ld",
+    "map_file": "core/build/artifacts/T3W1/bootloader.map",
+    "linker_vars": "",
+    "skip_sections": ""
+  }
+]

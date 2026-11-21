@@ -75,7 +75,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: ./.github/actions/build-core-emu
+      - uses: $/.github/actions/build-core-emu
         with:
           model: ${{ matrix.model }}
           version: ${{ needs.get_models.outputs.version }}
@@ -101,7 +101,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: ./.github/actions/build-core-emu
+      - uses: $/.github/actions/build-core-emu
         with:
           model: ${{ matrix.model }}
           version: ${{ needs.get_models.outputs.version }}
@@ -127,7 +127,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: ./.github/actions/build-legacy-emu
+      - uses: $/.github/actions/build-legacy-emu
         with:
           version: ${{ needs.get_models.outputs.version }}
 
@@ -150,7 +150,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: ./.github/actions/build-legacy-emu
+      - uses: $/.github/actions/build-legacy-emu
         with:
           version: ${{ needs.get_models.outputs.version }}
           binary-suffix: -arm

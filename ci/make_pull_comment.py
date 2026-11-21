@@ -6,7 +6,9 @@ MAIN, *EXTRA = json.loads(LANGS_JSON)
 
 REPORT_URL = f"https://data.trezor.io/dev/firmware/ui_report/{RUN_ID}"
 CI_RUN_URL = f"https://github.com/trezor/trezor-firmware/actions/runs/{RUN_ID}"
-TEST_TYPES = ["device_test", "click_test", "persistence_test"]
+TEST_TYPES = ["device_test", "click_test", "persistence_test", "bootloader_test"]
+# jobs that run in English only
+EN_ONLY_TYPES = ["persistence_test", "bootloader_test"]
 MODELS = [
     "T2T1",
     "T3B1",
@@ -33,8 +35,7 @@ def print_table(lang):
     screens = f"[all]({REPORT_URL}/{lang}_diff.html)"
     print(f"\n# `{lang}` {main}({screens})\n")
 
-    # Currently, persistence_test is not running with translations
-    test_types = TEST_TYPES if lang == "en" else TEST_TYPES[:-1]
+    test_types = [t for t in TEST_TYPES if lang == "en" or t not in EN_ONLY_TYPES]
 
     header = ["model"] + test_types
     print("|".join(header))
