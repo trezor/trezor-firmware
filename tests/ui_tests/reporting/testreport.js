@@ -213,16 +213,47 @@ function onClick(id, handler) {
 async function loadIncludes() {
     // Replace <include src="..."> elements by the content of the referenced pages
     // (used by the per-language summary pages, see `ci/make_summary_htmls.py`)
-    const includes = Array.from(document.getElementsByTagName("include"));
-    await Promise.all(includes.map(async include => {
+    //
+    // `node` is the element currently standing in for the include (the original
+    // <include> on the first try, or the error block we inserted on a retry).
+    async function loadInclude(src, node) {
         try {
-            const response = await fetch(include.getAttribute("src"));
-            include.insertAdjacentHTML("afterend", await response.text());
-            include.remove();
+            const response = await fetch(src);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            // Fetched report HTML is trusted local content.
+            node.insertAdjacentHTML("afterend", await response.text());
+            node.remove();
         } catch (error) {
             console.error(error);
+            // Build a visible error block with the failing src, the error
+            // message and a Retry button. Use textContent to escape the
+            // (potentially untrusted) src and error strings.
+            const errorBlock = document.createElement("div");
+            errorBlock.style.cssText = "border: 1px solid #c00; background: #fee; color: #900; padding: 8px; margin: 8px 0;";
+
+            const message = document.createElement("div");
+            message.textContent = `Failed to load report ${src}: ${error.message}`;
+            errorBlock.appendChild(message);
+
+            const retryButton = document.createElement("button");
+            retryButton.type = "button";
+            retryButton.textContent = "Retry";
+            retryButton.addEventListener("click", () => {
+                loadInclude(src, errorBlock);
+            });
+            errorBlock.appendChild(retryButton);
+
+            node.insertAdjacentElement("afterend", errorBlock);
+            node.remove();
         }
-    }));
+    }
+
+    const includes = Array.from(document.getElementsByTagName("include"));
+    await Promise.all(includes.map(include =>
+        loadInclude(include.getAttribute("src"), include)
+    ));
 }
 
 async function onLoad() {
