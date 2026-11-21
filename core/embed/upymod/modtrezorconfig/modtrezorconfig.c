@@ -131,6 +131,8 @@ static mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin, mp_obj_t ext_salt) {
     case UNLOCK_ACCESS_VIOLATION:
       mp_raise_msg(&mp_type_RuntimeError,
                    MP_ERROR_TEXT("Access violation during unlock."));
+    case UNLOCK_INVALID_PIN_FORMAT:
+      mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid PIN format."));
     case UNLOCK_UNKNOWN:
       mp_raise_msg(&mp_type_RuntimeError,
                    MP_ERROR_TEXT("Something went wrong during unlock."));
@@ -241,6 +243,8 @@ static mp_obj_t mod_trezorconfig_change_pin(size_t n_args,
     case PIN_CHANGE_ACCESS_VIOLATION:
       mp_raise_msg(&mp_type_RuntimeError,
                    MP_ERROR_TEXT("Access violation during PIN change."));
+    case PIN_CHANGE_INVALID_PIN_FORMAT:
+      mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid PIN format."));
     case PIN_CHANGE_UNKNOWN:
       mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Change PIN failed."));
     default:

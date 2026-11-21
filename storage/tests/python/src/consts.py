@@ -58,6 +58,9 @@ KEK_SIZE = 32
 # The length of KEIV in bytes.
 KEIV_SIZE = 12
 
+# The maximum length of the wipe code in bytes.
+MAX_WIPE_CODE_LEN = 50
+
 # The byte length of the salt used in checking the wipe code.
 WIPE_CODE_SALT_SIZE = 8
 

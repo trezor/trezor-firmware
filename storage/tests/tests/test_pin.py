@@ -32,6 +32,22 @@ def test_change_pin(nc_class):
 
 
 @pytest.mark.parametrize("nc_class", NC_CLASSES)
+def test_pin_with_zero_byte(nc_class):
+    sc, sp = common.init(nc_class, unlock=True)
+    for s in (sc, sp):
+        assert not s.change_pin("22\x002")  # invalid PIN
+        assert s.change_pin("222")
+        assert s.unlock("222")
+
+        rem = s.get_pin_rem()
+        assert not s.unlock("222\x00")  # invalid PIN
+        assert s.get_pin_rem() == rem
+        assert s.unlock("222")
+
+    assert common.memory_equals(sc, sp)
+
+
+@pytest.mark.parametrize("nc_class", NC_CLASSES)
 def test_has_pin(nc_class):
     sc, sp = common.init(nc_class)
     for s in (sc, sp):

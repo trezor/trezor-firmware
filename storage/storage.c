@@ -1141,6 +1141,23 @@ static secbool __wur decrypt_dek(const uint8_t *pin, size_t pin_len,
   return sectrue;
 }
 
+static secbool pin_format_is_valid(const uint8_t *pin, size_t pin_len) {
+  if (pin == NULL) {
+    return secfalse;
+  }
+  // The PIN acts as the HMAC key in PBKDF2, which pads its key with zero
+  // bytes, so PINs differing only in trailing zero bytes stretch to the same
+  // KEK. The wipe code check compares exact bytes, so such a PIN variant
+  // could be used to test PIN candidates without the risk of triggering the
+  // wipe code.
+  for (size_t i = 0; i < pin_len; i++) {
+    if (pin[i] == 0) {
+      return secfalse;
+    }
+  }
+  return sectrue;
+}
+
 static void ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
   if (sectrue != is_not_wipe_code(pin, pin_len)) {
     storage_wipe();
@@ -1155,6 +1172,12 @@ static uint32_t get_backoff_time_ms(uint32_t fail_ctr) {
 
 static storage_unlock_result_t unlock(const uint8_t *pin, size_t pin_len,
                                       const uint8_t *ext_salt) {
+  if (sectrue != pin_format_is_valid(pin, pin_len)) {
+    // An invalid PIN cannot match the stored PIN, so this is not a failed
+    // guess and does not need to spend an unlock attempt
+    return UNLOCK_INVALID_PIN_FORMAT;
+  }
+
   const uint8_t *unlock_pin = pin;
   size_t unlock_pin_len = pin_len;
   uint32_t legacy_pin = 0;
@@ -1705,6 +1728,10 @@ storage_pin_change_result_t storage_change_pin(const uint8_t *newpin,
     return PIN_CHANGE_WRONG_ARGUMENT;
   }
 
+  if (sectrue != pin_format_is_valid(newpin, newpin_len)) {
+    return PIN_CHANGE_INVALID_PIN_FORMAT;
+  }
+
   storage_pin_change_result_t ret = PIN_CHANGE_UNKNOWN;
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
@@ -1736,6 +1763,10 @@ end:
 }
 
 void storage_ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
+  if (sectrue != pin_format_is_valid(pin, pin_len)) {
+    return;
+  }
+
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
 #if NORCOW_MIN_VERSION <= 2
   // If we are unlocking the storage during upgrade from version 2 or lower,
@@ -1772,6 +1803,7 @@ secbool storage_change_wipe_code(const uint8_t *pin, size_t pin_len,
                                  const uint8_t *wipe_code,
                                  size_t wipe_code_len) {
   if (sectrue != initialized || pin == NULL || wipe_code == NULL ||
+      sectrue != pin_format_is_valid(wipe_code, wipe_code_len) ||
       (pin_len != 0 && pin_len == wipe_code_len &&
        memcmp(pin, wipe_code, pin_len) == 0)) {
     return secfalse;
