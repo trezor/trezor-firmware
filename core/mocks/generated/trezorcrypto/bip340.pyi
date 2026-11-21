@@ -20,9 +20,12 @@ def publickey(secret_key: AnyBytes) -> bytes:
 def sign(
     secret_key: AnyBytes,
     digest: AnyBytes,
+    aux_rand: AnyBytes | None = None,
 ) -> bytes:
     """
     Uses secret key to produce the signature of the digest.
+    If aux_rand is provided, it must be 32 bytes of auxiliary random data
+    per BIP-340 to protect against side-channel analysis and fault attacks.
     """
 
 

@@ -85,15 +85,18 @@ static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip340_publickey_obj,
 /// def sign(
 ///     secret_key: AnyBytes,
 ///     digest: AnyBytes,
+///     aux_rand: AnyBytes | None = None,
 /// ) -> bytes:
 ///     """
 ///     Uses secret key to produce the signature of the digest.
+///     If aux_rand is provided, it must be 32 bytes of auxiliary random data
+///     per BIP-340 to protect against side-channel analysis and fault attacks.
 ///     """
-static mp_obj_t mod_trezorcrypto_bip340_sign(mp_obj_t secret_key,
-                                             mp_obj_t digest) {
+static mp_obj_t mod_trezorcrypto_bip340_sign(size_t n_args,
+                                             const mp_obj_t *args) {
   mp_buffer_info_t sk = {0}, dig = {0};
-  mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
-  mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
+  mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
+  mp_get_buffer_raise(args[1], &dig, MP_BUFFER_READ);
   if (sk.len != 32) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
@@ -101,11 +104,21 @@ static mp_obj_t mod_trezorcrypto_bip340_sign(mp_obj_t secret_key,
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of digest"));
   }
 
+  const uint8_t *auxiliary_data = NULL;
+  mp_buffer_info_t aux = {0};
+  if (n_args > 2 && args[2] != mp_const_none) {
+    mp_get_buffer_raise(args[2], &aux, MP_BUFFER_READ);
+    if (aux.len != 32) {
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of auxiliary data"));
+    }
+    auxiliary_data = (const uint8_t *)aux.buf;
+  }
+
   vstr_t sig = {0};
   vstr_init_len(&sig, 64);
   int ret =
       zkp_bip340_sign_digest((const uint8_t *)sk.buf, (const uint8_t *)dig.buf,
-                             (uint8_t *)sig.buf, NULL);
+                             (uint8_t *)sig.buf, auxiliary_data);
   if (0 != ret) {
     vstr_clear(&sig);
     mp_raise_ValueError(MP_ERROR_TEXT("Signing failed"));
@@ -113,8 +126,8 @@ static mp_obj_t mod_trezorcrypto_bip340_sign(mp_obj_t secret_key,
   return mp_obj_new_bytes_from_vstr(&sig);
 }
 
-static MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip340_sign_obj,
-                                 mod_trezorcrypto_bip340_sign);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_bip340_sign_obj, 2,
+                                           3, mod_trezorcrypto_bip340_sign);
 
 /// def verify_publickey(public_key: AnyBytes) -> bool:
 ///     """
