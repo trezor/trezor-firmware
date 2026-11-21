@@ -213,6 +213,11 @@ pub struct FlashArgs {
     /// combined image instead of the one `xtask combine` wrote.
     #[arg(long)]
     pub combined: bool,
+
+    /// Write without first checking that the connected device is a `--model`
+    /// one (its MCU, and the model its boardloader was built for).
+    #[arg(long)]
+    pub skip_device_check: bool,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
@@ -233,6 +238,11 @@ pub struct FlashEraseArgs {
     /// Target model
     #[arg(long, short = 'm', ignore_case = true)]
     pub model: Model,
+
+    /// Erase without first checking that the connected device is a `--model`
+    /// one (its MCU, and the model its boardloader was built for).
+    #[arg(long)]
+    pub skip_device_check: bool,
 }
 
 #[derive(Args, Debug)]

@@ -1,13 +1,12 @@
-use std::io::Write;
-use std::path::{Path, PathBuf};
-use std::{fs, process};
+use std::fs;
+use std::ops::RangeInclusive;
 
 use anyhow::{Context, Result, ensure};
 
 use crate::args::{FlashArgs, FlashEraseArgs, FlashSection, Model, ResetArgs};
-use crate::{combine, helpers};
+use crate::{combine, device, helpers, openocd};
 
-/// Flashes the specified project to the device using OpenOCD.
+/// Flashes the specified project to the device.
 pub fn flash_project(args: FlashArgs) -> Result<()> {
     ensure!(
         args.project.flashable(),
@@ -35,6 +34,8 @@ pub fn flash_project(args: FlashArgs) -> Result<()> {
     let image =
         fs::read(&binary).with_context(|| format!("Failed to read `{}`", binary.display()))?;
     let segments = helpers::project_segments(&content, args.project, &image)?;
+
+    device::check(args.model, args.skip_device_check)?;
 
     println!("Flashing `{}`", binary.display());
     flash_segments(args.model, &segments)
@@ -82,6 +83,8 @@ pub fn flash_combined(args: FlashArgs) -> Result<()> {
         fs::read(&binary).with_context(|| format!("Failed to read `{}`", binary.display()))?;
     let segments = combine::combined_segments(&content, &image)?;
 
+    device::check(args.model, args.skip_device_check)?;
+
     println!(
         "Flashing the combined `{}` image `{}`",
         args.project.binary_name(),
@@ -90,37 +93,31 @@ pub fn flash_combined(args: FlashArgs) -> Result<()> {
     flash_segments(args.model, &segments)
 }
 
-/// Erase specified flash section using OpenOCD. The section boundaries are
-/// determined by reading symbols from the model's memory.ld file.
+/// Erase specified flash section. The section boundaries are determined by
+/// reading symbols from the model's memory.ld file.
 pub fn flash_erase(args: FlashEraseArgs) -> Result<()> {
     let mem_ld = args.model.model_memory_ld()?;
     let content = fs::read_to_string(&mem_ld)
         .with_context(|| format!("Failed to read `{}`", mem_ld.display()))?;
-    let instr = build_flash_erase_instruction(&content, args.section)?;
+    let sectors = sectors_to_erase(&content, args.section)?;
 
-    run_openocd(args.model, &instr)
+    device::check(args.model, args.skip_device_check)?;
+    match sectors {
+        Some(sectors) => openocd::erase_sectors(args.model, &sectors),
+        None => openocd::erase_all(args.model),
+    }
 }
 
-/// Resets the connected device using OpenOCD.
+/// Resets the connected device.
 pub fn reset(args: ResetArgs) -> Result<()> {
     println!("Resetting `{:?}`", args.model);
 
-    run_openocd(args.model, "init; reset; exit")
+    openocd::reset(args.model)
 }
 
-/// Flashes `(address, bytes)` segments, each written to its own address in a
-/// single OpenOCD session.
-///
-/// Every segment goes through a temporary file, since `flash write_image` takes
-/// a whole file.
+/// Flashes `(address, bytes)` segments, each written to its own address.
 fn flash_segments(model: Model, segments: &[(u32, &[u8])]) -> Result<()> {
-    let dir = TempDir::new()?;
-    let mut files = Vec::new();
     for (i, (address, data)) in segments.iter().enumerate() {
-        let path = dir.0.join(format!("segment-{i}.bin"));
-        fs::File::create_new(&path)
-            .and_then(|mut file| file.write_all(data))
-            .with_context(|| format!("Failed to write `{}`", path.display()))?;
         println!(
             "Writing segment {}/{} ({} bytes) to address 0x{:08X}",
             i + 1,
@@ -128,267 +125,75 @@ fn flash_segments(model: Model, segments: &[(u32, &[u8])]) -> Result<()> {
             data.len(),
             address
         );
-        files.push((path, *address));
     }
 
-    let instruction = build_flash_write_instruction(&files)?;
-    run_openocd(model, &instruction)
+    openocd::write(model, segments)
 }
 
-/// A freshly created directory under the system temp dir, removed on drop.
-///
-/// `create` fails if the path already exists, so nothing planted there
-/// beforehand (a file, or a symlink elsewhere) is ever written through. On Unix
-/// the directory is owner-only from the start, so no other user can swap a
-/// segment file before OpenOCD reads it.
-struct TempDir(PathBuf);
-
-impl TempDir {
-    fn new() -> Result<Self> {
-        let nanos = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_or(0, |d| d.subsec_nanos());
-        let path = std::env::temp_dir().join(format!("xtask-flash-{}-{nanos:08x}", process::id()));
-        let mut builder = fs::DirBuilder::new();
-        #[cfg(unix)]
-        std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
-        builder
-            .create(&path)
-            .with_context(|| format!("Failed to create `{}`", path.display()))?;
-        Ok(Self(path))
-    }
-}
-
-impl Drop for TempDir {
-    fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.0);
-    }
-}
-
-/// Runs OpenOCD instructions against the connected device for the given model.
-fn run_openocd(model: Model, instructions: &str) -> Result<()> {
-    let model_config = model.config()?;
-
-    let status = process::Command::new("openocd")
-        .args(["-f", "interface/stlink.cfg"])
-        .args(["-c", "transport select hla_swd"])
-        .args(["-f", model_config.openocd_target()?])
-        .arg("-c")
-        .arg(instructions)
-        .status()
-        .context("Failed to spawn `openocd`")?;
-
-    ensure!(status.success(), "`openocd` failed with status: {status}");
-
-    Ok(())
-}
-
-/// Quotes a path for interpolation into an OpenOCD `-c` script.
-///
-/// The script is handed to openocd as a single argv element, so no shell is
-/// involved -- but openocd parses it as Tcl, where an unquoted path containing
-/// a space becomes two words and `[`, `$` or `;` change the parse entirely.
-/// Tcl braces suppress every substitution, so `{...}` is the correct quoting
-/// and the braces are stripped before the command sees its argument.
-///
-/// What still has to be rejected, since brace quoting cannot express it:
-///
-/// * Braces, which would close or unbalance the group itself.
-/// * Newlines: backslash-newline is the one substitution Tcl *does* perform
-///   inside braces, and a raw newline would also break the `;`-separated
-///   script.
-/// * A path ENDING in a backslash. Interior backslashes are literal inside
-///   braces, but Tcl does not count a brace that a backslash quotes when it
-///   looks for the matching close brace -- and the close brace here is the one
-///   this function appends. `foo\` would become `{foo\}`, whose `\}` is not the
-///   terminator, so the rest of the command gets swallowed into the word.
-///
-/// Interior backslashes are therefore allowed: rejecting them would refuse
-/// every Windows-style path for no reason.
-fn tcl_quote_path(path: &Path) -> Result<String> {
-    let path = path
-        .to_str()
-        .with_context(|| format!("path is not valid UTF-8: {}", path.display()))?;
-
-    ensure!(
-        !path.contains(['{', '}', '\n', '\r']),
-        "path cannot be quoted for OpenOCD's Tcl parser \
-         (contains a brace or newline): {path}"
-    );
-    ensure!(
-        !path.ends_with('\\'),
-        "path cannot be quoted for OpenOCD's Tcl parser \
-         (ends in a backslash, which would escape the closing brace): {path}"
-    );
-
-    Ok(format!("{{{path}}}"))
-}
-
-fn build_flash_write_instruction(files: &[(PathBuf, u32)]) -> Result<String> {
-    let mut instr = String::from("init; reset halt; ");
-    for (path, address) in files {
-        instr.push_str(&format!(
-            "flash write_image erase {} 0x{:X}; ",
-            tcl_quote_path(path)?,
-            address
-        ));
-    }
-    instr.push_str("exit");
-    Ok(instr)
-}
-
-fn build_flash_erase_instruction(content: &str, section: FlashSection) -> Result<String> {
-    let mut instr = String::from("init; reset halt; flash info 0; ");
-
-    let mut push_erase = |symbol_prefix: &str| {
+/// The flash sector ranges making up `section`, or `None` for the whole flash.
+fn sectors_to_erase(
+    content: &str,
+    section: FlashSection,
+) -> Result<Option<Vec<RangeInclusive<u32>>>> {
+    let sectors = |symbol_prefix: &str| -> Result<RangeInclusive<u32>> {
         let start =
             helpers::read_symbol_from_content(content, &format!("{}_SECTOR_START", symbol_prefix))?;
         let end =
             helpers::read_symbol_from_content(content, &format!("{}_SECTOR_END", symbol_prefix))?;
-        instr.push_str(&format!("flash erase_sector 0 {} {}; ", start, end));
-        Ok::<(), anyhow::Error>(())
+        Ok(start..=end)
     };
 
-    match section {
-        FlashSection::All => {
-            instr.push_str("flash erase_sector 0 0 last; flash erase_check 0; ");
-        }
-        FlashSection::Boardloader => push_erase("BOARDLOADER")?,
-        FlashSection::Bootloader => push_erase("BOOTLOADER")?,
+    let ranges = match section {
+        FlashSection::All => return Ok(None),
+        FlashSection::Boardloader => vec![sectors("BOARDLOADER")?],
+        FlashSection::Bootloader => vec![sectors("BOOTLOADER")?],
         FlashSection::Firmware => {
             if helpers::read_symbol_from_content(content, "FIRMWARE_P1_SECTOR_START").is_ok() {
-                push_erase("FIRMWARE_P1")?;
-                push_erase("FIRMWARE_P2")?;
+                vec![sectors("FIRMWARE_P1")?, sectors("FIRMWARE_P2")?]
             } else {
-                push_erase("FIRMWARE")?;
+                vec![sectors("FIRMWARE")?]
             }
         }
-        FlashSection::Storage => {
-            push_erase("STORAGE_1")?;
-            push_erase("STORAGE_2")?;
-        }
-    }
-
-    instr.push_str("exit");
-    Ok(instr)
+        FlashSection::Storage => vec![sectors("STORAGE_1")?, sectors("STORAGE_2")?],
+    };
+    Ok(Some(ranges))
 }
 
 #[cfg(test)]
 mod tests {
-    use std::path::{Path, PathBuf};
-
-    use super::{build_flash_erase_instruction, build_flash_write_instruction, tcl_quote_path};
+    use super::sectors_to_erase;
     use crate::args::FlashSection;
 
     #[test]
-    fn builds_flash_write_instruction() {
-        let instruction =
-            build_flash_write_instruction(&[(PathBuf::from("/tmp/fw.bin"), 0x0800_4000)]).unwrap();
-
-        assert_eq!(
-            instruction,
-            "init; reset halt; flash write_image erase {/tmp/fw.bin} 0x8004000; exit"
-        );
-    }
-
-    #[test]
-    fn builds_flash_write_instruction_for_several_segments() {
-        let instruction = build_flash_write_instruction(&[
-            (PathBuf::from("/tmp/p1.bin"), 0x0804_0000),
-            (PathBuf::from("/tmp/p2.bin"), 0x0812_0000),
-        ])
-        .unwrap();
-
-        assert_eq!(
-            instruction,
-            "init; reset halt; flash write_image erase {/tmp/p1.bin} 0x8040000; \
-             flash write_image erase {/tmp/p2.bin} 0x8120000; exit"
-        );
-    }
-
-    /// `--file` accepts any path the user types, and openocd parses the `-c`
-    /// script as Tcl: unquoted, a space would split the filename into two Tcl
-    /// words and `[...]` would be command substitution.
-    #[test]
-    fn quotes_paths_that_tcl_would_otherwise_reparse() {
-        let instruction = build_flash_write_instruction(&[(
-            PathBuf::from("/my builds/fw [v2].bin"),
-            0x0800_4000,
-        )])
-        .unwrap();
-
-        assert_eq!(
-            instruction,
-            "init; reset halt; flash write_image erase {/my builds/fw [v2].bin} 0x8004000; exit"
-        );
-    }
-
-    #[test]
-    fn rejects_paths_that_cannot_be_brace_quoted() {
-        // A brace would end (or unbalance) the group itself; a newline is the
-        // one thing Tcl still substitutes inside braces. A TRAILING backslash
-        // would escape the closing brace this code appends, so the rest of the
-        // command would be swallowed into the word.
-        for bad in [
-            "/tmp/fw{.bin",
-            "/tmp/fw}.bin",
-            "/tmp/fw\n.bin",
-            "/tmp/fw\r.bin",
-            "/tmp/builds\\",
-        ] {
-            assert!(
-                tcl_quote_path(Path::new(bad)).is_err(),
-                "expected {bad:?} to be rejected"
-            );
-        }
-
-        assert!(tcl_quote_path(Path::new("/tmp/fw.bin")).is_ok());
-        assert!(tcl_quote_path(Path::new("/my builds/fw.bin")).is_ok());
-    }
-
-    /// Interior backslashes are literal inside Tcl braces, so a Windows-style
-    /// path must survive quoting untouched rather than being refused.
-    #[test]
-    fn accepts_interior_backslashes() {
-        assert_eq!(
-            tcl_quote_path(Path::new(r"C:\builds\fw.bin")).unwrap(),
-            r"{C:\builds\fw.bin}"
-        );
-        // An even run of trailing backslashes still leaves the close brace
-        // countable, but the check is deliberately conservative about the end
-        // of the path -- only the interior case is guaranteed.
-        assert_eq!(
-            tcl_quote_path(Path::new(r"/my builds\v2/fw.bin")).unwrap(),
-            r"{/my builds\v2/fw.bin}"
-        );
-    }
-
-    #[test]
-    fn builds_firmware_erase_instruction_for_dual_bank_layouts() {
+    fn erases_both_firmware_parts_on_dual_bank_layouts() {
         let content = "\
 FIRMWARE_P1_SECTOR_START = 5;\n\
 FIRMWARE_P1_SECTOR_END = 10;\n\
 FIRMWARE_P2_SECTOR_START = 11;\n\
 FIRMWARE_P2_SECTOR_END = 18;\n";
 
-        let instruction = build_flash_erase_instruction(content, FlashSection::Firmware).unwrap();
-
-        assert!(instruction.contains("flash erase_sector 0 5 10;"));
-        assert!(instruction.contains("flash erase_sector 0 11 18;"));
-        assert!(instruction.ends_with("exit"));
+        assert_eq!(
+            sectors_to_erase(content, FlashSection::Firmware).unwrap(),
+            Some(vec![5..=10, 11..=18])
+        );
     }
 
     #[test]
-    fn builds_storage_erase_instruction() {
+    fn erases_both_storage_areas() {
         let content = "\
 STORAGE_1_SECTOR_START = 2;\n\
 STORAGE_1_SECTOR_END = 3;\n\
 STORAGE_2_SECTOR_START = 4;\n\
 STORAGE_2_SECTOR_END = 5;\n";
 
-        let instruction = build_flash_erase_instruction(content, FlashSection::Storage).unwrap();
+        assert_eq!(
+            sectors_to_erase(content, FlashSection::Storage).unwrap(),
+            Some(vec![2..=3, 4..=5])
+        );
+    }
 
-        assert!(instruction.contains("flash erase_sector 0 2 3;"));
-        assert!(instruction.contains("flash erase_sector 0 4 5;"));
+    #[test]
+    fn erases_everything_for_all() {
+        assert_eq!(sectors_to_erase("", FlashSection::All).unwrap(), None);
     }
 }
