@@ -117,6 +117,10 @@ class InvalidFormatDefinition(ClearSigningFailed):
     pass
 
 
+class MustMatchViolation(ValueError):
+    pass
+
+
 def _check_padding_zero(
     raw_data: memoryview, used_bytes: int, exc: type[ValueOverflow] = ValueOverflow
 ) -> None:
@@ -198,6 +202,21 @@ def _word_bytes(value: AnyValue) -> AnyValue:
             raise InvalidFormatDefinition
         return value.to_bytes(_EVM_WORD_SIZE, "big")
     return value
+
+
+def _to_bytes(value: AnyValue) -> bytes:
+    """Byte form of a decoded value as compared against `ifNotIn` /
+    `mustMatch`: ints (uint/int/bool/@.value) as a 32-byte two's-complement
+    word, strings as UTF-8, address/bytesN/bytes/slices as-is. Anything else
+    (None, arrays) is rejected."""
+    # bool listed explicitly: in MicroPython it is not an int subclass
+    if isinstance(value, (int, bool)):
+        return (value % (1 << _EVM_WORD_BITS)).to_bytes(_EVM_WORD_SIZE, "big")
+    if isinstance(value, str):
+        return value.encode()
+    if isinstance(value, (bytes, bytearray)):
+        return bytes(value)
+    raise InvalidFormatDefinition  # Arrays not expected.
 
 
 def parse_bool(raw_data: memoryview) -> Value:
@@ -858,10 +877,24 @@ class FieldDefinition:
         path: Path,
         label: str,
         formatter: FieldFormatter | type[FieldFormatter],
+        if_not_in: list[bytes] | None = None,
+        must_match: list[bytes] | None = None,
     ) -> None:
         self.path = path
         self.label = label
         self.formatter = formatter
+        self.if_not_in = if_not_in
+        self.must_match = must_match
+
+    def is_hidden(self, value: AnyValue) -> bool:
+        """Raise if mustMatch is violated, return True if ifNotIn suggests hiding"""
+        if self.must_match:
+            if _to_bytes(value) not in self.must_match:
+                raise MustMatchViolation
+            return True
+        if self.if_not_in:
+            return _to_bytes(value) in self.if_not_in
+        return False
 
     @staticmethod
     def from_proto(info: EthereumERC7730FieldInfo) -> "FieldDefinition":
@@ -884,6 +917,11 @@ class FieldDefinition:
             return tuple(steps)
 
         path = decode_path(info.path)
+        if isinstance(path, str) and (info.if_not_in or info.must_match):
+            # Constant path = metadata stuff. No validation required.
+            # Definitions should drop it already
+            # https://github.com/trezor/definitions/pull/156
+            raise InvalidFormatDefinition
 
         fmt_type = info.formatter
         if fmt_type == FT.FORMATTER_ADDRESS_NAME:
@@ -941,7 +979,13 @@ class FieldDefinition:
         else:
             raise InvalidFormatDefinition
 
-        return FieldDefinition(path=path, label=info.label, formatter=formatter)
+        return FieldDefinition(
+            path=path,
+            label=info.label,
+            formatter=formatter,
+            if_not_in=[bytes(b) for b in info.if_not_in],
+            must_match=[bytes(b) for b in info.must_match],
+        )
 
     def get_formatter(self) -> FieldFormatter:
         # instantiate formatters only if needed
@@ -1087,6 +1131,9 @@ class DisplayFormat:
         fields: list[RenderedField] = []
         for field_definition in self.field_definitions:
             try:
+                value = get_value_for_path(field_definition.path)
+                if field_definition.is_hidden(value):
+                    continue
                 formatter = field_definition.get_formatter()
                 if isinstance(formatter, CalldataFormatter):
                     # Expands into multiple rows (the subcall's provider and
@@ -1103,7 +1150,6 @@ class DisplayFormat:
                         )
                     )
                     continue
-                value = get_value_for_path(field_definition.path)
                 formatted, token, token_address = await _format_field_value(
                     formatter, value, msg, defs, get_value_for_path
                 )
