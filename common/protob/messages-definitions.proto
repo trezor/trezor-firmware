@@ -133,6 +133,9 @@ message EthereumABIValueInfo {
     optional EthereumABIType dynamic = 2;     // DynamicLeaf(parser)
     optional EthereumABITupleInfo tuple = 3;  // Tuple(fields, is_dynamic)
     optional EthereumABIValueInfo array = 4;  // Array(element_type)
+    // TODO: to be implemented. Simply consume the parameter during data traversal. Value not shown to user, doesn't
+    // require parsing.
+    optional bool skip_item = 5;
 }
 
 /**

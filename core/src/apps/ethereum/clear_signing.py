@@ -717,6 +717,9 @@ class ABIValue:
         arrays multiply; tuple fan-out is bounded by the definition."""
         if depth > _MAX_ABI_NESTING or arrays > _MAX_NESTED_ARRAYS:
             raise InvalidFormatDefinition
+        if info.skip_item:
+            # TODO: skippable parameters are not implemented yet.
+            raise InvalidFormatDefinition
         if info.atomic is not None:
             return Atomic(_get_parser(info.atomic, is_dynamic=False))
         elif info.dynamic is not None:

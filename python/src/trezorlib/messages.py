@@ -4825,6 +4825,7 @@ class EthereumABIValueInfo(protobuf.MessageType):
         2: protobuf.Field("dynamic", "EthereumABIType", repeated=False, required=False, default=None),
         3: protobuf.Field("tuple", "EthereumABITupleInfo", repeated=False, required=False, default=None),
         4: protobuf.Field("array", "EthereumABIValueInfo", repeated=False, required=False, default=None),
+        5: protobuf.Field("skip_item", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4834,11 +4835,13 @@ class EthereumABIValueInfo(protobuf.MessageType):
         dynamic: EthereumABIType | None = None,
         tuple: EthereumABITupleInfo | None = None,
         array: EthereumABIValueInfo | None = None,
+        skip_item: bool | None = None,
     ) -> None:
         self.atomic = atomic
         self.dynamic = dynamic
         self.tuple = tuple
         self.array = array
+        self.skip_item = skip_item
 
 
 class EthereumERC7730Path(protobuf.MessageType):

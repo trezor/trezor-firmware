@@ -1124,6 +1124,8 @@ pub struct EthereumABIValueInfo {
     pub tuple: ::protobuf::MessageField<EthereumABITupleInfo>,
     // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumABIValueInfo.array)
     pub array: ::protobuf::MessageField<EthereumABIValueInfo>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumABIValueInfo.skip_item)
+    pub skip_item: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.definitions.EthereumABIValueInfo.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1184,8 +1186,27 @@ impl EthereumABIValueInfo {
         self.dynamic = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
     }
 
+    // optional bool skip_item = 5;
+
+    pub fn skip_item(&self) -> bool {
+        self.skip_item.unwrap_or(false)
+    }
+
+    pub fn clear_skip_item(&mut self) {
+        self.skip_item = ::std::option::Option::None;
+    }
+
+    pub fn has_skip_item(&self) -> bool {
+        self.skip_item.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_skip_item(&mut self, v: bool) {
+        self.skip_item = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut fields = ::std::vec::Vec::with_capacity(5);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "atomic",
@@ -1206,6 +1227,11 @@ impl EthereumABIValueInfo {
             "array",
             |m: &EthereumABIValueInfo| { &m.array },
             |m: &mut EthereumABIValueInfo| { &mut m.array },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "skip_item",
+            |m: &EthereumABIValueInfo| { &m.skip_item },
+            |m: &mut EthereumABIValueInfo| { &mut m.skip_item },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EthereumABIValueInfo>(
             "EthereumABIValueInfo",
@@ -1237,6 +1263,9 @@ impl ::protobuf::Message for EthereumABIValueInfo {
                 34 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.array)?;
                 },
+                40 => {
+                    self.skip_item = ::std::option::Option::Some(is.read_bool()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -1263,6 +1292,9 @@ impl ::protobuf::Message for EthereumABIValueInfo {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
+        if let Some(v) = self.skip_item {
+            my_size += 1 + 1;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1280,6 +1312,9 @@ impl ::protobuf::Message for EthereumABIValueInfo {
         }
         if let Some(v) = self.array.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(4, v, os)?;
+        }
+        if let Some(v) = self.skip_item {
+            os.write_bool(5, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1302,6 +1337,7 @@ impl ::protobuf::Message for EthereumABIValueInfo {
         self.dynamic = ::std::option::Option::None;
         self.tuple.clear();
         self.array.clear();
+        self.skip_item = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -1311,6 +1347,7 @@ impl ::protobuf::Message for EthereumABIValueInfo {
             dynamic: ::std::option::Option::None,
             tuple: ::protobuf::MessageField::none(),
             array: ::protobuf::MessageField::none(),
+            skip_item: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -4290,77 +4327,78 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     mbol\x12\x12\n\x04name\x18\x03\x20\x02(\tR\x04name\"\x83\x01\n\x14Ethere\
     umABITupleInfo\x12L\n\x06fields\x18\x01\x20\x03(\x0b24.hw.trezor.message\
     s.definitions.EthereumABIValueInfoR\x06fields\x12\x1d\n\nis_dynamic\x18\
-    \x02\x20\x01(\x08R\tisDynamic\"\xc2\x02\n\x14EthereumABIValueInfo\x12G\n\
+    \x02\x20\x01(\x08R\tisDynamic\"\xdf\x02\n\x14EthereumABIValueInfo\x12G\n\
     \x06atomic\x18\x01\x20\x01(\x0e2/.hw.trezor.messages.definitions.Ethereu\
     mABITypeR\x06atomic\x12I\n\x07dynamic\x18\x02\x20\x01(\x0e2/.hw.trezor.m\
     essages.definitions.EthereumABITypeR\x07dynamic\x12J\n\x05tuple\x18\x03\
     \x20\x01(\x0b24.hw.trezor.messages.definitions.EthereumABITupleInfoR\x05\
     tuple\x12J\n\x05array\x18\x04\x20\x01(\x0b24.hw.trezor.messages.definiti\
-    ons.EthereumABIValueInfoR\x05array\"\xea\x03\n\x13EthereumERC7730Path\
-    \x12\x12\n\x04path\x18\x01\x20\x03(\x11R\x04path\x12c\n\x0econtainer_pat\
-    h\x18\x02\x20\x01(\x0e2<.hw.trezor.messages.definitions.EthereumERC7730C\
-    ontainerPathR\rcontainerPath\x12\x1f\n\x0bconst_value\x18\x03\x20\x01(\t\
-    R\nconstValue\x12\x1f\n\x0bslice_start\x18\x04\x20\x01(\x11R\nsliceStart\
-    \x12\x1b\n\tslice_end\x18\x05\x20\x01(\x11R\x08sliceEnd\x12a\n\x05steps\
-    \x18\x06\x20\x03(\x0b2K.hw.trezor.messages.definitions.EthereumERC7730Pa\
-    th.EthereumERC7730PathStepR\x05steps\x1a\x97\x01\n\x17EthereumERC7730Pat\
-    hStep\x12\x14\n\x05field\x18\x01\x20\x01(\rR\x05field\x12\x14\n\x05index\
-    \x18\x02\x20\x01(\x11R\x05index\x12\x12\n\x04each\x18\x03\x20\x01(\x08R\
-    \x04each\x12\x1f\n\x0bslice_start\x18\x04\x20\x01(\x11R\nsliceStart\x12\
-    \x1b\n\tslice_end\x18\x05\x20\x01(\x11R\x08sliceEnd\"\xf2\x0b\n\x18Ether\
-    eumERC7730FieldInfo\x12G\n\x04path\x18\x01\x20\x02(\x0b23.hw.trezor.mess\
-    ages.definitions.EthereumERC7730PathR\x04path\x12\x14\n\x05label\x18\x02\
-    \x20\x02(\tR\x05label\x12_\n\tformatter\x18\x03\x20\x02(\x0e2A.hw.trezor\
-    .messages.definitions.EthereumERC7730FieldFormatterTypeR\tformatter\x12R\
-    \n\ntoken_path\x18\x04\x20\x01(\x0b23.hw.trezor.messages.definitions.Eth\
-    ereumERC7730PathR\ttokenPath\x12\x1c\n\tthreshold\x18\x05\x20\x01(\x0cR\
-    \tthreshold\x12+\n\x11threshold_message\x18\r\x20\x01(\tR\x10thresholdMe\
-    ssage\x126\n\x17native_currency_address\x18\x0e\x20\x03(\x0cR\x15nativeC\
-    urrencyAddress\x12\x1a\n\x08decimals\x18\x06\x20\x01(\rR\x08decimals\x12\
-    \x12\n\x04base\x18\x07\x20\x01(\tR\x04base\x12\x16\n\x06prefix\x18\x08\
-    \x20\x01(\x08R\x06prefix\x12.\n\x13const_token_address\x18\t\x20\x01(\
-    \x0cR\x11constTokenAddress\x12W\n\rchain_id_path\x18\x15\x20\x01(\x0b23.\
-    hw.trezor.messages.definitions.EthereumERC7730PathR\x0bchainIdPath\x12$\
-    \n\x0econst_chain_id\x18\x16\x20\x01(\x04R\x0cconstChainId\x12T\n\x0bcal\
-    lee_path\x18\n\x20\x01(\x0b23.hw.trezor.messages.definitions.EthereumERC\
-    7730PathR\ncalleePath\x12!\n\x0cconst_callee\x18\x19\x20\x01(\x0cR\x0bco\
-    nstCallee\x12X\n\rselector_path\x18\x1c\x20\x01(\x0b23.hw.trezor.message\
-    s.definitions.EthereumERC7730PathR\x0cselectorPath\x12\x1a\n\x08selector\
-    \x18\x0b\x20\x01(\x0cR\x08selector\x12T\n\x0bamount_path\x18\x17\x20\x01\
-    (\x0b23.hw.trezor.messages.definitions.EthereumERC7730PathR\namountPath\
-    \x12!\n\x0cconst_amount\x18\x1d\x20\x01(\x0cR\x0bconstAmount\x12V\n\x0cs\
-    pender_path\x18\x18\x20\x01(\x0b23.hw.trezor.messages.definitions.Ethere\
-    umERC7730PathR\x0bspenderPath\x12#\n\rconst_spender\x18\x1a\x20\x01(\x0c\
-    R\x0cconstSpender\x12(\n\x10is_delegate_call\x18\x1b\x20\x01(\x08R\x0eis\
-    DelegateCall\x12Y\n\x0benum_values\x18\x0c\x20\x03(\x0b28.hw.trezor.mess\
-    ages.definitions.EthereumERC7730EnumEntryR\nenumValues\x12,\n\x0elookup_\
-    address\x18\x0f\x20\x01(\x08:\x05falseR\rlookupAddress\x12(\n\x0clookup_\
-    token\x18\x10\x20\x01(\x08:\x05falseR\x0blookupToken\x12.\n\x0flookup_co\
-    ntract\x18\x11\x20\x01(\x08:\x05falseR\x0elookupContract\x12\x1a\n\tif_n\
-    ot_in\x18\x12\x20\x03(\x0cR\x07ifNotIn\x12\x1d\n\nmust_match\x18\x13\x20\
-    \x03(\x0cR\tmustMatch\x12\x1b\n\tbundle_id\x18\x14\x20\x01(\rR\x08bundle\
-    Id\"]\n\x18EthereumERC7730EnumEntry\x12\x10\n\x03key\x18\x01\x20\x02(\rR\
-    \x03key\x12\x14\n\x05value\x18\x02\x20\x02(\tR\x05value\x12\x19\n\x08wid\
-    e_key\x18\x03\x20\x01(\x0cR\x07wideKey\"\xfa\x02\n\x19EthereumDisplayFor\
-    matInfo\x12\x19\n\x08chain_id\x18\x01\x20\x02(\x04R\x07chainId\x12\x18\n\
-    \x07address\x18\x02\x20\x02(\x0cR\x07address\x12\x19\n\x08func_sig\x18\
-    \x03\x20\x02(\x0cR\x07funcSig\x12\x16\n\x06intent\x18\x04\x20\x02(\tR\
-    \x06intent\x12i\n\x15parameter_definitions\x18\x05\x20\x03(\x0b24.hw.tre\
-    zor.messages.definitions.EthereumABIValueInfoR\x14parameterDefinitions\
-    \x12e\n\x11field_definitions\x18\x06\x20\x03(\x0b28.hw.trezor.messages.d\
-    efinitions.EthereumERC7730FieldInfoR\x10fieldDefinitions\x12#\n\rprovide\
-    r_name\x18\x07\x20\x01(\tR\x0cproviderName*i\n\x0eDefinitionType\x12\x14\
-    \n\x10ETHEREUM_NETWORK\x10\0\x12\x12\n\x0eETHEREUM_TOKEN\x10\x01\x12\x10\
-    \n\x0cSOLANA_TOKEN\x10\x02\x12\x1b\n\x17ETHEREUM_DISPLAY_FORMAT\x10\x03*\
-    \xf4\x03\n\x0fEthereumABIType\x12\x0f\n\x0bABI_ADDRESS\x10\0\x12\x0f\n\
-    \x0bABI_UINT256\x10\x01\x12\x0f\n\x0bABI_UINT248\x10\x02\x12\x0f\n\x0bAB\
-    I_UINT160\x10\x03\x12\x0f\n\x0bABI_UINT128\x10\x04\x12\x0f\n\x0bABI_UINT\
-    120\x10\x05\x12\x0f\n\x0bABI_UINT112\x10\x06\x12\x0e\n\nABI_UINT96\x10\
-    \x07\x12\x0e\n\nABI_UINT72\x10\x08\x12\x0e\n\nABI_UINT64\x10\t\x12\x0e\n\
-    \nABI_UINT48\x10\n\x12\x0e\n\nABI_UINT40\x10\x0b\x12\x0e\n\nABI_UINT32\
-    \x10\x0c\x12\x0e\n\nABI_UINT24\x10\r\x12\x0e\n\nABI_UINT16\x10\x0e\x12\r\
-    \n\tABI_UINT8\x10\x0f\x12\x0c\n\x08ABI_BOOL\x10\x10\x12\x0e\n\nABI_INT16\
-    0\x10\x11\x12\x0e\n\nABI_INT128\x10\x12\x12\r\n\tABI_INT64\x10\x13\x12\r\
+    ons.EthereumABIValueInfoR\x05array\x12\x1b\n\tskip_item\x18\x05\x20\x01(\
+    \x08R\x08skipItem\"\xea\x03\n\x13EthereumERC7730Path\x12\x12\n\x04path\
+    \x18\x01\x20\x03(\x11R\x04path\x12c\n\x0econtainer_path\x18\x02\x20\x01(\
+    \x0e2<.hw.trezor.messages.definitions.EthereumERC7730ContainerPathR\rcon\
+    tainerPath\x12\x1f\n\x0bconst_value\x18\x03\x20\x01(\tR\nconstValue\x12\
+    \x1f\n\x0bslice_start\x18\x04\x20\x01(\x11R\nsliceStart\x12\x1b\n\tslice\
+    _end\x18\x05\x20\x01(\x11R\x08sliceEnd\x12a\n\x05steps\x18\x06\x20\x03(\
+    \x0b2K.hw.trezor.messages.definitions.EthereumERC7730Path.EthereumERC773\
+    0PathStepR\x05steps\x1a\x97\x01\n\x17EthereumERC7730PathStep\x12\x14\n\
+    \x05field\x18\x01\x20\x01(\rR\x05field\x12\x14\n\x05index\x18\x02\x20\
+    \x01(\x11R\x05index\x12\x12\n\x04each\x18\x03\x20\x01(\x08R\x04each\x12\
+    \x1f\n\x0bslice_start\x18\x04\x20\x01(\x11R\nsliceStart\x12\x1b\n\tslice\
+    _end\x18\x05\x20\x01(\x11R\x08sliceEnd\"\xf2\x0b\n\x18EthereumERC7730Fie\
+    ldInfo\x12G\n\x04path\x18\x01\x20\x02(\x0b23.hw.trezor.messages.definiti\
+    ons.EthereumERC7730PathR\x04path\x12\x14\n\x05label\x18\x02\x20\x02(\tR\
+    \x05label\x12_\n\tformatter\x18\x03\x20\x02(\x0e2A.hw.trezor.messages.de\
+    finitions.EthereumERC7730FieldFormatterTypeR\tformatter\x12R\n\ntoken_pa\
+    th\x18\x04\x20\x01(\x0b23.hw.trezor.messages.definitions.EthereumERC7730\
+    PathR\ttokenPath\x12\x1c\n\tthreshold\x18\x05\x20\x01(\x0cR\tthreshold\
+    \x12+\n\x11threshold_message\x18\r\x20\x01(\tR\x10thresholdMessage\x126\
+    \n\x17native_currency_address\x18\x0e\x20\x03(\x0cR\x15nativeCurrencyAdd\
+    ress\x12\x1a\n\x08decimals\x18\x06\x20\x01(\rR\x08decimals\x12\x12\n\x04\
+    base\x18\x07\x20\x01(\tR\x04base\x12\x16\n\x06prefix\x18\x08\x20\x01(\
+    \x08R\x06prefix\x12.\n\x13const_token_address\x18\t\x20\x01(\x0cR\x11con\
+    stTokenAddress\x12W\n\rchain_id_path\x18\x15\x20\x01(\x0b23.hw.trezor.me\
+    ssages.definitions.EthereumERC7730PathR\x0bchainIdPath\x12$\n\x0econst_c\
+    hain_id\x18\x16\x20\x01(\x04R\x0cconstChainId\x12T\n\x0bcallee_path\x18\
+    \n\x20\x01(\x0b23.hw.trezor.messages.definitions.EthereumERC7730PathR\nc\
+    alleePath\x12!\n\x0cconst_callee\x18\x19\x20\x01(\x0cR\x0bconstCallee\
+    \x12X\n\rselector_path\x18\x1c\x20\x01(\x0b23.hw.trezor.messages.definit\
+    ions.EthereumERC7730PathR\x0cselectorPath\x12\x1a\n\x08selector\x18\x0b\
+    \x20\x01(\x0cR\x08selector\x12T\n\x0bamount_path\x18\x17\x20\x01(\x0b23.\
+    hw.trezor.messages.definitions.EthereumERC7730PathR\namountPath\x12!\n\
+    \x0cconst_amount\x18\x1d\x20\x01(\x0cR\x0bconstAmount\x12V\n\x0cspender_\
+    path\x18\x18\x20\x01(\x0b23.hw.trezor.messages.definitions.EthereumERC77\
+    30PathR\x0bspenderPath\x12#\n\rconst_spender\x18\x1a\x20\x01(\x0cR\x0cco\
+    nstSpender\x12(\n\x10is_delegate_call\x18\x1b\x20\x01(\x08R\x0eisDelegat\
+    eCall\x12Y\n\x0benum_values\x18\x0c\x20\x03(\x0b28.hw.trezor.messages.de\
+    finitions.EthereumERC7730EnumEntryR\nenumValues\x12,\n\x0elookup_address\
+    \x18\x0f\x20\x01(\x08:\x05falseR\rlookupAddress\x12(\n\x0clookup_token\
+    \x18\x10\x20\x01(\x08:\x05falseR\x0blookupToken\x12.\n\x0flookup_contrac\
+    t\x18\x11\x20\x01(\x08:\x05falseR\x0elookupContract\x12\x1a\n\tif_not_in\
+    \x18\x12\x20\x03(\x0cR\x07ifNotIn\x12\x1d\n\nmust_match\x18\x13\x20\x03(\
+    \x0cR\tmustMatch\x12\x1b\n\tbundle_id\x18\x14\x20\x01(\rR\x08bundleId\"]\
+    \n\x18EthereumERC7730EnumEntry\x12\x10\n\x03key\x18\x01\x20\x02(\rR\x03k\
+    ey\x12\x14\n\x05value\x18\x02\x20\x02(\tR\x05value\x12\x19\n\x08wide_key\
+    \x18\x03\x20\x01(\x0cR\x07wideKey\"\xfa\x02\n\x19EthereumDisplayFormatIn\
+    fo\x12\x19\n\x08chain_id\x18\x01\x20\x02(\x04R\x07chainId\x12\x18\n\x07a\
+    ddress\x18\x02\x20\x02(\x0cR\x07address\x12\x19\n\x08func_sig\x18\x03\
+    \x20\x02(\x0cR\x07funcSig\x12\x16\n\x06intent\x18\x04\x20\x02(\tR\x06int\
+    ent\x12i\n\x15parameter_definitions\x18\x05\x20\x03(\x0b24.hw.trezor.mes\
+    sages.definitions.EthereumABIValueInfoR\x14parameterDefinitions\x12e\n\
+    \x11field_definitions\x18\x06\x20\x03(\x0b28.hw.trezor.messages.definiti\
+    ons.EthereumERC7730FieldInfoR\x10fieldDefinitions\x12#\n\rprovider_name\
+    \x18\x07\x20\x01(\tR\x0cproviderName*i\n\x0eDefinitionType\x12\x14\n\x10\
+    ETHEREUM_NETWORK\x10\0\x12\x12\n\x0eETHEREUM_TOKEN\x10\x01\x12\x10\n\x0c\
+    SOLANA_TOKEN\x10\x02\x12\x1b\n\x17ETHEREUM_DISPLAY_FORMAT\x10\x03*\xf4\
+    \x03\n\x0fEthereumABIType\x12\x0f\n\x0bABI_ADDRESS\x10\0\x12\x0f\n\x0bAB\
+    I_UINT256\x10\x01\x12\x0f\n\x0bABI_UINT248\x10\x02\x12\x0f\n\x0bABI_UINT\
+    160\x10\x03\x12\x0f\n\x0bABI_UINT128\x10\x04\x12\x0f\n\x0bABI_UINT120\
+    \x10\x05\x12\x0f\n\x0bABI_UINT112\x10\x06\x12\x0e\n\nABI_UINT96\x10\x07\
+    \x12\x0e\n\nABI_UINT72\x10\x08\x12\x0e\n\nABI_UINT64\x10\t\x12\x0e\n\nAB\
+    I_UINT48\x10\n\x12\x0e\n\nABI_UINT40\x10\x0b\x12\x0e\n\nABI_UINT32\x10\
+    \x0c\x12\x0e\n\nABI_UINT24\x10\r\x12\x0e\n\nABI_UINT16\x10\x0e\x12\r\n\t\
+    ABI_UINT8\x10\x0f\x12\x0c\n\x08ABI_BOOL\x10\x10\x12\x0e\n\nABI_INT160\
+    \x10\x11\x12\x0e\n\nABI_INT128\x10\x12\x12\r\n\tABI_INT64\x10\x13\x12\r\
     \n\tABI_INT32\x10(\x12\r\n\tABI_INT24\x10)\x12\x0e\n\nABI_INT256\x10*\
     \x12\x0f\n\x0bABI_BYTES32\x10\x14\x12\x0f\n\x0bABI_BYTES16\x10\x15\x12\
     \x0e\n\nABI_BYTES8\x10\x16\x12\x0e\n\nABI_BYTES4\x10\x17\x12\x0f\n\x0bAB\

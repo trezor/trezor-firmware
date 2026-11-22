@@ -3374,6 +3374,7 @@ if TYPE_CHECKING:
         dynamic: "EthereumABIType | None"
         tuple: "EthereumABITupleInfo | None"
         array: "EthereumABIValueInfo | None"
+        skip_item: "bool | None"
 
         def __init__(
             self,
@@ -3382,6 +3383,7 @@ if TYPE_CHECKING:
             dynamic: "EthereumABIType | None" = None,
             tuple: "EthereumABITupleInfo | None" = None,
             array: "EthereumABIValueInfo | None" = None,
+            skip_item: "bool | None" = None,
         ) -> None:
             pass
 
