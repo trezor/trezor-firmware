@@ -613,6 +613,8 @@ class EnumFormatter(FieldFormatter):
         if isinstance(value, (bytes, bytearray)):
             # byte sliced to be read as an int
             value = int.from_bytes(value, "big")
+        if isinstance(value, bool):
+            value = int(value)
         if type(value) is not int:
             raise InvalidFormatDefinition
         formatted = self.entries.get(value)
@@ -869,6 +871,7 @@ class ContainerPath:
     From = 1
     Value = 2
     To = 3
+    ChainId = 4     # TODO
 
 
 class FieldDefinition:

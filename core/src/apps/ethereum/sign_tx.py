@@ -171,9 +171,7 @@ async def confirm_tx_data(
     value = int.from_bytes(msg.value, "big")
 
     if len(initial_data) < data_length:
-        # Don't even attempt to clear sign if we have a calldata larger than `MAX_DATA_STORED`.
-        # this is because clear signing doesn't currently support fetching additional data,
-        # which is because if it did, we would not be able to fall back to blind signing anymore.
+        # Clear signing applet cannot stream data yet.
         clear_signed = False
     else:
         try:
