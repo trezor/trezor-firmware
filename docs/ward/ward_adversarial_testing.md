@@ -268,6 +268,19 @@ catalogue](ward_testing.md#test-catalogue).
 - **`refuses a stored link that does not reproduce its own root`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'refuses a stored link that does not reproduce its own root'`
 
+### `packages/wardd/src/__tests__/replica.test.ts` (4)
+
+A peer holding the wallet's Evolu owner key stores corrupt rows on purpose. It can always deny service by deleting or withholding rows; these pin that corrupt rows do no more than that.
+
+- **`rewriting a stored row under its id costs that head, and never walks a device back`** — A peer overwrites a genuine row's changes: the replica falls back one head, and the device holding the newer head refuses the older one.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/replica.test.ts -t "rewriting a stored row under its id costs that head, and never walks a device back"`
+- **`a tower of corrupt rows stacked above the head does not hide it`** — Thirty chained corrupt rows: only the first is replayed and left out; nothing above it reaches genesis.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/replica.test.ts -t "a tower of corrupt rows stacked above the head does not hide it"`
+- **`a corrupt second path into the real head is passed over for the genuine one`** — A newer corrupt row ending at the real head is tried first, left out, and the device walks the genuine chain.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/replica.test.ts -t "a corrupt second path into the real head is passed over for the genuine one"`
+- **`with a WM, corrupt rows above its head do not move the head the replica serves`** — The replica is built at the WM's head, so corrupt rows above it are never replayed.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/replica.test.ts -t "with a WM, corrupt rows above its head do not move the head the replica serves"`
+
 ### `packages/wardd/src/__tests__/server.test.ts` (8)
 
 - **`refuses the ADVERSARIAL TEST methods unless started with --adversarial-tests`**

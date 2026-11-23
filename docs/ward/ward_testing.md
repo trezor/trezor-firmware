@@ -1466,6 +1466,25 @@ Run the file: `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__
 - **`cannot be given a WM as well`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'cannot be given a WM as well'`
 
+#### `packages/wardd/src/__tests__/replica.test.ts` (7)
+
+The replica leaves out a stored row that does not reproduce its own root, and rebuilds without it. The adversarial four are also listed in [Adversarial testing](ward_adversarial_testing.md).
+
+- **`keeps serving the valid head, and taking writes, after a corrupt row lands above it`** — Without a WM: the corrupt row is left out, another device still catches up, and a write lands at the very counter the corrupt row claims.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/replica.test.ts -t "keeps serving the valid head, and taking writes, after a corrupt row lands above it"`
+- **`never replays, or counts, a corrupt row that no head is built through`** — With a WM: a corrupt dead sibling beside the WM's head is never replayed.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/replica.test.ts -t "never replays, or counts, a corrupt row that no head is built through"`
+- **`says it is behind when the WM's head builds only through a corrupt row, and recovers once the row is restored`** — A sync is refused as `internal` rather than crashing, and re-storing the genuine row under its id heals the replica.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/replica.test.ts -t "says it is behind when the WM's head builds only through a corrupt row, and recovers once the row is restored"`
+- **`rewriting a stored row under its id costs that head, and never walks a device back`** — A peer overwrites a genuine row's changes: the replica falls back one head, and the device holding the newer head refuses the older one.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/replica.test.ts -t "rewriting a stored row under its id costs that head, and never walks a device back"`
+- **`a tower of corrupt rows stacked above the head does not hide it`** — Thirty chained corrupt rows: only the first is replayed and left out; nothing above it reaches genesis.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/replica.test.ts -t "a tower of corrupt rows stacked above the head does not hide it"`
+- **`a corrupt second path into the real head is passed over for the genuine one`** — A newer corrupt row ending at the real head is tried first, left out, and the device walks the genuine chain.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/replica.test.ts -t "a corrupt second path into the real head is passed over for the genuine one"`
+- **`with a WM, corrupt rows above its head do not move the head the replica serves`** — The replica is built at the WM's head, so corrupt rows above it are never replayed.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/replica.test.ts -t "with a WM, corrupt rows above its head do not move the head the replica serves"`
+
 #### `packages/wardd/src/__tests__/server.test.ts` (8)
 
 Run the file: `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/server.test.ts`
