@@ -1,0 +1,9 @@
+{
+  "data_type": "ETHEREUM_NETWORK",
+  "message": {
+    "chain_id": 14,
+    "symbol": "FLR",
+    "slip44": 60,
+    "name": "Flare"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "ad552a648c74d49e10027ab8a618a3ad4901c5be",
+    "chain_id": 14,
+    "symbol": "FXRP",
+    "decimals": 6,
+    "name": "Flare Bridged XRP (Flare)"
+  }
+}
