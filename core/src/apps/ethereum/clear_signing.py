@@ -386,15 +386,22 @@ def _unknown_token_on_chain(chain_id: int) -> EthereumTokenInfo:
 
 
 class AddressNameFormatter(FieldFormatter):
-    def __init__(self, lookup_address: bool = False) -> None:
+    def __init__(
+        self,
+        lookup_address: bool = False,
+        chain_id_path: Path | None = None,
+        const_chain_id: int | None = None,
+    ) -> None:
         self.lookup_address = lookup_address
+        self.chain_id_path = chain_id_path
+        self.const_chain_id = const_chain_id
 
     async def format(
         self,
         address: AnyValue,
         msg: MsgInSignTx,
         defs: Definitions,
-        _path_walker: PathWalker,
+        path_walker: PathWalker,
     ) -> FormattedValue:
         if address is None:
             return None, None, None
@@ -403,10 +410,15 @@ class AddressNameFormatter(FieldFormatter):
         else:
             if not isinstance(address, bytes):
                 raise InvalidFormatDefinition
+            other_chain_id = _resolve_other_chain_id(
+                self.chain_id_path, self.const_chain_id, msg, path_walker
+            )
             if self.lookup_address:
                 try:
                     address_name = await lookup_known_address(
-                        msg.chain_id, address, msg
+                        msg.chain_id if other_chain_id is None else other_chain_id,
+                        address,
+                        msg,
                     )
                 except UnexpectedMessageException:
                     # the host may abort the workflow by sending a new message
@@ -1020,6 +1032,7 @@ class FieldDefinition:
         if (chain_id_path is not None or const_chain_id is not None) and (
             fmt_type
             not in (
+                FT.FORMATTER_ADDRESS_NAME,
                 FT.FORMATTER_TOKEN_AMOUNT,
                 # TODO: uses tx.chain_id for now
                 FT.FORMATTER_CALLDATA,
@@ -1028,7 +1041,9 @@ class FieldDefinition:
             raise InvalidFormatDefinition
 
         if fmt_type == FT.FORMATTER_ADDRESS_NAME:
-            formatter = AddressNameFormatter(info.lookup_address)
+            formatter = AddressNameFormatter(
+                info.lookup_address, chain_id_path, const_chain_id
+            )
         elif fmt_type == FT.FORMATTER_AMOUNT:
             formatter = AmountFormatter
         elif fmt_type == FT.FORMATTER_TOKEN_AMOUNT:
@@ -1745,7 +1760,7 @@ async def _handle_generic_ui(
 
         token_chain_id = (
             actual_token.chain_id if actual_token.chain_id else msg.chain_id
-        ) # actual_token.chain_id is 0 for UNKNOWN_TOKEN (_unknown_token_on_chain)
+        )  # actual_token.chain_id is 0 for UNKNOWN_TOKEN (_unknown_token_on_chain)
 
         # Unknown token, show its address
         if actual_token_address is not None:

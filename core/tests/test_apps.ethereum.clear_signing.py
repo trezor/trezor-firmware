@@ -2639,7 +2639,7 @@ class TestABIValueFromProto(unittest.TestCase):
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestCrossChainToken(unittest.TestCase):
-    """ERC-7730 `chainId` / `chainIdPath` on `tokenAmount`:
+    """ERC-7730 `chainId` / `chainIdPath` on `tokenAmount` and `addressName`:
     a token living on a chain other than the transaction's (cross-chain swaps)
     is resolved against that chain's definitions, never the transaction's."""
 
@@ -2651,10 +2651,13 @@ class TestCrossChainToken(unittest.TestCase):
 
     def setUp(self):
         self.requests = []
+        self.lookups = []
         self._orig_request = clear_signing_module.request_definitions
+        self._orig_lookup = clear_signing_module.lookup_known_address
 
     def tearDown(self):
         clear_signing_module.request_definitions = self._orig_request
+        clear_signing_module.lookup_known_address = self._orig_lookup
 
     def _msg(self, supports_definition_request=False):
         class _Msg:
@@ -2715,6 +2718,18 @@ class TestCrossChainToken(unittest.TestCase):
         fmt = FieldDefinition.from_proto(info).get_formatter()
         self.assertEqual(fmt.chain_id_path, (2,))
         self.assertIsNone(fmt.const_chain_id)
+
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[0]),
+            label="Token",
+            formatter=FT.FORMATTER_ADDRESS_NAME,
+            lookup_address=True,
+            const_chain_id=self.POLYGON,
+        )
+        fmt = FieldDefinition.from_proto(info).get_formatter()
+        self.assertTrue(fmt.lookup_address)
+        self.assertEqual(fmt.const_chain_id, self.POLYGON)
+        self.assertIsNone(fmt.chain_id_path)
 
         # `@.chainId` is a container path
         info = EthereumERC7730FieldInfo(
@@ -2886,6 +2901,29 @@ class TestCrossChainToken(unittest.TestCase):
         self.assertEqual(formatted, "7 Wei UNKN")
         self.assertEqual(token.chain_id, self.POLYGON)
         self.assertIsNone(token_address)
+
+    # --- addressName (tokenTicker) ---
+
+    def test_address_name_looked_up_on_its_chain(self):
+        async def lookup_known_address(chain_id, address, msg=None):
+            self.lookups.append((chain_id, bytes(address)))
+            return "USD Coin" if chain_id == self.POLYGON else None
+
+        clear_signing_module.lookup_known_address = lookup_known_address
+
+        fmt = AddressNameFormatter(lookup_address=True, const_chain_id=self.POLYGON)
+        formatted, token, token_address = self._format(fmt, self.TOKEN)
+        self.assertEqual(formatted, "USD Coin")
+        self.assertIsNone(token)
+        self.assertIsNone(token_address)
+        self.assertEqual(self.lookups, [(self.POLYGON, self.TOKEN)])
+
+        # unknown on the other chain: the plain address
+        fmt = AddressNameFormatter(
+            lookup_address=True, const_chain_id=self.UNKNOWN_CHAIN_ID
+        )
+        formatted, _, _ = self._format(fmt, self.TOKEN)
+        self.assertEqual(formatted.lower(), "0x" + self.TOKEN.hex())
 
 
 if __name__ == "__main__":
