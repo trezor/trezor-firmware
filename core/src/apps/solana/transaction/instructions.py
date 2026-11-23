@@ -1161,6 +1161,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=True,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_WITHDRAW_NONCE_ACCOUNT:
             return Instruction(
@@ -1218,6 +1219,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=True,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_INITIALIZE_NONCE_ACCOUNT:
             return Instruction(
@@ -1257,6 +1259,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=True,
             )
         if instruction_id == _SYSTEM_PROGRAM_ID_INS_AUTHORIZE_NONCE_ACCOUNT:
             return Instruction(
@@ -1651,6 +1654,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=False,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_AUTHORIZE:
             return Instruction(
@@ -1720,6 +1724,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=False,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_DELEGATE_STAKE:
             return Instruction(
@@ -1764,6 +1769,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=False,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_SPLIT:
             return Instruction(
@@ -1873,6 +1879,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=False,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_DEACTIVATE:
             return Instruction(
@@ -1904,6 +1911,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=False,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_SET_LOCKUP:
             return Instruction(
@@ -2018,6 +2026,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=False,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED:
             return Instruction(
@@ -2101,6 +2110,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=False,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED:
             return Instruction(
@@ -2143,6 +2153,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=False,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED:
             return Instruction(
@@ -2206,6 +2217,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=False,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED:
             return Instruction(
@@ -2283,6 +2295,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=False,
             )
         if instruction_id == _STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED:
             return Instruction(
@@ -2519,6 +2532,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=True,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG:
             return Instruction(
@@ -2558,6 +2572,7 @@ def get_instruction(
                 True,
                 None,
                 None,
+                allow_alt_sysvars=True,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_TRANSFER:
             return Instruction(
@@ -3251,6 +3266,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=True,
             )
         if instruction_id == _TOKEN_PROGRAM_ID_INS_SYNC_NATIVE:
             return Instruction(
@@ -3399,6 +3415,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=True,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_MULTISIG:
             return Instruction(
@@ -3438,6 +3455,7 @@ def get_instruction(
                 True,
                 None,
                 None,
+                allow_alt_sysvars=True,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_TRANSFER:
             return Instruction(
@@ -4131,6 +4149,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=True,
             )
         if instruction_id == _TOKEN_2022_PROGRAM_ID_INS_SYNC_NATIVE:
             return Instruction(
@@ -4293,6 +4312,7 @@ def get_instruction(
                 False,
                 None,
                 None,
+                allow_alt_sysvars=True,
             )
         if instruction_id == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT:
             return Instruction(

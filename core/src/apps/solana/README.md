@@ -209,6 +209,7 @@ The `programs.json` file serves as a structured configuration file in the Solana
       - `args`: An optional dict of arguments for the formatter, see explanation below.
     - `references`: An array of account names that are used by the instruction. A reference named `*_sysvar` must hold the account listed under `sysvars`, otherwise the transaction is rejected.
     - `references_required`: The number of references required by the instruction. If more `references` are specified than required, the extra ones are optional, and may or may not be present in the transaction.
+    - `allow_alt_sysvars`: Required for instructions with a `*_sysvar` reference, not allowed for the others. A boolean indicating whether such a reference may be loaded from an address lookup table, in which case the account can't be checked. With `false`, a transaction that does so is rejected. Set it to `false` for all instructions of a program whose sysvar accounts are optional, like the Stake program. Such a program reads a different account in the sysvar slot as the account that comes after the sysvars, which shifts the accounts that follow into roles other than the ones listed in `references`.
     - `ui_properties`: Contains user interface-related information for this instruction.
       - `account`: Reference to one account in the references list identified by its `name`
       - `parameter`: Reference to one parameter in the parameters list identified by its `name`

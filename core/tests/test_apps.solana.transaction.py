@@ -417,6 +417,13 @@ STAKE_ACCOUNT = b"a" * 32
 # at index 3 and the signer as the stake authority.
 DEACTIVATE_INSTRUCTION: RawInstruction = (2, (1, 3, 0), (5).to_bytes(4, "little"))
 
+TOKEN_PROGRAM = base58.decode("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+TOKEN_ACCOUNT = b"k" * 32
+MINT = b"m" * 32
+# Initialize Account (instruction 1) at index 1 for the mint at index 2, with
+# the signer as the owner and the Rent sysvar at index 4.
+INITIALIZE_ACCOUNT_INSTRUCTION: RawInstruction = (3, (1, 2, 0, 4), b"\x01")
+
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestSolanaSysvarAccounts(unittest.TestCase):
@@ -455,6 +462,36 @@ class TestSolanaSysvarAccounts(unittest.TestCase):
                     [DEACTIVATE_INSTRUCTION],
                     version=0,
                     alts=[(b"t" * 32, (), (7,))],
+                )
+            )
+
+    def test_alt_reference_allowed(self):
+        # The Token program fails unless the Rent slot holds the sysvar, so the
+        # slot may refer to index 4, i.e. the address loaded from the table.
+        table = b"t" * 32
+        transaction = Transaction(
+            build_tx(
+                (1, 0, 2),
+                (SIGNER, TOKEN_ACCOUNT, MINT, TOKEN_PROGRAM),
+                [INITIALIZE_ACCOUNT_INSTRUCTION],
+                version=0,
+                alts=[(table, (), (7,))],
+            )
+        )
+        (initialize_account,) = transaction.instructions
+        self.assertEqual(
+            initialize_account.rent_sysvar, (table, 7, AddressType.AddressReadOnly)
+        )
+
+    def test_other_account_alt_reference_allowed(self):
+        # An account included in the transaction directly must be the sysvar
+        # even where an ALT reference is allowed.
+        with self.assertRaises(ValueError):
+            Transaction(
+                build_tx(
+                    (1, 0, 3),
+                    (SIGNER, TOKEN_ACCOUNT, MINT, TOKEN_PROGRAM, b"x" * 32),
+                    [INITIALIZE_ACCOUNT_INSTRUCTION],
                 )
             )
 

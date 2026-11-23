@@ -64,6 +64,7 @@ class Instruction:
         accounts: list[Account],
         accounts_required: int,
         account_templates: tuple[str, ...],
+        allow_alt_sysvars: bool,
     ) -> dict[str, Account]:
         from ..types import is_address_reference
         from .instructions import SYSVAR_ACCOUNTS
@@ -77,10 +78,13 @@ class Instruction:
                 break
             account = accounts[i]
             sysvar = SYSVAR_ACCOUNTS.get(account_name)
-            if sysvar is not None and (
-                is_address_reference(account) or account[0] != sysvar
-            ):
-                raise ValueError  # Sysvar slot does not hold the expected sysvar
+            if sysvar is not None:
+                if is_address_reference(account):
+                    # The account loaded from the lookup table is unknown.
+                    if not allow_alt_sysvars:
+                        raise ValueError  # Sysvar slot can't be verified
+                elif account[0] != sysvar:
+                    raise ValueError  # Sysvar slot does not hold the expected sysvar
             parsed_accounts[account_name] = account
         return parsed_accounts
 
@@ -101,6 +105,7 @@ class Instruction:
         supports_trailing_accounts: bool = False,
         is_deprecated_warning: str | None = None,
         trailing_accounts_warning: str | None = None,
+        allow_alt_sysvars: bool = False,
     ) -> None:
         self.program_id = program_id
         self.instruction_id = instruction_id
@@ -132,6 +137,7 @@ class Instruction:
                 accounts,
                 accounts_required,
                 account_templates,
+                allow_alt_sysvars,
             )
 
             self.trailing_accounts = accounts[len(account_templates) :]

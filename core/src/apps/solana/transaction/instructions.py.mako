@@ -81,9 +81,15 @@ ${getProgramId(program)} = "${program["id"]}"
             raise Exception(f"Sysvar \"{name}\" has an invalid account \"{sysvar}\".")
     for program in programs["programs"]:
         for instruction in program["instructions"]:
+            has_sysvar = False
             for reference in instruction["references"]:
-                if reference.endswith("_sysvar") and reference not in sysvars:
-                    raise Exception(f"Instruction \"{instruction['name']}\" references an unknown sysvar \"{reference}\".")
+                if reference.endswith("_sysvar"):
+                    has_sysvar = True
+                    if reference not in sysvars:
+                        raise Exception(f"Instruction \"{instruction['name']}\" references an unknown sysvar \"{reference}\".")
+            # Whether a sysvar may be loaded from an address lookup table has to be decided for each instruction.
+            if has_sysvar != ("allow_alt_sysvars" in instruction):
+                raise Exception(f"Instruction \"{instruction['name']}\" must set \"allow_alt_sysvars\" if and only if it references a sysvar.")
 %>
 # Accounts that the `*_sysvar` references must hold.
 SYSVAR_ACCOUNTS: dict[str, bytes] = {
@@ -253,6 +259,9 @@ def get_instruction(
                 ${instruction["trailing_references"]},
                 ${repr(instruction.get("is_deprecated_warning"))},
                 ${repr(instruction.get("trailing_accounts_warning"))},
+                % if "allow_alt_sysvars" in instruction:
+                allow_alt_sysvars=${instruction["allow_alt_sysvars"]},
+                % endif
             )
     % endfor
         return Instruction(
