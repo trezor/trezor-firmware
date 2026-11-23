@@ -192,6 +192,7 @@
             "nonce_authority"
           ],
           "references_required": 3,
+          "allow_alt_sysvars": true,
           "ui_properties": [
             {
               "account": "nonce_account",
@@ -223,6 +224,7 @@
             "nonce_authority"
           ],
           "references_required": 5,
+          "allow_alt_sysvars": true,
           "ui_properties": [
             {
               "parameter": "lamports",
@@ -260,6 +262,7 @@
             "rent_sysvar"
           ],
           "references_required": 3,
+          "allow_alt_sysvars": true,
           "ui_properties": [
             {
               "account": "nonce_account",
@@ -516,6 +519,7 @@
             "rent_sysvar"
           ],
           "references_required": 2,
+          "allow_alt_sysvars": false,
           "ui_properties": [
             {
               "account": "uninitialized_stake_account",
@@ -571,6 +575,7 @@
             "lockup_authority"
           ],
           "references_required": 3,
+          "allow_alt_sysvars": false,
           "ui_properties": [
             {
               "account": "stake_account",
@@ -610,6 +615,7 @@
             "stake_authority"
           ],
           "references_required": 6,
+          "allow_alt_sysvars": false,
           "ui_properties": [
             {
               "account": "initialized_stake_account",
@@ -683,6 +689,7 @@
             "lockup_authority"
           ],
           "references_required": 5,
+          "allow_alt_sysvars": false,
           "ui_properties": [
             {
               "parameter": "lamports",
@@ -714,6 +721,7 @@
             "stake_authority"
           ],
           "references_required": 3,
+          "allow_alt_sysvars": false,
           "ui_properties": [
             {
               "account": "delegated_stake_account",
@@ -792,6 +800,7 @@
             "stake_authority"
           ],
           "references_required": 5,
+          "allow_alt_sysvars": false,
           "ui_properties": [
             {
               "account": "source_stake_account",
@@ -841,6 +850,7 @@
             "lockup_authority"
           ],
           "references_required": 3,
+          "allow_alt_sysvars": false,
           "ui_properties": [
             {
               "account": "stake_account",
@@ -878,6 +888,7 @@
             "withdrawal_authority"
           ],
           "references_required": 4,
+          "allow_alt_sysvars": false,
           "ui_properties": [
             {
               "account": "uninitialized_stake_account",
@@ -913,6 +924,7 @@
             "lockup_authority"
           ],
           "references_required": 4,
+          "allow_alt_sysvars": false,
           "ui_properties": [
             {
               "account": "stake_account",
@@ -968,6 +980,7 @@
             "lockup_authority"
           ],
           "references_required": 4,
+          "allow_alt_sysvars": false,
           "ui_properties": [
             {
               "account": "stake_account",
@@ -1131,6 +1144,7 @@
             "rent_sysvar"
           ],
           "references_required": 4,
+          "allow_alt_sysvars": true,
           "ui_properties": [
             {
               "account": "account_to_initialize",
@@ -1162,6 +1176,7 @@
             "rent_sysvar"
           ],
           "references_required": 2,
+          "allow_alt_sysvars": true,
           "ui_properties": [
             {
               "account": "multisig_account",
@@ -1681,6 +1696,7 @@
             "rent_sysvar"
           ],
           "references_required": 3,
+          "allow_alt_sysvars": true,
           "ui_properties": [
             {
               "account": "account_to_initialize",
@@ -1778,6 +1794,7 @@
             "rent_sysvar"
           ],
           "references_required": 4,
+          "allow_alt_sysvars": true,
           "ui_properties": [
             {
               "account": "account_to_initialize",
@@ -1809,6 +1826,7 @@
             "rent_sysvar"
           ],
           "references_required": 2,
+          "allow_alt_sysvars": true,
           "ui_properties": [
             {
               "account": "multisig_account",
@@ -2329,6 +2347,7 @@
             "rent_sysvar"
           ],
           "references_required": 3,
+          "allow_alt_sysvars": true,
           "ui_properties": [
             {
               "account": "account_to_initialize",
@@ -2429,6 +2448,7 @@
             "rent_sysvar"
           ],
           "references_required": 6,
+          "allow_alt_sysvars": true,
           "ui_properties": [
             {
               "account": "associated_token_account",

@@ -1,0 +1,1 @@
+Solana: Accept sysvar accounts loaded from address lookup tables, except in Stake program instructions.
