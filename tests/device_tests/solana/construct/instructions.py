@@ -21,6 +21,7 @@ from .custom_constructs import (
     CompactStruct,
     HexStringAdapter,
     Memo,
+    OptionalInstructionId,
     OptionalParameter,
     PublicKey,
     String,
@@ -1268,7 +1269,7 @@ Token2022Program_Instruction = Select(
 
 
 class AssociatedTokenAccountProgramInstruction(Enum):
-    CREATE = None
+    CREATE = 0
     CREATE_IDEMPOTENT = 1
     RECOVER_NESTED = 2
 
@@ -1287,7 +1288,7 @@ AssociatedTokenAccountProgram_Create = Struct(
     ),
     "data"
     / CompactStruct(
-        "instruction_id" / Pass,
+        "instruction_id" / OptionalInstructionId(Const(0, Byte)),
     ),
 )
 

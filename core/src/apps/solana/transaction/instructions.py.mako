@@ -178,6 +178,29 @@ def get_instruction_id_length(program_id: str) -> int:
 
     return 0
 
+<%
+    # Make sure that the instruction run on empty instruction data is defined.
+    for program in programs["programs"]:
+        if "empty_data_instruction_id" not in program:
+            continue
+        instruction_ids = [instruction["id"] for instruction in program["instructions"]]
+        if program["empty_data_instruction_id"] not in instruction_ids:
+            raise Exception(f"Program \"{program['name']}\" has an unknown empty data instruction id.")
+%>
+
+def get_empty_data_instruction_id(program_id: str) -> InstructionId:
+    # Some programs run a default instruction when the instruction data is empty.
+% for program in programs["programs"]:
+    % for instruction in program["instructions"]:
+        % if "empty_data_instruction_id" in program and instruction["id"] == program["empty_data_instruction_id"]:
+    if program_id == ${getProgramId(program)}:
+        return ${getInstructionIdText(program, instruction)}
+        % endif
+    % endfor
+% endfor
+
+    return None
+
 
 % for _, type in programs["types"].items():
     % if "is_enum" in type and type["is_enum"]:
