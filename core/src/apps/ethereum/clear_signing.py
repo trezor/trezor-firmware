@@ -871,7 +871,7 @@ class ContainerPath:
     From = 1
     Value = 2
     To = 3
-    ChainId = 4     # TODO
+    ChainId = 4  # TODO
 
 
 class FieldDefinition:
@@ -1088,6 +1088,8 @@ class DisplayFormat:
                     # risking a confidently wrong display.
                     raise InvalidFormatDefinition
                 if path == ContainerPath.From:
+                    # Conditional visibility check not required.
+                    # Sending account label is fine.
                     account, _ = get_account_and_path(msg.address_n)
                     return account
                 elif path == ContainerPath.Value:
@@ -1631,7 +1633,7 @@ async def _handle_generic_ui(
         if actual_token is tokens.UNKNOWN_TOKEN and actual_token_address is not None:
             token_address_str = address_from_bytes(actual_token_address, defs.network)
             token_address_property: StrPropertyType = (
-                TR.ethereum__token_contract,
+                f"{TR.words__address} ({TR.ethereum__unknown_token})",
                 token_address_str,
                 None,
             )
