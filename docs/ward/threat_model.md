@@ -152,8 +152,9 @@ session, but it cannot move the floor.
 
 ### Catching up to a cached attestation
 
-`WardCatchUp` goes only as far as the WM once vouched for. `wardd` keeps every WM attestation it
-relays, with the round nonce it was signed over, and replicates them through Evolu with the links.
+`WardCatchUp` goes only as far as the WM once vouched for. `wardd` keeps one verified attestation
+per WM head nonce, with the round nonce it was signed over, and replicates it through Evolu with
+the links.
 While the WM is down, `wardd` names the newest head on its replica's chain that a kept attestation
 names, which may be below the replica's head. The Trezor then:
 
