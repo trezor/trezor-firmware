@@ -1,0 +1,66 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "866e82a600a1414e583f7f13623f1ac5d58b0afa",
+    "func_sig": "3dbb202b",
+    "intent": "Send message to Base",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "dynamic": "ABI_BYTES"
+      },
+      {
+        "atomic": "ABI_UINT32"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "container_path": "VALUE"
+        },
+        "label": "ETH to Bridge",
+        "formatter": "FORMATTER_AMOUNT",
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "L2 Target",
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "L2 Call",
+        "formatter": "FORMATTER_CALLDATA",
+        "callee_path": {
+          "path": [
+            0
+          ]
+        },
+        "amount_path": {
+          "container_path": "VALUE"
+        },
+        "const_spender": "4200000000000000000000000000000000000007",
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      }
+    ],
+    "provider_name": "Base L1CrossDomainMessenger"
+  }
+}
