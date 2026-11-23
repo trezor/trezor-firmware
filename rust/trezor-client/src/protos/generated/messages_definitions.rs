@@ -3909,6 +3909,8 @@ pub enum EthereumABIType {
     ABI_UINT256 = 1,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumABIType.ABI_UINT248)
     ABI_UINT248 = 2,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumABIType.ABI_UINT216)
+    ABI_UINT216 = 50,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumABIType.ABI_UINT160)
     ABI_UINT160 = 3,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.EthereumABIType.ABI_UINT128)
@@ -3977,6 +3979,7 @@ impl ::protobuf::Enum for EthereumABIType {
             0 => ::std::option::Option::Some(EthereumABIType::ABI_ADDRESS),
             1 => ::std::option::Option::Some(EthereumABIType::ABI_UINT256),
             2 => ::std::option::Option::Some(EthereumABIType::ABI_UINT248),
+            50 => ::std::option::Option::Some(EthereumABIType::ABI_UINT216),
             3 => ::std::option::Option::Some(EthereumABIType::ABI_UINT160),
             4 => ::std::option::Option::Some(EthereumABIType::ABI_UINT128),
             5 => ::std::option::Option::Some(EthereumABIType::ABI_UINT120),
@@ -4013,6 +4016,7 @@ impl ::protobuf::Enum for EthereumABIType {
             "ABI_ADDRESS" => ::std::option::Option::Some(EthereumABIType::ABI_ADDRESS),
             "ABI_UINT256" => ::std::option::Option::Some(EthereumABIType::ABI_UINT256),
             "ABI_UINT248" => ::std::option::Option::Some(EthereumABIType::ABI_UINT248),
+            "ABI_UINT216" => ::std::option::Option::Some(EthereumABIType::ABI_UINT216),
             "ABI_UINT160" => ::std::option::Option::Some(EthereumABIType::ABI_UINT160),
             "ABI_UINT128" => ::std::option::Option::Some(EthereumABIType::ABI_UINT128),
             "ABI_UINT120" => ::std::option::Option::Some(EthereumABIType::ABI_UINT120),
@@ -4048,6 +4052,7 @@ impl ::protobuf::Enum for EthereumABIType {
         EthereumABIType::ABI_ADDRESS,
         EthereumABIType::ABI_UINT256,
         EthereumABIType::ABI_UINT248,
+        EthereumABIType::ABI_UINT216,
         EthereumABIType::ABI_UINT160,
         EthereumABIType::ABI_UINT128,
         EthereumABIType::ABI_UINT120,
@@ -4089,33 +4094,34 @@ impl ::protobuf::EnumFull for EthereumABIType {
             EthereumABIType::ABI_ADDRESS => 0,
             EthereumABIType::ABI_UINT256 => 1,
             EthereumABIType::ABI_UINT248 => 2,
-            EthereumABIType::ABI_UINT160 => 3,
-            EthereumABIType::ABI_UINT128 => 4,
-            EthereumABIType::ABI_UINT120 => 5,
-            EthereumABIType::ABI_UINT112 => 6,
-            EthereumABIType::ABI_UINT96 => 7,
-            EthereumABIType::ABI_UINT72 => 8,
-            EthereumABIType::ABI_UINT64 => 9,
-            EthereumABIType::ABI_UINT48 => 10,
-            EthereumABIType::ABI_UINT40 => 11,
-            EthereumABIType::ABI_UINT32 => 12,
-            EthereumABIType::ABI_UINT24 => 13,
-            EthereumABIType::ABI_UINT16 => 14,
-            EthereumABIType::ABI_UINT8 => 15,
-            EthereumABIType::ABI_BOOL => 16,
-            EthereumABIType::ABI_INT160 => 17,
-            EthereumABIType::ABI_INT128 => 18,
-            EthereumABIType::ABI_INT64 => 19,
-            EthereumABIType::ABI_INT32 => 20,
-            EthereumABIType::ABI_INT24 => 21,
-            EthereumABIType::ABI_INT256 => 22,
-            EthereumABIType::ABI_BYTES32 => 23,
-            EthereumABIType::ABI_BYTES16 => 24,
-            EthereumABIType::ABI_BYTES8 => 25,
-            EthereumABIType::ABI_BYTES4 => 26,
-            EthereumABIType::ABI_BYTES20 => 27,
-            EthereumABIType::ABI_BYTES => 28,
-            EthereumABIType::ABI_STRING => 29,
+            EthereumABIType::ABI_UINT216 => 3,
+            EthereumABIType::ABI_UINT160 => 4,
+            EthereumABIType::ABI_UINT128 => 5,
+            EthereumABIType::ABI_UINT120 => 6,
+            EthereumABIType::ABI_UINT112 => 7,
+            EthereumABIType::ABI_UINT96 => 8,
+            EthereumABIType::ABI_UINT72 => 9,
+            EthereumABIType::ABI_UINT64 => 10,
+            EthereumABIType::ABI_UINT48 => 11,
+            EthereumABIType::ABI_UINT40 => 12,
+            EthereumABIType::ABI_UINT32 => 13,
+            EthereumABIType::ABI_UINT24 => 14,
+            EthereumABIType::ABI_UINT16 => 15,
+            EthereumABIType::ABI_UINT8 => 16,
+            EthereumABIType::ABI_BOOL => 17,
+            EthereumABIType::ABI_INT160 => 18,
+            EthereumABIType::ABI_INT128 => 19,
+            EthereumABIType::ABI_INT64 => 20,
+            EthereumABIType::ABI_INT32 => 21,
+            EthereumABIType::ABI_INT24 => 22,
+            EthereumABIType::ABI_INT256 => 23,
+            EthereumABIType::ABI_BYTES32 => 24,
+            EthereumABIType::ABI_BYTES16 => 25,
+            EthereumABIType::ABI_BYTES8 => 26,
+            EthereumABIType::ABI_BYTES4 => 27,
+            EthereumABIType::ABI_BYTES20 => 28,
+            EthereumABIType::ABI_BYTES => 29,
+            EthereumABIType::ABI_STRING => 30,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -4389,30 +4395,30 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ons.EthereumERC7730FieldInfoR\x10fieldDefinitions\x12#\n\rprovider_name\
     \x18\x07\x20\x01(\tR\x0cproviderName*i\n\x0eDefinitionType\x12\x14\n\x10\
     ETHEREUM_NETWORK\x10\0\x12\x12\n\x0eETHEREUM_TOKEN\x10\x01\x12\x10\n\x0c\
-    SOLANA_TOKEN\x10\x02\x12\x1b\n\x17ETHEREUM_DISPLAY_FORMAT\x10\x03*\xf4\
-    \x03\n\x0fEthereumABIType\x12\x0f\n\x0bABI_ADDRESS\x10\0\x12\x0f\n\x0bAB\
+    SOLANA_TOKEN\x10\x02\x12\x1b\n\x17ETHEREUM_DISPLAY_FORMAT\x10\x03*\x85\
+    \x04\n\x0fEthereumABIType\x12\x0f\n\x0bABI_ADDRESS\x10\0\x12\x0f\n\x0bAB\
     I_UINT256\x10\x01\x12\x0f\n\x0bABI_UINT248\x10\x02\x12\x0f\n\x0bABI_UINT\
-    160\x10\x03\x12\x0f\n\x0bABI_UINT128\x10\x04\x12\x0f\n\x0bABI_UINT120\
-    \x10\x05\x12\x0f\n\x0bABI_UINT112\x10\x06\x12\x0e\n\nABI_UINT96\x10\x07\
-    \x12\x0e\n\nABI_UINT72\x10\x08\x12\x0e\n\nABI_UINT64\x10\t\x12\x0e\n\nAB\
-    I_UINT48\x10\n\x12\x0e\n\nABI_UINT40\x10\x0b\x12\x0e\n\nABI_UINT32\x10\
-    \x0c\x12\x0e\n\nABI_UINT24\x10\r\x12\x0e\n\nABI_UINT16\x10\x0e\x12\r\n\t\
-    ABI_UINT8\x10\x0f\x12\x0c\n\x08ABI_BOOL\x10\x10\x12\x0e\n\nABI_INT160\
-    \x10\x11\x12\x0e\n\nABI_INT128\x10\x12\x12\r\n\tABI_INT64\x10\x13\x12\r\
-    \n\tABI_INT32\x10(\x12\r\n\tABI_INT24\x10)\x12\x0e\n\nABI_INT256\x10*\
-    \x12\x0f\n\x0bABI_BYTES32\x10\x14\x12\x0f\n\x0bABI_BYTES16\x10\x15\x12\
-    \x0e\n\nABI_BYTES8\x10\x16\x12\x0e\n\nABI_BYTES4\x10\x17\x12\x0f\n\x0bAB\
-    I_BYTES20\x10\x18\x12\r\n\tABI_BYTES\x10\x1e\x12\x0e\n\nABI_STRING\x10\
-    \x1f*\x88\x02\n!EthereumERC7730FieldFormatterType\x12\x1a\n\x16FORMATTER\
-    _ADDRESS_NAME\x10\0\x12\x14\n\x10FORMATTER_AMOUNT\x10\x01\x12\x1a\n\x16F\
-    ORMATTER_TOKEN_AMOUNT\x10\x02\x12\x12\n\x0eFORMATTER_UNIT\x10\x03\x12\
-    \x11\n\rFORMATTER_RAW\x10\x04\x12\x12\n\x0eFORMATTER_DATE\x10\x05\x12\
-    \x16\n\x12FORMATTER_CALLDATA\x10\x06\x12\x12\n\x0eFORMATTER_ENUM\x10\x07\
-    \x12\x16\n\x12FORMATTER_DURATION\x10\x08\x12\x16\n\x12FORMATTER_NFT_NAME\
-    \x10\t*I\n\x1cEthereumERC7730ContainerPath\x12\x08\n\x04FROM\x10\x01\x12\
-    \t\n\x05VALUE\x10\x02\x12\x06\n\x02TO\x10\x03\x12\x0c\n\x08CHAIN_ID\x10\
-    \x04B?\n#com.satoshilabs.trezor.lib.protobufB\x18TrezorMessageDefinition\
-    s\
+    216\x102\x12\x0f\n\x0bABI_UINT160\x10\x03\x12\x0f\n\x0bABI_UINT128\x10\
+    \x04\x12\x0f\n\x0bABI_UINT120\x10\x05\x12\x0f\n\x0bABI_UINT112\x10\x06\
+    \x12\x0e\n\nABI_UINT96\x10\x07\x12\x0e\n\nABI_UINT72\x10\x08\x12\x0e\n\n\
+    ABI_UINT64\x10\t\x12\x0e\n\nABI_UINT48\x10\n\x12\x0e\n\nABI_UINT40\x10\
+    \x0b\x12\x0e\n\nABI_UINT32\x10\x0c\x12\x0e\n\nABI_UINT24\x10\r\x12\x0e\n\
+    \nABI_UINT16\x10\x0e\x12\r\n\tABI_UINT8\x10\x0f\x12\x0c\n\x08ABI_BOOL\
+    \x10\x10\x12\x0e\n\nABI_INT160\x10\x11\x12\x0e\n\nABI_INT128\x10\x12\x12\
+    \r\n\tABI_INT64\x10\x13\x12\r\n\tABI_INT32\x10(\x12\r\n\tABI_INT24\x10)\
+    \x12\x0e\n\nABI_INT256\x10*\x12\x0f\n\x0bABI_BYTES32\x10\x14\x12\x0f\n\
+    \x0bABI_BYTES16\x10\x15\x12\x0e\n\nABI_BYTES8\x10\x16\x12\x0e\n\nABI_BYT\
+    ES4\x10\x17\x12\x0f\n\x0bABI_BYTES20\x10\x18\x12\r\n\tABI_BYTES\x10\x1e\
+    \x12\x0e\n\nABI_STRING\x10\x1f*\x88\x02\n!EthereumERC7730FieldFormatterT\
+    ype\x12\x1a\n\x16FORMATTER_ADDRESS_NAME\x10\0\x12\x14\n\x10FORMATTER_AMO\
+    UNT\x10\x01\x12\x1a\n\x16FORMATTER_TOKEN_AMOUNT\x10\x02\x12\x12\n\x0eFOR\
+    MATTER_UNIT\x10\x03\x12\x11\n\rFORMATTER_RAW\x10\x04\x12\x12\n\x0eFORMAT\
+    TER_DATE\x10\x05\x12\x16\n\x12FORMATTER_CALLDATA\x10\x06\x12\x12\n\x0eFO\
+    RMATTER_ENUM\x10\x07\x12\x16\n\x12FORMATTER_DURATION\x10\x08\x12\x16\n\
+    \x12FORMATTER_NFT_NAME\x10\t*I\n\x1cEthereumERC7730ContainerPath\x12\x08\
+    \n\x04FROM\x10\x01\x12\t\n\x05VALUE\x10\x02\x12\x06\n\x02TO\x10\x03\x12\
+    \x0c\n\x08CHAIN_ID\x10\x04B?\n#com.satoshilabs.trezor.lib.protobufB\x18T\
+    rezorMessageDefinitions\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
