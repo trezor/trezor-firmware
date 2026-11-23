@@ -1,0 +1,59 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "3154cf16ccdb4c6d922629664174b904d80f2c35",
+    "func_sig": "87087623",
+    "intent": "Bridge token to Base",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT32"
+      },
+      {
+        "dynamic": "ABI_BYTES"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Amount",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "token_path": {
+          "path": [
+            0
+          ]
+        },
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Token on Base",
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "const_chain_id": 8453,
+        "lookup_address": true,
+        "lookup_token": false,
+        "lookup_contract": false
+      }
+    ],
+    "provider_name": "Base L1StandardBridge"
+  }
+}
