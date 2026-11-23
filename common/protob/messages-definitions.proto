@@ -153,6 +153,7 @@ enum EthereumERC7730FieldFormatterType {
     FORMATTER_CALLDATA = 6;
     FORMATTER_ENUM = 7;
     FORMATTER_DURATION = 8;
+    FORMATTER_CHAIN_ID = 10;
 
     // Reserved for future. Not supported yet.
     FORMATTER_NFT_NAME = 9;
@@ -195,8 +196,7 @@ message EthereumERC7730Path {
 
     repeated EthereumERC7730PathStep steps = 6;  // 1,4,5, should be absent when this is set.
 
-    // e.g. Something like amounts.[].data[5].value.[].name would be a sequence like [0 (amounts posistion in function
-    // args), each, 4 (data is the 5th attribute of amounts struct), 5, 2(value), each, 1(name) ]
+    //  E.g.  #.market.collateralParams.[].token	[{field:0},{field:3},{each:true},{field:0}]
     message EthereumERC7730PathStep {
         // exactly one kind per step
         optional uint32 field = 1;  // tuple member or top-level parameter
