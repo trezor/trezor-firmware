@@ -1336,6 +1336,7 @@ version = "0.1.0"
 name = "trezor_lib"
 version = "0.0.0"
 dependencies = [
+ "api",
  "bindgen",
  "cfg-if",
  "crypto",

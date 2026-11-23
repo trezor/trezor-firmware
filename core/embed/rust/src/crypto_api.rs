@@ -1,7 +1,9 @@
 #[cfg(feature = "app_loading")]
 use rkyv::{rancor::Failure, Archived};
 #[cfg(feature = "app_loading")]
-use trezor_app_sdk::structs::{Slice, TrezorCryptoEnum, TrezorCryptoResult};
+use api::crypto_ipc::{TrezorCryptoEnum, TrezorCryptoResult};
+#[cfg(feature = "app_loading")]
+use trezor_app_sdk::structs::Slice;
 
 use crate::micropython::macros::{obj_fn_kw, obj_module};
 use crate::micropython::map::Map;
