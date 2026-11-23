@@ -330,23 +330,48 @@ class FieldFormatter:
         raise InvalidFormatDefinition
 
 
-def _resolve_other_chain_id(
-    chain_id_path: Path | None,
-    const_chain_id: int | None,
-    msg: MsgInSignTx,
-    path_walker: PathWalker,
-) -> int | None:
-    """Return other chainID"""
-    if const_chain_id is not None:
-        chain_id = const_chain_id
-    elif chain_id_path is not None:
-        chain_id = path_walker(chain_id_path)
-    else:
-        return None
+def _validate_chain_id(chain_id: AnyValue) -> int:
     # EthereumDefinitionRequest.chain_id is a uint64
     if not isinstance(chain_id, int) or not 0 < chain_id < 1 << 64:
         raise InvalidFormatDefinition
-    return None if chain_id == msg.chain_id else chain_id
+    return chain_id
+
+
+class PathOrConst:
+    """An ERC-7730 formatter param, given either as `<param>Path` (walked
+    from the calldata or the container) or as a constant `<param>`. Exactly
+    one of the two is set; an absent param is `None` instead of an instance."""
+
+    def __init__(self, path: Path | None = None, const: AnyValue = None) -> None:
+        if (path is None) == (const is None):
+            raise InvalidFormatDefinition
+        self.path = path
+        self.const = const
+
+    def resolve(self, path_walker: PathWalker) -> AnyValue:
+        if self.path is None:
+            return self.const
+        value = path_walker(self.path)
+        if value is None:
+            # a set param must not silently fall back to its default
+            raise InvalidFormatDefinition
+        return value
+
+
+def _resolve_other_chain_id(
+    chain_id: PathOrConst | None, path_walker: PathWalker
+) -> int | None:
+    """Return the chain ID given by the `chainId` / `chainIdPath` params, or
+    None if they are absent or name the chain of the call being displayed
+    (`@.chainId`: the transaction's, or an embedded call's)."""
+    if chain_id is None:
+        return None
+    other = _validate_chain_id(chain_id.resolve(path_walker))
+    return (
+        None
+        if other == _validate_chain_id(path_walker(ContainerPath.ChainId))
+        else other
+    )
 
 
 async def _definitions_for_another_chain(
@@ -387,14 +412,10 @@ def _unknown_token_on_chain(chain_id: int) -> EthereumTokenInfo:
 
 class AddressNameFormatter(FieldFormatter):
     def __init__(
-        self,
-        lookup_address: bool = False,
-        chain_id_path: Path | None = None,
-        const_chain_id: int | None = None,
+        self, lookup_address: bool = False, chain_id: PathOrConst | None = None
     ) -> None:
         self.lookup_address = lookup_address
-        self.chain_id_path = chain_id_path
-        self.const_chain_id = const_chain_id
+        self.chain_id = chain_id
 
     async def format(
         self,
@@ -410,13 +431,15 @@ class AddressNameFormatter(FieldFormatter):
         else:
             if not isinstance(address, bytes):
                 raise InvalidFormatDefinition
-            other_chain_id = _resolve_other_chain_id(
-                self.chain_id_path, self.const_chain_id, msg, path_walker
-            )
+            other_chain_id = _resolve_other_chain_id(self.chain_id, path_walker)
             if self.lookup_address:
                 try:
                     address_name = await lookup_known_address(
-                        msg.chain_id if other_chain_id is None else other_chain_id,
+                        (
+                            _validate_chain_id(path_walker(ContainerPath.ChainId))
+                            if other_chain_id is None
+                            else other_chain_id
+                        ),
                         address,
                         msg,
                     )
@@ -453,21 +476,17 @@ class AmountFormatter(FieldFormatter):
 class TokenAmountFormatter(FieldFormatter):
     def __init__(
         self,
-        token_path: Path | None = None,
-        const_token_address: bytes | None = None,
+        token: PathOrConst | None = None,
         native_currency_address: list[bytes] | None = None,
         threshold: int | None = None,
         threshold_message: str | None = None,
-        chain_id_path: Path | None = None,
-        const_chain_id: int | None = None,
+        chain_id: PathOrConst | None = None,
     ) -> None:
-        self.token_path = token_path
-        self.const_token_address = const_token_address
+        self.token = token
         self.native_currency_address = native_currency_address
         self.threshold = threshold
         self.threshold_message = threshold_message
-        self.chain_id_path = chain_id_path
-        self.const_chain_id = const_chain_id
+        self.chain_id = chain_id
 
     async def format(
         self,
@@ -487,21 +506,14 @@ class TokenAmountFormatter(FieldFormatter):
         if not isinstance(amount, int):
             raise InvalidFormatDefinition
 
-        token_address: AnyBytes | None
-        if self.const_token_address is not None:
-            # token given as a literal constant address
-            token_address = self.const_token_address
-        elif self.token_path is not None:
-            walked = path_walker(self.token_path)
-            if not isinstance(walked, bytes):
+        token_address: AnyBytes | None = None
+        if self.token is not None:
+            resolved = self.token.resolve(path_walker)
+            if not isinstance(resolved, bytes):
                 raise InvalidFormatDefinition
-            token_address = walked
-        else:
-            token_address = None
+            token_address = resolved
 
-        other_chain_id = _resolve_other_chain_id(
-            self.chain_id_path, self.const_chain_id, msg, path_walker
-        )
+        other_chain_id = _resolve_other_chain_id(self.chain_id, path_walker)
         token_defs = defs
 
         token: EthereumTokenInfo | None
@@ -534,7 +546,9 @@ class TokenAmountFormatter(FieldFormatter):
             if token is UNKNOWN_TOKEN:
                 if msg.supports_definition_request:
                     received_definitions, _ = await request_definitions(
-                        msg.chain_id, token_address, func_sig=None
+                        _validate_chain_id(path_walker(ContainerPath.ChainId)),
+                        token_address,
+                        func_sig=None,
                     )
                     if received_definitions is not None:
                         token = received_definitions.get_token(token_address)
@@ -675,17 +689,61 @@ class DurationFormatter(FieldFormatter):
 class CalldataFormatter(RawFormatter):
     """ERC-7730 `calldata` format: the field's value is the embedded calldata
     of a nested call, rendered with the display format of the called contract
-    (resolved from `callee_path`). Unlike every other formatter it expands
+    (resolved from `callee`). Unlike every other formatter it expands
     into multiple display rows, so `DisplayFormat.parse_calldata` handles it
     directly (see `_expand_calldata_field`) instead of going through the
     single-value `format` interface. Subclassing `RawFormatter` is defense
     in depth: should a code path ever fail to special-case this formatter,
     the inherited `format` renders the blob as raw hex instead of failing
-    clear signing."""
+    clear signing.
 
-    def __init__(self, callee_path: Path, selector: bytes | None = None) -> None:
-        self.callee_path = callee_path
+    Each param is a `PathOrConst`. The params set the embedded call's
+    container values (see `EmbeddedContainer`):
+      * callee (required): the called contract, the inner `@.to`
+      * selector: the inner function selector; when set the blob is
+        args-only, otherwise its first 4 bytes are the selector
+      * amount: the native currency sent along, the inner `@.value`
+      * spender: the sender of the embedded call, the inner `@.from`
+      * chain ID: the chain of the embedded call, the inner `@.chainId`;
+        defaults to the chain of the call holding the `calldata` field
+    """
+
+    def __init__(
+        self,
+        callee: PathOrConst,
+        selector: PathOrConst | None = None,
+        amount: PathOrConst | None = None,
+        spender: PathOrConst | None = None,
+        chain_id: PathOrConst | None = None,
+    ) -> None:
+        self.callee = callee
         self.selector = selector
+        self.amount = amount
+        self.spender = spender
+        self.chain_id = chain_id
+
+
+class EmbeddedContainer:
+    """Container values of an embedded call (ERC-7730 `calldata` format),
+    resolved from the `CalldataFormatter` params in the context of the call
+    holding the `calldata` field. `@.from` and `@.value` are only known when
+    the descriptor sets the `spender` / `amount` params: the device cannot
+    tell whether the wrapper CALLs (`@.from` = the wrapper) or DELEGATECALLs
+    (`@.from` = the signer) the callee, and the forwarded value is decided by
+    wrapper logic. None = unresolvable in the embedded call. `from_` may be
+    the signer's account label, like the transaction's `@.from`."""
+
+    def __init__(
+        self,
+        to: bytes,
+        chain_id: int,
+        from_: bytes | str | None = None,
+        value: int | None = None,
+    ) -> None:
+        self.to = to
+        self.chain_id = chain_id
+        self.from_ = from_
+        self.value = value
 
 
 class EnumFormatter(FieldFormatter):
@@ -965,7 +1023,7 @@ class ContainerPath:
     From = 1
     Value = 2
     To = 3
-    ChainId = 4  # TODO
+    ChainId = 4
 
 
 class FieldDefinition:
@@ -1013,6 +1071,21 @@ class FieldDefinition:
                 steps.append((p.slice_start,))  # `token.[-20:]`
             return tuple(steps)
 
+        def param(
+            path: EthereumERC7730Path | None,
+            const: AnyBytes | int | None,
+            const_len: int | None = None,
+        ) -> PathOrConst | None:
+            """`<param>Path` / `<param>` pair; None if neither is set. A bytes
+            constant is copied and, given `const_len`, its length checked."""
+            if path is None and const is None:
+                return None
+            if const is not None and not isinstance(const, int):
+                const = bytes(const)
+                if const_len is not None and len(const) != const_len:
+                    raise InvalidFormatDefinition
+            return PathOrConst(decode_path(path) if path is not None else None, const)
+
         path = decode_path(info.path)
         if isinstance(path, str) and (info.if_not_in or info.must_match):
             # Constant path = metadata stuff. No validation required.
@@ -1020,44 +1093,25 @@ class FieldDefinition:
             # https://github.com/trezor/definitions/pull/156
             raise InvalidFormatDefinition
 
-        chain_id_path = (
-            decode_path(info.chain_id_path) if info.chain_id_path is not None else None
-        )
-        const_chain_id = info.const_chain_id
-        if chain_id_path is not None and const_chain_id is not None:
-            # Mutual exclusion violated
-            raise InvalidFormatDefinition
+        chain_id = param(info.chain_id_path, info.const_chain_id)
 
         fmt_type = info.formatter
-        if (chain_id_path is not None or const_chain_id is not None) and (
+        if chain_id is not None and (
             fmt_type
             not in (
                 FT.FORMATTER_ADDRESS_NAME,
                 FT.FORMATTER_TOKEN_AMOUNT,
-                # TODO: uses tx.chain_id for now
                 FT.FORMATTER_CALLDATA,
             )
         ):
             raise InvalidFormatDefinition
 
         if fmt_type == FT.FORMATTER_ADDRESS_NAME:
-            formatter = AddressNameFormatter(
-                info.lookup_address, chain_id_path, const_chain_id
-            )
+            formatter = AddressNameFormatter(info.lookup_address, chain_id)
         elif fmt_type == FT.FORMATTER_AMOUNT:
             formatter = AmountFormatter
         elif fmt_type == FT.FORMATTER_TOKEN_AMOUNT:
             formatter_params = {}
-            if chain_id_path is not None:
-                formatter_params["chain_id_path"] = chain_id_path
-            if const_chain_id is not None:
-                formatter_params["const_chain_id"] = const_chain_id
-            if info.token_path is not None:
-                formatter_params["token_path"] = decode_path(info.token_path)
-            if info.const_token_address is not None:
-                formatter_params["const_token_address"] = bytes(
-                    info.const_token_address
-                )
             if info.threshold is not None:
                 formatter_params["threshold"] = int.from_bytes(info.threshold, "big")
             if info.threshold_message is not None:
@@ -1066,7 +1120,11 @@ class FieldDefinition:
                 formatter_params["native_currency_address"] = [
                     bytes(addr) for addr in info.native_currency_address
                 ]
-            formatter = TokenAmountFormatter(**formatter_params)
+            formatter = TokenAmountFormatter(
+                token=param(info.token_path, info.const_token_address),
+                chain_id=chain_id,
+                **formatter_params,
+            )
         elif fmt_type == FT.FORMATTER_UNIT:
             formatter_params = {}
             if info.decimals is not None:
@@ -1083,12 +1141,23 @@ class FieldDefinition:
         elif fmt_type == FT.FORMATTER_DURATION:
             formatter = DurationFormatter
         elif fmt_type == FT.FORMATTER_CALLDATA:
-            if info.callee_path is None:
+            callee = param(info.callee_path, info.const_callee, _ADDRESS_BYTES)
+            if callee is None:
+                # the callee is required
                 raise InvalidFormatDefinition
-            selector = bytes(info.selector) if info.selector is not None else None
-            if selector is not None and len(selector) != SC_FUNC_SIG_BYTES:
-                raise InvalidFormatDefinition
-            formatter = CalldataFormatter(decode_path(info.callee_path), selector)
+            const_amount = info.const_amount
+            if const_amount is not None:
+                if len(const_amount) > _EVM_WORD_SIZE:
+                    # a uint256
+                    raise InvalidFormatDefinition
+                const_amount = int.from_bytes(const_amount, "big")
+            formatter = CalldataFormatter(
+                callee=callee,
+                selector=param(info.selector_path, info.selector, SC_FUNC_SIG_BYTES),
+                amount=param(info.amount_path, const_amount),
+                spender=param(info.spender_path, info.const_spender, _ADDRESS_BYTES),
+                chain_id=chain_id,
+            )
         elif fmt_type == FT.FORMATTER_ENUM:
             if not info.enum_values:
                 raise InvalidFormatDefinition
@@ -1151,19 +1220,18 @@ class DisplayFormat:
         calldata: memoryview,
         msg: MsgInSignTx,
         defs: Definitions,
-        nested: bool = False,
-        override_callee: bytes | None = None,
+        container: EmbeddedContainer | None = None,
     ) -> tuple[list[AnyValue], list[RenderedField]]:
         """Parse `calldata` (without the selector) and format the display fields.
 
         Loosely speaking, it returns ([parameter = parsed value], [formatted value])
 
-        `nested` marks the parse of an embedded subcall's calldata (see
-        `_expand_calldata_field`): container paths other than `@.to` are
-        unresolvable there, and any further calldata fields render as raw
-        hex instead of triggering tertiary lookups. `override_callee` substitutes
-        the `@.to` container path (the subcall's callee, not the outer
-        transaction's recipient)."""
+        `container` marks the parse of an embedded subcall's calldata (see
+        `_expand_calldata_field`) and supplies its container paths (`@.to`
+        is the subcall's callee, not the outer transaction's recipient, ...).
+        `defs` are then the definitions of the subcall's chain. Any further
+        calldata fields render as raw hex instead of triggering tertiary
+        lookups."""
         parameters: list[AnyValue] = []
 
         offset = 0
@@ -1189,26 +1257,30 @@ class DisplayFormat:
                 return path
             if isinstance(path, int):  # ContainerPath
                 # standard container (transaction) paths like @.from, @.value...
+                if container is not None:
+                    # A subcall: the wrapper (`msg.to`) merely forwards the
+                    # call, so e.g. a nested transfer's `token_path=@.to`
+                    # resolves to the token contract, not to the wrapper.
+                    # `@.from` / `@.value` are only known when the outer
+                    # descriptor sets them (`spender` / `amount` params):
+                    # guessing would risk a confidently wrong display.
+                    if path == ContainerPath.To:
+                        value = container.to
+                    elif path == ContainerPath.ChainId:
+                        value = container.chain_id
+                    elif path == ContainerPath.From:
+                        value = container.from_
+                    elif path == ContainerPath.Value:
+                        value = container.value
+                    else:
+                        value = None
+                    if value is None:
+                        raise InvalidFormatDefinition
+                    return value
                 if path == ContainerPath.ChainId:
-                    # Not used in registry to show a value yet. We can show chain name via lookup if required.
                     return msg.chain_id
                 if path == ContainerPath.To:
-                    # `@.to` means "the contract this call goes to". For the
-                    # outer transaction that is `msg.to`. When parsing a
-                    # subcall, the wrapper (`msg.to`) merely forwards the
-                    # call: `override_callee` holds the actual callee, so e.g. a
-                    # nested transfer's `token_path=@.to` resolves to the
-                    # token contract, not to the wrapper.
-                    if override_callee is not None:
-                        return override_callee
                     return bytes_from_address(msg.to)
-                if nested:
-                    # In a subcall, `@.from` is ambiguous - the wrapper
-                    # contract if it CALLs the callee, the original signer if
-                    # it DELEGATECALLs - and `@.value` is decided by wrapper
-                    # logic; neither can be resolved from `msg` without
-                    # risking a confidently wrong display.
-                    raise InvalidFormatDefinition
                 if path == ContainerPath.From:
                     # Conditional visibility check not required.
                     # Sending account label is fine.
@@ -1273,7 +1345,7 @@ class DisplayFormat:
                             get_value_for_path,
                             msg,
                             defs,
-                            nested,
+                            container is not None,  # nested
                         )
                     )
                     continue
@@ -1331,34 +1403,72 @@ class DisplayFormat:
 
 
 async def find_display_format(
-    func_sig: bytes, contract_address: bytes, msg: MsgInSignTx, nested: bool = False
+    func_sig: bytes,
+    contract_address: bytes,
+    msg: MsgInSignTx,
+    nested: bool = False,
+    chain_id: int | None = None,
 ) -> DisplayFormat | None:
     """Find a display format for calling `func_sig` on the `contract_address`
-    contract, trying built-ins, then the definitions provided in the initial
-    request, then a definition request over the wire."""
+    contract on `chain_id` (default: the transaction's chain), trying
+    built-ins, then the definitions provided in the initial request, then a
+    definition request over the wire."""
 
     from .clear_signing_definitions import all_display_formats
 
+    if chain_id is None:
+        chain_id = msg.chain_id
+
     for display_format in all_display_formats():
-        if display_format.matches_call(func_sig, msg.chain_id, contract_address):
+        if display_format.matches_call(func_sig, chain_id, contract_address):
             return display_format
 
     if not nested and msg.definitions and msg.definitions.encoded_display_format:
         display_format = DisplayFormat.from_encoded(
             msg.definitions.encoded_display_format
         )
-        if display_format.matches_call(func_sig, msg.chain_id, contract_address):
+        if display_format.matches_call(func_sig, chain_id, contract_address):
             return display_format
 
     if msg.supports_definition_request:
-        _, proto = await request_definitions(msg.chain_id, contract_address, func_sig)
+        _, proto = await request_definitions(chain_id, contract_address, func_sig)
         display_format = DisplayFormat.from_proto(proto) if proto is not None else None
         if display_format is not None and display_format.matches_call(
-            func_sig, msg.chain_id, contract_address
+            func_sig, chain_id, contract_address
         ):
             return display_format
 
     return None
+
+
+def _embedded_container(
+    callee: AnyValue,
+    amount: AnyValue,
+    spender: AnyValue,
+    chain_id: AnyValue,
+    current_chain_id: int,
+) -> EmbeddedContainer:
+    """Validate the resolved `calldata` params of one subcall."""
+    if not isinstance(callee, bytes) or len(callee) != _ADDRESS_BYTES:
+        raise InvalidFormatDefinition
+    if amount is not None and (
+        isinstance(amount, bool) or not isinstance(amount, int) or amount < 0
+    ):
+        raise InvalidFormatDefinition
+    if spender is not None and not (
+        # an address, or the signer's account label (an outer `@.from`)
+        isinstance(spender, str)
+        or (isinstance(spender, bytes) and len(spender) == _ADDRESS_BYTES)
+    ):
+        raise InvalidFormatDefinition
+    return EmbeddedContainer(
+        to=callee,
+        chain_id=(
+            current_chain_id if chain_id is None else _validate_chain_id(chain_id)
+        ),
+        from_=spender,
+        value=amount,
+    )
 
 
 async def _expand_calldata_field(
@@ -1375,35 +1485,55 @@ async def _expand_calldata_field(
     (a single subcall), or to an array of such blobs (e.g. a multicall's
     `bytes[] data`). In the array case each element is expanded as its own
     subcall and its rows are labeled "(Subcall #1)", "(Subcall #2)", ...;
-    `callee_path` then resolves either to a single address shared by all
-    subcalls or to a parallel array of addresses of the same length."""
+    each param (callee, selector, ...) then resolves either to a single value
+    shared by all subcalls or, from a path, to a parallel array of the same
+    length."""
     blobs = path_walker(field_definition.path)
-    callees = path_walker(formatter.callee_path)
+    single = not isinstance(blobs, list)
+    blobs = [blobs] if single else blobs
+    count = len(blobs)
 
-    if not isinstance(blobs, list):
-        return await _expand_one_subcall(
-            field_definition, formatter, blobs, callees, msg, defs, nested
-        )
+    def per_subcall(param: PathOrConst | None) -> Sequence[AnyValue]:
+        value = param.resolve(path_walker) if param is not None else None
+        if isinstance(value, list):
+            if single or len(value) != count:
+                raise InvalidFormatDefinition
+            return value
+        # shared by all subcalls
+        return [value] * count
 
-    if isinstance(callees, list):
-        if len(callees) != len(blobs):
-            raise InvalidFormatDefinition
-    else:
-        # Same callee for all subcalls
-        callees = [callees] * len(blobs)
+    callees = per_subcall(formatter.callee)
+    selectors = per_subcall(formatter.selector)
+    amounts = per_subcall(formatter.amount)
+    spenders = per_subcall(formatter.spender)
+    chain_ids = per_subcall(formatter.chain_id)
+    # the chain of the call holding the `calldata` field
+    current_chain_id = _validate_chain_id(path_walker(ContainerPath.ChainId))
 
     rows: list[RenderedField] = []
-    for i, (blob, callee) in enumerate(zip(blobs, callees)):
+    for i in range(count):
+        blob, selector = blobs[i], selectors[i]
+        if not isinstance(blob, bytes):
+            # Calldata should be a bytes field
+            raise InvalidFormatDefinition
+        if selector is not None and (
+            not isinstance(selector, bytes) or len(selector) != SC_FUNC_SIG_BYTES
+        ):
+            raise InvalidFormatDefinition
+        container = _embedded_container(
+            callees[i], amounts[i], spenders[i], chain_ids[i], current_chain_id
+        )
         rows.extend(
             await _expand_one_subcall(
                 field_definition,
-                formatter,
                 blob,
-                callee,
+                selector,
+                container,
+                current_chain_id,
                 msg,
                 defs,
                 nested,
-                index=i + 1,
+                index=None if single else i + 1,
             )
         )
     return rows
@@ -1411,9 +1541,10 @@ async def _expand_calldata_field(
 
 async def _expand_one_subcall(
     field_definition: FieldDefinition,
-    formatter: CalldataFormatter,
-    blob: AnyValue,
-    callee: AnyValue,
+    blob: bytes,
+    selector: bytes | None,
+    container: EmbeddedContainer,
+    current_chain_id: int,
     msg: MsgInSignTx,
     defs: Definitions,
     nested: bool,
@@ -1426,15 +1557,25 @@ async def _expand_one_subcall(
     subcall cannot be clear-signed - no display format available, malformed
     inner calldata, unresolvable inner fields - it degrades to two rows, the
     callee and the raw hex blob, instead of failing the outer transaction.
+    A subcall on a chain other than `current_chain_id` (the chain of the call
+    holding the `calldata` field) adds a row naming its chain, after the
+    intent / callee row.
     `index` is the subcall's 1-based position when it comes from an array of
     subcalls, reflected in the label prefix: "(Subcall #<index>)"."""
+    from .networks import UNKNOWN_NETWORK
+    from .tokens import UNKNOWN_TOKEN
 
-    if not isinstance(blob, bytes):
-        # Calldata should be a bytes field
-        raise InvalidFormatDefinition
+    callee = container.to
+    chain_id = container.chain_id
+    other_chain = chain_id != current_chain_id
 
-    if not isinstance(callee, bytes) or len(callee) != _ADDRESS_BYTES:
-        raise InvalidFormatDefinition
+    if not other_chain:
+        inner_defs = defs
+    elif nested:
+        # already inside a subcall: no tertiary lookups
+        inner_defs = Definitions.from_encoded(None, None, chain_id)
+    else:
+        inner_defs = await _definitions_for_another_chain(chain_id, callee, True, msg)
 
     subcall = TR.ethereum__subcall
     if index is not None:
@@ -1442,10 +1583,17 @@ async def _expand_one_subcall(
 
     async def callee_str() -> str:
         # already inside a subcall: no tertiary lookups
-        known = await lookup_known_address(
-            msg.chain_id, callee, None if nested else msg
-        )
-        return known or address_from_bytes(callee, defs.network)
+        known = await lookup_known_address(chain_id, callee, None if nested else msg)
+        return known or address_from_bytes(callee, inner_defs.network)
+
+    def chain_rows() -> list[RenderedField]:
+        if not other_chain:
+            return []
+        if inner_defs.network is UNKNOWN_NETWORK:
+            row = (TR.ethereum__approve_chain_id, str(chain_id))
+        else:
+            row = (TR.words__network, inner_defs.network.name)
+        return [((f"({subcall}) {row[0]}", row[1], None), None, None)]
 
     async def raw_rows() -> list[RenderedField]:
         """No subparsing. Show the callee and the raw hex blob."""
@@ -1454,18 +1602,18 @@ async def _expand_one_subcall(
         if index is not None:
             to_label = f"({subcall}) {TR.ethereum__to}"
             blob_label = f"({subcall}) {blob_label}"
-        return [
-            ((to_label, await callee_str(), None), None, None),
-            ((blob_label, blob.hex(), None), None, None),
-        ]
+        rows: list[RenderedField] = [((to_label, await callee_str(), None), None, None)]
+        rows.extend(chain_rows())
+        rows.append(((blob_label, blob.hex(), None), None, None))
+        return rows
 
     if nested:
         # already inside a subcall: no tertiary lookups
         return await raw_rows()
 
-    if formatter.selector is not None:
+    if selector is not None:
         # per ERC-7730, an explicit selector means the blob is args-only
-        func_sig = formatter.selector
+        func_sig = selector
         body = memoryview(blob)
     elif len(blob) >= SC_FUNC_SIG_BYTES:
         func_sig = bytes(blob[:SC_FUNC_SIG_BYTES])
@@ -1474,22 +1622,15 @@ async def _expand_one_subcall(
         return await raw_rows()
 
     try:
-        inner_format = await find_display_format(func_sig, callee, msg, nested=True)
+        inner_format = await find_display_format(
+            func_sig, callee, msg, nested=True, chain_id=chain_id
+        )
         if inner_format is None:
             return await raw_rows()
         _, inner_fields = await inner_format.parse_calldata(
-            body, msg, defs, nested=True, override_callee=callee
+            body, msg, inner_defs, container
         )
     except (ClearSigningFailed, DataError) as e:
-        if __debug__:
-            from trezor import log
-
-            log.debug(
-                __name__,
-                'clear signing: subcall "%s" degraded to raw hex (%s)',
-                field_definition.label,
-                type(e).__name__,
-            )
         return await raw_rows()
 
     rows: list[RenderedField] = [
@@ -1504,7 +1645,11 @@ async def _expand_one_subcall(
         ),
         ((f"({subcall}) {TR.words__intent}", inner_format.intent, None), None, None),
     ]
+    rows.extend(chain_rows())
     for (inner_label, formatted, is_mono), token, token_address in inner_fields:
+        if token is UNKNOWN_TOKEN and chain_id != msg.chain_id:
+            # remember the chain, so that it can be shown next to the token
+            token = _unknown_token_on_chain(chain_id)
         rows.append(
             ((f"({subcall}) {inner_label}", formatted, is_mono), token, token_address)
         )
@@ -1754,7 +1899,7 @@ async def _handle_generic_ui(
         # Not a token field OR known token (address is not empty) so no additional property addition.
         # TODO: This extra "unknown token" property can be moved to the menu, when this field is being displayed.
         # That would need to call `confirm_properties` separately. Also a tiny design issue that the user is not prompted to know that they can know more info about this unknown token.
-        # The spec does ask (rightly so) to warn for unknow tokens. We can consider chaning the colour to yellow for whenever we have an unknown token.
+        # The spec does ask (rightly so) to warn for unknown tokens. We can consider chaning the colour to yellow for whenever we have an unknown token.
         if actual_token is None or actual_token.address:
             continue
 

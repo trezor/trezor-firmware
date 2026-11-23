@@ -273,9 +273,11 @@ async def _get_asset_token(
         formatter = field.formatter
         if (
             isinstance(formatter, TokenAmountFormatter)
-            and formatter.const_token_address
+            and formatter.token is not None
+            and isinstance(formatter.token.const, bytes)
+            and formatter.token.const
         ):
-            token_addr = formatter.const_token_address
+            token_addr = formatter.token.const
             break
     if token_addr is None:
         return None

@@ -40,6 +40,7 @@ if not utils.BITCOIN_ONLY:
         InvalidFormatDefinition,
         MustMatchViolation,
         OutOfBounds,
+        PathOrConst,
         RawFormatter,
         TokenAmountFormatter,
         Tuple,
@@ -1122,7 +1123,7 @@ class TestEthereumClearSigning(unittest.TestCase):
             def get_token(self, address):
                 return make_eth_token(symbol="TST", decimals=6, address=address)
 
-        fmt = TokenAmountFormatter(const_token_address=token_addr)
+        fmt = TokenAmountFormatter(token=PathOrConst(const=token_addr))
         formatted, token, addr = await_result(
             _format_field_value(fmt, [1_000_000, 2_000_000], None, _Defs(), None)
         )
@@ -1384,8 +1385,27 @@ class TestEthereumClearSigning(unittest.TestCase):
         )
         fmt = FieldDefinition.from_proto(info).get_formatter()
         self.assertIsInstance(fmt, TokenAmountFormatter)
-        self.assertEqual(fmt.const_token_address, token_addr)
-        self.assertIsNone(fmt.token_path)
+        self.assertEqual(fmt.token.const, token_addr)
+        self.assertIsNone(fmt.token.path)
+
+        # `tokenPath` and `token` are mutually exclusive
+        info.token_path = EthereumERC7730Path(path=[1])
+        with self.assertRaises(InvalidFormatDefinition):
+            FieldDefinition.from_proto(info)
+
+    def test_path_or_const(self):
+        # exactly one of the two is set
+        with self.assertRaises(InvalidFormatDefinition):
+            PathOrConst()
+        with self.assertRaises(InvalidFormatDefinition):
+            PathOrConst((0,), b"\x01")
+
+        # a constant never walks
+        self.assertEqual(PathOrConst(const=5).resolve(None), 5)
+        self.assertEqual(PathOrConst((0,)).resolve({(0,): 7}.get), 7)
+        # a path resolving to nothing does not fall back to a default
+        with self.assertRaises(InvalidFormatDefinition):
+            PathOrConst((0,)).resolve({}.get)
 
     def test_token_amount_constant_token_format(self):
         # The token is resolved from `defs` by the constant address, without
@@ -1398,7 +1418,7 @@ class TestEthereumClearSigning(unittest.TestCase):
             def get_token(self, address):
                 return make_eth_token(symbol="stETH", decimals=18, address=address)
 
-        fmt = TokenAmountFormatter(const_token_address=token_addr)
+        fmt = TokenAmountFormatter(token=PathOrConst(const=token_addr))
         formatted, token, addr = await_result(
             fmt.format(2 * 10**18, None, _Defs(), None)
         )
@@ -1407,7 +1427,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         self.assertIn("stETH", formatted)
         self.assertIn("2", formatted)
 
-    # --- tokenAmount without a token (neither token_path nor const_token_address) ---
+    # --- tokenAmount without a token (neither tokenPath nor token) ---
 
     ZERO_ADDRESS = b"\x00" * 20
     NATIVE_SENTINEL = b"\xee" * 20
@@ -1431,8 +1451,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         )
         fmt = FieldDefinition.from_proto(info).get_formatter()
         self.assertIsInstance(fmt, TokenAmountFormatter)
-        self.assertIsNone(fmt.token_path)
-        self.assertIsNone(fmt.const_token_address)
+        self.assertIsNone(fmt.token)
 
     def test_token_amount_without_token_is_unknown(self):
         # Rendered as the raw integer with the unknown-token ticker, and no
@@ -1490,7 +1509,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         # An explicit `token: 0x000...` listed in nativeCurrencyAddress is a
         # legitimate way to denote the native currency.
         fmt = TokenAmountFormatter(
-            const_token_address=self.ZERO_ADDRESS,
+            token=PathOrConst(const=self.ZERO_ADDRESS),
             native_currency_address=[self.ZERO_ADDRESS, self.NATIVE_SENTINEL],
         )
         formatted, token, addr = await_result(
@@ -1574,7 +1593,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         returns only that expansion's rows - i.e. exactly what the subcall
         contributes to the confirm screen."""
         display_format = self._outer_format(
-            formatter or CalldataFormatter(callee_path=(0,))
+            formatter or CalldataFormatter(callee=PathOrConst((0,)))
         )
         _, fields = await_result(
             display_format.parse_calldata(
@@ -1606,8 +1625,8 @@ class TestEthereumClearSigning(unittest.TestCase):
         )
         fmt = FieldDefinition.from_proto(info).get_formatter()
         self.assertIsInstance(fmt, CalldataFormatter)
-        self.assertEqual(fmt.callee_path, (0,))
-        self.assertEqual(fmt.selector, self.TRANSFER_SIG)
+        self.assertEqual(fmt.callee.path, (0,))
+        self.assertEqual(fmt.selector.const, self.TRANSFER_SIG)
 
         # callee_path is mandatory
         info = EthereumERC7730FieldInfo(
@@ -1643,15 +1662,15 @@ class TestEthereumClearSigning(unittest.TestCase):
         )
         fmt = FieldDefinition.from_proto(info).get_formatter()
         self.assertIsInstance(fmt, CalldataFormatter)
-        self.assertIsNone(fmt.callee_path)
-        self.assertEqual(fmt.const_callee, self.CALLEE)
-        self.assertEqual(fmt.selector_path, (2,))
-        self.assertIsNone(fmt.selector)
-        self.assertIsNone(fmt.amount_path)
-        self.assertEqual(fmt.const_amount, 10**18)
-        self.assertEqual(fmt.spender_path, ContainerPath.From)
-        self.assertIsNone(fmt.const_spender)
-        self.assertEqual(fmt.chain_id_path, (3,))
+        self.assertIsNone(fmt.callee.path)
+        self.assertEqual(fmt.callee.const, self.CALLEE)
+        self.assertEqual(fmt.selector.path, (2,))
+        self.assertIsNone(fmt.selector.const)
+        self.assertIsNone(fmt.amount.path)
+        self.assertEqual(fmt.amount.const, 10**18)
+        self.assertEqual(fmt.spender.path, ContainerPath.From)
+        self.assertIsNone(fmt.spender.const)
+        self.assertEqual(fmt.chain_id.path, (3,))
 
         info = EthereumERC7730FieldInfo(
             path=EthereumERC7730Path(path=[1]),
@@ -1662,10 +1681,10 @@ class TestEthereumClearSigning(unittest.TestCase):
             const_spender=spender,
         )
         fmt = FieldDefinition.from_proto(info).get_formatter()
-        self.assertEqual(fmt.callee_path, (0,))
-        self.assertEqual(fmt.amount_path, ContainerPath.Value)
-        self.assertIsNone(fmt.const_amount)
-        self.assertEqual(fmt.const_spender, spender)
+        self.assertEqual(fmt.callee.path, (0,))
+        self.assertEqual(fmt.amount.path, ContainerPath.Value)
+        self.assertIsNone(fmt.amount.const)
+        self.assertEqual(fmt.spender.const, spender)
 
     def test_from_proto_calldata_params_rejected(self):
         path = EthereumERC7730Path(path=[0])
@@ -1699,7 +1718,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         # inner token must resolve via the *callee* (`@.to` override), not the
         # outer transaction's `to`.
         blob = self._transfer_blob()
-        display_format = self._outer_format(CalldataFormatter(callee_path=(0,)))
+        display_format = self._outer_format(CalldataFormatter(callee=PathOrConst((0,))))
         defs = self._defs()
 
         _, fields = await_result(
@@ -1727,7 +1746,10 @@ class TestEthereumClearSigning(unittest.TestCase):
         # An explicit selector means the blob is args-only (per ERC-7730).
         blob = self._transfer_blob()[4:]  # strip the selector
         fields = self._expand(
-            blob, CalldataFormatter(callee_path=(0,), selector=self.TRANSFER_SIG)
+            blob,
+            CalldataFormatter(
+                callee=PathOrConst((0,)), selector=PathOrConst(const=self.TRANSFER_SIG)
+            ),
         )
 
         self.assertEqual(len(fields), 4)
@@ -1815,7 +1837,9 @@ class TestEthereumClearSigning(unittest.TestCase):
                 DynamicLeaf(parse_bytes),  # data
             ],
             field_definitions=[
-                FieldDefinition((1,), "Inner call", CalldataFormatter(callee_path=(0,)))
+                FieldDefinition(
+                    (1,), "Inner call", CalldataFormatter(callee=PathOrConst((0,)))
+                )
             ],
         )
         middle_blob = b"\x12\x34\x56\x78" + self._outer_calldata(
@@ -1863,7 +1887,7 @@ class TestEthereumClearSigning(unittest.TestCase):
         ]
         for values in cases:
             values[ContainerPath.ChainId] = 1
-            fmt = CalldataFormatter(callee_path=(1,))
+            fmt = CalldataFormatter(callee=PathOrConst((1,)))
             fd = FieldDefinition((0,), "Wrapped call", fmt)
             with self.assertRaises(InvalidFormatDefinition):
                 await_result(
@@ -2045,10 +2069,10 @@ class TestEthereumClearSigning(unittest.TestCase):
         # the inner `@.to`, `@.value`, `@.from`; the chain defaults to the
         # outer one (and gets no row of its own).
         fmt = CalldataFormatter(
-            callee_path=(0,),
-            amount_path=(1,),
-            spender_path=(2,),
-            selector_path=(3,),
+            callee=PathOrConst((0,)),
+            amount=PathOrConst((1,)),
+            spender=PathOrConst((2,)),
+            selector=PathOrConst((3,)),
         )
         fields = self._expand_params(
             fmt,
@@ -2062,11 +2086,11 @@ class TestEthereumClearSigning(unittest.TestCase):
     def test_calldata_params_constant(self):
         # the same from constants; the outer call's values are ignored
         fmt = CalldataFormatter(
-            const_callee=self.CALLEE,
-            const_amount=10**18,
-            const_spender=self.SPENDER,
-            selector=self.INNER_SIG,
-            const_chain_id=1,
+            callee=PathOrConst(const=self.CALLEE),
+            amount=PathOrConst(const=10**18),
+            spender=PathOrConst(const=self.SPENDER),
+            selector=PathOrConst(const=self.INNER_SIG),
+            chain_id=PathOrConst(const=1),
         )
         fields = self._expand_params(
             fmt, [self._container_format()], amount=5, selector=b"\xff" * 4
@@ -2076,10 +2100,10 @@ class TestEthereumClearSigning(unittest.TestCase):
     def test_calldata_params_amount_from_outer_value(self):
         # `amountPath: @.value` forwards the transaction's value
         fmt = CalldataFormatter(
-            callee_path=(0,),
-            amount_path=ContainerPath.Value,
-            const_spender=self.SPENDER,
-            selector=self.INNER_SIG,
+            callee=PathOrConst((0,)),
+            amount=PathOrConst(ContainerPath.Value),
+            spender=PathOrConst(const=self.SPENDER),
+            selector=PathOrConst(const=self.INNER_SIG),
         )
         display_format = self._outer_format(fmt)
         original = clear_signing_definitions.all_display_formats
@@ -2117,7 +2141,9 @@ class TestEthereumClearSigning(unittest.TestCase):
         # fields formatted with that chain's definitions; a row names the
         # chain, and unknown tokens are tagged with it.
         fmt = CalldataFormatter(
-            callee_path=(0,), selector=self.INNER_SIG, chain_id_path=(4,)
+            callee=PathOrConst((0,)),
+            selector=PathOrConst(const=self.INNER_SIG),
+            chain_id=PathOrConst((4,)),
         )
         fields = self._expand_params(
             fmt,
@@ -2149,7 +2175,9 @@ class TestEthereumClearSigning(unittest.TestCase):
         # no inner format on an unknown chain: the chain ID is shown between
         # the callee and the raw blob
         blob = b"\xde\xad\xbe\xef"
-        fmt = CalldataFormatter(callee_path=(0,), const_chain_id=self.UNKNOWN_CHAIN_ID)
+        fmt = CalldataFormatter(
+            callee=PathOrConst((0,)), chain_id=PathOrConst(const=self.UNKNOWN_CHAIN_ID)
+        )
         fields = self._expand_params(fmt, [], blob=blob)
 
         self.assertEqual(len(fields), 3)
@@ -2162,11 +2190,11 @@ class TestEthereumClearSigning(unittest.TestCase):
     def test_calldata_invalid_params_rejected(self):
         msg, defs = self._msg(), self._defs()
         fmt = CalldataFormatter(
-            callee_path=(1,),
-            amount_path=(2,),
-            spender_path=(3,),
-            selector_path=(4,),
-            chain_id_path=(5,),
+            callee=PathOrConst((1,)),
+            amount=PathOrConst((2,)),
+            spender=PathOrConst((3,)),
+            selector=PathOrConst((4,)),
+            chain_id=PathOrConst((5,)),
         )
         fd = FieldDefinition((0,), "Wrapped call", fmt)
         valid = {
@@ -2240,7 +2268,7 @@ class TestEthereumClearSigning(unittest.TestCase):
             parameter_definitions=[callee_param, Array(DynamicLeaf(parse_bytes))],
             field_definitions=[
                 FieldDefinition(
-                    (1,), "Wrapped call", CalldataFormatter(callee_path=(0,))
+                    (1,), "Wrapped call", CalldataFormatter(callee=PathOrConst((0,)))
                 )
             ],
         )
@@ -2317,7 +2345,9 @@ class TestEthereumClearSigning(unittest.TestCase):
             ],
         )
         fmt = CalldataFormatter(
-            callee_path=(1,), amount_path=(2,), selector=self.INNER_SIG
+            callee=PathOrConst((1,)),
+            amount=PathOrConst((2,)),
+            selector=PathOrConst(const=self.INNER_SIG),
         )
         fd = FieldDefinition((0,), "Wrapped call", fmt)
         values = {
@@ -2751,7 +2781,7 @@ class TestABIValueFromProto(unittest.TestCase):
                 FieldDefinition(
                     (0, 3, 7),
                     "Amount to Send",
-                    TokenAmountFormatter(token_path=(0, 3, 0)),
+                    TokenAmountFormatter(token=PathOrConst((0, 3, 0))),
                 ),
                 FieldDefinition((0, 3, 6), "Beneficiary", AddressNameFormatter),
             ],
@@ -3092,8 +3122,8 @@ class TestCrossChainToken(unittest.TestCase):
             chain_id_path=EthereumERC7730Path(path=[2]),
         )
         fmt = FieldDefinition.from_proto(info).get_formatter()
-        self.assertEqual(fmt.chain_id_path, (2,))
-        self.assertIsNone(fmt.const_chain_id)
+        self.assertEqual(fmt.chain_id.path, (2,))
+        self.assertIsNone(fmt.chain_id.const)
 
         info = EthereumERC7730FieldInfo(
             path=EthereumERC7730Path(path=[0]),
@@ -3104,8 +3134,8 @@ class TestCrossChainToken(unittest.TestCase):
         )
         fmt = FieldDefinition.from_proto(info).get_formatter()
         self.assertTrue(fmt.lookup_address)
-        self.assertEqual(fmt.const_chain_id, self.POLYGON)
-        self.assertIsNone(fmt.chain_id_path)
+        self.assertEqual(fmt.chain_id.const, self.POLYGON)
+        self.assertIsNone(fmt.chain_id.path)
 
         # `@.chainId` is a container path
         info = EthereumERC7730FieldInfo(
@@ -3115,7 +3145,7 @@ class TestCrossChainToken(unittest.TestCase):
             chain_id_path=EthereumERC7730Path(container_path=ContainerPath.ChainId),
         )
         fmt = FieldDefinition.from_proto(info).get_formatter()
-        self.assertEqual(fmt.chain_id_path, ContainerPath.ChainId)
+        self.assertEqual(fmt.chain_id.path, ContainerPath.ChainId)
 
     def test_from_proto_chain_params_rejected(self):
         # mutually exclusive
@@ -3149,14 +3179,15 @@ class TestCrossChainToken(unittest.TestCase):
         )
         fmt = FieldDefinition.from_proto(info).get_formatter()
         self.assertIsInstance(fmt, CalldataFormatter)
-        self.assertEqual(fmt.const_chain_id, self.POLYGON)
+        self.assertEqual(fmt.chain_id.const, self.POLYGON)
 
     # --- tokenAmount ---
 
     def test_same_chain_uses_transaction_definitions(self):
         # A chain ID equal to the transaction's is no override at all.
         fmt = TokenAmountFormatter(
-            const_token_address=self.TOKEN, const_chain_id=self.TX_CHAIN_ID
+            token=PathOrConst(const=self.TOKEN),
+            chain_id=PathOrConst(const=self.TX_CHAIN_ID),
         )
         defs = self._defs()
         defs.get_token = lambda address: make_eth_token(
@@ -3173,7 +3204,8 @@ class TestCrossChainToken(unittest.TestCase):
     def test_cross_chain_unknown_token_tagged_with_chain(self):
         # no definition requests: the token stays unknown, tagged with its chain
         fmt = TokenAmountFormatter(
-            const_token_address=self.TOKEN, const_chain_id=self.POLYGON
+            token=PathOrConst(const=self.TOKEN),
+            chain_id=PathOrConst(const=self.POLYGON),
         )
         formatted, token, token_address = self._format(fmt, 995)
         self.assertEqual(formatted, "995 Wei UNKN")
@@ -3188,7 +3220,8 @@ class TestCrossChainToken(unittest.TestCase):
         )
         self._stub_request(token=usdc, network=make_eth_network(chain_id=137))
         fmt = TokenAmountFormatter(
-            const_token_address=self.TOKEN, const_chain_id=self.POLYGON
+            token=PathOrConst(const=self.TOKEN),
+            chain_id=PathOrConst(const=self.POLYGON),
         )
         formatted, token, token_address = self._format(
             fmt, 2_500_000, self._msg(supports_definition_request=True)
@@ -3201,7 +3234,8 @@ class TestCrossChainToken(unittest.TestCase):
     def test_cross_chain_token_not_found_on_its_chain(self):
         self._stub_request()
         fmt = TokenAmountFormatter(
-            const_token_address=self.TOKEN, const_chain_id=self.POLYGON
+            token=PathOrConst(const=self.TOKEN),
+            chain_id=PathOrConst(const=self.POLYGON),
         )
         _, token, _ = self._format(fmt, 1, self._msg(supports_definition_request=True))
         self.assertEqual(token.address, b"")
@@ -3210,9 +3244,9 @@ class TestCrossChainToken(unittest.TestCase):
     def test_cross_chain_native_known_network(self):
         # The other chain's native currency, symbol from its built-in network.
         fmt = TokenAmountFormatter(
-            const_token_address=self.NATIVE,
+            token=PathOrConst(const=self.NATIVE),
             native_currency_address=[self.NATIVE],
-            const_chain_id=self.POLYGON,
+            chain_id=PathOrConst(const=self.POLYGON),
         )
         formatted, token, token_address = self._format(fmt, 10**18)
         self.assertEqual(formatted, "1 POL")
@@ -3223,9 +3257,9 @@ class TestCrossChainToken(unittest.TestCase):
     def test_cross_chain_native_unknown_network(self):
         # Without the network the symbol is unknown: raw value, tagged chain.
         fmt = TokenAmountFormatter(
-            const_token_address=self.NATIVE,
+            token=PathOrConst(const=self.NATIVE),
             native_currency_address=[self.NATIVE],
-            const_chain_id=self.UNKNOWN_CHAIN_ID,
+            chain_id=PathOrConst(const=self.UNKNOWN_CHAIN_ID),
         )
         formatted, token, token_address = self._format(fmt, 10**18)
         self.assertEqual(formatted, "1,000,000,000,000,000,000 Wei UNKN")
@@ -3239,9 +3273,9 @@ class TestCrossChainToken(unittest.TestCase):
         )
         self._stub_request(network=network)
         fmt = TokenAmountFormatter(
-            const_token_address=self.NATIVE,
+            token=PathOrConst(const=self.NATIVE),
             native_currency_address=[self.NATIVE],
-            const_chain_id=self.UNKNOWN_CHAIN_ID,
+            chain_id=PathOrConst(const=self.UNKNOWN_CHAIN_ID),
         )
         formatted, token, _ = self._format(
             fmt, 10**18, self._msg(supports_definition_request=True)
@@ -3256,7 +3290,7 @@ class TestCrossChainToken(unittest.TestCase):
             (1,): self.POLYGON,
             ContainerPath.ChainId: self.TX_CHAIN_ID,
         }
-        fmt = TokenAmountFormatter(token_path=(0,), chain_id_path=(1,))
+        fmt = TokenAmountFormatter(token=PathOrConst((0,)), chain_id=PathOrConst((1,)))
         _, token, _ = self._format(fmt, walker=lambda path: values[path])
         self.assertEqual(token.chain_id, self.POLYGON)
 
@@ -3277,7 +3311,7 @@ class TestCrossChainToken(unittest.TestCase):
 
     def test_no_token_cross_chain(self):
         # a tokenless amount is still tagged with the chain it lives on
-        fmt = TokenAmountFormatter(const_chain_id=self.POLYGON)
+        fmt = TokenAmountFormatter(chain_id=PathOrConst(const=self.POLYGON))
         formatted, token, token_address = self._format(fmt, 7)
         self.assertEqual(formatted, "7 Wei UNKN")
         self.assertEqual(token.chain_id, self.POLYGON)
@@ -3292,7 +3326,9 @@ class TestCrossChainToken(unittest.TestCase):
 
         clear_signing_module.lookup_known_address = lookup_known_address
 
-        fmt = AddressNameFormatter(lookup_address=True, const_chain_id=self.POLYGON)
+        fmt = AddressNameFormatter(
+            lookup_address=True, chain_id=PathOrConst(const=self.POLYGON)
+        )
         formatted, token, token_address = self._format(fmt, self.TOKEN)
         self.assertEqual(formatted, "USD Coin")
         self.assertIsNone(token)
@@ -3301,7 +3337,7 @@ class TestCrossChainToken(unittest.TestCase):
 
         # unknown on the other chain: the plain address
         fmt = AddressNameFormatter(
-            lookup_address=True, const_chain_id=self.UNKNOWN_CHAIN_ID
+            lookup_address=True, chain_id=PathOrConst(const=self.UNKNOWN_CHAIN_ID)
         )
         formatted, _, _ = self._format(fmt, self.TOKEN)
         self.assertEqual(formatted.lower(), "0x" + self.TOKEN.hex())
