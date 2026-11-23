@@ -177,6 +177,8 @@ def auth_commit(
 TAG_WM_HEAD = b"WARD WM COMMIT v3"
 TAG_WM_INIT = b"WARD WM INIT v3"
 TAG_WM_REVERT = b"WARD WM REVERT v3"
+# Without a WM (the MVP build): the step signed for the host, over NO_HEAD_NONCE.
+TAG_STEP = b"WARD STEP v1"
 
 # The nonce a WM holds for a wallet it has never seen -- the one value `head_init_sig` is minted
 # under. A live head never carries it.

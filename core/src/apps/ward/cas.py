@@ -30,6 +30,10 @@ TAG_WM_HEAD = b"WARD WM COMMIT v3"
 TAG_WM_INIT = b"WARD WM INIT v3"
 # Lets a WM apply policy to demotions; replay protection is the head nonce's job.
 TAG_WM_REVERT = b"WARD WM REVERT v3"
+# Without a WM (the MVP build): the same step signed for the HOST, over NO_HEAD_NONCE, so a host
+# can refuse to store a write no device of this wallet made. Its own tag, so it is never a WM
+# authorisation.
+TAG_STEP = b"WARD STEP v1"
 
 
 def transition_preimage(
@@ -310,13 +314,15 @@ async def authorise(
     to_counter: int,
     to_root: bytes | None,
     revert: bool = False,
-) -> "tuple[bytes, bytes | None]":
+) -> "tuple[bytes, bytes]":
     """`(auth_commit, wm_sig)` for one transition: the device-facing MAC and the WM-facing
     signature over the same step, the latter bound to the WM head nonce this session attested.
     Every minting path goes through here, so the two can never name different transitions.
 
-    A firmware built without a WM (the MVP) mints no `wm_sig`: there is no WM to present it to,
-    and no head nonce to bind it to. `auth_commit` alone authorises the step for other devices."""
+    A firmware built without a WM (the MVP) has no WM to present it to and no head nonce to bind it
+    to, so the second element is the step signed for the HOST instead: under TAG_STEP, over
+    NO_HEAD_NONCE, verifiable with `ward_id` alone. It lets a host refuse a write no device of this
+    wallet made. A revert cannot be minted there (it needs an attested round)."""
     from trezor import utils
 
     from . import round as sync_round
@@ -326,7 +332,7 @@ async def authorise(
     ops = (ward_id, from_counter, from_root, to_counter, to_root)
     step = auth_commit(await derive_k_auth(), *ops, TAG_REVERT if revert else TAG_COMMIT)
     if not utils.USE_WARD_WM:
-        return step, None
+        return step, wm_sig(await derive_k_sig(), *ops, NO_HEAD_NONCE, TAG_STEP)
     return (
         step,
         wm_sig(

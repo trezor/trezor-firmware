@@ -63,7 +63,7 @@ from ...ward_app import (  # noqa: F401  -- ward_app_pinned is an autouse fixtur
 )
 from ...ward_keys import derive_k_sig
 from ...ward_keys import wm_sig as oracle_wm_sig
-from ...ward_keys import EMPTY_ROOT, TAG_REVERT
+from ...ward_keys import EMPTY_ROOT, TAG_REVERT, TAG_STEP, verify_wm_sig
 from ...ward_keys import (
     auth_commit,
     bip39_seed,
@@ -2304,8 +2304,8 @@ def test_ward_persisting_still_refuses_an_attestation_older_than_the_stored_head
 @pytest.mark.ward_wm("without")
 def test_ward_without_a_wm_catches_up_and_writes_on_its_own_chain(session: Session):
     """THE MVP LOOP: catch up to genesis, write, store the write, catch up to it. Every head is
-    moved by the chain alone and persisted, the write carries no `wm_sig`, and a read is proved
-    but never current."""
+    moved by the chain alone and persisted, the write is signed for the HOST (TAG_STEP, no head
+    nonce) so it can refuse one this wallet did not make, and a read is proved but never current."""
     store = WardTrie()
     ack = ward.catch_up(session, 0, None, None, store.links_ending_at)
     assert ack.persisted and ack.counter == 0
@@ -2316,8 +2316,15 @@ def test_ward_without_a_wm_catches_up_and_writes_on_its_own_chain(session: Sessi
         lambda p: ward.set_entry(session, _APP, b"addr1", b"Petr_label", p),
         "ward_set_entry",
     )
-    assert res.wm_sig is None
     ward.apply(store, res)
+    link = store.links[-1]
+    assert verify_wm_sig(
+        _WARD_ID, link[0], link[1], link[2], link[3], NO_HEAD_NONCE, res.wm_sig, TAG_STEP
+    )
+    # ...and it is not a WM authorisation: the WM's tag does not verify over the same bytes
+    assert not verify_wm_sig(
+        _WARD_ID, link[0], link[1], link[2], link[3], NO_HEAD_NONCE, res.wm_sig
+    )
 
     ack = ward.catch_up(session, store.counter, store.root(), None, store.links_ending_at)
     assert ack.persisted and ack.counter == store.counter == 1

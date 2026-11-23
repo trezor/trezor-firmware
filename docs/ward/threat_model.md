@@ -216,8 +216,9 @@ and catch-up is how the stored head moves at all:
 
 - The host (`wardd --without-wm`) catches the device up to genesis first, then after every write
   it has stored: its `sync` is that catch-up, and its `flush` stores each change and catches up to
-  it. A write derives from the stored head and carries no `wm_sig`. The device adopts its own write
-  by catching up one link.
+  it. A write derives from the stored head. In place of a `wm_sig` it carries the step signed for
+  the host under K_sig (tag `WARD STEP v1`, no head nonce), and `wardd` stores only a step that
+  verifies against `ward_id`. The device adopts its own write by catching up one link.
 - `WardSync`, and with it every WM route (ingest, reconcile, the chain walk, rejoin, rollback), is
   refused. `WardSetPersistWithoutWm` is refused too.
 - Every read shows "Not proven current; may be out of date.": no head is ever attested, so there is
@@ -469,6 +470,8 @@ Each Trezor syncs to the WM's head at the start of a WARD session, and catches u
     - The WM accepts the revert as its own transition.
 - **Reveals:**
     - **WM and host:** that a revert happened, and how far back it went.
+- **What the host can still do:** propose a target that was never a state of this ward; see
+  [WardRollback doesn't check that the target was ever a state of this ward](#wardrollback-doesnt-check-that-the-target-was-ever-a-state-of-this-ward).
 
 ### Key export and listing
 
@@ -479,3 +482,40 @@ Specified, not implemented on this branch. `WARDExportKeys` releases `K_path`, `
     - The host keeps them in memory only.
     - `K_sig` and `K_auth` never leave, so a host holding the keys still cannot write.
 - **Reveals:** everything stored in the ward, to that host, from then on: identifiers, values, entry types and pointer targets.
+
+## Potential gaps
+
+Known weaknesses, kept here until they are closed.
+
+### WardRollback doesn't check that the target was ever a state of this ward
+
+`WardRollback` builds `(wm_counter, wm_root) -> (wm_counter + 1, recovered_root)` under the revert
+tag. The Trezor checks only that `recovered_root` is 32 bytes. It does not check that the target is
+an ancestor of the WM's head, or that it was ever a head at all.
+
+This used to be enforced: `WardRollback` required an archived WM attestation of its target.
+`086ecb739c` merged the old counter recovery into it, whose target is unproven on purpose, so that a
+host that lost rows can still revert to a tree it can rebuild. The requirement went with the merge.
+
+- **What a host can propose:**
+    - the tip of a sibling branch of a fork, a genuine tree another device built;
+    - any tree it can assemble from sealed leaves it has ever held: older values, deleted entries
+      brought back, entries left out. It cannot forge a value, but it can combine them freely.
+- **Nothing else stops it.** The WM accepts any revert the Trezor signed. Other Trezors accept the
+  revert link when their chain walk crosses it, since it is authorised under `K_auth`; they only
+  count it in `reverts_crossed`.
+- **The user is the only gate, and cannot see what they approve.** The hold screen says "Target:
+  Proposed by the host. Not confirmed by the WARD Manager." but shows nothing of the tree. The
+  "Discarding N changes" line appears only when the new counter is at or below the stored one, so
+  a move to a fork's tip at `wm_counter + 1` shows no discard count.
+- **Without a WM (the MVP build) it does not apply.** `WardSync` is refused and a rollback needs an
+  attested round, so there is no rollback at all. Catch-up only goes to a head that descends from
+  the stored one, so a Trezor cannot be moved onto another branch. A fork strands the Trezor on the
+  losing branch instead: the host serves the highest head, every catch-up to it fails with "does
+  not descend", and there is no way back short of a WM.
+- **A possible fix.** `WardRollback` names the target's counter, and the Trezor walks the links back
+  from the WM's attested head to it (`walk_back`) and requires landing on `recovered_root`. That
+  proves the target is a preceding state on the WM's own line: never a sibling branch, never an
+  assembled tree. The screen can then name the change restored and the true number discarded. The
+  cost is the escape hatch for a host that lost the rows below the target too; if that case matters,
+  it should be a separate, explicitly unproven mode with a stronger warning.

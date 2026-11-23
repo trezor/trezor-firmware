@@ -804,7 +804,7 @@ Run the file: `ward_device_test tests/device_tests/misc/test_ward.py`
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_stops_persisting_once_the_user_withdraws"`
 - **`test_ward_persisting_still_refuses_an_attestation_older_than_the_stored_head`** — The setting changes what is KEPT, not what is accepted: the timestamp floor still holds.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_persisting_still_refuses_an_attestation_older_than_the_stored_head"`
-- **`test_ward_without_a_wm_catches_up_and_writes_on_its_own_chain`** — THE MVP LOOP (MVP build): catch up to genesis, write, store the write, catch up to it. Every head is moved by the chain alone and persisted, the write carries no `wm_sig`, and a read is proved but never current.
+- **`test_ward_without_a_wm_catches_up_and_writes_on_its_own_chain`** — THE MVP LOOP (MVP build): catch up to genesis, write, store the write, catch up to it. Every head is moved by the chain alone and persisted, the write is signed for the HOST (TAG_STEP, no head nonce) so it can refuse one this wallet did not make, and a read is proved but never current.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_without_a_wm_catches_up_and_writes_on_its_own_chain"`
 - **`test_ward_without_a_wm_refuses_the_wm_routes_and_the_setting`** — MVP build: `WardSync` and `WardSetPersistWithoutWm` are refused.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_without_a_wm_refuses_the_wm_routes_and_the_setting"`
@@ -1445,8 +1445,10 @@ Run the file: `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'turns a device refusal into device_failure'`
 - **`publishes nothing and releases the wallet`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'publishes nothing and releases the wallet'`
-- **`refuses a stored link that does not reproduce its own root`**
-  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'refuses a stored link that does not reproduce its own root'`
+- **`leaves out a stored link that does not reproduce its own root, and says so`**
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'leaves out a stored link that does not reproduce its own root, and says so'`
+- **`falls back to the highest head that still builds, past a corrupt row`**
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'falls back to the highest head that still builds, past a corrupt row'`
 - **`narrates a rebuild: the walk back to genesis, each step's entries, each root`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'narrates a rebuild: the walk back to genesis, each step'"'"'s entries, each root'`
 - **`says when the head asked for cannot be built`**
@@ -1457,6 +1459,8 @@ Run the file: `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'flushes by storing each change and catching the device up to it, persisted'`
 - **`syncs another device of the wallet by a catch-up it persists`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'syncs another device of the wallet by a catch-up it persists'`
+- **`refuses to store a step this wallet's device did not sign`**
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t "refuses to store a step this wallet's device did not sign"`
 - **`refuses the service channel, which needs a WM`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'refuses the service channel, which needs a WM'`
 - **`cannot be given a WM as well`**
