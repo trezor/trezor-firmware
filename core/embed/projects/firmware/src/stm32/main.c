@@ -76,6 +76,51 @@ LOG_DECLARE(coreapp_main)
 uint32_t ipc_buffer[IPC_COREAPP_BUFFER_SIZE / sizeof(uint32_t)];
 #endif
 
+// Installs the images this firmware carries (bootloader, nRF) when the device
+// has different ones. Returns true if the update screen was shown. Reboots
+// after a bootloader update and does not return.
+static bool update_embedded_images(void) {
+  bool update_required = false;
+
+#if PRODUCTION || FORCE_BOOTLOADER_UPGRADE
+  // Check if the bootloader is valid and replace it if not
+  bool bl_update_required = boot_image_check(boot_image_get_embdata());
+  update_required = update_required || bl_update_required;
+#endif
+
+#ifdef USE_NRF
+  bool nrf_update_required_ =
+      nrf_update_required(&nrf_app_start, (size_t)&nrf_app_size);
+  update_required = update_required || nrf_update_required_;
+#endif
+
+  if (!update_required) {
+    return false;
+  }
+
+  screen_update();
+
+#if PRODUCTION || FORCE_BOOTLOADER_UPGRADE
+  if (bl_update_required) {
+    boot_image_replace(boot_image_get_embdata());
+  }
+#endif
+
+#ifdef USE_NRF
+  if (nrf_update_required_) {
+    nrf_update(&nrf_app_start, (size_t)&nrf_app_size);
+  }
+#endif
+
+#if PRODUCTION || FORCE_BOOTLOADER_UPGRADE
+  if (bl_update_required) {
+    reboot_device();
+  }
+#endif
+
+  return true;
+}
+
 int main_func(uint32_t cmd, void *arg) {
   if (cmd == 1) {
     systask_postmortem_t *info = (systask_postmortem_t *)arg;
@@ -92,42 +137,9 @@ int main_func(uint32_t cmd, void *arg) {
 
   bool fading = DISPLAY_JUMP_BEHAVIOR == DISPLAY_RESET_CONTENT;
 
-  bool update_required = false;
-
-#if PRODUCTION || FORCE_BOOTLOADER_UPGRADE
-  // Check if the bootloader is valid and replace it if not
-  bool bl_update_required = boot_image_check(boot_image_get_embdata());
-  update_required = update_required || bl_update_required;
-#endif
-
-#ifdef USE_NRF
-  bool nrf_update_required_ =
-      nrf_update_required(&nrf_app_start, (size_t)&nrf_app_size);
-  update_required = update_required || nrf_update_required_;
-#endif
-
-  if (update_required) {
-    screen_update();
+  if (update_embedded_images()) {
     fading = true;
-
-#if PRODUCTION || FORCE_BOOTLOADER_UPGRADE
-    if (bl_update_required) {
-      boot_image_replace(boot_image_get_embdata());
-    }
-#endif
-
-#ifdef USE_NRF
-    if (nrf_update_required_) {
-      nrf_update(&nrf_app_start, (size_t)&nrf_app_size);
-    }
-#endif
   }
-
-#if PRODUCTION || FORCE_BOOTLOADER_UPGRADE
-  if (bl_update_required) {
-    reboot_device();
-  }
-#endif
 
 #ifdef USE_NRF
 #if PRODUCTION
