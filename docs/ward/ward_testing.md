@@ -1453,6 +1453,14 @@ Run the file: `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'says when the head asked for cannot be built'`
 - **`keeps the dev WM across a restart`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'keeps the dev WM across a restart'`
+- **`flushes by storing each change and catching the device up to it, persisted`**
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'flushes by storing each change and catching the device up to it, persisted'`
+- **`syncs another device of the wallet by a catch-up it persists`**
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'syncs another device of the wallet by a catch-up it persists'`
+- **`refuses the service channel, which needs a WM`**
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'refuses the service channel, which needs a WM'`
+- **`cannot be given a WM as well`**
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'cannot be given a WM as well'`
 
 #### `packages/wardd/src/__tests__/server.test.ts` (8)
 

@@ -214,9 +214,10 @@ user. `WardCatchUpAck.persisted` says which happened.
 **Without a WM (the MVP).** There is nothing to attest a head, so the chain is the only authority
 and catch-up is how the stored head moves at all:
 
-- The host catches the device up to genesis first, then after every write it has stored. A write
-  derives from the stored head and carries no `wm_sig`. The device adopts its own write by catching
-  up one link.
+- The host (`wardd --without-wm`) catches the device up to genesis first, then after every write
+  it has stored: its `sync` is that catch-up, and its `flush` stores each change and catches up to
+  it. A write derives from the stored head and carries no `wm_sig`. The device adopts its own write
+  by catching up one link.
 - `WardSync`, and with it every WM route (ingest, reconcile, the chain walk, rejoin, rollback), is
   refused. `WardSetPersistWithoutWm` is refused too.
 - Every read shows "Not proven current; may be out of date.": no head is ever attested, so there is
