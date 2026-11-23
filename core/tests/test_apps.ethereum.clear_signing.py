@@ -17,6 +17,7 @@ if not utils.BITCOIN_ONLY:
     )
     from trezor.ui.layouts.properties import AboveThreshold
 
+    from apps.ethereum import clear_signing as clear_signing_module
     from apps.ethereum import clear_signing_definitions
     from apps.ethereum.clear_signing import (
         ABIValue,
@@ -2634,6 +2635,257 @@ class TestABIValueFromProto(unittest.TestCase):
         # 99 is not a member of EthereumABIType.
         with self.assertRaises(InvalidFormatDefinition):
             ABIValue.from_proto(p_atomic(99))
+
+
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+class TestCrossChainToken(unittest.TestCase):
+    """ERC-7730 `chainId` / `chainIdPath` on `tokenAmount`:
+    a token living on a chain other than the transaction's (cross-chain swaps)
+    is resolved against that chain's definitions, never the transaction's."""
+
+    TOKEN = bytes.fromhex("3c499c542cef5e3811e1192ce70d8cc03d5c3359")
+    NATIVE = b"\xee" * 20
+    TX_CHAIN_ID = 1
+    POLYGON = 137  # a built-in network
+    UNKNOWN_CHAIN_ID = 7777777777  # no built-in network
+
+    def setUp(self):
+        self.requests = []
+        self._orig_request = clear_signing_module.request_definitions
+
+    def tearDown(self):
+        clear_signing_module.request_definitions = self._orig_request
+
+    def _msg(self, supports_definition_request=False):
+        class _Msg:
+            pass
+
+        msg = _Msg()
+        msg.chain_id = self.TX_CHAIN_ID
+        msg.supports_definition_request = supports_definition_request
+        return msg
+
+    def _defs(self):
+        """The transaction chain's definitions: every token is "TST"."""
+        test = self
+
+        class _Defs:
+            network = make_eth_network(chain_id=1, symbol="ETH")
+
+            def get_token(self, address):
+                test.fail("cross-chain token looked up on the transaction's chain")
+
+        return _Defs()
+
+    def _stub_request(self, token=None, network=None):
+        """Answer definition requests with `token` / `network` (or nothing)."""
+
+        async def request_definitions(chain_id, token_address, func_sig):
+            self.requests.append((chain_id, bytes(token_address), func_sig))
+            if token is None and network is None:
+                return None, None
+
+            class _Received:
+                def get_token(_, address):
+                    if token is not None and address == token.address:
+                        return token
+                    return UNKNOWN_TOKEN
+
+            received = _Received()
+            received.network = network
+            return received, None
+
+        clear_signing_module.request_definitions = request_definitions
+
+    def _format(self, fmt, amount=1_000_000, msg=None, walker=None):
+        return await_result(
+            fmt.format(amount, msg or self._msg(), self._defs(), walker)
+        )
+
+    # --- from_proto ---
+
+    def test_from_proto_chain_params(self):
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[0]),
+            label="Amount",
+            formatter=FT.FORMATTER_TOKEN_AMOUNT,
+            token_path=EthereumERC7730Path(path=[1]),
+            chain_id_path=EthereumERC7730Path(path=[2]),
+        )
+        fmt = FieldDefinition.from_proto(info).get_formatter()
+        self.assertEqual(fmt.chain_id_path, (2,))
+        self.assertIsNone(fmt.const_chain_id)
+
+        # `@.chainId` is a container path
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[0]),
+            label="Amount",
+            formatter=FT.FORMATTER_TOKEN_AMOUNT,
+            chain_id_path=EthereumERC7730Path(container_path=ContainerPath.ChainId),
+        )
+        fmt = FieldDefinition.from_proto(info).get_formatter()
+        self.assertEqual(fmt.chain_id_path, ContainerPath.ChainId)
+
+    def test_from_proto_chain_params_rejected(self):
+        # mutually exclusive
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[0]),
+            label="Amount",
+            formatter=FT.FORMATTER_TOKEN_AMOUNT,
+            chain_id_path=EthereumERC7730Path(path=[1]),
+            const_chain_id=self.POLYGON,
+        )
+        with self.assertRaises(InvalidFormatDefinition):
+            FieldDefinition.from_proto(info)
+
+        # meaningless on a formatter that looks nothing up: reject, not ignore
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[0]),
+            label="Raw",
+            formatter=FT.FORMATTER_RAW,
+            const_chain_id=self.POLYGON,
+        )
+        with self.assertRaises(InvalidFormatDefinition):
+            FieldDefinition.from_proto(info)
+
+        # calldata: accepted (not used yet), the definition is kept
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[1]),
+            label="Wrapped call",
+            formatter=FT.FORMATTER_CALLDATA,
+            callee_path=EthereumERC7730Path(path=[0]),
+            const_chain_id=self.POLYGON,
+        )
+        fmt = FieldDefinition.from_proto(info).get_formatter()
+        self.assertIsInstance(fmt, CalldataFormatter)
+
+    # --- tokenAmount ---
+
+    def test_same_chain_uses_transaction_definitions(self):
+        # A chain ID equal to the transaction's is no override at all.
+        fmt = TokenAmountFormatter(
+            const_token_address=self.TOKEN, const_chain_id=self.TX_CHAIN_ID
+        )
+        defs = self._defs()
+        defs.get_token = lambda address: make_eth_token(
+            symbol="TST", decimals=6, address=address, chain_id=self.TX_CHAIN_ID
+        )
+        formatted, token, token_address = await_result(
+            fmt.format(1_000_000, self._msg(), defs, None)
+        )
+        self.assertEqual(formatted, "1 TST")
+        self.assertEqual(token.symbol, "TST")
+        self.assertEqual(token_address, self.TOKEN)
+        self.assertEqual(self.requests, [])
+
+    def test_cross_chain_unknown_token_tagged_with_chain(self):
+        # no definition requests: the token stays unknown, tagged with its chain
+        fmt = TokenAmountFormatter(
+            const_token_address=self.TOKEN, const_chain_id=self.POLYGON
+        )
+        formatted, token, token_address = self._format(fmt, 995)
+        self.assertEqual(formatted, "995 Wei UNKN")
+        self.assertEqual(token.address, b"")
+        self.assertIsNot(token, UNKNOWN_TOKEN)
+        self.assertEqual(token.chain_id, self.POLYGON)
+        self.assertEqual(token_address, self.TOKEN)
+
+    def test_cross_chain_token_requested_on_its_chain(self):
+        usdc = make_eth_token(
+            symbol="USDC", decimals=6, address=self.TOKEN, chain_id=self.POLYGON
+        )
+        self._stub_request(token=usdc, network=make_eth_network(chain_id=137))
+        fmt = TokenAmountFormatter(
+            const_token_address=self.TOKEN, const_chain_id=self.POLYGON
+        )
+        formatted, token, token_address = self._format(
+            fmt, 2_500_000, self._msg(supports_definition_request=True)
+        )
+        self.assertEqual(formatted, "2.5 USDC")
+        self.assertIs(token, usdc)
+        self.assertEqual(token_address, self.TOKEN)
+        self.assertEqual(self.requests, [(self.POLYGON, self.TOKEN, None)])
+
+    def test_cross_chain_token_not_found_on_its_chain(self):
+        self._stub_request()
+        fmt = TokenAmountFormatter(
+            const_token_address=self.TOKEN, const_chain_id=self.POLYGON
+        )
+        _, token, _ = self._format(fmt, 1, self._msg(supports_definition_request=True))
+        self.assertEqual(token.address, b"")
+        self.assertEqual(token.chain_id, self.POLYGON)
+
+    def test_cross_chain_native_known_network(self):
+        # The other chain's native currency, symbol from its built-in network.
+        fmt = TokenAmountFormatter(
+            const_token_address=self.NATIVE,
+            native_currency_address=[self.NATIVE],
+            const_chain_id=self.POLYGON,
+        )
+        formatted, token, token_address = self._format(fmt, 10**18)
+        self.assertEqual(formatted, "1 POL")
+        self.assertIsNone(token)
+        self.assertIsNone(token_address)
+        self.assertEqual(self.requests, [])
+
+    def test_cross_chain_native_unknown_network(self):
+        # Without the network the symbol is unknown: raw value, tagged chain.
+        fmt = TokenAmountFormatter(
+            const_token_address=self.NATIVE,
+            native_currency_address=[self.NATIVE],
+            const_chain_id=self.UNKNOWN_CHAIN_ID,
+        )
+        formatted, token, token_address = self._format(fmt, 10**18)
+        self.assertEqual(formatted, "1,000,000,000,000,000,000 Wei UNKN")
+        self.assertEqual(token.address, b"")
+        self.assertEqual(token.chain_id, self.UNKNOWN_CHAIN_ID)
+        self.assertIsNone(token_address)
+
+    def test_cross_chain_native_network_requested(self):
+        network = make_eth_network(
+            chain_id=self.UNKNOWN_CHAIN_ID, symbol="FOO", slip44=1
+        )
+        self._stub_request(network=network)
+        fmt = TokenAmountFormatter(
+            const_token_address=self.NATIVE,
+            native_currency_address=[self.NATIVE],
+            const_chain_id=self.UNKNOWN_CHAIN_ID,
+        )
+        formatted, token, _ = self._format(
+            fmt, 10**18, self._msg(supports_definition_request=True)
+        )
+        self.assertEqual(formatted, "1 FOO")
+        self.assertIsNone(token)
+        self.assertEqual(self.requests, [(self.UNKNOWN_CHAIN_ID, self.NATIVE, None)])
+
+    def test_chain_id_path(self):
+        values = {(0,): self.TOKEN, (1,): self.POLYGON}
+        fmt = TokenAmountFormatter(token_path=(0,), chain_id_path=(1,))
+        _, token, _ = self._format(fmt, walker=lambda path: values[path])
+        self.assertEqual(token.chain_id, self.POLYGON)
+
+        # resolving to the transaction's chain is no override
+        values[(1,)] = self.TX_CHAIN_ID
+        defs = self._defs()
+        defs.get_token = lambda address: UNKNOWN_TOKEN
+        _, token, _ = await_result(
+            fmt.format(1, self._msg(), defs, lambda path: values[path])
+        )
+        self.assertIs(token, UNKNOWN_TOKEN)
+
+        # a chain ID must be a uint64 > 0
+        for bad in (0, 1 << 64, self.TOKEN, True, None):
+            values[(1,)] = bad
+            with self.assertRaises(InvalidFormatDefinition):
+                self._format(fmt, walker=lambda path: values[path])
+
+    def test_no_token_cross_chain(self):
+        # a tokenless amount is still tagged with the chain it lives on
+        fmt = TokenAmountFormatter(const_chain_id=self.POLYGON)
+        formatted, token, token_address = self._format(fmt, 7)
+        self.assertEqual(formatted, "7 Wei UNKN")
+        self.assertEqual(token.chain_id, self.POLYGON)
+        self.assertIsNone(token_address)
 
 
 if __name__ == "__main__":
