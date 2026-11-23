@@ -8,5 +8,7 @@ a host stores and replicates them, and the WARD Manager orders the changes and a
 - [Who talks to whom](ward-channels.md): the wallet and service channels.
 - [Threat model](threat_model.md): what each party learns, per use case.
 - [User stories](user_story.md): what a user expects, starting with the mini-WARD backup and restore.
+- [mini-WARD to MVP migration](miniscript_to_mvp.md): carrying on-device records into the replicated store.
+- [MVP to WARD Manager migration](mvp_to_final_migration.md): enrolling an existing wallet at its adopted head.
 - [Testing](ward_testing.md): setup, every test and the command that runs it, the stack, and testing from a shell.
 - [Adversarial testing](ward_adversarial_testing.md): the device against a host or WM that misbehaves on purpose.
