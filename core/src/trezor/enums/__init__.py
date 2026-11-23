@@ -303,6 +303,7 @@ if TYPE_CHECKING:
         ABI_ADDRESS = 0
         ABI_UINT256 = 1
         ABI_UINT248 = 2
+        ABI_UINT216 = 50
         ABI_UINT160 = 3
         ABI_UINT128 = 4
         ABI_UINT120 = 5
