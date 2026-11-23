@@ -46,7 +46,7 @@ async def set_entry(msg: WardSetEntry) -> "WardLeafAck | WardMutationApplied":
         title = "Update entry"
         props.append(("Replaces", display_content(old), True))
     props.append(("New value", display_bytes(value), True))
-    add_freshness(props)
+    await add_freshness(props)
 
     await confirm_properties("ward_set_entry", title, props)
 

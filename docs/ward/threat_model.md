@@ -102,10 +102,141 @@ The trie proves that a leaf is in a tree. It does not prove the tree is the late
 A host cannot replay an earlier attestation, because it does not know the nonce in advance. The Trezor's root moves only through such an adoption.
 
 - **Fresh.** In a WARD session that adopted a WM-attested head, a read is proven against the WM's current head, and the screen shows no warning.
-- **Not fresh.** Without the WM, a read is proven against the head the Trezor last adopted, and the screen shows "Not proven current; may be out of date." A host that fails the sync on purpose can show only an old value of this ward, and only under that warning.
-- **Caught up without the WM.** A host can walk the Trezor forward along the wallet's own chain (`WardCatchUp`). Reads in that session prove against the newer head, still under the warning, and nothing is persisted.
+- **Not fresh.** Without the WM, a read is proven against the head the Trezor last adopted, and the screen shows "Not reflecting changes since <timestamp> UTC, nor user reverts.", dated by the WM's signed timestamp for that head. A host that fails the sync on purpose can show only an old value of this ward, and only under that warning.
+- **Caught up without the WM.** A host can walk the Trezor forward along the wallet's own chain (`WardCatchUp`), as far as a head the WM once attested. Reads in that session prove against the newer head, under the warning dated by that attestation, and nothing is persisted.
 - **Never older.** A head below the stored counter, or a read proved against an older tree, is refused, with or without the WM.
 - **Never adopted.** With no stored head, there is nothing to prove against, and the read is refused.
+
+The stored head moves only on a live attestation. [Progress without the WM](#progress-without-the-wm) explains why.
+
+## Progress without the WM
+
+When a sync fails, the Trezor could still move its stored head forward along links that `wardd`
+holds. It does not. This section gives the reason and analyses a variant anchored on cached WM
+attestations.
+
+### Why links alone never move the stored head
+
+A link is a transition `(c, r) -> (c', r')` with an `auth_commit` under `K_auth`. That proves a
+device of this wallet formed it. It does not prove the WM accepted it, or that the WM still stands
+on it. `auth_commit` binds only the transition, so a link stays valid forever.
+
+Some genuine links are not on the WM's current line:
+
+- **A lost race.** The Trezor authorises `(c-1, r) -> (c, A)` and publishes it, but another writer
+  lands `(c, B)` first. The host keeps the authorisation for `A`.
+- **A branch removed by a revert.** The WM's register is restored from 57 to 10, and the user
+  holds to confirm `WardRollback` or `WardRejoin`. The links 10 → … → 57 stay genuine.
+
+Suppose a failed sync persisted the furthest head that the links reach. Then a host could do this:
+
+1. Make the sync fail. It always can, because it relays the WM.
+2. Serve a Trezor links from its stored head up a branch the WM does not hold: the losing `A`, or
+   10 → … → 57 to a Trezor that last synced below 10.
+3. The Trezor persists that head.
+
+The results:
+
+- The Trezor stores and shows values that the WM does not hold, in every later session, not just
+  this one.
+- The counter floor rises above the WM's line. Every later sync fails, because the WM's head no
+  longer descends from the stored head, or is below it. Only a `WardRejoin` or `WardRollback`
+  brings the Trezor back. The host engineered that hold screen, and it asks the user to discard
+  changes that the WM actually holds.
+- Writes built on that head lose at the WM.
+
+`ac7c4a19d9` removed exactly this: an archived anchor that raised the persisted counter with no
+live attestation, and so undid a confirmed recovery. `WardCatchUp` therefore keeps the walked-to
+head for the session only, under the warning. A host can show an old or abandoned value for one
+session, but it cannot move the floor.
+
+### Catching up to a cached attestation
+
+`WardCatchUp` goes only as far as the WM once vouched for. `wardd` keeps every WM attestation it
+relays, with the round nonce it was signed over, and replicates them through Evolu with the links.
+While the WM is down, `wardd` names the newest head on its replica's chain that a kept attestation
+names, which may be below the replica's head. The Trezor then:
+
+1. Refuses a head below its stored counter.
+2. Verifies the attestation's signature over the host-supplied nonce. This is not
+   `verify_round_attestation`: it does not need this round's nonce, and it latches nothing.
+3. Refuses an attestation whose timestamp is older than the stored head's (the timestamp floor).
+4. Walks the links back from the named head to its stored head.
+5. Reads from the named head for this session only. Nothing is persisted.
+
+Without the WM, the screen says "Not reflecting changes since <timestamp> UTC, nor user reverts."
+The timestamp is the WM's, signed, for the head the read proves against: the caught-up head, or
+the stored head, which `adopt` now stores with its timestamp. A head stored before timestamps were
+kept shows the undated "Not proven current; may be out of date."
+
+What this adds over links alone:
+
+- **No never-accepted heads.** A lost race, or a head that a host builds from authorisations it
+  collected but never published, has no attestation. Every value shown was the ward's state at
+  some point.
+- **A signed date.** The Trezor has no clock, so it shows the date and the user judges how old
+  that is.
+- **The timestamp floor.** Every attestation on a branch removed by a revert predates the adoption
+  that followed that revert. A Trezor that took part in the revert, or synced after it, refuses all
+  of them. That closes the `ac7c4a19d9` attack for reads.
+
+What it does not fix:
+
+- **"Was the head" is not "is on the WM's line".** A Trezor that last synced before a regression of
+  the WM's register can still be walked up the abandoned branch, as far as the WM attested before
+  it regressed. The warning names this: the value does not reflect reverts. This is why the head is
+  not persisted by default. Persisting it would raise the floor above the WM's restored head, and the
+  Trezor would need a `WardRollback`; see [When the caught-up head is persisted](#when-the-caught-up-head-is-persisted).
+- **The host chooses the head.** It can stop at any attested head between the stored head and the
+  newest it holds. The date shows how old that is.
+- **The timestamp is now security-relevant.** The floor relies on the WM's clock never going
+  backwards, including across a restore of its register. The timestamp is in seconds since the
+  Unix epoch. A WM that colludes with the host is out of scope either way, because it can sign a
+  live attestation for anything.
+- **A weaker form of the epoch.** `ac7c4a19d9` leaves a GAP note for a counter epoch that a revert
+  bumps and the preimage binds. The epoch needs a wire break and a WM change, but it does not
+  depend on a clock.
+
+The service channel on this branch still falls back to the stored head without catching up: it
+has no `WardCatchUp` RPC.
+
+### When the caught-up head is persisted
+
+Whether `WardCatchUp` keeps the head it reaches depends on the deployment and, with a WM, on the
+user. `WardCatchUpAck.persisted` says which happened.
+
+| Build | User setting | `WardCatchUp` needs | Head |
+| --- | --- | --- | --- |
+| With a WM (default) | off (default) | a cached attestation, no older than the stored head's | this session only |
+| With a WM (default) | on, for this wallet | the same | persisted |
+| Without a WM (`--ward-without-wm`, the MVP) | none | the chain alone | persisted |
+
+**Without a WM (the MVP).** There is nothing to attest a head, so the chain is the only authority
+and catch-up is how the stored head moves at all:
+
+- The host catches the device up to genesis first, then after every write it has stored. A write
+  derives from the stored head and carries no `wm_sig`. The device adopts its own write by catching
+  up one link.
+- `WardSync`, and with it every WM route (ingest, reconcile, the chain walk, rejoin, rollback), is
+  refused. `WardSetPersistWithoutWm` is refused too.
+- Every read shows "Not proven current; may be out of date.": no head is ever attested, so there is
+  no timestamp to date it by.
+- **What this gives up.** The attack in [Why links alone never move the stored head](#why-links-alone-never-move-the-stored-head)
+  is open: a host can persist a lost race, or a branch a revert removed. With no WM there is also no
+  compare-and-swap, so two devices writing at once fork the chain, and nothing short of a WM can
+  rejoin them. The MVP accepts this until a WM exists.
+
+**With a WM, when the user allows it.** `WardSetPersistWithoutWm` turns persisting on for the active
+wallet. Allowing it is held to confirm; withdrawing needs no screen. Persisting still requires the
+cached attestation and the timestamp floor, so a revert this Trezor took part in, or synced after,
+cannot be undone. What the user accepts is the remaining case: a Trezor that missed a regression of
+the WM's register can be walked up the abandoned branch and keep it, until a `WardRollback` once
+the WM is back. The setting is stored per wallet in flash (keys 0x18..), and is only written by that
+confirmed request.
+
+**Which build a device is cannot be asked over the wire.** The test suite tells them apart by how
+the device answers `WardSetPersistWithoutWm` (`ward_wm` marker in `tests/conftest.py`). A host must
+not let a device's claim decide what it trusts.
 
 ## What each party learns
 
@@ -216,16 +347,23 @@ A Trezor whose WM is unreachable, for example a second device joining while the 
 walked forward by its host along the wallet's chain (`WardCatchUp`).
 
 - **Expects:**
+    - The named head carries a WM attestation the host kept from an earlier round, no older than
+      the stored head's.
     - Every link is authorised by a device of this wallet, and the walk lands exactly on the
       stored head, so the head is genuine and descends from it.
-    - Reads in that session prove against the new head, under the "not proven current" warning.
-    - Nothing is persisted: the stored root and counter move only with the WM. Persisting would
-      let a host walk a device back up a branch the user discarded with a revert.
+    - Reads in that session prove against the new head, under "Not reflecting changes since
+      <timestamp> UTC, nor user reverts."
+    - Nothing is persisted by default: the stored root and counter move only with the WM.
+      Persisting would let a host walk a device back up a branch the user discarded with a revert;
+      see [Progress without the WM](#progress-without-the-wm). The user may allow it per wallet,
+      and a firmware built without a WM always persists; see
+      [When the caught-up head is persisted](#when-the-caught-up-head-is-persisted).
     - A head below the stored counter is refused before any link is asked for, and a read proved
       against an older tree fails.
-- **Reveals:** nothing beyond the chain the host already stores.
-- **What the host can still do:** stop short of the latest head, or follow a branch the WM
-  never accepted. Both are shown as not proven current.
+- **Reveals:** nothing beyond the chain and the attestations the host already stores.
+- **What the host can still do:** stop short of the newest attested head, or, for a Trezor that
+  missed a regression of the WM's register, follow a branch a revert later removed. Both are
+  shown with the date of the head they read from.
 
 ### Passphrase wallet
 

@@ -8444,12 +8444,26 @@ if TYPE_CHECKING:
     class WardCatchUp(protobuf.MessageType):
         to_counter: "int"
         to_root: "AnyBytes | None"
+        nonce: "AnyBytes | None"
+        from_counter: "int | None"
+        from_root: "AnyBytes | None"
+        from_head_nonce: "AnyBytes | None"
+        to_head_nonce: "AnyBytes | None"
+        timestamp: "int | None"
+        wm_signature: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             to_counter: "int",
             to_root: "AnyBytes | None" = None,
+            nonce: "AnyBytes | None" = None,
+            from_counter: "int | None" = None,
+            from_root: "AnyBytes | None" = None,
+            from_head_nonce: "AnyBytes | None" = None,
+            to_head_nonce: "AnyBytes | None" = None,
+            timestamp: "int | None" = None,
+            wm_signature: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8460,17 +8474,33 @@ if TYPE_CHECKING:
     class WardCatchUpAck(protobuf.MessageType):
         counter: "int | None"
         reverts_crossed: "int | None"
+        persisted: "bool | None"
 
         def __init__(
             self,
             *,
             counter: "int | None" = None,
             reverts_crossed: "int | None" = None,
+            persisted: "bool | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WardCatchUpAck"]:
+            return isinstance(msg, cls)
+
+    class WardSetPersistWithoutWm(protobuf.MessageType):
+        allow: "bool"
+
+        def __init__(
+            self,
+            *,
+            allow: "bool",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardSetPersistWithoutWm"]:
             return isinstance(msg, cls)
 
     class WardRejoin(protobuf.MessageType):

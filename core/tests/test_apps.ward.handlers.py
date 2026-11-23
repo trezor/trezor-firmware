@@ -17,6 +17,7 @@ WARD_REQUESTS = (
     "WardReconcile",
     "WardVerifyChain",
     "WardCatchUp",
+    "WardSetPersistWithoutWm",
     "WardRollback",
     "WardRejoin",
     "WardPinCachedEntry",

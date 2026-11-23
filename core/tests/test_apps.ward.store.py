@@ -361,6 +361,45 @@ class TestWardStore(unittest.TestCase):
         self.assertEqual(ward_store.get_root(_WALLET_A), b"\x02" * 32)
         self.assertEqual(ward_store.get_counter(_WALLET_A), 6)
 
+    def test_a_root_slot_keeps_the_wm_timestamp_beside_the_head(self):
+        """The WM's timestamp for the adopted head dates the warning a read without the WM shows,
+        and floors which cached attestation `WardCatchUp` accepts. A slot written before it was
+        kept has none, rather than a zero that would date a head 1970 and floor nothing."""
+        ward_store.set_root(_WALLET_A, b"\x01" * 32, 5)
+        self.assertIsNone(ward_store.get_timestamp(_WALLET_A))
+
+        ward_store.set_root(_WALLET_A, b"\x02" * 32, 6, 1_700_000_006)
+        self.assertEqual(ward_store.get_timestamp(_WALLET_A), 1_700_000_006)
+        self.assertEqual(ward_store.get_root(_WALLET_A), b"\x02" * 32)
+        self.assertEqual(ward_store.get_counter(_WALLET_A), 6)
+
+        # an adoption with no timestamp does not keep the previous head's
+        ward_store.set_root(_WALLET_A, b"\x03" * 32, 7)
+        self.assertIsNone(ward_store.get_timestamp(_WALLET_A))
+        self.assertIsNone(ward_store.get_timestamp(_WALLET_B))
+
+    def test_a_wallet_setting_is_its_own_and_gives_its_slot_back(self):
+        """Off by default, per wallet, and a wallet with nothing turned on holds no slot -- so
+        eight wallets that once allowed something do not lock a ninth out for good."""
+        flag = ward_store.SETTING_PERSIST_WITHOUT_WM
+        self.assertFalse(ward_store.get_setting(_WALLET_A, flag))
+
+        self.assertTrue(ward_store.set_setting(_WALLET_A, flag, True))
+        self.assertTrue(ward_store.get_setting(_WALLET_A, flag))
+        self.assertFalse(ward_store.get_setting(_WALLET_B, flag))
+
+        self.assertTrue(ward_store.set_setting(_WALLET_A, flag, False))
+        self.assertFalse(ward_store.get_setting(_WALLET_A, flag))
+
+        wallets = [bytes([0x10 + i]) * 16 for i in range(ward_store.MAX_WALLETS)]
+        for wallet in wallets:
+            self.assertTrue(ward_store.set_setting(wallet, flag, True))
+        self.assertFalse(ward_store.set_setting(_WALLET_A, flag, True))
+        # turning off what was never on needs no slot
+        self.assertTrue(ward_store.set_setting(_WALLET_A, flag, False))
+        self.assertTrue(ward_store.set_setting(wallets[0], flag, False))
+        self.assertTrue(ward_store.set_setting(_WALLET_A, flag, True))
+
     def test_a_record_header_must_name_its_own_wallet_and_key(self):
         """A mismatched header is a programming error, not a recoverable state.
 

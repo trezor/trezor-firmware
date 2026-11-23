@@ -114,31 +114,36 @@ def is_online() -> bool:
 
 # --- the provisional head: caught up without the WM -------------------------------------
 #
-# `WardCatchUp`'s result: a head on this wallet's own chain above the stored one, which reads in
-# THIS SESSION prove against. Never persisted, never "online": only a WM-attested adoption moves
-# the stored head, and `adopt` drops this. Layout: flag(1B) || counter(4B BE) || root(32B).
+# `WardCatchUp`'s result: a head on this wallet's own chain above the stored one that the WM once
+# attested, which reads in THIS SESSION prove against. Never persisted, never "online": only a
+# live WM-attested adoption moves the stored head, and `adopt` drops this.
+# Layout: flag(1B) || counter(4B BE) || root(32B) || timestamp(8B BE), the timestamp the WM signed.
+_PROVISIONAL_LEN = const(1 + 4 + _ROOT_LEN + 8)
 
 
-def set_provisional(counter: int, root: bytes) -> None:
+def set_provisional(counter: int, root: bytes, timestamp: int) -> None:
     from .codec import u32
 
     assert len(root) == _ROOT_LEN
-    _set(_cc.APP_WARD_PROVISIONAL, b"\x01" + u32(counter) + root)
+    _set(
+        _cc.APP_WARD_PROVISIONAL,
+        b"\x01" + u32(counter) + root + timestamp.to_bytes(8, "big"),
+    )
 
 
-def provisional() -> "tuple[int, bytes] | None":
-    """`(counter, root)` this session caught up to without the WM, or None."""
+def provisional() -> "tuple[int, bytes, int] | None":
+    """`(counter, root, timestamp)` this session caught up to without the WM, or None."""
     from .codec import Reader
 
     raw = _get(_cc.APP_WARD_PROVISIONAL)
-    if not raw or len(raw) != 1 + 4 + _ROOT_LEN or raw[0] != 1:
+    if not raw or len(raw) != _PROVISIONAL_LEN or raw[0] != 1:
         return None
     r = Reader(raw, 1)
-    return r.uint(4), bytes(r.take(_ROOT_LEN))
+    return r.uint(4), bytes(r.take(_ROOT_LEN)), r.uint(8)
 
 
 def clear_provisional() -> None:
-    _set(_cc.APP_WARD_PROVISIONAL, bytes(1 + 4 + _ROOT_LEN))
+    _set(_cc.APP_WARD_PROVISIONAL, bytes(_PROVISIONAL_LEN))
 
 
 # --- the WM's head, as this device last saw it ----------------------------------------
@@ -148,27 +153,32 @@ def clear_provisional() -> None:
 # twice when a `(counter, root)` pair recurs; storing the head beside it lets
 # `adopt.verify_round_attestation` check continuity against the head the nonce belongs to.
 #
-# Layout: flag(1B) || counter(4B BE) || root(32B, preimage form) || nonce(32B). The flag tells
-# "never synced" apart from an all-zero genesis head.
+# Layout: flag(1B) || counter(4B BE) || root(32B, preimage form) || nonce(32B)
+#         || timestamp(8B BE). The flag tells "never synced" apart from an all-zero genesis head;
+# the timestamp is the one the WM signed, which `adopt` persists beside the head.
+_WM_HEAD_LEN = const(1 + 4 + _ROOT_LEN + _NONCE_LEN + 8)
 
 
-def set_wm_head(counter: int, root: bytes, nonce: bytes) -> None:
-    """Record the WM head an attestation just vouched for, and its freshness token."""
+def set_wm_head(counter: int, root: bytes, nonce: bytes, timestamp: int) -> None:
+    """Record the WM head an attestation just vouched for, its freshness token and its time."""
     from .codec import u32
 
     assert len(root) == _ROOT_LEN and len(nonce) == _NONCE_LEN
-    _set(_cc.APP_WARD_WM_HEAD, b"\x01" + u32(counter) + root + nonce)
+    _set(
+        _cc.APP_WARD_WM_HEAD,
+        b"\x01" + u32(counter) + root + nonce + timestamp.to_bytes(8, "big"),
+    )
 
 
-def wm_head() -> "tuple[int, bytes, bytes] | None":
-    """`(counter, root, head_nonce)` as this device last saw it, or None."""
+def wm_head() -> "tuple[int, bytes, bytes, int] | None":
+    """`(counter, root, head_nonce, timestamp)` as this device last saw it, or None."""
     from .codec import Reader
 
     raw = _get(_cc.APP_WARD_WM_HEAD)
-    if not raw or len(raw) != 1 + 4 + _ROOT_LEN + _NONCE_LEN or raw[0] != 1:
+    if not raw or len(raw) != _WM_HEAD_LEN or raw[0] != 1:
         return None
     r = Reader(raw, 1)
-    return r.uint(4), bytes(r.take(_ROOT_LEN)), bytes(r.take(_NONCE_LEN))
+    return r.uint(4), bytes(r.take(_ROOT_LEN)), bytes(r.take(_NONCE_LEN)), r.uint(8)
 
 
 def require_head_nonce() -> bytes:

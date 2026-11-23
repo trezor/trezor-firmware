@@ -58,9 +58,13 @@ replaces the previous one of the same model.
 | Connect build | `xtask_draft build firmware --emulator -m T3T1 -p test --frozen false` | unit tests, most device tests, the stack |
 | Service build | the same, plus `--enable-ward-service-channel` | `tests/device_tests/ward/test_ward_service_*` |
 | THP service build | `-m T3W1` and `--enable-ward-service-channel --ward-service-thp` | `tests/device_tests/thp/*`, with `EMU=core/build-xtask/artifacts/T3W1/firmware-emu` |
+| MVP build (no WM) | the connect build, plus `--ward-without-wm` | tests marked `ward_wm("without")`; every other WARD test skips |
 
 The builds are not frozen: firmware Python edits are picked up when the emulator restarts. A new
-or changed protobuf message needs a rebuild, because message definitions are compiled in.
+or changed protobuf message needs a rebuild, because message definitions are compiled in. Switching
+`--ward-without-wm` on or off also needs the upymod build cache removed first
+(`rm -rf core/build-xtask/{debug,release}/build/upymod-* core/build-xtask/{debug,release}/deps/*upymod*`),
+or the emulator keeps the previous `utils.USE_WARD_WM`.
 
 ### Suite shell
 
@@ -204,7 +208,7 @@ python -i tools/ward_shell.py /tmp/ward-stack-XXXXXXXX
 | `d1.new_session()` | a fresh session: no attested head until it syncs |
 | `wm_down()`, `wm_up()` | stop and start the WARD Manager |
 | `start_second()` | start device 2 and its wardd, if the adapter has not |
-| `d2.catch_up()` | follow the wallet's chain to wardd's head without the WM |
+| `d2.catch_up()` | follow the wallet's chain without the WM, to the newest head a WM attestation wardd kept names |
 | `d2.answer("ward_conflict_keep_new", False)` | decline the next "Keep your value?" question |
 
 A refused operation prints `REFUSED` with the device's reason instead of raising.
@@ -217,7 +221,7 @@ A refused operation prints `REFUSED` with the device's reason instead of raising
 d1.sync(); d1.get("contact3")          # "Entry", no warning
 wm_down(); d1.new_session()
 d1.sync()                              # REFUSED: wm_unavailable
-d1.get("contact3")                     # "Unverified entry", "Not proven current; may be out of date."
+d1.get("contact3")                     # "Unverified entry", "Not reflecting changes since <date> UTC, nor user reverts."
 wm_up(); d1.sync(); d1.get("contact3") # fresh again
 ```
 
@@ -226,8 +230,8 @@ wm_up(); d1.sync(); d1.get("contact3") # fresh again
 ```python
 wm_down(); d1.put("x", "1")            # REFUSED: a write needs the WM
 wm_up(); d1.put("x", "1"); wm_down()
-d2.new_session(); d2.catch_up()        # device 2 follows the chain to device 1's head
-d2.get("x")                            # the value, under the warning
+d2.new_session(); d2.catch_up()        # device 2 follows the chain to device 1's head, which the WM attested
+d2.get("x")                            # the value, under the warning dated by that attestation
 d2.new_session(); d2.get("x")          # REFUSED: this session proves against the stored head again,
                                        # and wardd serves the newer tree
 ```
@@ -580,6 +584,10 @@ Run the file: `ward_unit_test test_apps.ward.store.py`
   `ward_unit_test test_apps.ward.store.py`
 - **`TestWardStore.test_records_never_collide_with_root_slots`** — The two key ranges are disjoint, and a root write must not disturb a record.
   `ward_unit_test test_apps.ward.store.py`
+- **`TestWardStore.test_a_root_slot_keeps_the_wm_timestamp_beside_the_head`** — The WM's timestamp for the adopted head dates the warning a read without the WM shows, and floors which cached attestation `WardCatchUp` accepts.
+  `ward_unit_test test_apps.ward.store.py`
+- **`TestWardStore.test_a_wallet_setting_is_its_own_and_gives_its_slot_back`** — Off by default, per wallet, and a wallet with nothing turned on holds no slot.
+  `ward_unit_test test_apps.ward.store.py`
 - **`TestWardStore.test_a_record_header_must_name_its_own_wallet_and_key`** — A mismatched header is a programming error, not a recoverable state.
   `ward_unit_test test_apps.ward.store.py`
 - **`TestWardStore.test_a_compact_record_is_scoped_by_its_name_alone`** — No wallet tag, so the NAME has to do the scoping -- and it does, being a hash over wallet_id.
@@ -782,10 +790,26 @@ Run the file: `ward_device_test tests/device_tests/misc/test_ward.py`
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_an_unpublished_write_simply_does_not_happen"`
 - **`test_ward_catches_up_across_transitions_it_never_saw`** — The device adopts a head two steps ahead, by verifying each step.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catches_up_across_transitions_it_never_saw"`
-- **`test_ward_catch_up_without_the_wm_reads_the_newer_head_with_the_warning`** — No WM: the chain alone moves the session's reads forward, and the screen says unproven.
+- **`test_ward_catch_up_without_the_wm_reads_the_newer_head_with_the_warning`** — No WM: a cached attestation and the chain move the session's reads forward, and the screen says the value does not reflect anything since the WM's timestamp for that head.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_without_the_wm_reads_the_newer_head_with_the_warning"`
+- **`test_ward_catch_up_refuses_a_head_the_wm_never_attested`** — A LOST RACE, or a head built from authorisations that were never published: every link is genuine, but no WM signature names the head, so the device does not read from it.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_refuses_a_head_the_wm_never_attested"`
+- **`test_ward_catch_up_refuses_an_attestation_older_than_the_stored_head`** — THE TIMESTAMP FLOOR: every head on a branch a revert removed was attested before that revert, so an attestation older than the stored head's is refused before any link is asked.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_refuses_an_attestation_older_than_the_stored_head"`
 - **`test_ward_catch_up_persists_nothing`** — The next session reads the STORED head again: a proof against the caught-up tree fails.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_persists_nothing"`
+- **`test_ward_catch_up_persists_when_the_user_allows_it`** — THE USER'S SETTING: the cached-attested head becomes the STORED head, so a later session reads from it too -- still under the dated warning, since no WM attested it live.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_persists_when_the_user_allows_it"`
+- **`test_ward_catch_up_stops_persisting_once_the_user_withdraws`** — Withdrawing needs no screen, and the next catch-up is for its session only again.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_stops_persisting_once_the_user_withdraws"`
+- **`test_ward_persisting_still_refuses_an_attestation_older_than_the_stored_head`** — The setting changes what is KEPT, not what is accepted: the timestamp floor still holds.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_persisting_still_refuses_an_attestation_older_than_the_stored_head"`
+- **`test_ward_without_a_wm_catches_up_and_writes_on_its_own_chain`** — THE MVP LOOP (MVP build): catch up to genesis, write, store the write, catch up to it. Every head is moved by the chain alone and persisted, the write carries no `wm_sig`, and a read is proved but never current.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_without_a_wm_catches_up_and_writes_on_its_own_chain"`
+- **`test_ward_without_a_wm_refuses_the_wm_routes_and_the_setting`** — MVP build: `WardSync` and `WardSetPersistWithoutWm` are refused.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_without_a_wm_refuses_the_wm_routes_and_the_setting"`
+- **`test_ward_without_a_wm_still_refuses_an_older_head_or_a_foreign_chain`** — MVP build: the chain is the only authority here, so its two checks matter more, not less.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_without_a_wm_still_refuses_an_older_head_or_a_foreign_chain"`
 - **`test_ward_catch_up_refuses_a_head_older_than_the_stored_one`** — Serving a device an older head without the WM is detected before any link is asked.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_refuses_a_head_older_than_the_stored_one"`
 - **`test_ward_without_the_wm_a_read_from_an_older_tree_is_refused`** — The other way to serve an older root: answer a read with a proof from an earlier tree.
@@ -1372,6 +1396,8 @@ Run the file: `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__
 
 - **`stores a link whole, once`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/evoluBackend.test.ts -t 'stores a link whole, once'`
+- **`keeps a WM attestation whole, once, apart from the links`**
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/evoluBackend.test.ts -t 'keeps a WM attestation whole, once, apart from the links'`
 - **`derives the WARD owner as a child of the wallet's Evolu node`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/evoluBackend.test.ts -t 'derives the WARD owner as a child of the wallet'"'"'s Evolu node'`
 - **`resolves when the write completes, and stops listening`**
@@ -1486,3 +1512,9 @@ Run the file: `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/wmServer.test.ts -t 'reports it, fails a sync as wm_unavailable, and still serves its last head'`
 - **`walks a device that never synced up to its head, without the WM`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/wmServer.test.ts -t 'walks a device that never synced up to its head, without the WM'`
+- **`stops at the newest head a kept WM attestation names, below the replica head`**
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/wmServer.test.ts -t 'stops at the newest head a kept WM attestation names, below the replica head'`
+- **`with no kept attestation, offers the head bare, which a WM device refuses`**
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/wmServer.test.ts -t 'with no kept attestation, offers the head bare, which a WM device refuses'`
+- **`with no kept attestation, moves a device built without a WM, which persists`**
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/wmServer.test.ts -t 'with no kept attestation, moves a device built without a WM, which persists'`

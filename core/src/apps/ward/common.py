@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 # Sealing and the trie stop a host forging a value or moving a leaf between paths, but against a
 # root this session has not had attested it can still serve an OLDER tree: the value is authentic,
 # its freshness is not proven. Shown unless the WM attested the head in this session -- see
-# `add_freshness`.
+# `add_freshness`, which names the WM's timestamp for the head instead when it knows one.
 WARNING_UNVERIFIED: "StrPropertyType" = (
     "Warning",
     "Not proven current; may be out of date.",
@@ -83,10 +83,39 @@ def is_fresh() -> bool:
     return sync_round.is_online()
 
 
-def add_freshness(props: list) -> None:
-    """Append the warning unless the WM attested this session's head (`is_fresh`)."""
-    if not is_fresh():
+async def add_freshness(props: list) -> None:
+    """Append the warning unless the WM attested this session's head (`is_fresh`).
+
+    DATED when the WM's timestamp for the head reads prove against is known (`read_timestamp`):
+    the WM held that head then, and nothing since is reflected -- neither a later change, nor a
+    revert that discarded it. A head stored before timestamps were kept gets the undated warning.
+    """
+    if is_fresh():
+        return
+
+    from trezor.strings import format_timestamp
+
+    from .root import read_timestamp
+
+    timestamp = await read_timestamp()
+    if timestamp is None:
         props.append(WARNING_UNVERIFIED)
+    else:
+        props.append(
+            (
+                "Warning",
+                "Not reflecting changes since %s UTC, nor user reverts."
+                % format_timestamp(timestamp),
+                False,
+            )
+        )
+
+
+def has_wm() -> bool:
+    """Whether this firmware is deployed with a WARD Manager. Not in the MVP build
+    (`--ward-without-wm`): a head is then never attested, the stored head is moved by
+    `WardCatchUp` along this wallet's own chain, and writes derive from it."""
+    return utils.USE_WARD_WM
 
 
 async def online() -> bool:
@@ -94,8 +123,16 @@ async def online() -> bool:
 
     A service build drives one sync attempt itself and raises whatever it failed with; a
     connect build can only report what the host has already done.
+
+    WITHOUT A WM (the MVP) nothing is ever attested, so this means "there is a stored head to
+    write on": the host catches the device up (`WardCatchUp`, persisted) first, genesis included.
     """
     from . import round as sync_round
+
+    if not has_wm():
+        from .root import get_root
+
+        return await get_root() is not None
 
     if sync_round.is_online():
         return True

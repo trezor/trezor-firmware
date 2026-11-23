@@ -88,7 +88,7 @@ Other attacks to try by hand, with only the ordinary commands:
 
 | Attack | How | Expected |
 | --- | --- | --- |
-| Hide the WM so reads cannot be fresh | `wm_down(); d1.new_session(); d1.get("contact3")` | shown, but as "Unverified entry" with "Not proven current" |
+| Hide the WM so reads cannot be fresh | `wm_down(); d1.new_session(); d1.get("contact3")` | shown, but as "Unverified entry" with "Not reflecting changes since <date> UTC, nor user reverts." |
 | Write while the WM is away | `wm_down(); d1.put("x", "1")` | `REFUSED: wm_unavailable`; the device's head does not move |
 | Read a newer tree in a session that did not catch up to it | after `d2.catch_up()` in one session: `d2.new_session(); d2.get(...)` an entry changed since the stored head | `REFUSED`: the session proves against the stored head |
 
@@ -186,6 +186,10 @@ catalogue](ward_testing.md#test-catalogue).
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_an_attestation_cannot_be_adopted_twice"`
 - **`test_ward_catch_up_refuses_a_head_older_than_the_stored_one`** — Serving a device an older head without the WM is detected before any link is asked.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_refuses_a_head_older_than_the_stored_one"`
+- **`test_ward_catch_up_refuses_a_head_the_wm_never_attested`** — A LOST RACE, or a head built from authorisations that were never published: every link is genuine, but no WM signature names the head, so the device does not read from it.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_refuses_a_head_the_wm_never_attested"`
+- **`test_ward_catch_up_refuses_an_attestation_older_than_the_stored_head`** — THE TIMESTAMP FLOOR: every head on a branch a revert removed was attested before that revert, so an attestation older than the stored head's is refused before any link is asked.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_refuses_an_attestation_older_than_the_stored_head"`
 - **`test_ward_without_the_wm_a_read_from_an_older_tree_is_refused`** — The other way to serve an older root: answer a read with a proof from an earlier tree.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_without_the_wm_a_read_from_an_older_tree_is_refused"`
 - **`test_ward_catch_up_refuses_a_chain_that_does_not_reach_the_stored_head`**

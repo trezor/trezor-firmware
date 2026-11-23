@@ -22,11 +22,17 @@ async def sync(msg: WardSync) -> WardSyncAck:
     from . import round as sync_round
     from .attest import NONCE_LENGTH
     from .cas import head_init_sig
-    from .common import require_initialized
+    from .common import has_wm, require_initialized
     from .keys import derive_k_sig, derive_ward_id
     from .root import get_counter, get_root
 
     require_initialized()
+    # Every WM route (ingest, reconcile, the chain walk, rejoin, rollback) needs the round opened
+    # here, so refusing it refuses them all.
+    if not has_wm():
+        from trezor.wire import DataError
+
+        raise DataError("WARD: this firmware has no WARD Manager; catch up with WardCatchUp")
 
     nonce = random.bytes(NONCE_LENGTH)
     sync_round.begin(nonce)

@@ -118,6 +118,8 @@ ward_service_thp = [
     "upymod/ward_service_thp",
     "trezor_lib/ward_service_thp",
 ]
+# WARD for a deployment with no WARD Manager (the MVP); see apps/ward/common.py `has_wm`.
+ward_without_wm = ["upymod/ward_without_wm"]
 boot_ucb = ["sec/boot_ucb", "trezor_lib/boot_ucb"]
 button = ["io/button", "upymod/button", "trezor_lib/button"]
 consumption_mask = ["sec/consumption_mask"]

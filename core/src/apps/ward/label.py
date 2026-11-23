@@ -12,6 +12,8 @@ for `show_address(warning=...)`. Failures are labelling failures, for the caller
 # Short and blunt: they land in a `warning` slot next to an address.
 # Online means the WM attested this session's head (`common.is_fresh`), so a pulled label is current.
 NOTE_CURRENT = "Label proven current."
+# Without a WM (the MVP build) a pulled label is proved against the stored head, never current.
+NOTE_PROVEN = "Label proven; not checked as current."
 NOTE_ABSENT = "No label for this address."
 NOTE_OFFLINE = "Offline label; not checked with the host."
 NOTE_PENDING = "Label not published yet."
@@ -44,7 +46,7 @@ async def resolve_label(
     could not be performed.
     """
     from . import offline_store
-    from .common import online_or_offline, read_entry, require_initialized
+    from .common import is_fresh, online_or_offline, read_entry, require_initialized
     from .keys import ENTRY_TYPE_ADDRESS
 
     _authorize(principal, "read")
@@ -59,7 +61,7 @@ async def resolve_label(
         # ABSENT is proven (a witness was checked); an EMPTY value is a deliberate blank.
         if value is None:
             return None, NOTE_ABSENT
-        return value, NOTE_CURRENT
+        return value, NOTE_CURRENT if is_fresh() else NOTE_PROVEN
 
     status, entry = await offline_store.get(key_type, app_id, identifier)
 

@@ -54,7 +54,7 @@ async def get_entry(msg: WardGetEntry) -> Success:
     else:
         title = "Entry" if is_fresh() else "Unverified entry"
         props.append(("Value", display_bytes(value), True))
-    add_freshness(props)
+    await add_freshness(props)
 
     await confirm_properties("ward_get_entry", title, props)
 

@@ -312,8 +312,9 @@ def flush(session: "Session", client: WarddClient, max_batch: int = 1) -> dict:
 
 
 def catch_up(session: "Session", client: WarddClient) -> dict:
-    """Walk the device up to the replica's head WITHOUT the WM, for this session only: what a
-    host can do while the WM is down. Run `open_store` first, on the same session."""
+    """Walk the device up WITHOUT the WM, for this session only, to the newest head on the
+    replica's chain that a WM attestation wardd kept names: what a host can do while the WM is
+    down. Run `open_store` first, on the same session."""
     return client.call("catchUp", {}, session_device(session))
 
 

@@ -351,6 +351,7 @@ if not utils.BITCOIN_ONLY:
     WardSetPointer = 2349
     WardCatchUp = 2350
     WardCatchUpAck = 2351
+    WardSetPersistWithoutWm = 2352
     WardResetApp = 2343
     WardResetAppAck = 2344
     DisplayAddress = 2322

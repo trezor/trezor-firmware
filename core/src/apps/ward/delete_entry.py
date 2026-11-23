@@ -62,7 +62,7 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
 
     props = entry_props(app_id, identifier)
     props.append(("Deleting value", display_content(current), True))
-    add_freshness(props)
+    await add_freshness(props)
 
     await confirm_properties("ward_delete_entry", "Delete entry", props, hold=True)
 

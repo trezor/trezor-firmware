@@ -414,6 +414,7 @@ def _prepared_test_ctx(
 
     _check_protocol(request, _raw_test_ctx)
     _check_ward_transport(request, _raw_test_ctx)
+    _check_ward_wm(request, _raw_test_ctx)
 
     sd_marker = request.node.get_closest_marker("sd_card")
     if sd_marker and not _raw_test_ctx.sd_card_present:
@@ -548,6 +549,41 @@ def _check_ward_transport(
 
     if not applicable.intersection(marker.args):
         pytest.skip(f"Test does not apply to a '{actual}' WARD build.")
+
+
+_WARD_HAS_WM: bool | None = None
+
+
+def _check_ward_wm(request: pytest.FixtureRequest, client: TrezorTestContext) -> None:
+    """Skip a WARD test that does not apply to whether this firmware has a WARD Manager.
+
+    `ward_wm("with")`, `ward_wm("without")`, or both. A WARD test without the marker needs a WM:
+    the MVP build (`--ward-without-wm`) refuses every WM route, so the rest of the suite is
+    inapplicable there rather than failing.
+
+    Probed by `WardSetPersistWithoutWm` on a seedless session, which the MVP build refuses for
+    being one before anything else, and a WM build refuses for wanting a seed: no state changes.
+    """
+    if not request.node.get_closest_marker("ward"):
+        return
+    marker = request.node.get_closest_marker("ward_wm")
+    wanted = set(marker.args) if marker else {"with"}
+
+    global _WARD_HAS_WM
+    if _WARD_HAS_WM is None:
+        from trezorlib import exceptions as trezor_exceptions
+
+        try:
+            client.get_seedless_session().call(
+                messages.WardSetPersistWithoutWm(allow=False), expect=messages.Success
+            )
+            _WARD_HAS_WM = True
+        except trezor_exceptions.TrezorFailure as e:
+            _WARD_HAS_WM = "no WARD Manager" not in (e.message or "")
+
+    actual = "with" if _WARD_HAS_WM else "without"
+    if actual not in wanted:
+        pytest.skip(f"Test does not apply to a WARD build {actual} a WM.")
 
 
 def _is_main_runner(session_or_request: pytest.Session | pytest.FixtureRequest) -> bool:

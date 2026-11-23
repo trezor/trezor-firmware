@@ -40,6 +40,7 @@ ble = ["io/ble"]
 # See apps/ward/service.py. Do not build new work on this path.
 ward_service_channel = ["io/ward_service_channel"]
 ward_service_thp = ["ward_service_channel", "io/ward_service_thp"]
+ward_without_wm = []
 button = ["io/button"]
 decred = []
 disable_animation = []

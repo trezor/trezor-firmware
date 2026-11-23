@@ -283,17 +283,25 @@ message WardVerifyChainAck {
 }
 
 /**
- * Request: follow this wallet's own chain to the head the host names, WITH NO WARD MANAGER, for
- * this session only.
+ * Request: follow this wallet's own chain to a head the WM ONCE ATTESTED, WITH NO WARD MANAGER
+ * reachable, for this session only.
  *
- * The device walks back from the named head (WardChainRequest, as in WardVerifyChain) and must
- * land exactly on its stored head; every link is authorised by a device of this wallet. A head
- * below the stored counter is refused before any link is asked for.
+ * The named head is the `to` end of a CACHED attestation: one the WM signed in some earlier round,
+ * kept by the host with the round nonce it answered. The device verifies the signature over that
+ * nonce -- it proves the head WAS the WM's at `timestamp`, not that it still is -- and refuses one
+ * whose timestamp is older than its stored head's. It then walks back from the named head
+ * (WardChainRequest, as in WardVerifyChain) and must land exactly on its stored head; every link
+ * is authorised by a device of this wallet. A head below the stored counter is refused before any
+ * link is asked for.
  *
- * NOTHING IS PERSISTED. Reads in this session prove against the named head, under the "not proven
- * current" warning; the stored root and counter move only by a WM-attested adoption. Persisting
- * would reintroduce what WardVerifyChain's archived anchor was removed for: a host walking a
- * device back up a branch the user had discarded.
+ * NOTHING IS PERSISTED BY DEFAULT. Reads in this session prove against the named head, under a
+ * warning that it does not reflect changes since `timestamp`, nor reverts; the stored root and
+ * counter move only by a live WM-attested adoption. Persisting would reintroduce what
+ * WardVerifyChain's archived anchor was removed for: a host walking a device back up a branch the
+ * user had discarded. Two exceptions, both reported in WardCatchUpAck.persisted:
+ *  - the user allowed it for this wallet (WardSetPersistWithoutWm); the attestation is required,
+ *  - a firmware built without a WARD Manager (the MVP) always persists, and has no attestation to
+ *    ask for: the fields below are then ignored and the chain alone moves the stored head.
  *
  * @start
  * @next WardChainRequest
@@ -303,6 +311,16 @@ message WardVerifyChainAck {
 message WardCatchUp {
     required uint32 to_counter = 1;
     optional bytes  to_root    = 2;  // absent: the empty tree
+
+    // THE CACHED ATTESTATION whose `to` end is the head above, field for field as
+    // WardIngestAttestation, plus the round nonce it was signed over.
+    optional bytes  nonce           = 3;  // 32B, the round nonce of the round it answered
+    optional uint32 from_counter    = 4;
+    optional bytes  from_root       = 5;  // absent means the empty tree
+    optional bytes  from_head_nonce = 6;  // 32B
+    optional bytes  to_head_nonce   = 7;  // 32B
+    optional uint64 timestamp       = 8;  // WM's clock, seconds: when the WM reached the head
+    optional bytes  wm_signature    = 9;  // 64B Ed25519
 }
 
 /**
@@ -312,6 +330,24 @@ message WardCatchUp {
 message WardCatchUpAck {
     optional uint32 counter         = 1;
     optional uint32 reverts_crossed = 2;
+    optional bool   persisted       = 3;  // the stored head moved, rather than this session's
+}
+
+/**
+ * Request: allow, or stop allowing, WardCatchUp to PERSIST a cached-attested head for the active
+ * wallet while the WM is unreachable.
+ *
+ * Allowing it is the user's decision and is held to confirm: a device that persists can be walked
+ * up a branch a revert removed, if it missed that revert, and then needs a WardRollback once the
+ * WM is back. Stopping needs no confirmation. Refused on a firmware built without a WM, which
+ * always persists.
+ *
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message WardSetPersistWithoutWm {
+    required bool allow = 1;
 }
 
 /**

@@ -810,6 +810,7 @@ def test_ward_get_entry_pulls_and_shows(session: Session):
     assert "unverified" not in rec.title
     assert "Petr_label" in rec.text
     assert "not proven current" not in rec.text.lower()
+    assert "notreflecting" not in rec.squashed.lower()
 
 
 @pytest.mark.models("core")
@@ -830,7 +831,8 @@ def test_ward_get_entry_without_the_wm_proves_against_the_stored_head_and_warns(
     _res, rec = _read(fresh, store, lambda p: ward.get_entry(fresh, _APP, b"addr1", p))
     assert "unverified entry" in rec.title
     assert "Petr_label" in rec.text
-    assert "not proven current" in rec.text.lower()
+    # dated by the WM's timestamp for the stored head, which `_attest` sets at _T0 + counter
+    assert _not_reflecting(_T0 + store.counter) in rec.squashed
 
     # the same leaf in another tree: authentic content, but not under the stored head
     key = expected_entry_key(_K_PATH, _APP, b"addr1")
@@ -2164,20 +2166,236 @@ def _away(session: Session, store: WardTrie) -> tuple:
     return links, head, base_counter + 2, base_root
 
 
+def _not_reflecting(timestamp: int) -> str:
+    """The dated freshness warning as `_Recorded.squashed` holds it."""
+    from datetime import datetime, timezone
+
+    when = datetime.fromtimestamp(timestamp, timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    return "".join(f"Not reflecting changes since {when} UTC, nor user reverts.".split())
+
+
+def _cached(
+    store: WardTrie,
+    links: list,
+    timestamp: int,
+    to: "tuple | None" = None,
+) -> ward.CachedAttestation:
+    """What a host keeps from a sync round: the WM's attestation of the step into the last of
+    `links`, signed over a round nonce this device never minted -- an earlier round's, or another
+    device's. `to` overrides the head it names, to attest a head the links do not reach."""
+    wm = _wm_for(store)
+    from_counter, from_root, to_counter, to_root = links[-1][:4]
+    if to is not None:
+        to_counter, to_root = to
+    nonce = bytes(range(32))
+    from_head_nonce, to_head_nonce = b"\x11" * 32, b"\x22" * 32
+    sig = wm.sign(
+        _WARD_ID,
+        nonce,
+        from_counter,
+        from_root,
+        from_head_nonce,
+        to_counter,
+        to_root,
+        to_head_nonce,
+        timestamp,
+    )
+    return ward.CachedAttestation(
+        nonce, from_counter, from_root, from_head_nonce, to_head_nonce, timestamp, sig
+    )
+
+
 @pytest.mark.models("core")
 def test_ward_catch_up_without_the_wm_reads_the_newer_head_with_the_warning(session: Session):
-    """No WM: the chain alone moves the session's reads forward, and the screen says unproven."""
+    """No WM: a cached attestation and the chain move the session's reads forward, and the screen
+    says the value does not reflect anything since the WM's timestamp for that head."""
     store = WardTrie()
     links, head, target, _base_root = _away(session, store)
 
     offline = session.test_ctx.get_session()
-    ack = ward.catch_up(offline, target, head.root(), _serves(links))
+    ack = ward.catch_up(
+        offline, target, head.root(), _cached(store, links, _T0 + target), _serves(links)
+    )
     assert ack.counter == target
+    assert not ack.persisted
 
     _res, rec = _read(offline, head, lambda p: ward.get_entry(offline, _APP, b"b", p))
     assert "two" in rec.text
     assert "unverified entry" in rec.title
+    assert _not_reflecting(_T0 + target) in rec.squashed
+
+
+def _allow_persist(session: Session) -> _Recorded:
+    """Allow catch-up to persist for this wallet, walking the held screen."""
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_input_flow(
+            InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
+        )
+        ward.set_persist_without_wm(session, True)
+    return rec
+
+
+@pytest.mark.models("core")
+def test_ward_catch_up_persists_when_the_user_allows_it(session: Session):
+    """THE USER'S SETTING: the cached-attested head becomes the STORED head, so a later session
+    reads from it too -- still under the dated warning, since no WM attested it live."""
+    store = WardTrie()
+    links, head, target, _base_root = _away(session, store)
+    rec = _allow_persist(session)
+    assert "keep state without wm" in rec.title
+
+    ack = ward.catch_up(
+        session.test_ctx.get_session(),
+        target,
+        head.root(),
+        _cached(store, links, _T0 + target),
+        _serves(links),
+    )
+    assert ack.persisted
+
+    later = session.test_ctx.get_session()
+    _res, rec = _read(later, head, lambda p: ward.get_entry(later, _APP, b"b", p))
+    assert "two" in rec.text
+    assert _not_reflecting(_T0 + target) in rec.squashed
+
+
+@pytest.mark.models("core")
+def test_ward_catch_up_stops_persisting_once_the_user_withdraws(session: Session):
+    """Withdrawing needs no screen, and the next catch-up is for its session only again."""
+    store = WardTrie()
+    links, head, target, _base_root = _away(session, store)
+    _allow_persist(session)
+    ward.set_persist_without_wm(session, False)
+
+    ack = ward.catch_up(
+        session.test_ctx.get_session(),
+        target,
+        head.root(),
+        _cached(store, links, _T0 + target),
+        _serves(links),
+    )
+    assert not ack.persisted
+
+
+@pytest.mark.models("core")
+def test_ward_persisting_still_refuses_an_attestation_older_than_the_stored_head(
+    session: Session,
+):
+    """The setting changes what is KEPT, not what is accepted: the timestamp floor still holds."""
+    store = WardTrie()
+    links, head, target, _base_root = _away(session, store)
+    _allow_persist(session)
+
+    with pytest.raises(exceptions.TrezorFailure, match="before this device's head"):
+        ward.catch_up(
+            session.test_ctx.get_session(),
+            target,
+            head.root(),
+            _cached(store, links, _T0),
+            _serves(links),
+        )
+
+
+# --- the MVP build: no WARD Manager (`--ward-without-wm`) ----------------------------------
+
+
+@pytest.mark.models("core")
+@pytest.mark.ward_wm("without")
+def test_ward_without_a_wm_catches_up_and_writes_on_its_own_chain(session: Session):
+    """THE MVP LOOP: catch up to genesis, write, store the write, catch up to it. Every head is
+    moved by the chain alone and persisted, the write carries no `wm_sig`, and a read is proved
+    but never current."""
+    store = WardTrie()
+    ack = ward.catch_up(session, 0, None, None, store.links_ending_at)
+    assert ack.persisted and ack.counter == 0
+
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"addr1", b"Petr_label", p),
+        "ward_set_entry",
+    )
+    assert res.wm_sig is None
+    ward.apply(store, res)
+
+    ack = ward.catch_up(session, store.counter, store.root(), None, store.links_ending_at)
+    assert ack.persisted and ack.counter == store.counter == 1
+
+    later = session.test_ctx.get_session()
+    _res, rec = _read(later, store, lambda p: ward.get_entry(later, _APP, b"addr1", p))
+    assert "Petr_label" in rec.text
+    assert "unverified entry" in rec.title
     assert "not proven current" in rec.text.lower()
+
+
+@pytest.mark.models("core")
+@pytest.mark.ward_wm("without")
+def test_ward_without_a_wm_refuses_the_wm_routes_and_the_setting(session: Session):
+    with pytest.raises(exceptions.TrezorFailure, match="no WARD Manager"):
+        ward.sync(session)
+    with pytest.raises(exceptions.TrezorFailure, match="no WARD Manager"):
+        ward.set_persist_without_wm(session, True)
+
+
+@pytest.mark.models("core")
+@pytest.mark.ward_wm("without")
+def test_ward_without_a_wm_still_refuses_an_older_head_or_a_foreign_chain(session: Session):
+    """The chain is the only authority here, so its two checks matter more, not less."""
+    store = WardTrie()
+    ward.catch_up(session, 0, None, None, store.links_ending_at)
+    for value in (b"one", b"two"):
+        res, _rec = _write(
+            session,
+            store,
+            lambda p, v=value: ward.set_entry(session, _APP, b"a", v, p),
+            "ward_set_entry",
+        )
+        ward.apply(store, res)
+        older = (store.counter - 1, store.links[-1][1])
+        ward.catch_up(session, store.counter, store.root(), None, store.links_ending_at)
+
+    with pytest.raises(exceptions.TrezorFailure, match="older than this device"):
+        ward.catch_up(session, older[0], older[1], None, store.links_ending_at)
+
+    forged = [_link(store.counter, b"\x00" * 32, store.counter + 1, b"\xbb" * 32)]
+    with pytest.raises(exceptions.TrezorFailure, match="chain link|does not descend"):
+        ward.catch_up(session, store.counter + 1, b"\xbb" * 32, None, _serves(forged))
+
+
+@pytest.mark.models("core")
+def test_ward_catch_up_refuses_a_head_the_wm_never_attested(session: Session):
+    """A LOST RACE, or a head built from authorisations that were never published: every link is
+    genuine, but no WM signature names the head, so the device does not read from it."""
+    store = WardTrie()
+    links, head, target, _base_root = _away(session, store)
+    forged = _cached(store, links, _T0 + target, to=(target, b"\xbb" * 32))
+
+    with pytest.raises(exceptions.TrezorFailure, match="never attested"):
+        ward.catch_up(
+            session.test_ctx.get_session(), target, head.root(), forged, _serves(links)
+        )
+
+
+@pytest.mark.models("core")
+def test_ward_catch_up_refuses_an_attestation_older_than_the_stored_head(session: Session):
+    """THE TIMESTAMP FLOOR: every head on a branch a revert removed was attested before that
+    revert, so an attestation older than the stored head's is refused before any link is asked."""
+    store = WardTrie()
+    links, head, target, base_root = _away(session, store)
+    stored_time = _T0 + target - 2  # `_attest` stamped the stored head at _T0 + its counter
+
+    def no_links(*_args):
+        raise AssertionError("the device must refuse before asking for links")
+
+    with pytest.raises(exceptions.TrezorFailure, match="before this device's head"):
+        ward.catch_up(
+            session.test_ctx.get_session(),
+            target,
+            head.root(),
+            _cached(store, links, stored_time - 1),
+            no_links,
+        )
 
 
 @pytest.mark.models("core")
@@ -2185,7 +2403,13 @@ def test_ward_catch_up_persists_nothing(session: Session):
     """The next session reads the STORED head again: a proof against the caught-up tree fails."""
     store = WardTrie()
     links, head, target, _base_root = _away(session, store)
-    ward.catch_up(session.test_ctx.get_session(), target, head.root(), _serves(links))
+    ward.catch_up(
+        session.test_ctx.get_session(),
+        target,
+        head.root(),
+        _cached(store, links, _T0 + target),
+        _serves(links),
+    )
 
     later = session.test_ctx.get_session()
     with pytest.raises(exceptions.TrezorFailure, match="trusted root"):
@@ -2205,8 +2429,9 @@ def test_ward_catch_up_refuses_a_head_older_than_the_stored_one(session: Session
     def no_links(*_args):
         raise AssertionError("the device must refuse before asking for links")
 
+    attested = _cached(store, [(old_counter - 1, None, old_counter, old_root, b"")], _T0)
     with pytest.raises(exceptions.TrezorFailure, match="older than this device"):
-        ward.catch_up(offline, old_counter, old_root, no_links)
+        ward.catch_up(offline, old_counter, old_root, attested, no_links)
 
 
 @pytest.mark.models("core")
@@ -2229,8 +2454,14 @@ def test_ward_catch_up_refuses_a_chain_that_does_not_reach_the_stored_head(sessi
     links, head, target, _base_root = _away(session, store)
     forged = [links[0][:1] + (links[0][1][:-1] + b"\x00",) + links[0][2:], links[1]]
 
-    with pytest.raises(exceptions.TrezorFailure):
-        ward.catch_up(session.test_ctx.get_session(), target, head.root(), _serves(forged))
+    with pytest.raises(exceptions.TrezorFailure, match="does not descend|chain link"):
+        ward.catch_up(
+            session.test_ctx.get_session(),
+            target,
+            head.root(),
+            _cached(store, links, _T0 + target),
+            _serves(forged),
+        )
 
 
 @pytest.mark.models("core")
@@ -2238,7 +2469,9 @@ def test_ward_catch_up_is_refused_with_an_attested_head(session: Session):
     store = WardTrie()
     links, head, target, _base_root = _away(session, store)
     with pytest.raises(exceptions.TrezorFailure, match="already has a WM-attested head"):
-        ward.catch_up(session, target, head.root(), _serves(links))
+        ward.catch_up(
+            session, target, head.root(), _cached(store, links, _T0 + target), _serves(links)
+        )
 
 
 @pytest.mark.models("core")

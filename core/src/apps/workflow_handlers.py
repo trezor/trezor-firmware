@@ -186,6 +186,8 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.ward.verify_chain"
         if msg_type == MessageType.WardCatchUp:
             return "apps.ward.catch_up"
+        if msg_type == MessageType.WardSetPersistWithoutWm:
+            return "apps.ward.persist_setting"
         if msg_type == MessageType.WardRollback:
             return "apps.ward.rollback"
         if msg_type == MessageType.WardRejoin:

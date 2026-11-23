@@ -359,21 +359,59 @@ def verify_chain(
     )
 
 
+class CachedAttestation(NamedTuple):
+    """A WM attestation kept from an earlier round, with the round nonce it was signed over.
+
+    Its `to` end is the head it vouches for; `catch_up` names that head separately.
+    """
+
+    nonce: bytes
+    from_counter: int
+    from_root: Optional[bytes]
+    from_head_nonce: bytes
+    to_head_nonce: bytes
+    timestamp: int
+    wm_signature: bytes
+
+
 def catch_up(
     session: "Session",
     to_counter: int,
     to_root: Optional[bytes],
+    attestation: Optional[CachedAttestation],
     link_source: LinkSource,
     max_links_per_ack: int = 64,
 ) -> messages.WardCatchUpAck:
     """Follow the wallet's own chain to `(to_counter, to_root)` WITHOUT the WM, for this session.
 
-    The device walks back to its stored head and reads from the named head under the "not proven
-    current" warning; nothing is persisted. A head below the stored counter is refused.
+    `attestation` is the WM's cached attestation of that head. The device checks it, refuses one
+    older than its stored head's, walks back to its stored head and reads from the named head
+    under a warning dated by the attestation. Nothing is persisted unless the user allowed it for
+    this wallet (`set_persist_without_wm`); `persisted` in the ack says which. A head below the
+    stored counter is refused.
+
+    On a firmware built without a WM (the MVP) `attestation` may be None: the chain alone decides,
+    and the head is always persisted.
     """
     return _chain_walk(
         session,
-        messages.WardCatchUp(to_counter=to_counter, to_root=to_root),
+        messages.WardCatchUp(
+            to_counter=to_counter,
+            to_root=to_root,
+            **(
+                {}
+                if attestation is None
+                else dict(
+                    nonce=attestation.nonce,
+                    from_counter=attestation.from_counter,
+                    from_root=attestation.from_root,
+                    from_head_nonce=attestation.from_head_nonce,
+                    to_head_nonce=attestation.to_head_nonce,
+                    timestamp=attestation.timestamp,
+                    wm_signature=attestation.wm_signature,
+                )
+            ),
+        ),
         link_source,
         max_links_per_ack,
         messages.WardCatchUpAck,
@@ -601,6 +639,14 @@ def flush_queue(
             max_batch=max_batch if max_batch > 1 else None,
         ),
         provider,
+    )
+
+
+def set_persist_without_wm(session: "Session", allow: bool) -> messages.Success:
+    """Allow (held to confirm) or stop `catch_up` persisting a cached-attested head for the active
+    wallet while the WM is unreachable. Refused on a firmware built without a WM."""
+    return session.call(
+        messages.WardSetPersistWithoutWm(allow=allow), expect=messages.Success
     )
 
 

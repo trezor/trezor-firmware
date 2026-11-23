@@ -1,6 +1,6 @@
 """Persistent WARD state, per hidden wallet (keyed by wallet_id): root slots, host pins, the
 offline store, claims. Disjoint key ranges -- roots 1..MAX_WALLETS, service pin 0x10, app pin 0x11,
-claims 0x20.., records 0x40.. -- so no record is read as another kind.
+settings 0x18.., claims 0x20.., records 0x40.. -- so no record is read as another kind.
 
 When full the store REFUSES, never evicts, and only a user-confirmed erase or replacement removes a
 record. Plaintext is fine: `storage.c` seals each value under a PIN-derived key, slot as AAD.
@@ -13,6 +13,7 @@ from storage import common
 _WALLET_ID_LEN = const(16)
 _ROOT_LEN = const(32)
 _COUNTER_LEN = const(4)
+_TIMESTAMP_LEN = const(8)
 
 
 class _Range:
@@ -55,7 +56,9 @@ def _check_wallet_id(wallet_id: bytes) -> None:
         raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
 
 
-# --- root slots: wallet_id(16) || root(32) || counter(4) ------------------------------
+# --- root slots: wallet_id(16) || root(32) || counter(4) [|| timestamp(8)] -----------
+# The timestamp is the one the WM signed for the adopted head. A slot written before it was kept
+# has none, and reads as None.
 MAX_WALLETS = const(8)
 _ROOTS = _Range(1, MAX_WALLETS)
 
@@ -84,9 +87,24 @@ def get_counter(wallet_id: bytes) -> int:
     return int.from_bytes(found[1][off : off + _COUNTER_LEN], "big")
 
 
-def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> bool:
-    """Record this wallet's root and counter. False if every slot belongs to another wallet --
-    not advisory: ignoring it believes in a head that was never stored."""
+def get_timestamp(wallet_id: bytes) -> int | None:
+    """The WM's timestamp for the stored head, or None if the slot predates keeping it."""
+    found = _find(wallet_id)
+    off = _WALLET_ID_LEN + _ROOT_LEN + _COUNTER_LEN
+    if found is None or len(found[1]) < off + _TIMESTAMP_LEN:
+        return None
+    return int.from_bytes(found[1][off : off + _TIMESTAMP_LEN], "big")
+
+
+def set_root(
+    wallet_id: bytes,
+    root: bytes | None,
+    counter: int = 0,
+    timestamp: int | None = None,
+) -> bool:
+    """Record this wallet's root, counter and (if known) the WM's timestamp for it. False if every
+    slot belongs to another wallet -- not advisory: ignoring it believes in a head that was never
+    stored."""
     _check_wallet_id(wallet_id)
 
     found = _find(wallet_id)
@@ -98,8 +116,48 @@ def set_root(wallet_id: bytes, root: bytes | None, counter: int = 0) -> bool:
         index,
         wallet_id
         + (root if root is not None else bytes(_ROOT_LEN))
-        + counter.to_bytes(_COUNTER_LEN, "big"),
+        + counter.to_bytes(_COUNTER_LEN, "big")
+        + (b"" if timestamp is None else timestamp.to_bytes(_TIMESTAMP_LEN, "big")),
     )
+    return True
+
+
+# --- per-wallet settings: wallet_id(16) || flags(1), keys 0x18.. ---------------------------
+# Absent means every flag is off. A user's choice, so only a confirmed request writes one.
+_SETTINGS = _Range(0x18, MAX_WALLETS)
+SETTING_PERSIST_WITHOUT_WM = const(0x01)  # `WardCatchUp` may persist a cached-attested head
+
+
+def get_setting(wallet_id: bytes, flag: int) -> bool:
+    """Whether the user turned `flag` on for this wallet."""
+    _check_wallet_id(wallet_id)
+    for _i, rec in _SETTINGS.items():
+        if rec[:_WALLET_ID_LEN] == wallet_id:
+            return bool(rec[_WALLET_ID_LEN] & flag)
+    return False
+
+
+def set_setting(wallet_id: bytes, flag: int, on: bool) -> bool:
+    """Turn `flag` on or off for this wallet. False if every slot belongs to another wallet; a
+    wallet left with no flag on gives its slot back."""
+    _check_wallet_id(wallet_id)
+    index = None
+    flags = 0
+    for i, rec in _SETTINGS.items():
+        if rec[:_WALLET_ID_LEN] == wallet_id:
+            index, flags = i, rec[_WALLET_ID_LEN]
+            break
+    flags = (flags | flag) if on else (flags & ~flag)
+    if index is None:
+        if not flags:
+            return True
+        index = _SETTINGS.first_free()
+        if index is None:
+            return False
+    if flags:
+        _SETTINGS.set(index, wallet_id + bytes([flags]))
+    else:
+        _SETTINGS.delete(index)
     return True
 
 

@@ -314,6 +314,8 @@ USE_WARD_SERVICE_CHANNEL: bool
 """Whether WARD is served over its own interface rather than the ordinary connection."""
 USE_WARD_SERVICE_THP: bool
 """Whether that interface speaks THP. It speaks codec v1 when this is false."""
+USE_WARD_WM: bool
+"""Whether WARD has a WARD Manager. False in the MVP build."""
 NOTIFY_BOOT: int
 """Notification event: boot completed."""
 NOTIFY_UNLOCK: int

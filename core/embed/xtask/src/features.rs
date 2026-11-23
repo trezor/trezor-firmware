@@ -54,6 +54,19 @@ pub fn resolve_features(args: &ResolvedBuildArgs) -> Result<ResolvedBuildFeature
         );
     }
 
+    // NO WM IS A PROPERTY OF THE WALLET CHANNEL'S WARD. The deprecated service channel syncs
+    // through the WM and nothing else, so a build without one would serve an interface that can
+    // never become ready.
+    if args.ward_without_wm && args.btc_only {
+        bail!("ward_without_wm needs WARD, which is not built in bitcoin-only firmware");
+    }
+    if args.ward_without_wm && args.enable_ward_service_channel {
+        bail!(
+            "ward_without_wm cannot be combined with --enable-ward-service-channel: the service \
+             channel syncs only through the WM"
+        );
+    }
+
     let mut features: Vec<String> = vec![args.model.feature_name()];
 
     if args.emulator {
@@ -375,6 +388,38 @@ mod tests {
         let error = resolve_features(&args).unwrap_err();
         assert!(
             error.to_string().contains("ward_service_thp"),
+            "unexpected error: {error}"
+        );
+    }
+
+    #[test]
+    fn rejects_a_build_without_a_wm_that_serves_the_service_channel() {
+        // The service channel syncs only through the WM, so it could never become ready.
+        let args = ResolvedBuildArgs {
+            ward_without_wm: true,
+            enable_ward_service_channel: true,
+            ..ResolvedBuildArgs::default()
+        };
+
+        let error = resolve_features(&args).unwrap_err();
+        assert!(
+            error.to_string().contains("ward_without_wm"),
+            "unexpected error: {error}"
+        );
+    }
+
+    #[test]
+    fn rejects_a_bitcoin_only_build_without_a_wm() {
+        // Bitcoin-only firmware has no WARD for the option to change.
+        let args = ResolvedBuildArgs {
+            ward_without_wm: true,
+            btc_only: true,
+            ..ResolvedBuildArgs::default()
+        };
+
+        let error = resolve_features(&args).unwrap_err();
+        assert!(
+            error.to_string().contains("ward_without_wm"),
             "unexpected error: {error}"
         );
     }

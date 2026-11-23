@@ -394,6 +394,7 @@ trezor_message_impl! {
     WardSetPointer => MessageType_WardSetPointer,
     WardCatchUp => MessageType_WardCatchUp,
     WardCatchUpAck => MessageType_WardCatchUpAck,
+    WardSetPersistWithoutWm => MessageType_WardSetPersistWithoutWm,
     WardResetApp => MessageType_WardResetApp,
     WardResetAppAck => MessageType_WardResetAppAck,
     DisplayAddress => MessageType_DisplayAddress,

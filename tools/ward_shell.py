@@ -17,7 +17,7 @@ display yourself.
     d1.status()                    # wardd's replica head and the WM's
     wm_down(); wm_up()             # stop / start the WARD Manager
     start_second()                 # start device 2 and its wardd (if the adapter has not)
-    d2.catch_up()                  # WardCatchUp: follow the chain without the WM
+    d2.catch_up()                  # WardCatchUp: up to the newest WM-attested head, no WM
     d1.new_session()               # a fresh session: no attested head yet
 
     # ADVERSARIAL TESTS, through device 2's wardd (started with --adversarial-tests):

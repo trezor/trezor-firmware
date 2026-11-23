@@ -310,17 +310,25 @@ async def authorise(
     to_counter: int,
     to_root: bytes | None,
     revert: bool = False,
-) -> "tuple[bytes, bytes]":
+) -> "tuple[bytes, bytes | None]":
     """`(auth_commit, wm_sig)` for one transition: the device-facing MAC and the WM-facing
     signature over the same step, the latter bound to the WM head nonce this session attested.
-    Every minting path goes through here, so the two can never name different transitions."""
+    Every minting path goes through here, so the two can never name different transitions.
+
+    A firmware built without a WM (the MVP) mints no `wm_sig`: there is no WM to present it to,
+    and no head nonce to bind it to. `auth_commit` alone authorises the step for other devices."""
+    from trezor import utils
+
     from . import round as sync_round
     from .keys import derive_k_auth, derive_k_sig, derive_ward_id
 
     ward_id = await derive_ward_id()
     ops = (ward_id, from_counter, from_root, to_counter, to_root)
+    step = auth_commit(await derive_k_auth(), *ops, TAG_REVERT if revert else TAG_COMMIT)
+    if not utils.USE_WARD_WM:
+        return step, None
     return (
-        auth_commit(await derive_k_auth(), *ops, TAG_REVERT if revert else TAG_COMMIT),
+        step,
         wm_sig(
             await derive_k_sig(),
             *ops,

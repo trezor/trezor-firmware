@@ -877,6 +877,7 @@ class MessageType(IntEnum):
     WardSetPointer = 2349
     WardCatchUp = 2350
     WardCatchUpAck = 2351
+    WardSetPersistWithoutWm = 2352
     WardResetApp = 2343
     WardResetAppAck = 2344
     DisplayAddress = 2322
@@ -10578,6 +10579,13 @@ class WardCatchUp(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("to_counter", "uint32", repeated=False, required=True),
         2: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("from_counter", "uint32", repeated=False, required=False, default=None),
+        5: protobuf.Field("from_root", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("from_head_nonce", "bytes", repeated=False, required=False, default=None),
+        7: protobuf.Field("to_head_nonce", "bytes", repeated=False, required=False, default=None),
+        8: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
+        9: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10585,9 +10593,23 @@ class WardCatchUp(protobuf.MessageType):
         *,
         to_counter: "int",
         to_root: Optional["bytes"] = None,
+        nonce: Optional["bytes"] = None,
+        from_counter: Optional["int"] = None,
+        from_root: Optional["bytes"] = None,
+        from_head_nonce: Optional["bytes"] = None,
+        to_head_nonce: Optional["bytes"] = None,
+        timestamp: Optional["int"] = None,
+        wm_signature: Optional["bytes"] = None,
     ) -> None:
         self.to_counter = to_counter
         self.to_root = to_root
+        self.nonce = nonce
+        self.from_counter = from_counter
+        self.from_root = from_root
+        self.from_head_nonce = from_head_nonce
+        self.to_head_nonce = to_head_nonce
+        self.timestamp = timestamp
+        self.wm_signature = wm_signature
 
 
 class WardCatchUpAck(protobuf.MessageType):
@@ -10595,6 +10617,7 @@ class WardCatchUpAck(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
         2: protobuf.Field("reverts_crossed", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("persisted", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10602,9 +10625,25 @@ class WardCatchUpAck(protobuf.MessageType):
         *,
         counter: Optional["int"] = None,
         reverts_crossed: Optional["int"] = None,
+        persisted: Optional["bool"] = None,
     ) -> None:
         self.counter = counter
         self.reverts_crossed = reverts_crossed
+        self.persisted = persisted
+
+
+class WardSetPersistWithoutWm(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2352
+    FIELDS = {
+        1: protobuf.Field("allow", "bool", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        allow: "bool",
+    ) -> None:
+        self.allow = allow
 
 
 class WardRejoin(protobuf.MessageType):

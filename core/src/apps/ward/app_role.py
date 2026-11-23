@@ -161,6 +161,7 @@ def _ward_app_messages() -> "tuple[int, ...]":
             MT.WardReconcile,
             MT.WardVerifyChain,
             MT.WardCatchUp,
+            MT.WardSetPersistWithoutWm,
             MT.WardRollback,
             MT.WardRejoin,
             MT.WardPinCachedEntry,

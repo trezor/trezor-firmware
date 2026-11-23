@@ -462,6 +462,7 @@ enum MessageType {
     MessageType_WardSetPointer = 2349 [(wire_in) = true];
     MessageType_WardCatchUp = 2350 [(wire_in) = true];
     MessageType_WardCatchUpAck = 2351 [(wire_out) = true];
+    MessageType_WardSetPersistWithoutWm = 2352 [(wire_in) = true];
 
     MessageType_WardResetApp = 2343 [(wire_in) = true];
     MessageType_WardResetAppAck = 2344 [(wire_out) = true];

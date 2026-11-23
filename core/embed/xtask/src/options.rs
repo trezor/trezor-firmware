@@ -230,6 +230,15 @@ build_options! {
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map ward_service_thp: bool,
 
+    /// Build WARD for a deployment with no WARD Manager (the MVP).
+    ///
+    /// The device then moves its stored head by following this wallet's own chain
+    /// (`WardCatchUp`, persisted) and writes against it, since there is nothing to
+    /// attest a head. Without this flag a WM is assumed: the stored head moves only on
+    /// a live attestation, unless the user allows persisting a cached one.
+    #[arg(long, num_args = 0..=1, default_missing_value = "true")]
+    map ward_without_wm: bool,
+
     /// Disable UI animations
     #[arg(long, num_args = 0..=1, default_missing_value = "true")]
     map disable_animation: bool,

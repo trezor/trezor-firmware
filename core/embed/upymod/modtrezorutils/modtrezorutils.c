@@ -872,6 +872,8 @@ static const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether WARD is served over its own interface rather than the ordinary connection."""
 /// USE_WARD_SERVICE_THP: bool
 /// """Whether that interface speaks THP. It speaks codec v1 when this is false."""
+/// USE_WARD_WM: bool
+/// """Whether WARD has a WARD Manager. False in the MVP build."""
 /// NOTIFY_BOOT: int
 /// """Notification event: boot completed."""
 /// NOTIFY_UNLOCK: int
@@ -1115,6 +1117,11 @@ static const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_WARD_SERVICE_THP), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_WARD_SERVICE_THP), mp_const_false},
+#endif
+#ifdef USE_WARD_WM
+    {MP_ROM_QSTR(MP_QSTR_USE_WARD_WM), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_WARD_WM), mp_const_false},
 #endif
 #ifdef UI_LAYOUT_BOLT
     {MP_ROM_QSTR(MP_QSTR_UI_LAYOUT), MP_ROM_QSTR(MP_QSTR_BOLT)},

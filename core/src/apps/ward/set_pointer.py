@@ -51,7 +51,7 @@ async def set_pointer(msg: WardSetPointer) -> "WardLeafAck | WardMutationApplied
         title = "Update pointer"
         props.append(("Replaces", display_content(old), True))
     props.append(("Points to", display_bytes(target), True))
-    add_freshness(props)
+    await add_freshness(props)
 
     await confirm_properties("ward_set_pointer", title, props)
 

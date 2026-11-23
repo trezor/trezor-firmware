@@ -63,7 +63,9 @@ if t.TYPE_CHECKING:
     from trezorlib.client import Session
 
 APP_ID = "stack_app"
-WARNING = "notprovencurrent"  # WARNING_UNVERIFIED, as `Screens.take` squashes it
+# the freshness warning without the WM, as `Screens.take` squashes it: dated by the WM's timestamp
+# for the head the read proves against ("Not reflecting changes since <date> UTC, nor user reverts.")
+WARNING = "notreflectingchangessince"
 
 
 def switch_wm(run_dir: Path, down: bool, timeout: float = 60) -> bool:
@@ -164,10 +166,13 @@ def wait_files(run_dir: Path, names: tuple[str, ...], timeout: float = 120) -> b
 
 
 def wait_replica(client: ward_relay.WarddClient, counter: int, timeout: float = 90) -> dict:
-    """Poll a wardd until its replica reaches `counter` (it fills from the relay)."""
+    """Poll a wardd until its replica reaches `counter` and holds the WM's attestation of it (both
+    fill from the relay, as separate rows): `catch_up` goes only as far as a kept attestation."""
     deadline = time.monotonic() + timeout
     st = ward_relay.status(client)
-    while time.monotonic() < deadline and st.get("counter") != counter:
+    while time.monotonic() < deadline and (
+        st.get("counter") != counter or st.get("attestedCounter") != counter
+    ):
         time.sleep(1)
         st = ward_relay.status(client)
     return st
@@ -503,7 +508,7 @@ def conflicts(
             ward.get_entry(b2, APP_ID, b"contact3", provider_b)
             shown = screens_b.take()
             step(
-                "device 2 reads contact3, not proven current",
+                "device 2 reads contact3, dated by the WM's last attestation",
                 "carol_from_A" in shown and WARNING in shown.lower(),
                 shown,
             )

@@ -20,5 +20,6 @@ tezos
 tron
 ward
 ward_transport
+ward_wm
 xfail_if_no_optiga
 zcash

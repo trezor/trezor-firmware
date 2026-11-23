@@ -89,7 +89,7 @@ async def verify_round_attestation(
     # Continuity (R1, R2), after the signature so the compared values are WM-vouched.
     seen = sync_round.wm_head()
     if seen is not None:
-        seen_counter, seen_root, seen_nonce = seen
+        seen_counter, seen_root, seen_nonce, _seen_time = seen
         if from_counter == seen_counter and same_root(from_root, seen_root):
             if from_head_nonce != seen_nonce:
                 raise DataError(
@@ -101,8 +101,11 @@ async def verify_round_attestation(
                     "WARD: the WM head nonce changed without the head moving"
                 )
 
-    sync_round.set_wm_head(to_counter, root_or_empty(to_root), to_head_nonce)
-    # The timestamp is signed but deliberately not checked: anti-replay is the counter's job.
+    sync_round.set_wm_head(
+        to_counter, root_or_empty(to_root), to_head_nonce, timestamp
+    )
+    # The timestamp is signed but not checked here: anti-replay is the counter's job. `adopt`
+    # persists it, and `catch_up` holds a cached attestation to it.
     return from_counter, root_or_empty(from_root), to_counter, root_or_empty(to_root)
 
 
@@ -185,13 +188,22 @@ async def adopt(
     from trezor.wire import DataError
 
     from . import round as sync_round
+    from .attest import same_root
     from .offline_store import reconcile_pending
     from .root import set_root
 
     # Before `set_root`: settlement reads the head being replaced.
     await reconcile_pending(counter, root, landed_commits=landed_commits)
 
-    if not await set_root(root, counter):
+    # The WM's timestamp for this head, from the attestation that vouched for it. Every adoption
+    # follows one, so a mismatch is a caller bug; it then stores no timestamp rather than another
+    # head's.
+    timestamp = None
+    seen = sync_round.wm_head()
+    if seen is not None and seen[0] == counter and same_root(seen[1], root):
+        timestamp = seen[3]
+
+    if not await set_root(root, counter, timestamp):
         raise DataError(
             "WARD: no root slot for this wallet; eight already hold one, so this one can only be used offline"
         )
@@ -203,3 +215,30 @@ async def adopt(
     # Any adoption spends a pending demotion consent: it was given for a descent from the old head.
     sync_round.clear_demotion()
     sync_round.clear()
+
+
+async def persist_caught_up(
+    counter: int,
+    root: bytes | None,
+    landed_commits: list,
+    timestamp: int | None,
+) -> None:
+    """Move the STORED head to one `catch_up` reached without a live attestation.
+
+    Only where the deployment or the user allows it (see `catch_up`). Settles queued writes as
+    `adopt` does, since the walk crossed their authorisations, and persists the head with the WM's
+    timestamp for it when there is one. NOT ONLINE: no WM attested it in this session, so reads
+    still carry the freshness warning and writes still need a sync -- unless there is no WM at all.
+    """
+    from trezor.wire import DataError
+
+    from . import round as sync_round
+    from .offline_store import reconcile_pending
+    from .root import set_root
+
+    await reconcile_pending(counter, root, landed_commits=landed_commits)
+    if not await set_root(root, counter, timestamp):
+        raise DataError(
+            "WARD: no root slot for this wallet; eight already hold one, so this one can only be used offline"
+        )
+    sync_round.clear_provisional()

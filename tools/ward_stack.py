@@ -25,7 +25,8 @@ Stop the stack with `q` in the adapter's terminal, Ctrl-C here, or `--stop RUN_D
 
 THE WM CAN BE TAKEN DOWN without stopping the stack: Enter in its terminal (or creating
 `<run>/wm.down`) stops it, Enter again (or removing the file) starts it. While it is down wardd
-reports it unavailable and the device reads what it last adopted, with the "Not proven current"
+reports it unavailable and the device reads what it last adopted, or what wardd catches it up to
+(the newest head a kept WM attestation names), with the "Not reflecting changes since <date>"
 warning; the adapter does exactly that in its last steps.
 """
 
@@ -339,7 +340,8 @@ def component(config_path: Path, role: str) -> int:
                 (root / "wm.stopped").touch()
                 print(
                     "WARD Manager stopped: wardd reports it unavailable, and reads show"
-                    " 'Not proven current'. Enter (or removing wm.down) starts it again.",
+                    " 'Not reflecting changes since <date>'. Enter (or removing wm.down)"
+                    " starts it again.",
                     flush=True,
                 )
                 while not stopped(config) and wm_down_requested(root):
