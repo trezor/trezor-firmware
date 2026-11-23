@@ -1224,6 +1224,7 @@ if not utils.BITCOIN_ONLY:
             verb=TR.buttons__continue,
             hold=False,
             br_name="confirm_ethereum_approve",
+            is_data=not recipient_str,
             chunkify=False if recipient_str else chunkify,
         )
 

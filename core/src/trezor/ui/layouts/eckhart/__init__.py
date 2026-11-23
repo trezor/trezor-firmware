@@ -1367,11 +1367,7 @@ if not utils.BITCOIN_ONLY:
             verb=TR.buttons__continue,
         )
 
-        account_items: tuple[StrPropertyType] | None = (
-            ((TR.address_details__derivation_path, account_path, True),)
-            if account_path
-            else None
-        )
+        account_items = _get_account_info_items(account, account_path)
 
         await _confirm_summary(
             native_amount,
