@@ -973,7 +973,11 @@ impl<'a> MpyBuilder<'a> {
         let touch_wakeup = py_bool(cfg!(feature = "touch_wakeup"));
         let tropic = py_bool(cfg!(feature = "tropic"));
         let ward = py_bool(cfg!(feature = "ward"));
-        let scm_revision_xor2 = self.scm_revision_xor2;
+        // Offset by 256 so the inlined constant always encodes with the same
+        // bytecode length (values 0..=63 encode shorter than 64..=255), keeping
+        // the binary size independent of the git revision. The C side masks
+        // the argument with 0xFF, so the effective key is unchanged.
+        let scm_revision_xor2 = u16::from(self.scm_revision_xor2) + 0x100;
         let nfc = py_bool(cfg!(feature = "nfc"));
 
         let layout_bolt = py_bool(cfg!(feature = "layout_bolt"));
