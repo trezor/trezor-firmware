@@ -1,0 +1,171 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 14,
+    "address": "d70659a6396285bf7214d7ea9673184e7c72e07e",
+    "func_sig": "c7c7f5b3",
+    "intent": "Bridge FXRP",
+    "parameter_definitions": [
+      {
+        "tuple": {
+          "fields": [
+            {
+              "atomic": "ABI_UINT32"
+            },
+            {
+              "atomic": "ABI_BYTES32"
+            },
+            {
+              "atomic": "ABI_UINT256"
+            },
+            {
+              "atomic": "ABI_UINT256"
+            },
+            {
+              "dynamic": "ABI_BYTES"
+            },
+            {
+              "dynamic": "ABI_BYTES"
+            },
+            {
+              "dynamic": "ABI_BYTES"
+            }
+          ],
+          "is_dynamic": true
+        }
+      },
+      {
+        "tuple": {
+          "fields": [
+            {
+              "atomic": "ABI_UINT256"
+            },
+            {
+              "atomic": "ABI_UINT256"
+            }
+          ],
+          "is_dynamic": false
+        }
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0,
+            2
+          ]
+        },
+        "label": "Amount to send",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "const_token_address": "ad552a648c74d49e10027ab8a618a3ad4901c5be",
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "path": [
+            0,
+            3
+          ]
+        },
+        "label": "Minimum to receive",
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "const_token_address": "ad552a648c74d49e10027ab8a618a3ad4901c5be",
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "path": [
+            0,
+            0
+          ]
+        },
+        "label": "Destination",
+        "formatter": "FORMATTER_ENUM",
+        "enum_values": [
+          {
+            "key": 30101,
+            "value": "Ethereum"
+          },
+          {
+            "key": 30102,
+            "value": "BNB Chain"
+          },
+          {
+            "key": 30184,
+            "value": "Base"
+          },
+          {
+            "key": 30375,
+            "value": "Katana"
+          }
+        ],
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "path": [
+            0,
+            1
+          ]
+        },
+        "label": "Recipient",
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "path": [
+            1,
+            0
+          ]
+        },
+        "label": "Bridge fee",
+        "formatter": "FORMATTER_AMOUNT",
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Refund to",
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "path": [
+            1,
+            1
+          ]
+        },
+        "label": "LZ token fee",
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false,
+        "must_match": [
+          "0000000000000000000000000000000000000000000000000000000000000000"
+        ]
+      }
+    ],
+    "provider_name": "Flare Foundation: FXRP-OFT-Flare"
+  }
+}
