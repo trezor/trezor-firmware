@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "471686c42792f93528b000bef54bc10e3aa2045f",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "Morpho DAO: Midnight"
+  }
+}

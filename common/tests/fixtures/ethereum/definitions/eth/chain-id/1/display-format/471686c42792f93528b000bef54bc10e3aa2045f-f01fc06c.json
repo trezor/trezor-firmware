@@ -1,0 +1,70 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "471686c42792f93528b000bef54bc10e3aa2045f",
+    "func_sig": "f01fc06c",
+    "intent": "Cancel or reduce offers",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_BYTES32"
+      },
+      {
+        "atomic": "ABI_UINT128"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Group",
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Amount marked as used",
+        "formatter": "FORMATTER_ENUM",
+        "enum_values": [
+          {
+            "key": 4294967295,
+            "value": "Cancel all offers",
+            "wide_key": "ffffffffffffffffffffffffffffffff"
+          },
+          {
+            "key": 4294967295,
+            "value": ""
+          }
+        ],
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "On behalf",
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true,
+        "lookup_token": false,
+        "lookup_contract": false
+      }
+    ],
+    "provider_name": "Morpho DAO: Midnight"
+  }
+}

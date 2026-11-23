@@ -1006,6 +1006,84 @@ class TestEthereumClearSigning(unittest.TestCase):
         with self.assertRaises(InvalidFormatDefinition):
             FieldDefinition.from_proto(info)
 
+    def test_from_proto_enum_wide_key(self):
+        def enum_info(*entries):
+            return EthereumERC7730FieldInfo(
+                path=EthereumERC7730Path(path=[0]),
+                label="Role",
+                formatter=FT.FORMATTER_ENUM,
+                enum_values=list(entries),
+            )
+
+        role = bytes.fromhex(
+            "0f3203713f9a3f4a9748f1aee9bca713a30bc811b67a4b93434667911e0e92a5"
+        )
+        # shape emitted by the definitions: narrow keys, wide keys carrying
+        # the reserved 0xFFFFFFFF `key`, and one trailing guard entry
+        fmt = FieldDefinition.from_proto(
+            enum_info(
+                EthereumERC7730EnumEntry(key=0, value="Default admin"),
+                EthereumERC7730EnumEntry(
+                    key=0xFFFF_FFFF, wide_key=role, value="Force deallocate"
+                ),
+                EthereumERC7730EnumEntry(
+                    key=0xFFFF_FFFF, wide_key=b"\xff\xff\xff\xff", value="Max32"
+                ),
+                EthereumERC7730EnumEntry(key=0xFFFF_FFFF, value=""),
+            )
+        ).get_formatter()
+        self.assertIsInstance(fmt, EnumFormatter)
+
+        def fmt_value(value):
+            return await_result(fmt.format(value, None, None, None))[0]
+
+        # a bytes32 slice matches its wide key
+        self.assertEqual(fmt_value(role), "Force deallocate")
+        self.assertEqual(fmt_value(int.from_bytes(role, "big")), "Force deallocate")
+        self.assertEqual(fmt_value(b"\x00" * 32), "Default admin")
+        # 0xFFFFFFFF comes from its wide_key, not from the guard
+        self.assertEqual(fmt_value(0xFFFF_FFFF), "Max32")
+        self.assertEqual(fmt_value(b"\x00" * 28 + b"\xff" * 4), "Max32")
+        with self.assertRaises(InvalidFormatDefinition):
+            fmt_value(1)
+
+        # the guard alone does not map 0xFFFFFFFF
+        fmt = FieldDefinition.from_proto(
+            enum_info(
+                EthereumERC7730EnumEntry(
+                    key=0xFFFF_FFFF, wide_key=b"\x01\x00\x00\x00\x00", value="Big"
+                ),
+                EthereumERC7730EnumEntry(key=0xFFFF_FFFF, value=""),
+            )
+        ).get_formatter()
+        self.assertEqual(await_result(fmt.format(1 << 32, None, None, None))[0], "Big")
+        with self.assertRaises(InvalidFormatDefinition):
+            await_result(fmt.format(0xFFFF_FFFF, None, None, None))
+
+        # a wide key equal to a narrow key is still a duplicate
+        with self.assertRaises(InvalidFormatDefinition):
+            FieldDefinition.from_proto(
+                enum_info(
+                    EthereumERC7730EnumEntry(key=1, value="A"),
+                    EthereumERC7730EnumEntry(
+                        key=0xFFFF_FFFF, wide_key=b"\x00\x01", value="B"
+                    ),
+                )
+            )
+        # as are two equal wide keys
+        with self.assertRaises(InvalidFormatDefinition):
+            FieldDefinition.from_proto(
+                enum_info(
+                    EthereumERC7730EnumEntry(key=0xFFFF_FFFF, wide_key=role, value="A"),
+                    EthereumERC7730EnumEntry(key=0xFFFF_FFFF, wide_key=role, value="B"),
+                )
+            )
+        # an enum with nothing but the guard has no mapping
+        with self.assertRaises(InvalidFormatDefinition):
+            FieldDefinition.from_proto(
+                enum_info(EthereumERC7730EnumEntry(key=0xFFFF_FFFF, value=""))
+            )
+
     def test_enum_end_to_end(self):
         # Full path: calldata -> parse a `uint8` parameter -> the field renders
         # the mapped display string.

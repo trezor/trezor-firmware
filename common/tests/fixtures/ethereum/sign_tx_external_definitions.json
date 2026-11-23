@@ -1503,6 +1503,26 @@
                 "sig_r": "ba71cc2b16a73bd964e54a9cdef8a5e2b23d1de4d08e32e30511192cabe63725",
                 "sig_s": "558bb4c0a52c972dd13aa00f331cf7d902736fb0c907c0981220c3a415c34f43"
             }
+        },
+        {
+            "name": "morpho_Midnight_setConsumed",
+            "parameters": {
+                "comment": "supported | https://etherscan.io/tx/0x937a9435b63a6afffc2d88f15f200eacbdadc0b3f910b26384831c88e89e786a",
+                "data": "f01fc06c74656e6f7201004588144d4ce3d487d8693d415ccab1cd020117ebe948a3ee6e00000000000000000000000000000000ffffffffffffffffffffffffffffffff0000000000000000000000008eb3a5db0b650bddd2ac457f5500b32c86505a14",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0x471686c42792F93528B000beF54bC10E3aa2045f",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x1b86cc05",
+                "gas_limit": "0x101d2",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "656f97b9b5b13174f20997bc52d75cd887017b19a2fb517db513c95865c73f2a",
+                "sig_s": "3b8e2b2f0f2a4982171de9a15d64af62008df5a90ad4b43460c9e4e997856a20"
+            }
         }
     ]
 }
