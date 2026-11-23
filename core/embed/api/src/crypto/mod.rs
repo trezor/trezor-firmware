@@ -4,13 +4,13 @@ use stabby::boxed::BoxedSlice;
 use stabby::slice::Slice;
 use stabby::str::Str;
 use stabby::string::String;
-use trezor_app_sdk::structs::{TrezorCryptoEnum, TrezorCryptoResult};
 use trezor_app_sdk::traits::crypto::{
     BoxedHasher, CanonicalSig, CryptoError, CryptoV1, Curve, EcdsaCurve, HashingAlgorithm,
     HmacAlgorithm, XPUB_RAW_LEN,
 };
 use trezor_app_sdk::traits::util::{CoreServiceError, FastResult, ServiceResult, TIMEOUT_MAX};
 
+use crate::crypto_ipc::{TrezorCryptoEnum, TrezorCryptoResult};
 use crate::wire::{CoreIpcService, MSG_ID_ERROR, call_failed, ipc_call, service_error, to_bytes};
 
 /// A failed call into Core's crypto service, as reported to the app.

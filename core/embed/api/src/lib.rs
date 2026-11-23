@@ -9,6 +9,7 @@ extern crate alloc;
 pub mod allocator;
 mod app_state;
 mod crypto;
+pub mod crypto_ipc;
 mod syslog;
 mod ui;
 mod v1;
