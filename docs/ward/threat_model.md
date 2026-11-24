@@ -177,9 +177,9 @@ What this adds over links alone:
   some point.
 - **A signed date.** The Trezor has no clock, so it shows the date and the user judges how old
   that is.
-- **The timestamp floor.** Every attestation on a branch removed by a revert predates the adoption
-  that followed that revert. A Trezor that took part in the revert, or synced after it, refuses all
-  of them. That closes the `ac7c4a19d9` attack for reads.
+- **The timestamp floor.** A Trezor refuses cached attestations whose signed timestamp is earlier
+  than the time it stored. Equal timestamps can occur in the same second, and clock or register
+  recovery can affect ordering. See [cached catch-up](gaps.md#cached-catch-up-and-proof-views).
 
 What it does not fix:
 
@@ -231,11 +231,10 @@ and catch-up is how the stored head moves at all:
 
 **With a WM, when the user allows it.** `WardSetPersistWithoutWm` turns persisting on for the active
 wallet. Allowing it is held to confirm; withdrawing needs no screen. Persisting still requires the
-cached attestation and the timestamp floor, so a revert this Trezor took part in, or synced after,
-cannot be undone. What the user accepts is the remaining case: a Trezor that missed a regression of
-the WM's register can be walked up the abandoned branch and keep it, until a `WardRollback` once
-the WM is back. The setting is stored per wallet in flash (keys 0x18..), and is only written by that
-confirmed request.
+cached attestation and the timestamp floor. A Trezor that missed a regression of the WM's register
+can keep a head on the abandoned branch until recovery with the WM. The timestamp floor also has
+the ordering limits described above. The setting is stored per wallet in flash (keys 0x18..),
+and enabling it requires the confirmed request.
 
 **Which build a device is cannot be asked over the wire.** The test suite tells them apart by how
 the device answers `WardSetPersistWithoutWm` (`ward_wm` marker in `tests/conftest.py`). A host must
@@ -464,15 +463,17 @@ Each Trezor syncs to the WM's head at the start of a WARD session, and catches u
 
 ### Revert
 
-`WardRollback` restores an earlier state when `wardd`'s database lost data, or the WM's head cannot be served.
+`WardRollback` restores a verified historical state when the WM's head cannot be served or its
+register has regressed.
 
 - **Expects:**
-    - The user sees the current change, the restored change and how many changes are discarded, and holds to confirm.
+    - The user sees the device and WM counters, the verified target counter, the new counter, and
+      how many changes followed the target. They hold to confirm.
     - The WM accepts the revert as its own transition.
 - **Reveals:**
     - **WM and host:** that a revert happened, and how far back it went.
-- **What the host can still do:** propose a target that was never a state of this ward; see
-  [WardRollback doesn't check that the target was ever a state of this ward](#wardrollback-doesnt-check-that-the-target-was-ever-a-state-of-this-ward).
+- **What the host supplies:** authenticated links with archived WM receipts for the historical
+  occurrences, followed by the data needed to serve the restored state. See [verified rollback](gaps.md#verified-rollback).
 
 ### Key export and listing
 
@@ -484,39 +485,6 @@ Specified, not implemented on this branch. `WARDExportKeys` releases `K_path`, `
     - `K_sig` and `K_auth` never leave, so a host holding the keys still cannot write.
 - **Reveals:** everything stored in the ward, to that host, from then on: identifiers, values, entry types and pointer targets.
 
-## Potential gaps
+## Security gaps
 
-Known weaknesses, kept here until they are closed.
-
-### WardRollback doesn't check that the target was ever a state of this ward
-
-`WardRollback` builds `(wm_counter, wm_root) -> (wm_counter + 1, recovered_root)` under the revert
-tag. The Trezor checks only that `recovered_root` is 32 bytes. It does not check that the target is
-an ancestor of the WM's head, or that it was ever a head at all.
-
-This used to be enforced: `WardRollback` required an archived WM attestation of its target.
-`086ecb739c` merged the old counter recovery into it, whose target is unproven on purpose, so that a
-host that lost rows can still revert to a tree it can rebuild. The requirement went with the merge.
-
-- **What a host can propose:**
-    - the tip of a sibling branch of a fork, a genuine tree another device built;
-    - any tree it can assemble from sealed leaves it has ever held: older values, deleted entries
-      brought back, entries left out. It cannot forge a value, but it can combine them freely.
-- **Nothing else stops it.** The WM accepts any revert the Trezor signed. Other Trezors accept the
-  revert link when their chain walk crosses it, since it is authorised under `K_auth`; they only
-  count it in `reverts_crossed`.
-- **The user is the only gate, and cannot see what they approve.** The hold screen says "Target:
-  Proposed by the host. Not confirmed by the WARD Manager." but shows nothing of the tree. The
-  "Discarding N changes" line appears only when the new counter is at or below the stored one, so
-  a move to a fork's tip at `wm_counter + 1` shows no discard count.
-- **Without a WM (the MVP build) it does not apply.** `WardSync` is refused and a rollback needs an
-  attested round, so there is no rollback at all. Catch-up only goes to a head that descends from
-  the stored one, so a Trezor cannot be moved onto another branch. A fork strands the Trezor on the
-  losing branch instead: the host serves the highest head, every catch-up to it fails with "does
-  not descend", and there is no way back short of a WM.
-- **A possible fix.** `WardRollback` names the target's counter, and the Trezor walks the links back
-  from the WM's attested head to it (`walk_back`) and requires landing on `recovered_root`. That
-  proves the target is a preceding state on the WM's own line: never a sibling branch, never an
-  assembled tree. The screen can then name the change restored and the true number discarded. The
-  cost is the escape hatch for a host that lost the rows below the target too; if that case matters,
-  it should be a separate, explicitly unproven mode with a stronger warning.
+See the [security review](gaps.md) for the current findings and status.

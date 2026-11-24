@@ -34,6 +34,14 @@ async def get_timestamp() -> int | None:
     return ward_store.get_timestamp(await derive_wallet_id())
 
 
+async def get_head_nonce() -> bytes | None:
+    import storage.ward as ward_store
+
+    from .keys import derive_wallet_id
+
+    return ward_store.get_head_nonce(await derive_wallet_id())
+
+
 async def read_timestamp() -> int | None:
     """The WM's timestamp for the head `read_root` names: when the WM reached it."""
     from . import round as sync_round
@@ -65,7 +73,10 @@ async def get_counter() -> int:
 
 
 async def set_root(
-    root: bytes | None, counter: int | None = None, timestamp: int | None = None
+    root: bytes | None,
+    counter: int | None = None,
+    timestamp: int | None = None,
+    head_nonce: bytes | None = None,
 ) -> bool:
     """Record an adopted root (None = empty tree); `counter=None` keeps the stored one. False means
     no slot, and the caller MUST fail the adoption: with no stored root leaves go unproven."""
@@ -77,4 +88,6 @@ async def set_root(
     wallet_id = await derive_wallet_id()
     if counter is None:
         counter = ward_store.get_counter(wallet_id)
-    return ward_store.set_root(wallet_id, root_or_empty(root), counter, timestamp)
+    return ward_store.set_root(
+        wallet_id, root_or_empty(root), counter, timestamp, head_nonce
+    )

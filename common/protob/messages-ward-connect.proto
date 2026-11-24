@@ -245,6 +245,7 @@ message WardVerifyChain {
 message WardChainRequest {
     optional uint32 to_counter = 1;
     optional bytes  to_root    = 2;  // absent means the empty tree
+    optional bytes  to_head_nonce = 3;  // the accepted occurrence, for WardRollback
 }
 
 /**
@@ -587,42 +588,20 @@ message WardReconcileAck {
 }
 
 /**
- * Request: demote the head by exactly one step.
- *
- * The escape from a stuck state. A device whose write never reached the WM is AHEAD of
- * it, so every sync is refused as a rollback and the wallet cannot move -- this undoes
- * that write so it can.
- *
- * The host presents the predecessor and the COMMIT authorisation that created the current
- * head from it. The device requires that authorisation to name its OWN current counter
- * and root, which does three things at once: it proves `to_root` really was the immediate
- * predecessor, it pins the demotion to one step, and it binds the counter.
- *
- * Binding the counter is not redundant with binding the root. Roots repeat whenever
- * contents repeat -- change a label and change it back -- so an OLD authorisation whose
- * `to_root` happens to equal today's head would otherwise be accepted, demoting the wallet
- * to a state from arbitrarily long ago in a single hop while satisfying the one-step rule
- * perfectly.
- *
- * The counter still moves FORWARD. The head points backward but the counter increments,
- * so no counter is ever reused and a stale authorisation cannot replay after a rollback.
+ * Request: restore a proven historical state. The device verifies both the WM's live
+ * attestation and the requested target against the wallet's authenticated history.
+ * A WM that is behind this device must still be on its history. The revert advances
+ * the WM's counter by one and is bound to the WM's current head nonce.
  * @start
+ * @next WardChainRequest
  * @next WardRollbackAck
  * @next Failure
  */
 message WardRollback {
-    // 1-5 were the LINK INTO THE TARGET: to_root, auth_commit, from_counter, from_root,
-    // to_counter. It authenticated the target and carried the counter the discarded count was
-    // derived from. Gone with the proof requirement below -- a host rebuilding from partial rows
-    // produces a root no link ever ended at, so demanding one refused the very case this exists
-    // for. The count now comes from the counters, which are authenticated on their own.
+    // Previously used for a single link into the target. The device now walks the chain.
     reserved 1, 2, 3, 4, 5;
 
-    // 6-8 were the ARCHIVED ATTESTATION for the target, proving it had once been the WM's head
-    // and so excluding an abandoned branch. Same objection: a host missing rows is exactly one
-    // whose reconstructible root the WM may never have attested, so proof of headship made the
-    // escape unavailable in the case it exists for. Whether the target was AUTHORITATIVE is the
-    // user's call now, on a screen that names it as the host's proposal.
+    // Previously used for an archived target attestation.
     reserved 6, 7, 8;
 
     // THE WM'S OWN HEAD, attested against this round's nonce -- the step it most recently took.
@@ -660,10 +639,10 @@ message WardRollback {
     optional bytes  from_head_nonce = 17;  // 32B
     optional bytes  to_head_nonce   = 16;  // 32B
 
-    // THE STATE TO COME BACK TO: the root of a trie the HOST can reconstruct from the rows it
-    // actually holds, proposed by it and approved by the user on the device. Absent means the
-    // empty tree. Not required to have been a head -- see the note on 6-8.
+    // The historical state to restore. The device must prove this exact pair before
+    // displaying the confirmation. An absent root denotes the empty tree.
     optional bytes  recovered_root = 15;
+    optional uint32 recovered_counter = 18;  // required by the device, including for genesis
 }
 
 /**

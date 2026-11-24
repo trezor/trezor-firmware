@@ -37,11 +37,11 @@ if __debug__:
     from trezor import log
 
 if TYPE_CHECKING:
-    from typing import Callable
-
     from buffer_types import AnyBuffer
-    from storage.cache_common import DataCache
+    from collections.abc import Callable
     from trezorio import WireInterface
+
+    from storage.cache_common import DataCache
 
 
 class WardBufferSource(CodecBufferSource):
@@ -289,7 +289,11 @@ async def _handle_bootstrap(ctx: WardCodecContext, msg: Message) -> None:
         # NOT `handle_single_message`, and not `find_handler`. The first would `workflow.spawn`
         # and close a live wallet workflow, which a daemon announcing itself has no business
         # doing; the second would make every registered message reachable here.
-        response = await bind_codec(decode_message(msg, WardServiceOpen), ctx.iface)
+        request = decode_message(msg, WardServiceOpen)
+        if request.renew_binding:
+            await bind_codec(request, ctx.iface)
+            return
+        response = await bind_codec(request, ctx.iface)
     except Exception as exc:
         if __debug__:
             log.exception(__name__, exc, iface=ctx.iface)
@@ -310,6 +314,8 @@ async def handle_ward_codec_interface(
     must not `loop.clear()`: doing so from here would tear down the wallet session on the strength
     of something a daemon said.
     """
+    from trezor.enums import MessageType
+
     global _CONTEXT
 
     ctx = _CONTEXT = WardCodecContext(iface, bootstrap, pooled)
@@ -364,6 +370,11 @@ async def handle_ward_codec_interface(
                 continue
 
             if ctx.rpc_in_flight:
+                if msg.type == MessageType.WardServiceOpen:
+                    # The daemon can retry its announcement while the device is
+                    # already bound. An announcement is never an RPC reply.
+                    msg.release()
+                    continue
                 _drop_pending(ctx)
                 ctx.reply.put(msg)
                 continue

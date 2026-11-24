@@ -5,7 +5,7 @@ WARD service, and a Trezor on the session a Rust host already holds. wardd holds
 logic: the replica (in Evolu), the WM, and the order of every sync, catch-up and flush. This crate
 holds none of it. It implements the same contract as the Connect, Python
 (`trezorlib.ward_relay`) and Java bindings: `packages/ward-core/relay.md` in trezor-suite,
-version 1.x.
+version 2.x. The binding derives the WARD owner secret locally before opening the replica.
 
 ## Using it
 

@@ -47,6 +47,9 @@ from trezorlib.ward_relay import (
     sync,
 )
 
+if t.TYPE_CHECKING:
+    from trezorlib.client import Session
+
 GUID = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 
@@ -152,7 +155,7 @@ class StubWardd:
                 self.received.append(frame)
                 if frame["method"] == "hello":
                     if frame["params"]["token"] == "good":
-                        conn.send({"id": frame["id"], "result": {"version": "1.0"}})
+                        conn.send({"id": frame["id"], "result": {"version": "2.0"}})
                     else:
                         conn.send(
                             {
@@ -211,6 +214,7 @@ def stub() -> t.Iterator[StubWardd]:
     s = StubWardd(
         {
             "sync": _conversation,
+            "openStore": _echo,
             "echo": _echo,
             "refused": _refuse,
             "forbidden": _forbidden,
@@ -226,7 +230,7 @@ def test_hello_sends_the_token_and_no_origin(stub: StubWardd) -> None:
     assert stub.received[0] == {
         "id": 1,
         "method": "hello",
-        "params": {"version": "1.0", "token": "good"},
+        "params": {"version": "2.0", "token": "good"},
     }
     # only a browser sends Origin; wardd admits a local process on the token
     assert stub.origins == [None]
@@ -236,6 +240,17 @@ def test_a_wrong_token_is_refused_with_its_code(stub: StubWardd) -> None:
     with pytest.raises(WarddError) as e:
         WarddClient("bad", stub.url)
     assert e.value.code == "unauthorised"
+
+
+def test_open_store_sends_only_the_ward_owner_secret(stub: StubWardd) -> None:
+    with WarddClient("good", stub.url) as client:
+        result = open_store(
+            t.cast("Session", None), client, bytes.fromhex("ab" * 32), bytes(range(64))
+        )
+    assert result["params"] == {
+        "wardId": "ab" * 32,
+        "wardOwnerSecret": "fa46e3e20d89f32d8e70c6864f06407a79d036a7cf851d2fcfbb5228ffce42d3",
+    }
 
 
 def test_wardd_not_running_is_said_plainly() -> None:

@@ -30,6 +30,8 @@ pub struct WardServiceOpen {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardServiceOpen.protocol_version)
     pub protocol_version: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardServiceOpen.renew_binding)
+    pub renew_binding: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardServiceOpen.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -65,13 +67,37 @@ impl WardServiceOpen {
         self.protocol_version = ::std::option::Option::Some(v);
     }
 
+    // optional bool renew_binding = 2;
+
+    pub fn renew_binding(&self) -> bool {
+        self.renew_binding.unwrap_or(false)
+    }
+
+    pub fn clear_renew_binding(&mut self) {
+        self.renew_binding = ::std::option::Option::None;
+    }
+
+    pub fn has_renew_binding(&self) -> bool {
+        self.renew_binding.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_renew_binding(&mut self, v: bool) {
+        self.renew_binding = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "protocol_version",
             |m: &WardServiceOpen| { &m.protocol_version },
             |m: &mut WardServiceOpen| { &mut m.protocol_version },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "renew_binding",
+            |m: &WardServiceOpen| { &m.renew_binding },
+            |m: &mut WardServiceOpen| { &mut m.renew_binding },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardServiceOpen>(
             "WardServiceOpen",
@@ -94,6 +120,9 @@ impl ::protobuf::Message for WardServiceOpen {
                 8 => {
                     self.protocol_version = ::std::option::Option::Some(is.read_uint32()?);
                 },
+                16 => {
+                    self.renew_binding = ::std::option::Option::Some(is.read_bool()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -109,6 +138,9 @@ impl ::protobuf::Message for WardServiceOpen {
         if let Some(v) = self.protocol_version {
             my_size += ::protobuf::rt::uint32_size(1, v);
         }
+        if let Some(v) = self.renew_binding {
+            my_size += 1 + 1;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -117,6 +149,9 @@ impl ::protobuf::Message for WardServiceOpen {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.protocol_version {
             os.write_uint32(1, v)?;
+        }
+        if let Some(v) = self.renew_binding {
+            os.write_bool(2, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -136,12 +171,14 @@ impl ::protobuf::Message for WardServiceOpen {
 
     fn clear(&mut self) {
         self.protocol_version = ::std::option::Option::None;
+        self.renew_binding = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static WardServiceOpen {
         static instance: WardServiceOpen = WardServiceOpen {
             protocol_version: ::std::option::Option::None,
+            renew_binding: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -3209,47 +3246,48 @@ impl ::protobuf::reflect::ProtobufValue for WardResetServiceAck {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x1bmessages-ward-service.proto\x12\x17hw.trezor.messages.ward\x1a\x13\
-    messages-ward.proto\"<\n\x0fWardServiceOpen\x12)\n\x10protocol_version\
-    \x18\x01\x20\x01(\rR\x0fprotocolVersion\"\x14\n\x12WardServiceOpenAck\"\
-    \xb6\x01\n\x0fWardSyncRequest\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\
-    \x05nonce\x12\x17\n\x07ward_id\x18\x02\x20\x01(\x0cR\x06wardId\x12'\n\
-    \x0fcurrent_counter\x18\x03\x20\x01(\rR\x0ecurrentCounter\x12!\n\x0ccurr\
-    ent_root\x18\x04\x20\x01(\x0cR\x0bcurrentRoot\x12\"\n\rhead_init_sig\x18\
-    \x06\x20\x01(\x0cR\x0bheadInitSigJ\x04\x08\x05\x10\x06\"\xe1\x02\n\x10Wa\
-    rdSyncResponse\x12\x1c\n\ttimestamp\x18\x03\x20\x01(\x04R\ttimestamp\x12\
-    !\n\x0cwm_signature\x18\x04\x20\x01(\x0cR\x0bwmSignature\x12<\n\x05links\
-    \x18\x05\x20\x03(\x0b2&.hw.trezor.messages.ward.WardChainLinkR\x05links\
-    \x12\x1d\n\nto_counter\x18\x06\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_ro\
-    ot\x18\x07\x20\x01(\x0cR\x06toRoot\x12!\n\x0cfrom_counter\x18\x08\x20\
-    \x01(\rR\x0bfromCounter\x12\x1b\n\tfrom_root\x18\t\x20\x01(\x0cR\x08from\
-    Root\x12&\n\x0ffrom_head_nonce\x18\x0b\x20\x01(\x0cR\rfromHeadNonce\x12\
-    \"\n\rto_head_nonce\x18\n\x20\x01(\x0cR\x0btoHeadNonceJ\x04\x08\x01\x10\
-    \x02J\x04\x08\x02\x10\x03\"{\n\x10WardServiceFetch\x12\x1b\n\tentry_key\
-    \x18\x01\x20\x01(\x0cR\x08entryKey\x12'\n\x0fcurrent_counter\x18\x02\x20\
-    \x01(\rR\x0ecurrentCounter\x12!\n\x0ccurrent_root\x18\x03\x20\x01(\x0cR\
-    \x0bcurrentRoot\"\x12\n\x10WardSyncRequired\"\xac\x02\n\x0bWardPublish\
-    \x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12'\n\x0fsealed\
-    _identity\x18\x0b\x20\x01(\x0cR\x0esealedIdentity\x12%\n\x0esealed_conte\
-    nt\x18\x0c\x20\x01(\x0cR\rsealedContent\x12\x18\n\x07counter\x18\x04\x20\
-    \x01(\rR\x07counter\x12\x1f\n\x0bauth_commit\x18\x06\x20\x01(\x0cR\nauth\
-    Commit\x12\x15\n\x06wm_sig\x18\x07\x20\x01(\x0cR\x05wmSig\x12\x14\n\x05n\
-    once\x18\x08\x20\x01(\x0cR\x05nonce\x12\x1b\n\tfrom_root\x18\t\x20\x01(\
-    \x0cR\x08fromRoot\x12\x19\n\x08new_root\x18\n\x20\x01(\x0cR\x07newRootJ\
-    \x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x05\x10\x06\"\xa9\x01\
-    \n\x0eWardPublishAck\x12\x1c\n\ttimestamp\x18\x03\x20\x01(\x04R\ttimesta\
-    mp\x12!\n\x0cwm_signature\x18\x04\x20\x01(\x0cR\x0bwmSignature\x12&\n\
-    \x0ffrom_head_nonce\x18\x06\x20\x01(\x0cR\rfromHeadNonce\x12\"\n\rto_hea\
-    d_nonce\x18\x05\x20\x01(\x0cR\x0btoHeadNonceJ\x04\x08\x01\x10\x02J\x04\
-    \x08\x02\x10\x03\"8\n\x13WardPublishConflict\x12!\n\x0chead_counter\x18\
-    \x01\x20\x01(\rR\x0bheadCounter\"L\n\x13WardMutationApplied\x12\x1b\n\te\
-    ntry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12\x18\n\x07counter\x18\x02\
-    \x20\x01(\rR\x07counter\"l\n\x15WardFlushQueueApplied\x12\x1b\n\tentry_k\
-    ey\x18\x01\x20\x01(\x0cR\x08entryKey\x12\x18\n\x07counter\x18\x02\x20\
-    \x01(\rR\x07counter\x12\x1c\n\tremaining\x18\x03\x20\x01(\rR\tremaining\
-    \"(\n\x10WardResetService\x12\x14\n\x05force\x18\x01\x20\x01(\x08R\x05fo\
-    rce\"5\n\x13WardResetServiceAck\x12\x1e\n\nunresolved\x18\x01\x20\x01(\r\
-    R\nunresolvedB?\n#com.satoshilabs.trezor.lib.protobufB\x18TrezorMessageW\
-    ardService\
+    messages-ward.proto\"a\n\x0fWardServiceOpen\x12)\n\x10protocol_version\
+    \x18\x01\x20\x01(\rR\x0fprotocolVersion\x12#\n\rrenew_binding\x18\x02\
+    \x20\x01(\x08R\x0crenewBinding\"\x14\n\x12WardServiceOpenAck\"\xb6\x01\n\
+    \x0fWardSyncRequest\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\
+    \x12\x17\n\x07ward_id\x18\x02\x20\x01(\x0cR\x06wardId\x12'\n\x0fcurrent_\
+    counter\x18\x03\x20\x01(\rR\x0ecurrentCounter\x12!\n\x0ccurrent_root\x18\
+    \x04\x20\x01(\x0cR\x0bcurrentRoot\x12\"\n\rhead_init_sig\x18\x06\x20\x01\
+    (\x0cR\x0bheadInitSigJ\x04\x08\x05\x10\x06\"\xe1\x02\n\x10WardSyncRespon\
+    se\x12\x1c\n\ttimestamp\x18\x03\x20\x01(\x04R\ttimestamp\x12!\n\x0cwm_si\
+    gnature\x18\x04\x20\x01(\x0cR\x0bwmSignature\x12<\n\x05links\x18\x05\x20\
+    \x03(\x0b2&.hw.trezor.messages.ward.WardChainLinkR\x05links\x12\x1d\n\nt\
+    o_counter\x18\x06\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x07\
+    \x20\x01(\x0cR\x06toRoot\x12!\n\x0cfrom_counter\x18\x08\x20\x01(\rR\x0bf\
+    romCounter\x12\x1b\n\tfrom_root\x18\t\x20\x01(\x0cR\x08fromRoot\x12&\n\
+    \x0ffrom_head_nonce\x18\x0b\x20\x01(\x0cR\rfromHeadNonce\x12\"\n\rto_hea\
+    d_nonce\x18\n\x20\x01(\x0cR\x0btoHeadNonceJ\x04\x08\x01\x10\x02J\x04\x08\
+    \x02\x10\x03\"{\n\x10WardServiceFetch\x12\x1b\n\tentry_key\x18\x01\x20\
+    \x01(\x0cR\x08entryKey\x12'\n\x0fcurrent_counter\x18\x02\x20\x01(\rR\x0e\
+    currentCounter\x12!\n\x0ccurrent_root\x18\x03\x20\x01(\x0cR\x0bcurrentRo\
+    ot\"\x12\n\x10WardSyncRequired\"\xac\x02\n\x0bWardPublish\x12\x1b\n\tent\
+    ry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12'\n\x0fsealed_identity\x18\
+    \x0b\x20\x01(\x0cR\x0esealedIdentity\x12%\n\x0esealed_content\x18\x0c\
+    \x20\x01(\x0cR\rsealedContent\x12\x18\n\x07counter\x18\x04\x20\x01(\rR\
+    \x07counter\x12\x1f\n\x0bauth_commit\x18\x06\x20\x01(\x0cR\nauthCommit\
+    \x12\x15\n\x06wm_sig\x18\x07\x20\x01(\x0cR\x05wmSig\x12\x14\n\x05nonce\
+    \x18\x08\x20\x01(\x0cR\x05nonce\x12\x1b\n\tfrom_root\x18\t\x20\x01(\x0cR\
+    \x08fromRoot\x12\x19\n\x08new_root\x18\n\x20\x01(\x0cR\x07newRootJ\x04\
+    \x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x05\x10\x06\"\xa9\x01\n\
+    \x0eWardPublishAck\x12\x1c\n\ttimestamp\x18\x03\x20\x01(\x04R\ttimestamp\
+    \x12!\n\x0cwm_signature\x18\x04\x20\x01(\x0cR\x0bwmSignature\x12&\n\x0ff\
+    rom_head_nonce\x18\x06\x20\x01(\x0cR\rfromHeadNonce\x12\"\n\rto_head_non\
+    ce\x18\x05\x20\x01(\x0cR\x0btoHeadNonceJ\x04\x08\x01\x10\x02J\x04\x08\
+    \x02\x10\x03\"8\n\x13WardPublishConflict\x12!\n\x0chead_counter\x18\x01\
+    \x20\x01(\rR\x0bheadCounter\"L\n\x13WardMutationApplied\x12\x1b\n\tentry\
+    _key\x18\x01\x20\x01(\x0cR\x08entryKey\x12\x18\n\x07counter\x18\x02\x20\
+    \x01(\rR\x07counter\"l\n\x15WardFlushQueueApplied\x12\x1b\n\tentry_key\
+    \x18\x01\x20\x01(\x0cR\x08entryKey\x12\x18\n\x07counter\x18\x02\x20\x01(\
+    \rR\x07counter\x12\x1c\n\tremaining\x18\x03\x20\x01(\rR\tremaining\"(\n\
+    \x10WardResetService\x12\x14\n\x05force\x18\x01\x20\x01(\x08R\x05force\"\
+    5\n\x13WardResetServiceAck\x12\x1e\n\nunresolved\x18\x01\x20\x01(\rR\nun\
+    resolvedB?\n#com.satoshilabs.trezor.lib.protobufB\x18TrezorMessageWardSe\
+    rvice\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

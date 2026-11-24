@@ -886,8 +886,10 @@ Run the file: `ward_device_test tests/device_tests/misc/test_ward.py`
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_a_batch_with_one_bad_proof_files_nothing"`
 - **`test_ward_rollback_undoes_the_last_write`** — The wallet returns to the state before its most recent change.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_rollback_undoes_the_last_write"`
-- **`test_ward_rollback_needs_no_proof_that_the_target_was_ever_the_head`** — A demotion asks for the WM's head and the user, and nothing else.
-  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_rollback_needs_no_proof_that_the_target_was_ever_the_head"`
+- **`test_ward_rollback_requires_the_root_at_the_requested_counter`** — A historical root must match the counter being restored.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_rollback_requires_the_root_at_the_requested_counter"`
+- **`test_ward_rollback_needs_wm_acceptance_for_older_links`** — Historical links need WM receipts tied to their accepted occurrences.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_rollback_needs_wm_acceptance_for_older_links"`
 - **`test_ward_rollback_count_comes_from_the_attested_counter`** — The number on the screen is authenticated, which is what makes it worth showing.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_rollback_count_comes_from_the_attested_counter"`
 - **`test_ward_rollback_from_a_regressed_wm_is_the_same_operation`** — The WM's register is lost; the demotion extends the WM's head, not this device's.
@@ -1245,7 +1247,7 @@ Run the file: `pytest python/tests/test_ward_trie.py`
 - **`test_only_the_sealed_content_is_committed`** — value_digest = sha256(0x03 \|\| sealed_content): the identity is stored beside the leaf and changes nothing in the tree; an empty content is a delete.
   `pytest "python/tests/test_ward_trie.py::test_only_the_sealed_content_is_committed"`
 
-#### `python/tests/test_ward_relay.py` (12)
+#### `python/tests/test_ward_relay.py` (13)
 
 Run the file: `pytest python/tests/test_ward_relay.py`
 
@@ -1253,6 +1255,8 @@ Run the file: `pytest python/tests/test_ward_relay.py`
   `pytest "python/tests/test_ward_relay.py::test_hello_sends_the_token_and_no_origin"`
 - **`test_a_wrong_token_is_refused_with_its_code`**
   `pytest "python/tests/test_ward_relay.py::test_a_wrong_token_is_refused_with_its_code"`
+- **`test_open_store_sends_only_the_ward_owner_secret`**
+  `pytest "python/tests/test_ward_relay.py::test_open_store_sends_only_the_ward_owner_secret"`
 - **`test_wardd_not_running_is_said_plainly`**
   `pytest "python/tests/test_ward_relay.py::test_wardd_not_running_is_said_plainly"`
 - **`test_a_conversation_answers_each_device_call_in_order`**

@@ -7,7 +7,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Set;
@@ -17,6 +20,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * The Java binding of the <b>wardd relay</b> -- for Lark and any other JVM host that talks to a
@@ -26,7 +31,7 @@ import java.util.concurrent.TimeoutException;
  * client and the order of every sync, catch-up and flush. A binding carries messages between it
  * and the device on the session the host already holds, and nothing more -- the same contract the
  * Connect, Python and Rust bindings implement ({@code packages/ward-core/relay.md} in
- * trezor-suite, version 1.x):
+ * trezor-suite, version 2.x):
  *
  * <pre>
  * client -&gt; wardd   {id, method, params}
@@ -40,7 +45,7 @@ import java.util.concurrent.TimeoutException;
  */
 public final class WarddClient implements AutoCloseable {
     public static final URI DEFAULT_URL = URI.create("ws://127.0.0.1:21329");
-    public static final String RELAY_PROTOCOL_VERSION = "1.0";
+    public static final String RELAY_PROTOCOL_VERSION = "2.0";
 
     /**
      * The only messages wardd may put on the device: its sync and flush conversation. Anything
@@ -144,8 +149,8 @@ public final class WarddClient implements AutoCloseable {
 
     /**
      * Select the wallet: by {@code wardId}, or the device's own (asked with {@code WardSync}) when
-     * null. {@code evoluNode} is the 64-byte node the device returns for {@code EvoluGetNode};
-     * wardd derives the replica's owner from its child {@code WARD}. A wardd started with
+     * null. The client derives the replica's WARD child from the 64-byte {@code evoluNode}.
+     * A wardd started with
      * {@code --memory} needs none.
      */
     public JsonNode openStore(WardPipe pipe, byte[] wardId, byte[] evoluNode) throws WarddException {
@@ -166,7 +171,19 @@ public final class WarddClient implements AutoCloseable {
         }
         ObjectNode params = JSON.createObjectNode().put("wardId", id);
         if (evoluNode != null) {
-            params.put("evoluNode", HEX.formatHex(evoluNode));
+            if (evoluNode.length != 64) {
+                throw new WarddException("protocol", "evoluNode must be a 64-byte SLIP-21 node");
+            }
+            try {
+                Mac mac = Mac.getInstance("HmacSHA512");
+                mac.init(new SecretKeySpec(evoluNode, 0, 32, "HmacSHA512"));
+                mac.update((byte) 0);
+                byte[] child = mac.doFinal("WARD".getBytes(StandardCharsets.US_ASCII));
+                params.put("wardOwnerSecret", HEX.formatHex(child, 32, 64));
+                Arrays.fill(child, (byte) 0);
+            } catch (GeneralSecurityException e) {
+                throw new WarddException("protocol", "could not derive the WARD owner", e);
+            }
         }
         return call("openStore", params, null);
     }

@@ -1716,6 +1716,8 @@ pub struct WardChainRequest {
     pub to_counter: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardChainRequest.to_root)
     pub to_root: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardChainRequest.to_head_nonce)
+    pub to_head_nonce: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardChainRequest.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1787,8 +1789,44 @@ impl WardChainRequest {
         self.to_root.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bytes to_head_nonce = 3;
+
+    pub fn to_head_nonce(&self) -> &[u8] {
+        match self.to_head_nonce.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_to_head_nonce(&mut self) {
+        self.to_head_nonce = ::std::option::Option::None;
+    }
+
+    pub fn has_to_head_nonce(&self) -> bool {
+        self.to_head_nonce.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_to_head_nonce(&mut self, v: ::std::vec::Vec<u8>) {
+        self.to_head_nonce = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_to_head_nonce(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.to_head_nonce.is_none() {
+            self.to_head_nonce = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.to_head_nonce.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_to_head_nonce(&mut self) -> ::std::vec::Vec<u8> {
+        self.to_head_nonce.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "to_counter",
@@ -1799,6 +1837,11 @@ impl WardChainRequest {
             "to_root",
             |m: &WardChainRequest| { &m.to_root },
             |m: &mut WardChainRequest| { &mut m.to_root },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "to_head_nonce",
+            |m: &WardChainRequest| { &m.to_head_nonce },
+            |m: &mut WardChainRequest| { &mut m.to_head_nonce },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardChainRequest>(
             "WardChainRequest",
@@ -1824,6 +1867,9 @@ impl ::protobuf::Message for WardChainRequest {
                 18 => {
                     self.to_root = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                26 => {
+                    self.to_head_nonce = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -1842,6 +1888,9 @@ impl ::protobuf::Message for WardChainRequest {
         if let Some(v) = self.to_root.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
+        if let Some(v) = self.to_head_nonce.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(3, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1853,6 +1902,9 @@ impl ::protobuf::Message for WardChainRequest {
         }
         if let Some(v) = self.to_root.as_ref() {
             os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.to_head_nonce.as_ref() {
+            os.write_bytes(3, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1873,6 +1925,7 @@ impl ::protobuf::Message for WardChainRequest {
     fn clear(&mut self) {
         self.to_counter = ::std::option::Option::None;
         self.to_root = ::std::option::Option::None;
+        self.to_head_nonce = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -1880,6 +1933,7 @@ impl ::protobuf::Message for WardChainRequest {
         static instance: WardChainRequest = WardChainRequest {
             to_counter: ::std::option::Option::None,
             to_root: ::std::option::Option::None,
+            to_head_nonce: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -5030,6 +5084,8 @@ pub struct WardRollback {
     pub to_head_nonce: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardRollback.recovered_root)
     pub recovered_root: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardRollback.recovered_counter)
+    pub recovered_counter: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardRollback.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -5319,8 +5375,27 @@ impl WardRollback {
         self.recovered_root.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional uint32 recovered_counter = 18;
+
+    pub fn recovered_counter(&self) -> u32 {
+        self.recovered_counter.unwrap_or(0)
+    }
+
+    pub fn clear_recovered_counter(&mut self) {
+        self.recovered_counter = ::std::option::Option::None;
+    }
+
+    pub fn has_recovered_counter(&self) -> bool {
+        self.recovered_counter.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_recovered_counter(&mut self, v: u32) {
+        self.recovered_counter = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(9);
+        let mut fields = ::std::vec::Vec::with_capacity(10);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "from_counter",
@@ -5367,6 +5442,11 @@ impl WardRollback {
             |m: &WardRollback| { &m.recovered_root },
             |m: &mut WardRollback| { &mut m.recovered_root },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "recovered_counter",
+            |m: &WardRollback| { &m.recovered_counter },
+            |m: &mut WardRollback| { &mut m.recovered_counter },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardRollback>(
             "WardRollback",
             fields,
@@ -5412,6 +5492,9 @@ impl ::protobuf::Message for WardRollback {
                 122 => {
                     self.recovered_root = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                144 => {
+                    self.recovered_counter = ::std::option::Option::Some(is.read_uint32()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -5451,6 +5534,9 @@ impl ::protobuf::Message for WardRollback {
         if let Some(v) = self.recovered_root.as_ref() {
             my_size += ::protobuf::rt::bytes_size(15, &v);
         }
+        if let Some(v) = self.recovered_counter {
+            my_size += ::protobuf::rt::uint32_size(18, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -5484,6 +5570,9 @@ impl ::protobuf::Message for WardRollback {
         if let Some(v) = self.recovered_root.as_ref() {
             os.write_bytes(15, v)?;
         }
+        if let Some(v) = self.recovered_counter {
+            os.write_uint32(18, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -5510,6 +5599,7 @@ impl ::protobuf::Message for WardRollback {
         self.from_head_nonce = ::std::option::Option::None;
         self.to_head_nonce = ::std::option::Option::None;
         self.recovered_root = ::std::option::Option::None;
+        self.recovered_counter = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -5524,6 +5614,7 @@ impl ::protobuf::Message for WardRollback {
             from_head_nonce: ::std::option::Option::None,
             to_head_nonce: ::std::option::Option::None,
             recovered_root: ::std::option::Option::None,
+            recovered_counter: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -5879,60 +5970,62 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x03\x10\x04J\x04\x08\x05\x10\x06J\x04\x08\x07\x10\x08\"A\n\x0fWardVerif\
     yChainJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\
     \x04\x08\x04\x10\x05J\x04\x08\x05\x10\x06J\x04\x08\x06\x10\x07J\x04\x08\
-    \x07\x10\x08J\x04\x08\x08\x10\t\"J\n\x10WardChainRequest\x12\x1d\n\nto_c\
+    \x07\x10\x08J\x04\x08\x08\x10\t\"n\n\x10WardChainRequest\x12\x1d\n\nto_c\
     ounter\x18\x01\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x02\x20\
-    \x01(\x0cR\x06toRoot\"P\n\x10WardChainLinkAck\x12<\n\x05links\x18\x01\
-    \x20\x03(\x0b2&.hw.trezor.messages.ward.WardChainLinkR\x05links\"r\n\x12\
-    WardVerifyChainAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\
-    \x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12'\n\x0frevert\
-    s_crossed\x18\x03\x20\x01(\rR\x0erevertsCrossed\"\xa8\x02\n\x0bWardCatch\
-    Up\x12\x1d\n\nto_counter\x18\x01\x20\x02(\rR\ttoCounter\x12\x17\n\x07to_\
-    root\x18\x02\x20\x01(\x0cR\x06toRoot\x12\x14\n\x05nonce\x18\x03\x20\x01(\
-    \x0cR\x05nonce\x12!\n\x0cfrom_counter\x18\x04\x20\x01(\rR\x0bfromCounter\
-    \x12\x1b\n\tfrom_root\x18\x05\x20\x01(\x0cR\x08fromRoot\x12&\n\x0ffrom_h\
-    ead_nonce\x18\x06\x20\x01(\x0cR\rfromHeadNonce\x12\"\n\rto_head_nonce\
-    \x18\x07\x20\x01(\x0cR\x0btoHeadNonce\x12\x1c\n\ttimestamp\x18\x08\x20\
-    \x01(\x04R\ttimestamp\x12!\n\x0cwm_signature\x18\t\x20\x01(\x0cR\x0bwmSi\
-    gnature\"q\n\x0eWardCatchUpAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\
-    \x07counter\x12'\n\x0freverts_crossed\x18\x02\x20\x01(\rR\x0erevertsCros\
-    sed\x12\x1c\n\tpersisted\x18\x03\x20\x01(\x08R\tpersisted\"/\n\x17WardSe\
-    tPersistWithoutWm\x12\x14\n\x05allow\x18\x01\x20\x02(\x08R\x05allow\"/\n\
-    \nWardRejoin\x12!\n\x0cfork_counter\x18\x01\x20\x01(\rR\x0bforkCounter\"\
-    \x8b\x01\n\rWardRejoinAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07co\
-    unter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x1c\n\t\
-    discarded\x18\x03\x20\x01(\rR\tdiscarded\x12'\n\x0freverts_crossed\x18\
-    \x04\x20\x01(\rR\x0erevertsCrossed\"\n\n\x08WardSync\"\x8e\x01\n\x0bWard\
-    SyncAck\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x17\n\x07w\
-    ard_id\x18\x02\x20\x01(\x0cR\x06wardId\x12\x18\n\x07counter\x18\x03\x20\
-    \x01(\rR\x07counter\x12\x12\n\x04root\x18\x04\x20\x01(\x0cR\x04root\x12\
-    \"\n\rhead_init_sig\x18\x05\x20\x01(\x0cR\x0bheadInitSig\"\xa8\x02\n\x15\
-    WardIngestAttestation\x12!\n\x0cwm_signature\x18\x03\x20\x01(\x0cR\x0bwm\
-    Signature\x12\x1c\n\ttimestamp\x18\x04\x20\x01(\x04R\ttimestamp\x12\x1d\
-    \n\nto_counter\x18\x05\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\
-    \x06\x20\x01(\x0cR\x06toRoot\x12!\n\x0cfrom_counter\x18\x07\x20\x01(\rR\
-    \x0bfromCounter\x12\x1b\n\tfrom_root\x18\x08\x20\x01(\x0cR\x08fromRoot\
-    \x12&\n\x0ffrom_head_nonce\x18\n\x20\x01(\x0cR\rfromHeadNonce\x12\"\n\rt\
-    o_head_nonce\x18\t\x20\x01(\x0cR\x0btoHeadNonceJ\x04\x08\x01\x10\x02J\
-    \x04\x08\x02\x10\x03\"4\n\x18WardIngestAttestationAck\x12\x18\n\x07count\
-    er\x18\x01\x20\x01(\rR\x07counter\"B\n\rWardReconcile\x12\x1f\n\x0bauth_\
-    commit\x18\x04\x20\x01(\x0cR\nauthCommitJ\x04\x08\x01\x10\x02J\x04\x08\
-    \x02\x10\x03J\x04\x08\x03\x10\x04\"G\n\x10WardReconcileAck\x12\x18\n\x07\
-    counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\
-    \x01(\x0cR\x07newRoot\"\xea\x02\n\x0cWardRollback\x12!\n\x0cfrom_counter\
-    \x18\t\x20\x01(\rR\x0bfromCounter\x12\x1b\n\tfrom_root\x18\n\x20\x01(\
-    \x0cR\x08fromRoot\x12\x1d\n\nto_counter\x18\x0b\x20\x01(\rR\ttoCounter\
-    \x12\x17\n\x07to_root\x18\x0c\x20\x01(\x0cR\x06toRoot\x12!\n\x0cwm_signa\
-    ture\x18\r\x20\x01(\x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\x0e\x20\
-    \x01(\x04R\ttimestamp\x12&\n\x0ffrom_head_nonce\x18\x11\x20\x01(\x0cR\rf\
-    romHeadNonce\x12\"\n\rto_head_nonce\x18\x10\x20\x01(\x0cR\x0btoHeadNonce\
-    \x12%\n\x0erecovered_root\x18\x0f\x20\x01(\x0cR\rrecoveredRootJ\x04\x08\
-    \x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\
-    \x05J\x04\x08\x05\x10\x06J\x04\x08\x06\x10\x07J\x04\x08\x07\x10\x08J\x04\
-    \x08\x08\x10\t\"\x84\x01\n\x0fWardRollbackAck\x12\x18\n\x07counter\x18\
+    \x01(\x0cR\x06toRoot\x12\"\n\rto_head_nonce\x18\x03\x20\x01(\x0cR\x0btoH\
+    eadNonce\"P\n\x10WardChainLinkAck\x12<\n\x05links\x18\x01\x20\x03(\x0b2&\
+    .hw.trezor.messages.ward.WardChainLinkR\x05links\"r\n\x12WardVerifyChain\
+    Ack\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08new\
+    _root\x18\x02\x20\x01(\x0cR\x07newRoot\x12'\n\x0freverts_crossed\x18\x03\
+    \x20\x01(\rR\x0erevertsCrossed\"\xa8\x02\n\x0bWardCatchUp\x12\x1d\n\nto_\
+    counter\x18\x01\x20\x02(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x02\x20\
+    \x01(\x0cR\x06toRoot\x12\x14\n\x05nonce\x18\x03\x20\x01(\x0cR\x05nonce\
+    \x12!\n\x0cfrom_counter\x18\x04\x20\x01(\rR\x0bfromCounter\x12\x1b\n\tfr\
+    om_root\x18\x05\x20\x01(\x0cR\x08fromRoot\x12&\n\x0ffrom_head_nonce\x18\
+    \x06\x20\x01(\x0cR\rfromHeadNonce\x12\"\n\rto_head_nonce\x18\x07\x20\x01\
+    (\x0cR\x0btoHeadNonce\x12\x1c\n\ttimestamp\x18\x08\x20\x01(\x04R\ttimest\
+    amp\x12!\n\x0cwm_signature\x18\t\x20\x01(\x0cR\x0bwmSignature\"q\n\x0eWa\
+    rdCatchUpAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12'\n\
+    \x0freverts_crossed\x18\x02\x20\x01(\rR\x0erevertsCrossed\x12\x1c\n\tper\
+    sisted\x18\x03\x20\x01(\x08R\tpersisted\"/\n\x17WardSetPersistWithoutWm\
+    \x12\x14\n\x05allow\x18\x01\x20\x02(\x08R\x05allow\"/\n\nWardRejoin\x12!\
+    \n\x0cfork_counter\x18\x01\x20\x01(\rR\x0bforkCounter\"\x8b\x01\n\rWardR\
+    ejoinAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\
+    \x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x1c\n\tdiscarded\x18\
+    \x03\x20\x01(\rR\tdiscarded\x12'\n\x0freverts_crossed\x18\x04\x20\x01(\r\
+    R\x0erevertsCrossed\"\n\n\x08WardSync\"\x8e\x01\n\x0bWardSyncAck\x12\x14\
+    \n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x17\n\x07ward_id\x18\x02\
+    \x20\x01(\x0cR\x06wardId\x12\x18\n\x07counter\x18\x03\x20\x01(\rR\x07cou\
+    nter\x12\x12\n\x04root\x18\x04\x20\x01(\x0cR\x04root\x12\"\n\rhead_init_\
+    sig\x18\x05\x20\x01(\x0cR\x0bheadInitSig\"\xa8\x02\n\x15WardIngestAttest\
+    ation\x12!\n\x0cwm_signature\x18\x03\x20\x01(\x0cR\x0bwmSignature\x12\
+    \x1c\n\ttimestamp\x18\x04\x20\x01(\x04R\ttimestamp\x12\x1d\n\nto_counter\
+    \x18\x05\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x06\x20\x01(\
+    \x0cR\x06toRoot\x12!\n\x0cfrom_counter\x18\x07\x20\x01(\rR\x0bfromCounte\
+    r\x12\x1b\n\tfrom_root\x18\x08\x20\x01(\x0cR\x08fromRoot\x12&\n\x0ffrom_\
+    head_nonce\x18\n\x20\x01(\x0cR\rfromHeadNonce\x12\"\n\rto_head_nonce\x18\
+    \t\x20\x01(\x0cR\x0btoHeadNonceJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\
+    \x03\"4\n\x18WardIngestAttestationAck\x12\x18\n\x07counter\x18\x01\x20\
+    \x01(\rR\x07counter\"B\n\rWardReconcile\x12\x1f\n\x0bauth_commit\x18\x04\
+    \x20\x01(\x0cR\nauthCommitJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\
+    \x04\x08\x03\x10\x04\"G\n\x10WardReconcileAck\x12\x18\n\x07counter\x18\
     \x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\
-    \x07newRoot\x12\x1f\n\x0bauth_commit\x18\x03\x20\x01(\x0cR\nauthCommit\
-    \x12\x15\n\x06wm_sig\x18\x05\x20\x01(\x0cR\x05wmSigJ\x04\x08\x04\x10\x05\
-    B?\n#com.satoshilabs.trezor.lib.protobufB\x18TrezorMessageWardConnect\
+    \x07newRoot\"\x97\x03\n\x0cWardRollback\x12!\n\x0cfrom_counter\x18\t\x20\
+    \x01(\rR\x0bfromCounter\x12\x1b\n\tfrom_root\x18\n\x20\x01(\x0cR\x08from\
+    Root\x12\x1d\n\nto_counter\x18\x0b\x20\x01(\rR\ttoCounter\x12\x17\n\x07t\
+    o_root\x18\x0c\x20\x01(\x0cR\x06toRoot\x12!\n\x0cwm_signature\x18\r\x20\
+    \x01(\x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\x0e\x20\x01(\x04R\tti\
+    mestamp\x12&\n\x0ffrom_head_nonce\x18\x11\x20\x01(\x0cR\rfromHeadNonce\
+    \x12\"\n\rto_head_nonce\x18\x10\x20\x01(\x0cR\x0btoHeadNonce\x12%\n\x0er\
+    ecovered_root\x18\x0f\x20\x01(\x0cR\rrecoveredRoot\x12+\n\x11recovered_c\
+    ounter\x18\x12\x20\x01(\rR\x10recoveredCounterJ\x04\x08\x01\x10\x02J\x04\
+    \x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\x05J\x04\x08\x05\
+    \x10\x06J\x04\x08\x06\x10\x07J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\t\"\
+    \x84\x01\n\x0fWardRollbackAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\
+    \x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\
+    \x1f\n\x0bauth_commit\x18\x03\x20\x01(\x0cR\nauthCommit\x12\x15\n\x06wm_\
+    sig\x18\x05\x20\x01(\x0cR\x05wmSigJ\x04\x08\x04\x10\x05B?\n#com.satoshil\
+    abs.trezor.lib.protobufB\x18TrezorMessageWardConnect\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

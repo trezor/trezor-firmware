@@ -21,7 +21,7 @@ of this document.
      ▼
   Trezor
      │
-     │  WardSyncRequest / WardServiceFetch / WardPublish
+     │  WardSyncRequest / WardChainRequest / WardServiceFetch / WardPublish
      │  ── over the SERVICE CHANNEL, an interface of the device's own ──
      ▼
   WARD host app + wardd   (owns the replica, speaks to the backend)
@@ -54,6 +54,12 @@ and see none of this.
 That is the whole of the claim, and it is worth stating what it is *not*: WARD's user-facing
 operations do not avoid the wallet channel — they arrive on it, by design, because the app that sends
 them is standing in for a wallet. What avoids it is everything behind them.
+
+The service keeps the WM attestation separate from the history. A device that is behind
+pulls pages of up to 64 links, newest first, and adopts the attested head after proving descent
+from its stored head. A device already at the attested head needs only the attestation exchange.
+Protocol v3 lets the codec daemon renew its binding while idle. Firmware ignores a renewal
+during an RPC, and the next renewal rebinds the endpoint after a timeout.
 
 ## What differs between the two builds
 

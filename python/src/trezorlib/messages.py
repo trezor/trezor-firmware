@@ -10308,6 +10308,7 @@ class WardChainLink(protobuf.MessageType):
         3: protobuf.Field("to_counter", "uint32", repeated=False, required=False, default=None),
         4: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
         5: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("acceptance", "WardChainAcceptance", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10318,12 +10319,37 @@ class WardChainLink(protobuf.MessageType):
         to_counter: Optional["int"] = None,
         to_root: Optional["bytes"] = None,
         auth_commit: Optional["bytes"] = None,
+        acceptance: Optional["WardChainAcceptance"] = None,
     ) -> None:
         self.from_counter = from_counter
         self.from_root = from_root
         self.to_counter = to_counter
         self.to_root = to_root
         self.auth_commit = auth_commit
+        self.acceptance = acceptance
+
+
+class WardChainAcceptance(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("from_head_nonce", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
+        4: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        nonce: Optional["bytes"] = None,
+        from_head_nonce: Optional["bytes"] = None,
+        timestamp: Optional["int"] = None,
+        wm_signature: Optional["bytes"] = None,
+    ) -> None:
+        self.nonce = nonce
+        self.from_head_nonce = from_head_nonce
+        self.timestamp = timestamp
+        self.wm_signature = wm_signature
 
 
 class WardPinCachedEntry(protobuf.MessageType):
@@ -10528,6 +10554,7 @@ class WardChainRequest(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("to_counter", "uint32", repeated=False, required=False, default=None),
         2: protobuf.Field("to_root", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("to_head_nonce", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10535,9 +10562,11 @@ class WardChainRequest(protobuf.MessageType):
         *,
         to_counter: Optional["int"] = None,
         to_root: Optional["bytes"] = None,
+        to_head_nonce: Optional["bytes"] = None,
     ) -> None:
         self.to_counter = to_counter
         self.to_root = to_root
+        self.to_head_nonce = to_head_nonce
 
 
 class WardChainLinkAck(protobuf.MessageType):
@@ -10805,6 +10834,7 @@ class WardRollback(protobuf.MessageType):
         17: protobuf.Field("from_head_nonce", "bytes", repeated=False, required=False, default=None),
         16: protobuf.Field("to_head_nonce", "bytes", repeated=False, required=False, default=None),
         15: protobuf.Field("recovered_root", "bytes", repeated=False, required=False, default=None),
+        18: protobuf.Field("recovered_counter", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10819,6 +10849,7 @@ class WardRollback(protobuf.MessageType):
         from_head_nonce: Optional["bytes"] = None,
         to_head_nonce: Optional["bytes"] = None,
         recovered_root: Optional["bytes"] = None,
+        recovered_counter: Optional["int"] = None,
     ) -> None:
         self.from_counter = from_counter
         self.from_root = from_root
@@ -10829,6 +10860,7 @@ class WardRollback(protobuf.MessageType):
         self.from_head_nonce = from_head_nonce
         self.to_head_nonce = to_head_nonce
         self.recovered_root = recovered_root
+        self.recovered_counter = recovered_counter
 
 
 class WardRollbackAck(protobuf.MessageType):
@@ -10858,14 +10890,17 @@ class WardServiceOpen(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2330
     FIELDS = {
         1: protobuf.Field("protocol_version", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("renew_binding", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         protocol_version: Optional["int"] = None,
+        renew_binding: Optional["bool"] = None,
     ) -> None:
         self.protocol_version = protocol_version
+        self.renew_binding = renew_binding
 
 
 class WardServiceOpenAck(protobuf.MessageType):

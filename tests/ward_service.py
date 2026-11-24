@@ -383,6 +383,8 @@ class MockWardService:
         name = type(request).__name__
         if name == "WardSyncRequest":
             return self._sync_response(request)
+        if name == "WardChainRequest":
+            return self._chain_response(request)
         if name == "WardServiceFetch":
             return self._fetch_response(request)
         if name == "WardPublish":
@@ -390,7 +392,7 @@ class MockWardService:
         raise AssertionError(f"the daemon was asked something it cannot serve: {name}")
 
     def _sync_response(self, request):
-        """The current head, attested, with the links from the device's head forward.
+        """The current head, attested. The device pulls chain pages separately.
 
         The head is `(counter, root)` off the replica this daemon owns -- no derivation, and no
         key of the wallet's involved anywhere in this file.
@@ -447,18 +449,6 @@ class MockWardService:
             signature,
         ) = self.wm.attest(ward_id, request.nonce)
 
-        links = [
-            messages.WardChainLink(
-                from_counter=fc,
-                from_root=fr,
-                to_counter=tc,
-                to_root=tr,
-                auth_commit=ac,
-            )
-            for (fc, fr, tc, tr, ac, _op) in self.store.links
-            if fc >= (request.current_counter or 0)
-        ]
-
         return messages.WardSyncResponse(
             from_counter=att_from_counter,
             from_root=att_from_root,
@@ -468,7 +458,23 @@ class MockWardService:
             wm_signature=signature,
             from_head_nonce=att_from_head_nonce,
             to_head_nonce=att_to_head_nonce,
-            links=links,
+        )
+
+    def _chain_response(self, request):
+        assert self.store is not None
+        return messages.WardChainLinkAck(
+            links=[
+                messages.WardChainLink(
+                    from_counter=fc,
+                    from_root=fr,
+                    to_counter=tc,
+                    to_root=tr,
+                    auth_commit=ac,
+                )
+                for fc, fr, tc, tr, ac, _op in self.store.links_ending_at(
+                    request.to_counter, request.to_root, 64
+                )
+            ]
         )
 
     def _fetch_response(self, request):

@@ -27,7 +27,7 @@ fn a_batched_ack_round_trips_with_bytes_as_hex() {
         "remaining": 0,
         "from_counter": 4,
         "leaves": [
-            {"entry_key": "33".repeat(32), "content": {"encoding": 1, "plaintext": {"content": "aabb"}}},
+            {"entry_key": "33".repeat(32), "sealed_content": "aabb"},
             {"entry_key": "44".repeat(32)},
         ],
     });

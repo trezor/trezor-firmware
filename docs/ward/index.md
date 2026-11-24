@@ -7,6 +7,7 @@ a host stores and replicates them, and the WARD Manager orders the changes and a
 - [Trie canonical form](ward-trie.md): the trie, its root and its proofs.
 - [Who talks to whom](ward-channels.md): the wallet and service channels.
 - [Threat model](threat_model.md): what each party learns, per use case.
+- [Security gaps](gaps.md): review findings, fixes, and remaining release gates.
 - [User stories](user_story.md): what a user expects, starting with the mini-WARD backup and restore.
 - [mini-WARD to MVP migration](miniscript_to_mvp.md): carrying on-device records into the replicated store.
 - [MVP to WARD Manager migration](mvp_to_final_migration.md): enrolling an existing wallet at its adopted head.

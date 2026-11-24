@@ -55,6 +55,11 @@ class WarddClientTest {
             result.putObject("result").put("big", "x".repeat(70_000)).set("params", frame.get("params"));
             conn.send(result);
         });
+        wardd.scripts.put("openStore", (conn, frame) -> {
+            ObjectNode result = StubWardd.JSON.createObjectNode().put("id", frame.get("id").asLong());
+            result.set("result", frame.get("params"));
+            conn.send(result);
+        });
     }
 
     @AfterEach
@@ -73,7 +78,7 @@ class WarddClientTest {
         WarddClient.connect(wardd.url(), "good").close();
         JsonNode hello = wardd.received.get(0);
         assertEquals("hello", hello.get("method").asText());
-        assertEquals("1.0", hello.at("/params/version").asText());
+        assertEquals("2.0", hello.at("/params/version").asText());
         assertEquals("good", hello.at("/params/token").asText());
         assertNull(wardd.origins.get(0), "only a browser sends Origin");
     }
@@ -82,6 +87,21 @@ class WarddClientTest {
     void aWrongTokenIsRefusedWithItsCode() {
         WarddException e = assertThrows(WarddException.class, () -> WarddClient.connect(wardd.url(), "bad"));
         assertEquals("unauthorised", e.code());
+    }
+
+    @Test
+    void opensStoreWithOnlyTheWardOwnerSecret() throws Exception {
+        byte[] parent = new byte[64];
+        for (int i = 0; i < parent.length; i++) {
+            parent[i] = (byte) i;
+        }
+        try (WarddClient client = WarddClient.connect(wardd.url(), "good")) {
+            JsonNode result = client.openStore(null, new byte[32], parent);
+            assertEquals(2, result.size());
+            assertEquals("00".repeat(32), result.get("wardId").asText());
+            assertEquals("fa46e3e20d89f32d8e70c6864f06407a79d036a7cf851d2fcfbb5228ffce42d3",
+                    result.get("wardOwnerSecret").asText());
+        }
     }
 
     @Test

@@ -32,9 +32,8 @@ import "messages-ward.proto";
  *   WardEntryRequest        -> WardServiceFetch, which names the head the device is asking
  *                              ABOUT, so the service can say "you are behind" instead of
  *                              serving a proof that cannot verify.
- *   WardSync + WardIngest-  -> WardSyncRequest / WardSyncResponse: one exchange instead of
- *   Attestation + Reconcile    three. The nonce no longer has to outlive two round trips, so it
- *                              stops being session state and becomes a local variable.
+ *   WardSync + WardIngest-  -> WardSyncRequest / WardSyncResponse for the attestation, then
+ *   Attestation + Reconcile    WardChainRequest / WardChainLinkAck for any missing history.
  *   WardLeafAck             -> WardPublish hands the mutation to the service, and
  *                              WardMutationApplied tells the WARD APP it happened. The app on a
  *                              service build is NOT given the leaf: it does not own the replica,
@@ -64,6 +63,7 @@ import "messages-ward.proto";
  */
 message WardServiceOpen {
     optional uint32 protocol_version = 1;  // service protocol this daemon speaks
+    optional bool renew_binding = 2;  // codec only; idle renewal, no reply
 }
 
 /**
@@ -83,9 +83,8 @@ message WardServiceOpenAck {
  * -- unlike the connect-mode round, whose nonce had to be kept in the session cache because three
  * separate host requests had to agree on it.
  *
- * current_counter and current_root name the device's OWN head. The service folds forward from
- * exactly there, so what comes back proves descent from a state this device actually reached
- * rather than from one it is told about.
+ * current_counter and current_root name the device's own head. The device walks backward from
+ * the attested step and must reach this exact pair.
  *
  * head_init_sig matters only when the WM may not know this wallet yet: a compare-and-swap needs
  * something to compare against, and a WM that has never seen this wallet has nothing. The opening
@@ -109,18 +108,9 @@ message WardSyncRequest {
 }
 
 /**
- * Request: service -> device. The attested head, and the authorised steps from the device's own
- * head to it.
- *
- * CHAIN-ONLY, with no one-link shortcut. The service owns the replica AND its history, so it
- * can always show the steps -- and every adoption then proves two separate things: DESCENT, that
- * each intervening transition was authorised by a device of this wallet and none was skipped, and
- * CURRENCY, that the WM vouches for where it ends. Connect mode has a weaker route that takes the
- * host's root on the WM's word alone; this file does not.
- *
- * links is empty when the device already holds the attested head -- the ordinary "nothing has
- * changed" answer. One link after a publication the device did not see confirmed. Several when
- * another device of the wallet has written in the meantime.
+ * Request: service -> device. The WM's attested step. In service protocol v2 the device
+ * proves descent with separate WardChainRequest / WardChainLinkAck exchanges, each carrying
+ * up to 64 links in newest-first order. It adopts after reaching its exact stored head.
  */
 message WardSyncResponse {
     reserved 1, 2;  // were `counter` and `root`; the attestation names a STEP now
@@ -128,11 +118,9 @@ message WardSyncResponse {
     optional uint64 timestamp    = 3;
     optional bytes  wm_signature = 4;  // over the nonce from the request, so it cannot be replayed
 
-    repeated WardChainLink links = 5;  // ordered, starting at the device's current head
+    repeated WardChainLink links = 5;  // legacy service v1 only; unused in v2
 
-    // The transition the WM attests: the LAST of the links above, when there are any. Not
-    // derivable from the device's own head -- the WM may be several steps ahead, and it is the
-    // final step it vouches for.
+    // The transition the WM attests. The first link of the first page must name both ends.
     optional uint32 to_counter   = 6;
     optional bytes  to_root      = 7;  // absent means the empty tree
     optional uint32 from_counter = 8;

@@ -1,7 +1,15 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import WardVerifyChain, WardVerifyChainAck
+    from collections.abc import Awaitable, Callable
+
+    from trezor.messages import (
+        WardChainLink,
+        WardChainLinkAck,
+        WardChainRequest,
+        WardVerifyChain,
+        WardVerifyChainAck,
+    )
 
 # Sanity bound on a padding host (~77 links fit the 8704-byte buffer); the walk's real bound is
 # the counter distance.
@@ -110,6 +118,11 @@ async def walk_back(
     start_root: "bytes | None",
     stop_counter: int,
     expect_from: "tuple | None" = None,
+    *,
+    collect_commits: bool = True,
+    wanted_commits: "set[bytes] | None" = None,
+    pull: "Callable[[WardChainRequest], Awaitable[WardChainLinkAck]] | None" = None,
+    verify_acceptance: "Callable[[WardChainLink], None] | None" = None,
 ) -> "tuple[bytes | None, list, int, tuple | None]":
     """Walk authorised links BACK from `(start_counter, start_root)` down to `stop_counter`,
     pulling them from the host one ack at a time.
@@ -119,6 +132,8 @@ async def walk_back(
     step above the stop (None if no step was taken). `expect_from` pins the first link's
     predecessor. Each request names the exact `(counter, root)` wanted and
     `verify_chain_step_back` refuses a link ending elsewhere, so batching has no security content.
+    Callers that only need ancestry can disable `collect_commits` to keep `crossed` empty.
+    Callers can limit settlement evidence to `wanted_commits` or supply another transport.
     The walk must land EXACTLY on `stop_counter`: roots repeat, so a batch link jumping over the
     stop could otherwise "arrive" at a state the walk never passed through.
     """
@@ -133,10 +148,11 @@ async def walk_back(
     reverts = 0
     above = None
     while counter > stop_counter:
-        ack = await context.call(
-            WardChainRequest(to_counter=counter, to_root=root),
-            expected_type=WardChainLinkAck,
-        )
+        request = WardChainRequest(to_counter=counter, to_root=root)
+        if pull is None:
+            ack = await context.call(request, expected_type=WardChainLinkAck)
+        else:
+            ack = await pull(request)
         if not ack.links:
             raise DataError("WARD: the host cannot continue the chain")
         if len(ack.links) > _MAX_LINKS_PER_ACK:
@@ -153,12 +169,18 @@ async def walk_back(
                         "WARD: the first link does not begin at the attested predecessor"
                     )
                 expect_from = None
-            crossed.append(link.auth_commit)
+            if verify_acceptance is not None:
+                verify_acceptance(link)
+            if collect_commits and (
+                wanted_commits is None or link.auth_commit in wanted_commits
+            ):
+                crossed.append(link.auth_commit)
             if reverted:
                 reverts += 1
             # Never fold below the stop; overshooting is refused below.
             if counter <= stop_counter:
                 break
+        del ack
     if counter != stop_counter:
         raise DataError("WARD: the chain does not land on counter %d" % stop_counter)
     return root, crossed, reverts, above

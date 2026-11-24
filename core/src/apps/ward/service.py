@@ -22,9 +22,13 @@ if TYPE_CHECKING:
     from trezorio import WireInterface
 
     from storage.cache_common import SessionlessCache
-
     from trezor import protobuf
-    from trezor.messages import WardEntryAck, WardServiceOpen, WardServiceOpenAck
+    from trezor.messages import (
+        WardChainRequest,
+        WardEntryAck,
+        WardServiceOpen,
+        WardServiceOpenAck,
+    )
     from trezor.protobuf import MessageType as LoadedMessageType
     from trezor.wire.codec.ward_context import WardCodecContext
     from trezor.wire.protocol_common import Message
@@ -39,7 +43,7 @@ if TYPE_CHECKING:
 RPC_TIMEOUT_MS = const(30_000)
 
 # Bumped when the message set changes shape, so an older daemon is refused by name.
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 3
 
 
 def _binding_cache() -> "SessionlessCache":
@@ -349,22 +353,22 @@ async def fetch(entry_key: bytes, retry: bool = True) -> "WardEntryAck":
 async def sync() -> None:
     """Ask the service for the current head and adopt it, or raise.
 
-    One RPC for the connect path's three, reusing the same audited round (`round`, `adopt`). The
-    nonce is minted here, before the daemon talks to the WM. CHAIN-ONLY: the daemon owns the
-    history, so the head must descend from this device's own head and end exactly on the
-    attested step.
+    The nonce is minted before the daemon talks to the WM. Walk bounded pages back from that
+    attested step to the device's own head, and adopt only after the full proof checks out.
     """
+    from storage import ward as ward_store
     from trezor.crypto import random
-    from trezor.messages import WardSyncRequest, WardSyncResponse
+    from trezor.messages import WardChainLinkAck, WardSyncRequest, WardSyncResponse
     from trezor.wire import DataError
 
     from . import round as sync_round
     from .adopt import adopt, verify_round_attestation
     from .attest import NONCE_LENGTH, same_root
-    from .cas import head_init_sig, link_of, verify_chain_step
+    from .cas import head_init_sig
     from .common import require_initialized
-    from .keys import derive_k_auth, derive_k_sig, derive_ward_id
+    from .keys import derive_k_auth, derive_k_sig, derive_wallet_id, derive_ward_id
     from .root import get_counter, get_root
+    from .verify_chain import walk_back
 
     require_initialized()
 
@@ -379,6 +383,7 @@ async def sync() -> None:
         init = head_init_sig(await derive_k_sig(), ward_id, counter, root)
 
     nonce = random.bytes(NONCE_LENGTH)
+    sync_round.mark_offline()
     sync_round.begin(nonce)
 
     answer = await _rpc(
@@ -411,46 +416,32 @@ async def sync() -> None:
     )
     if attested_counter < counter:
         raise DataError("attested counter is older than the stored counter")
+    # Keep only the verified MACs needed to settle this wallet's flash claims.
+    wanted_commits = {
+        ward_store.claim_parse(claim)[3]
+        for _, claim in ward_store.claim_list(await derive_wallet_id())
+    }
+
+    async def pull(request: WardChainRequest) -> WardChainLinkAck:
+        return await _rpc(request, WardChainLinkAck)
+
+    landed_root, crossed, _, _ = await walk_back(
+        await derive_k_auth(),
+        ward_id,
+        attested_counter,
+        attested_root,
+        counter,
+        expect_from=(attested_from_counter, attested_from_root),
+        wanted_commits=wanted_commits,
+        pull=pull,
+    )
+    if not same_root(landed_root, root):
+        raise DataError("the chain does not reach this device's stored root")
+
     sync_round.set_attested(
         attested_from_counter, attested_from_root, attested_counter, attested_root
     )
-
-    # The baseline is the device's own head, never one the answer names.
-    running_counter = counter
-    running_root = root
-    k_auth = await derive_k_auth()
-    crossed = []
-    reverts = 0
-    last_from = None
-    for link in answer.links:
-        step = link_of(link)
-        running_counter, running_root, reverted = verify_chain_step(
-            k_auth, ward_id, running_counter, running_root, step
-        )
-        # After the step verified, never before.
-        crossed.append(step[4])
-        last_from = step[:2]
-        reverts += reverted
-
-    if __debug__:
-        log.debug(__name__, "sync: %d links, %d of them reverts", len(answer.links), reverts)
-
-    if running_counter != attested_counter:
-        raise DataError("chain does not end at the attested counter")
-
-    # And on the attested root (preimage form), or the fold could arrive at a fork.
-    if not same_root(running_root, attested_root):
-        raise DataError("chain end does not match the attested root")
-
-    # And the last step must BE the attested step: a write and a revert can end on the same
-    # (counter, root). With no links, the checks above already make the own head the attested one.
-    if last_from is not None and (
-        last_from[0] != attested_from_counter
-        or not same_root(last_from[1], attested_from_root)
-    ):
-        raise DataError("the chain's last step is not the step the WM attested")
-
-    await adopt(attested_counter, running_root, landed_commits=crossed)
+    await adopt(attested_counter, attested_root, landed_commits=crossed)
 
 
 async def become_ready() -> bool:

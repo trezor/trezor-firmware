@@ -4,7 +4,7 @@ The Java binding of the **wardd relay**: it carries a WARD conversation between 
 WARD service, and a Trezor on the session a JVM host (Lark) already holds. wardd holds all of the
 WARD logic; this library holds none. It implements the same contract as the Connect, Python
 (`trezorlib.ward_relay`) and Rust (`rust/ward-relay`) bindings: `packages/ward-core/relay.md` in
-trezor-suite, version 1.x.
+trezor-suite, version 2.x. The binding derives the WARD owner secret locally.
 
 ## Using it
 

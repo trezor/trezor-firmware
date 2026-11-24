@@ -143,7 +143,9 @@ async def catch_up(msg: WardCatchUp) -> WardCatchUpAck:
         await derive_wallet_id(), ward_store.SETTING_PERSIST_WITHOUT_WM
     )
     if persist:
-        await persist_caught_up(to_counter, to_root, crossed, timestamp)
+        await persist_caught_up(
+            to_counter, to_root, crossed, timestamp, msg.to_head_nonce if has_wm() else None
+        )
     else:
         assert timestamp is not None
         sync_round.set_provisional(to_counter, root_or_empty(to_root), timestamp)

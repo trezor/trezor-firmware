@@ -447,12 +447,24 @@ def _chain_walk(
     max_links_per_ack: int,
     expected: type,
     what: str,
+    acceptance_source: "Callable[[bytes], messages.WardChainLink | None] | None" = None,
 ) -> t.Any:
     """Send `msg`, answer the device's `WardChainRequest`s from `link_source`, and return the
     final response, which must be an `expected`."""
     res = session.call(msg)
     while isinstance(res, messages.WardChainRequest):
-        links = link_source(res.to_counter, res.to_root, max_links_per_ack)
+        occurrence = res.to_head_nonce
+        accepted_link = (
+            acceptance_source(occurrence)
+            if occurrence is not None and acceptance_source is not None
+            else None
+        )
+        if accepted_link is not None:
+            res = session.call(messages.WardChainLinkAck(links=[accepted_link]))
+            continue
+        links = link_source(
+            res.to_counter, res.to_root, 1 if occurrence is not None else max_links_per_ack
+        )
         res = session.call(
             messages.WardChainLinkAck(
                 links=[
@@ -482,16 +494,35 @@ def rollback(
     wm_signature: bytes,
     from_head_nonce: bytes,
     to_head_nonce: bytes,
+    *,
+    recovered_counter: int,
+    link_source: LinkSource,
+    acceptance_source: "Callable[[bytes], messages.WardChainLink | None] | None" = None,
     recovered_root: Optional[bytes] = None,
     timestamp: int = 0,
 ) -> messages.WardRollbackAck:
-    """Mint a REVERT from the WM's attested head to `recovered_root`, on confirmation.
+    """Mint a REVERT to a verified historical head, on confirmation.
 
     The operands are the WM's own head, attested this round. Nothing is adopted: publish the
     REVERT to the WM, sync, and record it with `apply_rollback`.
+    Supply links with archived WM attestations by head nonce through `acceptance_source`.
+    The live attestation already proves the newest step when the WM is the anchor.
     """
-    msg = messages.WardRollback(**_fields(locals()))
-    return session.call(msg, expect=messages.WardRollbackAck)
+    msg = messages.WardRollback(
+        from_counter=from_counter,
+        from_root=from_root,
+        to_counter=to_counter,
+        to_root=to_root,
+        wm_signature=wm_signature,
+        from_head_nonce=from_head_nonce,
+        to_head_nonce=to_head_nonce,
+        recovered_counter=recovered_counter,
+        recovered_root=recovered_root,
+        timestamp=timestamp,
+    )
+    return _chain_walk(
+        session, msg, link_source, 64, messages.WardRollbackAck, "the revert", acceptance_source
+    )
 
 
 def _log(store, *link: object, wm_sig: Optional[bytes]) -> None:  # noqa: ANN001

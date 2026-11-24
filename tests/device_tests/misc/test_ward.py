@@ -2979,7 +2979,7 @@ class _World:
         """Adopt the attested head across a GAP by walking back to this device's own head."""
         return ward.verify_chain(self.session, self.serve())
 
-    def rollback(self, recovered_root: bytes) -> tuple:
+    def rollback(self, target: tuple) -> tuple:
         """Mint a REVERT from the WM's head as it stands now; returns (ack, recorder).
 
         Unlike `_rollback`, this never restages the WM -- the scenario already put it where it
@@ -2987,16 +2987,18 @@ class _World:
         """
         ack_sync = ward.sync(self.session)
         fc, fr, fhn, tc, tr, hn, ts, sig = self.wm.attest(ack_sync.ward_id, ack_sync.nonce)
+        recovered_counter, recovered_root = target
         rec = _Recorded()
         with self.session.test_ctx as ctx:
-            ctx.set_expected_responses(
-                [m.ButtonRequest(name="ward_rollback"), m.WardRollbackAck]
-            )
             ctx.set_input_flow(
                 InputFlowConfirmAllWarnings(self.session, on_page=rec.on_page).get()
             )
             ack = ward.rollback(
                 self.session, fc, fr, tc, tr, sig, fhn, hn,
+                recovered_counter=recovered_counter, link_source=self.serve(),
+                acceptance_source=lambda nonce: self.wm.rollback_link(
+                    _WARD_ID, nonce, self.store.links + self.elsewhere
+                ),
                 recovered_root=recovered_root, timestamp=ts,
             )
         return ack, rec
@@ -3238,9 +3240,9 @@ def test_ward_scenario_wm_behind_refuses_ingest_and_recovers_by_rollback(session
     with pytest.raises(exceptions.TrezorFailure, match="no attested sync round"):
         world.rejoin(base[0])
 
-    ack, rec = world.rollback(own[1])
+    ack, rec = world.rollback(own)
     assert (ack.counter, ack.new_root) == (base[0] + 1, own[1])
-    for shown in ("#%d" % own[0], "#%d" % (base[0] + 1), "1change"):
+    for shown in ("#%d" % own[0], "#%d" % (base[0] + 1), "0changes"):
         assert shown in rec.squashed
 
     world.adopt_demotion(ack)
@@ -3257,8 +3259,8 @@ def test_ward_scenario_wm_behind_to_an_older_tree_discards_its_entries(session: 
     world, base, _own = _behind_device(session)
 
     older = world.tree_of(b"a")
-    ack, rec = world.rollback(older)
-    assert "cannot be recovered" in rec.text.lower()
+    ack, rec = world.rollback((base[0], older))
+    assert "2changes" in rec.squashed
 
     world.adopt_demotion(ack)
     rewound = _subset(world.store, [world.key(b"a")])
@@ -3376,7 +3378,7 @@ def test_ward_attack_recovery_replay(session: Session):
     device minted then, and the `wm_sig` to the WM head nonce of then; both are single-use.
     """
     world, base, own = _behind_device(session)
-    ack, _rec = world.rollback(own[1])
+    ack, _rec = world.rollback(own)
     link = world.publish_demotion(ack)
     kept_attestation = world.adopt(link)
     world.write(b"d", b"after the recovery")
@@ -3488,7 +3490,7 @@ def test_ward_attack_pending_revert_authorization(session: Session):
     world.write(b"b", b"two")
     own = world.head
 
-    pending, _rec = world.rollback(base[1])  # approved and held by the host, never published
+    pending, _rec = world.rollback(base)  # approved and held by the host, never published
     world.write(b"c", b"the wallet moves on")
 
     with pytest.raises(MockWM.Conflict):
@@ -3515,8 +3517,8 @@ def test_ward_attack_multiple_approved_demotions(session: Session):
     is refused as a plain rollback, so a host cannot pick among the user's approvals.
     """
     world, base, own = _behind_device(session)
-    first, _r1 = world.rollback(own[1])
-    second, _r2 = world.rollback(world.tree_of(b"a"))
+    first, _r1 = world.rollback(own)
+    second, _r2 = world.rollback(base)
     assert first.counter == second.counter and first.new_root != second.new_root
 
     # the host lands the FIRST approval
@@ -3643,16 +3645,17 @@ def _rollback(
     wm: MockWM,
     store: WardTrie,
     recovered_root,
+    *,
+    recovered_counter: int,
     wm_counter: "int | None" = None,
     wm_root=None,
+    include_archive: bool = True,
 ):
     """Walk the demotion confirmation and return (ack, recorder).
 
     `wm_counter`/`wm_root` stage a REGRESSED WM -- its register restored from a backup, which
     is exactly `MockWM.restore_backup`: the head goes back, the nonce is fresh.
-    Omit them for the ordinary case, where the WM is at this device's head and the demotion is
-    what used to be called a rollback. The handler cannot tell the two apart, which is the point
-    of having one.
+    Omit them to restore a predecessor of the WM's current head.
     """
     if wm_counter is None:
         wm_counter, wm_root = store.counter, store.root()
@@ -3670,9 +3673,6 @@ def _rollback(
 
     rec = _Recorded()
     with session.test_ctx as ctx:
-        ctx.set_expected_responses(
-            [m.ButtonRequest(name="ward_rollback"), m.WardRollbackAck]
-        )
         ctx.set_input_flow(
             InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get()
         )
@@ -3685,6 +3685,13 @@ def _rollback(
             sig,
             fhn,
             hn,
+            recovered_counter=recovered_counter,
+            link_source=store.links_ending_at,
+            acceptance_source=(
+                (lambda nonce: wm.rollback_link(_WARD_ID, nonce, store.links))
+                if include_archive
+                else None
+            ),
             recovered_root=recovered_root,
             timestamp=ts,
         )
@@ -3745,12 +3752,14 @@ def test_ward_rollback_undoes_the_last_write(session: Session):
 
     wm = _wm_for(store)
     _attest(session, wm, store)
-    ack, rec = _rollback(session, wm, store, before_root)
+    ack, rec = _rollback(session, wm, store, before_root, recovered_counter=1)
 
     assert ack.counter == store.counter + 1  # forward, though the head moves back
     assert ack.new_root == before_root
     assert "revert" in rec.title.lower()
-    assert "cannot be recovered" in rec.text.lower()
+    assert "restore state from" in rec.text.lower()
+    assert "#1" in rec.squashed
+    assert "1change" in rec.squashed
 
     from_counter, from_root = store.counter, store.root()
     link = _publish_demotion(wm, store, ack, from_counter, from_root)
@@ -3766,37 +3775,33 @@ def test_ward_rollback_undoes_the_last_write(session: Session):
 
 
 @pytest.mark.models("core")
-def test_ward_rollback_needs_no_proof_that_the_target_was_ever_the_head(session: Session):
-    """A demotion asks for the WM's head and the user, and nothing else.
+def test_ward_rollback_requires_the_root_at_the_requested_counter(session: Session):
+    """Each historical root is tied to its counter before the confirmation."""
+    world = _World(session)
+    world.write(b"a", b"one")
+    first = world.head
+    world.write(b"b", b"two")
+    second = world.head
+    world.write(b"c", b"three")
 
-    It briefly asked for the archived attestation of its TARGET, so that a link from an abandoned
-    branch could not be restored -- and before that, for a link at all. Both are withdrawn,
-    because they ask for something this situation cannot supply: a rollback runs when the host
-    cannot reconstruct the current tree, so the state it CAN rebuild is whatever its own rows
-    hash to, and a host missing rows is exactly one whose reconstructible root the WM may never
-    have attested, and which no link ever ended at.
+    with pytest.raises(exceptions.TrezorFailure, match="target does not match"):
+        world.rollback((first[0], second[1]))
+    assert ward.sync(session).counter == world.head[0]
 
-    So the target here is a tree that NEVER EXISTED in this wallet's history -- assembled from
-    leaves it holds, in a shape it never had -- and it is accepted, on the user's approval alone.
-    """
+
+@pytest.mark.models("core")
+def test_ward_rollback_needs_wm_acceptance_for_older_links(session: Session):
     store = WardTrie()
-    key_a = _seed(session, store, b"a", b"one")
-    key_b = _seed(session, store, b"b", b"two")
-    _seed(session, store, b"c", b"three")
-
-    # a and c but not b: a shape no counter of this wallet ever held
-    invented = _subset(store, [key_a, _seed(session, store, b"d", b"four")])
-    assert invented.root() != store.root()
-    del key_b
-
+    _seed(session, store, b"a", b"one")
+    _seed(session, store, b"b", b"two")
     wm = _wm_for(store)
-    _attest(session, wm, store)
-    ack, rec = _rollback(session, wm, store, invented.root())
 
-    assert ack.new_root == invented.root()
-    # AND THE SCREEN SAYS WHAT IS NOT PROVEN. With no headship proof asked for, a user reading
-    # "confirmed by the WARD Manager" would be reading a guarantee nobody made.
-    assert "not confirmed" in rec.text.lower()
+    with pytest.raises(exceptions.TrezorFailure, match="missing or invalid WM acceptance"):
+        _rollback(session, wm, store, None, recovered_counter=0, include_archive=False)
+
+    ack, _ = _rollback(session, wm, store, None, recovered_counter=0)
+    assert ack.counter == store.counter + 1
+    assert ack.new_root is None
 
 
 @pytest.mark.models("core")
@@ -3805,9 +3810,7 @@ def test_ward_rollback_count_comes_from_the_attested_counter(session: Session):
 
     A host that wants a deep demotion approved would like the screen to read "1 change" rather
     than "3 changes", since the count is the only thing separating an honest recovery from a
-    rewind. It cannot choose it: the distance is `stored_counter - (attested_counter + 1)`, and
-    both numbers come from verified material -- the device's own head, and a counter inside the
-    WM's signed attestation.
+    rewind. The displayed distance is from the device's own head to the exact verified target.
     """
     store = WardTrie()
     key_a = _seed(session, store, b"a", b"one")
@@ -3819,15 +3822,16 @@ def test_ward_rollback_count_comes_from_the_attested_counter(session: Session):
     wm = _wm_for(store)
     _attest(session, wm, store)
 
-    # The WM's register regressed to counter 1, so the demotion lands at 2 and discards two.
+    # Recovery restores state #1 and publishes at #2. Three changes followed the target.
     at_one = _link_into(store, 1)
     _ack, rec = _rollback(
-        session, wm, store, _subset(store, [key_a]).root(), at_one[2], at_one[3]
+        session, wm, store, _subset(store, [key_a]).root(),
+        recovered_counter=1, wm_counter=at_one[2], wm_root=at_one[3],
     )
 
     assert "#4" in rec.squashed  # where it is
     assert "#2" in rec.squashed  # where it is going
-    assert "2changes" in rec.squashed  # and the distance, from authenticated numbers
+    assert "3changes" in rec.squashed  # and the distance, from authenticated numbers
 
 
 @pytest.mark.models("core")
@@ -3861,7 +3865,8 @@ def test_ward_rollback_from_a_regressed_wm_is_the_same_operation(session: Sessio
 
     serviceable = _subset(store, [key_a])
     ack, _rec = _rollback(
-        session, wm, store, serviceable.root(), wm_counter, wm_root
+        session, wm, store, serviceable.root(),
+        recovered_counter=wm_counter, wm_counter=wm_counter, wm_root=wm_root,
     )
 
     assert ack.counter == wm_counter + 1
@@ -3932,6 +3937,8 @@ def test_ward_rollback_still_requires_a_genuine_attestation(session: Session):
             sig,
             from_head_nonce,
             head_nonce,
+            recovered_counter=0,
+            link_source=store.links_ending_at,
             recovered_root=root,
             timestamp=store.timestamp,
         )
@@ -5822,13 +5829,14 @@ def test_ward_demotion_consent_does_not_survive_an_unrelated_adoption(session: S
     """
     store = WardTrie()
     key_a = _seed(session, store, b"a", b"one")
+    _seed(session, store, b"z", b"two")
     wm = _wm_for(store)
     _attest(session, wm, store)
     wm_counter, wm_root = store.counter, store.root()
 
     # The user approves coming back to a tree the host can still serve.
     serviceable = _subset(store, [key_a])
-    ack, _rec = _rollback(session, wm, store, serviceable.root())
+    ack, _rec = _rollback(session, wm, store, serviceable.root(), recovered_counter=1)
     assert ack.counter == wm_counter + 1
 
     # THE HOST NEVER PUBLISHES IT. Instead it carries the device forward with ordinary writes,
@@ -5920,7 +5928,8 @@ def test_ward_a_demotion_from_a_regressed_wm_records_the_wm_predecessor(
 
     serviceable = _subset(store, [key_a])
     ack, _rec = _rollback(
-        session, wm, store, serviceable.root(), wm_counter, wm_root
+        session, wm, store, serviceable.root(),
+        recovered_counter=wm_counter, wm_counter=wm_counter, wm_root=wm_root,
     )
 
     link = _publish_demotion(wm, store, ack, wm_counter, wm_root)

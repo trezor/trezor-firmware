@@ -26,11 +26,24 @@ import struct
 
 import pytest
 
-from trezorlib import messages
+from trezorlib import exceptions, messages, ward
 from trezorlib.debuglink import TrezorTestContext as Client
+from trezorlib.transport import Timeout
 from trezorlib.transport.udp import UdpTransport
+from trezorlib.ward_service import PROTOCOL_VERSION
 
-from ...ward_service import MockWardService
+from ...input_flows import InputFlowConfirmAllWarnings
+from ...ward_app import take_ward_app_role
+from ...ward_keys import (
+    auth_commit,
+    derive_k_auth,
+    derive_k_data,
+    derive_k_path,
+    entry_key,
+    seal_content,
+)
+from ...ward_service import DEFAULT_SEED, DEFAULT_WARD_ID, MockWardService, bound_daemon
+from ...ward_trie import WardTrie
 
 # NOT `protocol("v1")` ANY MORE. That marker describes the WALLET transport, and the codec
 # service endpoint is no longer tied to it: the service interface speaks codec v1 on every build,
@@ -41,6 +54,71 @@ pytestmark = [
     pytest.mark.models("core"),
     pytest.mark.ward_transport("service-codec"),
 ]
+
+
+@pytest.mark.parametrize("drop_page", [False, True])
+def test_service_catches_up_across_multiple_chain_pages(client: Client, drop_page: bool) -> None:
+    store = WardTrie()
+    app_id = "TEST"
+    identifier = b"paged history"
+    key = entry_key(derive_k_path(DEFAULT_SEED), app_id, identifier)
+    k_auth = derive_k_auth(DEFAULT_SEED)
+    k_data = derive_k_data(DEFAULT_SEED)
+    for counter in range(1, 131):
+        before = store.root()
+        store.set(
+            key, ward.Leaf(b"", seal_content(k_data, str(counter).encode(), counter))
+        )
+        after = store.root()
+        mac = auth_commit(k_auth, DEFAULT_WARD_ID, counter - 1, before, counter, after)
+        store.record(counter - 1, before, counter, after, mac)
+    store.counter = 130
+
+    def unexpected_pull(_key: bytes) -> None:
+        raise AssertionError("the wallet channel was asked for a service proof")
+
+    session = client.get_session()
+    take_ward_app_role(session)
+    daemon = bound_daemon(client, store)
+    try:
+        if drop_page:
+            handle = daemon.server.handler
+            pages = 0
+
+            def drop_second_page(request):
+                nonlocal pages
+                if isinstance(request, messages.WardChainRequest):
+                    pages += 1
+                    if pages == 2:
+                        return None
+                return handle(request)
+
+            daemon.server.handler = drop_second_page
+            with daemon.serving(), session.test_ctx as ctx:
+                ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+                with pytest.raises(exceptions.TrezorFailure, match="service did not answer"):
+                    ward.get_entry(session, app_id, identifier, unexpected_pull)
+            assert daemon.served == ["WardSyncRequest", "WardChainRequest", "WardChainRequest"]
+            daemon.served.clear()
+            daemon.server.handler = handle
+            daemon.service.write(
+                messages.WardServiceOpen(protocol_version=PROTOCOL_VERSION, renew_binding=True)
+            )
+            with pytest.raises(Timeout):
+                daemon.service.read(timeout=0.2)  # renewal has no reply
+        with daemon.serving(), session.test_ctx as ctx:
+            ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+            result = ward.get_entry(session, app_id, identifier, unexpected_pull)
+            assert result.response.message == "WARD entry shown"
+        assert daemon.served == [
+            "WardSyncRequest",
+            "WardChainRequest",
+            "WardChainRequest",
+            "WardChainRequest",
+            "WardServiceFetch",
+        ]
+    finally:
+        daemon.close()
 
 
 def test_a_daemon_that_restarts_while_idle_simply_rebinds(client: Client) -> None:

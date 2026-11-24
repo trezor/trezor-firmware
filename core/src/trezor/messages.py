@@ -8197,6 +8197,7 @@ if TYPE_CHECKING:
         to_counter: "int | None"
         to_root: "AnyBytes | None"
         auth_commit: "AnyBytes | None"
+        acceptance: "WardChainAcceptance | None"
 
         def __init__(
             self,
@@ -8206,11 +8207,32 @@ if TYPE_CHECKING:
             to_counter: "int | None" = None,
             to_root: "AnyBytes | None" = None,
             auth_commit: "AnyBytes | None" = None,
+            acceptance: "WardChainAcceptance | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WardChainLink"]:
+            return isinstance(msg, cls)
+
+    class WardChainAcceptance(protobuf.MessageType):
+        nonce: "AnyBytes | None"
+        from_head_nonce: "AnyBytes | None"
+        timestamp: "int | None"
+        wm_signature: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            nonce: "AnyBytes | None" = None,
+            from_head_nonce: "AnyBytes | None" = None,
+            timestamp: "int | None" = None,
+            wm_signature: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardChainAcceptance"]:
             return isinstance(msg, cls)
 
     class WardPinCachedEntry(protobuf.MessageType):
@@ -8396,12 +8418,14 @@ if TYPE_CHECKING:
     class WardChainRequest(protobuf.MessageType):
         to_counter: "int | None"
         to_root: "AnyBytes | None"
+        to_head_nonce: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             to_counter: "int | None" = None,
             to_root: "AnyBytes | None" = None,
+            to_head_nonce: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8647,6 +8671,7 @@ if TYPE_CHECKING:
         from_head_nonce: "AnyBytes | None"
         to_head_nonce: "AnyBytes | None"
         recovered_root: "AnyBytes | None"
+        recovered_counter: "int | None"
 
         def __init__(
             self,
@@ -8660,6 +8685,7 @@ if TYPE_CHECKING:
             from_head_nonce: "AnyBytes | None" = None,
             to_head_nonce: "AnyBytes | None" = None,
             recovered_root: "AnyBytes | None" = None,
+            recovered_counter: "int | None" = None,
         ) -> None:
             pass
 
@@ -8689,11 +8715,13 @@ if TYPE_CHECKING:
 
     class WardServiceOpen(protobuf.MessageType):
         protocol_version: "int | None"
+        renew_binding: "bool | None"
 
         def __init__(
             self,
             *,
             protocol_version: "int | None" = None,
+            renew_binding: "bool | None" = None,
         ) -> None:
             pass
 

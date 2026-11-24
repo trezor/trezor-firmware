@@ -135,10 +135,9 @@ def verify_attestation(
 ) -> bool:
     """Is this a WM attestation of this transition for this wallet, this round?
 
-    The ONLY verification entry point. `nonce` must be the open round's (`round.get()`), never
-    a message field: a path taking the nonce as data must never decide what is current. The one
-    caller that does is `catch_up`, which decides only what WAS a head, for one session, and
-    persists nothing.
+    A live attestation must use the open round's nonce. When a caller takes the nonce from
+    stored evidence, the signature proves historical acceptance. Rollback additionally
+    checks that the receipt reaches the expected head occurrence.
     """
     return _verify(
         attestation_preimage(

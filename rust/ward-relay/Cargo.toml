@@ -21,6 +21,8 @@ tokio = { version = "1", features = ["net", "rt", "macros", "time"] }
 tokio-tungstenite = "0.24"
 protobuf = { version = "=3.7.2", optional = true }
 hex = "0.4"
+hmac = "0.12"
+sha2 = "0.10"
 
 [build-dependencies]
 protobuf = { version = "=3.7.2", optional = true }

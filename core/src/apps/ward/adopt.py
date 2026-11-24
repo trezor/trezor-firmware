@@ -199,11 +199,13 @@ async def adopt(
     # follows one, so a mismatch is a caller bug; it then stores no timestamp rather than another
     # head's.
     timestamp = None
+    nonce = None
     seen = sync_round.wm_head()
     if seen is not None and seen[0] == counter and same_root(seen[1], root):
+        nonce = seen[2]
         timestamp = seen[3]
 
-    if not await set_root(root, counter, timestamp):
+    if not await set_root(root, counter, timestamp, nonce):
         raise DataError(
             "WARD: no root slot for this wallet; eight already hold one, so this one can only be used offline"
         )
@@ -222,6 +224,7 @@ async def persist_caught_up(
     root: bytes | None,
     landed_commits: list,
     timestamp: int | None,
+    head_nonce: bytes | None = None,
 ) -> None:
     """Move the STORED head to one `catch_up` reached without a live attestation.
 
@@ -237,7 +240,7 @@ async def persist_caught_up(
     from .root import set_root
 
     await reconcile_pending(counter, root, landed_commits=landed_commits)
-    if not await set_root(root, counter, timestamp):
+    if not await set_root(root, counter, timestamp, head_nonce):
         raise DataError(
             "WARD: no root slot for this wallet; eight already hold one, so this one can only be used offline"
         )

@@ -5,7 +5,7 @@
 //! the order of every sync, catch-up and flush. A binding carries messages between it and the
 //! device on the session the host already holds, and nothing more -- the same contract the
 //! Connect, Python and Java bindings implement (`packages/ward-core/relay.md` in trezor-suite,
-//! version 1.x):
+//! version 2.x):
 //!
 //! ```text
 //! client -> wardd   {id, method, params}
@@ -23,7 +23,9 @@
 pub mod codec;
 
 use futures_util::{SinkExt, StreamExt};
+use hmac::{Hmac, Mac};
 use serde_json::{json, Value};
+use sha2::Sha512;
 use tokio::net::TcpStream;
 use tokio_tungstenite::{
     tungstenite::{client::IntoClientRequest, Message},
@@ -31,7 +33,7 @@ use tokio_tungstenite::{
 };
 
 pub const WARDD_DEFAULT_URL: &str = "ws://127.0.0.1:21329";
-pub const RELAY_PROTOCOL_VERSION: &str = "1.0";
+pub const RELAY_PROTOCOL_VERSION: &str = "2.0";
 
 /// The only messages wardd may put on the device: its sync and flush conversation. Anything else
 /// is answered as a `Failure` without reaching the device, so whatever answers on the wardd port
@@ -196,8 +198,8 @@ impl WarddClient {
     }
 
     /// Select the wallet: by `ward_id`, or the device's own (asked with `WardSync`). `evolu_node`
-    /// is the 64-byte node the device returns for `EvoluGetNode`; wardd derives the replica's
-    /// owner from its child `WARD`. A wardd started with `--memory` needs none.
+    /// is the 64-byte node the device returns for `EvoluGetNode`. The client derives the
+    /// replica's WARD child locally. A wardd started with `--memory` needs none.
     pub async fn open_store<P: WardPipe>(
         &mut self,
         pipe: &mut P,
@@ -222,7 +224,15 @@ impl WarddClient {
         };
         let mut params = json!({ "wardId": ward_id });
         if let Some(node) = evolu_node {
-            params["evoluNode"] = json!(hex::encode(node));
+            if node.len() != 64 {
+                return Err(RelayError::Protocol(
+                    "evolu_node must be a 64-byte SLIP-21 node".into(),
+                ));
+            }
+            let mut mac =
+                Hmac::<Sha512>::new_from_slice(&node[..32]).expect("HMAC accepts any key length");
+            mac.update(b"\x00WARD");
+            params["wardOwnerSecret"] = json!(hex::encode(&mac.finalize().into_bytes()[32..]));
         }
         self.call_without_device("openStore", params).await
     }

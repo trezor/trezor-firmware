@@ -37,7 +37,7 @@ async fn start_wardd() -> (String, Log) {
                     let send = |v: Value| Message::Text(v.to_string());
                     match frame["method"].as_str() {
                         Some("hello") if frame["params"]["token"] == "good" => {
-                            ws.send(send(json!({"id": id, "result": {"version": "1.0"}}))).await.unwrap()
+                            ws.send(send(json!({"id": id, "result": {"version": "2.0"}}))).await.unwrap()
                         }
                         Some("hello") => ws
                             .send(send(json!({"id": id, "error": {"code": "unauthorised", "message": "no"}})))
@@ -98,7 +98,7 @@ async fn hello_carries_the_token_and_a_wrong_one_is_refused() {
     WarddClient::connect(&url, "good").await.unwrap().close().await;
     assert_eq!(
         log.lock().unwrap()[0],
-        json!({"id": 1, "method": "hello", "params": {"version": "1.0", "token": "good"}})
+        json!({"id": 1, "method": "hello", "params": {"version": "2.0", "token": "good"}})
     );
     let err = WarddClient::connect(&url, "bad").await.err().unwrap();
     assert_eq!(err.code(), Some("unauthorised"));
@@ -171,10 +171,14 @@ async fn wardds_codes_are_kept_and_a_hangup_is_an_error() {
 async fn the_thin_calls_send_the_contracts_params() {
     let (url, log) = start_wardd().await;
     let mut client = WarddClient::connect(&url, "good").await.unwrap();
-    client.open_store(&mut Scripted(vec![], None), Some(&[0xab; 32]), Some(&[1, 2])).await.unwrap();
+    let parent: Vec<u8> = (0..64).collect();
+    client.open_store(&mut Scripted(vec![], None), Some(&[0xab; 32]), Some(&parent)).await.unwrap();
     client.serve_entry(json!({"entry_key": "aa"}), &[(vec![1], vec![2])]).await.unwrap();
     let log = log.lock().unwrap();
-    assert_eq!(log[1]["params"], json!({"wardId": "ab".repeat(32), "evoluNode": "0102"}));
+    assert_eq!(log[1]["params"], json!({
+        "wardId": "ab".repeat(32),
+        "wardOwnerSecret": "fa46e3e20d89f32d8e70c6864f06407a79d036a7cf851d2fcfbb5228ffce42d3"
+    }));
     assert_eq!(log[2]["params"], json!({"request": {"entry_key": "aa"}, "staged": [["01", "02"]]}));
 }
 
@@ -214,7 +218,7 @@ async fn against_real_wardd() {
     let mut client = client.expect("wardd started");
     let opened =
         client.open_store(&mut Scripted(vec![], None), Some(&[7; 32]), None).await.unwrap();
-    assert_eq!(opened, json!({"counter": 0, "root": null}));
+    assert_eq!(opened, json!({"counter": 0, "root": null, "wmAvailable": true}));
     let status = client.status().await.unwrap();
     assert_eq!(status["wmCounter"], Value::Null);
     let err = WarddClient::connect(&url, "wrong").await.err().unwrap();

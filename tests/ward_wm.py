@@ -155,6 +155,7 @@ class MockWM:
         # `from` one is what this step CONSUMED, the `to` one is what it minted and what the next
         # authorisation must quote.
         self._heads: dict[bytes, tuple[int, bytes, int, bytes, int, bytes, bytes]] = {}
+        self._accepted: dict[tuple[bytes, bytes], tuple] = {}
 
     @property
     def pubkey(self) -> bytes:
@@ -378,9 +379,30 @@ class MockWM:
         right, and it is what lets a device catch a restore onto its own head (the standstill rule
         in `adopt.verify_round_attestation`).
         """
+        archived_step = next(
+            (
+                step
+                for (wallet, _), (_, step) in reversed(
+                    getattr(self, "_accepted", {}).items()
+                )
+                if wallet == ward_id
+                and (step[3], step[4]) == (counter, _or_empty(root))
+                and (
+                    from_counter is None
+                    or step[:2] == (from_counter, _or_empty(from_root))
+                )
+            ),
+            None,
+        )
+        if archived_step is not None:
+            from_counter, from_root = archived_step[:2]
         self.install_unauthenticated(
             ward_id, counter, root, timestamp, from_counter, from_root, restore=True
         )
+        if archived_step is not None:
+            fc, fr, tc, tr, ts, _, nonce = self._heads[ward_id]
+            from_nonce = nonce if counter == 0 else archived_step[2]
+            self._heads[ward_id] = fc, fr, tc, tr, ts, from_nonce, nonce
 
     def take_over(self, ward_id: bytes, record: "WMRecord") -> None:
         """A CORRECT FAILOVER: this standby takes the primary's record as it stands, nonce and all.
@@ -462,7 +484,7 @@ class MockWM:
         is what lets a device tell its own authorisation was the one spent.
         """
         fc, fr, counter, root, timestamp, from_nonce, to_nonce = self._heads[ward_id]
-        return (
+        answer = (
             fc,
             fr,
             from_nonce,
@@ -482,6 +504,36 @@ class MockWM:
                 timestamp,
             ),
         )
+        # Old Python service test snapshots did not carry an archive.
+        self.__dict__.setdefault("_accepted", {})[ward_id, to_nonce] = (nonce, answer)
+        return answer
+
+    def rollback_link(self, ward_id: bytes, occurrence: bytes, links):
+        """Find a recorded link and the WM attestation that identifies its occurrence."""
+        from trezorlib import messages
+
+        archived = getattr(self, "_accepted", {}).get((ward_id, occurrence))
+        if archived is None:
+            return None
+        nonce, (fc, fr, fn, tc, tr, _tn, ts, sig) = archived
+        for link in reversed(links):
+            if (link[0], _or_empty(link[1]), link[2], _or_empty(link[3])) == (
+                fc,
+                fr,
+                tc,
+                tr,
+            ):
+                return messages.WardChainLink(
+                    from_counter=fc,
+                    from_root=fr,
+                    to_counter=tc,
+                    to_root=tr,
+                    auth_commit=link[4],
+                    acceptance=messages.WardChainAcceptance(
+                        nonce=nonce, from_head_nonce=fn, timestamp=ts, wm_signature=sig
+                    ),
+                )
+        return None
 
     # --- publish-and-attest, as one operation -----------------------------------------------
 
@@ -591,6 +643,7 @@ class MockWM:
                 self._rotate(ward_id, to_counter, _or_empty(to_root), head_nonce),
             ),
         )
+        self.attest(ward_id, bytes(32))
         return is_revert
 
     def publish_and_attest(

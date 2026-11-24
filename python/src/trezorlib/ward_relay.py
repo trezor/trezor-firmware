@@ -18,7 +18,7 @@
 
 `wardd` (the local WARD service) owns the replica, the WM client and the order of every sync and
 flush; a binding only carries messages between it and the device on the caller's session. The
-contract is `packages/ward-core/relay.md` in trezor-suite, version 1.x:
+contract is `packages/ward-core/relay.md` in trezor-suite, version 2.x:
 
     client -> wardd   {id, method, params}
     wardd  -> client  {id, deviceCall: {name, message}}    send this to the device
@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import hmac
 import json
 import os
 import socket
@@ -48,7 +49,7 @@ if t.TYPE_CHECKING:
     from .client import Session
 
 WARDD_DEFAULT_URL = "ws://127.0.0.1:21329"
-RELAY_PROTOCOL_VERSION = "1.0"
+RELAY_PROTOCOL_VERSION = "2.0"
 DEFAULT_TOKEN_FILE = Path.home() / ".trezor-ward" / "token"
 
 # The only messages wardd may put on the device: its sync and flush conversation. Anything else --
@@ -285,7 +286,8 @@ def open_store(
     evolu_node: bytes | None = None,
 ) -> dict:
     """Select the wallet in wardd: `ward_id`, or the session's own (asked with `WardSync`).
-    `evolu_node` is the device's `EvoluGetNode` node; a `--memory` wardd needs none."""
+    Derives the WARD-only owner from the device's `EvoluGetNode` node locally.
+    An in-memory wardd needs no credential."""
     if ward_id is None:
         ack = session.call(messages.WardSync(), expect=messages.WardSyncAck)
         if ack.ward_id is None:
@@ -293,7 +295,11 @@ def open_store(
         ward_id = ack.ward_id
     params: dict = {"wardId": ward_id.hex()}
     if evolu_node is not None:
-        params["evoluNode"] = evolu_node.hex()
+        if len(evolu_node) != 64:
+            raise ValueError("evolu_node must be a 64-byte SLIP-21 node")
+        params["wardOwnerSecret"] = hmac.digest(
+            evolu_node[:32], b"\x00WARD", "sha512"
+        )[32:].hex()
     return client.call("openStore", params)
 
 
