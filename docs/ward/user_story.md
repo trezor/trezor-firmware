@@ -163,3 +163,38 @@ Acceptance criteria:
   published value that differs from it is a conflict.
 - **Reveals to the host:** that an entry was held back, and its path; then, after the user picks,
   either a transition or none. Not the values.
+
+## The WARD Manager
+
+### Restoring history after the WARD Manager was restored from a backup
+
+> As a user whose WARD Manager was restored from an older backup, I want my Trezor to notice,
+> ask me before it restores the newer history, and tell me how recent the restored history is,
+> so that I neither lose changes silently nor approve something I cannot judge.
+
+A restored WM holds an older head than the user's Trezor and has forgotten every session, so the
+Trezor's earlier authorizations no longer work. The host still holds the newer changes and the
+WM's records of accepting them.
+
+Implemented on this branch, as below. The stack (`tools/ward_stack.py`) restores the WM from a
+backup taken three changes earlier and rolls it forward.
+
+Acceptance criteria:
+
+- **Detected by the Trezor.** During a sync, the WM attests a head below the Trezor's stored
+  head. The Trezor neither adopts it nor fails: it reports that the WM is behind. The host does
+  not decide this.
+- **Approved on the Trezor.** Before signing anything, the Trezor shows "Restore WARD history":
+  the WM's change number, its own, and how many changes it will sign again. Declining signs
+  nothing, and the WM stays where it was restored to.
+- **Only accepted history.** The Trezor signs a change again only if it made the change, by its
+  own MAC, and the WM accepted it, by the WM's signed record. A change that lost a race, or that a
+  host held back, is never restored.
+- **Told at the end.** The Trezor shows "WARD history restored": the change number it restored to
+  and when the WM accepted the last restored change, in UTC. The user can compare that with when
+  they last made a change.
+- **Then as usual.** The next sync adopts the restored head with no further screen.
+- **Reveals to the host and the WM:** that a restore was rolled forward, and how far.
+- **Not covered.** A Trezor that is not ahead of the restored WM, such as a new one, does not
+  notice the restore. Whoever holds the WM's records can stop the replay early. See the
+  [WARD Manager](ward_manager.md#obligations-and-open-work).

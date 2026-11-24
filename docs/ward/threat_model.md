@@ -10,7 +10,7 @@ What WARD protects, from whom, and what each party still learns. The leaf format
 | Trezor | The seed; every key below | Everything: it is the only party that decides |
 | Host | The application connected to the unlocked Trezor, its `wardd`, and `wardd`'s database of transitions | Availability only |
 | Evolu relay | Encrypted Evolu messages that carry the transitions between `wardd` instances | Availability only |
-| WARD Manager (WM) | Each ward's head `(counter, root)` and head nonce | Ordering and freshness, never content |
+| WARD Manager (WM) | Each ward's head `(counter, root)`, the step that reached it, and the nonce of the latest sync | Ordering and freshness, never content |
 | Other Trezors of the wallet | The same seed | As the Trezor |
 
 - The host can talk to the Trezor and ask for anything it can name, so it can ask about any identifier it can guess. It cannot pass a screen the user refuses.
@@ -101,10 +101,12 @@ The trie proves that a leaf is in a tree. It does not prove the tree is the late
 
 A host cannot replay an earlier attestation, because it does not know the nonce in advance. The Trezor's root moves only through such an adoption.
 
+The same nonce opens a **session**. The Trezor binds every authorization it gives the WM to the nonce of its latest sync, and the WM accepts an authorization only while that sync is the wallet's latest. A write the host holds back, or one that lost a race, cannot land after a later sync or after a restore of the WM. See [transitions and sessions](ward_transitions.md#sessions).
+
 - **Fresh.** In a WARD session that adopted a WM-attested head, a read is proven against the WM's current head, and the screen shows no warning.
 - **Not fresh.** Without the WM, a read is proven against the head the Trezor last adopted, and the screen shows "Not reflecting changes since <timestamp> UTC, nor user reverts.", dated by the WM's signed timestamp for that head. A host that fails the sync on purpose can show only an old value of this ward, and only under that warning.
 - **Caught up without the WM.** A host can walk the Trezor forward along the wallet's own chain (`WardCatchUp`), as far as a head the WM once attested. Reads in that session prove against the newer head, under the warning dated by that attestation, and nothing is persisted.
-- **Never older.** A head below the stored counter, or a read proved against an older tree, is refused, with or without the WM.
+- **Never older.** A head below the stored counter, or a read proved against an older tree, is refused, with or without the WM. A WM that attests a head below the stored counter is reported as behind (`wm_behind`) and nothing is adopted from it; see [WM restored from a backup](#wm-restored-from-a-backup).
 - **Never adopted.** With no stored head, there is nothing to prove against, and the read is refused.
 
 The stored head moves only on a live attestation. [Progress without the WM](#progress-without-the-wm) explains why.
@@ -127,6 +129,12 @@ Some genuine links are not on the WM's current line:
   lands `(c, B)` first. The host keeps the authorisation for `A`.
 - **A branch removed by a revert.** The WM's register is restored from 57 to 10, and the user
   holds to confirm `WardRollback` or `WardRejoin`. The links 10 → … → 57 stay genuine.
+- **A register that went back.** The WM's register is restored from 57 to 10 and nothing has
+  moved it since. The stored `wm_sig`s for 10 → … → 57 stay refused: each is bound to the session
+  of the sync it was minted in, and a restore ends every session. A host holding the WM's own
+  signed records of those steps can roll the WM forward, or stop early. See
+  [roll-forward](ward_manager.md#roll-forward) and
+  [WM restore and roll-forward](gaps.md#wm-restore-and-roll-forward).
 
 Suppose a failed sync persisted the furthest head that the links reach. Then a host could do this:
 
@@ -153,7 +161,7 @@ session, but it cannot move the floor.
 ### Catching up to a cached attestation
 
 `WardCatchUp` goes only as far as the WM once vouched for. `wardd` keeps one verified attestation
-per WM head nonce, with the round nonce it was signed over, and replicates it through Evolu with
+per attested transition, with the round nonce it was signed over, and replicates it through Evolu with
 the links.
 While the WM is down, `wardd` names the newest head on its replica's chain that a kept attestation
 names, which may be below the replica's head. The Trezor then:
@@ -218,7 +226,7 @@ and catch-up is how the stored head moves at all:
 - The host (`wardd --without-wm`) catches the device up to genesis first, then after every write
   it has stored: its `sync` is that catch-up, and its `flush` stores each change and catches up to
   it. A write derives from the stored head. In place of a `wm_sig` it carries the step signed for
-  the host under K_sig (tag `WARD STEP v1`, no head nonce), and `wardd` stores only a step that
+  the host under K_sig (tag `WARD STEP v2`), and `wardd` stores only a step that
   verifies against `ward_id`. The device adopts its own write by catching up one link.
 - `WardSync`, and with it every WM route (ingest, reconcile, the chain walk, rejoin, rollback), is
   refused. `WardSetPersistWithoutWm` is refused too.
@@ -252,6 +260,7 @@ not let a device's claim decide what it trusts.
 | Number of entries, sizes, deletes | Yes | Message count and sizes | No |
 | Transitions: counter, root, batch size | Yes | When one is published | Counter, root and time |
 | Ward identity, and when it is used | `ward_id` | The Evolu owner, not the `ward_id` | `ward_id`, once per WARD session |
+| Session nonce | Yes, it relays it | No | Yes; it keeps the latest per ward |
 
 ## Use cases
 
@@ -457,6 +466,8 @@ Each Trezor syncs to the WM's head at the start of a WARD session, and catches u
 - **Expects:**
     - Every device ends on the WM's head.
     - A device that diverged is told so, and rejoins only after the user confirms what is discarded.
+    - A sync by one device ends the session of every other. A device whose pending write was
+      minted in an ended session gets a conflict, syncs, and writes again.
 - **Reveals:**
     - **WM:** syncs from several devices look the same, so it cannot count devices from the protocol. It sees when each session starts.
     - **Host:** which device it is connected to.
@@ -473,7 +484,29 @@ register has regressed.
 - **Reveals:**
     - **WM and host:** that a revert happened, and how far back it went.
 - **What the host supplies:** authenticated links with archived WM receipts for the historical
-  occurrences, followed by the data needed to serve the restored state. See [verified rollback](gaps.md#verified-rollback).
+  transitions, followed by the data needed to serve the restored state. See [verified rollback](gaps.md#verified-rollback).
+
+### WM restored from a backup
+
+The WM's register goes back to an earlier head: a backup restore, a failover onto a stale replica.
+Its sessions do not come back, so it accepts none of the authorizations minted before.
+
+- **Expects:**
+    - A Trezor that holds a newer head detects it during sync: the attestation is below its stored
+      counter, so it reports `wm_behind` and adopts nothing.
+    - The user approves on the Trezor ("Restore WARD history") before anything is signed again.
+    - The Trezor signs again only transitions that carry both its own `auth_commit` and the WM's
+      record of accepting them, starting at the WM's attested head and staying on its own history.
+    - At the end, the Trezor shows the restored change number and when the WM accepted the last
+      restored change, in UTC.
+    - A Trezor not ahead of the restored WM, such as a fresh one, does not detect it and adopts
+      the WM's head.
+- **Reveals:**
+    - **WM and host:** that a restore was rolled forward, and how far.
+- **What the host supplies:** the accepted transitions from the WM's head, each with its WM
+  acceptance record, in pages of up to 16. See [roll-forward](ward_transitions.md#roll-forward).
+- **Open:** whoever holds the records chooses how far the replay goes. See
+  [WARD Manager obligations](ward_manager.md#obligations-and-open-work).
 
 ### Key export and listing
 

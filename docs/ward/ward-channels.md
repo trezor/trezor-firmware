@@ -59,7 +59,10 @@ The service keeps the WM attestation separate from the history. A device that is
 pulls pages of up to 64 links, newest first, and adopts the attested head after proving descent
 from its stored head. A device already at the attested head needs only the attestation exchange.
 Protocol v3 lets the codec daemon renew its binding while idle. Firmware ignores a renewal
-during an RPC, and the next renewal rebinds the endpoint after a timeout.
+during an RPC, and the next renewal rebinds the endpoint after a timeout. The current version is
+4, which removed the WM head nonce; the device requires an exact match. The service channel does
+not roll a restored WM forward; that runs on the wallet channel only (see
+[transitions and sessions](ward_transitions.md#roll-forward)).
 
 ## What differs between the two builds
 

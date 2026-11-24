@@ -132,8 +132,6 @@ catalogue](ward_testing.md#test-catalogue).
   `ward_unit_test test_apps.ward.py`
 - **`TestWardWmAuthorisation.test_head_init_cannot_be_replayed_as_an_advance`** — Its own tag, so the authorisation that opens a wallet's history cannot be re-presented as a step within it.
   `ward_unit_test test_apps.ward.py`
-- **`TestWardWmAuthorisation.test_the_enrolment_nonce_is_only_for_enrolment`** — `NO_HEAD_NONCE` domain-separates the one statement made when the WM holds no nonce to quote.
-  `ward_unit_test test_apps.ward.py`
 
 ### `core/tests/test_apps.ward.settle.py` (8)
 
@@ -142,7 +140,7 @@ catalogue](ward_testing.md#test-catalogue).
 - **`TestWardClaimSettlement.test_another_wallets_claim_is_untouched`** — Settlement is scoped by wallet_id, which is what stops one wallet's reconciliation from rewriting another's queued records.
   `ward_unit_test test_apps.ward.settle.py`
 
-### `core/tests/test_apps.ward.store.py` (26)
+### `core/tests/test_apps.ward.store.py` (29)
 
 - **`TestWardStore.test_wallets_cannot_see_each_others_records`** — A passphrase switch must not surface another wallet's entry at the same path.
   `ward_unit_test test_apps.ward.store.py`
@@ -152,7 +150,7 @@ catalogue](ward_testing.md#test-catalogue).
 - **`TestWardCodecExchange.test_a_stale_answer_is_dropped_and_its_lease_given_back`** — An answer to a question that already gave up must not become the NEXT question's.
   `ward_unit_test test_trezor.wire.codec.ward_context.py`
 
-### `tests/device_tests/misc/test_ward.py` (163) — connect build (T3T1)
+### `tests/device_tests/misc/test_ward.py` (185) — connect build (T3T1)
 
 - **`test_ward_rejects_a_tampered_leaf`** — A leaf the host edited is refused.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_rejects_a_tampered_leaf"`
@@ -216,8 +214,26 @@ catalogue](ward_testing.md#test-catalogue).
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_splicing_unrelated_genuine_transitions"`
 - **`test_ward_attack_pending_revert_authorization`** — A REVERT the user approved but the host never published is a live authorisation -- until the wallet moves.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_pending_revert_authorization"`
-- **`test_ward_attack_multiple_approved_demotions`** — TWO APPROVED DEMOTIONS: the host lands the one the user approved FIRST.
+- **`test_ward_attack_multiple_approved_demotions`** — TWO APPROVED DEMOTIONS: the host cannot land the one the user approved FIRST.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_multiple_approved_demotions"`
+- **`test_ward_attack_a_write_from_an_ended_session_is_refused`** — THE HOST HOLDS A WRITE BACK AND SYNCS THE DEVICE AGAIN: the held write is dead.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_a_write_from_an_ended_session_is_refused"`
+- **`test_ward_attack_another_devices_sync_ends_this_devices_session`** — THE SAME, WITH ANOTHER DEVICE OF THE WALLET SYNCING IN BETWEEN.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_another_devices_sync_ends_this_devices_session"`
+- **`test_ward_a_write_is_bound_to_the_latest_sync`** — The device binds to the nonce of the LATEST attestation it verified, not an earlier one: after two syncs, the write's `wm_sig` verifies under the second nonce only.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_a_write_is_bound_to_the_latest_sync"`
+- **`test_ward_attack_a_revert_from_an_ended_session_is_refused`** — A DEMOTION THE USER APPROVED, HELD BACK PAST A NEW SYNC: refused like any other write.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_a_revert_from_an_ended_session_is_refused"`
+- **`test_ward_attack_roll_forward_needs_a_detected_restore`** — Not in a round whose attestation did not find the WM behind:
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_roll_forward_needs_a_detected_restore"`
+- **`test_ward_attack_roll_forward_needs_the_wms_record`** — A step the WM never recorded as accepted -- a lost race, a write held back -- is not signed again:
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_roll_forward_needs_the_wms_record"`
+- **`test_ward_attack_roll_forward_needs_the_devices_own_mac`** — The WM's record alone is not enough either:
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_roll_forward_needs_the_devices_own_mac"`
+- **`test_ward_attack_roll_forward_starts_at_the_attested_head`** — The first step must start at the head the WM attests in this round, and each next one where the previous ended:
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_roll_forward_starts_at_the_attested_head"`
+- **`test_ward_attack_roll_forward_refuses_a_branch_off_this_devices_history`** — Genuine steps on another branch -- made by this wallet and accepted by a WM -- that reach this device's counter with another root are not signed again:
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_roll_forward_refuses_a_branch_off_this_devices_history"`
 - **`test_ward_pin_rejects_a_forged_leaf`** — A leaf the wallet never sealed fails its tag, and NOTHING is stored.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_pin_rejects_a_forged_leaf"`
 - **`test_ward_pin_rejects_a_leaf_that_is_not_in_the_trusted_root`** — Once the device holds a root, membership is required -- authenticity is not enough.
@@ -226,12 +242,6 @@ catalogue](ward_testing.md#test-catalogue).
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_one_wallet_does_not_settle_anothers_queued_change"`
 - **`test_ward_a_tampered_backup_is_refused_before_any_screen`** — EVERY field the device would write back is inside the MAC.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_a_tampered_backup_is_refused_before_any_screen"`
-- **`test_ward_refuses_an_attestation_that_consumed_another_nonce`** — R1, THE ADVANCE.
-  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_refuses_an_attestation_that_consumed_another_nonce"`
-- **`test_ward_refuses_a_nonce_that_moved_while_the_head_did_not`** — R2, THE STANDSTILL -- the restore detector, and the one case the device can catch alone.
-  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_refuses_a_nonce_that_moved_while_the_head_did_not"`
-- **`test_ward_refuses_an_attested_head_carrying_the_enrolment_nonce`** — `NO_HEAD_NONCE` is what `head_init_sig` is signed under, and NOTHING ELSE.
-  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_refuses_an_attested_head_carrying_the_enrolment_nonce"`
 - **`test_ward_a_demotion_from_a_regressed_wm_records_the_wm_predecessor`** — The recorded link must name the head the REVERT was minted over, not the store's.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_a_demotion_from_a_regressed_wm_records_the_wm_predecessor"`
 
@@ -245,19 +255,38 @@ catalogue](ward_testing.md#test-catalogue).
 - **`test_another_wallet_is_not_served_from_this_replica`** — A hidden wallet against a daemon that holds a different wallet's replica: refused.
   `ward_device_test "tests/device_tests/ward/test_ward_service_sync.py::test_another_wallet_is_not_served_from_this_replica"`
 
+### `tests/test_ward_wm.py` (29) — the mock WARD Manager
+
+- **`test_an_authorisation_moves_the_head_at_most_once`** — THE COMPARE-AND-SWAP, stated as the attack it closes.
+  `pytest "tests/test_ward_wm.py::test_an_authorisation_moves_the_head_at_most_once"`
+- **`test_a_new_sync_ends_the_session`** — An authorisation minted in one sync is refused once any device of the wallet syncs again:
+  `pytest "tests/test_ward_wm.py::test_a_new_sync_ends_the_session"`
+- **`test_known_gap_a_host_can_reopen_an_old_session`** — KNOWN GAP, pinned so it is noticed when closed.
+  `pytest "tests/test_ward_wm.py::test_known_gap_a_host_can_reopen_an_old_session"`
+- **`test_a_restored_wm_refuses_the_devices_authorisations`** — The session nonce is volatile, so a restore ends every session:
+  `pytest "tests/test_ward_wm.py::test_a_restored_wm_refuses_the_devices_authorisations"`
+- **`test_a_lost_race_has_no_record_to_be_signed_again_from`** — Two devices mint from the same head; one lands.
+  `pytest "tests/test_ward_wm.py::test_a_lost_race_has_no_record_to_be_signed_again_from"`
+- **`test_a_restored_wm_can_be_stopped_at_any_prefix`** — THE COST that remains:
+  `pytest "tests/test_ward_wm.py::test_a_restored_wm_can_be_stopped_at_any_prefix"`
+- **`test_a_re_enrolled_wm_refuses_a_kept_first_write`** — `head_init_sig` is not secret, so a WM that lost everything can be enrolled again at genesis.
+  `pytest "tests/test_ward_wm.py::test_a_re_enrolled_wm_refuses_a_kept_first_write"`
+- **`test_an_unauthorised_transition_is_refused`** — The WM verifies with `ward_id` alone -- no enrolment, and no second per-wallet secret.
+  `pytest "tests/test_ward_wm.py::test_an_unauthorised_transition_is_refused"`
+
 ### `packages/ward-core/src/__tests__/serve.test.ts` (5)
 
 - **`refuses a batch that does not start at the store counter`**
   `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tests__/serve.test.ts -t 'refuses a batch that does not start at the store counter'`
 
-### `packages/ward-core/src/__tests__/wm.test.ts` (7)
+### `packages/ward-core/src/__tests__/wm.test.ts` (10)
 
-- **`advances on a genuine wm_sig, rotates the nonce, and refuses a replay`**
-  `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tests__/wm.test.ts -t 'advances on a genuine wm_sig, rotates the nonce, and refuses a replay'`
+- **`advances on a genuine wm_sig, and refuses a replay`**
+  `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tests__/wm.test.ts -t 'advances on a genuine wm_sig, and refuses a replay'`
 - **`accepts a batch of up to MAX_BATCH and a revert, and refuses a forged step`**
   `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tests__/wm.test.ts -t 'accepts a batch of up to MAX_BATCH and a revert, and refuses a forged step'`
 
-### `packages/wardd/src/__tests__/host.test.ts` (18)
+### `packages/wardd/src/__tests__/host.test.ts` (38)
 
 - **`refuses a result minted on a head that has since moved, and stores nothing of it`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'refuses a result minted on a head that has since moved, and stores nothing of it'`
@@ -265,10 +294,25 @@ catalogue](ward_testing.md#test-catalogue).
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'refuses a result at the right counter but minted over a different root'`
 - **`refuses a sync from a device on another wallet`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'refuses a sync from a device on another wallet'`
-- **`refuses a stored link that does not reproduce its own root`**
-  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'refuses a stored link that does not reproduce its own root'`
 
-### `packages/wardd/src/__tests__/replica.test.ts` (4)
+- **`refuses a result minted before the same device synced again`** — a transition is invalidated by a new sync.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'refuses a result minted before the same device synced again'`
+- **`refuses a result once another device of the wallet has synced`** — a transition is invalidated by a new sync.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'refuses a result once another device of the wallet has synced'`
+- **`is refused by the WM itself when a host skips its own check`** — a transition is invalidated by a new sync.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'is refused by the WM itself when a host skips its own check'`
+- **`is not signed again by a device whose own head is off the replayed chain`** — roll-forward through the device.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'is not signed again by a device whose own head is off the replayed chain'`
+- **`the device refuses a forged or misplaced WM record, and signs nothing`** — roll-forward through the device.
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/host.test.ts -t 'the device refuses a forged or misplaced WM record, and signs nothing'`
+
+### `packages/wardd/src/__tests__/service.test.ts` (10)
+
+- **`ADVERSARIAL: refuses a publish whose session a later sync ended`**
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/service.test.ts -t 'ADVERSARIAL: refuses a publish whose session a later sync ended'`
+
+
+### `packages/wardd/src/__tests__/replica.test.ts` (8)
 
 A peer holding the wallet's Evolu owner key stores corrupt rows on purpose. It can always deny service by deleting or withholding rows; these pin that corrupt rows do no more than that.
 
@@ -281,14 +325,14 @@ A peer holding the wallet's Evolu owner key stores corrupt rows on purpose. It c
 - **`with a WM, corrupt rows above its head do not move the head the replica serves`** — The replica is built at the WM's head, so corrupt rows above it are never replayed.
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/replica.test.ts -t "with a WM, corrupt rows above its head do not move the head the replica serves"`
 
-### `packages/wardd/src/__tests__/server.test.ts` (8)
+### `packages/wardd/src/__tests__/server.test.ts` (10)
 
 - **`refuses the ADVERSARIAL TEST methods unless started with --adversarial-tests`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/server.test.ts -t 'refuses the ADVERSARIAL TEST methods unless started with --adversarial-tests'`
 - **`serves an older state on request, and the device refuses it`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/server.test.ts -t 'serves an older state on request, and the device refuses it'`
 
-### `packages/wardd/src/__tests__/wmServer.test.ts` (6)
+### `packages/wardd/src/__tests__/wmServer.test.ts` (10)
 
 - **`refuses a stale advance as a conflict`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/wmServer.test.ts -t 'refuses a stale advance as a conflict'`

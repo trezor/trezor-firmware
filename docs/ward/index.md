@@ -6,6 +6,8 @@ a host stores and replicates them, and the WARD Manager orders the changes and a
 - [Leaf encryption](ward-leaf.md): `entry_key`, `sealed_identity` and `sealed_content`.
 - [Trie canonical form](ward-trie.md): the trie, its root and its proofs.
 - [Who talks to whom](ward-channels.md): the wallet and service channels.
+- [Transitions and sessions](ward_transitions.md): the two authorizations of every transition, the WM attestation, and the session that binds a Trezor's WM authorization to its latest sync.
+- [WARD Manager](ward_manager.md): its state and API, and how wardd rolls a restored WM forward from the WM's own signed records.
 - [Threat model](threat_model.md): what each party learns, per use case.
 - [Security gaps](gaps.md): review findings, fixes, and remaining release gates.
 - [User stories](user_story.md): what a user expects, starting with the mini-WARD backup and restore.

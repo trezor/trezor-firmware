@@ -1,7 +1,8 @@
 # WARD security gaps
 
 This review covers firmware and Suite `petrsusil/ward-draft` through firmware
-`0271e08ab5` and Suite `8f2830e585`, plus the fixes described below. It follows the
+`0271e08ab5` and Suite `8f2830e585`, plus the fixes described below (firmware
+`fcdbd3df97`, Suite `9b98067dc4`). It follows the
 [WARD threat model](threat_model.md). The Trezor is responsible for wallet authentication
 and user consent. wardd, the relay, and a replica peer can fail or supply misleading
 data. With a WM, ordering and live freshness depend on a trusted, durable register.
@@ -14,15 +15,17 @@ data. With a WM, ordering and live freshness depend on a trusted, durable regist
 | P1 | Opening a replica sent the parent Evolu credential to wardd. | Fixed in relay v2 |
 | P1 | The public write signature leaves the chain MAC outside its scope. | Open |
 | P1 | The development WM can attest a head before committing it to disk. | Open |
+| P1 | After a WM restore, whoever holds the WM's records chooses how far it is replayed. | Open |
 | P1 | Rollback could approve a root with no historical proof. | Fixed in firmware |
 | P1 | The MVP flash keys overlap records from public mini-WARD. | Open |
 | P2 | Cached catch-up can accept an ambiguous timestamp or serve proofs from the wrong head. | Open |
-| P2 | Malformed rows can block replay of otherwise healthy history. | Open |
+| P2 | Malformed or cyclic rows can block or hang replay of otherwise healthy history. | Open |
 | P2 | Two device display paths bypass the intended reveal policy. | Open |
 | P2 | Queued writes can miss intervening changes, and adoption and settlement can be interrupted. | Open |
-| P2 | Relay waits could hold the wallet lock and service catch-up could exceed the wire buffer. | Fixed |
+| P2 | Relay waits could hold the wallet lock and service catch-up could exceed the wire buffer. | Bounded and fixed |
 | P2 | Service catch-up could need a daemon restart after a dropped page. | Fixed in service v3 |
 | P2 | Large replica rebuilds and disconnected queued calls still consume wallet time. | Open, characterized by tests |
+| P2 | Rollback verifies one WM signature per historical link. | Open |
 
 Before distributing the MVP, close the Connect boundary and write-signature gaps and
 make the public mini-WARD upgrade preserve its flash records. MVP avoids a dependency
@@ -44,10 +47,14 @@ message to send. Connect grants permission for a WARD operation. A generic firmw
 schema is wider than that permission. Device authorization and confirmations still
 apply, but they do not enforce the Connect method boundary.
 
+Since relay v2, `openStore` also sends the WARD owner secret to that caller-supplied
+endpoint, so the endpoint choice is a credential exposure as well as a permission gap.
+
 Give each relay operation an allowlist and enforce the conversation phase, including
 which pull acknowledgment is expected. Apply the check before invoking a device
 command, and bind the endpoint to the installation's trusted daemon. The Python
-[binding](../../python/src/trezorlib/ward_relay.py) already restricts message names.
+[binding](../../python/src/trezorlib/ward_relay.py) already restricts message names, but
+it does not check the phase, and it checks only the `ws` scheme, not that the host is local.
 Verify that ordinary sync, catch-up, and batch flush still work and that out-of-scope
 messages never reach the transport.
 
@@ -67,31 +74,83 @@ the parent credential in a daemon or old logs are outside the scope of this fix.
 
 ### Transition authorization and chain data
 
-The device's public signature commits to both heads and, in WM mode, the head
-nonce. wardd stores `auth_commit` for subsequent device chain verification. Today
+The device's public signature commits to both heads. wardd stores `auth_commit` for subsequent device chain verification. Today
 it can accept a result with a genuine public signature and a damaged chain MAC. It
 can then advance the WM to a root whose stored inbound link the Trezor refuses.
 Firmware verifies the chain MAC and rejects that history, so the direct consequence
-is recovery or sync failure.
+is recovery or sync failure. The failure outlives the faulty daemon: the WM's head is
+global, so every honest replica is stranded on a head whose inbound link no device
+accepts, and replacing wardd does not repair it.
 
 Version the public step signature to commit to the chain MAC in both deployments.
 Include the accepted link identity in the WM attestation so the hardware and replica
-agree on the occurrence used for settlement. Check old rows explicitly during
+agree on the transition used for settlement. Check old rows explicitly during
 migration. Test serialization and verification across firmware and hosts, including
 repeated roots, reverts, and an unusable row beside a healthy chain.
 
 ### Durable WM state
 
-The development WM updates the in-memory head before its file write finishes.
-An attestation can observe that change while persistence is still pending. An
-older snapshot also carries its older nonce-retirement ledger, so restoring both
-together can make a superseded head nonce current again.
+The development WM (`packages/wardd/src/wmServer.ts` around `DevWm`) updates the
+in-memory head before its file write finishes. An attestation can observe that change
+while persistence is still pending. If the write fails, the head stays advanced in
+memory while the writer receives a refusal, so the writer and later readers disagree
+about whether the step landed.
 
 Publish a head to readers and sign it only from committed state. Keep advance and
 initial enrollment transactional and make the outcome queryable after an uncertain
-response. Track nonce retirement or a signed recovery generation in state that
-survives register restore. Exercise disk failure, process interruption, concurrent
-attestation, and restoration of an earlier register.
+response. Exercise disk failure, process interruption, concurrent attestation, and
+restoration of an earlier register. Restoration is the subject of the next section.
+
+### WM restore and roll-forward
+
+The WM holds no head nonce. A Trezor's `wm_sig` covers the transition and the session
+nonce: the round nonce the Trezor picked for its latest sync. The WM keeps the nonce of
+the wallet's latest sync and accepts an advance only when it is bound to that nonce
+and starts at its head. After accepting, it signs its own record of the step under the
+session nonce. See [transitions and sessions](ward_transitions.md).
+
+A restored backup, a failover onto a stale replica, or a re-enrollment after total loss
+makes the register go back. The session nonce is volatile, so a restore ends every
+session, and the restored WM accepts none of the stored `wm_sig`s. That includes lost
+races and publications a host held back. What the WM had accepted comes back by
+roll-forward. wardd feeds a Trezor the accepted steps with the WM's record of each. The
+Trezor checks its own MAC and the WM's signature, and signs each step again for the
+current session (`WardRollForward`). wardd then submits the new signatures as ordinary
+advances. A step with no WM record cannot come back. See
+[roll-forward](ward_transitions.md#roll-forward), which also covers the alternative of
+the WM accepting its own records directly.
+
+Two attack surfaces remain until the WM has a recovery mode:
+
+- **Prefix choice.** Whoever holds the records chooses how far a restored WM is
+  replayed. That includes wardd, a replica peer with the WARD owner secret, and old
+  logs. After two restores, two branches can grow from one head, and that holder also
+  chooses the branch. The WM then attests an old genuine state as current. Trezors
+  whose stored counter is past it refuse it by the counter floor. A fresh Trezor, a
+  restored seed, or a rarely synced Trezor accepts it, shows stale data, and may write
+  on top, which forks the history. Nothing can be forged, and a malicious WM could
+  already present any genuine historical state. The difference is that an honest WM
+  can now be steered by a host after a restore.
+- **Reopened session.** The WM cannot tell a fresh Trezor nonce from an old one that a
+  host replays. After a restore brings back a head, a host can ask the WM to attest it
+  under an old session's nonce and then land that session's unlanded authorizations.
+
+Close both at the WM:
+
+1. Keep a per-wallet high-water mark outside the backup: the highest counter and
+   timestamp the WM ever attested. An HSM monotonic counter or an append-only log
+   both qualify.
+2. After a restore, enter recovery mode. Accept an advance only together with the WM's
+   own record of that exact step. Where branches compete, follow the newest acceptance
+   timestamp.
+3. Attest no head as current until the head reaches the
+   high-water mark. If no replica can supply the missing history, leave recovery only
+   by an explicit operator decision, which then needs the rejoin flow on Trezors.
+
+A WM that lost the wallet entirely holds no head to replay onto. Re-enrollment needs the
+genesis `head_init_sig`, which only a Trezor at counter 0 supplies today. The WM-side
+recovery mode, a re-enrollment at genesis, two competing branches, and a write racing
+the replay remain open.
 
 ### Verified rollback
 
@@ -99,24 +158,30 @@ attestation, and restoration of an earlier register.
 and root before showing the hold screen. For normal rollback, the device walks back
 from the live WM-attested head. If the WM has regressed, the device establishes that
 the WM head is an ancestor of its own stored head, then proves the target from the
-device's history. That still permits restoring the device's own stored root without
-discarding changes. A branch switch belongs in the separate rejoin flow.
+device's history. The target may also be the device's own stored root, which then
+discards no changes; this is intended. A branch switch belongs in the separate rejoin flow.
 
 The device checks both checkpoints during one backward walk. The live attestation
-identifies the newest WM transition, and archived WM attestations link older
-transitions by their head nonces. The device stores its adopted nonce with its root
-and counter. Devices with older root records must sync once to record that nonce.
-When the WM has regressed and minted a fresh nonce, the restored counter and root
-must be on the history anchored to the occurrence the device stored. At a non-genesis
-restored head, the WM must retain the consumed predecessor nonce from its backup
-so the device can identify the original step.
+identifies the newest WM transition. Every older link must carry the WM's archived
+attestation of that exact step, verified over the link's own `(counter, root)` ends.
+The device asks for these with `WardChainRequest.with_acceptance`. When the WM has
+regressed, the link into the WM's restored head must start at the predecessor named
+by the WM's live attestation. A pair repeats only if the register went back, so the
+receipt chain is unambiguous within one register history; see the previous section.
 
 The screen distinguishes the current device state, current WM state, verified target
 counter, and new transition counter. It shows how many changes followed the target.
-The revert continues to extend the WM head and quote its live nonce. A host that
-lost the chain evidence must recover it from another replica or backup before using
-this flow. Arbitrary reconstruction from surviving leaves would require a separately
-designed recovery operation and a different user decision.
+The revert extends the WM head, and the WM accepts it only by compare-and-swap on that
+head. A host that lost the chain evidence must recover it from another replica or
+backup before using this flow. Rolling a restored WM forward (previous section) avoids
+the regressed case altogether.
+
+The device verifies one Ed25519 signature per historical link. The host sends 16 links
+with receipts per page, which fits the 8704-byte buffer. The cost grows with the
+distance to the target and nothing else bounds it. Measure a deep rollback on hardware
+and decide whether to cap the distance. The firmware's per-page bound of 128 and its
+"~77 links" comment predate receipts. Arbitrary reconstruction from surviving leaves
+would require a separately designed recovery operation and a different user decision.
 
 ### mini-WARD layout and migration
 
@@ -150,8 +215,10 @@ a successful read, with a newer replica value present.
 ### Replica validation and replay
 
 The replica recovers from some root mismatches. Malformed JSON or link fields can
-still abort the entire operation before that check. Unvalidated counter progression
-also weakens the traversal bound. Validate each row before indexing it and isolate
+still abort the entire operation before that check. Counter progression is not
+validated, and the replica walks with an unbounded limit (`Number.MAX_SAFE_INTEGER`),
+so a self-loop or a two-row cycle from a replica peer makes the walk loop while it
+holds the wallet lock. Validate each row before indexing it and isolate
 failures. Check widths, operation shape, counter progression, and the public MVP
 signature on replicated MVP links. Bound every walk and compare the rebuilt root
 before serving data. Test a healthy history alongside bad rows and ensure the
@@ -195,7 +262,11 @@ The device walks backward from the attested step to its exact stored counter and
 before adopting, and keeps only the verified commitments needed for its pending
 claims. Service protocol v3 adds idle binding renewal to the codec daemon. A retry
 after a dropped page starts a fresh sync once the device receives a renewal.
-The service daemon and device firmware must both support service protocol v3.
+The service daemon and device firmware must speak the same service protocol version, which
+the device checks for an exact match. Version 3 added idle binding renewal; the current
+version 4 removed the WM head nonce. Only
+the device checks the version: `WardServiceOpenAck` carries none, and wardd learns of a
+mismatch only from the refusal. Some proto comments still say v2.
 
 The daemon still rebuilds its replica before serving a chain, and predecessor
 selection scans the transition log once per link. Queued catch-up still rebuilds
