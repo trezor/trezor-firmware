@@ -613,11 +613,8 @@ impl Input {
 
         let style = theme::label_keyboard();
         let eye_progress = self.eye_hint.progress();
-        let dots_offset = Self::DOTS_OFFSET
-            + EyeHintAnimation::offset(
-                EyeHintAnimation::content_progress(eye_progress),
-                Self::DOTS_SLIDE,
-            );
+        let dots_offset =
+            Self::DOTS_OFFSET + EyeHintAnimation::offset(eye_progress, Self::DOTS_SLIDE);
         let mut cursor = self.area.left_center().ofs(Offset::x(dots_offset));
 
         let pp_len = self.textbox.count();
