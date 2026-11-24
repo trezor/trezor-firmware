@@ -63,7 +63,7 @@ pub(crate) struct Leaf<K, H: HashFn> {
     /// The leaf's key.
     pub(crate) key: K,
     /// The digest of the leaf's value.
-    pub(crate) value: H::Output,
+    pub(crate) value_digest: H::Output,
 }
 
 impl<K: Key, H: HashFn> Leaf<K, H> {
@@ -80,10 +80,10 @@ impl<K: Key, H: HashFn> TryFrom<&[u8]> for Leaf<K, H> {
             return Err(Error::Length);
         }
         // The length was checked, so both pieces are exactly their widths.
-        let (key, value) = bytes.split_at(key_len::<K>());
+        let (key, value_digest) = bytes.split_at(key_len::<K>());
         Ok(Self {
             key: K::from_bytes(key.try_into().unwrap()),
-            value: value.try_into().unwrap(),
+            value_digest: value_digest.try_into().unwrap(),
         })
     }
 }
@@ -212,7 +212,7 @@ pub(crate) fn write_into<K: Key, H: HashFn>(
 
     let mut out = out;
     put(&mut out, leaf.key.as_bytes().as_ref());
-    put(&mut out, leaf.value.as_ref());
+    put(&mut out, leaf.value_digest.as_ref());
     for step in steps {
         put(&mut out, step.crit_bit.as_bytes());
         put(&mut out, step.sibling.as_ref());
@@ -341,7 +341,7 @@ impl<K: Key, H: HashFn> Copy for Leaf<K, H> {}
 
 impl<K: Key, H: HashFn> PartialEq for Leaf<K, H> {
     fn eq(&self, other: &Self) -> bool {
-        self.key == other.key && self.value == other.value
+        self.key == other.key && self.value_digest == other.value_digest
     }
 }
 
@@ -352,7 +352,7 @@ impl<K: Key, H: HashFn> fmt::Debug for Leaf<K, H> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Leaf")
             .field("key", &self.key.as_bytes().as_ref())
-            .field("value", &self.value.as_ref())
+            .field("value_digest", &self.value_digest.as_ref())
             .finish()
     }
 }
@@ -487,7 +487,7 @@ mod tests {
             proof.leaf(),
             Some(Leaf {
                 key: [0b0100_0000],
-                value: [0xaa; 32]
+                value_digest: [0xaa; 32]
             })
         );
         let steps: Vec<_> = proof.steps().collect();
@@ -511,7 +511,7 @@ mod tests {
     fn build_and_parse_round_trip() {
         let leaf = Leaf {
             key: [0b0000_1111],
-            value: [7; 32],
+            value_digest: [7; 32],
         };
         let steps = [
             Step {

@@ -202,7 +202,7 @@ impl<'r, B: AsRef<[u8]>, K: Key, H: HashFn> Walk<'r, B, K, H> {
         match &turn {
             Some(turn) if lies_below(proof, turn.crit_bit) => {
                 let left = fold(
-                    leaf_digest::<K, H>(&turn.leaf.key, &turn.leaf.value),
+                    leaf_digest::<K, H>(&turn.leaf.key, &turn.leaf.value_digest),
                     turn.current.steps().take(turn.below),
                     &turn.leaf.key,
                 );

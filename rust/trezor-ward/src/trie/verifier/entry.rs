@@ -44,7 +44,7 @@ pub struct OccupiedEntry<R, B, K: Key, H: HashFn> {
     root: R,
     proof: Proof<B, K, H>,
     key: K,
-    value: H::Output,
+    value_digest: H::Output,
 }
 
 /// A key proven absent, and the handle to insert it.
@@ -92,13 +92,13 @@ fn lookup<K: Key, H: HashFn>(
     }
     // The crit bit sits inside every branch digest, so a path that folds to the root
     // branches on exactly the bits it claims to.
-    let start = leaf_digest::<K, H>(&leaf.key, &leaf.value);
+    let start = leaf_digest::<K, H>(&leaf.key, &leaf.value_digest);
     if fold(start, proof.steps(), key) != root.0 {
         return Err(Error::RootMismatch);
     }
 
     Ok(match crit_bit(key, &leaf.key) {
-        None => Lookup::Present(leaf.value),
+        None => Lookup::Present(leaf.value_digest),
         Some(c) => Lookup::Absent(Some((leaf, c))),
     })
 }
@@ -118,11 +118,11 @@ impl<H: HashFn> Root<H> {
     ) -> Result<Option<OccupiedEntry<&'a Self, &'a [u8], K, H>>, Error> {
         let proof = proof.view();
         Ok(match lookup(self, key, &proof)? {
-            Lookup::Present(value) => Some(OccupiedEntry {
+            Lookup::Present(value_digest) => Some(OccupiedEntry {
                 root: self,
                 proof,
                 key: *key,
-                value,
+                value_digest,
             }),
             Lookup::Absent(_) => None,
         })
@@ -137,11 +137,11 @@ impl<H: HashFn> Root<H> {
     ) -> Result<Entry<'a, K, H>, Error> {
         let proof = proof.view();
         Ok(match lookup(self, key, &proof)? {
-            Lookup::Present(value) => Entry::Occupied(OccupiedEntry {
+            Lookup::Present(value_digest) => Entry::Occupied(OccupiedEntry {
                 root: self,
                 proof,
                 key: *key,
-                value,
+                value_digest,
             }),
             Lookup::Absent(splice) => Entry::Vacant(VacantEntry {
                 root: self,
@@ -196,7 +196,7 @@ impl<R, B: AsRef<[u8]>, K: Key, H: HashFn> OccupiedEntry<R, B, K, H> {
             root,
             proof,
             key: leaf.key,
-            value: leaf.value,
+            value_digest: leaf.value_digest,
         }
     }
 
@@ -207,13 +207,13 @@ impl<R, B: AsRef<[u8]>, K: Key, H: HashFn> OccupiedEntry<R, B, K, H> {
 
     /// The digest of the stored value.
     pub fn digest(&self) -> &H::Output {
-        &self.value
+        &self.value_digest
     }
 
     /// The stored value, given a claim of it: `claimed` itself if it hashes to the digest the
     /// proof commits to, [`Error::ValueMismatch`] otherwise.
     pub fn value<'v, V: Hashable<H> + ?Sized>(&self, claimed: &'v V) -> Result<&'v V, Error> {
-        if claimed.digest() == self.value {
+        if claimed.digest() == self.value_digest {
             Ok(claimed)
         } else {
             Err(Error::ValueMismatch)
@@ -271,7 +271,7 @@ impl<K: Key, H: HashFn> VacantEntry<'_, K, H> {
         // leaf's own path, up to the first branch at or above `c`.
         let mut steps = self.proof.steps().peekable();
         let subtree = fold(
-            leaf_digest::<K, H>(&terminal.key, &terminal.value),
+            leaf_digest::<K, H>(&terminal.key, &terminal.value_digest),
             core::iter::from_fn(|| steps.next_if(|step| step.crit_bit > c)),
             &terminal.key,
         );
@@ -300,7 +300,7 @@ impl<R, B, K: Key, H: HashFn> fmt::Debug for OccupiedEntry<R, B, K, H> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("OccupiedEntry")
             .field("key", &self.key.as_bytes().as_ref())
-            .field("value", &self.value.as_ref())
+            .field("value_digest", &self.value_digest.as_ref())
             .finish_non_exhaustive()
     }
 }

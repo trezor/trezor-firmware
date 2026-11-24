@@ -27,8 +27,8 @@ pub(crate) fn empty_root<H: HashFn>() -> H::Output {
 }
 
 /// The digest of a leaf.
-pub(crate) fn leaf_digest<K: Key, H: HashFn>(key: &K, value: &H::Output) -> H::Output {
-    H::digest(&[&[TAG_LEAF], key.as_bytes().as_ref(), value.as_ref()])
+pub(crate) fn leaf_digest<K: Key, H: HashFn>(key: &K, value_digest: &H::Output) -> H::Output {
+    H::digest(&[&[TAG_LEAF], key.as_bytes().as_ref(), value_digest.as_ref()])
 }
 
 /// The digest of a branch. Children are positional: `left` holds the keys whose crit bit is 0.

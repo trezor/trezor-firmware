@@ -245,7 +245,7 @@ impl<K: Key, V: Hashable<H>, H: HashFn> Tree<K, V, H> {
         let (terminal_key, value) = top.descend(key, |step| steps.push(step));
         let leaf = Leaf {
             key: *terminal_key,
-            value: value.digest(),
+            value_digest: value.digest(),
         };
         Proof::build(&leaf, steps.into_iter().rev())
             .expect("a lookup path in a canonical tree is well formed")
