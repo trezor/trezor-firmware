@@ -27,7 +27,7 @@ uses = [
 
 # ELF sections to be included in the final binary.
 # The order of sections is important.
-elf_sections = [".header", ".flash", ".data"]
+elf_sections = [".header", ".flash", ".data", ".flash_padding"]
 
 # xtask build options mapped to the cargo features
 [build-options]

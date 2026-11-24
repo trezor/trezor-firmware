@@ -24,10 +24,6 @@ _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
 _bootloader_code_size = _bootloader_code_end - ADDR(.padding);
 
-/* Size of the zero fill that pads the image to the full BOOTLOADER_MAXSIZE.
-   Reported by the memory-usage tool so it can show real content vs padding. */
-__flash_padding_size = _bootloader_code_end - __flash_padding_start;
-
 SECTIONS {
   .header : ALIGN(4) {
     KEEP(*(.header));
@@ -89,9 +85,10 @@ SECTIONS {
     . = ALIGN(8);
   } >BOOT_ARGS
 
-  .flash : {
+  /* Separate output section so size tools (xtask memusage, MemBrowse) can
+     tell the fill from real code */
+  .flash_padding : {
     /* Pad the rest of bootloader area with zeros */
-    __flash_padding_start = .;
     BYTE(0x00)
     FILL(0x00)
     . = ADDR(.header) + BOOTLOADER_MAXSIZE;
