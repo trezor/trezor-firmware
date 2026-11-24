@@ -775,7 +775,11 @@ static mp_obj_t mod_trezorutil_get_scm_revision(mp_obj_t xor2) {
   //   was successfully updated when in fact the malicious firmware is running
   //   on the device all along.
 
-  uint8_t SCM_REVISION_LONG[] = SCM_REVISION_LONG_INIT;
+  // volatile keeps the compiler from folding the bytes into an anonymous
+  // constant, which it emits as a mergeable C string. There the revision bytes
+  // can tail-merge with other strings and make the firmware size depend on the
+  // git revision.
+  static const volatile uint8_t SCM_REVISION_LONG[] = SCM_REVISION_LONG_INIT;
 
   uint8_t scm_revision[sizeof(SCM_REVISION_SHORT) + sizeof(SCM_REVISION_LONG)] =
       {0};
