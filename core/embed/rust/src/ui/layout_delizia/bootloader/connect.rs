@@ -1,8 +1,8 @@
-use super::super::component::{Button, ButtonMsg};
 use super::super::constant::WIDTH;
 use super::super::theme::bootloader::{
-    button_bld, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING,
+    BUTTON_AREA_START, BUTTON_BLD, BUTTON_HEIGHT, CONTENT_PADDING,
 };
+use super::button::Button;
 use crate::strutil::TString;
 use crate::ui::component::{Component, Event, EventCtx, Pad};
 use crate::ui::display::{Color, Font};
@@ -34,9 +34,7 @@ impl Connect {
             bg: Pad::with_background(bg),
             message: message.into(),
             font,
-            button: Button::with_text("Cancel".into())
-                .styled(button_bld())
-                .with_text_align(Alignment::Center),
+            button: Button::with_text("Cancel", &BUTTON_BLD),
         };
 
         instance.bg.clear();
@@ -58,7 +56,7 @@ impl Component for Connect {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(ButtonMsg::Clicked) = self.button.event(ctx, event) {
+        if self.button.event(ctx, event).is_some() {
             return Some(ConnectMsg::Cancel);
         }
 

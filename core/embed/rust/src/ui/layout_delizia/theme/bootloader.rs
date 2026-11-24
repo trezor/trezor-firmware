@@ -1,12 +1,20 @@
-use super::super::component::{ButtonStyle, ButtonStyleSheet, ResultStyle};
+//! Bootloader theme. It does not use the firmware theme, so that firmware UI
+//! changes do not reach the bootloader unnoticed.
+
+use super::super::bootloader::button::{ButtonStyle, ButtonStyleSheet};
+use super::super::component::ResultStyle;
 use super::super::fonts;
-use super::super::theme::{BLACK, FG, GREY_DARK, GREY_LIGHT, WHITE};
 use crate::ui::component::text::TextStyle;
 use crate::ui::component::LineBreaking::BreakWordsNoHyphen;
 use crate::ui::constant::{HEIGHT, WIDTH};
-use crate::ui::display::Color;
+use crate::ui::display::{Color, Font};
 use crate::ui::geometry::{Offset, Point, Rect};
 use crate::ui::util::include_res;
+
+pub const WHITE: Color = Color::white();
+pub const BLACK: Color = Color::black();
+pub const GREY: Color = Color::rgb(0x8B, 0x8F, 0x93);
+pub const GREEN_LIGHT: Color = Color::rgb(0x0B, 0xA5, 0x67);
 
 pub const BLD_BG: Color = Color::rgb(0x00, 0x1E, 0xAD);
 pub const BLD_FG: Color = WHITE;
@@ -29,10 +37,6 @@ pub const BLD_BTN_COLOR_ACTIVE: Color = Color::rgb(0x04, 0x10, 0x58);
 pub const BLD_TITLE_COLOR: Color = WHITE;
 
 pub const WELCOME_COLOR: Color = BLACK;
-pub const WELCOME_HIGHLIGHT_COLOR: Color = Color::rgb(0x28, 0x28, 0x28);
-
-// Commonly used corner radius (i.e. for buttons).
-pub const RADIUS: u8 = 2;
 
 // Commonly used constants for UI elements.
 pub const CONTENT_PADDING: i16 = 6;
@@ -52,6 +56,7 @@ pub const CORNER_BUTTON_AREA: Rect = Rect::from_top_left_and_size(
 );
 pub const BUTTON_AREA_START: i16 = HEIGHT - 56;
 pub const BUTTON_HEIGHT: i16 = 50;
+pub const BUTTON_FONT: Font = fonts::FONT_SUB;
 
 // BLD icons
 pub const X24: &[u8] = include_res!("layout_delizia/res/x24.toif");
@@ -67,135 +72,71 @@ pub const WARNING40: &[u8] = include_res!("layout_delizia/res/warning40.toif");
 pub const CHECK24: &[u8] = include_res!("layout_delizia/res/check24.toif");
 pub const CHECK40: &[u8] = include_res!("layout_delizia/res/check40.toif");
 
-pub fn button_confirm() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: fonts::FONT_SUB,
-            text_color: BLD_BG,
-            button_color: WHITE,
-            icon_color: BLD_BG,
-            background_color: BLD_BG,
-        },
-        active: &ButtonStyle {
-            font: fonts::FONT_SUB,
-            text_color: BLD_BG,
-            button_color: BLD_INSTALL_BTN_COLOR_ACTIVE,
-            icon_color: BLD_BG,
-            background_color: BLD_BG,
-        },
-        disabled: &ButtonStyle {
-            font: fonts::FONT_SUB,
-            text_color: FG,
-            button_color: GREY_DARK,
-            icon_color: BLD_BG,
-            background_color: FG,
-        },
-    }
-}
+pub static BUTTON_CONFIRM: ButtonStyleSheet = ButtonStyleSheet {
+    normal: ButtonStyle {
+        text_color: BLD_BG,
+        button_color: WHITE,
+        icon_color: BLD_BG,
+    },
+    active: ButtonStyle {
+        text_color: BLD_BG,
+        button_color: BLD_INSTALL_BTN_COLOR_ACTIVE,
+        icon_color: BLD_BG,
+    },
+};
 
-pub fn button_wipe_cancel() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: fonts::FONT_SUB,
-            text_color: WHITE,
-            button_color: BLD_WIPE_CANCEL_BTN_COLOR,
-            icon_color: WHITE,
-            background_color: BLD_WIPE_COLOR,
-        },
-        active: &ButtonStyle {
-            font: fonts::FONT_SUB,
-            text_color: WHITE,
-            button_color: BLD_WIPE_CANCEL_BTN_COLOR_ACTIVE,
-            icon_color: WHITE,
-            background_color: BLD_WIPE_COLOR,
-        },
-        disabled: &ButtonStyle {
-            font: fonts::FONT_SUB,
-            text_color: GREY_LIGHT,
-            button_color: GREY_DARK,
-            icon_color: GREY_LIGHT,
-            background_color: WHITE,
-        },
-    }
-}
+pub static BUTTON_WIPE_CANCEL: ButtonStyleSheet = ButtonStyleSheet {
+    normal: ButtonStyle {
+        text_color: WHITE,
+        button_color: BLD_WIPE_CANCEL_BTN_COLOR,
+        icon_color: WHITE,
+    },
+    active: ButtonStyle {
+        text_color: WHITE,
+        button_color: BLD_WIPE_CANCEL_BTN_COLOR_ACTIVE,
+        icon_color: WHITE,
+    },
+};
 
-pub fn button_wipe_confirm() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: fonts::FONT_SUB,
-            text_color: BLD_WIPE_COLOR,
-            button_color: BLD_WIPE_BTN_COLOR,
-            icon_color: BLD_WIPE_COLOR,
-            background_color: BLD_WIPE_COLOR,
-        },
-        active: &ButtonStyle {
-            font: fonts::FONT_SUB,
-            text_color: BLD_WIPE_COLOR,
-            button_color: BLD_WIPE_BTN_COLOR_ACTIVE,
-            icon_color: BLD_WIPE_COLOR,
-            background_color: BLD_WIPE_COLOR,
-        },
-        disabled: &ButtonStyle {
-            font: fonts::FONT_SUB,
-            text_color: FG,
-            button_color: GREY_DARK,
-            icon_color: FG,
-            background_color: FG,
-        },
-    }
-}
+pub static BUTTON_WIPE_CONFIRM: ButtonStyleSheet = ButtonStyleSheet {
+    normal: ButtonStyle {
+        text_color: BLD_WIPE_COLOR,
+        button_color: BLD_WIPE_BTN_COLOR,
+        icon_color: BLD_WIPE_COLOR,
+    },
+    active: ButtonStyle {
+        text_color: BLD_WIPE_COLOR,
+        button_color: BLD_WIPE_BTN_COLOR_ACTIVE,
+        icon_color: BLD_WIPE_COLOR,
+    },
+};
 
-pub fn button_bld_menu() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: fonts::FONT_SUB,
-            text_color: BLD_FG,
-            button_color: BLD_BG,
-            icon_color: BLD_FG,
-            background_color: BLD_BG,
-        },
-        active: &ButtonStyle {
-            font: fonts::FONT_SUB,
-            text_color: BLD_FG,
-            button_color: BLD_BG,
-            icon_color: BLD_FG,
-            background_color: BLD_BG,
-        },
-        disabled: &ButtonStyle {
-            font: fonts::FONT_SUB,
-            text_color: GREY_LIGHT,
-            button_color: BLD_BG,
-            icon_color: GREY_LIGHT,
-            background_color: BLD_BG,
-        },
-    }
-}
+/// Corner buttons: only the icon is visible, pressing changes nothing.
+pub static BUTTON_BLD_MENU: ButtonStyleSheet = ButtonStyleSheet {
+    normal: ButtonStyle {
+        text_color: BLD_FG,
+        button_color: BLD_BG,
+        icon_color: BLD_FG,
+    },
+    active: ButtonStyle {
+        text_color: BLD_FG,
+        button_color: BLD_BG,
+        icon_color: BLD_FG,
+    },
+};
 
-pub fn button_bld() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: fonts::FONT_SUB,
-            text_color: BLD_FG,
-            button_color: BLD_BTN_COLOR,
-            icon_color: BLD_FG,
-            background_color: BLD_BG,
-        },
-        active: &ButtonStyle {
-            font: fonts::FONT_SUB,
-            text_color: BLD_FG,
-            button_color: BLD_BTN_COLOR_ACTIVE,
-            icon_color: BLD_FG,
-            background_color: BLD_BG,
-        },
-        disabled: &ButtonStyle {
-            font: fonts::FONT_SUB,
-            text_color: GREY_LIGHT,
-            button_color: BLD_BTN_COLOR,
-            icon_color: GREY_LIGHT,
-            background_color: BLD_BG,
-        },
-    }
-}
+pub static BUTTON_BLD: ButtonStyleSheet = ButtonStyleSheet {
+    normal: ButtonStyle {
+        text_color: BLD_FG,
+        button_color: BLD_BTN_COLOR,
+        icon_color: BLD_FG,
+    },
+    active: ButtonStyle {
+        text_color: BLD_FG,
+        button_color: BLD_BTN_COLOR_ACTIVE,
+        icon_color: BLD_FG,
+    },
+};
 
 pub const fn text_title(bg: Color) -> TextStyle {
     TextStyle::new(
@@ -244,6 +185,3 @@ pub const RESULT_WIPE: ResultStyle = ResultStyle::new(
 );
 
 pub const RESULT_FW_INSTALL: ResultStyle = ResultStyle::new(BLD_FG, BLD_BG, BLD_BTN_COLOR);
-
-pub const RESULT_INITIAL: ResultStyle =
-    ResultStyle::new(FG, WELCOME_COLOR, WELCOME_HIGHLIGHT_COLOR);

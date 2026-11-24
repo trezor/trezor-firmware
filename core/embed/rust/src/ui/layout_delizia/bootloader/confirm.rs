@@ -1,11 +1,9 @@
-use super::constant::WIDTH;
-use super::theme::bootloader::{
+use super::super::constant::WIDTH;
+use super::super::theme::bootloader::{
     text_fingerprint, text_title, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING,
-    CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, INFO32, TITLE_AREA, X32,
+    CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, INFO32, TITLE_AREA, WHITE, X32,
 };
-use super::theme::WHITE;
-use super::ButtonMsg::Clicked;
-use super::{Button, ButtonStyleSheet};
+use super::button::{Button, ButtonStyleSheet};
 use crate::strutil::TString;
 use crate::ui::component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad};
 use crate::ui::constant::screen;
@@ -84,7 +82,7 @@ impl<'a> Confirm<'a> {
         mut self,
         title: TString<'a>,
         text: TString<'a>,
-        menu_button: ButtonStyleSheet,
+        menu_button: &'static ButtonStyleSheet,
     ) -> Self {
         self.info = Some(ConfirmInfo {
             title: Child::new(
@@ -94,13 +92,11 @@ impl<'a> Confirm<'a> {
                 Label::left_aligned(text, text_fingerprint(self.bg_color)).vertically_centered(),
             ),
             info_button: Child::new(
-                Button::with_icon(Icon::new(INFO32))
-                    .styled(menu_button)
+                Button::with_icon(Icon::new(INFO32), menu_button)
                     .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
             ),
             close_button: Child::new(
-                Button::with_icon(Icon::new(X32))
-                    .styled(menu_button)
+                Button::with_icon(Icon::new(X32), menu_button)
                     .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
             ),
         });
@@ -170,14 +166,14 @@ impl Component for Confirm<'_> {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some(info) = self.info.as_mut() {
             if self.show_info {
-                if let Some(Clicked) = info.close_button.event(ctx, event) {
+                if info.close_button.event(ctx, event).is_some() {
                     self.show_info = false;
                     self.content_pad.clear();
                     self.message.request_complete_repaint(ctx);
                     self.alert.request_complete_repaint(ctx);
                     return None;
                 }
-            } else if let Some(Clicked) = info.info_button.event(ctx, event) {
+            } else if info.info_button.event(ctx, event).is_some() {
                 self.show_info = true;
                 info.text.request_complete_repaint(ctx);
                 info.title.request_complete_repaint(ctx);
@@ -185,10 +181,10 @@ impl Component for Confirm<'_> {
                 return None;
             }
         }
-        if let Some(Clicked) = self.left_button.event(ctx, event) {
+        if self.left_button.event(ctx, event).is_some() {
             return Some(Self::Msg::Cancel);
         };
-        if let Some(Clicked) = self.right_button.event(ctx, event) {
+        if self.right_button.event(ctx, event).is_some() {
             return Some(Self::Msg::Confirm);
         };
         None

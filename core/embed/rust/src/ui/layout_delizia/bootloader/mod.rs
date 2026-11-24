@@ -1,21 +1,23 @@
+use button::{Button, ButtonContent};
+use confirm::{Confirm, ConfirmTitle};
 use connect::Connect;
 use heapless::String;
 use intro::Intro;
 use menu::Menu;
+use result::ResultScreen;
 use sys::time;
 use ufmt::uwrite;
 
 use super::bootloader::welcome::Welcome;
-use super::component::bl_confirm::{Confirm, ConfirmTitle};
-use super::component::{Button, ButtonContent, ResultScreen, WelcomeScreen};
+use super::component::WelcomeScreen;
 use super::cshape::{render_loader, LoaderRange};
+use super::theme::backlight;
 use super::theme::bootloader::{
-    button_bld, button_bld_menu, button_confirm, button_wipe_cancel, button_wipe_confirm, BLD_BG,
-    BLD_FG, BLD_TITLE_COLOR, BLD_WARN_COLOR, BLD_WIPE_COLOR, CHECK24, CHECK40, DOWNLOAD24, FIRE32,
-    FIRE40, RESULT_FW_INSTALL, RESULT_WIPE, TEXT_BOLD, TEXT_NORMAL, TEXT_WIPE_BOLD,
-    TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
+    BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WARN_COLOR, BLD_WIPE_COLOR, BUTTON_BLD, BUTTON_BLD_MENU,
+    BUTTON_CONFIRM, BUTTON_WIPE_CANCEL, BUTTON_WIPE_CONFIRM, CHECK24, CHECK40, DOWNLOAD24, FIRE32,
+    FIRE40, GREEN_LIGHT, GREY, RESULT_FW_INSTALL, RESULT_WIPE, TEXT_BOLD, TEXT_NORMAL,
+    TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
 };
-use super::theme::{backlight, GREEN_LIGHT, GREY};
 use super::{fonts, UIDelizia};
 use crate::bootloader::run;
 use crate::ui::component::Label;
@@ -28,11 +30,13 @@ use crate::ui::ui_bootloader::BootloaderUI;
 use crate::ui::util::animation_disabled;
 use crate::ui::{shape, CommonUI};
 
+pub mod button;
+mod confirm;
+pub mod connect;
 pub mod intro;
 pub mod menu;
+mod result;
 pub mod welcome;
-
-pub mod connect;
 
 pub type BootloaderString = String<128>;
 
@@ -222,8 +226,8 @@ impl BootloaderUI for UIDelizia {
         // Vary only the content: building the styling chain twice costs flash.
         let (left_content, right_content) = if should_keep_seed {
             (
-                ButtonContent::Text("CANCEL".into()),
-                ButtonContent::Text("INSTALL".into()),
+                ButtonContent::Text("CANCEL"),
+                ButtonContent::Text("INSTALL"),
             )
         } else {
             (
@@ -231,18 +235,14 @@ impl BootloaderUI for UIDelizia {
                 ButtonContent::Icon(Icon::new(CHECK24)),
             )
         };
-        let left = Button::new(left_content)
-            .styled(button_bld())
-            .with_text_align(Alignment::Center);
-        let right = Button::new(right_content)
-            .styled(button_confirm())
-            .with_text_align(Alignment::Center);
+        let left = Button::new(left_content, &BUTTON_BLD);
+        let right = Button::new(right_content, &BUTTON_CONFIRM);
 
         let mut frame = Confirm::new(BLD_BG, left, right, ConfirmTitle::Text(title), msg)
             .with_info(
                 "FW FINGERPRINT".into(),
                 fingerprint.into(),
-                button_bld_menu(),
+                &BUTTON_BLD_MENU,
             );
 
         if let Some(alert) = alert {
@@ -262,12 +262,8 @@ impl BootloaderUI for UIDelizia {
         );
         let alert = Label::centered("SEED AND FIRMWARE\nWILL BE ERASED!".into(), TEXT_WIPE_BOLD);
 
-        let right = Button::with_text("RESET".into())
-            .styled(button_wipe_confirm())
-            .with_text_align(Alignment::Center);
-        let left = Button::with_text("CANCEL".into())
-            .styled(button_wipe_cancel())
-            .with_text_align(Alignment::Center);
+        let right = Button::with_text("RESET", &BUTTON_WIPE_CONFIRM);
+        let left = Button::with_text("CANCEL", &BUTTON_WIPE_CANCEL);
 
         let mut frame = Confirm::new(BLD_WIPE_COLOR, left, right, ConfirmTitle::Icon(icon), msg)
             .with_alert(alert);
@@ -284,12 +280,8 @@ impl BootloaderUI for UIDelizia {
             TEXT_NORMAL,
         );
 
-        let right = Button::with_text("UNLOCK".into())
-            .styled(button_confirm())
-            .with_text_align(Alignment::Center);
-        let left = Button::with_text("CANCEL".into())
-            .styled(button_bld())
-            .with_text_align(Alignment::Center);
+        let right = Button::with_text("UNLOCK", &BUTTON_CONFIRM);
+        let left = Button::with_text("CANCEL", &BUTTON_BLD);
 
         let mut frame = Confirm::new(BLD_BG, left, right, ConfirmTitle::Text(title), msg);
 
