@@ -113,11 +113,11 @@ Tests:
 - **Delay.** Within a session, a host may delay a publication while nothing else lands.
 - **A reopened nonce.** The WM cannot tell a fresh Trezor nonce from an old one that a host
   replays. After a restore brings back a head, a host can ask the WM to attest that head under
-  the nonce of an old session and then submit that session's unlanded authorizations. The WM
-  high-water mark and recovery mode described in [WARD Manager](ward_manager.md#obligations-and-open-work)
-  close this: until it is back at its newest head, a restored WM takes an advance only with its own
-  record of that exact step, which an unlanded authorization does not have. `test_known_gap_a_host_can_reopen_an_old_session` in `tests/test_ward_wm.py` pins
-  the current behavior.
+  the nonce of an old session and then submit that session's unlanded authorizations. This is an
+  accepted gap: closing it needs a WM high-water mark that a restore cannot take back, and no
+  acceptable store for one exists. See
+  [WM restore and roll-forward](gaps.md#wm-restore-and-roll-forward).
+  `test_known_gap_a_host_can_reopen_an_old_session` in `tests/test_ward_wm.py` pins the behavior.
 
 ## Why the session is part of the signature
 
@@ -236,9 +236,8 @@ each step, compare-and-swaps on its head, and installs the step. No Trezor is in
 ### What both options leave open
 
 Whoever holds the records chooses how far the WM is replayed, and after two restores also which
-branch. The WM then attests an old genuine head as current. The fix is at the WM: a high-water mark
-kept outside the backup, and a recovery mode. See
-[WARD Manager obligations](ward_manager.md#obligations-and-open-work).
+branch. The WM then attests an old genuine head as current. This is an accepted gap. See
+[WM restore and roll-forward](gaps.md#wm-restore-and-roll-forward).
 
 ## The optional session field
 

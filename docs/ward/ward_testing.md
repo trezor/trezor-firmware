@@ -1397,7 +1397,7 @@ The mock WARD Manager (`tests/ward_wm.py`): enrolment, compare-and-swap, session
   `pytest "tests/test_ward_wm.py::test_one_session_carries_several_transitions"`
 - **`test_a_new_sync_ends_the_session`** — An authorisation minted in one sync is refused once any device of the wallet syncs again:
   `pytest "tests/test_ward_wm.py::test_a_new_sync_ends_the_session"`
-- **`test_known_gap_a_host_can_reopen_an_old_session`** — KNOWN GAP, pinned so it is noticed when closed.
+- **`test_known_gap_a_host_can_reopen_an_old_session`** — ACCEPTED GAP, pinned so a change in behavior is noticed.
   `pytest "tests/test_ward_wm.py::test_known_gap_a_host_can_reopen_an_old_session"`
 - **`test_an_advance_returns_the_wm_signed_acceptance`** — The WM's own record of the transition, under the session nonce:
   `pytest "tests/test_ward_wm.py::test_an_advance_returns_the_wm_signed_acceptance"`

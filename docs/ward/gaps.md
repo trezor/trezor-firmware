@@ -15,7 +15,7 @@ data. With a WM, ordering and live freshness depend on a trusted, durable regist
 | P1 | Opening a replica sent the parent Evolu credential to wardd. | Fixed in relay v2 |
 | P1 | The public write signature leaves the chain MAC outside its scope. | Open |
 | P1 | The development WM can attest a head before committing it to disk. | Open |
-| P1 | After a WM restore, whoever holds the WM's records chooses how far it is replayed. | Open |
+| P1 | After a WM restore, whoever holds the WM's records chooses how far it is replayed, and a host can reopen an old session. | Accepted |
 | P1 | Rollback could approve a root with no historical proof. | Fixed in firmware |
 | P1 | The MVP flash keys overlap records from public mini-WARD. | Open |
 | P2 | Cached catch-up can accept an ambiguous timestamp or serve proofs from the wrong head. | Open |
@@ -120,7 +120,7 @@ advances. A step with no WM record cannot come back. See
 [roll-forward](ward_transitions.md#roll-forward), which also covers the alternative of
 the WM accepting its own records directly.
 
-Two attack surfaces remain until the WM has a recovery mode:
+Two attack surfaces remain. Both are **accepted gaps**:
 
 - **Prefix choice.** Whoever holds the records chooses how far a restored WM is
   replayed. That includes wardd, a replica peer with the WARD owner secret, and old
@@ -134,23 +134,33 @@ Two attack surfaces remain until the WM has a recovery mode:
 - **Reopened session.** The WM cannot tell a fresh Trezor nonce from an old one that a
   host replays. After a restore brings back a head, a host can ask the WM to attest it
   under an old session's nonce and then land that session's unlanded authorizations.
+  Each is a genuine Trezor authorization from that head. It lands late, not forged.
 
-Close both at the WM:
+Closing either needs the WM to remember, across a restore, how far it had got: a
+per-wallet high-water mark, with a recovery mode that accepts only advances carrying the
+WM's own record and attests nothing until the mark is reached again. The mark would have
+to live where a restore, a failover onto a stale replica, and a total loss of the WM's
+storage cannot take it back. No acceptable store exists:
 
-1. Keep a per-wallet high-water mark outside the backup: the highest counter and
-   timestamp the WM ever attested. An HSM monotonic counter or an append-only log
-   both qualify.
-2. After a restore, enter recovery mode. Accept an advance only together with the WM's
-   own record of that exact step. Where branches compete, follow the newest acceptance
-   timestamp.
-3. Attest no head as current until the head reaches the
-   high-water mark. If no replica can supply the missing history, leave recovery only
-   by an explicit operator decision, which then needs the rejoin flow on Trezors.
+- **wardd or the replica.** These hold the records and choose the prefix, so they are
+  the parties the mark defends against. They can withhold it.
+- **A separate store run by the WM operator.** It goes back together with the register
+  in an operator-driven or botched restore, so it adds a second durable dependency
+  without an independent guarantee.
+- **An HSM monotonic counter beside `K_sig`.** It ties every wallet's state to signing
+  hardware and does not survive the loss of that hardware.
+- **External witnesses or a transparency log.** They add parties outside the WARD trust
+  model and a round trip to every attestation.
+
+The design therefore relies on a restore being rare and on these bounds: nothing is
+forged, every step that lands is one a Trezor authorized, and a Trezor never goes below
+its stored counter. `test_a_restored_wm_can_be_stopped_at_any_prefix` and
+`test_known_gap_a_host_can_reopen_an_old_session` in `tests/test_ward_wm.py` pin the
+behavior.
 
 A WM that lost the wallet entirely holds no head to replay onto. Re-enrollment needs the
-genesis `head_init_sig`, which only a Trezor at counter 0 supplies today. The WM-side
-recovery mode, a re-enrollment at genesis, two competing branches, and a write racing
-the replay remain open.
+genesis `head_init_sig`, which only a Trezor at counter 0 supplies today. A re-enrollment
+at genesis, two competing branches, and a write racing the replay remain open.
 
 ### Verified rollback
 

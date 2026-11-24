@@ -100,19 +100,13 @@ in `tests/test_ward_wm.py`.
 
 - **Sessions are volatile.** A restore or a failover must not bring back a session nonce. A
   restored session would make that session's unlanded authorizations valid again.
-- **The replay stops where the record holder chooses.** After a restore, whoever holds the
-  records chooses how far the WM is replayed, and the WM then attests an old genuine head as
-  current. Trezors whose stored counter is past that head refuse it by the counter floor. A fresh
-  Trezor, or one that rarely syncs, accepts it. The fix is open:
-  - Keep a per-wallet high-water mark outside the backup: the highest counter and timestamp the WM
-    ever attested.
-  - After a restore, enter recovery mode. Accept an advance only together with the WM's own record
-    of that exact step, and attest no head as current until the head reaches the high-water mark.
-    Roll-forward advances already come with their records, so wardd would send them along.
-  - Leave recovery without reaching the mark only by an operator decision. Trezors then need the
-    rejoin flow.
-
-  Recovery mode also closes the [reopened nonce](ward_transitions.md#what-a-session-does-not-prevent).
+- **The replay stops where the record holder chooses (accepted gap).** After a restore, whoever
+  holds the records chooses how far the WM is replayed, and the WM then attests an old genuine
+  head as current. Trezors whose stored counter is past that head refuse it by the counter floor.
+  A fresh Trezor, or one that rarely syncs, accepts it. The same restore lets a host
+  [reopen an old session](ward_transitions.md#what-a-session-does-not-prevent). Closing either
+  would need a per-wallet high-water mark that a restore cannot take back, and no acceptable
+  store for it exists. See [WM restore and roll-forward](gaps.md#wm-restore-and-roll-forward).
 - **A wallet the WM lost entirely** has no head to roll onto. Re-enrollment needs the genesis
   `head_init_sig`, which only a Trezor at counter 0 supplies today.
 - **The development WM's durability** is still open. See

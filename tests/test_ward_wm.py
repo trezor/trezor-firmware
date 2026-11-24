@@ -343,10 +343,10 @@ def test_a_new_sync_ends_the_session():
 
 
 def test_known_gap_a_host_can_reopen_an_old_session():
-    """KNOWN GAP, pinned so it is noticed when closed. The WM cannot tell a fresh device nonce from
-    an old one a host replays: asking it to attest under the held authorisation's nonce makes
-    that session current again, and the held write lands. The WM high-water mark and recovery
-    mode in docs/ward/ward_manager.md close it for the restore case."""
+    """ACCEPTED GAP, pinned so a change in behavior is noticed. The WM cannot tell a fresh device
+    nonce from an old one a host replays: asking it to attest under the held authorisation's nonce
+    makes that session current again, and the held write lands. See "WM restore and roll-forward"
+    in docs/ward/gaps.md."""
     wm = _opened()
     held = _sig(wm, 1, ROOT_1, 2, ROOT_2)
     old = wm.session(WARD_ID)
@@ -469,7 +469,7 @@ def test_a_stale_session_named_for_diagnostics_explains_the_refusal():
 def test_a_restored_wm_can_be_stopped_at_any_prefix():
     """THE COST that remains: whoever holds the records decides where the replay stops. The WM
     then attests an older genuine head as current; only devices whose stored counter is already
-    past it refuse it. A high-water mark that survives the restore is what closes this."""
+    past it refuse it. Accepted gap: see "WM restore and roll-forward" in docs/ward/gaps.md."""
     wm = _opened()
     records = _history(wm)
     wm.restore_backup(WARD_ID, 1, ROOT_1, 900)

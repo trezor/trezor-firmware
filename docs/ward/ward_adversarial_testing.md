@@ -261,7 +261,7 @@ catalogue](ward_testing.md#test-catalogue).
   `pytest "tests/test_ward_wm.py::test_an_authorisation_moves_the_head_at_most_once"`
 - **`test_a_new_sync_ends_the_session`** — An authorisation minted in one sync is refused once any device of the wallet syncs again:
   `pytest "tests/test_ward_wm.py::test_a_new_sync_ends_the_session"`
-- **`test_known_gap_a_host_can_reopen_an_old_session`** — KNOWN GAP, pinned so it is noticed when closed.
+- **`test_known_gap_a_host_can_reopen_an_old_session`** — ACCEPTED GAP, pinned so a change in behavior is noticed.
   `pytest "tests/test_ward_wm.py::test_known_gap_a_host_can_reopen_an_old_session"`
 - **`test_a_restored_wm_refuses_the_devices_authorisations`** — The session nonce is volatile, so a restore ends every session:
   `pytest "tests/test_ward_wm.py::test_a_restored_wm_refuses_the_devices_authorisations"`
