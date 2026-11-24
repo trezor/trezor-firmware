@@ -1,5 +1,3 @@
-use core::convert::TryFrom;
-
 use super::decode::{protobuf_decode, Decoder};
 use super::defs::{find_name_by_msg_offset, get_msg, MsgDef};
 use super::encode::{protobuf_encode, protobuf_len};
@@ -8,23 +6,21 @@ use crate::micropython::gc::Gc;
 use crate::micropython::macros::{obj_fn_1, obj_fn_2, obj_fn_3, obj_module, obj_type};
 use crate::micropython::map::Map;
 use crate::micropython::module::Module;
-use crate::micropython::obj::{Obj, ObjBase};
+use crate::micropython::obj::Obj;
+use crate::micropython::py_object::{GcObject, PyClass};
 use crate::micropython::qstr::{Attribute, Qstr};
 use crate::micropython::typ::{FullType, Type};
 use crate::micropython::{ffi, util, Error};
 
-#[repr(C)]
 pub struct MsgObj {
-    base: ObjBase,
     map: Map,
     msg_wire_id: Option<u16>,
     msg_offset: u16,
 }
 
 impl MsgObj {
-    pub fn alloc_with_capacity(capacity: usize, msg: &MsgDef) -> Result<Gc<Self>, Error> {
-        Gc::new(Self {
-            base: Self::obj_type().as_base(),
+    pub fn alloc_with_capacity(capacity: usize, msg: &MsgDef) -> Result<GcObject<Self>, Error> {
+        GcObject::new(Self {
             map: Map::with_capacity(capacity)?,
             msg_wire_id: msg.wire_id,
             msg_offset: msg.offset,
@@ -42,7 +38,9 @@ impl MsgObj {
     pub fn def(&self) -> MsgDef {
         get_msg(self.msg_offset)
     }
+}
 
+impl PyClass for MsgObj {
     fn obj_type() -> &'static Type {
         static TYPE: FullType = obj_type! {
             name: Qstr::MP_QSTR_Msg,
@@ -98,44 +96,19 @@ impl MsgObj {
     }
 }
 
-impl From<Gc<MsgObj>> for Obj {
-    fn from(value: Gc<MsgObj>) -> Self {
-        // SAFETY:
-        //  - `value` is GC-allocated.
-        //  - `value` is `repr(C)`.
-        //  - `value` has a `base` as the first field with the correct type.
-        unsafe { Self::from_ptr(Gc::into_raw(value).cast()) }
-    }
-}
-
-impl TryFrom<Obj> for Gc<MsgObj> {
-    type Error = Error;
-
-    fn try_from(value: Obj) -> Result<Self, Self::Error> {
-        if MsgObj::obj_type().is_type_of(value) {
-            // SAFETY: We assume that if `value` is an object pointer with the correct type,
-            // it is always GC-allocated.
-            let this = unsafe { Gc::from_raw(value.as_ptr().cast()) };
-            Ok(this)
-        } else {
-            Err(Error::TypeError)
-        }
-    }
-}
-
 unsafe extern "C" fn msg_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj) {
     let block = || {
-        let mut this = Gc::<MsgObj>::try_from(self_in)?;
+        let this = GcObject::<MsgObj>::try_from(self_in)?;
         let attr = Attribute::from_raw(attr);
 
         unsafe {
             if dest.read().is_null() {
                 // Load attribute.
-                dest.write(this.getattr(attr)?);
+                dest.write(this.borrow().getattr(attr)?);
             } else {
                 let value = dest.offset(1).read();
                 // Store attribute.
-                Gc::as_mut(&mut this).setattr(attr, value)?;
+                this.borrow_mut().setattr(attr, value)?;
                 dest.write(Obj::const_null());
             }
             Ok(())
@@ -144,25 +117,7 @@ unsafe extern "C" fn msg_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj)
     unsafe { util::try_or_raise(block) }
 }
 
-#[repr(C)]
-pub struct MsgDefObj {
-    base: ObjBase,
-    def: MsgDef,
-}
-
-impl MsgDefObj {
-    pub fn alloc(def: MsgDef) -> Result<Gc<Self>, Error> {
-        let this = Gc::new(Self {
-            base: Self::obj_type().as_base(),
-            def,
-        })?;
-        Ok(this)
-    }
-
-    pub fn msg(&self) -> &MsgDef {
-        &self.def
-    }
-
+impl PyClass for MsgDef {
     fn obj_type() -> &'static Type {
         static TYPE: FullType = obj_type! {
             name: Qstr::MP_QSTR_MsgDef,
@@ -173,34 +128,10 @@ impl MsgDefObj {
     }
 }
 
-impl From<Gc<MsgDefObj>> for Obj {
-    fn from(value: Gc<MsgDefObj>) -> Self {
-        // SAFETY:
-        //  - `value` is GC-allocated.
-        //  - `value` is `repr(C)`.
-        //  - `value` has a `base` as the first field with the correct type.
-        unsafe { Self::from_ptr(Gc::into_raw(value).cast()) }
-    }
-}
-
-impl TryFrom<Obj> for Gc<MsgDefObj> {
-    type Error = Error;
-
-    fn try_from(value: Obj) -> Result<Self, Self::Error> {
-        if MsgDefObj::obj_type().is_type_of(value) {
-            // SAFETY: We assume that if `value` is an object pointer with the correct type,
-            // it is always GC-allocated.
-            let this = unsafe { Gc::from_raw(value.as_ptr().cast()) };
-            Ok(this)
-        } else {
-            Err(Error::TypeError)
-        }
-    }
-}
-
 unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj) {
     let block = || {
-        let this = Gc::<MsgDefObj>::try_from(self_in)?;
+        let this = GcObject::<MsgDef>::try_from(self_in)?;
+        let this = this.borrow();
         let attr = Attribute::from_raw(attr);
 
         let arg = unsafe { dest.read() };
@@ -212,14 +143,14 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
         match attr.into() {
             Qstr::MP_QSTR_MESSAGE_NAME => {
                 // Return the QSTR name of this message def.
-                let name = Qstr::from_u16(unwrap!(find_name_by_msg_offset(this.def.offset)));
+                let name = Qstr::from_u16(unwrap!(find_name_by_msg_offset(this.offset)));
                 unsafe {
                     dest.write(name.into());
                 };
             }
             Qstr::MP_QSTR_MESSAGE_WIRE_TYPE => {
                 // Return the wire type of this message def.
-                let wire_id_obj = this.def.wire_id.map_or_else(Obj::const_none, Into::into);
+                let wire_id_obj = this.wire_id.map_or_else(Obj::const_none, Into::into);
                 unsafe {
                     dest.write(wire_id_obj);
                 };
@@ -249,11 +180,12 @@ unsafe extern "C" fn msg_def_obj_call(
     args: *const Obj,
 ) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let this = Gc::<MsgDefObj>::try_from(self_in)?;
+        let this = GcObject::<MsgDef>::try_from(self_in)?;
+        let this = this.borrow();
         let decoder = Decoder {
             enable_experimental: true,
         };
-        let obj = decoder.message_from_values(kwargs, this.msg())?;
+        let obj = decoder.message_from_values(kwargs, &this)?;
         Ok(obj)
     };
     unsafe { util::try_with_args_and_kwargs_inline(n_args, n_kw, args, block) }
@@ -261,10 +193,11 @@ unsafe extern "C" fn msg_def_obj_call(
 
 unsafe extern "C" fn msg_def_obj_is_type_of(self_in: Obj, obj: Obj) -> Obj {
     let block = || {
-        let this = Gc::<MsgDefObj>::try_from(self_in)?;
-        let msg = Gc::<MsgObj>::try_from(obj);
+        let this = GcObject::<MsgDef>::try_from(self_in)?;
+        let this = this.borrow();
+        let msg = GcObject::<MsgObj>::try_from(obj);
         match msg {
-            Ok(msg) if msg.msg_offset == this.def.offset => Ok(Obj::const_true()),
+            Ok(msg) if msg.borrow().msg_offset == this.offset => Ok(Obj::const_true()),
             _ => Ok(Obj::const_false()),
         }
     };
@@ -281,14 +214,14 @@ pub extern "C" fn protobuf_debug_msg_type() -> &'static Type {
 
 #[no_mangle]
 pub extern "C" fn protobuf_debug_msg_def_type() -> &'static Type {
-    MsgDefObj::obj_type()
+    MsgDef::obj_type()
 }
 
 pub extern "C" fn protobuf_type_for_name(name: Obj) -> Obj {
     let block = || {
         let name = Qstr::try_from(name)?;
         let def = MsgDef::for_name(name.to_u16()).ok_or_else(|| Error::KeyError(name.into()))?;
-        let obj = MsgDefObj::alloc(def)?.into();
+        let obj = GcObject::<MsgDef>::new(def)?.into();
         Ok(obj)
     };
     unsafe { util::try_or_raise(block) }
@@ -300,7 +233,7 @@ pub extern "C" fn protobuf_type_for_wire(enum_name: Obj, wire_id: Obj) -> Obj {
         let enum_name = Qstr::try_from(enum_name)?;
         let def = MsgDef::for_wire_id(enum_name.to_u16(), wire_id)
             .ok_or_else(|| Error::KeyError(wire_id.into()))?;
-        let obj = MsgDefObj::alloc(def)?.into();
+        let obj = GcObject::<MsgDef>::new(def)?.into();
         Ok(obj)
     };
     unsafe { util::try_or_raise(block) }
