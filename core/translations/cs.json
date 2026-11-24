@@ -408,12 +408,7 @@
       "Eckhart": ""
     },
     "buttons__continue": "Pokračovat",
-    "buttons__continue_anyway": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "Přesto pokračovat",
-      "Eckhart": "Přesto pokračovat"
-    },
+    "buttons__continue_anyway": "Přesto pokračovat",
     "buttons__details": "Podrobnosti",
     "buttons__disconnect": {
       "Bolt": "",
@@ -2001,7 +1996,7 @@
       "Eckhart": ""
     },
     "reset__you_need_one_share": {
-      "Bolt": "Pro obnovení potřebujete 1 podíl.",
+      "Bolt": "Pro obnovení budete potřebovat jeden podíl.",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -2182,7 +2177,7 @@
       "Delizia": "Jsou použity různé cesty pro různé XPUBy.",
       "Eckhart": "Jsou použity různé cesty pro různé XPUBy."
     },
-    "send__receiving_to_multisig": "Příjem na adresách multisig.",
+    "send__receiving_to_multisig": "Přijímáte na multisig adresu.",
     "send__send_from": "Odeslání z",
     "send__send_in_the_app": {
       "Bolt": "",
