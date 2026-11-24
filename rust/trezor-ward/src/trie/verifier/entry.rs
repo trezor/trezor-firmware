@@ -267,8 +267,9 @@ impl<K: Key, H: HashFn> VacantEntry<'_, K, H> {
             self.root.0 = new_leaf;
             return;
         };
-        // Steps are leaf-to-root, so those below the new branch come first: the terminal
-        // leaf's own path, up to the first branch at or above `c`.
+        // The steps below the new branch come first, since steps are leaf-to-root: they are
+        // the ones whose crit bit is greater than `c`. None has crit bit `c` itself: the lookup
+        // found the two keys agreeing wherever the path branches, and at `c` they differ.
         let mut steps = self.proof.steps().peekable();
         let subtree = fold(
             leaf_digest::<K, H>(&terminal.key, &terminal.value_digest),
