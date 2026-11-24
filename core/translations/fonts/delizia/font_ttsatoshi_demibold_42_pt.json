@@ -13,6 +13,7 @@
     "à": "142017011f0010fdff5f00000000000000f2ffef0100000000000040ffff0b00000000000000f7ff5f00000000000000a0ffef0100000000000000fcff0b00000000000000000000000000000000000000000000000000000000000000000000000093edef9d0400000000a2ffffffffdf03000040ffffffffffff4f0000e1ffffffffffffff0200fbffff6b74fcffff0b20ffff7f0000a0ffff1f60ffff0c000010feff5f00000000000000fbff7f00000000000000f9ff9f000071dbffffffffff9f0080ffffffffffffff9f00faffffffffffffff9f60ffffffcebbbbfdff9fd0ffff3d000000f9ff9ff2ffff03000000fbff9ff3ffff00000000feff9ff3ffff00000060ffff9ff1ffff060000e4ffff9fd0ffff8f34a5ffffff9f40ffffffffffffffff9f00f9fffffffffffbff9f0070ffffffff6ff0ff9f000091edef6b01000000",
     "á": "142017011f000000000000fbff9f00000000000060ffff0b000000000000f1ffdf01000000000000fbff2f00000000000060ffff04000000000000f1ff7f00000000000000000000000000000000000000000000000000000000000000000000000093edef9d0400000000a2ffffffffdf03000040ffffffffffff4f0000e1ffffffffffffff0200fbffff6b74fcffff0b20ffff7f0000a0ffff1f60ffff0c000010feff5f00000000000000fbff7f00000000000000f9ff9f000071dbffffffffff9f0080ffffffffffffff9f00faffffffffffffff9f60ffffffcebbbbfdff9fd0ffff3d000000f9ff9ff2ffff03000000fbff9ff3ffff00000000feff9ff3ffff00000060ffff9ff1ffff060000e4ffff9fd0ffff8f34a5ffffff9f40ffffffffffffffff9f00f9fffffffffffbff9f0070ffffffff6ff0ff9f000091edef6b01000000",
     "ã": "141f17011e000020eabe0410ff8f000000f3ffffbfc8ff5f000000fcffffffffff1f000020ffefb8ffffff07000040ff4f00b3ff5d000000001101000000000000000000000000000000000000000000000000000000000093edef9d0400000000a2ffffffffdf03000040ffffffffffff4f0000e1ffffffffffffff0200fbffff6b74fcffff0b20ffff7f0000a0ffff1f60ffff0c000010feff5f00000000000000fbff7f00000000000000f9ff9f000071dbffffffffff9f0080ffffffffffffff9f00faffffffffffffff9f60ffffffcebbbbfdff9fd0ffff3d000000f9ff9ff2ffff03000000fbff9ff3ffff00000000feff9ff3ffff00000060ffff9ff1ffff060000e4ffff9fd0ffff8f34a5ffffff9f40ffffffffffffffff9f00f9fffffffffffbff9f0070ffffffff6ff0ff9f000091edef6b01000000",
+    "â": "142017011f00000020feff5f000000000000d1ffffff030000000000fbffffff2e0000000090ffffd5ffdf00000000f6ff5f20feff0b000040ffff0800f3ff8f0000000000000000000000000000000000000000000000000000000000000000000093edef9d0400000000a2ffffffffdf03000040ffffffffffff4f0000e1ffffffffffffff0200fbffff6b74fcffff0b20ffff7f0000a0ffff1f60ffff0c000010feff5f00000000000000fbff7f00000000000000f9ff9f000071dbffffffffff9f0080ffffffffffffff9f00faffffffffffffff9f60ffffffcebbbbfdff9fd0ffff3d000000f9ff9ff2ffff03000000fbff9ff3ffff00000000feff9ff3ffff00000060ffff9ff1ffff060000e4ffff9fd0ffff8f34a5ffffff9f40ffffffffffffffff9f00f9fffffffffffbff9f0070ffffffff6ff0ff9f000091edef6b01000000",
     "ç": "162018011600000040d9fece38000000000050fdffffffff2b00000000f9ffffffffffff040000a0ffffffffffffff2e0000f7ffffffcefeffffdf0010ffffff2a0020fbffff0890ffff6f000000a0ffff0de0ffff0b00000010ffff3ff3ffff0200000000101101f5ffff0000000000000000f6ffcf0000000000000000f6ffdf0000000000000000f5ffff0000000000000000f2ffff0300000000656626e0ffff0d00000020ffff2f90ffff9f000000c0ffff0c20ffffff5d0151fdffff0600f8ffffffffffffffbf0000c0ffffffffffffff1e000010fcffffffffffcf0100000080ffffffffff07000000000081fcff9e0500000000000000f1ff070000000000000000f7ff080000000000000000f8ffdf020000000000000000f4ff0b0000000000000000a0ff0f0000000000000000f4ff0f00000000000020ffffff0d00000000000020ffffff0300000000000020ffef2b000000000000000011000000000000",
     "é": "162018011f000000000000f3ffff0200000000000000fdff4f0000000000000080ffff0700000000000000f3ffaf0000000000000000fdff0c0000000000000080ffef0100000000000000000000000000000000000000000000000000000000000000000000000000000040d9fece27000000000040fdffffffff1a00000000f8ffffffffffef03000090ffffffffffffff2f0000f6ffff9f46c7ffffdf0010ffffcf020000f6ffff0780ffff1e00000080ffff0ed0ffff0400000000fdff4ff1ffff0000000000f9ff8ff4ffdf7777777777fbffaff6ffffffffffffffffffcff6ffffffffffffffffffcff5ffffffffffffffffffaff4ffcf0000000000000000f1ffff0100000000000000c0ffff070000000000000060ffff2f00000050eeee0d00feffef040000f5ffff0800f5ffffbf57c7ffffef010090ffffffffffffff3f000000f8ffffffffffff0400000040fdffffffff1a000000000040d9fece38000000",
     "ê": "162018011f00000000f8ffdf0100000000000050ffffff0b000000000000f3ffffff9f000000000020feff6bffff0600000000d0ffdf01f8ff4f00000000fbff2e00a0ffff020000000000000000000000000000000000000000000000000000000000000000000000000040d9fece27000000000040fdffffffff1a00000000f8ffffffffffef03000090ffffffffffffff2f0000f6ffff9f46c7ffffdf0010ffffcf020000f6ffff0780ffff1e00000080ffff0ed0ffff0400000000fdff4ff1ffff0000000000f9ff8ff4ffdf7777777777fbffaff6ffffffffffffffffffcff6ffffffffffffffffffcff5ffffffffffffffffffaff4ffcf0000000000000000f1ffff0100000000000000c0ffff070000000000000060ffff2f00000050eeee0d00feffef040000f5ffff0800f5ffffbf57c7ffffef010090ffffffffffffff3f000000f8ffffffffffff0400000040fdffffffff1a000000000040d9fece38000000",
@@ -525,6 +526,11 @@
     ],
     [
       "Ç",
+      "â",
+      -1
+    ],
+    [
+      "Ç",
       "A",
       -1
     ],
@@ -919,6 +925,11 @@
       -1
     ],
     [
+      "C",
+      "â",
+      -1
+    ],
+    [
       "D",
       "À",
       -1
@@ -981,6 +992,11 @@
     [
       "F",
       "ã",
+      -1
+    ],
+    [
+      "F",
+      "â",
       -1
     ],
     [
@@ -1130,6 +1146,11 @@
     ],
     [
       "P",
+      "â",
+      -2
+    ],
+    [
+      "P",
       "ç",
       -1
     ],
@@ -1211,6 +1232,11 @@
     [
       "R",
       "ã",
+      -1
+    ],
+    [
+      "R",
+      "â",
       -1
     ],
     [
@@ -1296,6 +1322,11 @@
     [
       "T",
       "ã",
+      -3
+    ],
+    [
+      "T",
+      "â",
       -3
     ],
     [
@@ -1400,6 +1431,11 @@
     ],
     [
       "V",
+      "â",
+      -2
+    ],
+    [
+      "V",
       "ç",
       -2
     ],
@@ -1470,6 +1506,11 @@
     ],
     [
       "W",
+      "â",
+      -1
+    ],
+    [
+      "W",
       "ç",
       -1
     ],
@@ -1531,6 +1572,11 @@
     [
       "X",
       "ã",
+      -1
+    ],
+    [
+      "X",
+      "â",
       -1
     ],
     [
@@ -1615,6 +1661,11 @@
     ],
     [
       "Y",
+      "â",
+      -3
+    ],
+    [
+      "Y",
       "ç",
       -3
     ],
@@ -1676,6 +1727,11 @@
     [
       "Z",
       "ã",
+      -1
+    ],
+    [
+      "Z",
+      "â",
       -1
     ],
     [
@@ -1765,6 +1821,11 @@
     ],
     [
       "f",
+      "â",
+      -1
+    ],
+    [
+      "f",
       "ç",
       -1
     ],
@@ -1836,6 +1897,11 @@
     [
       "t",
       "ã",
+      -1
+    ],
+    [
+      "t",
+      "â",
       -1
     ],
     [
