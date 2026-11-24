@@ -612,8 +612,12 @@ impl Input {
         debug_assert_ne!(self.display_style, DisplayStyle::Shown);
 
         let style = theme::label_keyboard();
+        let eye_progress = self.eye_hint.progress();
         let dots_offset = Self::DOTS_OFFSET
-            + EyeHintAnimation::offset(self.eye_hint.content_progress(), Self::DOTS_SLIDE);
+            + EyeHintAnimation::offset(
+                EyeHintAnimation::content_progress(eye_progress),
+                Self::DOTS_SLIDE,
+            );
         let mut cursor = self.area.left_center().ofs(Offset::x(dots_offset));
 
         let pp_len = self.textbox.count();
@@ -629,7 +633,7 @@ impl Input {
         // Eye icon hinting that holding the input reveals the passphrase
         if self.eye_hint.is_visible() {
             let eye_offset = Self::EYE_ICON_PADDING
-                + EyeHintAnimation::offset(self.eye_hint.icon_progress(), Self::EYE_ICON_SLIDE);
+                + EyeHintAnimation::offset(eye_progress, Self::EYE_ICON_SLIDE);
             ToifImage::new(
                 self.area.left_center().ofs(Offset::x(eye_offset)),
                 theme::ICON_EYE.toif,
@@ -713,14 +717,12 @@ impl Component for Input {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if self.eye_hint.process(ctx, event) {
             self.pad.clear();
-        }
-
-        if self.textbox.is_empty() {
-            self.update_eye_hint(ctx);
-            return None;
+            ctx.request_paint();
         }
 
         match event {
+            // No touch events are handled when the textbox is empty
+            _ if self.textbox.is_empty() => {}
             // Reveal on touch start within the input area
             Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
                 self.multi_tap.clear_pending_state(ctx);

@@ -127,10 +127,11 @@ impl PassphraseInput {
             return;
         }
 
+        let eye_progress = self.eye_hint.progress();
+
         // Eye icon hinting that holding the input reveals the passphrase
         if self.eye_hint.is_visible() {
-            let eye_offset =
-                EyeHintAnimation::offset(self.eye_hint.icon_progress(), Self::EYE_ICON_SLIDE);
+            let eye_offset = EyeHintAnimation::offset(eye_progress, Self::EYE_ICON_SLIDE);
             ToifImage::new(
                 hidden_area.left_center().ofs(Offset::x(eye_offset)),
                 theme::ICON_EYE.toif,
@@ -142,7 +143,10 @@ impl PassphraseInput {
 
         let dashes_offset = theme::ICON_EYE.toif.width()
             + Self::EYE_ICON_SPACE
-            + EyeHintAnimation::offset(self.eye_hint.content_progress(), Self::DASHES_SLIDE);
+            + EyeHintAnimation::offset(
+                EyeHintAnimation::content_progress(eye_progress),
+                Self::DASHES_SLIDE,
+            );
         let mut cursor = hidden_area.left_center().ofs(Offset::x(dashes_offset));
 
         // Number of visible icons + characters
@@ -368,7 +372,9 @@ impl Component for PassphraseInput {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.eye_hint.process(ctx, event);
+        if self.eye_hint.process(ctx, event) {
+            ctx.request_paint();
+        }
         let msg = self.handle_event(ctx, event);
         self.update_eye_hint(ctx);
         msg
