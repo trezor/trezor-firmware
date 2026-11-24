@@ -170,6 +170,49 @@ impl PassphraseInput {
             }
         }
     }
+
+    fn handle_event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<StringInputMsg> {
+        // No touch events are handled when the textbox is empty
+        if self.is_empty() {
+            return None;
+        }
+
+        match event {
+            Event::Timer(_) if self.multi_tap.timeout_event(event) => {
+                self.multi_tap.clear_pending_state(ctx);
+                self.last_char_timer.start(ctx, Self::LAST_DIGIT_TIMEOUT);
+                self.display_style = DisplayStyle::LastOnly;
+                // Disable keypad when the passphrase reached the max length
+                if self.is_full() {
+                    return Some(StringInputMsg::UpdateKeypad);
+                }
+                return None;
+            }
+            // Reveal on touch start within the input area
+            Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
+                self.multi_tap.clear_pending_state(ctx);
+                // Stop the last char timer
+                self.last_char_timer.stop();
+                // Show the entire passphrase on the touch start
+                self.display_style = DisplayStyle::Shown;
+                self.update_shown_area();
+                return Some(StringInputMsg::UpdateKeypad);
+            }
+            // Hide on touch end anywhere on the screen
+            Event::Touch(TouchEvent::TouchEnd(_)) if self.display_style == DisplayStyle::Shown => {
+                self.multi_tap.clear_pending_state(ctx);
+                self.display_style = DisplayStyle::Hidden;
+                return Some(StringInputMsg::UpdateKeypad);
+            }
+            // Timeout for showing the last char.
+            Event::Timer(_) if self.last_char_timer.expire(event) => {
+                self.display_style = DisplayStyle::Hidden;
+                ctx.request_paint();
+            }
+            _ => {}
+        };
+        None
+    }
 }
 
 impl StringInput for PassphraseInput {
@@ -286,46 +329,7 @@ impl Component for PassphraseInput {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // No touch events are handled when the textbox is empty
-        if self.is_empty() {
-            return None;
-        }
-
-        match event {
-            Event::Timer(_) if self.multi_tap.timeout_event(event) => {
-                self.multi_tap.clear_pending_state(ctx);
-                self.last_char_timer.start(ctx, Self::LAST_DIGIT_TIMEOUT);
-                self.display_style = DisplayStyle::LastOnly;
-                // Disable keypad when the passphrase reached the max length
-                if self.is_full() {
-                    return Some(StringInputMsg::UpdateKeypad);
-                }
-                return None;
-            }
-            // Reveal on touch start within the input area
-            Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
-                self.multi_tap.clear_pending_state(ctx);
-                // Stop the last char timer
-                self.last_char_timer.stop();
-                // Show the entire passphrase on the touch start
-                self.display_style = DisplayStyle::Shown;
-                self.update_shown_area();
-                return Some(StringInputMsg::UpdateKeypad);
-            }
-            // Hide on touch end anywhere on the screen
-            Event::Touch(TouchEvent::TouchEnd(_)) if self.display_style == DisplayStyle::Shown => {
-                self.multi_tap.clear_pending_state(ctx);
-                self.display_style = DisplayStyle::Hidden;
-                return Some(StringInputMsg::UpdateKeypad);
-            }
-            // Timeout for showing the last char.
-            Event::Timer(_) if self.last_char_timer.expire(event) => {
-                self.display_style = DisplayStyle::Hidden;
-                ctx.request_paint();
-            }
-            _ => {}
-        };
-        None
+        self.handle_event(ctx, event)
     }
 
     fn render<'s>(&self, target: &mut impl Renderer<'s>) {
