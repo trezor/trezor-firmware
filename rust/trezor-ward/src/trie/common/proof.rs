@@ -105,8 +105,7 @@ impl<B: AsRef<[u8]>, K: Key, H: HashFn> Proof<B, K, H> {
     pub fn parse(bytes: B) -> Result<Self, Error> {
         let len = bytes.as_ref().len();
         if len != 0
-            && (len < Leaf::<K, H>::LEN
-                || !(len - Leaf::<K, H>::LEN).is_multiple_of(Step::<K, H>::LEN))
+            && (len < Leaf::<K, H>::LEN || (len - Leaf::<K, H>::LEN) % Step::<K, H>::LEN != 0)
         {
             return Err(Error::Length);
         }
