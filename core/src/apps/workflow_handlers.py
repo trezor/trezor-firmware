@@ -190,6 +190,8 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.ward.persist_setting"
         if msg_type == MessageType.WardRollback:
             return "apps.ward.rollback"
+        if msg_type == MessageType.WardRollForward:
+            return "apps.ward.roll_forward"
         if msg_type == MessageType.WardRejoin:
             return "apps.ward.rejoin"
         if msg_type == MessageType.WardPinCachedEntry:

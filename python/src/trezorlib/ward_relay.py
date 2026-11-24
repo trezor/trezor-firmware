@@ -57,7 +57,7 @@ DEFAULT_TOKEN_FILE = Path.home() / ".trezor-ward" / "token"
 # whatever answers on the wardd port cannot drive the wallet.
 DEVICE_CALLS = frozenset(
     "WardSync WardIngestAttestation WardReconcile WardVerifyChain WardCatchUp WardRejoin "
-    "WardFlushQueue WardEntryAck WardChainLinkAck".split()
+    "WardRollForward WardFlushQueue WardEntryAck WardChainLinkAck".split()
 )
 
 _WS_GUID = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"

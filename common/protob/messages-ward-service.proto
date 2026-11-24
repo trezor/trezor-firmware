@@ -126,12 +126,7 @@ message WardSyncResponse {
     optional uint32 from_counter = 8;
     optional bytes  from_root    = 9;  // absent means the empty tree
 
-    // BOTH ENDS OF THE WM'S HEAD NONCE, covered by the signature: the token it rotates on every
-    // accepted transition. `to_head_nonce` is quoted forward in the device's next `wm_sig`;
-    // `from_head_nonce` is the one this step consumed, which is what names the OCCURRENCE rather
-    // than the transition. See WardPublish.wm_sig and apps/ward/cas.
-    optional bytes  from_head_nonce = 11;  // 32B
-    optional bytes  to_head_nonce   = 10;  // 32B
+    reserved 10, 11;  // were the WM head nonces
 }
 
 /**
@@ -188,7 +183,7 @@ message WardPublish {
     reserved 5;
 
     optional bytes  auth_commit = 6;   // for another device of this wallet
-    optional bytes  wm_sig      = 7;   // for the WM: those bytes plus its current head nonce
+    optional bytes  wm_sig      = 7;   // for the WM: the same transition, bound to the session nonce
     optional bytes  nonce       = 8;   // 32B, so the attestation that comes back is for THIS write
 
     // The two ends of the transition, because the WM verifies `wm_sig` over them and
@@ -213,12 +208,7 @@ message WardPublishAck {
     optional uint64 timestamp    = 3;
     optional bytes  wm_signature = 4;  // over the nonce from WardPublish
 
-    // BOTH ENDS OF THE WM'S HEAD NONCE, covered by the signature: the token it rotates on every
-    // accepted transition. `to_head_nonce` is quoted forward in the device's next `wm_sig`;
-    // `from_head_nonce` is the one this step consumed, which is what names the OCCURRENCE rather
-    // than the transition. See WardPublish.wm_sig and apps/ward/cas.
-    optional bytes  from_head_nonce = 6;  // 32B
-    optional bytes  to_head_nonce   = 5;  // 32B
+    reserved 5, 6;  // were the WM head nonces
 }
 
 /**

@@ -317,12 +317,10 @@ def ingest_attestation(
     to_counter: int,
     to_root: Optional[bytes],
     wm_signature: bytes,
-    from_head_nonce: bytes,
-    to_head_nonce: bytes,
     timestamp: int = 0,
 ) -> messages.WardIngestAttestationAck:
     """Deliver the WM's signed transition into its head for the open round. Genesis is
-    `(0, empty) -> (0, empty)`; the head nonces are the WM's, covered by its signature."""
+    `(0, empty) -> (0, empty)`."""
     msg = messages.WardIngestAttestation(**_fields(locals()))
     return session.call(msg, expect=messages.WardIngestAttestationAck)
 
@@ -368,8 +366,6 @@ class CachedAttestation(NamedTuple):
     nonce: bytes
     from_counter: int
     from_root: Optional[bytes]
-    from_head_nonce: bytes
-    to_head_nonce: bytes
     timestamp: int
     wm_signature: bytes
 
@@ -405,8 +401,6 @@ def catch_up(
                     nonce=attestation.nonce,
                     from_counter=attestation.from_counter,
                     from_root=attestation.from_root,
-                    from_head_nonce=attestation.from_head_nonce,
-                    to_head_nonce=attestation.to_head_nonce,
                     timestamp=attestation.timestamp,
                     wm_signature=attestation.wm_signature,
                 )
@@ -440,6 +434,16 @@ def rejoin(
     )
 
 
+# Links with WM attestations are ~250 bytes each; 16 keep a page well inside the 8704-byte buffer.
+_ACCEPTANCE_PAGE = 16
+
+# `(from_counter, from_root, to_counter, to_root)` -> the WM's archived attestation of that step.
+AcceptanceSource = t.Callable[
+    [int, Optional[bytes], int, Optional[bytes]],
+    Optional[messages.WardChainAcceptance],
+]
+
+
 def _chain_walk(
     session: "Session",
     msg: "protobuf.MessageType",
@@ -447,24 +451,16 @@ def _chain_walk(
     max_links_per_ack: int,
     expected: type,
     what: str,
-    acceptance_source: "Callable[[bytes], messages.WardChainLink | None] | None" = None,
+    acceptance_source: "AcceptanceSource | None" = None,
 ) -> t.Any:
     """Send `msg`, answer the device's `WardChainRequest`s from `link_source`, and return the
-    final response, which must be an `expected`."""
+    final response, which must be an `expected`. A request with `with_acceptance` gets each
+    link's archived WM attestation from `acceptance_source`, in smaller pages."""
     res = session.call(msg)
     while isinstance(res, messages.WardChainRequest):
-        occurrence = res.to_head_nonce
-        accepted_link = (
-            acceptance_source(occurrence)
-            if occurrence is not None and acceptance_source is not None
-            else None
-        )
-        if accepted_link is not None:
-            res = session.call(messages.WardChainLinkAck(links=[accepted_link]))
-            continue
-        links = link_source(
-            res.to_counter, res.to_root, 1 if occurrence is not None else max_links_per_ack
-        )
+        receipts = bool(res.with_acceptance) and acceptance_source is not None
+        limit = min(max_links_per_ack, _ACCEPTANCE_PAGE) if receipts else max_links_per_ack
+        links = link_source(res.to_counter, res.to_root, limit)
         res = session.call(
             messages.WardChainLinkAck(
                 links=[
@@ -474,6 +470,11 @@ def _chain_walk(
                         to_counter=tc,
                         to_root=tr,
                         auth_commit=ac,
+                        acceptance=(
+                            acceptance_source(fc, fr, tc, tr)
+                            if receipts and acceptance_source is not None
+                            else None
+                        ),
                     )
                     # the operation is host-side bookkeeping, never on the wire
                     for (fc, fr, tc, tr, ac) in (lnk[:5] for lnk in links)
@@ -492,12 +493,10 @@ def rollback(
     to_counter: int,
     to_root: Optional[bytes],
     wm_signature: bytes,
-    from_head_nonce: bytes,
-    to_head_nonce: bytes,
     *,
     recovered_counter: int,
     link_source: LinkSource,
-    acceptance_source: "Callable[[bytes], messages.WardChainLink | None] | None" = None,
+    acceptance_source: "AcceptanceSource | None" = None,
     recovered_root: Optional[bytes] = None,
     timestamp: int = 0,
 ) -> messages.WardRollbackAck:
@@ -505,8 +504,8 @@ def rollback(
 
     The operands are the WM's own head, attested this round. Nothing is adopted: publish the
     REVERT to the WM, sync, and record it with `apply_rollback`.
-    Supply links with archived WM attestations by head nonce through `acceptance_source`.
-    The live attestation already proves the newest step when the WM is the anchor.
+    `acceptance_source` supplies each historical link's archived WM attestation. The live
+    attestation already proves the newest step when the WM is the anchor.
     """
     msg = messages.WardRollback(
         from_counter=from_counter,
@@ -514,14 +513,50 @@ def rollback(
         to_counter=to_counter,
         to_root=to_root,
         wm_signature=wm_signature,
-        from_head_nonce=from_head_nonce,
-        to_head_nonce=to_head_nonce,
         recovered_counter=recovered_counter,
         recovered_root=recovered_root,
         timestamp=timestamp,
     )
     return _chain_walk(
         session, msg, link_source, 64, messages.WardRollbackAck, "the revert", acceptance_source
+    )
+
+
+def roll_forward(
+    session: "Session",
+    from_counter: int,
+    from_root: Optional[bytes],
+    to_counter: int,
+    to_root: Optional[bytes],
+    wm_signature: bytes,
+    links: "list[messages.WardChainLink]",
+    timestamp: int = 0,
+    final: bool = True,
+) -> messages.WardRollForwardAck:
+    """Have the device sign again, for this round's session, transitions the WM accepted before
+    its register went back.
+
+    The first five operands are the WM's live attestation of its current head, against the open
+    round. `links` run oldest first from that head; each must carry its WM acceptance record
+    (`WardChainLink.acceptance`) and its `auth_commit`. Returns one `wm_sig` per link, to submit to
+    the WM as ordinary advances. At most 16 links per call.
+
+    Only in a round whose `ingest_attestation` reported `wm_behind`. The device asks the user to
+    approve on the first page; `final` marks the last page, on which it shows the restored head and
+    when the WM accepted its last change (also returned as `last_timestamp`).
+    """
+    return session.call(
+        messages.WardRollForward(
+            from_counter=from_counter,
+            from_root=from_root,
+            to_counter=to_counter,
+            to_root=to_root,
+            timestamp=timestamp,
+            wm_signature=wm_signature,
+            links=links,
+            final=final,
+        ),
+        expect=messages.WardRollForwardAck,
     )
 
 

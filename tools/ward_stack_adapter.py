@@ -20,8 +20,11 @@ syncs and flushes: the relay stores it and the WM accepts it -> the second devic
 flushes: contact1 is resolved KEEP ORIGINAL, contact2 KEEP NEW -> both devices read the same
 resolved values -> the first device progresses -> WM DOWN -> the second device catches up to it
 without the WM -> serving the second device a root OLDER than it stored is refused, as a head and
-as a read -> an entry added and then deleted leaves exactly the root from before the add, on the
-device and in both replicas.
+as a read -> after the WM restarted, a write from the session before is refused -> an entry added
+and then deleted leaves exactly the root from before the add, on the device and in both replicas
+-> THE WM IS RESTORED FROM A BACKUP taken at #10 -> the first device detects it during its sync,
+the user approves, the device signs the changes since again (roll-forward) and shows when the WM
+accepted the last of them -> the WM is back at the head, and the next sync just reconciles.
 
 Counters are relative to the head the session starts at, so the arc can be rerun on the same
 device. The WM steps need the stack's run directory (`WARD_STACK_RUN_DIR`) and are skipped
@@ -481,6 +484,9 @@ def conflicts(
                 shown,
             )
             st_a, st_b = ward_relay.status(wardd_a), ward_relay.status(wardd_b)
+            # A BACKUP OF THE WM'S REGISTER at this head, restored at the end of the session
+            wm_backup = run_dir / "wm-backup.json"
+            wm_backup.write_bytes((run_dir / "wm" / "wm.json").read_bytes())
             step(
                 "both wardd replicas and the WM agree",
                 st_a.get("counter") == st_b.get("counter") == st_a.get("wmCounter") == base + 10
@@ -543,6 +549,20 @@ def conflicts(
 
             # ADD, THEN DELETE: the tree depends on what it holds, not on what it once held
             print("== WARD stack: add an entry, then delete it", flush=True)
+            # THE WM RESTARTED, and its sessions are volatile: a write device 1 authorises in the
+            # session it synced before the restart is refused, so it syncs before it writes
+            # (docs/ward/ward_transitions.md, sessions)
+            stale = ward.set_entry(a, APP_ID, b"temp", b"stale", provider_a)
+            try:
+                provider_a.apply_result(stale)
+                step("a write from the session before the WM restart is refused", False, "it landed")
+            except ward_relay.WarddError as e:
+                step(
+                    "a write from the session before the WM restart is refused",
+                    "no session" in str(e),
+                    str(e),
+                )
+            ward_relay.sync(a, wardd_a)
             root_before = ward_relay.status(wardd_a).get("root")
             result = ward.set_entry(a, APP_ID, b"temp", b"short_lived", provider_a)
             provider_a.apply_result(result)
@@ -566,6 +586,56 @@ def conflicts(
                 "device 2's replica rebuilt the same root from the relay",
                 st_b.get("root") == root_before,
                 str(st_b),
+            )
+
+            # THE WM IS RESTORED FROM A BACKUP: its register goes back to #10 and its sessions are
+            # gone. Device 1 detects it during its sync, the user approves, the device signs the
+            # changes the WM accepted since again for this session, and finally shows when the WM
+            # accepted the last of them (docs/ward/ward_transitions.md, roll-forward)
+            print("== WARD stack: the WM restored from a backup, rolled forward", flush=True)
+            restored_to = base + 10
+            switch_wm(run_dir, down=True)
+            (run_dir / "wm" / "wm.json").write_bytes(wm_backup.read_bytes())
+            up = switch_wm(run_dir, down=False)
+            st = ward_relay.status(wardd_a)
+            step(
+                "WM restored from the backup at #%d" % restored_to,
+                up and st.get("wmCounter") == restored_to,
+                str(st),
+            )
+            screens_a.take()
+            rolled = ward_relay.sync(a, wardd_a)
+            shown = screens_a.take()
+            outcome = rolled.get("rolledForward") or {}
+            step(
+                "device 1 detected the restored WM during sync, and the user approved",
+                "RestoreWARDhistory" in shown,
+                shown,
+            )
+            step(
+                "device 1 signed #%d -> #%d again; the WM accepted them"
+                % (restored_to, base + 13),
+                outcome.get("steps") == 3 and outcome.get("toCounter") == base + 13,
+                str(rolled),
+            )
+            accepted = outcome.get("lastTimestamp") or 0
+            day = time.strftime("%Y-%m-%d", time.gmtime(accepted))
+            step(
+                "device 1 showed when the WM accepted the last restored change (%s UTC)"
+                % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(accepted)),
+                "WARDhistoryrestored" in shown and "Lastchangeaccepted" in shown and day in shown,
+                shown,
+            )
+            st_a = ward_relay.status(wardd_a)
+            step(
+                "the WM is back at #%d, and the replica agrees" % (base + 13),
+                st_a.get("wmCounter") == st_a.get("counter") == base + 13
+                and st_a.get("wmRoot") == st_a.get("root") == root_before,
+                str(st_a),
+            )
+            step(
+                "device 1 adopted it: the next sync just reconciles",
+                ward_relay.sync(a, wardd_a).get("counter") == base + 13,
             )
     finally:
         debug_b.close()

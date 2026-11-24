@@ -441,10 +441,8 @@ class MockWardService:
         (
             att_from_counter,
             att_from_root,
-            att_from_head_nonce,
             att_counter,
             att_root,
-            att_to_head_nonce,
             att_timestamp,
             signature,
         ) = self.wm.attest(ward_id, request.nonce)
@@ -456,8 +454,6 @@ class MockWardService:
             to_root=att_root,
             timestamp=att_timestamp,
             wm_signature=signature,
-            from_head_nonce=att_from_head_nonce,
-            to_head_nonce=att_to_head_nonce,
         )
 
     def _chain_response(self, request):
@@ -554,10 +550,8 @@ class MockWardService:
             (
                 _afc,
                 _afr,
-                from_head_nonce,
                 counter,
                 root,
-                to_head_nonce,
                 timestamp,
                 signature,
             ) = self.wm.publish_and_attest(
@@ -590,18 +584,14 @@ class MockWardService:
                 request.nonce,
                 counter - 1,
                 head_root,
-                from_head_nonce,
                 counter,
                 root,
-                to_head_nonce,
                 timestamp,
             )
 
         return messages.WardPublishAck(
             timestamp=timestamp,
             wm_signature=signature,
-            from_head_nonce=from_head_nonce,
-            to_head_nonce=to_head_nonce,
         )
 
     def _commit(self, request) -> None:

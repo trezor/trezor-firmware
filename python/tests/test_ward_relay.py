@@ -369,8 +369,8 @@ def test_websocket_refuses_a_non_ws_url() -> None:
 # --- against the real wardd -------------------------------------------------------------------
 
 SUITE = os.environ.get("WARDD_SUITE_DIR")
-TAG_WM_HEAD = b"WARD WM COMMIT v3"
-TAG_WM_INIT = b"WARD WM INIT v3"
+TAG_WM_HEAD = b"WARD WM COMMIT v5"
+TAG_WM_INIT = b"WARD WM INIT v4"
 
 
 def _preimage(
@@ -398,7 +398,6 @@ class FakeDevice:
         self.ward_id = _ed25519.publickey_unsafe(self.k_sig)
         self.counter: int = 0
         self.root: bytes | None = None
-        self.head_nonce: bytes = b"\x00" * 32
         self.inflight: int | None = None  # the counter the change in flight would reach
         self.queue: list[tuple[bytes, bytes]] = []  # (entry_key, sealed_content)
 
@@ -415,21 +414,22 @@ class FakeDevice:
                 self.counter,
                 self.root,
             )
+            # the session nonce: this device picks it, and binds its next wm_sig to it
+            self.session = os.urandom(32)
             return messages.WardSyncAck(
-                nonce=os.urandom(32),
+                nonce=self.session,
                 ward_id=self.ward_id,
                 counter=self.counter,
                 # as the firmware: the root only at genesis (apps/ward/sync.py)
                 root=self.root if self.counter == 0 else None,
-                head_init_sig=self._sign(pre + b"\x00" * 32),
+                head_init_sig=self._sign(pre),
             )
         if isinstance(msg, messages.WardIngestAttestation):
             self.pending = msg
             return messages.WardIngestAttestationAck(counter=self.counter)
         if isinstance(msg, messages.WardReconcile):
-            assert self.pending.to_counter is not None and self.pending.to_head_nonce
+            assert self.pending.to_counter is not None
             self.counter, self.root = self.pending.to_counter, self.pending.to_root
-            self.head_nonce = self.pending.to_head_nonce
             if self.inflight is not None and self.counter == self.inflight:
                 self.queue.pop(0)
             self.inflight = None
@@ -447,7 +447,7 @@ class FakeDevice:
             self.inflight = to
             wm_sig = self._sign(
                 _preimage(TAG_WM_HEAD, self.ward_id, self.counter, self.root, to, root)
-                + self.head_nonce
+                + self.session
             )
             return messages.WardFlushQueueAck(
                 entry_key=entry_key,

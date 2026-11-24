@@ -8217,7 +8217,6 @@ if TYPE_CHECKING:
 
     class WardChainAcceptance(protobuf.MessageType):
         nonce: "AnyBytes | None"
-        from_head_nonce: "AnyBytes | None"
         timestamp: "int | None"
         wm_signature: "AnyBytes | None"
 
@@ -8225,7 +8224,6 @@ if TYPE_CHECKING:
             self,
             *,
             nonce: "AnyBytes | None" = None,
-            from_head_nonce: "AnyBytes | None" = None,
             timestamp: "int | None" = None,
             wm_signature: "AnyBytes | None" = None,
         ) -> None:
@@ -8418,14 +8416,14 @@ if TYPE_CHECKING:
     class WardChainRequest(protobuf.MessageType):
         to_counter: "int | None"
         to_root: "AnyBytes | None"
-        to_head_nonce: "AnyBytes | None"
+        with_acceptance: "bool | None"
 
         def __init__(
             self,
             *,
             to_counter: "int | None" = None,
             to_root: "AnyBytes | None" = None,
-            to_head_nonce: "AnyBytes | None" = None,
+            with_acceptance: "bool | None" = None,
         ) -> None:
             pass
 
@@ -8471,8 +8469,6 @@ if TYPE_CHECKING:
         nonce: "AnyBytes | None"
         from_counter: "int | None"
         from_root: "AnyBytes | None"
-        from_head_nonce: "AnyBytes | None"
-        to_head_nonce: "AnyBytes | None"
         timestamp: "int | None"
         wm_signature: "AnyBytes | None"
 
@@ -8484,8 +8480,6 @@ if TYPE_CHECKING:
             nonce: "AnyBytes | None" = None,
             from_counter: "int | None" = None,
             from_root: "AnyBytes | None" = None,
-            from_head_nonce: "AnyBytes | None" = None,
-            to_head_nonce: "AnyBytes | None" = None,
             timestamp: "int | None" = None,
             wm_signature: "AnyBytes | None" = None,
         ) -> None:
@@ -8511,6 +8505,50 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WardCatchUpAck"]:
+            return isinstance(msg, cls)
+
+    class WardRollForward(protobuf.MessageType):
+        from_counter: "int | None"
+        from_root: "AnyBytes | None"
+        to_counter: "int | None"
+        to_root: "AnyBytes | None"
+        timestamp: "int | None"
+        wm_signature: "AnyBytes | None"
+        links: "list[WardChainLink]"
+        final: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            links: "list[WardChainLink] | None" = None,
+            from_counter: "int | None" = None,
+            from_root: "AnyBytes | None" = None,
+            to_counter: "int | None" = None,
+            to_root: "AnyBytes | None" = None,
+            timestamp: "int | None" = None,
+            wm_signature: "AnyBytes | None" = None,
+            final: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardRollForward"]:
+            return isinstance(msg, cls)
+
+    class WardRollForwardAck(protobuf.MessageType):
+        wm_sigs: "list[AnyBytes]"
+        last_timestamp: "int | None"
+
+        def __init__(
+            self,
+            *,
+            wm_sigs: "list[AnyBytes] | None" = None,
+            last_timestamp: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardRollForwardAck"]:
             return isinstance(msg, cls)
 
     class WardSetPersistWithoutWm(protobuf.MessageType):
@@ -8596,8 +8634,6 @@ if TYPE_CHECKING:
         to_root: "AnyBytes | None"
         from_counter: "int | None"
         from_root: "AnyBytes | None"
-        from_head_nonce: "AnyBytes | None"
-        to_head_nonce: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8608,8 +8644,6 @@ if TYPE_CHECKING:
             to_root: "AnyBytes | None" = None,
             from_counter: "int | None" = None,
             from_root: "AnyBytes | None" = None,
-            from_head_nonce: "AnyBytes | None" = None,
-            to_head_nonce: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8619,11 +8653,15 @@ if TYPE_CHECKING:
 
     class WardIngestAttestationAck(protobuf.MessageType):
         counter: "int | None"
+        wm_behind: "bool | None"
+        stored_counter: "int | None"
 
         def __init__(
             self,
             *,
             counter: "int | None" = None,
+            wm_behind: "bool | None" = None,
+            stored_counter: "int | None" = None,
         ) -> None:
             pass
 
@@ -8668,8 +8706,6 @@ if TYPE_CHECKING:
         to_root: "AnyBytes | None"
         wm_signature: "AnyBytes | None"
         timestamp: "int | None"
-        from_head_nonce: "AnyBytes | None"
-        to_head_nonce: "AnyBytes | None"
         recovered_root: "AnyBytes | None"
         recovered_counter: "int | None"
 
@@ -8682,8 +8718,6 @@ if TYPE_CHECKING:
             to_root: "AnyBytes | None" = None,
             wm_signature: "AnyBytes | None" = None,
             timestamp: "int | None" = None,
-            from_head_nonce: "AnyBytes | None" = None,
-            to_head_nonce: "AnyBytes | None" = None,
             recovered_root: "AnyBytes | None" = None,
             recovered_counter: "int | None" = None,
         ) -> None:
@@ -8765,8 +8799,6 @@ if TYPE_CHECKING:
         to_root: "AnyBytes | None"
         from_counter: "int | None"
         from_root: "AnyBytes | None"
-        from_head_nonce: "AnyBytes | None"
-        to_head_nonce: "AnyBytes | None"
 
         def __init__(
             self,
@@ -8778,8 +8810,6 @@ if TYPE_CHECKING:
             to_root: "AnyBytes | None" = None,
             from_counter: "int | None" = None,
             from_root: "AnyBytes | None" = None,
-            from_head_nonce: "AnyBytes | None" = None,
-            to_head_nonce: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -8844,16 +8874,12 @@ if TYPE_CHECKING:
     class WardPublishAck(protobuf.MessageType):
         timestamp: "int | None"
         wm_signature: "AnyBytes | None"
-        from_head_nonce: "AnyBytes | None"
-        to_head_nonce: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             timestamp: "int | None" = None,
             wm_signature: "AnyBytes | None" = None,
-            from_head_nonce: "AnyBytes | None" = None,
-            to_head_nonce: "AnyBytes | None" = None,
         ) -> None:
             pass
 

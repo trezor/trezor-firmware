@@ -77,10 +77,6 @@ async def catch_up(msg: WardCatchUp) -> WardCatchUpAck:
             msg.nonce is None
             or len(msg.nonce) != NONCE_LENGTH
             or msg.from_counter is None
-            or msg.from_head_nonce is None
-            or len(msg.from_head_nonce) != 32
-            or msg.to_head_nonce is None
-            or len(msg.to_head_nonce) != 32
             or msg.timestamp is None
             or msg.wm_signature is None
         ):
@@ -90,10 +86,8 @@ async def catch_up(msg: WardCatchUp) -> WardCatchUpAck:
             msg.nonce,
             msg.from_counter,
             msg.from_root or None,
-            msg.from_head_nonce,
             to_counter,
             to_root,
-            msg.to_head_nonce,
             msg.timestamp,
             msg.wm_signature,
         ):
@@ -143,9 +137,7 @@ async def catch_up(msg: WardCatchUp) -> WardCatchUpAck:
         await derive_wallet_id(), ward_store.SETTING_PERSIST_WITHOUT_WM
     )
     if persist:
-        await persist_caught_up(
-            to_counter, to_root, crossed, timestamp, msg.to_head_nonce if has_wm() else None
-        )
+        await persist_caught_up(to_counter, to_root, crossed, timestamp)
     else:
         assert timestamp is not None
         sync_round.set_provisional(to_counter, root_or_empty(to_root), timestamp)

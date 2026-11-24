@@ -8,34 +8,31 @@ handler; `verify_inbound_link` and `adopt` are separate because reconcile checks
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import WardIngestAttestation, WardRollback
+    from trezor.messages import WardIngestAttestation, WardRollback, WardRollForward
 
 
 async def verify_round_attestation(
     from_counter: "int | None",
     from_root: "bytes | None",
-    from_head_nonce: "bytes | None",
     to_counter: "int | None",
     to_root: "bytes | None",
-    to_head_nonce: "bytes | None",
     timestamp: int,
     signature: "bytes | None",
 ) -> "tuple[int, bytes, int, bytes]":
     """Check a WM attestation against the OPEN round, and return the transition it names.
 
     Applies no counter rule (callers want opposite ones) and adopts nothing. Returns both roots in
-    preimage form. Latches the WM head `(to_counter, to_root, to_head_nonce)` once the signature
+    preimage form. Latches the WM head `(to_counter, to_root, timestamp)` once the signature
     verifies, even if the caller then refuses the attestation.
 
-    Continuity against the latched head (session-scoped): if the attested `from` end is that head,
-    the WM must have consumed the nonce latched for it (R1); if the `to` end is that head, the WM
-    has not moved and its nonce must not have changed (R2) -- that catches a register restore.
+    A WM whose register went back (backup restore, lost state) attests its restored head like any
+    other; the device's counter floor is what refuses it. See docs/ward/gaps.md.
     """
     from trezor.wire import DataError
 
     from . import round as sync_round
     from .attest import root_or_empty, same_root, verify_attestation
-    from .cas import MAX_BATCH, NO_HEAD_NONCE
+    from .cas import MAX_BATCH
     from .keys import derive_ward_id
 
     ctx = sync_round.get()
@@ -45,79 +42,44 @@ async def verify_round_attestation(
 
     if to_counter is None or from_counter is None or signature is None:
         raise DataError("both ends of the transition and wm_signature are required")
-    if (
-        from_head_nonce is None
-        or len(from_head_nonce) != 32
-        or to_head_nonce is None
-        or len(to_head_nonce) != 32
-    ):
-        raise DataError("WARD: both attested WM head nonces must be 32 bytes")
-
-    # A live head never carries the enrolment constant: a head left at it would make the first
-    # write after genesis replayable into any future re-enrolment.
-    if NO_HEAD_NONCE in (from_head_nonce, to_head_nonce):
-        raise DataError("WARD: the attested WM head carries the enrolment nonce")
     for r in (from_root, to_root):
         if r is not None and len(r) != 32:
             raise DataError("attested roots must be 32 bytes")
 
-    # A step advances by 1..MAX_BATCH and rotates the nonce; genesis attests itself.
+    # A step advances by 1..MAX_BATCH; genesis attests itself.
     if to_counter == 0:
         if from_counter != 0 or not same_root(from_root, to_root):
             raise DataError("WARD: counter 0 must attest itself")
-        if from_head_nonce != to_head_nonce:
-            raise DataError("WARD: counter 0 consumed no head nonce")
     elif not 1 <= to_counter - from_counter <= MAX_BATCH:
         raise DataError("WARD: an attested transition advances the counter by 1 to MAX_BATCH")
-    elif from_head_nonce == to_head_nonce:
-        raise DataError("WARD: an attested transition must rotate the WM head nonce")
 
     if not verify_attestation(
         await derive_ward_id(),
         nonce,
         from_counter,
         from_root,
-        from_head_nonce,
         to_counter,
         to_root,
-        to_head_nonce,
         timestamp,
         signature,
     ):
         raise DataError("WM attestation verification failed")
 
-    # Continuity (R1, R2), after the signature so the compared values are WM-vouched.
-    seen = sync_round.wm_head()
-    if seen is not None:
-        seen_counter, seen_root, seen_nonce, _seen_time = seen
-        if from_counter == seen_counter and same_root(from_root, seen_root):
-            if from_head_nonce != seen_nonce:
-                raise DataError(
-                    "WARD: the attested transition did not consume the WM head nonce this device holds"
-                )
-        elif to_counter == seen_counter and same_root(to_root, seen_root):
-            if to_head_nonce != seen_nonce:
-                raise DataError(
-                    "WARD: the WM head nonce changed without the head moving"
-                )
-
-    sync_round.set_wm_head(
-        to_counter, root_or_empty(to_root), to_head_nonce, timestamp
-    )
+    sync_round.set_wm_head(to_counter, root_or_empty(to_root), nonce, timestamp)
     # The timestamp is signed but not checked here: anti-replay is the counter's job. `adopt`
     # persists it, and `catch_up` holds a cached attestation to it.
     return from_counter, root_or_empty(from_root), to_counter, root_or_empty(to_root)
 
 
-async def verify_attested(msg: "WardIngestAttestation | WardRollback") -> "tuple[int, bytes, int, bytes]":
+async def verify_attested(
+    msg: "WardIngestAttestation | WardRollback | WardRollForward",
+) -> "tuple[int, bytes, int, bytes]":
     """`verify_round_attestation` over a message carrying the attestation's fields by name."""
     return await verify_round_attestation(
         msg.from_counter,
         msg.from_root or None,
-        msg.from_head_nonce,
         msg.to_counter,
         msg.to_root or None,
-        msg.to_head_nonce,
         msg.timestamp or 0,
         msg.wm_signature,
     )
@@ -199,13 +161,11 @@ async def adopt(
     # follows one, so a mismatch is a caller bug; it then stores no timestamp rather than another
     # head's.
     timestamp = None
-    nonce = None
     seen = sync_round.wm_head()
     if seen is not None and seen[0] == counter and same_root(seen[1], root):
-        nonce = seen[2]
         timestamp = seen[3]
 
-    if not await set_root(root, counter, timestamp, nonce):
+    if not await set_root(root, counter, timestamp):
         raise DataError(
             "WARD: no root slot for this wallet; eight already hold one, so this one can only be used offline"
         )
@@ -224,7 +184,6 @@ async def persist_caught_up(
     root: bytes | None,
     landed_commits: list,
     timestamp: int | None,
-    head_nonce: bytes | None = None,
 ) -> None:
     """Move the STORED head to one `catch_up` reached without a live attestation.
 
@@ -240,7 +199,7 @@ async def persist_caught_up(
     from .root import set_root
 
     await reconcile_pending(counter, root, landed_commits=landed_commits)
-    if not await set_root(root, counter, timestamp, head_nonce):
+    if not await set_root(root, counter, timestamp):
         raise DataError(
             "WARD: no root slot for this wallet; eight already hold one, so this one can only be used offline"
         )

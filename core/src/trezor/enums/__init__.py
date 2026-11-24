@@ -813,6 +813,8 @@ if TYPE_CHECKING:
         WardCatchUp = 2350
         WardCatchUpAck = 2351
         WardSetPersistWithoutWm = 2352
+        WardRollForward = 2353
+        WardRollForwardAck = 2354
         WardResetApp = 2343
         WardResetAppAck = 2344
         DisplayAddress = 2322

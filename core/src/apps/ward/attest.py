@@ -1,8 +1,8 @@
 """WM attestation: the WM's Ed25519 signature over the TRANSITION that reached its head.
 
     b"WARD ATTEST v1" || version(1B) || nonce || ward_id(32B)
-        || from_counter(4B BE) || from_root(32B) || from_head_nonce(32B)
-        || to_counter(4B BE)   || to_root(32B)   || to_head_nonce(32B)
+        || from_counter(4B BE) || from_root(32B)
+        || to_counter(4B BE)   || to_root(32B)
         || timestamp(8B BE)
 
 It attests freshness and ordering only. The WM signs roots in the clear and could name one the
@@ -10,14 +10,14 @@ wallet never held; descent (`verify_chain` walking K_auth links back to this dev
 what turns an attestation into a statement about state, and the counter floor bounds it.
 
 The round nonce is the device's, minted per round, so signed anchors cannot be stockpiled and
-replayed. The head nonces are the WM's: `from_head_nonce` is the one consumed by this step, so
-the attestation names one OCCURRENCE of a transition even when `(counter, root)` pairs recur.
-The timestamp is signed but not checked.
+replayed. Every accepted transition raises the counter, so within one register history a
+transition names one occurrence; only a register that goes back (restore, lost state) repeats a
+`(counter, root)` pair. The timestamp is signed but not checked.
 """
 
 _ATTEST_DOMAIN = b"WARD ATTEST v1"
 # Bumped on every change of meaning, even when the layout would not reveal it.
-_ATTEST_VERSION = 6
+_ATTEST_VERSION = 7
 
 NONCE_LENGTH = 32
 
@@ -80,16 +80,14 @@ def attestation_preimage(
     nonce: bytes,
     from_counter: int,
     from_root: "bytes | None",
-    from_head_nonce: bytes,
     to_counter: int,
     to_root: "bytes | None",
-    to_head_nonce: bytes,
     timestamp: int,
 ) -> bytes:
     """The fixed-width signed preimage; an absent root encodes as `EMPTY_ROOT`.
 
-    Genesis is the self-transition `(0, EMPTY_ROOT) -> (0, EMPTY_ROOT)` with one head nonce at
-    both ends; no genuine step has `from == to` or equal head nonces.
+    Genesis is the self-transition `(0, EMPTY_ROOT) -> (0, EMPTY_ROOT)`; no genuine step has
+    `from == to`.
     """
     from trezor.wire import DataError
 
@@ -102,8 +100,6 @@ def attestation_preimage(
         or len(ward_id) != 32
         or len(from_root) != 32
         or len(to_root) != 32
-        or len(from_head_nonce) != NONCE_LENGTH
-        or len(to_head_nonce) != NONCE_LENGTH
     ):
         raise DataError("WARD: attestation operands have the wrong length")
     return (
@@ -113,10 +109,8 @@ def attestation_preimage(
         + ward_id
         + u32(from_counter)
         + from_root
-        + from_head_nonce
         + u32(to_counter)
         + to_root
-        + to_head_nonce
         + timestamp.to_bytes(8, "big")
     )
 
@@ -126,23 +120,19 @@ def verify_attestation(
     nonce: bytes,
     from_counter: int,
     from_root: "bytes | None",
-    from_head_nonce: bytes,
     to_counter: int,
     to_root: "bytes | None",
-    to_head_nonce: bytes,
     timestamp: int,
     signature: bytes,
 ) -> bool:
     """Is this a WM attestation of this transition for this wallet, this round?
 
     A live attestation must use the open round's nonce. When a caller takes the nonce from
-    stored evidence, the signature proves historical acceptance. Rollback additionally
-    checks that the receipt reaches the expected head occurrence.
+    stored evidence, the signature proves historical acceptance only.
     """
     return _verify(
         attestation_preimage(
-            ward_id, nonce, from_counter, from_root, from_head_nonce,
-            to_counter, to_root, to_head_nonce, timestamp,
+            ward_id, nonce, from_counter, from_root, to_counter, to_root, timestamp
         ),
         signature,
     )

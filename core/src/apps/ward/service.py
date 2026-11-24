@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 RPC_TIMEOUT_MS = const(30_000)
 
 # Bumped when the message set changes shape, so an older daemon is refused by name.
-PROTOCOL_VERSION = 3
+PROTOCOL_VERSION = 4
 
 
 def _binding_cache() -> "SessionlessCache":
@@ -407,10 +407,8 @@ async def sync() -> None:
     ) = await verify_round_attestation(
         answer.from_counter,
         answer.from_root or None,
-        answer.from_head_nonce,
         answer.to_counter,
         answer.to_root or None,
-        answer.to_head_nonce,
         answer.timestamp or 0,
         answer.wm_signature,
     )
@@ -515,9 +513,6 @@ async def publish(
     from .adopt import adopt, verify_round_attestation
     from .attest import NONCE_LENGTH
 
-    # The nonce `advance` was signed under; the attestation must name it as consumed.
-    head_nonce = sync_round.require_head_nonce()
-
     # Per publication, so the WM cannot answer with an attestation collected earlier.
     nonce = random.bytes(NONCE_LENGTH)
     sync_round.begin(nonce)
@@ -542,15 +537,13 @@ async def publish(
     if answer.MESSAGE_WIRE_TYPE == WardPublishConflict.MESSAGE_WIRE_TYPE:
         raise DataError("WARD: another writer moved the head first; retry")
 
-    # EVERY OPERAND IS THE DEVICE'S OWN, nonce included: an attestation of any other head or any
-    # other occurrence of this step fails as a bad signature.
+    # EVERY OPERAND IS THE DEVICE'S OWN, round nonce included: an attestation of any other step,
+    # or one collected for an earlier publication, fails as a bad signature.
     await verify_round_attestation(
         counter - 1,
         from_root,
-        head_nonce,
         counter,
         new_root,
-        answer.to_head_nonce,
         answer.timestamp or 0,
         answer.wm_signature,
     )

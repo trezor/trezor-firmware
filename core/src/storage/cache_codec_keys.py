@@ -18,3 +18,4 @@ if not utils.USE_THP:
         APP_WARD_DEMOTION = const(10)
         APP_WARD_WM_HEAD = const(11)
         APP_WARD_PROVISIONAL = const(12)
+        APP_WARD_ROLL_FORWARD = const(13)

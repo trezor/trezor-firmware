@@ -56,8 +56,9 @@ def _check_wallet_id(wallet_id: bytes) -> None:
         raise ValueError  # wallet_id must be exactly _WALLET_ID_LEN bytes
 
 
-# --- root slots: wallet_id(16) || root(32) || counter(4) [|| timestamp(8) [|| WM nonce(32)]] ---
-# Older slots omit the timestamp or head nonce. The WM signs both for the adopted head.
+# --- root slots: wallet_id(16) || root(32) || counter(4) [|| timestamp(8)] -----------
+# The timestamp is the one the WM signed for the adopted head. A slot written before it was kept
+# has none, and reads as None.
 MAX_WALLETS = const(8)
 _ROOTS = _Range(1, MAX_WALLETS)
 
@@ -100,7 +101,6 @@ def set_root(
     root: bytes | None,
     counter: int = 0,
     timestamp: int | None = None,
-    head_nonce: bytes | None = None,
 ) -> bool:
     """Record this wallet's root, counter and (if known) the WM's timestamp for it. False if every
     slot belongs to another wallet -- not advisory: ignoring it believes in a head that was never
@@ -112,26 +112,14 @@ def set_root(
     if index is None:
         return False
 
-    if head_nonce is not None and (timestamp is None or len(head_nonce) != 32):
-        raise ValueError
     _ROOTS.set(
         index,
         wallet_id
         + (root if root is not None else bytes(_ROOT_LEN))
         + counter.to_bytes(_COUNTER_LEN, "big")
-        + (b"" if timestamp is None else timestamp.to_bytes(_TIMESTAMP_LEN, "big"))
-        + (head_nonce or b""),
+        + (b"" if timestamp is None else timestamp.to_bytes(_TIMESTAMP_LEN, "big")),
     )
     return True
-
-
-def get_head_nonce(wallet_id: bytes) -> bytes | None:
-    """The accepted WM occurrence persisted alongside the root, if known."""
-    found = _find(wallet_id)
-    offset = _WALLET_ID_LEN + _ROOT_LEN + _COUNTER_LEN + _TIMESTAMP_LEN
-    if found is None or len(found[1]) != offset + 32:
-        return None
-    return found[1][offset:]
 
 
 # --- per-wallet settings: wallet_id(16) || flags(1), keys 0x18.. ---------------------------

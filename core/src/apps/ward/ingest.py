@@ -9,6 +9,11 @@ async def ingest(msg: WardIngestAttestation) -> WardIngestAttestationAck:
 
     Establishes freshness only and adopts nothing: the WM signs roots in the clear, so only a
     link or chain folded later (`reconcile`, `verify_chain`) ties the head to this wallet.
+
+    A HEAD BELOW THIS DEVICE'S is not adopted, and not refused either: the WM's register went
+    back (a restored backup, a failover onto a stale replica). The round is NOT attested, so
+    nothing can be adopted from it; the ack says `wm_behind`, and the round may continue with
+    `WardRollForward`, which re-signs the history the WM accepted before, with the user's approval.
     """
     from trezor.messages import WardIngestAttestationAck
     from trezor.wire import DataError
@@ -28,7 +33,11 @@ async def ingest(msg: WardIngestAttestation) -> WardIngestAttestationAck:
     if counter < stored and not sync_round.demotion_matches(
         stored, from_counter, from_root, counter, root
     ):
-        raise DataError("attested counter is older than the stored counter")
+        ctx = sync_round.get()
+        if ctx is None:
+            raise DataError("no sync round in progress")
+        sync_round.set_roll_forward(sync_round.ROLL_FORWARD_DETECTED, ctx[1], counter, root)
+        return WardIngestAttestationAck(counter=counter, wm_behind=True, stored_counter=stored)
 
     sync_round.set_attested(from_counter, from_root, counter, root)
     return WardIngestAttestationAck(counter=counter)

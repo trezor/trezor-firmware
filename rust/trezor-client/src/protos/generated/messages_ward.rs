@@ -3102,8 +3102,6 @@ pub struct WardChainAcceptance {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardChainAcceptance.nonce)
     pub nonce: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardChainAcceptance.from_head_nonce)
-    pub from_head_nonce: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardChainAcceptance.timestamp)
     pub timestamp: ::std::option::Option<u64>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardChainAcceptance.wm_signature)
@@ -3158,42 +3156,6 @@ impl WardChainAcceptance {
     // Take field
     pub fn take_nonce(&mut self) -> ::std::vec::Vec<u8> {
         self.nonce.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
-    // optional bytes from_head_nonce = 2;
-
-    pub fn from_head_nonce(&self) -> &[u8] {
-        match self.from_head_nonce.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_from_head_nonce(&mut self) {
-        self.from_head_nonce = ::std::option::Option::None;
-    }
-
-    pub fn has_from_head_nonce(&self) -> bool {
-        self.from_head_nonce.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_from_head_nonce(&mut self, v: ::std::vec::Vec<u8>) {
-        self.from_head_nonce = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_from_head_nonce(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.from_head_nonce.is_none() {
-            self.from_head_nonce = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.from_head_nonce.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_from_head_nonce(&mut self) -> ::std::vec::Vec<u8> {
-        self.from_head_nonce.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     // optional uint64 timestamp = 3;
@@ -3252,17 +3214,12 @@ impl WardChainAcceptance {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "nonce",
             |m: &WardChainAcceptance| { &m.nonce },
             |m: &mut WardChainAcceptance| { &mut m.nonce },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "from_head_nonce",
-            |m: &WardChainAcceptance| { &m.from_head_nonce },
-            |m: &mut WardChainAcceptance| { &mut m.from_head_nonce },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "timestamp",
@@ -3295,9 +3252,6 @@ impl ::protobuf::Message for WardChainAcceptance {
                 10 => {
                     self.nonce = ::std::option::Option::Some(is.read_bytes()?);
                 },
-                18 => {
-                    self.from_head_nonce = ::std::option::Option::Some(is.read_bytes()?);
-                },
                 24 => {
                     self.timestamp = ::std::option::Option::Some(is.read_uint64()?);
                 },
@@ -3319,9 +3273,6 @@ impl ::protobuf::Message for WardChainAcceptance {
         if let Some(v) = self.nonce.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
-        if let Some(v) = self.from_head_nonce.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(2, &v);
-        }
         if let Some(v) = self.timestamp {
             my_size += ::protobuf::rt::uint64_size(3, v);
         }
@@ -3336,9 +3287,6 @@ impl ::protobuf::Message for WardChainAcceptance {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.nonce.as_ref() {
             os.write_bytes(1, v)?;
-        }
-        if let Some(v) = self.from_head_nonce.as_ref() {
-            os.write_bytes(2, v)?;
         }
         if let Some(v) = self.timestamp {
             os.write_uint64(3, v)?;
@@ -3364,7 +3312,6 @@ impl ::protobuf::Message for WardChainAcceptance {
 
     fn clear(&mut self) {
         self.nonce = ::std::option::Option::None;
-        self.from_head_nonce = ::std::option::Option::None;
         self.timestamp = ::std::option::Option::None;
         self.wm_signature = ::std::option::Option::None;
         self.special_fields.clear();
@@ -3373,7 +3320,6 @@ impl ::protobuf::Message for WardChainAcceptance {
     fn default_instance() -> &'static WardChainAcceptance {
         static instance: WardChainAcceptance = WardChainAcceptance {
             nonce: ::std::option::Option::None,
-            from_head_nonce: ::std::option::Option::None,
             timestamp: ::std::option::Option::None,
             wm_signature: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
@@ -4355,19 +4301,19 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     unter\x18\x03\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x04\x20\
     \x01(\x0cR\x06toRoot\x12\x1f\n\x0bauth_commit\x18\x05\x20\x01(\x0cR\naut\
     hCommit\x12L\n\nacceptance\x18\x06\x20\x01(\x0b2,.hw.trezor.messages.war\
-    d.WardChainAcceptanceR\nacceptance\"\x94\x01\n\x13WardChainAcceptance\
-    \x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12&\n\x0ffrom_head_n\
-    once\x18\x02\x20\x01(\x0cR\rfromHeadNonce\x12\x1c\n\ttimestamp\x18\x03\
+    d.WardChainAcceptanceR\nacceptance\"r\n\x13WardChainAcceptance\x12\x14\n\
+    \x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x1c\n\ttimestamp\x18\x03\
     \x20\x01(\x04R\ttimestamp\x12!\n\x0cwm_signature\x18\x04\x20\x01(\x0cR\
-    \x0bwmSignature\"K\n\x12WardPinCachedEntry\x12\x15\n\x06app_id\x18\x01\
-    \x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\nident\
-    ifier\"M\n\x14WardEraseCachedEntry\x12\x15\n\x06app_id\x18\x01\x20\x01(\
-    \tR\x05appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifier\"d\
-    \n\x0eWardFlushQueue\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\
-    \x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifier\x12\x1b\n\tmax_\
-    batch\x18\x03\x20\x01(\rR\x08maxBatch\"\x0e\n\x0cWardResetApp\".\n\x0fWa\
-    rdResetAppAck\x12\x1b\n\twas_bound\x18\x01\x20\x01(\x08R\x08wasBoundB8\n\
-    #com.satoshilabs.trezor.lib.protobufB\x11TrezorMessageWard\
+    \x0bwmSignatureJ\x04\x08\x02\x10\x03\"K\n\x12WardPinCachedEntry\x12\x15\
+    \n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\
+    \x20\x01(\x0cR\nidentifier\"M\n\x14WardEraseCachedEntry\x12\x15\n\x06app\
+    _id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\
+    \x0cR\nidentifier\"d\n\x0eWardFlushQueue\x12\x15\n\x06app_id\x18\x01\x20\
+    \x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifie\
+    r\x12\x1b\n\tmax_batch\x18\x03\x20\x01(\rR\x08maxBatch\"\x0e\n\x0cWardRe\
+    setApp\".\n\x0fWardResetAppAck\x12\x1b\n\twas_bound\x18\x01\x20\x01(\x08\
+    R\x08wasBoundB8\n#com.satoshilabs.trezor.lib.protobufB\x11TrezorMessageW\
+    ard\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

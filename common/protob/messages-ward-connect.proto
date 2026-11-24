@@ -245,7 +245,9 @@ message WardVerifyChain {
 message WardChainRequest {
     optional uint32 to_counter = 1;
     optional bytes  to_root    = 2;  // absent means the empty tree
-    optional bytes  to_head_nonce = 3;  // the accepted occurrence, for WardRollback
+    reserved 3;  // was `to_head_nonce`
+    // WardRollback: attach each link's archived WM attestation (WardChainLink.acceptance).
+    optional bool   with_acceptance = 4;
 }
 
 /**
@@ -318,8 +320,7 @@ message WardCatchUp {
     optional bytes  nonce           = 3;  // 32B, the round nonce of the round it answered
     optional uint32 from_counter    = 4;
     optional bytes  from_root       = 5;  // absent means the empty tree
-    optional bytes  from_head_nonce = 6;  // 32B
-    optional bytes  to_head_nonce   = 7;  // 32B
+    reserved 6, 7;  // were the WM head nonces
     optional uint64 timestamp       = 8;  // WM's clock, seconds: when the WM reached the head
     optional bytes  wm_signature    = 9;  // 64B Ed25519
 }
@@ -332,6 +333,49 @@ message WardCatchUpAck {
     optional uint32 counter         = 1;
     optional uint32 reverts_crossed = 2;
     optional bool   persisted       = 3;  // the stored head moved, rather than this session's
+}
+
+/**
+ * Request: re-authorise, for this session, transitions the WM accepted before its register went
+ * back (a restored backup, a failover onto a stale replica). Only in a round whose
+ * WardIngestAttestation reported `wm_behind`; the user approves on the first page, and on the
+ * final page the device shows the restored head and when the WM accepted its last change.
+ *
+ * Every wm_sig is bound to the session nonce of the sync it was minted in, and a restore ends
+ * every session, so the signatures a host stored cannot be submitted again. The host feeds the
+ * device the transitions instead, oldest first, starting at the WM head this round attests, each
+ * with the WM's record that it accepted that exact step (WardChainLink.acceptance). The device
+ * checks the live attestation against the open round, each link's auth_commit, each WM record,
+ * and that a link it would sign through its own stored head agrees with it; then it signs each
+ * step again under this round's nonce. The host submits the signatures as ordinary advances and,
+ * before the next page, has the WM attest its advanced head against the same round nonce.
+ * @start
+ * @next WardRollForwardAck
+ * @next Failure
+ */
+message WardRollForward {
+    // THE WM'S LIVE ATTESTATION of its current head, against this round's nonce, field for field
+    // as WardIngestAttestation. Its `to` end is where the first link must start.
+    optional uint32 from_counter = 1;
+    optional bytes  from_root    = 2;  // absent means the empty tree
+    optional uint32 to_counter   = 3;
+    optional bytes  to_root      = 4;  // absent means the empty tree
+    optional uint64 timestamp    = 5;
+    optional bytes  wm_signature = 6;
+
+    repeated WardChainLink links = 7;  // oldest first, each with its WM acceptance record
+
+    // The last page: the device shows the restored head and when the WM accepted its last change.
+    optional bool final = 8;
+}
+
+/**
+ * Response: one wm_sig per link, in order, bound to this round's nonce.
+ * @end
+ */
+message WardRollForwardAck {
+    repeated bytes  wm_sigs        = 1;
+    optional uint64 last_timestamp = 2;  // the WM's acceptance time of this page's last change
 }
 
 /**
@@ -469,7 +513,7 @@ message WardSyncAck {
  *
  * The device verifies an Ed25519 signature over
  *
- *   b"WARD ATTEST v1" || version(1B=4) || nonce || ward_id
+ *   b"WARD ATTEST v1" || version(1B=7) || nonce || ward_id
  *                   || from_counter(4B BE) || from_root || to_counter(4B BE) || to_root
  *                   || timestamp(8B BE)
  *
@@ -512,25 +556,10 @@ message WardIngestAttestation {
     optional uint32 from_counter = 7;  // the head it advanced from; to_counter - 1
     optional bytes  from_root    = 8;  // absent means the empty tree
 
-    // BOTH ENDS OF THE WM'S HEAD NONCE -- the freshness token it holds beside (counter, root) and
-    // rotates on every transition it accepts. Covered by the signature, so the host chooses
-    // neither.
-    //
-    // WHAT THEY ARE FOR. `to_head_nonce` is quoted FORWARD by the device, in the next `wm_sig` it
-    // mints, and the WM accepts an authorisation only against the nonce it currently holds -- so
-    // one authorisation moves the head at most once, even when a (counter, root) pair recurs,
-    // which a revert arranges by construction. `from_head_nonce` is the nonce the WM CONSUMED
-    // accepting this step, and it is what makes the attestation name the transition OCCURRENCE
-    // rather than the transition: a device that minted its authorisation under a particular nonce
-    // can tell that ITS authorisation was the one spent.
-    //
-    // At counter 0 the two are equal: nothing produced genesis, so nothing was consumed.
-    //
-    // THE WM MUST NEVER MAKE A SUPERSEDED NONCE CURRENT AGAIN -- not by rotation, and not through
-    // a backup restore, a failover, or any other state recovery, all of which may move the
-    // counter and root backwards legitimately. See apps/ward/cas.
-    optional bytes  from_head_nonce = 10;  // 32B
-    optional bytes  to_head_nonce   = 9;  // 32B
+    // 9 and 10 were the WM head nonces. A transition is identified by its (counter, root) ends:
+    // every step the WM accepts raises the counter, so they repeat only if the WM's register goes
+    // back. See docs/ward/gaps.md.
+    reserved 9, 10;
 
     // GENESIS ATTESTS ITSELF: at counter 0 nothing produced the head, so the two ends are equal
     // and the empty tree stands on both. No real step has from == to, so the two cannot be
@@ -538,11 +567,16 @@ message WardIngestAttestation {
 }
 
 /**
- * Response: the accepted counter.
+ * Response: the attested counter.
+ *
+ * `wm_behind`: the WM attested a head below this device's stored head -- its register went back.
+ * Nothing was attested for adoption; the host may continue the round with WardRollForward.
  * @end
  */
 message WardIngestAttestationAck {
-    optional uint32 counter = 1;
+    optional uint32 counter        = 1;
+    optional bool   wm_behind      = 2;
+    optional uint32 stored_counter = 3;  // this device's head, with wm_behind
 }
 
 /**
@@ -591,7 +625,7 @@ message WardReconcileAck {
  * Request: restore a proven historical state. The device verifies both the WM's live
  * attestation and the requested target against the wallet's authenticated history.
  * A WM that is behind this device must still be on its history. The revert advances
- * the WM's counter by one and is bound to the WM's current head nonce.
+ * the WM's counter by one, and the WM accepts it only from its current head.
  * @start
  * @next WardChainRequest
  * @next WardRollbackAck
@@ -619,25 +653,7 @@ message WardRollback {
     optional bytes  wm_signature = 13;
     optional uint64 timestamp    = 14;
 
-    // BOTH ENDS OF THE WM'S HEAD NONCE -- the freshness token it holds beside (counter, root) and
-    // rotates on every transition it accepts. Covered by the signature, so the host chooses
-    // neither.
-    //
-    // WHAT THEY ARE FOR. `to_head_nonce` is quoted FORWARD by the device, in the next `wm_sig` it
-    // mints, and the WM accepts an authorisation only against the nonce it currently holds -- so
-    // one authorisation moves the head at most once, even when a (counter, root) pair recurs,
-    // which a revert arranges by construction. `from_head_nonce` is the nonce the WM CONSUMED
-    // accepting this step, and it is what makes the attestation name the transition OCCURRENCE
-    // rather than the transition: a device that minted its authorisation under a particular nonce
-    // can tell that ITS authorisation was the one spent.
-    //
-    // At counter 0 the two are equal: nothing produced genesis, so nothing was consumed.
-    //
-    // THE WM MUST NEVER MAKE A SUPERSEDED NONCE CURRENT AGAIN -- not by rotation, and not through
-    // a backup restore, a failover, or any other state recovery, all of which may move the
-    // counter and root backwards legitimately. See apps/ward/cas.
-    optional bytes  from_head_nonce = 17;  // 32B
-    optional bytes  to_head_nonce   = 16;  // 32B
+    reserved 16, 17;  // were the WM head nonces
 
     // The historical state to restore. The device must prove this exact pair before
     // displaying the confirmation. An absent root denotes the empty tree.

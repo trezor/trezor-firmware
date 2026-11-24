@@ -19,6 +19,7 @@ WARD_REQUESTS = (
     "WardCatchUp",
     "WardSetPersistWithoutWm",
     "WardRollback",
+    "WardRollForward",
     "WardRejoin",
     "WardPinCachedEntry",
     "WardEraseCachedEntry",

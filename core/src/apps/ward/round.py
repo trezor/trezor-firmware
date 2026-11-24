@@ -148,10 +148,11 @@ def clear_provisional() -> None:
 
 # --- the WM's head, as this device last saw it ----------------------------------------
 #
-# `(counter, root, head_nonce)`, overwritten by every verified attestation whether or not it is
-# then adopted. The nonce is quoted in the next `cas.wm_sig`, so one authorisation cannot be used
-# twice when a `(counter, root)` pair recurs; storing the head beside it lets
-# `adopt.verify_round_attestation` check continuity against the head the nonce belongs to.
+# `(counter, root, session nonce, timestamp)`, overwritten by every verified attestation whether
+# or not it is then adopted. The session nonce is the round nonce that attestation answered: this
+# device picked it, and `cas.wm_sig` binds every authorisation to it. The WM keeps the nonce of
+# the wallet's latest sync and accepts only authorisations bound to it, so a new sync by any
+# device of the wallet ends the session.
 #
 # Layout: flag(1B) || counter(4B BE) || root(32B, preimage form) || nonce(32B)
 #         || timestamp(8B BE). The flag tells "never synced" apart from an all-zero genesis head;
@@ -160,7 +161,8 @@ _WM_HEAD_LEN = const(1 + 4 + _ROOT_LEN + _NONCE_LEN + 8)
 
 
 def set_wm_head(counter: int, root: bytes, nonce: bytes, timestamp: int) -> None:
-    """Record the WM head an attestation just vouched for, its freshness token and its time."""
+    """Record the WM head an attestation just vouched for, the session nonce it answered, and
+    its time."""
     from .codec import u32
 
     assert len(root) == _ROOT_LEN and len(nonce) == _NONCE_LEN
@@ -171,7 +173,7 @@ def set_wm_head(counter: int, root: bytes, nonce: bytes, timestamp: int) -> None
 
 
 def wm_head() -> "tuple[int, bytes, bytes, int] | None":
-    """`(counter, root, head_nonce, timestamp)` as this device last saw it, or None."""
+    """`(counter, root, session nonce, timestamp)` as this device last saw it, or None."""
     from .codec import Reader
 
     raw = _get(_cc.APP_WARD_WM_HEAD)
@@ -181,14 +183,52 @@ def wm_head() -> "tuple[int, bytes, bytes, int] | None":
     return r.uint(4), bytes(r.take(_ROOT_LEN)), bytes(r.take(_NONCE_LEN)), r.uint(8)
 
 
-def require_head_nonce() -> bytes:
-    """The head nonce, or refuse: a signature over an unknown nonce is one the WM rejects."""
+def require_session_nonce() -> bytes:
+    """The nonce of this session's latest WM attestation, or refuse: the WM accepts an
+    authorisation only when it is bound to the nonce of the wallet's latest sync."""
     from trezor.wire import DataError
 
     head = wm_head()
     if head is None:
-        raise DataError("WARD: no WM head nonce in this session; sync first")
+        raise DataError("WARD: no WM session; sync first")
     return head[2]
+
+
+# --- roll-forward: a restored WM, detected in this round -------------------------------
+#
+# `ingest` records that the WM attested a head below this device's stored head (DETECTED). The
+# user approves re-signing the WM's accepted history on the first `WardRollForward` page
+# (APPROVED). Every later page of the same round continues from where the previous ended.
+#
+# Layout: state(1B) || round nonce(32B) || cursor counter(4B BE) || cursor root(32B).
+ROLL_FORWARD_DETECTED = const(1)
+ROLL_FORWARD_APPROVED = const(2)
+_ROLL_FORWARD_LEN = const(1 + _NONCE_LEN + 4 + _ROOT_LEN)
+
+
+def set_roll_forward(state: int, nonce: bytes, counter: int, root: bytes) -> None:
+    from .codec import u32
+
+    assert len(nonce) == _NONCE_LEN and len(root) == _ROOT_LEN
+    _set(_cc.APP_WARD_ROLL_FORWARD, bytes([state]) + nonce + u32(counter) + root)
+
+
+def roll_forward() -> "tuple[int, bytes, int, bytes] | None":
+    """`(state, round nonce, cursor counter, cursor root)`, or None."""
+    from .codec import Reader
+
+    raw = _get(_cc.APP_WARD_ROLL_FORWARD)
+    if not raw or len(raw) != _ROLL_FORWARD_LEN or raw[0] not in (
+        ROLL_FORWARD_DETECTED,
+        ROLL_FORWARD_APPROVED,
+    ):
+        return None
+    r = Reader(raw, 1)
+    return raw[0], bytes(r.take(_NONCE_LEN)), r.uint(4), bytes(r.take(_ROOT_LEN))
+
+
+def clear_roll_forward() -> None:
+    _set(_cc.APP_WARD_ROLL_FORWARD, bytes(_ROLL_FORWARD_LEN))
 
 
 # --- the authorised demotion ----------------------------------------------------------

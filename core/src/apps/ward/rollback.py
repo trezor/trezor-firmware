@@ -27,14 +27,14 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     from . import round as sync_round
     from .adopt import verify_attested
     from .attest import NONCE_LENGTH, app_root, same_root, verify_attestation
-    from .cas import NO_HEAD_NONCE, authorise
+    from .cas import authorise
     from .common import (
         change_no,
         count_changes,
         require_initialized,
     )
     from .keys import derive_k_auth, derive_ward_id
-    from .root import get_counter, get_head_nonce, get_root
+    from .root import get_counter, get_root
     from .verify_chain import walk_back
 
     require_initialized()
@@ -51,13 +51,8 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
 
     stored_counter = await get_counter()
     stored_root = await get_root()
-    stored_nonce = await get_head_nonce()
     if stored_counter and stored_root is None:
         raise DataError("WARD: no trusted device head")
-    if stored_counter and stored_nonce is None:
-        raise DataError(
-            "WARD: sync this device to record its accepted head before rollback"
-        )
     if wm_counter == 0xFFFFFFFF:
         raise DataError("WARD: no counter available for the revert")
     new_counter = wm_counter + 1
@@ -72,30 +67,26 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
 
     k_auth = await derive_k_auth()
     ward_id = await derive_ward_id()
-    cursor_nonce = stored_nonce if wm_behind else msg.to_head_nonce
-    assert cursor_nonce is not None
     use_live = not wm_behind
 
     async def pull(request: WardChainRequest) -> WardChainLinkAck:
-        request.to_head_nonce = cursor_nonce
+        request.with_acceptance = True
         return await context.call(request, expected_type=WardChainLinkAck)
 
     def verify_acceptance(link: WardChainLink) -> None:
-        nonlocal cursor_nonce, use_live
+        # Every accepted transition raises the WM's counter, so within one register history the
+        # (counter, root) ends that walk_back already pinned name one accepted step. A register
+        # that went back can repeat a pair; see docs/ward/gaps.md.
+        nonlocal use_live
         if use_live:
             # walk_back checked the exact predecessor from the fresh attestation.
-            assert msg.from_head_nonce is not None
-            cursor_nonce = msg.from_head_nonce
             use_live = False
             return
         receipt = link.acceptance
         if (
             receipt is None
             or receipt.nonce is None
-            or receipt.from_head_nonce is None
-            or len(receipt.from_head_nonce) != NONCE_LENGTH
-            or receipt.from_head_nonce == NO_HEAD_NONCE
-            or receipt.from_head_nonce == cursor_nonce
+            or len(receipt.nonce) != NONCE_LENGTH
             or receipt.timestamp is None
             or receipt.wm_signature is None
             or not verify_attestation(
@@ -103,10 +94,8 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
                 receipt.nonce,
                 link.from_counter,
                 link.from_root or None,
-                receipt.from_head_nonce,
                 link.to_counter,
                 link.to_root or None,
-                cursor_nonce,
                 receipt.timestamp,
                 receipt.wm_signature,
             )
@@ -117,12 +106,10 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
         if wm_behind and link.to_counter == wm_counter and (
             link.from_counter != from_counter
             or not same_root(link.from_root or None, from_root)
-            or receipt.from_head_nonce != msg.from_head_nonce
         ):
-            # Restore may rotate the head nonce. The consumed predecessor still
-            # identifies the original step into the restored head.
+            # The WM's live attestation names the step into its restored head; this device's
+            # history must reach that head by the same step.
             raise DataError("WARD: the restored WM head has a different predecessor")
-        cursor_nonce = receipt.from_head_nonce
 
     # Check both checkpoints on one descent. Restarting at the anchor would let
     # the host change which inbound links it reports for already verified states.
@@ -150,14 +137,6 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
             expected_from = None
         if checkpoint == ancestor_counter and not same_root(cursor_root, ancestor_root):
             raise DataError("WARD: the WM and device heads are on different branches")
-        if (
-            checkpoint == stored_counter
-            and stored_counter
-            and cursor_nonce != stored_nonce
-        ):
-            raise DataError(
-                "WARD: the proof reaches a different occurrence of this device's head"
-            )
         if checkpoint == recovered_counter and not same_root(
             cursor_root, recovered_root
         ):
@@ -190,8 +169,9 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
             stored_counter, wm_counter, wm_root, new_counter, recovered_root
         )
 
-    # The head nonce binds this REVERT to this moment: it re-creates an older (counter, root)
-    # pair, which would otherwise revive authorisations minted for the earlier occurrence.
+    # A REVERT carries an older root under a new counter, so its pair is new. It is bound to this
+    # round's nonce, and the WM's compare-and-swap on (wm_counter, wm_root) lets it move the head
+    # once.
     step, advance = await authorise(
         wm_counter, wm_root, new_counter, recovered_root, revert=True
     )

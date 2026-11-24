@@ -18,7 +18,8 @@ Components, each in its own terminal with its own log in the run directory:
               it while the WM is down; its wardd fills its replica from the relay. That wardd runs
               with `--adversarial-tests`: the adapter has it serve the device an older state
     adapter   `tools/ward_stack_adapter.py`: one WARD session through wardd, step by step, then the
-              two devices queue conflicting changes offline and the second resolves them
+              two devices queue conflicting changes offline and the second resolves them, and
+              finally the WM is restored from a backup and rolled forward by the first device
 
 `--full-log` also merges every component into `<run>/full.log`, each line timestamped and tagged.
 Stop the stack with `q` in the adapter's terminal, Ctrl-C here, or `--stop RUN_DIR` from anywhere.

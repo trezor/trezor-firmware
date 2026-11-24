@@ -398,15 +398,14 @@ message WardChainLink {
     optional uint32 to_counter   = 3;
     optional bytes  to_root      = 4;
     optional bytes  auth_commit  = 5;
-    // Required for historical links used by WardRollback. The to-head nonce is
-    // the expected occurrence from the request or the previous receipt.
+    // Required for historical links used by WardRollback, when the request asks for it.
     optional WardChainAcceptance acceptance = 6;
 }
 
 /** A stored WM attestation of the enclosing link's endpoints. */
 message WardChainAcceptance {
     optional bytes  nonce           = 1;
-    optional bytes  from_head_nonce = 2;
+    reserved 2;  // was `from_head_nonce`
     optional uint64 timestamp       = 3;
     optional bytes  wm_signature    = 4;
 }

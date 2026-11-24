@@ -174,39 +174,11 @@ def auth_commit(
 # Written out here rather than imported, like everything else in this file: an oracle that shared
 # code with the firmware would agree with it by construction and prove nothing.
 
-TAG_WM_HEAD = b"WARD WM COMMIT v3"
-TAG_WM_INIT = b"WARD WM INIT v3"
-TAG_WM_REVERT = b"WARD WM REVERT v3"
-# Without a WM (the MVP build): the step signed for the host, over NO_HEAD_NONCE.
-TAG_STEP = b"WARD STEP v1"
-
-# The nonce a WM holds for a wallet it has never seen -- the one value `head_init_sig` is minted
-# under. A live head never carries it.
-NO_HEAD_NONCE = b"\x00" * 32
-
-
-def wm_preimage(
-    tag: bytes,
-    ward_id: bytes,
-    from_counter: int,
-    from_root,
-    to_counter: int,
-    to_root,
-    head_nonce: bytes,
-) -> bytes:
-    """`transition_preimage` with the WM's current head nonce appended.
-
-    The ONE field that separates the two authenticators. `auth_commit` cannot carry it -- a device
-    folding a chain holds links and no WM state -- so the nonce is appended here rather than woven
-    into the shared builder. Fixed width, so no length prefix is needed.
-    """
-    assert len(head_nonce) == 32
-    return (
-        transition_preimage(
-            tag, ward_id, from_counter, from_root, to_counter, to_root
-        )
-        + head_nonce
-    )
+TAG_WM_HEAD = b"WARD WM COMMIT v5"
+TAG_WM_INIT = b"WARD WM INIT v4"
+TAG_WM_REVERT = b"WARD WM REVERT v5"
+# Without a WM (the MVP build): the step signed for the host.
+TAG_STEP = b"WARD STEP v2"
 
 
 def wm_sig(
@@ -216,23 +188,19 @@ def wm_sig(
     from_root,
     to_counter: int,
     to_root,
-    head_nonce: bytes,
     tag: bytes = TAG_WM_HEAD,
+    session_nonce: bytes = b"",
 ) -> bytes:
-    """The signature a WM checks before letting a head advance.
-
-    THE BYTES `auth_commit` MACs, PLUS THE WM'S HEAD NONCE. The WM holds roots now, so there is no
-    vantage point from which only macs exist and no second entry point for one --
-    `wm_sig_over_macs` is gone with the key that made it necessary. Both roots are inside what the
-    WM verifies, which is also what it compare-and-swaps on and attests; the nonce is what makes
-    the authorisation good for one transition only.
-    """
+    """The signature a WM checks before letting a head advance: Ed25519 over THE BYTES
+    `auth_commit` MACs, under the WM's own tag, followed by the SESSION NONCE -- the round nonce
+    the device picked for its latest sync. The WM accepts it only while that is the wallet's
+    latest sync, and only by compare-and-swap on the predecessor. Enrolment and the MVP's host
+    step carry no nonce."""
     from trezorlib import _ed25519
 
     return _ed25519.signature_unsafe(
-        wm_preimage(
-            tag, ward_id, from_counter, from_root, to_counter, to_root, head_nonce
-        ),
+        transition_preimage(tag, ward_id, from_counter, from_root, to_counter, to_root)
+        + session_nonce,
         k_sig,
         ward_id,
     )
@@ -244,23 +212,18 @@ def verify_wm_sig(
     from_root,
     to_counter: int,
     to_root,
-    head_nonce: bytes,
     sig: bytes,
     tag: bytes = TAG_WM_HEAD,
+    session_nonce: bytes = b"",
 ) -> bool:
-    """What a WM does: verify with `ward_id` alone, holding no secret.
-
-    `head_nonce` is the WM's OWN value, never one taken off the wire -- a WM that verified against
-    a nonce its caller supplied would be checking that the caller can copy a number.
-    """
+    """What a WM does: verify with `ward_id` alone, against the session nonce IT holds."""
     from trezorlib import _ed25519
 
     try:
         _ed25519.checkvalid(
             sig,
-            wm_preimage(
-                tag, ward_id, from_counter, from_root, to_counter, to_root, head_nonce
-            ),
+            transition_preimage(tag, ward_id, from_counter, from_root, to_counter, to_root)
+            + session_nonce,
             ward_id,
         )
         return True
@@ -269,37 +232,14 @@ def verify_wm_sig(
 
 
 def head_init_sig(k_sig: bytes, ward_id: bytes, counter: int, root) -> bytes:
-    """Authorises the first head a WM ever holds for this wallet.
-
-    A self-transition `(counter, root) -> (counter, root)` under its own tag and under
-    NO_HEAD_NONCE -- the one state in which there is no existing nonce to quote -- so it can never
-    be replayed as an advance.
-    """
-    from trezorlib import _ed25519
-
-    return _ed25519.signature_unsafe(
-        wm_preimage(
-            TAG_WM_INIT, ward_id, counter, root, counter, root, NO_HEAD_NONCE
-        ),
-        k_sig,
-        ward_id,
-    )
+    """Authorises the first head a WM ever holds for this wallet: a self-transition
+    `(counter, root) -> (counter, root)` under its own tag, so it can never be replayed as an
+    advance. It is not secret; a wiped WM can be enrolled again with it."""
+    return wm_sig(k_sig, ward_id, counter, root, counter, root, TAG_WM_INIT)
 
 
 def verify_head_init_sig(ward_id: bytes, counter: int, root, sig: bytes) -> bool:
-    from trezorlib import _ed25519
-
-    try:
-        _ed25519.checkvalid(
-            sig,
-            wm_preimage(
-                TAG_WM_INIT, ward_id, counter, root, counter, root, NO_HEAD_NONCE
-            ),
-            ward_id,
-        )
-        return True
-    except Exception:
-        return False
+    return verify_wm_sig(ward_id, counter, root, counter, root, sig, TAG_WM_INIT)
 
 
 def derive_k_ident(seed: bytes) -> bytes:

@@ -680,10 +680,6 @@ pub struct WardSyncResponse {
     pub from_counter: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSyncResponse.from_root)
     pub from_root: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSyncResponse.from_head_nonce)
-    pub from_head_nonce: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSyncResponse.to_head_nonce)
-    pub to_head_nonce: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardSyncResponse.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -865,80 +861,8 @@ impl WardSyncResponse {
         self.from_root.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // optional bytes from_head_nonce = 11;
-
-    pub fn from_head_nonce(&self) -> &[u8] {
-        match self.from_head_nonce.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_from_head_nonce(&mut self) {
-        self.from_head_nonce = ::std::option::Option::None;
-    }
-
-    pub fn has_from_head_nonce(&self) -> bool {
-        self.from_head_nonce.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_from_head_nonce(&mut self, v: ::std::vec::Vec<u8>) {
-        self.from_head_nonce = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_from_head_nonce(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.from_head_nonce.is_none() {
-            self.from_head_nonce = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.from_head_nonce.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_from_head_nonce(&mut self) -> ::std::vec::Vec<u8> {
-        self.from_head_nonce.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
-    // optional bytes to_head_nonce = 10;
-
-    pub fn to_head_nonce(&self) -> &[u8] {
-        match self.to_head_nonce.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_to_head_nonce(&mut self) {
-        self.to_head_nonce = ::std::option::Option::None;
-    }
-
-    pub fn has_to_head_nonce(&self) -> bool {
-        self.to_head_nonce.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_to_head_nonce(&mut self, v: ::std::vec::Vec<u8>) {
-        self.to_head_nonce = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_to_head_nonce(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.to_head_nonce.is_none() {
-            self.to_head_nonce = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.to_head_nonce.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_to_head_nonce(&mut self) -> ::std::vec::Vec<u8> {
-        self.to_head_nonce.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(9);
+        let mut fields = ::std::vec::Vec::with_capacity(7);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "timestamp",
@@ -974,16 +898,6 @@ impl WardSyncResponse {
             "from_root",
             |m: &WardSyncResponse| { &m.from_root },
             |m: &mut WardSyncResponse| { &mut m.from_root },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "from_head_nonce",
-            |m: &WardSyncResponse| { &m.from_head_nonce },
-            |m: &mut WardSyncResponse| { &mut m.from_head_nonce },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "to_head_nonce",
-            |m: &WardSyncResponse| { &m.to_head_nonce },
-            |m: &mut WardSyncResponse| { &mut m.to_head_nonce },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardSyncResponse>(
             "WardSyncResponse",
@@ -1024,12 +938,6 @@ impl ::protobuf::Message for WardSyncResponse {
                 74 => {
                     self.from_root = ::std::option::Option::Some(is.read_bytes()?);
                 },
-                90 => {
-                    self.from_head_nonce = ::std::option::Option::Some(is.read_bytes()?);
-                },
-                82 => {
-                    self.to_head_nonce = ::std::option::Option::Some(is.read_bytes()?);
-                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -1064,12 +972,6 @@ impl ::protobuf::Message for WardSyncResponse {
         if let Some(v) = self.from_root.as_ref() {
             my_size += ::protobuf::rt::bytes_size(9, &v);
         }
-        if let Some(v) = self.from_head_nonce.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(11, &v);
-        }
-        if let Some(v) = self.to_head_nonce.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(10, &v);
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1097,12 +999,6 @@ impl ::protobuf::Message for WardSyncResponse {
         if let Some(v) = self.from_root.as_ref() {
             os.write_bytes(9, v)?;
         }
-        if let Some(v) = self.from_head_nonce.as_ref() {
-            os.write_bytes(11, v)?;
-        }
-        if let Some(v) = self.to_head_nonce.as_ref() {
-            os.write_bytes(10, v)?;
-        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -1127,8 +1023,6 @@ impl ::protobuf::Message for WardSyncResponse {
         self.to_root = ::std::option::Option::None;
         self.from_counter = ::std::option::Option::None;
         self.from_root = ::std::option::Option::None;
-        self.from_head_nonce = ::std::option::Option::None;
-        self.to_head_nonce = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -1141,8 +1035,6 @@ impl ::protobuf::Message for WardSyncResponse {
             to_root: ::std::option::Option::None,
             from_counter: ::std::option::Option::None,
             from_root: ::std::option::Option::None,
-            from_head_nonce: ::std::option::Option::None,
-            to_head_nonce: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -2099,10 +1991,6 @@ pub struct WardPublishAck {
     pub timestamp: ::std::option::Option<u64>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardPublishAck.wm_signature)
     pub wm_signature: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardPublishAck.from_head_nonce)
-    pub from_head_nonce: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardPublishAck.to_head_nonce)
-    pub to_head_nonce: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardPublishAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -2174,80 +2062,8 @@ impl WardPublishAck {
         self.wm_signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // optional bytes from_head_nonce = 6;
-
-    pub fn from_head_nonce(&self) -> &[u8] {
-        match self.from_head_nonce.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_from_head_nonce(&mut self) {
-        self.from_head_nonce = ::std::option::Option::None;
-    }
-
-    pub fn has_from_head_nonce(&self) -> bool {
-        self.from_head_nonce.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_from_head_nonce(&mut self, v: ::std::vec::Vec<u8>) {
-        self.from_head_nonce = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_from_head_nonce(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.from_head_nonce.is_none() {
-            self.from_head_nonce = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.from_head_nonce.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_from_head_nonce(&mut self) -> ::std::vec::Vec<u8> {
-        self.from_head_nonce.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
-    // optional bytes to_head_nonce = 5;
-
-    pub fn to_head_nonce(&self) -> &[u8] {
-        match self.to_head_nonce.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_to_head_nonce(&mut self) {
-        self.to_head_nonce = ::std::option::Option::None;
-    }
-
-    pub fn has_to_head_nonce(&self) -> bool {
-        self.to_head_nonce.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_to_head_nonce(&mut self, v: ::std::vec::Vec<u8>) {
-        self.to_head_nonce = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_to_head_nonce(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.to_head_nonce.is_none() {
-            self.to_head_nonce = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.to_head_nonce.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_to_head_nonce(&mut self) -> ::std::vec::Vec<u8> {
-        self.to_head_nonce.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "timestamp",
@@ -2258,16 +2074,6 @@ impl WardPublishAck {
             "wm_signature",
             |m: &WardPublishAck| { &m.wm_signature },
             |m: &mut WardPublishAck| { &mut m.wm_signature },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "from_head_nonce",
-            |m: &WardPublishAck| { &m.from_head_nonce },
-            |m: &mut WardPublishAck| { &mut m.from_head_nonce },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "to_head_nonce",
-            |m: &WardPublishAck| { &m.to_head_nonce },
-            |m: &mut WardPublishAck| { &mut m.to_head_nonce },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardPublishAck>(
             "WardPublishAck",
@@ -2293,12 +2099,6 @@ impl ::protobuf::Message for WardPublishAck {
                 34 => {
                     self.wm_signature = ::std::option::Option::Some(is.read_bytes()?);
                 },
-                50 => {
-                    self.from_head_nonce = ::std::option::Option::Some(is.read_bytes()?);
-                },
-                42 => {
-                    self.to_head_nonce = ::std::option::Option::Some(is.read_bytes()?);
-                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2317,12 +2117,6 @@ impl ::protobuf::Message for WardPublishAck {
         if let Some(v) = self.wm_signature.as_ref() {
             my_size += ::protobuf::rt::bytes_size(4, &v);
         }
-        if let Some(v) = self.from_head_nonce.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(6, &v);
-        }
-        if let Some(v) = self.to_head_nonce.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(5, &v);
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2334,12 +2128,6 @@ impl ::protobuf::Message for WardPublishAck {
         }
         if let Some(v) = self.wm_signature.as_ref() {
             os.write_bytes(4, v)?;
-        }
-        if let Some(v) = self.from_head_nonce.as_ref() {
-            os.write_bytes(6, v)?;
-        }
-        if let Some(v) = self.to_head_nonce.as_ref() {
-            os.write_bytes(5, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -2360,8 +2148,6 @@ impl ::protobuf::Message for WardPublishAck {
     fn clear(&mut self) {
         self.timestamp = ::std::option::Option::None;
         self.wm_signature = ::std::option::Option::None;
-        self.from_head_nonce = ::std::option::Option::None;
-        self.to_head_nonce = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2369,8 +2155,6 @@ impl ::protobuf::Message for WardPublishAck {
         static instance: WardPublishAck = WardPublishAck {
             timestamp: ::std::option::Option::None,
             wm_signature: ::std::option::Option::None,
-            from_head_nonce: ::std::option::Option::None,
-            to_head_nonce: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -3253,41 +3037,38 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x12\x17\n\x07ward_id\x18\x02\x20\x01(\x0cR\x06wardId\x12'\n\x0fcurrent_\
     counter\x18\x03\x20\x01(\rR\x0ecurrentCounter\x12!\n\x0ccurrent_root\x18\
     \x04\x20\x01(\x0cR\x0bcurrentRoot\x12\"\n\rhead_init_sig\x18\x06\x20\x01\
-    (\x0cR\x0bheadInitSigJ\x04\x08\x05\x10\x06\"\xe1\x02\n\x10WardSyncRespon\
+    (\x0cR\x0bheadInitSigJ\x04\x08\x05\x10\x06\"\xa1\x02\n\x10WardSyncRespon\
     se\x12\x1c\n\ttimestamp\x18\x03\x20\x01(\x04R\ttimestamp\x12!\n\x0cwm_si\
     gnature\x18\x04\x20\x01(\x0cR\x0bwmSignature\x12<\n\x05links\x18\x05\x20\
     \x03(\x0b2&.hw.trezor.messages.ward.WardChainLinkR\x05links\x12\x1d\n\nt\
     o_counter\x18\x06\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x07\
     \x20\x01(\x0cR\x06toRoot\x12!\n\x0cfrom_counter\x18\x08\x20\x01(\rR\x0bf\
-    romCounter\x12\x1b\n\tfrom_root\x18\t\x20\x01(\x0cR\x08fromRoot\x12&\n\
-    \x0ffrom_head_nonce\x18\x0b\x20\x01(\x0cR\rfromHeadNonce\x12\"\n\rto_hea\
-    d_nonce\x18\n\x20\x01(\x0cR\x0btoHeadNonceJ\x04\x08\x01\x10\x02J\x04\x08\
-    \x02\x10\x03\"{\n\x10WardServiceFetch\x12\x1b\n\tentry_key\x18\x01\x20\
-    \x01(\x0cR\x08entryKey\x12'\n\x0fcurrent_counter\x18\x02\x20\x01(\rR\x0e\
-    currentCounter\x12!\n\x0ccurrent_root\x18\x03\x20\x01(\x0cR\x0bcurrentRo\
-    ot\"\x12\n\x10WardSyncRequired\"\xac\x02\n\x0bWardPublish\x12\x1b\n\tent\
-    ry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12'\n\x0fsealed_identity\x18\
-    \x0b\x20\x01(\x0cR\x0esealedIdentity\x12%\n\x0esealed_content\x18\x0c\
-    \x20\x01(\x0cR\rsealedContent\x12\x18\n\x07counter\x18\x04\x20\x01(\rR\
-    \x07counter\x12\x1f\n\x0bauth_commit\x18\x06\x20\x01(\x0cR\nauthCommit\
-    \x12\x15\n\x06wm_sig\x18\x07\x20\x01(\x0cR\x05wmSig\x12\x14\n\x05nonce\
-    \x18\x08\x20\x01(\x0cR\x05nonce\x12\x1b\n\tfrom_root\x18\t\x20\x01(\x0cR\
-    \x08fromRoot\x12\x19\n\x08new_root\x18\n\x20\x01(\x0cR\x07newRootJ\x04\
-    \x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x05\x10\x06\"\xa9\x01\n\
-    \x0eWardPublishAck\x12\x1c\n\ttimestamp\x18\x03\x20\x01(\x04R\ttimestamp\
-    \x12!\n\x0cwm_signature\x18\x04\x20\x01(\x0cR\x0bwmSignature\x12&\n\x0ff\
-    rom_head_nonce\x18\x06\x20\x01(\x0cR\rfromHeadNonce\x12\"\n\rto_head_non\
-    ce\x18\x05\x20\x01(\x0cR\x0btoHeadNonceJ\x04\x08\x01\x10\x02J\x04\x08\
-    \x02\x10\x03\"8\n\x13WardPublishConflict\x12!\n\x0chead_counter\x18\x01\
-    \x20\x01(\rR\x0bheadCounter\"L\n\x13WardMutationApplied\x12\x1b\n\tentry\
-    _key\x18\x01\x20\x01(\x0cR\x08entryKey\x12\x18\n\x07counter\x18\x02\x20\
-    \x01(\rR\x07counter\"l\n\x15WardFlushQueueApplied\x12\x1b\n\tentry_key\
-    \x18\x01\x20\x01(\x0cR\x08entryKey\x12\x18\n\x07counter\x18\x02\x20\x01(\
-    \rR\x07counter\x12\x1c\n\tremaining\x18\x03\x20\x01(\rR\tremaining\"(\n\
-    \x10WardResetService\x12\x14\n\x05force\x18\x01\x20\x01(\x08R\x05force\"\
-    5\n\x13WardResetServiceAck\x12\x1e\n\nunresolved\x18\x01\x20\x01(\rR\nun\
-    resolvedB?\n#com.satoshilabs.trezor.lib.protobufB\x18TrezorMessageWardSe\
-    rvice\
+    romCounter\x12\x1b\n\tfrom_root\x18\t\x20\x01(\x0cR\x08fromRootJ\x04\x08\
+    \x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\
+    \x0c\"{\n\x10WardServiceFetch\x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\
+    \x08entryKey\x12'\n\x0fcurrent_counter\x18\x02\x20\x01(\rR\x0ecurrentCou\
+    nter\x12!\n\x0ccurrent_root\x18\x03\x20\x01(\x0cR\x0bcurrentRoot\"\x12\n\
+    \x10WardSyncRequired\"\xac\x02\n\x0bWardPublish\x12\x1b\n\tentry_key\x18\
+    \x01\x20\x01(\x0cR\x08entryKey\x12'\n\x0fsealed_identity\x18\x0b\x20\x01\
+    (\x0cR\x0esealedIdentity\x12%\n\x0esealed_content\x18\x0c\x20\x01(\x0cR\
+    \rsealedContent\x12\x18\n\x07counter\x18\x04\x20\x01(\rR\x07counter\x12\
+    \x1f\n\x0bauth_commit\x18\x06\x20\x01(\x0cR\nauthCommit\x12\x15\n\x06wm_\
+    sig\x18\x07\x20\x01(\x0cR\x05wmSig\x12\x14\n\x05nonce\x18\x08\x20\x01(\
+    \x0cR\x05nonce\x12\x1b\n\tfrom_root\x18\t\x20\x01(\x0cR\x08fromRoot\x12\
+    \x19\n\x08new_root\x18\n\x20\x01(\x0cR\x07newRootJ\x04\x08\x02\x10\x03J\
+    \x04\x08\x03\x10\x04J\x04\x08\x05\x10\x06\"i\n\x0eWardPublishAck\x12\x1c\
+    \n\ttimestamp\x18\x03\x20\x01(\x04R\ttimestamp\x12!\n\x0cwm_signature\
+    \x18\x04\x20\x01(\x0cR\x0bwmSignatureJ\x04\x08\x01\x10\x02J\x04\x08\x02\
+    \x10\x03J\x04\x08\x05\x10\x06J\x04\x08\x06\x10\x07\"8\n\x13WardPublishCo\
+    nflict\x12!\n\x0chead_counter\x18\x01\x20\x01(\rR\x0bheadCounter\"L\n\
+    \x13WardMutationApplied\x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08en\
+    tryKey\x12\x18\n\x07counter\x18\x02\x20\x01(\rR\x07counter\"l\n\x15WardF\
+    lushQueueApplied\x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08entryKey\
+    \x12\x18\n\x07counter\x18\x02\x20\x01(\rR\x07counter\x12\x1c\n\tremainin\
+    g\x18\x03\x20\x01(\rR\tremaining\"(\n\x10WardResetService\x12\x14\n\x05f\
+    orce\x18\x01\x20\x01(\x08R\x05force\"5\n\x13WardResetServiceAck\x12\x1e\
+    \n\nunresolved\x18\x01\x20\x01(\rR\nunresolvedB?\n#com.satoshilabs.trezo\
+    r.lib.protobufB\x18TrezorMessageWardService\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
