@@ -6,7 +6,9 @@ name: SDK
 # from core/embed/xtask, which just spawns it), the `trezor-app-build` crate
 # (sdk/crates/trezor-app-build), the build-script helpers the apps use for
 # protobuf, translation and linker setup, and the `trezor-app-sdk` crate
-# (sdk/crates/trezor-app-sdk), the no_std runtime library the apps link against.
+# (sdk/crates/trezor-app-sdk), the no_std runtime library the apps link against,
+# and the apps themselves (sdk/apps), which must build for firmware and pass
+# their device tests on the emulator.
 # See sdk/doc/development.md for background on their roles.
 
 on:
@@ -37,7 +39,7 @@ concurrency:
 permissions:
   contents: read        # for actions/checkout
 
-# Each job runs over all crates, one step per crate.
+# Each job runs over all crates and the apps workspace, one step each.
 jobs:
   lint:
     name: Lint (fmt, clippy, doc)
@@ -51,6 +53,7 @@ jobs:
       - run: nix-shell --run "cd sdk/crates/trezor-app-tool && cargo fmt --check && cargo clippy --all-targets -- -D warnings && RUSTDOCFLAGS='-D warnings' cargo doc --no-deps"
       - run: nix-shell --run "cd sdk/crates/trezor-app-build && cargo fmt --check && cargo clippy --all-targets -- -D warnings && RUSTDOCFLAGS='-D warnings' cargo doc --no-deps"
       - run: nix-shell --run "cd sdk/crates/trezor-app-sdk && cargo fmt --check && cargo clippy --no-default-features && cargo clippy --all-features && cargo doc --no-deps --all-features"
+      - run: nix-shell --run "cd sdk/apps && cargo app-tool fmt --check && cargo app-tool clippy -m t3w1 --lang en"
 
   test:
     name: Unit tests
@@ -64,6 +67,7 @@ jobs:
       - run: nix-shell --run "cd sdk/crates/trezor-app-tool && cargo test"
       - run: nix-shell --run "cd sdk/crates/trezor-app-build && cargo test"
       - run: nix-shell --run "cd sdk/crates/trezor-app-sdk && cargo test --features test"
+      - run: nix-shell --run "cd sdk/apps && cargo app-tool test -m t3w1 --lang en && cargo app-tool build -m t3w1 --lang en"
 
   deps_check:
     name: Dependency check (audit, vet)
@@ -77,3 +81,23 @@ jobs:
       - run: nix-shell --run "cd sdk/crates/trezor-app-tool && cargo audit && cargo vet --locked"
       - run: nix-shell --run "cd sdk/crates/trezor-app-build && cargo audit && cargo vet --locked"
       - run: nix-shell --run "cd sdk/crates/trezor-app-sdk && cargo audit && cargo vet --locked"
+      - run: nix-shell --run "cd sdk/apps && cargo audit && cargo vet --locked"
+
+  device_test:
+    name: Device tests (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [testapp]
+    env:
+      APP: ${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      # universal emulator with app loading and debuglink
+      - run: nix-shell --run "uv run xtask build firmware --emulator -m T3W1 -p test --apps true"
+      - run: nix-shell --run "uv run core/emu.py --headless --temporary-profile -q -c env -C sdk/apps cargo app-tool device-test -p $APP -m t3w1 -e"
