@@ -45,9 +45,11 @@ in
           "rust-src"
           "clippy"
           "rustfmt"
+          "llvm-tools-preview" # what cargo-llvm-cov reads the coverage data with
         ];
       })
       pkgs.cargo-hack # every combination of features
+      pkgs.cargo-llvm-cov # test coverage
       pkgs.wasmtime.out # runs the wasm32-wasip1 tests; only the binary, not the C API
     ];
   };

@@ -41,6 +41,16 @@ jobs:
       # is too slow to run without optimizations.
       - name: Tests, optimized
         run: $NIX_RUN cargo test --release
+      # What the tests run and what they never do, on the job's summary page. Locally,
+      # `cargo llvm-cov --branch --html` shows the same in the sources.
+      - name: Coverage
+        run: |
+          $NIX_RUN cargo llvm-cov --branch --no-report
+          {
+            echo '```'
+            $NIX_RUN cargo llvm-cov report --branch --show-missing-lines
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Every combination of features
         run: $NIX_RUN cargo hack clippy --feature-powerset -- -D warnings
       # Where the verifier runs. Without `use_std`, since these targets have no std.
