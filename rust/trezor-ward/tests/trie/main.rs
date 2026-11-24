@@ -1,9 +1,10 @@
-//! Tests of the trie: the differential test of the two provers against the verifier, and the
-//! hostile proofs the verifier must refuse.
+//! Tests of the trie: the differential test of the two provers against the verifier, the
+//! exhaustive test over keys of a few bits, and the hostile proofs the verifier must refuse.
 
 use trezor_ward::trie::{Sha256, Tree};
 
 mod differential;
+mod exhaustive;
 mod hostile;
 
 type Val = Vec<u8>;

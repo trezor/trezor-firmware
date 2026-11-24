@@ -37,6 +37,10 @@ jobs:
       # They enable every feature: the crate's dev-dependency on itself turns them on.
       - name: Tests
         run: $NIX_RUN cargo test
+      # As an optimized build has them, and with the exhaustive test over 4-bit keys, which
+      # is too slow to run without optimizations.
+      - name: Tests, optimized
+        run: $NIX_RUN cargo test --release
       - name: Every combination of features
         run: $NIX_RUN cargo hack clippy --feature-powerset -- -D warnings
       # Where the verifier runs. Without `use_std`, since these targets have no std.
