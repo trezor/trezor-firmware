@@ -13,6 +13,7 @@
     "à": "090d0a000d009704000000f21e00000040bf0000000000000000c4ee3b0050fffeff03906b00fb0a007399fb0c80ffffff0cf16f00f60cf32f10fd0ce0fffdff0c20ebaef40c",
     "á": "090d0a000d00003089000000d04f000000f90600000000000000c4ee3b0050fffeff03906b00fb0a007399fb0c80ffffff0cf16f00f60cf32f10fd0ce0fffdff0c20ebaef40c",
     "ã": "090d0a000d00e58ded0000defa7f000012000100000000000000c4ee3b0050fffeff03906b00fb0a007399fb0c80ffffff0cf16f00f60cf32f10fd0ce0fffdff0c20ebaef40c",
+    "â": "090d0a000d002088010000d0dc0d0000fb33bf00000000000000c4ee3b0050fffeff03906b00fb0a007399fb0c80ffffff0cf16f00f60cf32f10fd0ce0fffdff0c20ebaef40c",
     "ç": "0a0d0a00090091fd6c0020feffff09c0cf23f74ff22f004035f40e000000f21f004036d0cf12f64f40ffffff0a00b3ff7d000000cd00000000e608000010d50d000030cf0500",
     "é": "0a0d0a000d00001099010000a07f000000f50a0000000000000091fd6c0030ffefff0ad08f01e35ff27f77b7aff4ffffffbff10f000000c0af00c34d20feefff0a0091fd6c00",
     "ê": "0a0d0a000d000088030000a0bf2f0000f817de0100000000000091fd6c0030ffefff0ad08f01e35ff27f77b7aff4ffffffbff10f000000c0af00c34d20feefff0a0091fd6c00",
@@ -295,6 +296,11 @@
     ],
     [
       "F",
+      "â",
+      -1
+    ],
+    [
+      "F",
       "ç",
       -1
     ],
@@ -374,6 +380,11 @@
       -1
     ],
     [
+      "P",
+      "â",
+      -1
+    ],
+    [
       "T",
       "À",
       -1
@@ -401,6 +412,11 @@
     [
       "T",
       "ã",
+      -1
+    ],
+    [
+      "T",
+      "â",
       -1
     ],
     [
@@ -466,6 +482,11 @@
     [
       "V",
       "ã",
+      -1
+    ],
+    [
+      "V",
+      "â",
       -1
     ],
     [
@@ -546,6 +567,11 @@
     [
       "Y",
       "ã",
+      -1
+    ],
+    [
+      "Y",
+      "â",
       -1
     ],
     [
