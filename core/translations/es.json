@@ -63,7 +63,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Revisa dirección con la fuente."
+      "Eckhart": "Verifica la dirección con la fuente."
     },
     "address__coin_address_template": "Dirección {0}",
     "address__confirmed": {
@@ -104,7 +104,7 @@
       "Delizia": "XPUB",
       "Eckhart": "Clave pública (XPUB)"
     },
-    "address__xpub_export_warning": "",
+    "address__xpub_export_warning": "Una computadora cuántica podría revelar todas las claves derivadas de esta clave pública.",
     "address_details__account_info": "Información de cuenta",
     "address_details__derivation_path": "Ruta de derivación",
     "address_details__title_receive_address": "Dirección de recepción",
@@ -209,9 +209,9 @@
     "bitcoin__confirm_locktime": "Confirmar tiempo de bloqueo",
     "bitcoin__create_proof_of_ownership": "¿Deseas crear una prueba de propiedad?",
     "bitcoin__high_mining_fee_template": "La comisión de minería de\n{0}\nes muy alta.",
-    "bitcoin__locktime_no_effect": "Tiempo de bloqueo definido pero no afectará.",
+    "bitcoin__locktime_no_effect": "Tiempo de bloqueo está configurado, pero no tendrá efecto.",
     "bitcoin__locktime_set_to": "Tiempo de bloqueo es",
-    "bitcoin__locktime_set_to_blockheight": "Tiempo de bloqueo es alt. bloque",
+    "bitcoin__locktime_set_to_blockheight": "Tiempo de bloqueo configurado en la altura de bloque",
     "bitcoin__lot_of_change_outputs": {
       "Bolt": "Muchas salidas de cambio.",
       "Caesar": "Muchas salidas de cambio",
@@ -223,7 +223,7 @@
     "bitcoin__ticket_amount": "Cantidad del ticket",
     "bitcoin__title_confirm_details": "Confirmar detalles",
     "bitcoin__title_finalize_transaction": "Finalizar transacción",
-    "bitcoin__title_high_mining_fee": "Com. minería alta",
+    "bitcoin__title_high_mining_fee": "Comisión de minería alta",
     "bitcoin__title_meld_transaction": "Fusionar transacción",
     "bitcoin__title_modify_amount": "Modificar cantidad",
     "bitcoin__title_payjoin": "Payjoin",
@@ -399,8 +399,8 @@
     "buttons__change": "Cambiar",
     "buttons__check": "Verificar",
     "buttons__check_again": {
-      "Bolt": "Ver de nuevo",
-      "Caesar": "Ver de nuevo",
+      "Bolt": "Verifica de nuevo",
+      "Caesar": "Verifica de nuevo",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -413,12 +413,7 @@
       "Eckhart": ""
     },
     "buttons__continue": "Continuar",
-    "buttons__continue_anyway": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "Continuar igualmente",
-      "Eckhart": "Continuar igualmente"
-    },
+    "buttons__continue_anyway": "Continuar igualmente",
     "buttons__details": "Detalles",
     "buttons__disconnect": {
       "Bolt": "",
@@ -459,7 +454,7 @@
       "Eckhart": "Revisar"
     },
     "buttons__select": "Seleccionar",
-    "buttons__set": "Ajustar",
+    "buttons__set": "Configura",
     "buttons__shift": {
       "Bolt": "",
       "Caesar": "Shift",
@@ -526,7 +521,7 @@
     "cardano__cost": "Costo",
     "cardano__credential_intro_template": "La credencial de {0} es un(a) {1}",
     "cardano__credential_mismatch": "Las credenciales no coinciden con las de pago.",
-    "cardano__datum_hash": "Hash de datum",
+    "cardano__datum_hash": "Hash del datum",
     "cardano__delegating_to": "Delegando a",
     "cardano__delegating_to_key_hash": "Delegando al hash de clave",
     "cardano__delegating_to_script": "Delegando al script",
@@ -535,7 +530,7 @@
     "cardano__for_account_template": "Para la cuenta {0}",
     "cardano__for_key_hash": "Para el hash de clave",
     "cardano__for_script": "Para el script",
-    "cardano__inline_datum": "Datum inline",
+    "cardano__inline_datum": "Datum integrado",
     "cardano__input_id": "ID de entrada",
     "cardano__input_index": "Índice de entrada",
     "cardano__intro_text_change": "La siguiente dirección es de cambio. Su",
@@ -551,7 +546,7 @@
     "cardano__no_output_tx": "La transacción no tiene salidas; la red no se puede verificar.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Otros",
-    "cardano__output_contains_datum_or_ref_script": "",
+    "cardano__output_contains_datum_or_ref_script": "La salida contiene un datum o un script de referencia.",
     "cardano__path": "ruta",
     "cardano__pledge": "Compromiso",
     "cardano__pointer": "puntero",
@@ -612,14 +607,9 @@
     "cardano__x_of_y_signatures_template": "Requiere {0} de {1} firmas.",
     "coinjoin__access_account": "¿Acceder a tu cuenta de coinjoin?",
     "coinjoin__do_not_disconnect": "¡No desconectes tu Trezor!",
-    "coinjoin__max_coordinator_fee_pct": "Comisión max. coordinador",
+    "coinjoin__max_coordinator_fee_pct": "Comisión máxima del coordinador",
     "coinjoin__max_mining_fee": "Tasa máxima de minería",
-    "coinjoin__max_rounds": {
-      "Bolt": "Máx. de rondas",
-      "Caesar": "Máx. de rondas",
-      "Delizia": "Máx. de rondas",
-      "Eckhart": "Número máx. rondas"
-    },
+    "coinjoin__max_rounds": "Número máximo de rondas",
     "coinjoin__title": "Autorizar coinjoin",
     "coinjoin__title_progress": "Coinjoin en curso...",
     "coinjoin__waiting_for_others": "Esperando a los demás...",
@@ -697,13 +687,13 @@
     "ethereum__eip_712_empty_domain": "¡dApp no se identificó!",
     "ethereum__gas_limit": "Límite de gas",
     "ethereum__gas_price": "Precio de gas",
-    "ethereum__max_gas_price": "Comisión máx. de gas",
+    "ethereum__max_gas_price": "Comisión máxima por gas",
     "ethereum__name_and_version": "Nombre y versión",
     "ethereum__new_contract": "Se desplegará un nuevo contrato",
     "ethereum__no_message_field": "Sin campo de mensaje.",
-    "ethereum__priority_fee": "Comisión máx. de prioridad",
+    "ethereum__priority_fee": "Comisión de prioridad máxima",
     "ethereum__redeem": "Canjear",
-    "ethereum__redeem_amount": "Cantidad a canjear",
+    "ethereum__redeem_amount": "Canjear cantidad",
     "ethereum__redeem_from": "Canjear de",
     "ethereum__revoke_done": {
       "Bolt": "",
@@ -718,17 +708,12 @@
     "ethereum__show_full_array": "Ver matriz entera",
     "ethereum__show_full_domain": "Ver dominio entero",
     "ethereum__show_full_message": "Ver mensaje entero",
-    "ethereum__show_full_struct": {
-      "Bolt": "Ver estruct. entera",
-      "Caesar": "Ver estruct. entera",
-      "Delizia": "Ver estruct. íntegra.",
-      "Eckhart": "Ver estruct. entera"
-    },
+    "ethereum__show_full_struct": "Mostrar estructura completa",
     "ethereum__sign_eip712": "¿Quieres firmar los datos EIP-712?",
     "ethereum__skip_to_hash": "Omitir y ver el hash",
     "ethereum__smart_info": "Información del contrato de la cuenta inteligente",
     "ethereum__staking_claim": "Reclamar",
-    "ethereum__staking_claim_address": "Dir. de reclamo",
+    "ethereum__staking_claim_address": "Dirección para reclamar",
     "ethereum__staking_claim_intro": "¿Reclamar ETH de Everstake?",
     "ethereum__staking_stake": "Hacer stake",
     "ethereum__staking_stake_address": "Dirección de stake",
@@ -772,8 +757,8 @@
     "ethereum__vault_claim_to": "Reclamar en",
     "ethereum__vault_deposit_intro": "Verifica los detalles para depositar en la bóveda.",
     "ethereum__vault_owner_address": "Dirección del propietario",
-    "ethereum__vault_redeem_intro": "Verifica los detalles para redimir de la bóveda.",
-    "ethereum__vault_redeem_to": "Redimir en",
+    "ethereum__vault_redeem_intro": "Verifica los detalles para canjear desde la bóveda.",
+    "ethereum__vault_redeem_to": "Canjear en",
     "ethereum__vault_withdraw_intro": "Verifica los detalles para retirar de la bóveda.",
     "ethereum__view_data_and_hash": "Ver datos y hash",
     "ethereum__withdraw": "Retirar",
@@ -826,7 +811,7 @@
     "fido__title_select_credential": "Seleccionar credencial",
     "fido__title_u2f_auth": "Autenticación U2F",
     "fido__title_u2f_register": "Registro U2F",
-    "fido__title_verify_user": "Verif. usuario FIDO2",
+    "fido__title_verify_user": "Verificar usuario FIDO2",
     "fido__unable_to_verify_user": "No se puede verificar el usuario.",
     "fido__wanna_erase_credentials": {
       "Bolt": "",
@@ -1059,7 +1044,7 @@
     },
     "joint__title": {
       "Bolt": "",
-      "Caesar": "Transacc. conjunta",
+      "Caesar": "Transacción conjunta",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -1088,14 +1073,14 @@
     "k1n1__writing": "",
     "language__change_to_template": "¿Cambiar el idioma a {0}?",
     "language__changed": "El idioma cambió con éxito.",
-    "language__czech": "",
-    "language__english": "",
-    "language__french": "",
-    "language__german": "",
-    "language__indonesian": "",
-    "language__portuguese": "",
+    "language__czech": "Checo",
+    "language__english": "Inglés",
+    "language__french": "Francés",
+    "language__german": "Alemán",
+    "language__indonesian": "Indonesio",
+    "language__portuguese": "Portugués",
     "language__progress": "Cambiando lenguaje...",
-    "language__spanish": "",
+    "language__spanish": "Español",
     "language__title": "Configuración de idioma",
     "led__disable": {
       "Bolt": "",
@@ -1145,7 +1130,12 @@
       "Delizia": "",
       "Eckhart": "Desbloquear"
     },
-    "menu__turn_off": "",
+    "menu__turn_off": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Apagar"
+    },
     "misc__decrypt_value": "Descifrar valor",
     "misc__enable_labeling": "¿Habilitar el etiquetado?",
     "misc__encrypt_value": "Cifrar valor",
@@ -1218,7 +1208,7 @@
     "monero__processing_outputs": "Procesando salidas",
     "monero__signing": "Firmando...",
     "monero__signing_inputs": "Firmando entradas",
-    "monero__unlock_time_set_template": "Tiempo de desbloqueo de esta transacción definido como {0}",
+    "monero__unlock_time_set_template": "Tiiempo de desbloqueo de esta transacción está configurado en {0}",
     "monero__wanna_export_tx_der": "¿Quieres exportar tx_der\npara tx_proof?",
     "monero__wanna_export_tx_key": "¿Quieres exportar tx_key?",
     "monero__wanna_export_watchkey": "¿Quieres exportar las credenciales de solo lectura?",
@@ -1233,7 +1223,7 @@
     },
     "passphrase__always_on_device": "¿Ingresar siempre la passphrase en Trezor?",
     "passphrase__continue_with_empty_passphrase": "¿Continuar con la passphrase vacía?",
-    "passphrase__from_host_not_shown": "Se usará la passphrase proveída por la aplicación conectada, pero no se verá debido a la configuración.",
+    "passphrase__from_host_not_shown": "Se usará la passphrase proporcionada por la aplicación conectada, pero no se mostrará debido a la configuración del dispositivo.",
     "passphrase__hide": {
       "Bolt": "¿Ocultar la passphrase que viene de la aplicación?",
       "Caesar": "¿Ocultar la passphrase que viene de la aplicación?",
@@ -1247,13 +1237,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Mostrar passphrase"
+      "Eckhart": "Mostrar la passphrase"
     },
-    "passphrase__title_confirm": "Confirmar passphrase",
+    "passphrase__title_confirm": "Confirmar la passphrase",
     "passphrase__title_enter": "Ingresa la passphrase",
     "passphrase__title_hide": {
-      "Bolt": "Ocultar passphrase",
-      "Caesar": "Ocultar passphrase",
+      "Bolt": "Oculta la passphrase",
+      "Caesar": "Oculta la passphrase",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -1264,14 +1254,14 @@
       "Eckhart": ""
     },
     "passphrase__title_settings": {
-      "Bolt": "Configuración de passphrase",
-      "Caesar": "Configuración de passphrase",
+      "Bolt": "Configuración de la passphrase",
+      "Caesar": "Configuración de la passphrase",
       "Delizia": "",
-      "Eckhart": "Configuración de passphrase"
+      "Eckhart": "Configuración de la passphrase"
     },
     "passphrase__title_source": {
-      "Bolt": "Origen passphrase",
-      "Caesar": "Origen passphrase",
+      "Bolt": "Origen de la passphrase",
+      "Caesar": "Origen de la passphrase",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -1338,7 +1328,7 @@
     "pin__pin_mismatch": "El PIN no coincide.",
     "pin__please_check_again": {
       "Bolt": "",
-      "Caesar": "Vuelve a comprobarlo.",
+      "Caesar": "Vuelve a verificar por favor.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -1372,12 +1362,7 @@
     },
     "pin__title_settings": "Configuración del PIN",
     "pin__title_wrong_pin": "PIN incorrecto",
-    "pin__tries_left": {
-      "Bolt": "rest.",
-      "Caesar": "intentos restantes",
-      "Delizia": "rest.",
-      "Eckhart": "intentos restantes"
-    },
+    "pin__tries_left": "intentos restantes",
     "pin__turn_off": "¿Quieres desactivar la protección con PIN?",
     "pin__turn_on": "¿Activar la protección con PIN?",
     "pin__wipe_code_exists_description": "Antes de desactivar el PIN debe ser desactivado el código de borrado.",
@@ -1397,9 +1382,9 @@
     "progress__done": "Listo",
     "progress__loading_transaction": "Cargando transacción...",
     "progress__locking_device": {
-      "Bolt": "Bloq. el dispositivo...",
-      "Caesar": "Bloq. el dispositivo...",
-      "Delizia": "Bloq. el dispositivo...",
+      "Bolt": "Bloqueando el dispositivo...",
+      "Caesar": "Bloqueando el dispositivo...",
+      "Delizia": "Bloqueando el dispositivo...",
       "Eckhart": ""
     },
     "progress__one_second_left": "Queda 1 segundo",
@@ -1522,10 +1507,10 @@
       "Eckhart": "Regulatorio"
     },
     "reset__advanced_group_threshold_info": {
-      "Bolt": "El umbral de grupo determina el núm. de grupos necesarios para recuperar la billetera.",
+      "Bolt": "El umbral de grupo determina el número de grupos necesarios para recuperar la billetera.",
       "Caesar": "",
-      "Delizia": "El umbral de grupo determina el núm. de grupos necesarios para recuperar la billetera.",
-      "Eckhart": "El umbral de grupo determina el núm. de grupos necesarios para recuperar la billetera."
+      "Delizia": "El umbral de grupo determina el número de grupos necesarios para recuperar la billetera.",
+      "Eckhart": "El umbral de grupo determina el número de grupos necesarios para recuperar la billetera."
     },
     "reset__all_x_of_y_template": {
       "Bolt": "las {0} partes de {1}",
@@ -1577,17 +1562,12 @@
       "Eckhart": "Verifiquemos rápidamente la parte {0}."
     },
     "reset__check_share_title_template": {
-      "Bolt": "Verif. parte {0}",
+      "Bolt": "Verificar parte {0}",
       "Caesar": "",
-      "Delizia": "Verif. parte {0}",
+      "Delizia": "Verificar parte {0}",
       "Eckhart": ""
     },
-    "reset__check_wallet_backup_title": {
-      "Bolt": "Verificar el respaldo",
-      "Caesar": "Verificar el respaldo de la billetera",
-      "Delizia": "Verificar el respaldo",
-      "Eckhart": "Verificar el respaldo de la billetera"
-    },
+    "reset__check_wallet_backup_title": "Verificar el respaldo de la billetera",
     "reset__continue_with_next_share": {
       "Bolt": "Continúa con la próxima parte.",
       "Caesar": "Continúa con la próxima parte.",
@@ -1620,16 +1600,16 @@
       "Eckhart": ""
     },
     "reset__group_description": {
-      "Bolt": "Un grupo consta de partes de recuperación.",
+      "Bolt": "Un grupo está formado por partes de recuperación.",
       "Caesar": "",
-      "Delizia": "Un grupo consta de partes de recuperación.",
-      "Eckhart": "Un grupo consta de partes de recuperación."
+      "Delizia": "Un grupo está formado por partes de recuperación.",
+      "Eckhart": "Un grupo está formado por partes de recuperación."
     },
     "reset__group_info": {
-      "Bolt": "Cada grupo tiene un número de partes y su propio umbral. En los siguientes pasos, ajustarás el núm. de partes y los umbrales.",
+      "Bolt": "Cada grupo tiene un número definido de partes y su propio umbral. En los siguientes pasos, ajustarás los números de partes y los umbrales.",
       "Caesar": "",
-      "Delizia": "Cada grupo tiene un número de partes y su propio umbral. En los siguientes pasos, ajustarás el núm. de partes y los umbrales.",
-      "Eckhart": "Cada grupo tiene un número de partes y su propio umbral. En los siguientes pasos, ajustarás el núm. de partes y los umbrales."
+      "Delizia": "Cada grupo tiene un número definido de partes y su propio umbral. En los siguientes pasos, ajustarás los números de partes y los umbrales.",
+      "Eckhart": "Cada grupo tiene un número definido de partes y su propio umbral. En los siguientes pasos, ajustarás los números de partes y los umbrales."
     },
     "reset__group_share_checked_successfully_template": {
       "Bolt": "Parte {1} del grupo {0} verificada con éxito.",
@@ -1711,14 +1691,14 @@
       "Eckhart": "Cada parte del respaldo es una lista de {0} palabras.\nGuarda cada lista de palabras en un lugar seguro y separado o compártelas con personas de confianza. Reúnelas cuando sea necesario recuperar tu billetera."
     },
     "reset__num_shares_for_group_template": {
-      "Bolt": "Número de partes requeridas para formar el grupo {0}.",
+      "Bolt": "El número de partes requeridas para formar el grupo {0}.",
       "Caesar": "",
-      "Delizia": "Número de partes requeridas para formar el grupo {0}.",
-      "Eckhart": "Número de partes requeridas para formar el grupo {0}."
+      "Delizia": "El número  de partes requeridas para formar el grupo {0}.",
+      "Eckhart": "El número  de partes requeridas para formar el grupo {0}."
     },
     "reset__number_of_shares_info": {
       "Bolt": "",
-      "Caesar": "= número total de partes usadas para el respaldo de la billetera.",
+      "Caesar": "= el número  total de partes usadas para el respaldo de la billetera.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -1755,10 +1735,10 @@
       "Eckhart": "Repite para todas las partes."
     },
     "reset__required_number_of_groups": {
-      "Bolt": "El núm. de grupos necesario para la recuperación.",
+      "Bolt": "El número de grupos necesario para la recuperación.",
       "Caesar": "",
-      "Delizia": "El núm. de grupos necesario para la recuperación.",
-      "Eckhart": "El núm. de grupos necesario para la recuperación."
+      "Delizia": "El número de grupos necesario para la recuperación.",
+      "Eckhart": "El número de grupos necesario para la recuperación."
     },
     "reset__select_correct_word": {
       "Bolt": "",
@@ -1901,8 +1881,8 @@
     "reset__slip39_checklist_write_down_recovery": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Escribe y verifica las partes de respaldo",
-      "Eckhart": "Escribe y verifica las partes de respaldo"
+      "Delizia": "Escribe y verifica las partes de respaldo de la billetera",
+      "Eckhart": "Escribe y verifica las partes de respaldo de la billetera"
     },
     "reset__the_threshold_sets_the_number_of_shares": {
       "Bolt": "El umbral define el número de partes ",
@@ -1933,16 +1913,16 @@
       "Eckhart": ""
     },
     "reset__title_set_group_threshold": {
-      "Bolt": "Ajustar umbral g.",
+      "Bolt": "Configurar umbral de grupos",
       "Caesar": "",
-      "Delizia": "Ajustar umbral g.",
-      "Eckhart": "Ajustar umbral g."
+      "Delizia": "Configurar umbral de grupos",
+      "Eckhart": "Configurar umbral de grupos"
     },
     "reset__title_set_number_of_groups": {
-      "Bolt": "Definir número de grupos",
+      "Bolt": "Definir el número de grupos",
       "Caesar": "",
-      "Delizia": "Definir número de grupos",
-      "Eckhart": "Definir número de grupos"
+      "Delizia": "Definir el número de grupos",
+      "Eckhart": "Definir el número de grupos"
     },
     "reset__title_set_number_of_shares": {
       "Bolt": "Definir número de partes",
@@ -2198,7 +2178,7 @@
     "send__sign_cancelled": "Firma cancelada.",
     "send__sign_transaction": "Firmar transacción",
     "send__title_confirm_sending": "Confirmar envío",
-    "send__title_joint_transaction": "Transacc. conjunta",
+    "send__title_joint_transaction": "Transacción conjunta",
     "send__title_receiving_to": {
       "Bolt": "Recibiendo en",
       "Caesar": "",
@@ -2252,7 +2232,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "¿Permitir que el dispositivo conectado obtenga el núm. serie de tu Trezor Safe 7?"
+      "Eckhart": "¿Permitir que el dispositivo conectado obtenga el número de serie de tu Trezor Safe 7?"
     },
     "sn__title": {
       "Bolt": "",
@@ -2267,7 +2247,12 @@
     "solana__claim_question": "¿Reclamar SOL de la cuenta de staking?",
     "solana__claim_recipient_warning": "Reclama SOL en una dirección externa a tu billetera actual.",
     "solana__confirm_multisig": "Confirmar multi-firma",
-    "solana__details_not_reviewed": "",
+    "solana__details_not_reviewed": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Estás por firmar sin haber revisado los detalles de la transacción."
+    },
     "solana__expected_fee": "Comisión esperada",
     "solana__instruction_accounts_template": "La instrucción contiene {0} cuentas y sus datos tienen {1} bytes.",
     "solana__instruction_data": "Datos de instrucción",
@@ -2278,15 +2263,30 @@
     "solana__multiple_signers": "Múltiples firmantes",
     "solana__offchain_is_multisig": "El siguiente mensaje requiere de múltiples firmantes.",
     "solana__priority_fee": "Comisión de prioridad",
-    "solana__skip_details": "",
-    "solana__skip_details_hint": "",
+    "solana__skip_details": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Omitir detalles",
+      "Eckhart": "Omitir detalles"
+    },
+    "solana__skip_details_hint": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Si el tiempo límite se está agotando, salta directo a la firma en el menú.",
+      "Eckhart": "Si el tiempo límite se está agotando, salta directo a la firma en el menú."
+    },
     "solana__stake": "Hacer stake",
     "solana__stake_account": "Cuenta de stake",
     "solana__stake_on_question": "¿Hacer stake de SOL en {0}?",
     "solana__stake_question": "¿Hacer staking de SOL?",
     "solana__stake_withdrawal_warning": "La billetera actual no es la autoridad de retiro del staking de SOL.",
     "solana__stake_withdrawal_warning_title": "Dirección de la autoridad de retiro",
-    "solana__title_blind_signing": "",
+    "solana__title_blind_signing": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Firma ciega",
+      "Eckhart": "Firma ciega"
+    },
     "solana__transaction_contains_unknown_instructions": "La transacción contiene instrucciones desconocidas.",
     "solana__transaction_requires_x_signers_template": "La transacción requiere {0} firmantes, lo que aumenta la comisión.",
     "solana__unknown_token": "Token desconocido",
@@ -2298,12 +2298,17 @@
     },
     "solana__unstake": "Retirar stake",
     "solana__unstake_question": "¿Retirar SOL de cuenta de staking?",
-    "solana__view_details_in_menu": "",
+    "solana__view_details_in_menu": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ver detalles en el menú."
+    },
     "solana__vote_account": "Cuenta de voto",
     "stellar__account_merge": "Fusión de cuentas",
     "stellar__account_thresholds": "Umbrales de cuenta",
     "stellar__add_signer": "Añadir firmante",
-    "stellar__add_trust": "Añadir Trust",
+    "stellar__add_trust": "Añadir línea de confianza",
     "stellar__all_will_be_sent_to": "Todos los XLM se enviarán a",
     "stellar__allow_trust": "Permitir Trust",
     "stellar__approve_token": "Aprobar token",
@@ -2348,20 +2353,15 @@
     "stellar__no_memo_set": "¡No hay nota definida!",
     "stellar__no_restriction": "[sin restricciones]",
     "stellar__on_behalf_of": "A nombre de",
-    "stellar__path_pay": {
-      "Bolt": "Path Pay",
-      "Caesar": "Path Pay",
-      "Delizia": "Path Pay",
-      "Eckhart": "Pago con ruta"
-    },
-    "stellar__path_pay_at_least": "Path Pay de al menos",
+    "stellar__path_pay": "Pago por ruta",
+    "stellar__path_pay_at_least": "Pago por ruta de al menos",
     "stellar__pay": "Pagar",
     "stellar__pay_at_most": "Pagar al máximo",
-    "stellar__preauth_transaction": "Transacción pre-autorizada",
+    "stellar__preauth_transaction": "Transacción preautorizada",
     "stellar__price_per_template": "Precio por {0}",
     "stellar__remove_signer": "Eliminar firmante",
     "stellar__revoke_approval": "Revocar aprobación",
-    "stellar__revoke_trust": "Revocar Trust",
+    "stellar__revoke_trust": "Revocar trust",
     "stellar__selling": "Vendiendo",
     "stellar__set_data": "Configurar datos",
     "stellar__set_flags": "Configurar indicadores",
@@ -2369,7 +2369,7 @@
     "stellar__sign_authorization": "Firmar autorización",
     "stellar__sign_with": "Firmar con",
     "stellar__source_account": "Cuenta origen",
-    "stellar__spender": "Gastadora",
+    "stellar__spender": "Autorizado para gastar",
     "stellar__to": "A",
     "stellar__token_contract": "Contrato del token",
     "stellar__token_info": {
@@ -2487,7 +2487,7 @@
       "Delizia": "Escanea el QR para emparejar",
       "Eckhart": "Escanea el QR para emparejar"
     },
-    "tron__claim_unfrozen_balance": "¿Reclamar balance descongelado?",
+    "tron__claim_unfrozen_balance": "¿Reclamar saldo descongelado?",
     "tron__claim_voting_rewards": "¿Reclamar recompensas de voto?",
     "tron__delegate_resource": "Delegar recurso",
     "tron__lock_period": "Periodo de bloqueo",
@@ -2498,16 +2498,16 @@
       "Eckhart": "Bloques"
     },
     "tron__lockperiod_time": {
-      "Bolt": "Time",
+      "Bolt": "Tiempo",
       "Caesar": "Periodo de bloqueo (Tiempo)",
-      "Delizia": "Time",
-      "Eckhart": "Time"
+      "Delizia": "Tiempo",
+      "Eckhart": "Tiempo"
     },
     "tron__owner_address": "Dirección del propietario",
     "tron__undelegate_resource": "Remover delegación del recurso",
     "tutorial__complete": {
       "Bolt": "",
-      "Caesar": "Completar tutorial",
+      "Caesar": "Completar el tutorial",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2705,7 +2705,7 @@
     },
     "tutorial__title_middle_button": {
       "Bolt": "",
-      "Caesar": "Botón del medio",
+      "Caesar": "Botón central",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2717,7 +2717,7 @@
     },
     "tutorial__title_screen_scroll": {
       "Bolt": "",
-      "Caesar": "Prueba desplazar",
+      "Caesar": "Intenta deslizar",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2783,7 +2783,7 @@
     },
     "u2f__get": "¿Aumentar y recuperar el contador U2F?",
     "u2f__set_template": "¿Ajustar el contador U2F a {0}?",
-    "u2f__title_get": "Recibir cont. U2F",
+    "u2f__title_get": "Obtener contador U2F",
     "u2f__title_set": "Configurar contador U2F",
     "wipe__info": "Se borrarán todos los datos.",
     "wipe__start_again": "Borra tu Trezor y reinicia la configuración.",
@@ -2871,13 +2871,13 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "word_count__title": "Núm. de palabras",
+    "word_count__title": "El número de palabras",
     "words__about": "Acerca de",
     "words__account": "Cuenta",
     "words__account_deletion": "Eliminar cuenta",
     "words__address": "Dirección",
     "words__amount": "Cantidad",
-    "words__are_you_sure": "¿Seguro?",
+    "words__are_you_sure": "¿Seguro que quieres continuar?",
     "words__arguments": "Argumentos",
     "words__array_of": "Arreglo de",
     "words__asset": "Activo",
@@ -2908,7 +2908,7 @@
       "Eckhart": "Conectado"
     },
     "words__contains": "Contiene",
-    "words__continue_anyway_question": "¿Continuar igualmente?",
+    "words__continue_anyway_question": "¿Continuar de todos modos?",
     "words__continue_with": {
       "Bolt": "",
       "Caesar": "Continuar con",
@@ -2940,9 +2940,9 @@
     "words__fee": "Comisión",
     "words__fee_limit": "Límite de comisión",
     "words__from": {
-      "Bolt": "del",
-      "Caesar": "del",
-      "Delizia": "del",
+      "Bolt": "de",
+      "Caesar": "de",
+      "Delizia": "de",
       "Eckhart": ""
     },
     "words__from_title": "De",
@@ -2952,7 +2952,7 @@
     "words__intent": "Intención",
     "words__keep_it_safe": {
       "Bolt": "",
-      "Caesar": "¡Guárdala en un lugar seguro!",
+      "Caesar": "¡Guárdalo en un lugar seguro!",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2991,8 +2991,8 @@
     "words__outputs": "salidas",
     "words__pay_attention": "Presta atención",
     "words__please_check_again": {
-      "Bolt": "Vuelve a comprobarlo.",
-      "Caesar": "Vuelve a comprobarlo.",
+      "Bolt": "Vuelve a verificar por favor.",
+      "Caesar": "Vuelve a verificar por favor.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -3078,12 +3078,7 @@
       "Eckhart": ""
     },
     "words__token": "Token",
-    "words__transaction_fee": {
-      "Bolt": "Comisión",
-      "Caesar": "Comisión",
-      "Delizia": "Comisión de la transacción",
-      "Eckhart": "Comisión de la transacción"
-    },
+    "words__transaction_fee": "Comisión de transacción",
     "words__try_again": {
       "Bolt": "",
       "Caesar": "",

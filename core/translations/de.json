@@ -99,7 +99,7 @@
       "Delizia": "XPUB",
       "Eckhart": "Public Key (XPUB)"
     },
-    "address__xpub_export_warning": "",
+    "address__xpub_export_warning": "Ein Quantencomputer könnte diesen öffentlichen Schlüssel nutzen, um alle daraus abgeleiteten Schlüssel offenzulegen.",
     "address_details__account_info": "Konto-Info",
     "address_details__derivation_path": "Ableitungspfad",
     "address_details__title_receive_address": "Empfangsadresse",
@@ -418,12 +418,7 @@
       "Eckhart": ""
     },
     "buttons__continue": "Weiter",
-    "buttons__continue_anyway": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "Trotzdem fortfahren",
-      "Eckhart": "Trotzdem fortfahren"
-    },
+    "buttons__continue_anyway": "Trotzdem fortfahren",
     "buttons__details": "Details",
     "buttons__disconnect": {
       "Bolt": "",
@@ -616,7 +611,7 @@
     "cardano__no_output_tx": "Transaktion hat keine Ausgaben. Netzwerk kann nicht verifiziert werden.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Andere",
-    "cardano__output_contains_datum_or_ref_script": "",
+    "cardano__output_contains_datum_or_ref_script": "Der Output enthält ein Datum oder ein Referenzskript.",
     "cardano__path": "Pfad",
     "cardano__pledge": {
       "Bolt": "Versprechen",
@@ -1243,14 +1238,14 @@
     "k1n1__writing": "",
     "language__change_to_template": "Sprache in {0} ändern?",
     "language__changed": "Sprache erfolgreich geändert.",
-    "language__czech": "",
-    "language__english": "",
-    "language__french": "",
-    "language__german": "",
-    "language__indonesian": "",
-    "language__portuguese": "",
+    "language__czech": "Tschechisch",
+    "language__english": "Englisch",
+    "language__french": "Französisch",
+    "language__german": "Deutsch",
+    "language__indonesian": "Indonesisch",
+    "language__portuguese": "Portugiesisch",
     "language__progress": "Sprache wird geändert...",
-    "language__spanish": "",
+    "language__spanish": "Spanisch",
     "language__title": {
       "Bolt": "Spracheinstellungen",
       "Caesar": "Spracheinstellungen",
@@ -1305,7 +1300,12 @@
       "Delizia": "",
       "Eckhart": "Entsperren"
     },
-    "menu__turn_off": "",
+    "menu__turn_off": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ausschalten"
+    },
     "misc__decrypt_value": "Wert entschlüsseln",
     "misc__enable_labeling": {
       "Bolt": "Label aktivieren?",
@@ -1718,12 +1718,7 @@
       "Eckhart": "Du brauchst {count} mehr, beginnend mit {plural}"
     },
     "recovery__x_more_shares_needed_template_plural": "{count} weitere {plural} erforderlich.",
-    "recovery__x_of_y_entered_template": {
-      "Bolt": "{0} von {1} Shares eingegeben.",
-      "Caesar": "{0} von {1} Shares eingegeben.",
-      "Delizia": "{0} von {1} Shares eingegeben.",
-      "Eckhart": "{0} von {1} Shares eingegeben"
-    },
+    "recovery__x_of_y_entered_template": "{0} von {1} Shares eingegeben.",
     "recovery__you_have_entered": {
       "Bolt": "Du hast eingegeben",
       "Caesar": "Du hast eingegeben",
@@ -1767,7 +1762,7 @@
       "Eckhart": ""
     },
     "reset__by_continuing": {
-      "Bolt": "Du stimmst den Trezor Company Geschäftsbedingungen zu.",
+      "Bolt": "Wenn du fortfährst, akzeptierst du Trezors Bedingungen.",
       "Caesar": "Du stimmst den Geschäftsbedingungen von Trezor Company zu.",
       "Delizia": "Du stimmst den Geschäftsbedingungen von Trezor Company zu.",
       "Eckhart": "Wenn du fortfährst, stimmst du den Trezors Nutzungsbedingungen zu."
@@ -2432,12 +2427,7 @@
       "Delizia": "Verwendung verschiedener Pfade für verschiedene XPUBs.",
       "Eckhart": "Verwendung verschiedener Pfade für verschiedene XPUBs."
     },
-    "send__receiving_to_multisig": {
-      "Bolt": "An eine Multisig-Adresse empfangen.",
-      "Caesar": "Von Multisig-Adresse empfangen.",
-      "Delizia": "Von Multisig-Adresse empfangen.",
-      "Eckhart": "Empfangen von Multisig-Adresse."
-    },
+    "send__receiving_to_multisig": "Empfang an eine Multisig-Adresse.",
     "send__send_from": "Senden von",
     "send__send_in_the_app": {
       "Bolt": "",
@@ -2542,7 +2532,12 @@
     },
     "solana__claim_recipient_warning": "SOL an externe Adresse erhalten.",
     "solana__confirm_multisig": "Multisig bestätigen",
-    "solana__details_not_reviewed": "",
+    "solana__details_not_reviewed": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Du bist dabei, die Transaktion zu signieren, ohne die Transaktionsdetails zu überprüfen."
+    },
     "solana__expected_fee": {
       "Bolt": "Voraussichtliche Gebühr",
       "Caesar": "Voraussichtliche Gebühr",
@@ -2563,8 +2558,18 @@
     "solana__multiple_signers": "Mehrere Signer",
     "solana__offchain_is_multisig": "Die folgende Nachricht erfordert mehrere Signer.",
     "solana__priority_fee": "Prioritätsgebühr",
-    "solana__skip_details": "",
-    "solana__skip_details_hint": "",
+    "solana__skip_details": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Details überspringen",
+      "Eckhart": "Details überspringen"
+    },
+    "solana__skip_details_hint": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Wenn Zeitüberschreitungen auftreten, gehe im Menü direkt zum Signieren.",
+      "Eckhart": "Wenn Zeitüberschreitungen auftreten, gehe im Menü direkt zum Signieren."
+    },
     "solana__stake": "Stake",
     "solana__stake_account": "Staking-Konto",
     "solana__stake_on_question": "SOL auf {0} staken?",
@@ -2576,7 +2581,12 @@
     },
     "solana__stake_withdrawal_warning": "Diese Wallet hat keine SOL-Staking Auszahlungsberechtigung.",
     "solana__stake_withdrawal_warning_title": "Auszahlungsautoritätsadresse",
-    "solana__title_blind_signing": "",
+    "solana__title_blind_signing": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Blind signing",
+      "Eckhart": "Blind signing"
+    },
     "solana__transaction_contains_unknown_instructions": "Transaktion enthält unbekannte Anweisungen.",
     "solana__transaction_requires_x_signers_template": "Transaktion erfordert {0} Signer. Dadurch steigt die Gebühr.",
     "solana__unknown_token": "Unbekannter Token",
@@ -2588,7 +2598,12 @@
     },
     "solana__unstake": "Entstaken",
     "solana__unstake_question": "SOL von Staking-Konto entstaken?",
-    "solana__view_details_in_menu": "",
+    "solana__view_details_in_menu": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Details im Menü ansehen."
+    },
     "solana__vote_account": "Abstimmungskonto",
     "stellar__account_merge": "Kontozusammenführung",
     "stellar__account_thresholds": "Kontoschwellen",
@@ -2897,7 +2912,7 @@
     },
     "tutorial__press_and_hold": {
       "Bolt": "",
-      "Caesar": "Halte die rechte Taste gedrückt,\num wichtige Vorgänge zu genehmigen.",
+      "Caesar": "Halte die rechte Taste gedrückt, um wichtige Vorgänge zu genehmigen.",
       "Delizia": "",
       "Eckhart": ""
     },

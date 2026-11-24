@@ -73,7 +73,7 @@
       "Delizia": "XPUB",
       "Eckhart": "Kunci publik (XPUB)"
     },
-    "address__xpub_export_warning": "",
+    "address__xpub_export_warning": "Komputer kuantum bisa memakai kunci publik ini untuk mengungkap semua kunci turunannya.",
     "address_details__account_info": "Info akun",
     "address_details__derivation_path": "Derivation path",
     "address_details__title_receive_address": "Alamat penerimaan",
@@ -387,12 +387,7 @@
       "Eckhart": ""
     },
     "buttons__continue": "Lanjutkan",
-    "buttons__continue_anyway": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "Lanjutkan saja",
-      "Eckhart": "Lanjutkan saja"
-    },
+    "buttons__continue_anyway": "Lanjutkan saja",
     "buttons__details": "Detail",
     "buttons__disconnect": {
       "Bolt": "",
@@ -520,7 +515,7 @@
     "cardano__no_output_tx": "Transaksi tidak memiliki output, jaringan tidak dapat diverifikasi.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Lainnya",
-    "cardano__output_contains_datum_or_ref_script": "",
+    "cardano__output_contains_datum_or_ref_script": "Output berisi datum atau skrip referensi.",
     "cardano__path": "jalur",
     "cardano__pledge": "Pledge",
     "cardano__pointer": "pointer",
@@ -1042,14 +1037,14 @@
     "k1n1__writing": "",
     "language__change_to_template": "Ubah bahasa ke {0}?",
     "language__changed": "Bahasa berhasil diubah.",
-    "language__czech": "",
-    "language__english": "",
-    "language__french": "",
-    "language__german": "",
-    "language__indonesian": "",
-    "language__portuguese": "",
+    "language__czech": "Ceko",
+    "language__english": "Inggris",
+    "language__french": "Prancis",
+    "language__german": "Jerman",
+    "language__indonesian": "Indonesia",
+    "language__portuguese": "Portugis",
     "language__progress": "Mengubah bahasa...",
-    "language__spanish": "",
+    "language__spanish": "Spanyol",
     "language__title": "Pengaturan bahasa",
     "led__disable": {
       "Bolt": "",
@@ -1099,7 +1094,12 @@
       "Delizia": "",
       "Eckhart": "Buka kunci"
     },
-    "menu__turn_off": "",
+    "menu__turn_off": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Matikan"
+    },
     "misc__decrypt_value": "Dekripsi nilai",
     "misc__enable_labeling": "Aktifkan pelabelan?",
     "misc__encrypt_value": "Enkripsi nilai",
@@ -2226,7 +2226,12 @@
     "solana__claim_question": "Klaim SOL dari akun staking?",
     "solana__claim_recipient_warning": "Mengklaim SOL ke alamat di luar dompet Anda saat ini.",
     "solana__confirm_multisig": "Konfirmasi multisig",
-    "solana__details_not_reviewed": "",
+    "solana__details_not_reviewed": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Anda akan menandatangani tanpa meninjau detail transaksi."
+    },
     "solana__expected_fee": "Perkiraan biaya",
     "solana__instruction_accounts_template": "Instruksi berisi {0} akun dan datanya sepanjang {1} byte.",
     "solana__instruction_data": "Data instruksi",
@@ -2237,15 +2242,30 @@
     "solana__multiple_signers": "Beberapa penandatangan",
     "solana__offchain_is_multisig": "Pesan berikut membutuhkan beberapa penandatangan.",
     "solana__priority_fee": "Biaya prioritas",
-    "solana__skip_details": "",
-    "solana__skip_details_hint": "",
+    "solana__skip_details": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Lewati detail",
+      "Eckhart": "Lewati detail"
+    },
+    "solana__skip_details_hint": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Jika waktu tunggu habis, langsung lanjutkan ke penandatanganan di menu.",
+      "Eckhart": "Jika waktu tunggu habis, langsung lanjutkan ke penandatanganan di menu."
+    },
     "solana__stake": "Stake",
     "solana__stake_account": "Akun staking",
     "solana__stake_on_question": "Stake SOL di {0}?",
     "solana__stake_question": "Stake SOL?",
     "solana__stake_withdrawal_warning": "Dompet saat ini bukan otoritas penarikan staking SOL.",
     "solana__stake_withdrawal_warning_title": "Alamat otoritas penarikan",
-    "solana__title_blind_signing": "",
+    "solana__title_blind_signing": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Tanda tangan buta",
+      "Eckhart": "Tanda tangan buta"
+    },
     "solana__transaction_contains_unknown_instructions": "Transaksi berisi instruksi yang tidak dikenal.",
     "solana__transaction_requires_x_signers_template": "Transaksi butuh {0} penandatangan, yang meningkatkan biaya.",
     "solana__unknown_token": "Token tidak dikenal",
@@ -2257,7 +2277,12 @@
     },
     "solana__unstake": "Unstake",
     "solana__unstake_question": "Unstake SOL dari akun staking?",
-    "solana__view_details_in_menu": "",
+    "solana__view_details_in_menu": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Lihat detail di menu."
+    },
     "solana__vote_account": "Akun voting",
     "stellar__account_merge": "Penggabungan Akun",
     "stellar__account_thresholds": "Ambang Batas Akun",

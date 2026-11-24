@@ -114,7 +114,7 @@
       "Delizia": "XPUB",
       "Eckhart": "Clé publique (XPUB)"
     },
-    "address__xpub_export_warning": "",
+    "address__xpub_export_warning": "Un ordinateur quantique pourrait déduire toutes les clés dérivées de cette clé publique.",
     "address_details__account_info": {
       "Bolt": "Infos compte",
       "Caesar": "Infos du compte",
@@ -493,12 +493,7 @@
       "Eckhart": ""
     },
     "buttons__continue": "Continuer",
-    "buttons__continue_anyway": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "Continuer quand même",
-      "Eckhart": "Continuer quand même"
-    },
+    "buttons__continue_anyway": "Continuer quand même",
     "buttons__details": "Détails",
     "buttons__disconnect": {
       "Bolt": "",
@@ -636,7 +631,7 @@
     "cardano__no_output_tx": "La transaction n'a pas de sortie, le réseau ne peut pas être vérifié.",
     "cardano__nonce": "Nonce",
     "cardano__other": "Autres",
-    "cardano__output_contains_datum_or_ref_script": "",
+    "cardano__output_contains_datum_or_ref_script": "La sortie contient un datum ou un script de référence.",
     "cardano__path": "chemin",
     "cardano__pledge": {
       "Bolt": "Montant engagé",
@@ -1243,14 +1238,14 @@
     "k1n1__writing": "",
     "language__change_to_template": "Changer la langue en {0} ?",
     "language__changed": "La langue a été changée avec succès.",
-    "language__czech": "",
-    "language__english": "",
-    "language__french": "",
-    "language__german": "",
-    "language__indonesian": "",
-    "language__portuguese": "",
+    "language__czech": "Tchèque",
+    "language__english": "Anglais",
+    "language__french": "Français",
+    "language__german": "Allemand",
+    "language__indonesian": "Indonésien",
+    "language__portuguese": "Portugais ",
     "language__progress": "Changement de langue...",
-    "language__spanish": "",
+    "language__spanish": "Espagnol",
     "language__title": "Paramètres de langue",
     "led__disable": {
       "Bolt": "",
@@ -1300,7 +1295,12 @@
       "Delizia": "",
       "Eckhart": "Déverrouiller"
     },
-    "menu__turn_off": "",
+    "menu__turn_off": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Éteindre"
+    },
     "misc__decrypt_value": "Déchiffrer la valeur",
     "misc__enable_labeling": "Activer l'étiquetage ?",
     "misc__encrypt_value": "Chiffrer la valeur",
@@ -1712,12 +1712,7 @@
       "Delizia": "{count} {plural} supplémentaires commençant par",
       "Eckhart": "Il vous faut {count} {plural} supplémentaires commençant par"
     },
-    "recovery__x_more_shares_needed_template_plural": {
-      "Bolt": "{count} {plural} supplémentaire(s) requis.",
-      "Caesar": "{count} {plural} restant(s).",
-      "Delizia": "{count} {plural} supplémentaire(s) requis.",
-      "Eckhart": "{count} {plural} supplémentaire(s) requis."
-    },
+    "recovery__x_more_shares_needed_template_plural": "{count} {plural} supplémentaire(s) requis.",
     "recovery__x_of_y_entered_template": "{0} sur {1} fragments saisi(s).",
     "recovery__you_have_entered": {
       "Bolt": "Vous avez saisi",
@@ -1891,7 +1886,7 @@
     },
     "reset__never_make_digital_copy": "Ne conservez jamais votre sauvegarde sous forme numérique.",
     "reset__num_of_share_holders_template": {
-      "Bolt": "{0} personnes ou emplacements.",
+      "Bolt": "{0} personnes ou emplacements auront un fragment.",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -2045,8 +2040,8 @@
     "reset__slip39_checklist_num_groups_x_template": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Nombre de groupes : {0}",
-      "Eckhart": "Nombre de groupes : {0}"
+      "Delizia": "Nombre de groupes : {0}",
+      "Eckhart": "Nombre de groupes : {0}"
     },
     "reset__slip39_checklist_num_shares": {
       "Bolt": "",
@@ -2477,7 +2472,12 @@
     "solana__claim_question": "Récupérer les SOL du compte de staking ?",
     "solana__claim_recipient_warning": "Réclamation des SOL à une adresse externe à ce portefeuille.",
     "solana__confirm_multisig": "Confirmer la multi-signature",
-    "solana__details_not_reviewed": "",
+    "solana__details_not_reviewed": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Vous êtes sur le point de signer sans vérifier les détails de la transaction."
+    },
     "solana__expected_fee": "Frais attendus",
     "solana__instruction_accounts_template": "L'instruction contient {0} comptes et ses données font {1} octets.",
     "solana__instruction_data": "Données d'instruction",
@@ -2493,8 +2493,18 @@
     "solana__multiple_signers": "Plusieurs signataires",
     "solana__offchain_is_multisig": "Le message suivant nécessite plusieurs signataires.",
     "solana__priority_fee": "Frais de priorité",
-    "solana__skip_details": "",
-    "solana__skip_details_hint": "",
+    "solana__skip_details": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Passer les détails",
+      "Eckhart": "Passer les détails"
+    },
+    "solana__skip_details_hint": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "En cas de délais d'attente dépassé, signez directement depuis le menu.",
+      "Eckhart": "En cas de délais d'attente dépassé, signez directement depuis le menu."
+    },
     "solana__stake": "Mettre en staking",
     "solana__stake_account": "Compte de staking",
     "solana__stake_on_question": "Mettre en staking des SOL sur {0} ?",
@@ -2506,7 +2516,12 @@
     },
     "solana__stake_withdrawal_warning": "Le portefeuille actuel n'est pas l'autorité de retrait du staking SOL.",
     "solana__stake_withdrawal_warning_title": "Adresse de l'autorité de retrait",
-    "solana__title_blind_signing": "",
+    "solana__title_blind_signing": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Signature aveugle",
+      "Eckhart": "Signature aveugle"
+    },
     "solana__transaction_contains_unknown_instructions": "La transaction contient des instructions inconnues.",
     "solana__transaction_requires_x_signers_template": "La transaction nécessite {0} signataires, ce qui augmente les frais.",
     "solana__unknown_token": "Jeton inconnu",
@@ -2518,7 +2533,12 @@
     },
     "solana__unstake": "Retirer du staking",
     "solana__unstake_question": "Retirer les SOL du compte de staking ?",
-    "solana__view_details_in_menu": "",
+    "solana__view_details_in_menu": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Voir les détails dans le menu."
+    },
     "solana__vote_account": "Compte de vote",
     "stellar__account_merge": "Fusion de comptes",
     "stellar__account_thresholds": "Seuils de compte",
