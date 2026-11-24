@@ -196,12 +196,12 @@ message EthereumERC7730Path {
 
     repeated EthereumERC7730PathStep steps = 6;  // 1,4,5, should be absent when this is set.
 
-    //  E.g.  #.market.collateralParams.[].token	[{field:0},{field:3},{each:true},{field:0}]
+//  E.g.  #.market.collateralParams.[].token	[{field:0},{field:3},{each:true},{field:0}]
     message EthereumERC7730PathStep {
         // exactly one kind per step
         optional uint32 field = 1;  // tuple member or top-level parameter
         optional sint32 index = 2;  // array element, negative = from the end
-        optional bool each = 3;     // `.[]`
+        optional bool each = 3;     // `.[]`. decodes to `None` as a sentinel
         optional sint32 slice_start = 4;
         optional sint32 slice_end = 5;
     }
