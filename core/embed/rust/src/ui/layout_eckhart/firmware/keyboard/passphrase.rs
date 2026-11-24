@@ -143,10 +143,7 @@ impl PassphraseInput {
 
         let dashes_offset = theme::ICON_EYE.toif.width()
             + Self::EYE_ICON_SPACE
-            + EyeHintAnimation::offset(
-                EyeHintAnimation::content_progress(eye_progress),
-                Self::DASHES_SLIDE,
-            );
+            + EyeHintAnimation::offset(eye_progress, Self::DASHES_SLIDE);
         let mut cursor = hidden_area.left_center().ofs(Offset::x(dashes_offset));
 
         // Number of visible icons + characters
