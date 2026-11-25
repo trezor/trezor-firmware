@@ -12,8 +12,6 @@
 //! new variant goes at the end with a new value, and no value is ever
 //! renumbered or reused.
 
-use core::marker::PhantomData;
-
 use num_enum::TryFromPrimitive;
 use rkyv::boxed::{ArchivedBox, BoxResolver};
 use rkyv::option::ArchivedOption;
@@ -21,7 +19,7 @@ use rkyv::rancor::Fallible;
 use rkyv::ser::Writer;
 use rkyv::{Archive, Deserialize, Place, Serialize, SerializeUnsized};
 use stabby::IStable;
-use stabby::slice::Slice as StabbySlice;
+use stabby::slice::{Slice as StabbySlice, SliceMut};
 use stabby::str::Str;
 use ufmt::derive::uDebug;
 
@@ -243,94 +241,63 @@ where
 /// What a fact *is*, which decides how core formats and draws it.
 ///
 /// The app chooses the kind by what the value is, never by how it should look.
-/// The discriminants match the wire's: a new kind goes at the end with a new
-/// value, and no value is ever renumbered or reused.
+/// Each kind has the discriminant of its [`WireField`] variant, which core reads
+/// to tell the facts apart. A new kind goes at the end with a new value, and no
+/// value is ever renumbered or reused.
 #[stabby::stabby]
 #[repr(u8)]
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, TryFromPrimitive)]
 pub enum FieldKind {
     /// Words or a number, shown as written.
     Text = 0,
-    /// A sum formatted by the app, with its ticker apart in `WireField::ticker`.
+    /// A sum formatted by the app, with its ticker kept apart.
     Amount = 1,
     /// Something compared character by character: grouped and fixed-width.
     Address = 2,
-    /// Raw bytes, shown as hex. At most one per review.
-    Data = 3,
+    /// Text the app hands out while core pages it. At most one per review.
+    TextSource = 3,
     /// A sentence with no label: a question or an explanation.
     Note = 4,
     /// A sentence to weigh before confirming; a caution row.
     Warning = 5,
 }
 
-/// Reads `len` bytes at `offset` into `buf`; an `Err` when the app's source
-/// failed.
-pub(crate) type ReadFn = extern "C" fn(
-    ctx: *const u8,
-    offset: u32,
-    total: u32,
-    buf: *mut u8,
-    len: u32,
-) -> FastResult<(), ()>;
-
-/// Where a `Data` field's bytes come from, as the request carries it.
+/// Where a [`WireField::TextSource`] field's text comes from: the app's own
+/// code, which core calls back while the person pages.
 ///
-/// Not serialized: it points into the app's own memory, which does not cross
-/// IPC. `total` is the field's length, `read` is filled in by
-/// [`Field::data`](crate::modui::Field::data) or
-/// [`Field::data_source`](crate::modui::Field::data_source), and `streamed`
-/// says which of the two built it, so that an extra can refuse a stream.
-///
-/// The field order and `streamed: u32` are deliberate: together they keep the
-/// struct padding-free with one niche, which is what lets `Option<Source>` be
-/// `IStable` inside a `#[stabby::stabby]` struct. Do not "tidy" it.
+/// Apps implement [`TextSource`](crate::modui::TextSource); `modui` wraps it in
+/// this ABI-stable form.
 #[stabby::stabby]
-#[derive(Copy, Clone)]
-pub struct Source<'a> {
-    ctx: *const u8,
-    read: ReadFn,
-    total: u32,
-    streamed: u32,
-    _marker: PhantomData<&'a ()>,
+pub trait Source {
+    /// Fills all of `buf` with the UTF-8 bytes starting at `offset`; an `Err`
+    /// when the app's source failed.
+    extern "C" fn read<'a>(&self, offset: u32, buf: SliceMut<'a, u8>) -> FastResult<(), ()>;
 }
 
-impl<'a> Source<'a> {
-    pub(crate) const fn new(ctx: *const u8, total: u32, streamed: bool, read: ReadFn) -> Self {
-        Self {
-            ctx,
-            read,
-            total,
-            streamed: streamed as u32,
-            _marker: PhantomData,
-        }
-    }
+/// A borrowed [`Source`], as a request carries it.
+///
+/// Not serialized: it points into the app's own memory, which does not cross
+/// IPC.
+#[stabby::stabby]
+#[derive(Copy, Clone)]
+pub struct SourceRef<'a> {
+    inner: stabby::dynptr!(&'a dyn Source),
+}
 
-    /// The field's length in bytes.
-    pub(crate) fn total(&self) -> u32 {
-        self.total
+impl<'a> SourceRef<'a> {
+    pub(crate) fn new(inner: stabby::dynptr!(&'a dyn Source)) -> Self {
+        Self { inner }
     }
 
     /// Fills `buf` with the bytes at `offset`; `false` when the app's source
     /// failed.
     pub fn read(&self, offset: u32, buf: &mut [u8]) -> bool {
-        (self.read)(
-            self.ctx,
-            offset,
-            self.total,
-            buf.as_mut_ptr(),
-            buf.len() as u32,
-        )
-        .into_result()
-        .is_ok()
-    }
-
-    pub(crate) fn is_streamed(&self) -> bool {
-        self.streamed != 0
+        self.inner.read(offset, buf.into()).into_result().is_ok()
     }
 }
 
-// `ufmt` cannot format a raw pointer, and a source has nothing to print.
-impl ufmt::uDebug for Source<'_> {
+// A source has nothing to print.
+impl ufmt::uDebug for SourceRef<'_> {
     fn fmt<W: ?Sized>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
     where
         W: ufmt::uWrite,
@@ -339,38 +306,84 @@ impl ufmt::uDebug for Source<'_> {
     }
 }
 
-/// One fact in a [`ReviewRequest`] or one of its extras.
+/// One fact in a [`ReviewRequest`] or one of its extras. Each kind carries only
+/// what it needs; its discriminant is its [`FieldKind`].
 ///
-/// `label` is `None` for [`FieldKind::Note`] and [`FieldKind::Warning`].
-/// `value` is UTF-8 for the text kinds and empty for [`FieldKind::Data`], whose
-/// bytes come from `source`. `ticker` is the unit of a [`FieldKind::Amount`]
-/// (`"TRX"`), kept apart from its number so core decides how the two are drawn,
-/// and `None` for the other kinds. `len` is `value.len()` for the text kinds;
-/// for `Data` it is the total length core pulls, and `source` is where they
-/// come from. `source` is not serialized: it never crosses IPC.
-#[derive(uDebug, Copy, Clone, Archive, Serialize)]
+/// A `TextSource` crosses IPC as its label and length: core pulls the text
+/// itself from `source` in chunks while the person pages.
 #[stabby::stabby]
-pub struct WireField<'a> {
-    /// What the value is.
-    pub kind: FieldKind,
-    /// The name above the value.
-    pub label: OptStrSlice<'a>,
-    /// The value, as UTF-8.
-    pub value: Slice<'a, u8>,
-    /// The unit of an amount.
-    pub ticker: OptStrSlice<'a>,
-    /// The value's length in bytes.
-    pub len: u32,
-    /// Where a `Data` field's bytes come from.
-    #[rkyv(with = rkyv::with::Skip)]
-    pub source: Option<Source<'a>>,
+#[repr(C, u8)]
+#[derive(uDebug, Copy, Clone, Archive, Serialize)]
+pub enum WireField<'a> {
+    /// See [`FieldKind::Text`].
+    Text {
+        /// The name above the value.
+        label: StrSlice<'a>,
+        /// The value.
+        value: StrSlice<'a>,
+    } = 0,
+    /// See [`FieldKind::Amount`].
+    Amount {
+        /// The name above the value.
+        label: StrSlice<'a>,
+        /// The number, as the person should read it.
+        value: StrSlice<'a>,
+        /// The unit, such as `"TRX"`.
+        ticker: StrSlice<'a>,
+    } = 1,
+    /// See [`FieldKind::Address`].
+    Address {
+        /// The name above the value.
+        label: StrSlice<'a>,
+        /// The value.
+        value: StrSlice<'a>,
+    } = 2,
+    /// See [`FieldKind::TextSource`].
+    TextSource {
+        /// The name above the value.
+        label: StrSlice<'a>,
+        /// The text's length in UTF-8 bytes.
+        len: u32,
+        /// Where the text comes from.
+        #[rkyv(with = rkyv::with::Skip)]
+        source: SourceRef<'a>,
+    } = 3,
+    /// See [`FieldKind::Note`].
+    Note {
+        /// The sentence.
+        text: StrSlice<'a>,
+    } = 4,
+    /// See [`FieldKind::Warning`].
+    Warning {
+        /// The sentence.
+        text: StrSlice<'a>,
+    } = 5,
+    /// Never sent. Reserves room, so that a later kind fits without changing
+    /// the size of a field.
+    #[doc(hidden)]
+    Reserved(
+        /// Unused.
+        [usize; 8],
+    ) = 255,
 }
 
-impl<'a> WireField<'a> {
-    /// Whether the field's bytes come from an app-provided source rather than a
-    /// slice the app holds.
+impl WireField<'_> {
+    /// Whether core pulls this fact's text from the app while the person pages.
     pub(crate) fn is_streamed(&self) -> bool {
-        self.source.is_some_and(|source| source.is_streamed())
+        matches!(self, Self::TextSource { .. })
+    }
+
+    /// The kind of fact this is.
+    pub fn kind(&self) -> Option<FieldKind> {
+        Some(match self {
+            Self::Text { .. } => FieldKind::Text,
+            Self::Amount { .. } => FieldKind::Amount,
+            Self::Address { .. } => FieldKind::Address,
+            Self::TextSource { .. } => FieldKind::TextSource,
+            Self::Note { .. } => FieldKind::Note,
+            Self::Warning { .. } => FieldKind::Warning,
+            Self::Reserved(_) => return None,
+        })
     }
 }
 
@@ -387,7 +400,7 @@ pub const UI_MSG_CHUNK: u16 = 1;
 /// The id of the app's answer when its source could not produce a chunk.
 pub const UI_MSG_CHUNK_FAILED: u16 = 2;
 
-/// One chunk of a `Data` field, as core asks the app for it.
+/// One chunk of a `TextSource` field, as core asks the app for it.
 ///
 /// `field` is the field's flat index: the request's own facts first, then each
 /// extra's facts in order. The app answers with the bytes themselves.
@@ -420,9 +433,9 @@ pub struct WireExtra<'a> {
 /// menu already holds the way forward. See [`Answer::max_extras`].
 pub const MAX_MENU_ENTRIES: usize = 6;
 
-/// How many `Data` fields one list of facts may hold: a review's own facts, or
-/// one extra's.
-pub const MAX_DATA_FIELDS: usize = 1;
+/// How many `TextSource` fields one list of facts may hold: a review's own
+/// facts, or one extra's.
+pub const MAX_TEXT_SOURCES: usize = 1;
 
 /// How the person answers a review, which decides how core draws its yes.
 #[stabby::stabby]
