@@ -4,8 +4,10 @@
 //! value, and core decides the styling, the grouping and the paging of that kind
 //! on every model. Nothing here holds behaviour.
 
+use stabby::slice::SliceMut;
+
 use crate::modui::call::set_source_error;
-use crate::structs::{FieldKind, MAX_DATA_FIELDS, OptStrSlice, Slice, Source, WireField};
+use crate::structs::{MAX_TEXT_SOURCES, Slice, Source, SourceRef, WireField};
 use crate::traits::util::FastResult;
 use crate::{Error, Result};
 
@@ -19,8 +21,7 @@ use crate::{Error, Result};
 /// | [`text`](Field::text) | Words or a number, shown as written. | `Field::text("Resource", "Energy")` |
 /// | [`amount`](Field::amount) | A sum, formatted by the app, and its unit. | `Field::amount("Amount", "1.5", "TRX")` |
 /// | [`address`](Field::address) | Something compared character by character. | `Field::address("Recipient", &to)` |
-/// | [`data`](Field::data) | Raw bytes of any length, shown as hex and paged. | `Field::data("Input data", &calldata)` |
-/// | [`data_source`](Field::data_source) | Raw bytes the app hands out while core reads them, shown as hex and paged. | `Field::data_source("Input data", len, &source)` |
+/// | [`text_source`](Field::text_source) | Long text the app hands out while core pages it. | `Field::text_source("Message", len, &source)` |
 /// | [`note`](Field::note) | A sentence with no label: a question or an explanation. | `Field::note("Allow access to your balance?")` |
 /// | [`warning`](Field::warning) | A sentence to weigh before confirming. | `Field::warning("This address is not yours.")` |
 ///
@@ -41,82 +42,42 @@ pub struct Field<'a> {
     wire: WireField<'a>,
 }
 
-/// Where a [`data_source`](Field::data_source) field's bytes come from, read by
-/// core while the person pages.
+/// Where a [`text_source`](Field::text_source) field's text comes from, read
+/// by core while the person pages.
 ///
 /// Core reads in order, from offset 0, in contiguous ranges, and asks for each
 /// range once, so a source may hash what it hands out. It stops when the person
-/// reaches the end of the field or refuses it.
+/// reaches the end of the field or refuses it. The bytes are UTF-8; a range may
+/// end inside a character, and core joins it with the next range.
 ///
 /// `read` runs inside the review's own call to core, while that call still
 /// waits for the person's decision, and an app has one call to core in flight
 /// at a time. So `read` must not call core or the host: a wire, crypto or UI
-/// call from inside it stops the app. The bytes come from the app itself — held,
-/// decoded or generated. Reading them from the host needs a protocol that does
-/// not exist yet.
+/// call from inside it stops the app. The text comes from the app itself —
+/// held, decoded or generated. Reading it from the host needs a protocol that
+/// does not exist yet.
 ///
 /// `read` takes `&self` so that a [`Field`] stays `Copy`: a source that keeps
 /// state keeps it in a `Cell` or `RefCell` of its own.
-pub trait DataSource {
-    /// Fills `buf` with the bytes starting at `offset`.
+pub trait TextSource {
+    /// Fills all of `buf` with the UTF-8 bytes starting at `offset`.
     fn read(&self, offset: u32, buf: &mut [u8]) -> Result<()>;
 }
 
-impl DataSource for [u8] {
-    fn read(&self, offset: u32, buf: &mut [u8]) -> Result<()> {
-        let bytes = self
-            .get(offset as usize..)
-            .and_then(|rest| rest.get(..buf.len()))
-            .ok_or(Error::DataError("a data source read past its end"))?;
-        buf.copy_from_slice(bytes);
-        Ok(())
-    }
-}
-
-impl<T: DataSource + ?Sized> DataSource for &T {
+impl<T: TextSource + ?Sized> TextSource for &T {
     fn read(&self, offset: u32, buf: &mut [u8]) -> Result<()> {
         (**self).read(offset, buf)
     }
 }
 
-/// Copies out of a `&[u8]` whose length is `total`.
-///
-/// Not `read_source::<[u8]>`: a thin pointer cannot rebuild a slice, so the
-/// length comes from `Source::total` instead.
-extern "C" fn read_bytes(
-    ctx: *const u8,
-    offset: u32,
-    total: u32,
-    buf: *mut u8,
-    len: u32,
-) -> FastResult<(), ()> {
-    // SAFETY: `ctx` and `total` come from `Source::new` in `Field::data`, for a
-    // slice that outlives the request; `buf` and `len` come from core's chunk
-    // buffer.
-    let bytes = unsafe { core::slice::from_raw_parts(ctx, total as usize) };
-    let buf = unsafe { core::slice::from_raw_parts_mut(buf, len as usize) };
-    read_status(<[u8] as DataSource>::read(bytes, offset, buf))
-}
-
-/// Reads the `D` at `ctx`.
-extern "C" fn read_source<D: DataSource>(
-    ctx: *const u8,
-    offset: u32,
-    _total: u32,
-    buf: *mut u8,
-    len: u32,
-) -> FastResult<(), ()> {
-    // SAFETY: `ctx` comes from `Source::new` in `Field::data_source`, for a `D`
-    // that outlives the request; `buf` and `len` come from core's chunk buffer.
-    let source = unsafe { &*ctx.cast::<D>() };
-    let buf = unsafe { core::slice::from_raw_parts_mut(buf, len as usize) };
-    read_status(source.read(offset, buf))
-}
-
-/// A read's result as core takes it: the error itself stays in the app, kept
-/// for the answer of the call that is running.
-fn read_status(result: Result<()>) -> FastResult<(), ()> {
-    result.map_err(set_source_error).into()
+// What core calls: every app source, in the ABI-stable form. The error itself
+// stays in the app, kept for the answer of the call that is running.
+impl<T: TextSource> Source for T {
+    extern "C" fn read<'a>(&self, offset: u32, mut buf: SliceMut<'a, u8>) -> FastResult<(), ()> {
+        TextSource::read(self, offset, &mut buf)
+            .map_err(set_source_error)
+            .into()
+    }
 }
 
 impl<'a> Field<'a> {
@@ -133,7 +94,10 @@ impl<'a> Field<'a> {
     /// let resource = Field::text("Resource", "Energy");
     /// ```
     pub fn text(label: &'a str, value: &'a str) -> Self {
-        Self::new(FieldKind::Text, Some(label), value.as_bytes())
+        Self::from(WireField::Text {
+            label: label.into(),
+            value: value.into(),
+        })
     }
 
     /// A sum, and the ticker of what it counts: `"1.5"` and `"TRX"`.
@@ -150,9 +114,11 @@ impl<'a> Field<'a> {
     /// let amount = Field::amount("Amount", "1.5", "TRX");
     /// ```
     pub fn amount(label: &'a str, value: &'a str, ticker: &'a str) -> Self {
-        let mut field = Self::new(FieldKind::Amount, Some(label), value.as_bytes());
-        field.wire.ticker = OptStrSlice::new(Some(ticker));
-        field
+        Self::from(WireField::Amount {
+            label: label.into(),
+            value: value.into(),
+            ticker: ticker.into(),
+        })
     }
 
     /// Something compared character by character: an address, a key, a
@@ -169,43 +135,27 @@ impl<'a> Field<'a> {
     /// let recipient = Field::address("Recipient", "TRX...");
     /// ```
     pub fn address(label: &'a str, value: &'a str) -> Self {
-        Self::new(FieldKind::Address, Some(label), value.as_bytes())
+        Self::from(WireField::Address {
+            label: label.into(),
+            value: value.into(),
+        })
     }
 
-    /// Raw bytes of any length, shown as hex and paged.
+    /// Long text the app does not hand over at once, such as a message to
+    /// sign. Core pages it like [`text`](Field::text) and pulls it from
+    /// `source` while the person reads.
     ///
-    /// At most one per list of facts: a review's own, or one extra's. Core pulls
-    /// the bytes from the app in chunks while the person pages, so the app hands
-    /// over the whole value and never learns how many chunks it took.
+    /// At most one per list of facts. It may not sit in an extra: an extra can
+    /// be opened again, and its text would be read again. That is
+    /// [`Error::DataError`].
     ///
-    /// # Example
-    ///
-    /// ```no_run
-    /// use trezor_app_sdk::modui::Field;
-    ///
-    /// let data = Field::data("Input data", &[0xde, 0xad, 0xbe, 0xef]);
-    /// ```
-    pub fn data(label: &'a str, value: &'a [u8]) -> Self {
-        Self::wire_data(
-            label,
-            Source::new(value.as_ptr(), value.len() as u32, false, read_bytes),
-        )
-    }
-
-    /// Raw bytes the app does not hold all at once, shown as hex and paged.
-    ///
-    /// At most one per list of facts, like [`data`](Field::data). It may not sit
-    /// in an extra: an extra can be opened again, and its bytes would be read
-    /// again. That is [`Error::DataError`].
-    ///
-    /// Core reads the source while the person pages, as [`DataSource`]
-    /// describes. If `read` fails, the review ends as refused and the app gets
-    /// the source's own error back, not
+    /// Core reads the source as [`TextSource`] describes. If `read` fails, the
+    /// review ends as refused and the app gets the source's own error back, not
     /// [`Error::Cancelled`](crate::Error::Cancelled).
     ///
-    /// `len` is the total number of bytes, the source's to know.
+    /// `len` is the text's length in UTF-8 bytes, the source's to know.
     ///
-    /// A trait object works too: `&dyn DataSource` is itself a `DataSource`
+    /// A trait object works too: `&dyn TextSource` is itself a `TextSource`
     /// through the blanket `impl for &T`, so pass it as `&source`.
     ///
     /// # Example
@@ -214,36 +164,36 @@ impl<'a> Field<'a> {
     /// use core::cell::RefCell;
     /// use core::fmt::Write as _;
     /// use trezor_app_sdk::crypto::{self as sdk, HasherExt, HashingAlgorithm};
-    /// use trezor_app_sdk::modui::{self, DataSource, Field};
+    /// use trezor_app_sdk::modui::{self, Field, TextSource};
     /// use trezor_app_sdk::traits::crypto::BoxedHasher;
     /// use trezor_app_sdk::{Error, Result};
     ///
-    /// /// Bytes handed out range by range, hashed on the way out.
-    /// struct Stream<'a> {
-    ///     bytes: &'a [u8],
+    /// /// A message handed out range by range, hashed on the way out.
+    /// struct Message<'a> {
+    ///     text: &'a str,
     ///     hasher: RefCell<BoxedHasher>,
     /// }
     ///
-    /// impl DataSource for Stream<'_> {
+    /// impl TextSource for Message<'_> {
     ///     fn read(&self, offset: u32, buf: &mut [u8]) -> Result<()> {
     ///         let start = offset as usize;
     ///         let end = start + buf.len();
-    ///         let bytes = self.bytes.get(start..end).ok_or(Error::DataError("out of bytes"))?;
+    ///         let bytes = self.text.as_bytes().get(start..end).ok_or(Error::DataError("out of text"))?;
     ///         buf.copy_from_slice(bytes);
     ///         self.hasher.borrow_mut().update(buf);
     ///         Ok(())
     ///     }
     /// }
     ///
-    /// fn confirm_stream(bytes: &[u8]) -> Result<()> {
-    ///     let stream = Stream {
-    ///         bytes,
+    /// fn confirm_message(text: &str) -> Result<()> {
+    ///     let message = Message {
+    ///         text,
     ///         hasher: RefCell::new(sdk::get_hasher(HashingAlgorithm::Sha256)),
     ///     };
-    ///     let field = Field::data_source("Input data", bytes.len() as u32, &stream);
-    ///     modui::review("stream", "Stream", &[field]).confirm()?;
+    ///     let field = Field::text_source("Message", text.len() as u32, &message);
+    ///     modui::review("message", "Sign message", &[field]).confirm()?;
     ///
-    ///     let digest = stream.hasher.into_inner().finalize();
+    ///     let digest = message.hasher.into_inner().finalize();
     ///     let mut hash = String::new();
     ///     for byte in digest.as_ref() {
     ///         let _ = write!(hash, "{:02x}", byte);
@@ -251,18 +201,12 @@ impl<'a> Field<'a> {
     ///     modui::review("summary", "Signed", &[Field::address("Hash", &hash)]).confirm_strong()
     /// }
     /// ```
-    pub fn data_source<D: DataSource + 'a>(label: &'a str, len: u32, source: &'a D) -> Self {
-        Self::wire_data(
-            label,
-            Source::new(source as *const D as *const u8, len, true, read_source::<D>),
-        )
-    }
-
-    fn wire_data(label: &'a str, source: Source<'a>) -> Self {
-        let mut field = Self::new(FieldKind::Data, Some(label), &[]);
-        field.wire.len = source.total();
-        field.wire.source = Some(source);
-        field
+    pub fn text_source<S: TextSource + 'a>(label: &'a str, len: u32, source: &'a S) -> Self {
+        Self::from(WireField::TextSource {
+            label: label.into(),
+            len,
+            source: SourceRef::new(source.into()),
+        })
     }
 
     /// A sentence with no label: a question or an explanation.
@@ -277,7 +221,7 @@ impl<'a> Field<'a> {
     /// let question = Field::note("Allow access to your balance?");
     /// ```
     pub fn note(text: &'a str) -> Self {
-        Self::new(FieldKind::Note, None, text.as_bytes())
+        Self::from(WireField::Note { text: text.into() })
     }
 
     /// A sentence the person should weigh before confirming, drawn as a caution
@@ -294,20 +238,11 @@ impl<'a> Field<'a> {
     /// let caution = Field::warning("This address is not yours.");
     /// ```
     pub fn warning(text: &'a str) -> Self {
-        Self::new(FieldKind::Warning, None, text.as_bytes())
+        Self::from(WireField::Warning { text: text.into() })
     }
 
-    fn new(kind: FieldKind, label: Option<&'a str>, value: &'a [u8]) -> Self {
-        Self {
-            wire: WireField {
-                kind,
-                label: OptStrSlice::new(label),
-                value: Slice::new(value),
-                ticker: OptStrSlice::new(None),
-                len: value.len() as u32,
-                source: None,
-            },
-        }
+    fn from(wire: WireField<'a>) -> Self {
+        Self { wire }
     }
 }
 
@@ -329,17 +264,13 @@ pub(crate) fn wire_fields<'a>(fields: &'a [Field<'a>]) -> Slice<'a, WireField<'a
 }
 
 /// Checks one list of facts before it is sent: at most
-/// [`MAX_DATA_FIELDS`] [`data`](Field::data) fields.
+/// [`MAX_TEXT_SOURCES`] [`text_source`](Field::text_source) fields.
 ///
-/// The bytes themselves are not limited: core pulls them from the app, so the
-/// request only carries their length.
+/// The text itself is not limited: core pulls it from the app, so the request
+/// only carries its length.
 pub(crate) fn check_fields(fields: &[WireField<'_>]) -> Result<()> {
-    let data = fields
-        .iter()
-        .filter(|field| field.kind == FieldKind::Data)
-        .count();
-    if data > MAX_DATA_FIELDS {
-        return Err(Error::DataError("too many data fields"));
+    if fields.iter().filter(|field| field.is_streamed()).count() > MAX_TEXT_SOURCES {
+        return Err(Error::DataError("too many text sources"));
     }
     Ok(())
 }
@@ -347,73 +278,87 @@ pub(crate) fn check_fields(fields: &[WireField<'_>]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::structs::FieldKind;
+
+    /// The text a source hands out, range by range.
+    struct Text(&'static str);
+
+    impl TextSource for Text {
+        fn read(&self, offset: u32, buf: &mut [u8]) -> Result<()> {
+            let start = offset as usize;
+            let bytes = self.0.as_bytes().get(start..start + buf.len());
+            buf.copy_from_slice(bytes.ok_or(Error::DataError("out of text"))?);
+            Ok(())
+        }
+    }
 
     #[test]
     fn a_note_carries_its_text_and_no_label() {
         let note = Field::note("Continue?");
-        assert!(note.wire.kind == FieldKind::Note);
-        assert_eq!(note.wire.len, "Continue?".len() as u32);
-        assert_eq!(note.wire.label.as_str(), None);
-        assert_eq!(note.wire.value.as_slice(), b"Continue?");
+        assert!(note.wire.kind() == Some(FieldKind::Note));
+        assert!(matches!(note.wire, WireField::Note { text } if text.as_str() == "Continue?"));
     }
 
     #[test]
-    fn text_facts_carry_their_label_and_bytes() {
+    fn text_facts_carry_their_label_and_value() {
         let text = Field::text("Resource", "Energy");
-        assert!(text.wire.kind == FieldKind::Text);
-        assert_eq!(text.wire.label.as_str(), Some("Resource"));
-        assert_eq!(text.wire.value.as_slice(), b"Energy");
-        assert_eq!(text.wire.ticker.as_str(), None);
+        assert!(text.wire.kind() == Some(FieldKind::Text));
+        assert!(matches!(
+            text.wire,
+            WireField::Text { label, value }
+                if label.as_str() == "Resource" && value.as_str() == "Energy"
+        ));
     }
 
     #[test]
     fn an_amount_carries_its_ticker_apart() {
         let amount = Field::amount("Amount", "1.5", "TRX");
-        assert!(amount.wire.kind == FieldKind::Amount);
-        assert_eq!(amount.wire.label.as_str(), Some("Amount"));
-        assert_eq!(amount.wire.value.as_slice(), b"1.5");
-        assert_eq!(amount.wire.ticker.as_str(), Some("TRX"));
-        assert_eq!(amount.wire.len, "1.5".len() as u32);
-    }
-
-    #[test]
-    fn a_second_data_field_is_refused() {
-        let fields = [Field::data("a", &[1]), Field::data("b", &[2])];
+        assert!(amount.wire.kind() == Some(FieldKind::Amount));
         assert!(matches!(
-            check_fields(wire_fields(&fields).as_slice()),
-            Err(Error::DataError("too many data fields"))
+            amount.wire,
+            WireField::Amount { label, value, ticker }
+                if label.as_str() == "Amount" && value.as_str() == "1.5" && ticker.as_str() == "TRX"
         ));
     }
 
     #[test]
-    fn data_of_any_length_is_accepted() {
-        let bytes = [0u8; 4096];
-        let fields = [Field::data("a", &bytes)];
-        assert!(check_fields(wire_fields(&fields).as_slice()).is_ok());
-        assert_eq!(fields[0].wire.len, 4096);
-    }
-
-    #[test]
-    fn one_data_field_beside_text_is_accepted() {
-        let fields = [Field::data("a", &[1, 2, 3]), Field::text("b", "c")];
-        assert!(check_fields(wire_fields(&fields).as_slice()).is_ok());
-    }
-
-    #[test]
-    fn the_slice_source_returns_the_right_ranges() {
-        let bytes = b"hello";
+    fn a_text_source_reads_through_the_abi() {
+        let source = Text("hello");
+        let field = Field::text_source("a", 5, &source);
+        let WireField::TextSource { len, source, .. } = field.wire else {
+            panic!("not a text source");
+        };
+        assert_eq!(len, 5);
         let mut buf = [0u8; 3];
-        <[u8] as DataSource>::read(bytes, 1, &mut buf).unwrap();
+        assert!(source.read(1, &mut buf));
         assert_eq!(&buf, b"ell");
-        assert!(<[u8] as DataSource>::read(bytes, 4, &mut buf).is_err());
+        assert!(!source.read(4, &mut buf));
     }
 
     #[test]
-    fn the_request_does_not_grow_with_the_data() {
+    fn a_second_text_source_is_refused() {
+        let (a, b) = (Text("a"), Text("b"));
+        let fields = [Field::text_source("a", 1, &a), Field::text_source("b", 1, &b)];
+        assert!(matches!(
+            check_fields(wire_fields(&fields).as_slice()),
+            Err(Error::DataError("too many text sources"))
+        ));
+    }
+
+    #[test]
+    fn one_text_source_beside_text_is_accepted() {
+        let source = Text("abc");
+        let fields = [Field::text_source("a", 3, &source), Field::text("b", "c")];
+        assert!(check_fields(wire_fields(&fields).as_slice()).is_ok());
+    }
+
+    #[test]
+    fn the_request_does_not_grow_with_the_text() {
         use crate::structs::{Answer, ReviewRequest, TrezorUiEnum};
 
-        fn size(bytes: &[u8]) -> usize {
-            let fields = [Field::data("a", bytes)];
+        fn size(len: u32) -> usize {
+            let source = Text("");
+            let fields = [Field::text_source("a", len, &source)];
             let request = TrezorUiEnum::Review(ReviewRequest {
                 step: "s".into(),
                 title: "t".into(),
@@ -426,7 +371,7 @@ mod tests {
                 .len()
         }
 
-        assert_eq!(size(&[0u8; 4]), size(&[0u8; 1024]));
-        assert!(size(&[0u8; 1024]) < 128);
+        assert_eq!(size(4), size(1024));
+        assert!(size(1024) < 128);
     }
 }

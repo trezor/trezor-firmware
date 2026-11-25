@@ -13,10 +13,8 @@ use crate::{Error, Result};
 
 /// Facts the person can open from a review's menu, under a label of their own.
 ///
-/// An extra may hold a [`data`](Field::data) field like a review's own facts:
-/// core pulls it while the person pages through it. A field built from
-/// [`data_source`](Field::data_source) may not sit in an extra: an extra can be
-/// opened again, and its bytes would be read again.
+/// A field built from [`text_source`](Field::text_source) may not sit in an
+/// extra: an extra can be opened again, and its text would be read again.
 ///
 /// An extra with no facts is not offered: there is nothing to show in it. Build
 /// one from an `Option` when the facts may be missing, and let it drop:
@@ -67,8 +65,8 @@ fn wire_extras<'a>(extras: &'a [Extra<'a>]) -> Slice<'a, WireExtra<'a>> {
 
 /// Refuses what core cannot draw for `answer`, before anything is sent: a
 /// review with no facts, more offered extras than its menu has room for, too
-/// many `data` fields in one list of facts, or a streamed `data` field in an
-/// extra.
+/// many `text_source` fields in one list of facts, or a `text_source` field in
+/// an extra.
 ///
 /// An extra with no facts is not offered, so it does not count; core drops it.
 fn check_request(fields: &[Field<'_>], extras: &[Extra<'_>], answer: Answer) -> Result<()> {
@@ -87,7 +85,7 @@ fn check_request(fields: &[Field<'_>], extras: &[Extra<'_>], answer: Answer) -> 
         check_fields(fields)?;
         if fields.iter().any(|field| field.is_streamed()) {
             return Err(Error::DataError(
-                "a streamed data field cannot be in an extra",
+                "a text source cannot be in an extra",
             ));
         }
     }
@@ -438,29 +436,39 @@ mod tests {
         );
     }
 
+    use crate::modui::TextSource;
+
+    /// A source with nothing to say; the tests only build requests.
+    struct Silent;
+
+    impl TextSource for Silent {
+        fn read(&self, _offset: u32, _buf: &mut [u8]) -> Result<()> {
+            Ok(())
+        }
+    }
+
     #[test]
-    fn an_extra_holds_at_most_one_data_field() {
-        let facts = [Field::text("a", "b")];
-        let data = [Field::data("a", &[1]), Field::data("b", &[2])];
+    fn a_review_holds_at_most_one_text_source() {
+        let facts = [
+            Field::text_source("a", 1, &Silent),
+            Field::text_source("b", 1, &Silent),
+        ];
         assert!(matches!(
-            review("s", "t", &facts)
-                .extras(&[Extra::new("data", &data)])
-                .request(Answer::Confirm),
-            Err(Error::DataError("too many data fields"))
+            review("s", "t", &facts).request(Answer::Confirm),
+            Err(Error::DataError("too many text sources"))
         ));
     }
 
     #[test]
-    fn a_streamed_field_in_an_extra_is_refused() {
+    fn a_text_source_in_an_extra_is_refused() {
         let facts = [Field::text("a", "b")];
-        let bytes: &[u8] = &[0u8; 8];
-        let stream = [Field::data_source("stream", bytes.len() as u32, &bytes)];
+        let stream = [Field::text_source("stream", 8, &Silent)];
         assert!(matches!(
             review("s", "t", &facts)
                 .extras(&[Extra::new("extra", &stream)])
                 .request(Answer::Confirm),
             Err(Error::DataError(
-                "a streamed data field cannot be in an extra"
+                "a text source cannot be in an extra"
             ))
         ));
     }

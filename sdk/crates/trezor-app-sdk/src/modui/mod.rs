@@ -69,15 +69,15 @@
 //!
 //! Every layout that asks takes its content as [`Field`]s. The constructor
 //! names what the value *is* — words, a sum, something to compare character
-//! by character, raw bytes, a note, a warning — and core decides how that kind
+//! by character, long text, a note, a warning — and core decides how that kind
 //! looks on every model: its styling, its grouping, its paging and its font.
 //! The app never picks a style, and one list may mix all six kinds.
 //!
-//! A `data` field carries bytes the app already holds. A
-//! [`data_source`](Field::data_source) field carries a length and a
-//! [`DataSource`] instead, for bytes the app hands out one range at a time,
-//! hashing them on the way out, say. The bytes come from the app itself, not
-//! from the host; see [`DataSource`].
+//! A [`text_source`](Field::text_source) field carries a length and a
+//! [`TextSource`] instead of the text: core pulls the text from the app range
+//! by range while the person pages, so a long text is never sent whole. For
+//! now the text has to come from the app itself: reading it from the host
+//! needs a protocol that does not exist yet; see [`TextSource`].
 //!
 //! # Outcomes
 //!
@@ -155,18 +155,17 @@
 //! Content can be longer than one screen, and two different things split it,
 //! each for its own reason:
 //!
-//! - **Chunking** is the firmware's, and exists because core's memory is
-//!   limited: long data — the bytes given to [`Field::data`] — is cut into
-//!   chunks so core never holds a whole blob at once. The bytes stay in the
-//!   app, in a slice or in a source; core pulls each chunk while the person
-//!   pages, and the call does not return until the last one is read.
+//! - **Streaming** is the firmware's, and exists because core's memory is
+//!   limited: the text of a [`Field::text_source`] never crosses whole. It
+//!   stays in the app's source, and core pulls it range by range while the
+//!   person pages, until they reach its end or refuse it.
 //! - **Pagination** is core's, and exists because the screen is small. Core
 //!   splits whatever one request carries across as many screens as it takes
 //!   — a screen holds a few hundred bytes at most, on the largest model — as
 //!   the person scrolls.
 //!
-//! Neither is the app's: an app hands over the whole value and gets one
-//! outcome, and never learns how many chunks or pages it took.
+//! Neither is the app's: an app describes the whole value once and gets one
+//! outcome, and never learns how many ranges or pages it took.
 //!
 //! # Progress
 //!
@@ -192,8 +191,8 @@
 //! A layout's `Err` is [`crate::Error::Cancelled`] when the person refuses
 //! (see [outcomes](#outcomes)). What the library can tell before it asks — a
 //! review with no facts, more extras than the menu has room for, more than one
-//! `data` field in one list of facts, a streamed `data` field in an extra, a
-//! summary with neither amount nor fee — is also an `Err`, and `?` ends the flow
+//! `text_source` field in one list of facts, a `text_source` field in an extra,
+//! a summary with neither amount nor fee — is also an `Err`, and `?` ends the flow
 //! on it the same way: that is a mistake in the app, not a state to handle.
 //!
 //! A source whose `read` fails also ends the flow, but mid-review: the app gets
@@ -238,7 +237,7 @@
 //
 // This module is compiled into every app, so it holds as little code as it
 // can: a layout puts its arguments into the `crate::structs` request and makes
-// one `UiV1` call. Anything with behaviour — chunking, the menu, the progress
+// one `UiV1` call. Anything with behaviour — streaming, the menu, the progress
 // count, every default — is in the firmware: `core/embed/api` (which runs on
 // the app's task) or core. The limits are checked here as well, so that an app
 // gets an `Err` it can see rather than being stopped by core.
@@ -249,9 +248,9 @@
 //
 // So a new answer to a review means an `Answer` variant and its arm in core; a
 // new layout means a `structs` type and its `TrezorUiEnum` variant, an arm in
-// core's dispatch, and the layout's function here. A `data` field crosses as
-// its length, and core pulls the bytes from the app's slice or source while the
-// person pages.
+// core's dispatch, and the layout's function here. A `text_source` field
+// crosses as its length, and core pulls the text from the app's source while
+// the person pages.
 //
 // ButtonRequests: the app names the step and nothing else. Core prefixes the
 // app's identity, its image ID (`testapp.trezor.io`), and adds the `/menu` and
@@ -278,7 +277,7 @@ mod summary;
 mod verify;
 
 pub use done::done;
-pub use field::{DataSource, Field};
+pub use field::{Field, TextSource};
 pub use progress::{Progress, progress};
 pub use review::{Details, Extra, Review, review};
 pub use summary::{Summary, summary};

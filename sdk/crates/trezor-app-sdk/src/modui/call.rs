@@ -10,7 +10,7 @@ use crate::structs::{TrezorUiEnum, TrezorUiResult};
 use crate::traits::ui::UiV1Dyn as _;
 use crate::{Error, IntoAppResult, Result};
 
-/// The error a data source returned during the last call, until its answer is
+/// The error a text source returned during the last call, until its answer is
 /// read.
 ///
 /// Core only learns that a read failed, not why: the app's source kept the
@@ -22,7 +22,7 @@ pub(crate) fn set_source_error(error: Error) {
     *SOURCE_ERROR.lock() = Some(error);
 }
 
-/// Takes the error a data source returned during the last call, if any.
+/// Takes the error a text source returned during the last call, if any.
 fn take_source_error() -> Option<Error> {
     SOURCE_ERROR.lock().take()
 }
@@ -35,7 +35,7 @@ pub(crate) enum Decision {
 
 /// Shows one request and returns the person's answer.
 ///
-/// A refusal is `Err(Error::Cancelled)`, or the data source's own error when a
+/// A refusal is `Err(Error::Cancelled)`, or the text source's own error when a
 /// read failed and core stopped the screen. Core asking the app to stop is
 /// `Err(Error::Stopped)`, and a request that cannot reach core is
 /// `Err(Error::ServiceError)`; both unwind to the app's entry point.
