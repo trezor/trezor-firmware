@@ -31,6 +31,15 @@ SHOW_PROPERTIES_4 = bytes.fromhex(
     "0100000000000000bfffffff01000000b8ffffff01000000000000000c000000"
     "a0ffffff01000000a4ffffff04000000" + "00" * 100
 )
+# `TrezorUiEnum::ShowAddress` for "addr1", account "acc", path "m/44h" and one
+# xpub ("XPUB #1", "xpub6abc"), br_code 0
+SHOW_ADDRESS_XPUB = bytes.fromhex(
+    "616464723161646472316163636d2f3434685850554220233178707562366162"
+    "63000000eeffffff07000000edffffff080000000100000010000000c4ffffff"
+    "05000000c1ffffff050000000000000000000000000000000000000000000000"
+    "0000000001000000a2ffffff030000000100000099ffffff05000000a8ffffff"
+    "01000000000000000000000001000000" + "00" * 32
+)
 
 
 @unittest.skipUnless(
@@ -61,6 +70,14 @@ class TestProcessIpcMessage(unittest.TestCase):
         # more properties than the layout holds must be rejected, not crash Core
         with self.assertRaises(ValueError):
             trezorui_api.process_ipc_message(data=SHOW_PROPERTIES_5)
+
+    def test_show_address_with_xpub(self):
+        # the address flows unpack each xpub as a (title, xpub) pair
+        _layout, br_code, br_name = trezorui_api.process_ipc_message(
+            data=SHOW_ADDRESS_XPUB
+        )
+        self.assertEqual(br_code, 0)
+        self.assertIsNone(br_name)
 
 
 if __name__ == "__main__":

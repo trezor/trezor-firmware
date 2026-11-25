@@ -1307,6 +1307,20 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             unwrap!(List::alloc(unsafe { list.as_slice() })).into()
         }
 
+        // the address flows take each xpub as a (title, xpub) pair
+        fn obj_from_xpublist(archived: &Archived<Slice<Property>>) -> Obj {
+            let slice = archived.as_ref();
+            let mut list = unwrap!(List::with_capacity(slice.len()));
+            for item in slice {
+                let obj = unwrap!(Obj::try_from((
+                    unwrap!(Obj::try_from(item.key.as_ref())),
+                    unwrap!(Obj::try_from(item.value.as_ref())),
+                )));
+                unwrap!(list.append(obj));
+            }
+            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
+        }
+
         let (main_layout, br_code, br_name) =
         // Access the archived data zero-copy using safe Deref access
         match archived {
@@ -1549,7 +1563,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 m.case_sensitive,
                 tstr_opt(&m.account),
                 tstr_opt(&m.path),
-                obj_from_proplist(&m.xpubs),
+                obj_from_xpublist(&m.xpubs),
                 10,
                 "show_address".into(),
             )?,
