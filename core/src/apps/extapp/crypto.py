@@ -144,6 +144,8 @@ async def _ecdsa_sign_digest(session: Session, obj: Any) -> bytes:
             )
         raise DataError("Unsupported canonical signature type")
 
+    if curve != "nist256p1":
+        raise DataError("Unsupported curve")
     if canonical != _CANONICAL_ANY:
         raise DataError(f"Canonical signatures are not supported on {curve}")
     from trezor.crypto.curve import nist256p1

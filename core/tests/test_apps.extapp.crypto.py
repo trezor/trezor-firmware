@@ -88,6 +88,21 @@ class TestCryptoHandle(unittest.TestCase):
         with self.assertRaises(ForbiddenKeyPath):
             await_result(crypto._get_xpub(session, (0, address_n)))
 
+    def test_ecdsa_sign_unsupported_curve(self):
+        # guards against `_ECDSA_CURVES` growing without a signer for the curve
+        session = KeychainSession(bip39.seed(" ".join(["all"] * 12), ""))
+        ecdsa_curves = crypto._ECDSA_CURVES
+        crypto._ECDSA_CURVES = crypto._CURVES
+        try:
+            with self.assertRaises(DataError):
+                await_result(
+                    crypto._ecdsa_sign_digest(
+                        session, (2, [H_(44), H_(1), H_(0)], b"\x01" * 32, True, 0)
+                    )
+                )
+        finally:
+            crypto._ECDSA_CURVES = ecdsa_curves
+
     def test_get_public_key_formats(self):
         # the formats the apps rely on: raw 32-byte EdDSA keys, and both
         # compressed and uncompressed ECDSA keys
