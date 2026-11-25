@@ -2606,7 +2606,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def deserialize_progress_message(
     ///     *,
     ///     data: bytes,
-    /// ) -> Obj:
+    /// ) -> Any:
     ///     """Deserialize a progress message from bytes and return it as a MicroPython object."""
     Qstr::MP_QSTR_deserialize_progress_message => obj_fn_kw!(0, new_deserialize_progress_message).as_obj(),
 

@@ -174,7 +174,7 @@ pub static mp_module_trezorcrypto_api: Module = obj_module! {
     /// def deserialize_crypto_message(
     ///     *,
     ///     data: bytes,
-    /// ) -> Obj:
+    /// ) -> Any:
     ///     """Deserialize a crypto message from bytes and return it as a MicroPython object."""
     Qstr::MP_QSTR_deserialize_crypto_message => obj_fn_kw!(0, new_deserialize_crypto_message).as_obj(),
 };

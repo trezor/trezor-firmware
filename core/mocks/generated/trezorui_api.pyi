@@ -893,7 +893,7 @@ def send_ui_result(
 def deserialize_progress_message(
     *,
     data: bytes,
-) -> Obj:
+) -> Any:
     """Deserialize a progress message from bytes and return it as a MicroPython object."""
 
 

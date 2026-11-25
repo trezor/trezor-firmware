@@ -14,5 +14,5 @@ def serialize_crypto_result(
 def deserialize_crypto_message(
     *,
     data: bytes,
-) -> Obj:
+) -> Any:
     """Deserialize a crypto message from bytes and return it as a MicroPython object."""
