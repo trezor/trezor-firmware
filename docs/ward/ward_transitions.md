@@ -93,9 +93,9 @@ which anyone may read without effect.
 3. **The Trezor latches it.** After verifying the attestation, the Trezor stores
    `(counter, root, nonce, timestamp)` in its session cache (`round.wm_head`). It latches the
    nonce even if it then refuses the head.
-4. **The Trezor binds each authorization.** It mints every `wm_sig` over
-   `transition_preimage || nonce` and refuses to mint one without a session: "no WM session; sync
-   first".
+4. **The Trezor binds each authorization.** Every `wm_sig` it produces signs the transition
+   together with the session nonce: `transition_preimage || nonce`. Without a session it signs
+   nothing and answers "no WM session; sync first".
 5. **The WM checks the binding.** It accepts an advance only if `wm_sig` verifies against the
    session nonce it holds, under the commit or revert tag, and the `from` end is its current head
    (predecessor check). The host may name the session it believes is current; see
