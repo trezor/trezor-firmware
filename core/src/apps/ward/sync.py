@@ -21,7 +21,7 @@ async def sync(msg: WardSync) -> WardSyncAck:
 
     from . import round as sync_round
     from .attest import NONCE_LENGTH
-    from .cas import head_init_sig
+    from .cas import head_init_sig, session_proof
     from .common import has_wm, require_initialized
     from .keys import derive_k_sig, derive_ward_id
     from .root import get_counter, get_root
@@ -41,6 +41,10 @@ async def sync(msg: WardSync) -> WardSyncAck:
     counter = await get_counter()
     root = await get_root()
 
+    proof = None
+    if msg.wm_challenge is not None:
+        proof = session_proof(await derive_k_sig(), ward_id, msg.wm_challenge, nonce)
+
     init = None
     if counter == 0:
         init = head_init_sig(await derive_k_sig(), ward_id, counter, root)
@@ -51,4 +55,5 @@ async def sync(msg: WardSync) -> WardSyncAck:
         counter=counter,
         root=root if counter == 0 else None,
         head_init_sig=init,
+        session_proof=proof,
     )

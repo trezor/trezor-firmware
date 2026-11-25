@@ -4093,6 +4093,9 @@ impl ::protobuf::reflect::ProtobufValue for WardRejoinAck {
 // @@protoc_insertion_point(message:hw.trezor.messages.ward.WardSync)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct WardSync {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSync.wm_challenge)
+    pub wm_challenge: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardSync.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -4109,9 +4112,50 @@ impl WardSync {
         ::std::default::Default::default()
     }
 
+    // optional bytes wm_challenge = 1;
+
+    pub fn wm_challenge(&self) -> &[u8] {
+        match self.wm_challenge.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_wm_challenge(&mut self) {
+        self.wm_challenge = ::std::option::Option::None;
+    }
+
+    pub fn has_wm_challenge(&self) -> bool {
+        self.wm_challenge.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_wm_challenge(&mut self, v: ::std::vec::Vec<u8>) {
+        self.wm_challenge = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_wm_challenge(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.wm_challenge.is_none() {
+            self.wm_challenge = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.wm_challenge.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_wm_challenge(&mut self) -> ::std::vec::Vec<u8> {
+        self.wm_challenge.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(0);
+        let mut fields = ::std::vec::Vec::with_capacity(1);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "wm_challenge",
+            |m: &WardSync| { &m.wm_challenge },
+            |m: &mut WardSync| { &mut m.wm_challenge },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardSync>(
             "WardSync",
             fields,
@@ -4130,6 +4174,9 @@ impl ::protobuf::Message for WardSync {
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
+                10 => {
+                    self.wm_challenge = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -4142,12 +4189,18 @@ impl ::protobuf::Message for WardSync {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
+        if let Some(v) = self.wm_challenge.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.wm_challenge.as_ref() {
+            os.write_bytes(1, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -4165,11 +4218,13 @@ impl ::protobuf::Message for WardSync {
     }
 
     fn clear(&mut self) {
+        self.wm_challenge = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static WardSync {
         static instance: WardSync = WardSync {
+            wm_challenge: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -4197,6 +4252,8 @@ impl ::protobuf::reflect::ProtobufValue for WardSync {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct WardSyncAck {
     // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSyncAck.session_proof)
+    pub session_proof: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSyncAck.nonce)
     pub nonce: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSyncAck.ward_id)
@@ -4221,6 +4278,42 @@ impl<'a> ::std::default::Default for &'a WardSyncAck {
 impl WardSyncAck {
     pub fn new() -> WardSyncAck {
         ::std::default::Default::default()
+    }
+
+    // optional bytes session_proof = 6;
+
+    pub fn session_proof(&self) -> &[u8] {
+        match self.session_proof.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_session_proof(&mut self) {
+        self.session_proof = ::std::option::Option::None;
+    }
+
+    pub fn has_session_proof(&self) -> bool {
+        self.session_proof.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_session_proof(&mut self, v: ::std::vec::Vec<u8>) {
+        self.session_proof = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_session_proof(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.session_proof.is_none() {
+            self.session_proof = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.session_proof.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_session_proof(&mut self) -> ::std::vec::Vec<u8> {
+        self.session_proof.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     // optional bytes nonce = 1;
@@ -4387,8 +4480,13 @@ impl WardSyncAck {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut fields = ::std::vec::Vec::with_capacity(6);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "session_proof",
+            |m: &WardSyncAck| { &m.session_proof },
+            |m: &mut WardSyncAck| { &mut m.session_proof },
+        ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "nonce",
             |m: &WardSyncAck| { &m.nonce },
@@ -4432,6 +4530,9 @@ impl ::protobuf::Message for WardSyncAck {
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
+                50 => {
+                    self.session_proof = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 10 => {
                     self.nonce = ::std::option::Option::Some(is.read_bytes()?);
                 },
@@ -4459,6 +4560,9 @@ impl ::protobuf::Message for WardSyncAck {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
+        if let Some(v) = self.session_proof.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(6, &v);
+        }
         if let Some(v) = self.nonce.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
@@ -4480,6 +4584,9 @@ impl ::protobuf::Message for WardSyncAck {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.session_proof.as_ref() {
+            os.write_bytes(6, v)?;
+        }
         if let Some(v) = self.nonce.as_ref() {
             os.write_bytes(1, v)?;
         }
@@ -4512,6 +4619,7 @@ impl ::protobuf::Message for WardSyncAck {
     }
 
     fn clear(&mut self) {
+        self.session_proof = ::std::option::Option::None;
         self.nonce = ::std::option::Option::None;
         self.ward_id = ::std::option::Option::None;
         self.counter = ::std::option::Option::None;
@@ -4522,6 +4630,7 @@ impl ::protobuf::Message for WardSyncAck {
 
     fn default_instance() -> &'static WardSyncAck {
         static instance: WardSyncAck = WardSyncAck {
+            session_proof: ::std::option::Option::None,
             nonce: ::std::option::Option::None,
             ward_id: ::std::option::Option::None,
             counter: ::std::option::Option::None,
@@ -6326,39 +6435,40 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \"\x8b\x01\n\rWardRejoinAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07\
     counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x1c\n\
     \tdiscarded\x18\x03\x20\x01(\rR\tdiscarded\x12'\n\x0freverts_crossed\x18\
-    \x04\x20\x01(\rR\x0erevertsCrossed\"\n\n\x08WardSync\"\x8e\x01\n\x0bWard\
-    SyncAck\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x17\n\x07w\
-    ard_id\x18\x02\x20\x01(\x0cR\x06wardId\x12\x18\n\x07counter\x18\x03\x20\
-    \x01(\rR\x07counter\x12\x12\n\x04root\x18\x04\x20\x01(\x0cR\x04root\x12\
-    \"\n\rhead_init_sig\x18\x05\x20\x01(\x0cR\x0bheadInitSig\"\xe8\x01\n\x15\
-    WardIngestAttestation\x12!\n\x0cwm_signature\x18\x03\x20\x01(\x0cR\x0bwm\
-    Signature\x12\x1c\n\ttimestamp\x18\x04\x20\x01(\x04R\ttimestamp\x12\x1d\
-    \n\nto_counter\x18\x05\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\
-    \x06\x20\x01(\x0cR\x06toRoot\x12!\n\x0cfrom_counter\x18\x07\x20\x01(\rR\
-    \x0bfromCounter\x12\x1b\n\tfrom_root\x18\x08\x20\x01(\x0cR\x08fromRootJ\
-    \x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\t\x10\nJ\x04\x08\n\
-    \x10\x0b\"x\n\x18WardIngestAttestationAck\x12\x18\n\x07counter\x18\x01\
-    \x20\x01(\rR\x07counter\x12\x1b\n\twm_behind\x18\x02\x20\x01(\x08R\x08wm\
-    Behind\x12%\n\x0estored_counter\x18\x03\x20\x01(\rR\rstoredCounter\"B\n\
-    \rWardReconcile\x12\x1f\n\x0bauth_commit\x18\x04\x20\x01(\x0cR\nauthComm\
-    itJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04\"G\n\
-    \x10WardReconcileAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\
-    \x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\"\xd7\x02\n\x0cW\
-    ardRollback\x12!\n\x0cfrom_counter\x18\t\x20\x01(\rR\x0bfromCounter\x12\
-    \x1b\n\tfrom_root\x18\n\x20\x01(\x0cR\x08fromRoot\x12\x1d\n\nto_counter\
-    \x18\x0b\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x0c\x20\x01(\
-    \x0cR\x06toRoot\x12!\n\x0cwm_signature\x18\r\x20\x01(\x0cR\x0bwmSignatur\
-    e\x12\x1c\n\ttimestamp\x18\x0e\x20\x01(\x04R\ttimestamp\x12%\n\x0erecove\
-    red_root\x18\x0f\x20\x01(\x0cR\rrecoveredRoot\x12+\n\x11recovered_counte\
-    r\x18\x12\x20\x01(\rR\x10recoveredCounterJ\x04\x08\x01\x10\x02J\x04\x08\
-    \x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\x05J\x04\x08\x05\x10\
-    \x06J\x04\x08\x06\x10\x07J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\
-    \x08\x10\x10\x11J\x04\x08\x11\x10\x12\"\x84\x01\n\x0fWardRollbackAck\x12\
+    \x04\x20\x01(\rR\x0erevertsCrossed\"-\n\x08WardSync\x12!\n\x0cwm_challen\
+    ge\x18\x01\x20\x01(\x0cR\x0bwmChallenge\"\xb3\x01\n\x0bWardSyncAck\x12#\
+    \n\rsession_proof\x18\x06\x20\x01(\x0cR\x0csessionProof\x12\x14\n\x05non\
+    ce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x17\n\x07ward_id\x18\x02\x20\x01(\
+    \x0cR\x06wardId\x12\x18\n\x07counter\x18\x03\x20\x01(\rR\x07counter\x12\
+    \x12\n\x04root\x18\x04\x20\x01(\x0cR\x04root\x12\"\n\rhead_init_sig\x18\
+    \x05\x20\x01(\x0cR\x0bheadInitSig\"\xe8\x01\n\x15WardIngestAttestation\
+    \x12!\n\x0cwm_signature\x18\x03\x20\x01(\x0cR\x0bwmSignature\x12\x1c\n\t\
+    timestamp\x18\x04\x20\x01(\x04R\ttimestamp\x12\x1d\n\nto_counter\x18\x05\
+    \x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x06\x20\x01(\x0cR\x06to\
+    Root\x12!\n\x0cfrom_counter\x18\x07\x20\x01(\rR\x0bfromCounter\x12\x1b\n\
+    \tfrom_root\x18\x08\x20\x01(\x0cR\x08fromRootJ\x04\x08\x01\x10\x02J\x04\
+    \x08\x02\x10\x03J\x04\x08\t\x10\nJ\x04\x08\n\x10\x0b\"x\n\x18WardIngestA\
+    ttestationAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\
+    \x1b\n\twm_behind\x18\x02\x20\x01(\x08R\x08wmBehind\x12%\n\x0estored_cou\
+    nter\x18\x03\x20\x01(\rR\rstoredCounter\"B\n\rWardReconcile\x12\x1f\n\
+    \x0bauth_commit\x18\x04\x20\x01(\x0cR\nauthCommitJ\x04\x08\x01\x10\x02J\
+    \x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04\"G\n\x10WardReconcileAck\x12\
     \x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_root\
-    \x18\x02\x20\x01(\x0cR\x07newRoot\x12\x1f\n\x0bauth_commit\x18\x03\x20\
-    \x01(\x0cR\nauthCommit\x12\x15\n\x06wm_sig\x18\x05\x20\x01(\x0cR\x05wmSi\
-    gJ\x04\x08\x04\x10\x05B?\n#com.satoshilabs.trezor.lib.protobufB\x18Trezo\
-    rMessageWardConnect\
+    \x18\x02\x20\x01(\x0cR\x07newRoot\"\xd7\x02\n\x0cWardRollback\x12!\n\x0c\
+    from_counter\x18\t\x20\x01(\rR\x0bfromCounter\x12\x1b\n\tfrom_root\x18\n\
+    \x20\x01(\x0cR\x08fromRoot\x12\x1d\n\nto_counter\x18\x0b\x20\x01(\rR\tto\
+    Counter\x12\x17\n\x07to_root\x18\x0c\x20\x01(\x0cR\x06toRoot\x12!\n\x0cw\
+    m_signature\x18\r\x20\x01(\x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\
+    \x0e\x20\x01(\x04R\ttimestamp\x12%\n\x0erecovered_root\x18\x0f\x20\x01(\
+    \x0cR\rrecoveredRoot\x12+\n\x11recovered_counter\x18\x12\x20\x01(\rR\x10\
+    recoveredCounterJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\x03\
+    \x10\x04J\x04\x08\x04\x10\x05J\x04\x08\x05\x10\x06J\x04\x08\x06\x10\x07J\
+    \x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\x08\x10\x10\x11J\x04\x08\
+    \x11\x10\x12\"\x84\x01\n\x0fWardRollbackAck\x12\x18\n\x07counter\x18\x01\
+    \x20\x01(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07n\
+    ewRoot\x12\x1f\n\x0bauth_commit\x18\x03\x20\x01(\x0cR\nauthCommit\x12\
+    \x15\n\x06wm_sig\x18\x05\x20\x01(\x0cR\x05wmSigJ\x04\x08\x04\x10\x05B?\n\
+    #com.satoshilabs.trezor.lib.protobufB\x18TrezorMessageWardConnect\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

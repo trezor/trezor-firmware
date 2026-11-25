@@ -42,9 +42,9 @@ from trezorlib.ward_service import (  # noqa: F401
     WARD_PORT_OFFSET,
     WardServiceClient,
     WardServiceServer,
+    service_speaks_codec,
     ward_service_client,
 )
-from trezorlib.ward_service import service_speaks_codec
 from trezorlib.ward_service import ward_transport as _ward_interface_of
 
 from .ward_keys import EMPTY_ROOT, bip39_seed, derive_ward_id
@@ -403,6 +403,8 @@ class MockWardService:
         assert self.store is not None and self.wm is not None
         ward_id = request.ward_id
         self.ward_id = ward_id
+        if request.challenge_only:
+            return messages.WardSyncResponse(wm_challenge=self.wm.challenge(ward_id))
 
         counter = self.store.counter
         root = self.store.root() or EMPTY_ROOT
@@ -445,7 +447,7 @@ class MockWardService:
             att_root,
             att_timestamp,
             signature,
-        ) = self.wm.attest(ward_id, request.nonce)
+        ) = self.wm.open_session(ward_id, request.nonce, request.session_proof)
 
         return messages.WardSyncResponse(
             from_counter=att_from_counter,

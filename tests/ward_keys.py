@@ -206,6 +206,16 @@ def wm_sig(
     )
 
 
+def session_proof(
+    k_sig: bytes, ward_id: bytes, challenge: bytes, nonce: bytes
+) -> bytes:
+    from trezorlib import _ed25519
+
+    return _ed25519.signature_unsafe(
+        b"WARD SESSION OPEN v1" + ward_id + challenge + nonce, k_sig, ward_id
+    )
+
+
 def verify_wm_sig(
     ward_id: bytes,
     from_counter: int,

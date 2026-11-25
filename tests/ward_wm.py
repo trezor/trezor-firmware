@@ -36,6 +36,7 @@ It still sees no identifier and no value: it is told roots, never leaves.
 
 from __future__ import annotations
 
+from secrets import token_bytes
 from typing import NamedTuple, Optional
 
 from trezorlib import _ed25519
@@ -111,6 +112,21 @@ class MockWM:
         self._accepted: dict[tuple, tuple] = {}
         # ward_id -> the round nonce of that wallet's latest sync. Volatile: never in a record.
         self._session: dict[bytes, bytes] = {}
+        self._initial_challenge = token_bytes(32)
+        self._challenges: dict[bytes, bytes] = {}
+
+    def __getstate__(self):
+        # The Python service fixture pickles its WM together with the replica.
+        state = vars(self).copy()
+        for key in ("_session", "_initial_challenge", "_challenges"):
+            state.pop(key)
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._session = {}
+        self._initial_challenge = token_bytes(32)
+        self._challenges = {}
 
     @property
     def pubkey(self) -> bytes:
@@ -214,11 +230,13 @@ class MockWM:
         )
         # the session nonce is volatile: a rebuilt register does not have it
         self._session.pop(ward_id, None)
+        self._challenges[ward_id] = token_bytes(32)
 
     def take_over(self, ward_id: bytes, record: "WMRecord") -> None:
         """A FAILOVER: this standby takes the primary's record as it stands. Sessions do not fail
         over; devices sync with the standby first."""
         self._session.pop(ward_id, None)
+        self._challenges[ward_id] = token_bytes(32)
         self.install_unauthenticated(
             ward_id,
             record.counter,
@@ -232,6 +250,7 @@ class MockWM:
         """TOTAL LOSS of one wallet's register. It can come back only by enrolling at genesis."""
         self._heads.pop(ward_id, None)
         self._session.pop(ward_id, None)
+        self._challenges[ward_id] = token_bytes(32)
 
     def head(self, ward_id: bytes) -> Optional[tuple[int, bytes, int]]:
         """The HEAD -- `(counter, root, timestamp)` -- not the step that reached it."""
@@ -245,14 +264,29 @@ class MockWM:
         """(from_counter, from_root, to_counter, to_root, timestamp)."""
         return self._heads.get(ward_id)
 
-    def attest(self, ward_id: bytes, nonce: bytes) -> tuple:
-        """Sign the current transition against this round's nonce, which becomes the wallet's
-        session nonce: the one its devices' authorisations must now be bound to.
+    def challenge(self, ward_id: bytes) -> bytes:
+        return self._challenges.get(ward_id, self._initial_challenge)
 
-        Returns (from_counter, from_root, to_counter, to_root, timestamp, signature). The ROUND
-        nonce binding is what makes the answer fresh rather than merely authentic.
-        """
+    def open_session(self, ward_id: bytes, nonce: bytes, proof: bytes) -> tuple:
+        if ward_id not in self._heads:
+            raise ValueError("wallet is not enrolled")
+        if len(nonce) != 32 or not proof or len(proof) != 64:
+            raise ValueError("invalid session proof")
+        try:
+            _ed25519.checkvalid(
+                proof,
+                b"WARD SESSION OPEN v1" + ward_id + self.challenge(ward_id) + nonce,
+                ward_id,
+            )
+        except Exception as exc:
+            raise ValueError("invalid or expired session proof") from exc
+        answer = self.attest(ward_id, nonce)
+        self._challenges[ward_id] = token_bytes(32)
         self._session[ward_id] = nonce
+        return answer
+
+    def attest(self, ward_id: bytes, nonce: bytes) -> tuple:
+        """Read the head without opening or changing the write session."""
         return self._sign_step(ward_id, nonce)
 
     def session(self, ward_id: bytes) -> Optional[bytes]:

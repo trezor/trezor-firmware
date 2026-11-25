@@ -10759,11 +10759,22 @@ class WardRejoinAck(protobuf.MessageType):
 
 class WardSync(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2307
+    FIELDS = {
+        1: protobuf.Field("wm_challenge", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        wm_challenge: Optional["bytes"] = None,
+    ) -> None:
+        self.wm_challenge = wm_challenge
 
 
 class WardSyncAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2308
     FIELDS = {
+        6: protobuf.Field("session_proof", "bytes", repeated=False, required=False, default=None),
         1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
         2: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
@@ -10774,12 +10785,14 @@ class WardSyncAck(protobuf.MessageType):
     def __init__(
         self,
         *,
+        session_proof: Optional["bytes"] = None,
         nonce: Optional["bytes"] = None,
         ward_id: Optional["bytes"] = None,
         counter: Optional["int"] = None,
         root: Optional["bytes"] = None,
         head_init_sig: Optional["bytes"] = None,
     ) -> None:
+        self.session_proof = session_proof
         self.nonce = nonce
         self.ward_id = ward_id
         self.counter = counter
@@ -10949,6 +10962,8 @@ class WardServiceOpenAck(protobuf.MessageType):
 class WardSyncRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2332
     FIELDS = {
+        7: protobuf.Field("challenge_only", "bool", repeated=False, required=False, default=None),
+        8: protobuf.Field("session_proof", "bytes", repeated=False, required=False, default=None),
         1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
         2: protobuf.Field("ward_id", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("current_counter", "uint32", repeated=False, required=False, default=None),
@@ -10959,12 +10974,16 @@ class WardSyncRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
+        challenge_only: Optional["bool"] = None,
+        session_proof: Optional["bytes"] = None,
         nonce: Optional["bytes"] = None,
         ward_id: Optional["bytes"] = None,
         current_counter: Optional["int"] = None,
         current_root: Optional["bytes"] = None,
         head_init_sig: Optional["bytes"] = None,
     ) -> None:
+        self.challenge_only = challenge_only
+        self.session_proof = session_proof
         self.nonce = nonce
         self.ward_id = ward_id
         self.current_counter = current_counter
@@ -10975,6 +10994,7 @@ class WardSyncRequest(protobuf.MessageType):
 class WardSyncResponse(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2333
     FIELDS = {
+        12: protobuf.Field("wm_challenge", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
         4: protobuf.Field("wm_signature", "bytes", repeated=False, required=False, default=None),
         5: protobuf.Field("links", "WardChainLink", repeated=True, required=False, default=None),
@@ -10988,6 +11008,7 @@ class WardSyncResponse(protobuf.MessageType):
         self,
         *,
         links: Optional[Sequence["WardChainLink"]] = None,
+        wm_challenge: Optional["bytes"] = None,
         timestamp: Optional["int"] = None,
         wm_signature: Optional["bytes"] = None,
         to_counter: Optional["int"] = None,
@@ -10996,6 +11017,7 @@ class WardSyncResponse(protobuf.MessageType):
         from_root: Optional["bytes"] = None,
     ) -> None:
         self.links: Sequence["WardChainLink"] = links if links is not None else []
+        self.wm_challenge = wm_challenge
         self.timestamp = timestamp
         self.wm_signature = wm_signature
         self.to_counter = to_counter

@@ -93,6 +93,8 @@ message WardServiceOpenAck {
  * Ignored once the WM has a head.
  */
 message WardSyncRequest {
+    optional bool challenge_only = 7;  // request the WM challenge before opening a write session
+    optional bytes session_proof = 8;
     optional bytes  nonce           = 1;  // 32B, minted by the device for this exchange
     optional bytes  ward_id         = 2;  // 32B, the wallet the question is about
     optional uint32 current_counter = 3;  // the head the device holds...
@@ -113,6 +115,7 @@ message WardSyncRequest {
  * up to 64 links in newest-first order. It adopts after reaching its exact stored head.
  */
 message WardSyncResponse {
+    optional bytes wm_challenge = 12;  // only in response to challenge_only
     reserved 1, 2;  // were `counter` and `root`; the attestation names a STEP now
 
     optional uint64 timestamp    = 3;

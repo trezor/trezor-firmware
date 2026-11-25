@@ -149,8 +149,8 @@ def clear_provisional() -> None:
 # --- the WM's head, as this device last saw it ----------------------------------------
 #
 # `(counter, root, session nonce, timestamp)`, overwritten by every verified attestation whether
-# or not it is then adopted. The session nonce is the round nonce that attestation answered: this
-# device picked it, and `cas.wm_sig` binds every authorisation to it. The WM keeps the nonce of
+# or not it is then adopted. The write session is the device nonce from its authenticated sync.
+# A read-only service publication attestation preserves that nonce. The WM keeps the nonce of
 # the wallet's latest sync and accepts only authorisations bound to it, so a new sync by any
 # device of the wallet ends the session.
 #

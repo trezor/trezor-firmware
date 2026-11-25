@@ -61,7 +61,7 @@ from ...ward_app import (  # noqa: F401  -- ward_app_pinned is an autouse fixtur
     session_switch_prefix,
     ward_app_pinned,
 )
-from ...ward_keys import derive_k_sig
+from ...ward_keys import derive_k_sig, session_proof
 from ...ward_keys import wm_sig as oracle_wm_sig
 from ...ward_keys import EMPTY_ROOT, TAG_REVERT, TAG_STEP, TAG_WM_HEAD, verify_wm_sig
 from ...ward_keys import (
@@ -235,6 +235,11 @@ def _wm_for(store: WardTrie) -> MockWM:
         wm = MockWM()
         store._wm = wm
     return wm
+
+
+def _sync_challenge(session: Session, wm: MockWM):
+    wallet = ward.sync(session).ward_id
+    return ward.sync(session, wm.challenge(wallet))
 
 
 def _head_init_for(counter: int, root):
@@ -1449,7 +1454,7 @@ def _attest(
         timestamp = (
             _T0 + counter
         )  # time moves with the counter, as it would in practice
-    ack = ward.sync(session)
+    ack = _sync_challenge(session, wm)
     # ward_id comes from the DEVICE, since it is passphrase-dependent and this helper is used by
     # more than the default wallet. The root is the host's own -- no wallet key involved.
     root = store.root()
@@ -1459,7 +1464,9 @@ def _attest(
     into = _link_into(store, counter) if link is _DERIVE_LINK else link
     from_counter, from_root = (into[0], into[1]) if into is not None else (0, None)
     wm.force_head(ack.ward_id, counter, root, timestamp, from_counter, from_root)
-    _fc, _fr, _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
+    _fc, _fr, _c, _m, _t, sig = wm.open_session(
+        ack.ward_id, ack.nonce, ack.session_proof
+    )
     ward.ingest_attestation(
         session,
         from_counter,
@@ -1585,12 +1592,18 @@ def test_ward_refuses_a_link_into_a_head_the_wm_did_not_attest(session: Session)
 
     wm = _wm_for(store)
     counter = store.counter
-    ack = ward.sync(session)
+    ack = _sync_challenge(session, wm)
     # ward_id comes from the DEVICE, being passphrase-dependent. The root is the host's own.
     root = store.root()
-    wm.force_head(ack.ward_id, counter, root, _T0 + counter, *_step_into(store, counter, root))
-    _fc, _fr, _c, _m, _t, sig = wm.attest(ack.ward_id, ack.nonce)
-    ward.ingest_attestation(session, *_step_into(store, counter, root), counter, root, sig, _T0 + counter)
+    wm.force_head(
+        ack.ward_id, counter, root, _T0 + counter, *_step_into(store, counter, root)
+    )
+    _fc, _fr, _c, _m, _t, sig = wm.open_session(
+        ack.ward_id, ack.nonce, ack.session_proof
+    )
+    ward.ingest_attestation(
+        session, *_step_into(store, counter, root), counter, root, sig, _T0 + counter
+    )
 
     # A LINK AUTHORISED FOR A DIFFERENT DESTINATION. Rewriting the `to_root` of a genuine link
     # would prove nothing -- `WardReconcile` does not carry that field, so the edit never reaches
@@ -1973,10 +1986,12 @@ def test_ward_a_published_write_syncs_cleanly(session: Session):
     wm = _wm_for(store)
     _publish(wm, res, store)
 
-    ack = ward.sync(session)
+    ack = _sync_challenge(session, wm)
     # RELAYED, not recomputed: the host forwards the step the WM signed. Deriving it again here
     # would be the fixture agreeing with itself, and would break the moment the two disagreed.
-    fc, fr, counter, root, ts, sig = wm.attest(ack.ward_id, ack.nonce)
+    fc, fr, counter, root, ts, sig = wm.open_session(
+        ack.ward_id, ack.nonce, ack.session_proof
+    )
     ward.ingest_attestation(session, fc, fr, counter, root, sig, ts)
     ward.reconcile(session, _link_into(store, counter))
     store.counter = counter  # device and store now agree
@@ -2651,7 +2666,7 @@ def test_ward_verify_chain_brings_a_fresh_session_online(session: Session):
     # chain is the "what I hold is current" case, and the terminal counter and root checks still
     # have to agree -- so this exercises adoption without needing transitions to invent.
     wm = _wm_for(store)
-    ack = ward.sync(fresh)
+    ack = _sync_challenge(fresh, wm)
     root = store.root()
     wm.force_head(
         ack.ward_id,
@@ -2660,7 +2675,7 @@ def test_ward_verify_chain_brings_a_fresh_session_online(session: Session):
         _T0 + store.counter,
         *_step_into(store, store.counter, root),
     )
-    fc, fr, c, r, _t, sig = wm.attest(ack.ward_id, ack.nonce)
+    fc, fr, c, r, _t, sig = wm.open_session(ack.ward_id, ack.nonce, ack.session_proof)
     ward.ingest_attestation(fresh, fc, fr, c, r, sig, _T0 + store.counter)
 
     res = ward.verify_chain(fresh, _serves([]))
@@ -2882,7 +2897,11 @@ class _World:
         import os
 
         nonce = os.urandom(32)
-        self.wm.attest(_WARD_ID, nonce)
+        self.wm.open_session(
+            _WARD_ID,
+            nonce,
+            session_proof(self._k_sig, _WARD_ID, self.wm.challenge(_WARD_ID), nonce),
+        )
         return nonce
 
     def other_device_writes(self, *roots: bytes) -> tuple:
@@ -2943,8 +2962,10 @@ class _World:
 
         Returns the attestation as ingested, so an attacking host can KEEP it and replay it later.
         """
-        ack = ward.sync(self.session)
-        fc, fr, tc, tr, ts, sig = self.wm.attest(ack.ward_id, ack.nonce)
+        ack = _sync_challenge(self.session, self.wm)
+        fc, fr, tc, tr, ts, sig = self.wm.open_session(
+            ack.ward_id, ack.nonce, ack.session_proof
+        )
         attestation = (fc, fr, tc, tr, sig, ts)
         self.last_ingest = ward.ingest_attestation(self.session, *attestation)
         return attestation
@@ -2975,8 +2996,10 @@ class _World:
         Unlike `_rollback`, this never restages the WM -- the scenario already put it where it
         is (`wm_restores_to`), and the demotion must be built on exactly that head.
         """
-        ack_sync = ward.sync(self.session)
-        fc, fr, tc, tr, ts, sig = self.wm.attest(ack_sync.ward_id, ack_sync.nonce)
+        ack_sync = _sync_challenge(self.session, self.wm)
+        fc, fr, tc, tr, ts, sig = self.wm.open_session(
+            ack_sync.ward_id, ack_sync.nonce, ack_sync.session_proof
+        )
         recovered_counter, recovered_root = target
         rec = _Recorded()
         with self.session.test_ctx as ctx:
@@ -3565,8 +3588,8 @@ def test_ward_attack_a_write_from_an_ended_session_is_refused(session: Session):
     assert wm.head(_WARD_ID)[:2] == (store.counter, store.root())  # nothing has moved
 
     # another sync round: the device mints a fresh nonce, and the WM attests against it
-    ack = ward.sync(session)
-    wm.attest(ack.ward_id, ack.nonce)
+    ack = _sync_challenge(session, wm)
+    wm.open_session(ack.ward_id, ack.nonce, ack.session_proof)
 
     with pytest.raises(ValueError, match="not authorised"):
         _publish(wm, held, pending)
@@ -3589,7 +3612,12 @@ def test_ward_attack_another_devices_sync_ends_this_devices_session(session: Ses
     _go_online(session, store, wm)
 
     held, pending = _mint_unpublished(session, store, b"b", b"two")
-    wm.attest(_WARD_ID, os.urandom(32))  # another device's sync
+    nonce = os.urandom(32)
+    wm.open_session(
+        _WARD_ID,
+        nonce,
+        session_proof(derive_k_sig(_SEED), _WARD_ID, wm.challenge(_WARD_ID), nonce),
+    )
 
     with pytest.raises(ValueError, match="not authorised"):
         _publish(wm, held, pending)
@@ -3637,8 +3665,8 @@ def test_ward_attack_a_revert_from_an_ended_session_is_refused(session: Session)
     _attest(session, wm, store)
     ack, _rec = _rollback(session, wm, store, before_root, recovered_counter=1)
 
-    ack_sync = ward.sync(session)
-    wm.attest(ack_sync.ward_id, ack_sync.nonce)
+    ack_sync = _sync_challenge(session, wm)
+    wm.open_session(ack_sync.ward_id, ack_sync.nonce, ack_sync.session_proof)
 
     with pytest.raises(ValueError, match="not authorised"):
         _publish_demotion(wm, store, ack, store.counter, store.root())
@@ -3679,8 +3707,8 @@ def _fed(wm: MockWM, link, acceptance=_DERIVE_LINK) -> m.WardChainLink:
 
 def _detect(session: Session, wm: MockWM) -> tuple:
     """A sync round in which the device ingests the restored WM's attestation and reports it."""
-    ack = ward.sync(session)
-    attestation = wm.attest(ack.ward_id, ack.nonce)
+    ack = _sync_challenge(session, wm)
+    attestation = wm.open_session(ack.ward_id, ack.nonce, ack.session_proof)
     fc, fr, tc, tr, ts, sig = attestation
     ingested = ward.ingest_attestation(session, fc, fr, tc, tr, sig, ts)
     assert ingested.wm_behind and ingested.stored_counter > tc
@@ -3752,8 +3780,8 @@ def test_ward_attack_roll_forward_needs_a_detected_restore(session: Session):
     """Not in a round whose attestation did not find the WM behind: a host cannot have the device
     re-sign history at will."""
     store, wm, links = _restored_three(session)
-    ack = ward.sync(session)
-    fc, fr, tc, tr, ts, sig = wm.attest(ack.ward_id, ack.nonce)
+    ack = _sync_challenge(session, wm)
+    fc, fr, tc, tr, ts, sig = wm.open_session(ack.ward_id, ack.nonce, ack.session_proof)
     with pytest.raises(exceptions.TrezorFailure, match="no restored WM detected"):
         ward.roll_forward(session, fc, fr, tc, tr, sig, [_fed(wm, links[0])], ts)
 
@@ -3781,8 +3809,8 @@ def test_ward_roll_forward_signatures_are_bound_to_the_round(session: Session):
     after another sync they are refused."""
     _store, wm, links = _restored_three(session)
     _nonce, res, rec = _roll_forward(session, wm, [_fed(wm, lnk) for lnk in links])
-    ack = ward.sync(session)
-    wm.attest(ack.ward_id, ack.nonce)
+    ack = _sync_challenge(session, wm)
+    wm.open_session(ack.ward_id, ack.nonce, ack.session_proof)
     with pytest.raises(ValueError, match="not authorised"):
         wm.advance(_WARD_ID, *links[0][:4], res.wm_sigs[0], _T0 + links[0][2])
 
@@ -3986,8 +4014,10 @@ def _rollback(
             *_step_into(store, wm_counter, wm_root),
         )
 
-    ack_sync = ward.sync(session)
-    fc, fr, tc, tr, ts, sig = wm.attest(ack_sync.ward_id, ack_sync.nonce)
+    ack_sync = _sync_challenge(session, wm)
+    fc, fr, tc, tr, ts, sig = wm.open_session(
+        ack_sync.ward_id, ack_sync.nonce, ack_sync.session_proof
+    )
 
     rec = _Recorded()
     with session.test_ctx as ctx:
@@ -4046,7 +4076,8 @@ def _publish_demotion(wm: MockWM, store: WardTrie, ack, from_counter: int, from_
 
 def _adopt_demotion(session: Session, wm: MockWM, store: WardTrie, ack, link):
     """Publish, attest and adopt -- the round trip a host runs after a demotion is minted."""
-    fc, fr, tc, tr, ts, sig = wm.attest(_WARD_ID, ward.sync(session).nonce)
+    sync = _sync_challenge(session, wm)
+    fc, fr, tc, tr, ts, sig = wm.open_session(_WARD_ID, sync.nonce, sync.session_proof)
     ward.ingest_attestation(session, fc, fr, tc, tr, sig, ts)
     ward.reconcile(session, link)
 
@@ -5941,8 +5972,8 @@ def test_ward_takes_a_wm_restored_onto_its_own_head(session: Session):
     )
     assert wm.head(_WARD_ID)[:2] == (counter, root)
 
-    ack = ward.sync(session)
-    fc, fr, tc, tr, ts, sig = wm.attest(ack.ward_id, ack.nonce)
+    ack = _sync_challenge(session, wm)
+    fc, fr, tc, tr, ts, sig = wm.open_session(ack.ward_id, ack.nonce, ack.session_proof)
     ward.ingest_attestation(session, fc, fr, tc, tr, sig, ts)
     ward.reconcile(session, _link_into(store, counter))
     assert ward.sync(session).counter == counter
@@ -5961,8 +5992,8 @@ def test_ward_refuses_a_wm_restored_below_its_head(session: Session):
     _attest(session, wm, store)
 
     wm.restore_backup(_WARD_ID, *base, _T0 + base[0], *_step_into(store, *base))
-    ack = ward.sync(session)
-    fc, fr, tc, tr, ts, sig = wm.attest(ack.ward_id, ack.nonce)
+    ack = _sync_challenge(session, wm)
+    fc, fr, tc, tr, ts, sig = wm.open_session(ack.ward_id, ack.nonce, ack.session_proof)
     assert tc < store.counter
     _held_at_floor(session, ward.ingest_attestation(session, fc, fr, tc, tr, sig, ts))
 
@@ -5990,13 +6021,14 @@ def test_ward_enrolment_then_a_write(session: Session):
     store = WardTrie()
     wm = _wm_for(store)
 
-    ack = ward.sync(session)
+    ack = _sync_challenge(session, wm)
     assert ack.head_init_sig is not None
     assert ack.counter == 0
 
     fc, fr, tc, tr, ts, sig = wm.attest_head(
         ack.ward_id, ack.nonce, 0, None, ack.head_init_sig
     )
+    wm.open_session(ack.ward_id, ack.nonce, ack.session_proof)
     # GENESIS ATTESTS ITSELF
     assert (fc, tc) == (0, 0)
 

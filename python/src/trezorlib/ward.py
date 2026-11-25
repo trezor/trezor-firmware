@@ -299,10 +299,12 @@ def queue_get_entry(
     return _keyed_call(session, messages.WardQueueGetEntry, app_id, identifier, messages.WardQueueGetAck)
 
 
-def sync(session: "Session") -> messages.WardSyncAck:
+def sync(session: "Session", wm_challenge: bytes | None = None) -> messages.WardSyncAck:
     """Open a sync round: the device mints the nonce the WM signs. The ack's `counter` also tells a
     caller that lost a write's response whether it landed."""
-    return session.call(messages.WardSync(), expect=messages.WardSyncAck)
+    return session.call(
+        messages.WardSync(wm_challenge=wm_challenge), expect=messages.WardSyncAck
+    )
 
 
 def _fields(params: dict) -> dict:

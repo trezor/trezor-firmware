@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 RPC_TIMEOUT_MS = const(30_000)
 
 # Bumped when the message set changes shape, so an older daemon is refused by name.
-PROTOCOL_VERSION = 4
+PROTOCOL_VERSION = 5
 
 
 def _binding_cache() -> "SessionlessCache":
@@ -364,7 +364,7 @@ async def sync() -> None:
     from . import round as sync_round
     from .adopt import adopt, verify_round_attestation
     from .attest import NONCE_LENGTH, same_root
-    from .cas import head_init_sig
+    from .cas import head_init_sig, session_proof
     from .common import require_initialized
     from .keys import derive_k_auth, derive_k_sig, derive_wallet_id, derive_ward_id
     from .root import get_counter, get_root
@@ -386,8 +386,15 @@ async def sync() -> None:
     sync_round.mark_offline()
     sync_round.begin(nonce)
 
+    challenge = await _rpc(
+        WardSyncRequest(ward_id=ward_id, challenge_only=True), WardSyncResponse
+    )
+    proof = session_proof(
+        await derive_k_sig(), ward_id, challenge.wm_challenge or b"", nonce
+    )
     answer = await _rpc(
         WardSyncRequest(
+            session_proof=proof,
             nonce=nonce,
             ward_id=ward_id,
             current_counter=counter,
@@ -546,6 +553,7 @@ async def publish(
         new_root,
         answer.timestamp or 0,
         answer.wm_signature,
+        write_session=sync_round.require_session_nonce(),
     )
 
     await adopt(counter, new_root, landed_commits=[step])

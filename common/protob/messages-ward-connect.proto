@@ -462,6 +462,7 @@ message WardRejoinAck {
  * @next Failure
  */
 message WardSync {
+    optional bytes wm_challenge = 1;  // 32B; omit for wallet discovery
 }
 
 /**
@@ -469,6 +470,7 @@ message WardSync {
  * @end
  */
 message WardSyncAck {
+    optional bytes session_proof = 6;  // device signature over wallet, WM challenge and fresh nonce
     optional bytes nonce   = 1;  // 32B, minted now; the WM attestation must echo it
     optional bytes ward_id = 2;  // 32B opaque wallet handle; the host forwards it to the WM
 

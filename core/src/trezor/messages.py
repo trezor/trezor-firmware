@@ -8600,12 +8600,21 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WardSync(protobuf.MessageType):
+        wm_challenge: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            wm_challenge: "AnyBytes | None" = None,
+        ) -> None:
+            pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["WardSync"]:
             return isinstance(msg, cls)
 
     class WardSyncAck(protobuf.MessageType):
+        session_proof: "AnyBytes | None"
         nonce: "AnyBytes | None"
         ward_id: "AnyBytes | None"
         counter: "int | None"
@@ -8615,6 +8624,7 @@ if TYPE_CHECKING:
         def __init__(
             self,
             *,
+            session_proof: "AnyBytes | None" = None,
             nonce: "AnyBytes | None" = None,
             ward_id: "AnyBytes | None" = None,
             counter: "int | None" = None,
@@ -8770,6 +8780,8 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WardSyncRequest(protobuf.MessageType):
+        challenge_only: "bool | None"
+        session_proof: "AnyBytes | None"
         nonce: "AnyBytes | None"
         ward_id: "AnyBytes | None"
         current_counter: "int | None"
@@ -8779,6 +8791,8 @@ if TYPE_CHECKING:
         def __init__(
             self,
             *,
+            challenge_only: "bool | None" = None,
+            session_proof: "AnyBytes | None" = None,
             nonce: "AnyBytes | None" = None,
             ward_id: "AnyBytes | None" = None,
             current_counter: "int | None" = None,
@@ -8792,6 +8806,7 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WardSyncResponse(protobuf.MessageType):
+        wm_challenge: "AnyBytes | None"
         timestamp: "int | None"
         wm_signature: "AnyBytes | None"
         links: "list[WardChainLink]"
@@ -8804,6 +8819,7 @@ if TYPE_CHECKING:
             self,
             *,
             links: "list[WardChainLink] | None" = None,
+            wm_challenge: "AnyBytes | None" = None,
             timestamp: "int | None" = None,
             wm_signature: "AnyBytes | None" = None,
             to_counter: "int | None" = None,

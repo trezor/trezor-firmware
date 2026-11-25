@@ -333,6 +333,17 @@ async def authorise(
     )
 
 
+def session_proof(
+    k_sig: bytes, ward_id: bytes, challenge: bytes, nonce: bytes
+) -> bytes:
+    from trezor.crypto.curve import ed25519
+    from trezor.wire import DataError
+
+    if len(challenge) != 32 or len(nonce) != 32:
+        raise DataError("WARD: invalid session challenge or nonce")
+    return ed25519.sign(k_sig, b"WARD SESSION OPEN v1" + ward_id + challenge + nonce)
+
+
 def head_init_sig(
     k_sig: bytes, ward_id: bytes, counter: int, root: bytes | None
 ) -> bytes:

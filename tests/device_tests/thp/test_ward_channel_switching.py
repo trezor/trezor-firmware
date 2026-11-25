@@ -312,7 +312,10 @@ def test_wallet_session_restart_reattaches_service_channel(client: Client) -> No
         # One sync for the session, then a fetch per read -- and nothing else. `WardServiceOpen` is
         # not in here at all: it is answered by the DEVICE, before `serving()` starts, so the daemon
         # never had to repeat it.
-        assert wardd.served == ["WardSyncRequest"] + ["WardServiceFetch"] * 4
+        assert (
+            wardd.served
+            == ["WardSyncRequest", "WardSyncRequest"] + ["WardServiceFetch"] * 4
+        )
     finally:
         wardd.close()
 
@@ -350,7 +353,11 @@ def test_wallet_preemption_does_not_kill_ward_service(client: Client) -> None:
             # Host B, on a channel the device has never dispatched before, reaches the SAME daemon.
             second = client.get_session()
             assert _read(second, b"absent").leaf is None
-            assert wardd.served[served_by_a:] == ["WardSyncRequest", "WardServiceFetch"]
+            assert wardd.served[served_by_a:] == [
+                "WardSyncRequest",
+                "WardSyncRequest",
+                "WardServiceFetch",
+            ]
     finally:
         wardd.close()
 

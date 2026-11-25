@@ -98,7 +98,12 @@ def test_service_catches_up_across_multiple_chain_pages(client: Client, drop_pag
                 ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
                 with pytest.raises(exceptions.TrezorFailure, match="service did not answer"):
                     ward.get_entry(session, app_id, identifier, unexpected_pull)
-            assert daemon.served == ["WardSyncRequest", "WardChainRequest", "WardChainRequest"]
+            assert daemon.served == [
+                "WardSyncRequest",
+                "WardSyncRequest",
+                "WardChainRequest",
+                "WardChainRequest",
+            ]
             daemon.served.clear()
             daemon.server.handler = handle
             daemon.service.write(
@@ -111,6 +116,7 @@ def test_service_catches_up_across_multiple_chain_pages(client: Client, drop_pag
             result = ward.get_entry(session, app_id, identifier, unexpected_pull)
             assert result.response.message == "WARD entry shown"
         assert daemon.served == [
+            "WardSyncRequest",  # challenge
             "WardSyncRequest",
             "WardChainRequest",
             "WardChainRequest",

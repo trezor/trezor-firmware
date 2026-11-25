@@ -88,13 +88,13 @@ def _delete(session: Session, identifier: bytes, expect_screen: bool = True):
         return ward.delete_entry(session, _APP, identifier, _nothing_on_the_wire)
 
 
-def _read(session: Session, identifier: bytes):
+def _read(session: Session, identifier: bytes, on_page=None):
     with session.test_ctx as ctx:
         ctx.set_expected_responses(
             reveal_prefix(m.WardGetEntry)
             + [m.ButtonRequest(name="ward_get_entry"), m.Success]
         )
-        ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+        ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=on_page).get())
         return ward.get_entry(session, _APP, identifier, _nothing_on_the_wire)
 
 
@@ -144,6 +144,7 @@ def test_a_write_is_published_and_adopted(client: Client) -> None:
         assert store.counter == 1  # the daemon holds it...
         assert wardd.wm.head(_WARD_ID)[0] == 1  # ...and so does the WM
         assert wardd.served == [
+            "WardSyncRequest",  # challenge
             "WardSyncRequest",  # the write's own sync, this session's first operation
             "WardServiceFetch",  # the current state to derive against
             "WardPublish",
@@ -227,22 +228,20 @@ def test_a_conflict_is_definitive_and_keeps_the_channel(client: Client) -> None:
             assert store.counter == 0
             assert len(store) == 0
 
-            # THE CHANNEL IS STILL THERE, which is the claim this test exists for: the device can
-            # still ask and the daemon still answers, so a conflict costs one OPERATION rather
-            # than the conversation. Asserted on the requests SERVED, not on what the next
-            # operation returns.
-            #
-            # AND THE NEXT OPERATION DOES FAIL, which is a different fact and not this test's
-            # subject. The winner's head is the WM's now, and this daemon's replica holds no link
-            # into it -- so the device refuses to adopt a head nobody can explain. That is the
-            # service path's documented deficiency (see `--enable-ward-service-channel`: its sync
-            # is chain-only with no fallback), not a consequence of the conflict, and a real
-            # deployment resolves it when the daemon catches up with the winner's transition.
+            # The service remains bound. Its replica can still prove absence at the stored
+            # root. The read must warn that the winning head could not be verified.
             before = len(wardd.served)
-            with pytest.raises(exceptions.TrezorFailure) as stranded:
-                _read(session, b"addr1")
-            assert "does not end at the attested counter" in str(stranded.value)
-            assert len(wardd.served) > before
+            pages = []
+            _read(
+                session,
+                b"addr1",
+                on_page=lambda layout: pages.append(layout.text_content()),
+            )
+            assert (
+                "notreflectingchangessince" in "".join("".join(pages).split()).lower()
+            )
+            assert "WardChainRequest" in wardd.served[before:]
+            assert wardd.served[-1] == "WardServiceFetch"
     finally:
         wardd.close()
 
@@ -353,6 +352,7 @@ def test_an_idempotent_delete_publishes_nothing(client: Client) -> None:
 
         assert "WardPublish" not in wardd.served
         assert wardd.served == [
+            "WardSyncRequest",  # challenge
             "WardSyncRequest",
             "WardServiceFetch",  # the delete's proof of absence
             "WardServiceFetch",  # the read

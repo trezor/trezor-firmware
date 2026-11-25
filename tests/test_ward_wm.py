@@ -23,11 +23,13 @@ test fail for a reason that looks like a firmware bug.
 
 from __future__ import annotations
 
+import pickle
+
 import pytest
 
 from trezorlib import _ed25519
 
-from .ward_keys import TAG_WM_HEAD, head_init_sig, wm_sig
+from .ward_keys import TAG_WM_HEAD, head_init_sig, session_proof, wm_sig
 from .ward_wm import MockWM
 
 K_SIG = b"\x11" * 32
@@ -36,6 +38,12 @@ ROOT_0 = b"\x00" * 31 + b"\x01"
 ROOT_1 = b"\xaa" * 32
 ROOT_2 = b"\xbb" * 32
 NONCE = b"\x99" * 32
+
+
+def _open(wm, nonce):
+    proof = session_proof(K_SIG, WARD_ID, wm.challenge(WARD_ID), nonce)
+    wm.open_session(WARD_ID, nonce, proof)
+    return proof
 
 
 def _sig(wm, frm, from_root, to, to_root, tag=TAG_WM_HEAD, k_sig=K_SIG):
@@ -64,6 +72,7 @@ def _opened() -> MockWM:
     """
     wm = MockWM()
     wm.attest_head(WARD_ID, NONCE, 0, ROOT_0, head_init_sig(K_SIG, WARD_ID, 0, ROOT_0))
+    _open(wm, NONCE)
     _advance(wm, 0, ROOT_0, 1, ROOT_1)
     return wm
 
@@ -209,6 +218,7 @@ def test_a_read_only_first_use_can_attest_without_publishing():
     # AN OPENING HEAD ATTESTS ITSELF: no step produced it, so naming one would be inventing a
     # transition that never happened.
     assert (fc, fr, counter, root) == (0, ROOT_0, 0, ROOT_0)
+    _open(wm, NONCE)
     # and the head it adopted is now the one an advance must build on
     _advance(wm, 0, ROOT_0, 1, ROOT_1)
     assert wm.head(WARD_ID)[:2] == (1, ROOT_1)
@@ -337,26 +347,40 @@ def test_a_new_sync_ends_the_session():
     a lost race, or a write a host held back, does not land later."""
     wm = _opened()
     held_back = _sig(wm, 1, ROOT_1, 2, ROOT_2)
-    wm.attest(WARD_ID, b"\x42" * 32)  # another sync, another nonce the device picked
+    _open(wm, b"\x42" * 32)  # another sync, another nonce the device picked
     with pytest.raises(ValueError, match="not authorised"):
         wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, held_back, timestamp=1000)
 
 
-def test_known_gap_a_host_can_reopen_an_old_session():
-    """ACCEPTED GAP, pinned so a change in behavior is noticed. The WM cannot tell a fresh device
-    nonce from an old one a host replays: asking it to attest under the held authorisation's nonce
-    makes that session current again, and the held write lands. See "WM restore and roll-forward"
-    in docs/ward/gaps.md."""
+def test_only_a_fresh_device_proof_can_replace_the_write_session():
+    """Reads and consumed opening proofs preserve the current write session. A host that asks for
+    an attestation under an old nonce, or replays that nonce's opening proof, cannot make the
+    held write land: the proof's challenge was consumed when the session opened."""
     wm = _opened()
+    old = b"A" * 32
+    proof = _open(wm, old)
     held = _sig(wm, 1, ROOT_1, 2, ROOT_2)
-    old = wm.session(WARD_ID)
-    wm.attest(WARD_ID, b"\x42" * 32)  # a later sync ends the session...
+    current = b"B" * 32
+    _open(wm, current)
+    wm.attest(WARD_ID, old)
+    with pytest.raises(ValueError, match="expired"):
+        wm.open_session(WARD_ID, old, proof)
+    assert wm.session(WARD_ID) == current
     with pytest.raises(ValueError, match="not authorised"):
         wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, held, timestamp=1000)
 
-    wm.attest(WARD_ID, old)  # ...and the host asks for an attestation under the old nonce
-    wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, held, timestamp=1000)
-    assert wm.head(WARD_ID)[:2] == (2, ROOT_2)
+
+def test_restarting_the_python_service_discards_its_session_and_pending_challenge():
+    """A restart starts with no session and a fresh challenge, so a proof minted before it does
+    not open a session after it."""
+    wm = _opened()
+    candidate = b"C" * 32
+    proof = session_proof(K_SIG, WARD_ID, wm.challenge(WARD_ID), candidate)
+    restarted = pickle.loads(pickle.dumps(wm))
+    assert restarted.record(WARD_ID) == wm.record(WARD_ID)
+    assert restarted.session(WARD_ID) is None
+    with pytest.raises(ValueError, match="expired"):
+        restarted.open_session(WARD_ID, candidate, proof)
 
 
 def test_an_advance_returns_the_wm_signed_acceptance():
@@ -415,7 +439,7 @@ def test_a_restored_wm_is_rolled_forward_by_steps_signed_again():
 
     wm.restore_backup(WARD_ID, 1, ROOT_1, 900)
     assert wm.head(WARD_ID)[:2] == (1, ROOT_1)
-    wm.attest(WARD_ID, b"\x77" * 32)  # the device's sync opens the session the replay runs in
+    _open(wm, b"\x77" * 32)  # the device's sync opens the session the replay runs in
     for step, _record in records:
         _re_sign(wm, step)
     assert wm.head(WARD_ID)[:2] == (4, ROOT_1)
@@ -430,7 +454,7 @@ def test_a_restored_wm_refuses_the_devices_authorisations():
     wm.restore_backup(WARD_ID, 1, ROOT_1, 900)
     with pytest.raises(ValueError, match="no session"):
         wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, kept, timestamp=1000)
-    wm.attest(WARD_ID, b"\x77" * 32)
+    _open(wm, b"\x77" * 32)
     with pytest.raises(ValueError, match="not authorised"):
         wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, kept, timestamp=1000)
 
@@ -445,7 +469,7 @@ def test_a_lost_race_has_no_record_to_be_signed_again_from():
 
     assert wm.acceptance(WARD_ID, 1, ROOT_1, 2, ROOT_0) is None
     assert wm.acceptance(WARD_ID, 1, ROOT_1, 2, ROOT_2) is not None
-    wm.attest(WARD_ID, b"\x77" * 32)
+    _open(wm, b"\x77" * 32)
     with pytest.raises(ValueError, match="not authorised"):
         wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_0, loser, timestamp=1000)
 
@@ -456,7 +480,7 @@ def test_a_stale_session_named_for_diagnostics_explains_the_refusal():
     wm = _opened()
     old = wm.session(WARD_ID)
     held = _sig(wm, 1, ROOT_1, 2, ROOT_2)
-    wm.attest(WARD_ID, b"\x42" * 32)
+    _open(wm, b"\x42" * 32)
     with pytest.raises(ValueError, match="the session it names has ended"):
         wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, held, timestamp=1000, session=old)
     # naming the right session does not make a bad signature good
@@ -473,7 +497,7 @@ def test_a_restored_wm_can_be_stopped_at_any_prefix():
     wm = _opened()
     records = _history(wm)
     wm.restore_backup(WARD_ID, 1, ROOT_1, 900)
-    wm.attest(WARD_ID, b"\x77" * 32)
+    _open(wm, b"\x77" * 32)
     _re_sign(wm, records[0][0])
     assert wm.head(WARD_ID)[:2] == (2, ROOT_2)  # not 4, and nothing on the WM says so
 
@@ -484,11 +508,13 @@ def test_a_re_enrolled_wm_refuses_a_kept_first_write():
     init = head_init_sig(K_SIG, WARD_ID, 0, ROOT_0)
     wm = MockWM()
     wm.attest_head(WARD_ID, NONCE, 0, ROOT_0, init)
+    _open(wm, NONCE)
     first_write = _sig(wm, 0, ROOT_0, 1, ROOT_1)
     wm.advance(WARD_ID, 0, ROOT_0, 1, ROOT_1, first_write, timestamp=1000)
 
     reborn = MockWM()
     reborn.attest_head(WARD_ID, b"\x43" * 32, 0, ROOT_0, init)
+    _open(reborn, b"C" * 32)
     with pytest.raises(ValueError, match="not authorised"):
         reborn.advance(WARD_ID, 0, ROOT_0, 1, ROOT_1, first_write, timestamp=1000)
 
@@ -504,7 +530,7 @@ def test_a_failover_takes_the_record_as_it_stands():
     assert standby.record(WARD_ID) == record
     # sessions do not fail over: the device syncs with the standby before it writes
     assert standby.session(WARD_ID) is None
-    standby.attest(WARD_ID, NONCE)
+    _open(standby, b"S" * 32)
     _advance(standby, 1, ROOT_1, 2, ROOT_2)
     assert standby.head(WARD_ID)[:2] == (2, ROOT_2)
 

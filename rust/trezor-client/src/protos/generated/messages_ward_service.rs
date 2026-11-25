@@ -309,6 +309,10 @@ impl ::protobuf::reflect::ProtobufValue for WardServiceOpenAck {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct WardSyncRequest {
     // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSyncRequest.challenge_only)
+    pub challenge_only: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSyncRequest.session_proof)
+    pub session_proof: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSyncRequest.nonce)
     pub nonce: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSyncRequest.ward_id)
@@ -333,6 +337,61 @@ impl<'a> ::std::default::Default for &'a WardSyncRequest {
 impl WardSyncRequest {
     pub fn new() -> WardSyncRequest {
         ::std::default::Default::default()
+    }
+
+    // optional bool challenge_only = 7;
+
+    pub fn challenge_only(&self) -> bool {
+        self.challenge_only.unwrap_or(false)
+    }
+
+    pub fn clear_challenge_only(&mut self) {
+        self.challenge_only = ::std::option::Option::None;
+    }
+
+    pub fn has_challenge_only(&self) -> bool {
+        self.challenge_only.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_challenge_only(&mut self, v: bool) {
+        self.challenge_only = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes session_proof = 8;
+
+    pub fn session_proof(&self) -> &[u8] {
+        match self.session_proof.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_session_proof(&mut self) {
+        self.session_proof = ::std::option::Option::None;
+    }
+
+    pub fn has_session_proof(&self) -> bool {
+        self.session_proof.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_session_proof(&mut self, v: ::std::vec::Vec<u8>) {
+        self.session_proof = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_session_proof(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.session_proof.is_none() {
+            self.session_proof = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.session_proof.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_session_proof(&mut self) -> ::std::vec::Vec<u8> {
+        self.session_proof.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     // optional bytes nonce = 1;
@@ -499,8 +558,18 @@ impl WardSyncRequest {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut fields = ::std::vec::Vec::with_capacity(7);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "challenge_only",
+            |m: &WardSyncRequest| { &m.challenge_only },
+            |m: &mut WardSyncRequest| { &mut m.challenge_only },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "session_proof",
+            |m: &WardSyncRequest| { &m.session_proof },
+            |m: &mut WardSyncRequest| { &mut m.session_proof },
+        ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "nonce",
             |m: &WardSyncRequest| { &m.nonce },
@@ -544,6 +613,12 @@ impl ::protobuf::Message for WardSyncRequest {
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
+                56 => {
+                    self.challenge_only = ::std::option::Option::Some(is.read_bool()?);
+                },
+                66 => {
+                    self.session_proof = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 10 => {
                     self.nonce = ::std::option::Option::Some(is.read_bytes()?);
                 },
@@ -571,6 +646,12 @@ impl ::protobuf::Message for WardSyncRequest {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
+        if let Some(v) = self.challenge_only {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.session_proof.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(8, &v);
+        }
         if let Some(v) = self.nonce.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
@@ -592,6 +673,12 @@ impl ::protobuf::Message for WardSyncRequest {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.challenge_only {
+            os.write_bool(7, v)?;
+        }
+        if let Some(v) = self.session_proof.as_ref() {
+            os.write_bytes(8, v)?;
+        }
         if let Some(v) = self.nonce.as_ref() {
             os.write_bytes(1, v)?;
         }
@@ -624,6 +711,8 @@ impl ::protobuf::Message for WardSyncRequest {
     }
 
     fn clear(&mut self) {
+        self.challenge_only = ::std::option::Option::None;
+        self.session_proof = ::std::option::Option::None;
         self.nonce = ::std::option::Option::None;
         self.ward_id = ::std::option::Option::None;
         self.current_counter = ::std::option::Option::None;
@@ -634,6 +723,8 @@ impl ::protobuf::Message for WardSyncRequest {
 
     fn default_instance() -> &'static WardSyncRequest {
         static instance: WardSyncRequest = WardSyncRequest {
+            challenge_only: ::std::option::Option::None,
+            session_proof: ::std::option::Option::None,
             nonce: ::std::option::Option::None,
             ward_id: ::std::option::Option::None,
             current_counter: ::std::option::Option::None,
@@ -666,6 +757,8 @@ impl ::protobuf::reflect::ProtobufValue for WardSyncRequest {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct WardSyncResponse {
     // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSyncResponse.wm_challenge)
+    pub wm_challenge: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSyncResponse.timestamp)
     pub timestamp: ::std::option::Option<u64>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSyncResponse.wm_signature)
@@ -694,6 +787,42 @@ impl<'a> ::std::default::Default for &'a WardSyncResponse {
 impl WardSyncResponse {
     pub fn new() -> WardSyncResponse {
         ::std::default::Default::default()
+    }
+
+    // optional bytes wm_challenge = 12;
+
+    pub fn wm_challenge(&self) -> &[u8] {
+        match self.wm_challenge.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_wm_challenge(&mut self) {
+        self.wm_challenge = ::std::option::Option::None;
+    }
+
+    pub fn has_wm_challenge(&self) -> bool {
+        self.wm_challenge.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_wm_challenge(&mut self, v: ::std::vec::Vec<u8>) {
+        self.wm_challenge = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_wm_challenge(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.wm_challenge.is_none() {
+            self.wm_challenge = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.wm_challenge.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_wm_challenge(&mut self) -> ::std::vec::Vec<u8> {
+        self.wm_challenge.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     // optional uint64 timestamp = 3;
@@ -862,8 +991,13 @@ impl WardSyncResponse {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(7);
+        let mut fields = ::std::vec::Vec::with_capacity(8);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "wm_challenge",
+            |m: &WardSyncResponse| { &m.wm_challenge },
+            |m: &mut WardSyncResponse| { &mut m.wm_challenge },
+        ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "timestamp",
             |m: &WardSyncResponse| { &m.timestamp },
@@ -917,6 +1051,9 @@ impl ::protobuf::Message for WardSyncResponse {
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
+                98 => {
+                    self.wm_challenge = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 24 => {
                     self.timestamp = ::std::option::Option::Some(is.read_uint64()?);
                 },
@@ -950,6 +1087,9 @@ impl ::protobuf::Message for WardSyncResponse {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
+        if let Some(v) = self.wm_challenge.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(12, &v);
+        }
         if let Some(v) = self.timestamp {
             my_size += ::protobuf::rt::uint64_size(3, v);
         }
@@ -978,6 +1118,9 @@ impl ::protobuf::Message for WardSyncResponse {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.wm_challenge.as_ref() {
+            os.write_bytes(12, v)?;
+        }
         if let Some(v) = self.timestamp {
             os.write_uint64(3, v)?;
         }
@@ -1016,6 +1159,7 @@ impl ::protobuf::Message for WardSyncResponse {
     }
 
     fn clear(&mut self) {
+        self.wm_challenge = ::std::option::Option::None;
         self.timestamp = ::std::option::Option::None;
         self.wm_signature = ::std::option::Option::None;
         self.links.clear();
@@ -1028,6 +1172,7 @@ impl ::protobuf::Message for WardSyncResponse {
 
     fn default_instance() -> &'static WardSyncResponse {
         static instance: WardSyncResponse = WardSyncResponse {
+            wm_challenge: ::std::option::Option::None,
             timestamp: ::std::option::Option::None,
             wm_signature: ::std::option::Option::None,
             links: ::std::vec::Vec::new(),
@@ -3032,43 +3177,46 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x1bmessages-ward-service.proto\x12\x17hw.trezor.messages.ward\x1a\x13\
     messages-ward.proto\"a\n\x0fWardServiceOpen\x12)\n\x10protocol_version\
     \x18\x01\x20\x01(\rR\x0fprotocolVersion\x12#\n\rrenew_binding\x18\x02\
-    \x20\x01(\x08R\x0crenewBinding\"\x14\n\x12WardServiceOpenAck\"\xb6\x01\n\
-    \x0fWardSyncRequest\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\
-    \x12\x17\n\x07ward_id\x18\x02\x20\x01(\x0cR\x06wardId\x12'\n\x0fcurrent_\
-    counter\x18\x03\x20\x01(\rR\x0ecurrentCounter\x12!\n\x0ccurrent_root\x18\
-    \x04\x20\x01(\x0cR\x0bcurrentRoot\x12\"\n\rhead_init_sig\x18\x06\x20\x01\
-    (\x0cR\x0bheadInitSigJ\x04\x08\x05\x10\x06\"\xa1\x02\n\x10WardSyncRespon\
-    se\x12\x1c\n\ttimestamp\x18\x03\x20\x01(\x04R\ttimestamp\x12!\n\x0cwm_si\
-    gnature\x18\x04\x20\x01(\x0cR\x0bwmSignature\x12<\n\x05links\x18\x05\x20\
-    \x03(\x0b2&.hw.trezor.messages.ward.WardChainLinkR\x05links\x12\x1d\n\nt\
-    o_counter\x18\x06\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x07\
-    \x20\x01(\x0cR\x06toRoot\x12!\n\x0cfrom_counter\x18\x08\x20\x01(\rR\x0bf\
-    romCounter\x12\x1b\n\tfrom_root\x18\t\x20\x01(\x0cR\x08fromRootJ\x04\x08\
-    \x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\
-    \x0c\"{\n\x10WardServiceFetch\x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\
-    \x08entryKey\x12'\n\x0fcurrent_counter\x18\x02\x20\x01(\rR\x0ecurrentCou\
-    nter\x12!\n\x0ccurrent_root\x18\x03\x20\x01(\x0cR\x0bcurrentRoot\"\x12\n\
-    \x10WardSyncRequired\"\xac\x02\n\x0bWardPublish\x12\x1b\n\tentry_key\x18\
-    \x01\x20\x01(\x0cR\x08entryKey\x12'\n\x0fsealed_identity\x18\x0b\x20\x01\
-    (\x0cR\x0esealedIdentity\x12%\n\x0esealed_content\x18\x0c\x20\x01(\x0cR\
-    \rsealedContent\x12\x18\n\x07counter\x18\x04\x20\x01(\rR\x07counter\x12\
-    \x1f\n\x0bauth_commit\x18\x06\x20\x01(\x0cR\nauthCommit\x12\x15\n\x06wm_\
-    sig\x18\x07\x20\x01(\x0cR\x05wmSig\x12\x14\n\x05nonce\x18\x08\x20\x01(\
-    \x0cR\x05nonce\x12\x1b\n\tfrom_root\x18\t\x20\x01(\x0cR\x08fromRoot\x12\
-    \x19\n\x08new_root\x18\n\x20\x01(\x0cR\x07newRootJ\x04\x08\x02\x10\x03J\
-    \x04\x08\x03\x10\x04J\x04\x08\x05\x10\x06\"i\n\x0eWardPublishAck\x12\x1c\
-    \n\ttimestamp\x18\x03\x20\x01(\x04R\ttimestamp\x12!\n\x0cwm_signature\
-    \x18\x04\x20\x01(\x0cR\x0bwmSignatureJ\x04\x08\x01\x10\x02J\x04\x08\x02\
-    \x10\x03J\x04\x08\x05\x10\x06J\x04\x08\x06\x10\x07\"8\n\x13WardPublishCo\
-    nflict\x12!\n\x0chead_counter\x18\x01\x20\x01(\rR\x0bheadCounter\"L\n\
-    \x13WardMutationApplied\x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08en\
-    tryKey\x12\x18\n\x07counter\x18\x02\x20\x01(\rR\x07counter\"l\n\x15WardF\
-    lushQueueApplied\x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08entryKey\
-    \x12\x18\n\x07counter\x18\x02\x20\x01(\rR\x07counter\x12\x1c\n\tremainin\
-    g\x18\x03\x20\x01(\rR\tremaining\"(\n\x10WardResetService\x12\x14\n\x05f\
-    orce\x18\x01\x20\x01(\x08R\x05force\"5\n\x13WardResetServiceAck\x12\x1e\
-    \n\nunresolved\x18\x01\x20\x01(\rR\nunresolvedB?\n#com.satoshilabs.trezo\
-    r.lib.protobufB\x18TrezorMessageWardService\
+    \x20\x01(\x08R\x0crenewBinding\"\x14\n\x12WardServiceOpenAck\"\x82\x02\n\
+    \x0fWardSyncRequest\x12%\n\x0echallenge_only\x18\x07\x20\x01(\x08R\rchal\
+    lengeOnly\x12#\n\rsession_proof\x18\x08\x20\x01(\x0cR\x0csessionProof\
+    \x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x17\n\x07ward_id\
+    \x18\x02\x20\x01(\x0cR\x06wardId\x12'\n\x0fcurrent_counter\x18\x03\x20\
+    \x01(\rR\x0ecurrentCounter\x12!\n\x0ccurrent_root\x18\x04\x20\x01(\x0cR\
+    \x0bcurrentRoot\x12\"\n\rhead_init_sig\x18\x06\x20\x01(\x0cR\x0bheadInit\
+    SigJ\x04\x08\x05\x10\x06\"\xc4\x02\n\x10WardSyncResponse\x12!\n\x0cwm_ch\
+    allenge\x18\x0c\x20\x01(\x0cR\x0bwmChallenge\x12\x1c\n\ttimestamp\x18\
+    \x03\x20\x01(\x04R\ttimestamp\x12!\n\x0cwm_signature\x18\x04\x20\x01(\
+    \x0cR\x0bwmSignature\x12<\n\x05links\x18\x05\x20\x03(\x0b2&.hw.trezor.me\
+    ssages.ward.WardChainLinkR\x05links\x12\x1d\n\nto_counter\x18\x06\x20\
+    \x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x07\x20\x01(\x0cR\x06toRoot\
+    \x12!\n\x0cfrom_counter\x18\x08\x20\x01(\rR\x0bfromCounter\x12\x1b\n\tfr\
+    om_root\x18\t\x20\x01(\x0cR\x08fromRootJ\x04\x08\x01\x10\x02J\x04\x08\
+    \x02\x10\x03J\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\x0c\"{\n\x10WardService\
+    Fetch\x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12'\n\x0fc\
+    urrent_counter\x18\x02\x20\x01(\rR\x0ecurrentCounter\x12!\n\x0ccurrent_r\
+    oot\x18\x03\x20\x01(\x0cR\x0bcurrentRoot\"\x12\n\x10WardSyncRequired\"\
+    \xac\x02\n\x0bWardPublish\x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08\
+    entryKey\x12'\n\x0fsealed_identity\x18\x0b\x20\x01(\x0cR\x0esealedIdenti\
+    ty\x12%\n\x0esealed_content\x18\x0c\x20\x01(\x0cR\rsealedContent\x12\x18\
+    \n\x07counter\x18\x04\x20\x01(\rR\x07counter\x12\x1f\n\x0bauth_commit\
+    \x18\x06\x20\x01(\x0cR\nauthCommit\x12\x15\n\x06wm_sig\x18\x07\x20\x01(\
+    \x0cR\x05wmSig\x12\x14\n\x05nonce\x18\x08\x20\x01(\x0cR\x05nonce\x12\x1b\
+    \n\tfrom_root\x18\t\x20\x01(\x0cR\x08fromRoot\x12\x19\n\x08new_root\x18\
+    \n\x20\x01(\x0cR\x07newRootJ\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\
+    \x04\x08\x05\x10\x06\"i\n\x0eWardPublishAck\x12\x1c\n\ttimestamp\x18\x03\
+    \x20\x01(\x04R\ttimestamp\x12!\n\x0cwm_signature\x18\x04\x20\x01(\x0cR\
+    \x0bwmSignatureJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\x05\
+    \x10\x06J\x04\x08\x06\x10\x07\"8\n\x13WardPublishConflict\x12!\n\x0chead\
+    _counter\x18\x01\x20\x01(\rR\x0bheadCounter\"L\n\x13WardMutationApplied\
+    \x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12\x18\n\x07cou\
+    nter\x18\x02\x20\x01(\rR\x07counter\"l\n\x15WardFlushQueueApplied\x12\
+    \x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12\x18\n\x07counter\
+    \x18\x02\x20\x01(\rR\x07counter\x12\x1c\n\tremaining\x18\x03\x20\x01(\rR\
+    \tremaining\"(\n\x10WardResetService\x12\x14\n\x05force\x18\x01\x20\x01(\
+    \x08R\x05force\"5\n\x13WardResetServiceAck\x12\x1e\n\nunresolved\x18\x01\
+    \x20\x01(\rR\nunresolvedB?\n#com.satoshilabs.trezor.lib.protobufB\x18Tre\
+    zorMessageWardService\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

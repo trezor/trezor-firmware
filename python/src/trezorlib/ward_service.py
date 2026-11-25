@@ -55,7 +55,7 @@ LOG = logging.getLogger(__name__)
 _C = t.TypeVar("_C", bound="_ServiceClientBase")
 
 # Matches `apps.ward.service.PROTOCOL_VERSION`; the device refuses an unknown version by name.
-PROTOCOL_VERSION = 3
+PROTOCOL_VERSION = 5
 
 # Emulator: the WARD interface is the UDP port at wire + 7 (4/5 are BLE, 6 is the Tropic model).
 WARD_PORT_OFFSET = 7

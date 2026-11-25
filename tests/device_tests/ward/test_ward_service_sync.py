@@ -177,8 +177,8 @@ def test_a_second_session_syncs_again(client: Client) -> None:
             _read(client.get_session(), b"absent")
             second = wardd.served[len(first) :]
 
-        assert first == ["WardSyncRequest", "WardServiceFetch"]
-        assert second == ["WardSyncRequest", "WardServiceFetch"]
+        assert first == ["WardSyncRequest", "WardSyncRequest", "WardServiceFetch"]
+        assert second == ["WardSyncRequest", "WardSyncRequest", "WardServiceFetch"]
     finally:
         wardd.close()
 
@@ -230,8 +230,10 @@ def test_a_sync_requirement_buys_exactly_one_retry(client: Client) -> None:
                 ward.get_entry(session, _APP, b"anything", _nothing_on_the_wire)
         # The first fetch, then the sync it forced, then the one retry. Nothing after it.
         assert wardd.served == [
+            "WardSyncRequest",  # challenge
             "WardSyncRequest",
             "WardServiceFetch",
+            "WardSyncRequest",  # challenge
             "WardSyncRequest",
             "WardServiceFetch",
         ]

@@ -18,6 +18,8 @@ async def verify_round_attestation(
     to_root: "bytes | None",
     timestamp: int,
     signature: "bytes | None",
+    *,
+    write_session: "bytes | None" = None,
 ) -> "tuple[int, bytes, int, bytes]":
     """Check a WM attestation against the OPEN round, and return the transition it names.
 
@@ -65,7 +67,9 @@ async def verify_round_attestation(
     ):
         raise DataError("WM attestation verification failed")
 
-    sync_round.set_wm_head(to_counter, root_or_empty(to_root), nonce, timestamp)
+    sync_round.set_wm_head(
+        to_counter, root_or_empty(to_root), write_session or nonce, timestamp
+    )
     # The timestamp is signed but not checked here: anti-replay is the counter's job. `adopt`
     # persists it, and `catch_up` holds a cached attestation to it.
     return from_counter, root_or_empty(from_root), to_counter, root_or_empty(to_root)
