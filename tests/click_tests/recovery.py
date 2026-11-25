@@ -71,7 +71,9 @@ def enter_word(
         raise ValueError("Unknown model")
 
 
-def confirm_recovery(debug: "DebugLink", title: str = "recovery__title") -> None:
+def confirm_recovery(
+    debug: "DebugLink", title: str = "recovery__title_recover"
+) -> None:
     expected_title = TR.translate(title)
     # exlicitly wait, in case the recovery was started asynchronously (e.g. using BackgroundDeviceHandler)
     layout = debug.synchronize_at(expected_title)
@@ -190,7 +192,7 @@ def enter_share(
     debug: "DebugLink",
     share: str,
     is_first: bool = True,
-    before_title: str = "recovery__title_recover",
+    before_title: str = "recovery__title",
 ) -> "LayoutContent":
     if debug.layout_type is LayoutType.Bolt:
         assert TR.translate(before_title) in debug.read_layout().title()
@@ -222,7 +224,7 @@ def check_share_success(
     debug: "DebugLink",
     index: int,
     shares: list[str],
-    enter_share_before_title: str = "recovery__title_recover",
+    enter_share_before_title: str = "recovery__title",
 ) -> None:
     # FIXME: when ui-t3t1 done for shamir, we want to check the template below
     if debug.layout_type is LayoutType.Eckhart:
@@ -239,7 +241,7 @@ def check_share_success(
 def enter_shares(
     debug: "DebugLink",
     shares: list[str],
-    enter_share_before_title: str = "recovery__title_recover",
+    enter_share_before_title: str = "recovery__title",
     text: str = "recovery__enter_any_share",
     after_layout_text: str | None = "recovery__wallet_recovered",
     start_idx: int = 0,
