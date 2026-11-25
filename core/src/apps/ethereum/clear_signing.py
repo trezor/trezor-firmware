@@ -48,6 +48,9 @@ if TYPE_CHECKING:
     # constant value (str, resolved by the parser — not walked from calldata).
     Path = tuple[PathStep, ...] | int | str
     PathWalker = Callable[[Path], AnyValue]
+    # A PathWalker that can pin a `.[]` path to a single array element:
+    # `bounds` is (index, expected array length); None yields the whole array.
+    BoundedPathWalker = Callable[[Path, tuple[int, int] | None], AnyValue]
 
     # Parses a Value from a slice of the calldata.
     # Assumes that the memoryview contains just that value.
@@ -856,7 +859,7 @@ async def _format_field_value(
     value: AnyValue,
     msg: MsgInSignTx,
     defs: Definitions,
-    path_walker: PathWalker,
+    path_walker: BoundedPathWalker,
 ) -> FormattedValue:
     """Format a field value.
 
@@ -867,21 +870,35 @@ async def _format_field_value(
     at an array (amount, address, raw, ...). A non-list value is formatted
     directly.
 
+    For an array, a formatter param given by a `.[]` path (eg. `tokenPath:
+    tokens.[]` next to `amounts.[]`) resolves to the element at the same index;
+    that array must be as long as the value's. Any other param (a plain path,
+    a container path or a constant) is shared by all elements.
+
+    No token is returned for an array: an unknown token is flagged only by its
+    raw "Wei UNKN" amount line, without the address and chain rows that
+    `_handle_generic_ui` adds for a single value.
+
     Only flat arrays of formattable leaves are handled."""
     if not isinstance(value, list):
-        return await formatter.format(value, msg, defs, path_walker)
+        return await formatter.format(
+            value, msg, defs, lambda path: path_walker(path, None)
+        )
 
     from trezor.ui.layouts.properties import AboveThreshold
 
     lines: list[str] = []
-    # The same formatter instance is reused for every element, so a
-    # `tokenAmount`'s single `token_path` resolves to the same token on each
-    # iteration: the token is shared across the array and returned once.
-    token: EthereumTokenInfo | None = None
-    token_address: AnyBytes | None = None
-    for element in value:
-        formatted, element_token, element_address = await formatter.format(
-            element, msg, defs, path_walker
+
+    # Hardening. Just making sure the lengths are constant everywhere.
+    number_of_values = len(value)
+
+    for i, single_value in enumerate(value):
+
+        def single_value_path_walker(path: Path, index: int = i) -> AnyValue:
+            return path_walker(path, (index, number_of_values))
+
+        formatted, _, _ = await formatter.format(
+            single_value, msg, defs, single_value_path_walker
         )
         if isinstance(formatted, AboveThreshold):
             formatted = formatted.message
@@ -889,11 +906,7 @@ async def _format_field_value(
             # Raise if any member returns None.
             raise InvalidFormatDefinition
         lines.append(formatted)
-        if element_token is not None:
-            token = element_token
-        if element_address is not None:
-            token_address = element_address
-    return "\n".join(lines), token, token_address
+    return "\n".join(lines), None, None
 
 
 # https://eips.ethereum.org/EIPS/eip-7730#context-section
@@ -1147,7 +1160,9 @@ class FieldDefinition:
                 steps = []
                 each_step_count = 0
                 for s in p.steps:
-                    if steps and isinstance(steps[-1], tuple):      # tuple = slice. see below.
+                    if steps and isinstance(
+                        steps[-1], tuple
+                    ):  # tuple = slice. see below.
                         raise InvalidFormatDefinition  # a slice must be last
                     if s.slice_end is not None:
                         # `data.[0:20]` or `takerTraits.[:1]` (start defaults to 0)
@@ -1381,7 +1396,9 @@ class DisplayFormat:
             parameters.append(value)
             offset += consumed
 
-        def get_value_for_path(path: Path) -> AnyValue:
+        def get_value_for_path(
+            path: Path, bounds: tuple[int, int] | None = None
+        ) -> AnyValue:
             if isinstance(path, str):
                 # a literal constant value, not walked from calldata
                 return path
@@ -1419,7 +1436,7 @@ class DisplayFormat:
                 elif path == ContainerPath.Value:
                     return int.from_bytes(msg.value, "big")
                 else:
-                    raise InvalidFormatDefinition  # TODO
+                    raise InvalidFormatDefinition
             else:
                 if len(path) == 0:
                     # can't get anywhere by walking an inexisting path!
@@ -1434,7 +1451,13 @@ class DisplayFormat:
                     # only ABI arrays, not structs (tuple) or bytes
                     raise InvalidFormatDefinition
                 rest = path[each + 1 :]
-                return [_walk(element, rest) for element in array]
+                if bounds is None:
+                    return [_walk(element, rest) for element in array]
+
+                index, number_of_values = bounds
+                if len(array) != number_of_values:
+                    raise InvalidFormatDefinition
+                return _walk(array[index], rest)
 
         fields: list[RenderedField] = []
         for field_definition in self.field_definitions:
@@ -1744,7 +1767,7 @@ async def _expand_one_subcall(
         _, inner_fields = await inner_format.parse_calldata(
             body, msg, inner_defs, container
         )
-    except (ClearSigningFailed, DataError) as e:
+    except (ClearSigningFailed, DataError):
         return await raw_rows()
 
     rows: list[RenderedField] = [

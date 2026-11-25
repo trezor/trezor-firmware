@@ -1194,7 +1194,8 @@ class TestEthereumClearSigning(unittest.TestCase):
 
     def test_multi_value_token_amount(self):
         # Multi-value with TokenAmountFormatter: every element shares the one
-        # (constant) token, rendered one amount-per-line.
+        # (constant) token, rendered one amount-per-line. An array reports no
+        # token.
         token_addr = bytes.fromhex("ae7ab96520de3a18e5e111b5eaab095312d7fe84")
 
         class _Defs:
@@ -1208,8 +1209,8 @@ class TestEthereumClearSigning(unittest.TestCase):
             _format_field_value(fmt, [1_000_000, 2_000_000], None, _Defs(), None)
         )
         self.assertEqual(formatted, "1 TST\n2 TST")
-        self.assertEqual(token.symbol, "TST")
-        self.assertEqual(addr, token_addr)
+        self.assertIsNone(token)
+        self.assertIsNone(addr)
 
     def test_multi_value_date(self):
         # Multi-value with DateFormatter: a list of timestamps -> one date per line.
@@ -1582,7 +1583,8 @@ class TestEthereumClearSigning(unittest.TestCase):
             _format_field_value(fmt, [1, 2], None, self._eth_defs(), None)
         )
         self.assertEqual(formatted, "1 Wei UNKN\n2 Wei UNKN")
-        self.assertIs(token, UNKNOWN_TOKEN)
+        # an array reports no token, not even an unknown one
+        self.assertIsNone(token)
         self.assertIsNone(addr)
 
     def test_token_amount_explicit_zero_token_is_native(self):
@@ -2715,6 +2717,116 @@ class TestEthereumClearSigning(unittest.TestCase):
         self.assertEqual(fields[0][0][:2], ("Units", ""))
 
         self.assertEqual(self._expand_bundle([]), [])
+
+    TST1 = b"\x11" * 20
+    TST2 = b"\x22" * 20
+    UNKNOWN = b"\xaa" * 20
+    # known tokens: address -> (symbol, decimals)
+    KNOWN_TOKENS = {TST1: ("TST1", 6), TST2: ("TST2", 2)}
+
+    def _parse_token_amounts(self, tokens, amounts, token_path):
+        """Parse `fn(address[] tokens, uint256[] amounts)` displaying
+        `amounts.[]` as token amounts, with the token at `token_path`. Only
+        `KNOWN_TOKENS` are known, any other token is unknown."""
+        known = self.KNOWN_TOKENS
+
+        class _Defs:
+            network = make_eth_network()
+
+            def get_token(self, address):
+                if address not in known:
+                    return UNKNOWN_TOKEN
+                symbol, decimals = known[address]
+                return make_eth_token(symbol=symbol, decimals=decimals, address=address)
+
+        display_format = DisplayFormat(
+            binding_context=None,
+            func_sig=b"\x00\x00\x00\x00",
+            intent="Test",
+            parameter_definitions=[
+                Array(Atomic(parse_address)),
+                Array(Atomic(parse_uint256)),
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (1, None),
+                    "Amounts",
+                    TokenAmountFormatter(token=PathOrConst(token_path)),
+                )
+            ],
+        )
+        tokens_body = to_bytes(len(tokens)) + b"".join(pad_left(t) for t in tokens)
+        calldata = (
+            to_bytes(64)  # pointer to `tokens`
+            + to_bytes(64 + len(tokens_body))  # pointer to `amounts`
+            + tokens_body
+            + to_bytes(len(amounts))
+            + b"".join(to_bytes(a) for a in amounts)
+        )
+        _, fields = await_result(
+            display_format.parse_calldata(memoryview(calldata), self._msg(), _Defs())
+        )
+        return fields
+
+    def test_each_token_path_per_element(self):
+        # `tokenPath: tokens.[]` next to `amounts.[]`: each amount is formatted
+        # with the token at its own index; unknown ones as raw "Wei UNKN"
+        # amounts. No token is reported, so no unknown token address is shown.
+        other_unknown = b"\xbb" * 20
+        fields = self._parse_token_amounts(
+            [self.UNKNOWN, self.TST1, other_unknown],
+            [5_000_000, 1_000_000, 7],
+            (0, None),
+        )
+        (label, formatted, _), token, token_address = fields[0]
+        self.assertEqual(label, "Amounts")
+        self.assertEqual(formatted, "5,000,000 Wei UNKN\n1 TST1\n7 Wei UNKN")
+        self.assertIsNone(token)
+        self.assertIsNone(token_address)
+
+    def test_each_token_path_two_known_tokens(self):
+        # two different known tokens: each amount takes the symbol and the
+        # decimals of its own token (TST1: 6 decimals, TST2: 2 decimals)
+        fields = self._parse_token_amounts(
+            [self.TST1, self.TST2], [1_500_000, 250], (0, None)
+        )
+        (_, formatted, _), token, token_address = fields[0]
+        self.assertEqual(formatted, "1.5 TST1\n2.5 TST2")
+        self.assertIsNone(token)
+        self.assertIsNone(token_address)
+
+        # same tokens, swapped: the token follows the index, not the position
+        # of the first known token
+        fields = self._parse_token_amounts(
+            [self.TST2, self.TST1], [250, 1_500_000], (0, None)
+        )
+        self.assertEqual(fields[0][0][1], "2.5 TST2\n1.5 TST1")
+
+    def test_each_token_path_known_and_unknown(self):
+        # one known token (TST1) and one unknown: the unknown amount is raw,
+        # not scaled by its known neighbour's decimals, and no token (thus no
+        # unknown token address) is reported
+        fields = self._parse_token_amounts(
+            [self.TST1, self.UNKNOWN], [1_000_000, 1_000_000], (0, None)
+        )
+        (_, formatted, _), token, token_address = fields[0]
+        self.assertEqual(formatted, "1 TST1\n1,000,000 Wei UNKN")
+        self.assertIsNone(token)
+        self.assertIsNone(token_address)
+
+    def test_each_token_path_length_mismatch(self):
+        # the token array must be as long as the amount array
+        for tokens in ([self.TST1], [self.TST1] * 3):
+            with self.assertRaises(InvalidFormatDefinition):
+                self._parse_token_amounts(tokens, [1, 2], (0, None))
+
+    def test_each_value_shared_token_path(self):
+        # a token path without `.[]` (here `tokens.[0]`) is shared by all the
+        # amounts, whatever the length of the array it points into
+        fields = self._parse_token_amounts(
+            [self.TST1, self.TST2], [1_000_000, 2_000_000, 3_000_000], (0, 0)
+        )
+        self.assertEqual(fields[0][0][1], "1 TST1\n2 TST1\n3 TST1")
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
