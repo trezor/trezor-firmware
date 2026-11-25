@@ -255,6 +255,8 @@ def _get_parser(t: int, is_dynamic: bool) -> Parser:
         return parse_uint256
     elif t == T.ABI_UINT248:
         return make_uint_parser(248)
+    elif t == T.ABI_UINT216:
+        return make_uint_parser(216)
     elif t == T.ABI_UINT160:
         return make_uint_parser(160)
     elif t == T.ABI_UINT128:
