@@ -59,7 +59,7 @@ pub struct Menu<const N: usize> {
 impl<const N: usize> Menu<N> {
     pub fn new(items: [&'static str; N]) -> Self {
         let mut menu = Self {
-            pad: Pad::with_background(BLD_BG).with_clear(),
+            pad: Pad::with_background(BLD_BG),
             items,
             index: 0,
             item_area: Rect::zero(),
@@ -82,7 +82,6 @@ impl<const N: usize> Menu<N> {
     fn go_to(&mut self, ctx: &mut EventCtx, index: usize) {
         self.index = index;
         self.set_buttons();
-        self.pad.clear();
         ctx.request_paint();
     }
 

@@ -109,23 +109,15 @@ impl<'a> ResultScreen<'a> {
         icon: Icon,
         message: TString<'a>,
         footer: Label<'a>,
-        complete_draw: bool,
     ) -> Self {
-        let mut instance = Self {
+        Self {
             bg: Pad::with_background(style.bg_color),
             footer_pad: Pad::with_background(style.bg_color),
             style,
             icon,
             message: Label::centered(message, style.message_style()),
             footer: ResultFooter::new(footer, style),
-        };
-
-        if complete_draw {
-            instance.bg.clear();
-        } else {
-            instance.footer_pad.clear();
         }
-        instance
     }
 }
 

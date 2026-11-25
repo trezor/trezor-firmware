@@ -29,7 +29,7 @@ impl Connect {
     where
         T: Into<TString<'static>>,
     {
-        let mut instance = Self {
+        Self {
             fg,
             bg: Pad::with_background(bg),
             message: message.into(),
@@ -37,10 +37,7 @@ impl Connect {
             button: Button::with_text("Cancel".into())
                 .styled(button_bld())
                 .with_text_align(Alignment::Center),
-        };
-
-        instance.bg.clear();
-        instance
+        }
     }
 }
 

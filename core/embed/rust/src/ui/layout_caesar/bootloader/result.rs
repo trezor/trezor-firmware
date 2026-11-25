@@ -28,9 +28,8 @@ impl<'a> ResultScreen<'a> {
         icon: Icon,
         title: Label<'static>,
         content: Label<'a>,
-        complete_draw: bool,
     ) -> Self {
-        let mut instance = Self {
+        Self {
             bg: Pad::with_background(bg_color),
             small_pad: Pad::with_background(bg_color),
             fg_color,
@@ -38,14 +37,7 @@ impl<'a> ResultScreen<'a> {
             icon,
             message_top: Child::new(title),
             message_bottom: Child::new(content),
-        };
-
-        if complete_draw {
-            instance.bg.clear();
-        } else {
-            instance.small_pad.clear();
         }
-        instance
     }
 }
 

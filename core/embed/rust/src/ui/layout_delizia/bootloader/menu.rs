@@ -34,7 +34,7 @@ impl Menu {
         let content_reboot = IconText::new("REBOOT TREZOR", Icon::new(REFRESH24));
         let content_reset = IconText::new("FACTORY RESET", Icon::new(FIRE24));
 
-        let mut instance = Self {
+        Self {
             bg: Pad::with_background(BLD_BG),
             title: Child::new(
                 Label::left_aligned("BOOTLOADER".into(), text_title(BLD_BG)).vertically_centered(),
@@ -46,9 +46,7 @@ impl Menu {
             ),
             reboot: Child::new(Button::with_icon_and_text(content_reboot).styled(button_bld())),
             reset: Child::new(Button::with_icon_and_text(content_reset).styled(button_bld())),
-        };
-        instance.bg.clear();
-        instance
+        }
     }
 }
 

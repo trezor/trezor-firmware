@@ -34,7 +34,7 @@ impl<'a> ErrorScreen<'a> {
         );
 
         Self {
-            bg: Pad::with_background(FATAL_ERROR_COLOR).with_clear(),
+            bg: Pad::with_background(FATAL_ERROR_COLOR),
             title,
             message,
             footer,

@@ -82,7 +82,6 @@ impl Component for Progress {
                 if self.description.content() != &new_description {
                     self.description.update(new_description);
                     ctx.request_paint();
-                    self.description_pad.clear();
                 }
             }
         }

@@ -67,7 +67,6 @@ where
         // clear the background under it.
         self.content.change_page(self.scrollbar.pager().current());
         self.content.request_complete_repaint(ctx);
-        self.pad.clear();
 
         // Swipe has dimmed the screen, so fade back to normal backlight after the next
         // paint.

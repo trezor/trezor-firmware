@@ -131,7 +131,6 @@ impl Component for Progress {
                 if !new_description.is_empty() && para.content() != &new_description {
                     para.update(new_description);
                     ctx.request_paint();
-                    self.description_pad.clear();
                 }
             });
         } else {

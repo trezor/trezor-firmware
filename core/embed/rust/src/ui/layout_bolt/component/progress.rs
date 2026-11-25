@@ -74,7 +74,6 @@ impl Component for Progress {
                     if para.content() != &new_description {
                         para.update(new_description);
                         ctx.request_paint();
-                        self.description_pad.clear();
                     }
                 });
             }

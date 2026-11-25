@@ -284,7 +284,7 @@ impl ButtonController {
     pub fn new(btn_layout: ButtonLayout) -> Self {
         let handle_middle_button = btn_layout.btn_middle.is_some();
         Self {
-            pad: Pad::with_background(theme::BG).with_clear(),
+            pad: Pad::with_background(theme::BG),
             left_btn: ButtonContainer::new(ButtonPos::Left, btn_layout.btn_left),
             middle_btn: ButtonContainer::new(ButtonPos::Middle, btn_layout.btn_middle),
             right_btn: ButtonContainer::new(ButtonPos::Right, btn_layout.btn_right),
@@ -305,7 +305,6 @@ impl ButtonController {
     /// Updating all the three buttons to the wanted states.
     pub fn set(&mut self, btn_layout: ButtonLayout) {
         self.handle_middle_button = btn_layout.btn_middle.is_some();
-        self.pad.clear();
         self.left_btn.set(btn_layout.btn_left, self.button_area);
         self.middle_btn.set(btn_layout.btn_middle, self.button_area);
         self.right_btn.set(btn_layout.btn_right, self.button_area);

@@ -112,7 +112,6 @@ impl PinKeyboard {
         let is_full = self.textbox.inner().is_full();
         let is_empty = self.textbox.inner().is_empty();
 
-        self.textbox_pad.clear();
         self.textbox.request_complete_repaint(ctx);
 
         if is_empty {
@@ -275,7 +274,6 @@ impl Component for PinKeyboard {
             Event::Timer(_) if self.warning_timer.expire(event) => {
                 self.major_warning = None;
                 self.restart_prompts(ctx);
-                self.textbox_pad.clear();
                 self.minor_prompt.request_complete_repaint(ctx);
                 ctx.request_paint();
             }
@@ -521,7 +519,6 @@ impl Component for PinInput {
                 self.last_digit_timer.stop();
                 // Show the entire pin on the touch start
                 self.display_style = DisplayStyle::Shown;
-                self.pad.clear();
                 ctx.request_paint();
                 None
             }
@@ -529,7 +526,6 @@ impl Component for PinInput {
                 if mem::replace(&mut self.display_style, DisplayStyle::Hidden)
                     == DisplayStyle::Shown
                 {
-                    self.pad.clear();
                     ctx.request_paint();
                 };
                 None

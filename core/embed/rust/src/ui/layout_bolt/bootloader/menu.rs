@@ -40,7 +40,7 @@ impl Menu {
         let content_bluetooth = IconText::new("BLUETOOTH", Icon::new(FIRE24));
         let content_poweroff = IconText::new("POWER OFF", Icon::new(FIRE24));
 
-        let mut instance = Self {
+        Self {
             bg: Pad::with_background(BLD_BG),
             title: Label::left_aligned("BOOTLOADER".into(), text_title(BLD_BG))
                 .vertically_centered(),
@@ -54,9 +54,7 @@ impl Menu {
             reset: Button::with_icon_and_text(content_reset).styled(button_bld()),
             bluetooth: Button::with_icon_and_text(content_bluetooth).styled(button_bld()),
             poweroff: Button::with_icon_and_text(content_poweroff).styled(button_bld()),
-        };
-        instance.bg.clear();
-        instance
+        }
     }
 
     pub fn get_button_pos(&self, i: u8) -> Rect {

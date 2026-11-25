@@ -572,13 +572,11 @@ impl Component for Input {
                 self.last_char_timer.stop();
                 self.display_style = DisplayStyle::Shown;
                 self.update_shown_area();
-                self.pad.clear();
                 ctx.request_paint();
             }
             // Hide on touch end anywhere on the screen
             Event::Touch(TouchEvent::TouchEnd(_)) if self.display_style == DisplayStyle::Shown => {
                 self.display_style = DisplayStyle::Hidden;
-                self.pad.clear();
                 ctx.request_paint();
             }
             // Timeout for showing the last char
