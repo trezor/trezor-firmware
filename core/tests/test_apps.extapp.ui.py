@@ -78,22 +78,20 @@ class TestProcessIpcMessage(unittest.TestCase):
         self.assertEqual(br_code, 0)
         self.assertIsNone(br_name)
 
-    def test_send_ui_result(self):
-        sent = []
-        trezorui_api.send_ui_result(result=trezorui_api.CONFIRMED, ipc_cb=sent.append)
-        self.assertEqual(len(sent), 1)
+    def test_serialize_ui_result(self):
+        # rkyv-archived `TrezorUiResult`s, as the app decodes them
+        self.assertEqual(
+            trezorui_api.serialize_ui_result(result=trezorui_api.CONFIRMED),
+            bytes.fromhex("0000000000000000"),
+        )
+        self.assertEqual(
+            trezorui_api.serialize_ui_result(result=3),
+            bytes.fromhex("0400000003000000"),
+        )
 
-    def test_send_ui_result_send_fails(self):
-        # a failed send (app gone, inbox full) must raise, not crash Core
-        def send(_data):
-            raise RuntimeError("send failed")
-
-        with self.assertRaises(RuntimeError):
-            trezorui_api.send_ui_result(result=trezorui_api.CONFIRMED, ipc_cb=send)
-
-    def test_send_ui_result_no_callback(self):
+    def test_serialize_ui_result_invalid(self):
         with self.assertRaises(TypeError):
-            trezorui_api.send_ui_result(result=trezorui_api.CONFIRMED)
+            trezorui_api.serialize_ui_result(result="x")
 
 
 if __name__ == "__main__":

@@ -1585,16 +1585,9 @@ extern "C" fn new_process_ipc_message(_n_args: usize, _args: *const Obj, _kwargs
 }
 
 #[cfg(feature = "app_loading")]
-extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_serialize_ui_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_result)?;
-
-        let ipc_callback: Option<Obj> = kwargs
-            .get(Qstr::MP_QSTR_ipc_cb)
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
-
-        let ipc_cb = ipc_callback.ok_or(Error::TypeError)?;
 
         // Map MicroPython UiResult object to Rust enum for serialization
         let msg = if obj == CONFIRMED.as_obj() {
@@ -1611,19 +1604,13 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
             return Err(Error::TypeError);
         };
 
-        let bytes = crate::util::archive::to_bytes_obj(&msg)?;
-
-        // Send the response back via the ipc_cb callback; a failed send raises to
-        // the caller
-        ipc_cb.call_with_n_args(&[bytes])?;
-
-        Ok(Obj::const_none())
+        crate::util::archive::to_bytes_obj(&msg)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 #[cfg(not(feature = "app_loading"))]
-extern "C" fn new_send_ui_result(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
+extern "C" fn new_serialize_ui_result(_n_args: usize, _args: *const Obj, _kwargs: *mut Map) -> Obj {
     unimplemented!()
 }
 
@@ -2600,13 +2587,12 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
     Qstr::MP_QSTR_process_ipc_message => obj_fn_kw!(0, new_process_ipc_message).as_obj(),
 
-    /// def send_ui_result(
+    /// def serialize_ui_result(
     ///     *,
     ///     result: UiResult | int | str | None,
-    ///     ipc_cb: Callable[[bytes], None] | None = None,
-    /// ) -> None:
-    ///     """Serialize a UI result into bytes and send it via the ipc_cb callback.."""
-    Qstr::MP_QSTR_send_ui_result => obj_fn_kw!(0, new_send_ui_result).as_obj(),
+    /// ) -> bytes:
+    ///     """Serialize a UI result into bytes to send to the app."""
+    Qstr::MP_QSTR_serialize_ui_result => obj_fn_kw!(0, new_serialize_ui_result).as_obj(),
 
     /// def deserialize_progress_message(
     ///     *,
