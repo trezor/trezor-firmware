@@ -6,19 +6,22 @@ use ufmt::derive::uDebug;
 
 /// All crypto operations that can be requested from the app via IPC.
 ///
-/// Built by the app-side `crate::crypto` module, handled by Core in `trezor_lib::crypto_api`.
+/// Built by the app-side `crate::crypto` module, handled by Core in
+/// `trezor_lib::crypto_api`.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum TrezorCryptoEnum<'a> {
-    /// Derive the raw xpub, see [`CryptoV1::get_xpub`](trezor_app_sdk::traits::crypto::CryptoV1::get_xpub).
+    /// Derive the raw xpub, see `CryptoV1::get_xpub`.
     GetXpub {
-        /// A [`Curve`](trezor_app_sdk::traits::crypto::Curve), as its `u8` value.
+        /// A [`Curve`](trezor_app_sdk::traits::crypto::Curve), as its `u8`
+        /// value.
         curve: u8,
         /// Derivation path.
         address_n: Slice<'a, u32>,
     },
     /// Derive a public key.
     GetPublicKey {
-        /// A [`Curve`](trezor_app_sdk::traits::crypto::Curve), as its `u8` value.
+        /// A [`Curve`](trezor_app_sdk::traits::crypto::Curve), as its `u8`
+        /// value.
         curve: u8,
         /// Derivation path.
         address_n: Slice<'a, u32>,
@@ -27,8 +30,8 @@ pub enum TrezorCryptoEnum<'a> {
     },
     /// Sign a digest with ECDSA.
     EcdsaSignDigest {
-        /// An [`EcdsaCurve`](trezor_app_sdk::traits::crypto::EcdsaCurve), as its `u8`
-        /// value.
+        /// An [`EcdsaCurve`](trezor_app_sdk::traits::crypto::EcdsaCurve), as
+        /// its `u8` value.
         curve: u8,
         /// Derivation path.
         address_n: Slice<'a, u32>,
@@ -36,8 +39,8 @@ pub enum TrezorCryptoEnum<'a> {
         digest: [u8; 32],
         /// Set the recovery header byte for a compressed public key.
         compressed: bool,
-        /// A [`CanonicalSig`](trezor_app_sdk::traits::crypto::CanonicalSig), as its
-        /// `u8` value.
+        /// A [`CanonicalSig`](trezor_app_sdk::traits::crypto::CanonicalSig), as
+        /// its `u8` value.
         canonical: u8,
     },
     /// Sign a message with Ed25519.
