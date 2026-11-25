@@ -24,6 +24,7 @@ if not utils.BITCOIN_ONLY:
         Array,
         Atomic,
         CalldataFormatter,
+        ClearSigningFailed,
         ContainerPath,
         DateFormatter,
         DirtyAddress,
@@ -33,6 +34,7 @@ if not utils.BITCOIN_ONLY:
         EnumFormatter,
         FieldDefinition,
         InvalidFormatDefinition,
+        MustMatchViolation,
         OutOfBounds,
         RawFormatter,
         TokenAmountFormatter,
@@ -40,6 +42,7 @@ if not utils.BITCOIN_ONLY:
         ValueOverflow,
         _expand_calldata_field,
         _format_field_value,
+        _to_bytes,
         make_fixed_bytes_parser,
         make_int_parser,
         make_uint_parser,
@@ -1204,6 +1207,81 @@ class TestEthereumClearSigning(unittest.TestCase):
         self.assertEqual(formatted, "kmgcEURC")
         self.assertIsNone(token)
         self.assertIsNone(token_address)
+
+    # --- conditional visibility (`ifNotIn` / `mustMatch`) ---
+
+    def test_visibility_to_bytes(self):
+        # numbers (incl. bool, negatives) as the 32-byte ABI word
+        self.assertEqual(_to_bytes(0), b"\x00" * 32)
+        self.assertEqual(_to_bytes(True), b"\x00" * 31 + b"\x01")
+        self.assertEqual(_to_bytes(-1), b"\xff" * 32)
+        # bytes as-is, strings as UTF-8
+        self.assertEqual(_to_bytes(b"\xab" * 20), b"\xab" * 20)
+        self.assertEqual(_to_bytes("hi"), b"hi")
+        # no defined byte form
+        for value in (None, [0]):
+            with self.assertRaises(InvalidFormatDefinition):
+                _to_bytes(value)
+
+    def test_visibility_if_not_in(self):
+        field = FieldDefinition((0,), "Expiry", RawFormatter, if_not_in=[to_bytes(0)])
+        self.assertTrue(field.is_hidden(0))
+        self.assertFalse(field.is_hidden(5))
+        # no rule: always shown
+        self.assertFalse(FieldDefinition((0,), "X", RawFormatter).is_hidden(0))
+
+    def test_visibility_must_match(self):
+        field = FieldDefinition((0,), "Token", RawFormatter, must_match=[b"\x22" * 20])
+        self.assertTrue(field.is_hidden(b"\x22" * 20))
+        with self.assertRaises(MustMatchViolation):
+            field.is_hidden(b"\x33" * 20)
+        # must abort signing, never degrade to blind signing
+        self.assertFalse(issubclass(MustMatchViolation, ClearSigningFailed))
+
+    def test_from_proto_visibility(self):
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[0]),
+            label="Fee",
+            formatter=FT.FORMATTER_RAW,
+            if_not_in=[to_bytes(0)],
+        )
+        self.assertTrue(FieldDefinition.from_proto(info).is_hidden(0))
+
+        # a rule on a constant path is refused
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(const_value="kmgcEURC"),
+            label="Share ticker",
+            formatter=FT.FORMATTER_RAW,
+            if_not_in=[b"kmgcEURC"],
+        )
+        with self.assertRaises(InvalidFormatDefinition):
+            FieldDefinition.from_proto(info)
+
+    def test_visibility_end_to_end(self):
+        # f(uint256 fee, uint256 amount): "Fee" hidden when 0, "Amount" must be 7
+        display_format = DisplayFormat(
+            binding_context=None,
+            func_sig=b"\x00\x00\x00\x00",
+            provider_name=None,
+            intent="Test",
+            parameter_definitions=[Atomic(parse_uint256), Atomic(parse_uint256)],
+            field_definitions=[
+                FieldDefinition((0,), "Fee", RawFormatter, if_not_in=[to_bytes(0)]),
+                FieldDefinition((1,), "Amount", RawFormatter, must_match=[to_bytes(7)]),
+            ],
+        )
+
+        def labels(fee: int, amount: int) -> list[str]:
+            calldata = memoryview(to_bytes(fee) + to_bytes(amount))
+            _, fields = await_result(
+                display_format.parse_calldata(calldata, None, None)
+            )
+            return [label for (label, _, _), _, _ in fields]
+
+        self.assertEqual(labels(3, 7), ["Fee"])
+        self.assertEqual(labels(0, 7), [])
+        with self.assertRaises(MustMatchViolation):
+            labels(3, 8)
 
     # --- path byte-slices (`token.[-20:]` etc.) ---
 

@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 14,
+    "address": "ad552a648c74d49e10027ab8a618a3ad4901c5be",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "Flare Foundation: FXRP"
+  }
+}
