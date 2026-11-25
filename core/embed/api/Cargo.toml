@@ -5,9 +5,7 @@ edition = "2024"
 links = "api"
 
 [build-dependencies]
-color-eyre.workspace = true
 xbuild.workspace = true
-bindgen.workspace = true
 
 [dependencies]
 lock_api.workspace = true
