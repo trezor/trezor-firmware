@@ -157,7 +157,7 @@ async def _stop_app(session: Session) -> None:
     image = session.image
     if image.is_running():
         try:
-            session.send(SERVICE_LIFECYCLE, LIFECYCLE_ABORT, b"")
+            session.send(SERVICE_LIFECYCLE, LIFECYCLE_ABORT, b"", die_on_error=False)
         except Exception:
             pass  # the timeout below takes care of it
         try:
@@ -175,7 +175,9 @@ async def _send_request(session: Session, request: ExtAppMessage) -> None:
     retries = _START_RETRIES
     while True:
         try:
-            session.send(SERVICE_WIRE, request.message_id, request.data)
+            session.send(
+                SERVICE_WIRE, request.message_id, request.data, die_on_error=False
+            )
             return
         except Exception as e:
             retries -= 1

@@ -60,17 +60,14 @@ async def handle(session: Session, msg: IpcMessage) -> None:
             log.error(
                 __name__, f"Crypto operation {msg.message_id} failed: {describe(e)}"
             )
-        try:
-            session.send(SERVICE_CRYPTO, MSG_ID_ERROR, b"")
-        except Exception:
-            session.die("Failed to send crypto error")
+        session.send(SERVICE_CRYPTO, MSG_ID_ERROR, b"")
         return
 
     try:
         data = trezorcrypto_api.serialize_crypto_result(result=result)
-        session.send(SERVICE_CRYPTO, msg.message_id, data)
     except Exception:
-        session.die("Failed to serialize or send crypto result")
+        session.die("Failed to serialize crypto result")
+    session.send(SERVICE_CRYPTO, msg.message_id, data)
 
 
 def _curve(value: int, curves: tuple[str, ...] = _CURVES) -> str:

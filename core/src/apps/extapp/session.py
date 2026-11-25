@@ -80,8 +80,21 @@ class Session:
             self.keychains[curve] = keychain
         return keychain
 
-    def send(self, service: int, message_id: int, data: AnyBytes) -> None:
-        io.ipc_send(self.task_id, service, message_id, data)
+    def send(
+        self,
+        service: int,
+        message_id: int,
+        data: AnyBytes,
+        die_on_error: bool = True,
+    ) -> None:
+        """Send `data` to the app. A failed send stops the app, unless
+        `die_on_error` is False: then it raises."""
+        try:
+            io.ipc_send(self.task_id, service, message_id, data)
+        except Exception as e:
+            if not die_on_error:
+                raise
+            self.die(f"IPC send failed: {describe(e)}")
 
     def stop(self) -> None:
         self.stopped = True

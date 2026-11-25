@@ -52,12 +52,9 @@ def handle_host_message(session: Session, msg: ExtAppMessage) -> None:
         # the host's fault, not the app's
         session.die("Invalid message ID from host", DataError("Invalid message ID"))
     session.response_sent = False
-    try:
-        session.send(SERVICE_WIRE, msg.message_id, msg.data)
-    except Exception:
-        # e.g. the message does not fit the app's inbox; the app would keep
-        # waiting for it, so stop the app instead
-        session.die("Failed to send host message to app")
+    # a failed send (e.g. too big for the app's inbox) stops the app, which
+    # would keep waiting for the message
+    session.send(SERVICE_WIRE, msg.message_id, msg.data)
 
 
 def handle_error(session: Session, msg: IpcMessage) -> NoReturn:

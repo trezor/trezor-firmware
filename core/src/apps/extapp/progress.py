@@ -46,7 +46,4 @@ def handle(session: Session, msg: IpcMessage) -> None:
     else:
         session.die("Unknown progress message ID")
 
-    try:
-        session.send(SERVICE_PROGRESS, message_id, b"")
-    except Exception:
-        session.die("Failed to send progress result")
+    session.send(SERVICE_PROGRESS, message_id, b"")

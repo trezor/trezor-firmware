@@ -28,6 +28,6 @@ async def handle(session: Session, msg: IpcMessage) -> None:
 
     try:
         data = trezorui_api.serialize_ui_result(result=result)
-        session.send(SERVICE_UI, 0, data)
     except Exception:
-        session.die("Failed to serialize or send UI result")
+        session.die("Failed to serialize UI result")
+    session.send(SERVICE_UI, 0, data)
