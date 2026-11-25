@@ -114,60 +114,58 @@ restore itself: re-binding history the WM had lost to the current session.
 
 ## What the host does
 
-The host rolls the WM forward during a sync on the wallet channel, when the Trezor reports that
-the WM is behind:
+The host coordinates; it decides nothing the Trezor or the WM does not check. When the Trezor
+reports during a sync that the WM is behind, the host:
 
-1. Take the kept records of steps above the WM's head, newest first.
-2. For each, walk the replica's links back from it. The WM's current head must lie on that walk.
-   If no walk passes through it, the WM is on another branch, which is a rejoin case, and nothing
-   is replayed.
-3. Use the path up to the first step without a kept record.
-4. Send the path to the Trezor a page at a time, with the WM's live attestation and each step's
-   record, marking the last page.
-5. Submit each returned signature to the WM as an advance, and keep each acceptance.
-6. Before the next page, have the WM attest its advanced head under the same round nonce, because
-   the Trezor's round is still open. That attestation only reads and leaves the session open.
-7. When done, attest once more, hand it to the Trezor, and continue the normal sync, where the
-   Trezor now adopts its head. The sync reports how many steps were restored, the counter reached,
-   and the time of the last record.
+- **Finds the path.** From its replica it picks the newest accepted head it holds a WM record
+  for, and the chain of steps that leads there from the WM's current head. If no such chain
+  starts at the WM's head, the WM is on another branch: that is a rejoin, not a roll-forward.
+  The path ends at the first step the host has no record for.
+- **Relays it.** It hands the path to the Trezor in pages, with the WM's records, and submits the
+  signatures the Trezor returns to the WM as ordinary advances. Between pages it has the WM
+  attest its advanced head again, so each page starts where the WM now stands.
+- **Finishes the sync.** Once the WM is back at the Trezor's head, the sync continues as usual
+  and the Trezor adopts its head. The host reports how far the history was restored and when the
+  WM last confirmed it.
 
-A refusal by the Trezor or the WM, or a declined approval, ends the roll-forward there, and a
-Trezor still ahead of the WM then fails the sync. The host can be configured not to roll forward.
-The deprecated service channel does not roll forward.
+Any refusal, by the Trezor or the WM, or a declined approval, ends the roll-forward where it is;
+a Trezor still ahead of the WM then fails the sync. Roll-forward runs on the wallet channel only.
 
-## Trade-offs
+## Who re-admits the history
 
-- **For:**
-  - The WM keeps one way in: a Trezor-signed advance in the current session.
-  - The Trezor checks every step itself, and a hostile WM cannot sign a history the wallet never
-    made.
-  - The re-signed steps are bound to a session like any other authorization, so they expire with
-    it.
-- **Against:**
-  - A Trezor must be connected, ahead of the restored WM, and the user must approve.
-  - Each step costs a MAC check, a WM signature check and a new signature on the device.
-  - The deprecated service channel does not support it.
+A restored WM has lost steps it once accepted, and something must put them back. There are two
+ways, and they differ in who vouches for each step:
 
-## Alternative: the WM accepts its own records directly (not chosen)
-
-The host presents the WM's records to the WM. The WM verifies its own signature over each step,
-checks the predecessor against its head, and installs the step. No Trezor is involved.
+- **The Trezor signs again (chosen).** The Trezor checks each step against its own MAC and the
+  WM's record, and signs it for the current session. The WM takes it as an ordinary advance.
+- **The WM accepts its own records (not chosen).** The host presents the WM's records to the WM.
+  The WM verifies its own signature over each step, checks the predecessor, and installs it. No
+  Trezor is involved.
 
 ```mermaid
 flowchart LR
-    H["host with the WM's<br/>acceptance records"] -->|"replay a record"| M["WM: verify its own signature,<br/>predecessor check, install"]
-    M -.->|"no Trezor, no wallet MAC,<br/>no session"| M
+    subgraph chosen ["The Trezor signs again"]
+        H1["host with the WM's records"] --> T1["Trezor: own MAC, WM's record,<br/>user approval, new signature"] --> M1["WM: ordinary advance<br/>in the current session"]
+    end
+    subgraph other ["The WM accepts its own records"]
+        H2["host with the WM's records"] --> M2["WM: verify its own signature,<br/>predecessor check, install"]
+    end
 ```
 
-- **For:**
-  - It works while no Trezor is connected.
-  - It is cheap: one signature check per step, on the WM.
-- **Against:**
-  - The WM gains a second way in that bypasses the Trezor. A WM bug or key compromise there is
-    not checked by any wallet MAC.
-  - Anyone holding the records can drive the WM forward with no device present, which widens the
-    prefix choice below.
-  - The records are not bound to any session, so they never expire.
+| | The Trezor signs again | The WM accepts its own records |
+| --- | --- | --- |
+| Ways into the WM | One: a Trezor-signed advance in the current session | Two: that, and a replay of its own records |
+| Who checks a step | The Trezor (its own MAC) and the WM (its record) | The WM alone |
+| A WM bug or a stolen WM key | Cannot invent history: no wallet MAC | Reinstalls whatever its key signed |
+| Who can drive it | Only a connected Trezor, with the user's approval | Anyone holding the records, with no device present |
+| Expiry | The new signatures expire with the session | The records never expire |
+| Prefix choice | The record holder chooses where to stop | The same, and without any Trezor involved |
+| Availability | Needs a Trezor that is ahead of the restored WM | Works with no Trezor connected |
+| Cost | A MAC check, a record check and a signature per step, on the device | One signature check per step, on the WM |
+
+The chosen way keeps the WM's single way in and puts every re-admitted step in front of the
+wallet's own key. The price is availability: until a Trezor that is ahead connects and the user
+approves, the restored WM stays behind. Neither way removes the prefix choice; see below.
 
 ## What stays open
 
