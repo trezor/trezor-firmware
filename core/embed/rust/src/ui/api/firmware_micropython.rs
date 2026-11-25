@@ -1243,6 +1243,10 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
 
+        // SAFETY: `kwargs` keeps `obj` alive for the whole block, and no
+        // MicroPython code runs while the buffer is borrowed (the block only
+        // allocates objects and copies every string out), so nothing can modify
+        // it.
         let archived =
             rkyv::access::<Archived<TrezorUiEnum>, Failure>(unwrap!(unsafe { get_buffer(obj) }))
                 .map_err(|_| Error::ValueError(c"Invalid UI message"))?;
@@ -1634,6 +1638,9 @@ extern "C" fn new_deserialize_progress_message(
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
 
+        // SAFETY: `kwargs` keeps `obj` alive for the whole block, and no
+        // MicroPython code runs while `data` is borrowed (the block only
+        // allocates the result objects), so nothing can modify the buffer.
         let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
 
         fn obj_from_archived_borrowed_str_option(
