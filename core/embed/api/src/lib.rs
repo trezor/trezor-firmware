@@ -16,11 +16,9 @@ mod v1;
 mod wire;
 
 // The API getter handed to every loaded app, by `coreapp_app_entry` below.
-// Exported under a stable symbol name because it is the entry point of
-// Core's whole app-facing ABI surface, even though nothing outside this
-// crate references it any more.
-#[unsafe(no_mangle)]
-pub extern "C" fn coreapp_api_get(version: u32) -> ApiVariant {
+// `extern "C"` for the app ABI boundary; apps only get its address, so the
+// symbol stays private.
+extern "C" fn coreapp_api_get(version: u32) -> ApiVariant {
     if version != 1 {
         fatal_error!("Unsupported API version");
     }
@@ -42,10 +40,10 @@ pub extern "C" fn coreapp_api_get(version: u32) -> ApiVariant {
 // The launch arguments are copied onto the app's stack (or into its data
 // area on the emulator), so no syscall is needed to query them.
 //
-// Same "C only ever takes its address" contract as `coreapp_api_get` above:
-// `core/embed/sys/task/*/coreapp.c` declares this as
-// `extern int coreapp_app_entry(const void* args)` and never calls it, so
-// the declared C parameter type does not need to match the real one below.
+// C only ever takes its address: `core/embed/sys/task/*/coreapp.c` declares
+// this as `extern int coreapp_app_entry(const void* args)` and never calls
+// it, so the declared C parameter type does not need to match the real one
+// below.
 #[unsafe(no_mangle)]
 pub extern "C" fn coreapp_app_entry(args: &io::AppArgs) -> core::ffi::c_int {
     let args = *args;
