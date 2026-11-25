@@ -41,8 +41,8 @@ jobs:
       # is too slow to run without optimizations.
       - name: Tests, optimized
         run: $NIX_RUN cargo test --release
-      # What the tests run and what they never do, on the job's summary page. Locally,
-      # `cargo llvm-cov --branch --html` shows the same in the sources.
+      # What the tests run and what they never do: the table and the uncovered lines on the
+      # job's summary page, the same shown in the sources as an artifact.
       - name: Coverage
         run: |
           $NIX_RUN cargo llvm-cov --branch --no-report
@@ -51,6 +51,12 @@ jobs:
             $NIX_RUN cargo llvm-cov report --branch --show-missing-lines
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+          $NIX_RUN cargo llvm-cov report --branch --html
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        with:
+          name: trezor-ward-coverage
+          path: rust/trezor-ward/target/llvm-cov/html
+          retention-days: 7
       - name: Every combination of features
         run: $NIX_RUN cargo hack clippy --feature-powerset -- -D warnings
       # Where the verifier runs. Without `use_std`, since these targets have no std.
