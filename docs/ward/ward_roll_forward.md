@@ -98,6 +98,10 @@ It also checks two things about the chain:
 
 It then signs each step again for the current session, keeping its kind: a revert stays a revert.
 
+**Why the WM's signature too.** The Trezor's own MAC proves it made a step, not that the step
+landed: a lost race or a held-back publication carries a genuine MAC. Without the WM's record, a
+host could re-admit such a step after a restore and land a change the WM never accepted.
+
 ## What the user sees
 
 - **Approval.** On the first page, after checking it, the Trezor shows "Restore WARD history":
@@ -136,8 +140,9 @@ a Trezor still ahead of the WM then fails the sync. Roll-forward runs on the wal
 A restored WM has lost steps it once accepted, and something must put them back. There are two
 ways, and they differ in who vouches for each step:
 
-- **The Trezor signs again (chosen).** The Trezor checks each step against its own MAC and the
-  WM's record, and signs it for the current session. The WM takes it as an ordinary advance.
+- **The Trezor signs again (chosen as more transparent to the user).** The Trezor checks each
+  step against its own MAC and the WM's record, and signs it for the current session. The WM
+  takes it as an ordinary advance.
 - **The WM accepts its own records (not chosen).** The host presents the WM's records to the WM.
   The WM verifies its own signature over each step, checks the predecessor, and installs it. No
   Trezor is involved.
