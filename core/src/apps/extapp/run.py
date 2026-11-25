@@ -48,10 +48,6 @@ _IPC_TIMEOUT_MS = const(20000)
 # how long a stopped app has to exit on its own
 _STOP_TIMEOUT_MS = const(250)
 
-# an app registers its inbox once it runs, Core retries until then
-_START_RETRY_MS = const(1)
-_START_RETRIES = const(1000)
-
 _IPC_EVENT = io.IPC2_EVENT | io.POLL_READ
 _APP_EXIT_EVENT = io.APP_ARENA_EVENT | io.POLL_READ
 
@@ -171,23 +167,6 @@ async def _stop_app(session: Session) -> None:
         session.die("App crashed")
 
 
-async def _send_request(session: Session, request: ExtAppMessage) -> None:
-    retries = _START_RETRIES
-    while True:
-        try:
-            session.send(
-                SERVICE_WIRE, request.message_id, request.data, die_on_error=False
-            )
-            return
-        except Exception as e:
-            retries -= 1
-            if retries == 0 or not session.image.is_running():
-                session.die(
-                    f"Failed to send request {request.message_id}: {describe(e)}"
-                )
-        await loop.sleep(_START_RETRY_MS)
-
-
 async def _next_message(session: Session) -> IpcMessage | None:
     """Next message from the app, or `None` once the app has exited and
     everything it sent is handled. The host's messages are passed to the app."""
@@ -216,7 +195,9 @@ async def _next_message(session: Session) -> IpcMessage | None:
 
 
 async def _serve(session: Session, request: ExtAppMessage) -> ExtAppResponse | None:
-    await _send_request(session, request)
+    # `image.run()` only returns once the app waits for messages, so its
+    # inbox is there
+    session.send(SERVICE_WIRE, request.message_id, request.data)
 
     # last service the app called, to tell where it stopped
     last_service = SERVICE_WIRE
