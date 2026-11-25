@@ -36,9 +36,6 @@ where
         if self.visible != show {
             self.visible = show;
 
-            // Invalidate the pad, so either we prepare a fresh canvas for the content, or
-            // paint over it.
-            self.pad.clear();
             if show {
                 // Make sure the whole inner tree is painted.
                 self.inner.request_complete_repaint(ctx);

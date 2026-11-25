@@ -31,7 +31,7 @@ pub struct Intro<'a> {
 impl<'a> Intro<'a> {
     pub fn new(title: TString<'a>, content: TString<'a>, fw_ok: bool) -> Self {
         Self {
-            bg: Pad::with_background(BLD_BG).with_clear(),
+            bg: Pad::with_background(BLD_BG),
             title: Label::left_aligned(title, text_title(BLD_BG)).vertically_centered(),
             menu: Button::with_icon(Icon::new(MENU32))
                 .styled(button_bld_menu())

@@ -109,7 +109,6 @@ impl Tutorial {
         }
         // Buttons still held from the previous screen are not a single press
         self.single_press = SinglePress::default();
-        self.pad.clear();
         ctx.request_paint();
     }
 

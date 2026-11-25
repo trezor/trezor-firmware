@@ -48,7 +48,7 @@ impl<'a> ConfirmPairing<'a> {
         code: u32,
     ) -> Self {
         Self {
-            bg: Pad::with_background(bg_color).with_clear(),
+            bg: Pad::with_background(bg_color),
             content_pad: Pad::with_background(bg_color),
             bg_color,
             title,

@@ -766,7 +766,6 @@ impl Component for PinDots {
                 // Stop the last char timer
                 self.last_digit_timer.stop();
                 self.display_style = DisplayStyle::Shown;
-                self.pad.clear();
                 ctx.request_paint();
                 None
             }
@@ -774,7 +773,6 @@ impl Component for PinDots {
                 if mem::replace(&mut self.display_style, DisplayStyle::Hidden)
                     == DisplayStyle::Shown
                 {
-                    self.pad.clear();
                     ctx.request_paint();
                 };
                 None

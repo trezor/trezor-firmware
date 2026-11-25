@@ -52,17 +52,14 @@ impl Connect {
 
         let menu = if show_menu { Some(menu_btn) } else { None };
 
-        let mut instance = Self {
+        Self {
             fg,
             bg: Pad::with_background(bg),
             message: message.into(),
             font,
             button: cancel,
             menu,
-        };
-
-        instance.bg.clear();
-        instance
+        }
     }
 }
 

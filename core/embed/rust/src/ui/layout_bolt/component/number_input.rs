@@ -53,7 +53,6 @@ where
             p.update(text);
             ctx.request_paint()
         });
-        self.paragraphs_pad.clear();
         ctx.request_paint();
     }
 

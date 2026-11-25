@@ -107,7 +107,7 @@ impl BootloaderUI for UICaesar {
         run(&mut frame, true, true)
     }
 
-    fn screen_install_success(restart_seconds: u8, _initial_setup: bool, complete_draw: bool) {
+    fn screen_install_success(restart_seconds: u8, _initial_setup: bool, _complete_draw: bool) {
         let mut reboot_msg = BootloaderString::new();
 
         if restart_seconds >= 1 {
@@ -124,8 +124,7 @@ impl BootloaderUI for UICaesar {
         let content =
             Label::centered(reboot_msg.as_str().into(), TEXT_NORMAL).vertically_centered();
 
-        let mut frame =
-            ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content, complete_draw);
+        let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content);
         show(&mut frame, false);
     }
 
@@ -135,7 +134,7 @@ impl BootloaderUI for UICaesar {
         let content = Label::centered("Please reconnect\nthe device".into(), TEXT_NORMAL)
             .vertically_centered();
 
-        let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_ALERT, title, content, true);
+        let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_ALERT, title, content);
         show(&mut frame, false);
     }
 
@@ -215,7 +214,7 @@ impl BootloaderUI for UICaesar {
         let content = Label::centered("Please reconnect the\ndevice".into(), TEXT_NORMAL)
             .vertically_centered();
 
-        let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content, true);
+        let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content);
 
         run(&mut frame, true, false);
     }
@@ -281,7 +280,7 @@ impl BootloaderUI for UICaesar {
         let content = Label::centered("Please reconnect\nthe device".into(), TEXT_NORMAL)
             .vertically_centered();
 
-        let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content, true);
+        let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content);
 
         run(&mut frame, true, false);
     }
@@ -292,7 +291,7 @@ impl BootloaderUI for UICaesar {
         let content = Label::centered("Please reconnect\nthe device".into(), TEXT_NORMAL)
             .vertically_centered();
 
-        let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_ALERT, title, content, true);
+        let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_ALERT, title, content);
         show(&mut frame, false);
     }
 

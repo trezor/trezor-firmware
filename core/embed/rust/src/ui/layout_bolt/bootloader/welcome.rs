@@ -29,7 +29,7 @@ pub struct Welcome {
 impl Welcome {
     pub fn new() -> Self {
         Self {
-            bg: Pad::with_background(WELCOME_COLOR).with_clear(),
+            bg: Pad::with_background(WELCOME_COLOR),
             menu: Button::with_icon(Icon::new(MENU32))
                 .styled(button_initial())
                 .with_expanded_touch_area(Insets::uniform(13)),

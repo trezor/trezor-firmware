@@ -151,7 +151,6 @@ where
         // clear the background under it.
         self.content.change_page(self.scrollbar.pager().current());
         self.content.request_complete_repaint(ctx);
-        self.pad.clear();
 
         // Swipe has dimmed the screen, so fade back to normal backlight after the next
         // paint.
@@ -256,7 +255,6 @@ where
         match button_msg {
             Some(ButtonMsg::Pressed) => {
                 loader.start_growing(ctx, now);
-                loader.pad.clear(); // Clear the remnants of the content.
             }
             Some(ButtonMsg::Released) => {
                 loader.start_shrinking(ctx, now);

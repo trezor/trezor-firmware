@@ -185,7 +185,6 @@ impl BootloaderUI for UIDelizia {
             "Firmware installation was not successful".into(),
             Label::centered(RECONNECT_MESSAGE.into(), RESULT_FW_INSTALL.title_style())
                 .vertically_centered(),
-            true,
         );
         show(&mut frame, true);
     }
@@ -304,7 +303,6 @@ impl BootloaderUI for UIDelizia {
             "Bootloader unlocked".into(),
             Label::centered(RECONNECT_MESSAGE.into(), RESULT_FW_INSTALL.title_style())
                 .vertically_centered(),
-            true,
         );
         run(&mut frame, true, false);
     }
@@ -379,7 +377,6 @@ impl BootloaderUI for UIDelizia {
             "Trezor reset\nsuccessfully".into(),
             Label::centered(RECONNECT_MESSAGE.into(), RESULT_WIPE.title_style())
                 .vertically_centered(),
-            true,
         );
         run(&mut frame, true, false);
     }
@@ -391,7 +388,6 @@ impl BootloaderUI for UIDelizia {
             "Trezor reset was\nnot successful".into(),
             Label::centered(RECONNECT_MESSAGE.into(), RESULT_WIPE.title_style())
                 .vertically_centered(),
-            true,
         );
         show(&mut frame, true);
     }

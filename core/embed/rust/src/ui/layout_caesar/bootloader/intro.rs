@@ -34,7 +34,7 @@ pub struct Intro<'a> {
 impl<'a> Intro<'a> {
     pub fn new(title: TString<'a>, content: TString<'a>, fw_ok: bool) -> Self {
         Self {
-            bg: Pad::with_background(BLD_BG).with_clear(),
+            bg: Pad::with_background(BLD_BG),
             title: Child::new(Label::centered(title, TEXT_NORMAL).vertically_centered()),
             buttons: Buttons::new(
                 Some(Button::menu()),

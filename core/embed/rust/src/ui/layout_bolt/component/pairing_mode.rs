@@ -38,16 +38,13 @@ impl PairingMode {
         bg: Color,
         button: Button,
     ) -> Self {
-        let mut instance = Self {
+        Self {
             fg,
             bg: Pad::with_background(bg),
             message,
             font,
             button,
-        };
-
-        instance.bg.clear();
-        instance
+        }
     }
 }
 

@@ -136,7 +136,6 @@ impl Homescreen {
                 }
             }
             Event::Timer(_) if self.delay.expire(event) => {
-                self.pad.clear();
                 self.paint_notification_only = false;
                 self.loader.start_growing(ctx, Instant::now());
             }
@@ -149,7 +148,6 @@ impl Homescreen {
             }
             Some(LoaderMsg::ShrunkCompletely) => {
                 self.loader.reset();
-                self.pad.clear();
                 self.paint_notification_only = false;
                 ctx.request_paint()
             }

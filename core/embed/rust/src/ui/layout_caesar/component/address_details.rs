@@ -22,7 +22,7 @@ impl AddressDetails {
             .with_border(QR_BORDER);
         Ok(Self {
             qr_code,
-            pad: Pad::with_background(theme::BG).with_clear(),
+            pad: Pad::with_background(theme::BG),
             buttons: Child::new(ButtonController::new(ButtonLayout::new(
                 Some(ButtonDetails::cancel_icon()),
                 None,

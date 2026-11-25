@@ -62,7 +62,7 @@ impl<'a> Confirm<'a> {
         message: Label<'a>,
     ) -> Self {
         Self {
-            bg: Pad::with_background(bg_color).with_clear(),
+            bg: Pad::with_background(bg_color),
             content_pad: Pad::with_background(bg_color),
             bg_color,
             title,
@@ -172,7 +172,6 @@ impl Component for Confirm<'_> {
             if self.show_info {
                 if let Some(Clicked) = info.close_button.event(ctx, event) {
                     self.show_info = false;
-                    self.content_pad.clear();
                     self.message.request_complete_repaint(ctx);
                     self.alert.request_complete_repaint(ctx);
                     return None;
@@ -181,7 +180,6 @@ impl Component for Confirm<'_> {
                 self.show_info = true;
                 info.text.request_complete_repaint(ctx);
                 info.title.request_complete_repaint(ctx);
-                self.content_pad.clear();
                 return None;
             }
         }

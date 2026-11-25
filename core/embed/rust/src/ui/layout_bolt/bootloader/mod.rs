@@ -111,7 +111,6 @@ impl UIBolt {
             Icon::new(CHECK40),
             "Firmware installed\nsuccessfully".into(),
             Label::centered(msg.into(), RESULT_FW_INSTALL.title_style()).vertically_centered(),
-            complete_draw,
         );
         show(&mut frame, complete_draw);
     }
@@ -122,7 +121,6 @@ impl UIBolt {
             Icon::new(CHECK40),
             "Firmware installed\nsuccessfully".into(),
             Label::centered(msg.into(), RESULT_INITIAL.title_style()).vertically_centered(),
-            complete_draw,
         );
         show(&mut frame, complete_draw);
     }
@@ -177,7 +175,6 @@ impl BootloaderUI for UIBolt {
             "Firmware installation was not successful".into(),
             Label::centered(RECONNECT_MESSAGE.into(), RESULT_FW_INSTALL.title_style())
                 .vertically_centered(),
-            true,
         );
         show(&mut frame, true);
     }
@@ -340,7 +337,6 @@ impl BootloaderUI for UIBolt {
             "Trezor reset\nsuccessfully".into(),
             Label::centered(RECONNECT_MESSAGE.into(), RESULT_WIPE.title_style())
                 .vertically_centered(),
-            true,
         );
         run(&mut frame, true, false);
     }
@@ -352,7 +348,6 @@ impl BootloaderUI for UIBolt {
             "Trezor reset was\nnot successful".into(),
             Label::centered(RECONNECT_MESSAGE.into(), RESULT_WIPE.title_style())
                 .vertically_centered(),
-            true,
         );
         show(&mut frame, true);
     }

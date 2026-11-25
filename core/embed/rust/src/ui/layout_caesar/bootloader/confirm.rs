@@ -54,7 +54,7 @@ impl<'a> Confirm<'a> {
         button_text: &'static str,
     ) -> Self {
         let mut confirm = Self {
-            bg: Pad::with_background(bg_color).with_clear(),
+            bg: Pad::with_background(bg_color),
             title: Label::left_aligned(title, TEXT_BOLD),
             message,
             alert,
@@ -103,7 +103,6 @@ impl<'a> Confirm<'a> {
 
     fn set_state(&mut self, ctx: &mut EventCtx, state: ConfirmState) {
         self.state = state;
-        self.bg.clear();
         self.set_buttons();
         self.request_complete_repaint(ctx);
     }

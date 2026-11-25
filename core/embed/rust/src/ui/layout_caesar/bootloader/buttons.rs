@@ -186,7 +186,7 @@ pub struct Buttons {
 impl Buttons {
     pub fn new(left: Option<Button>, middle: Option<Button>, right: Option<Button>) -> Self {
         Self {
-            pad: Pad::with_background(BLD_BG).with_clear(),
+            pad: Pad::with_background(BLD_BG),
             left,
             middle,
             right,
@@ -198,7 +198,6 @@ impl Buttons {
         self.left = left;
         self.middle = middle;
         self.right = right;
-        self.pad.clear();
     }
 
     fn get(&self, pos: ButtonPos) -> Option<Button> {

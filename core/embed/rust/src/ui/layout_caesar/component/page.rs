@@ -55,7 +55,7 @@ where
     pub fn new(content: T, background: Color) -> Self {
         Self {
             content: Child::new(content),
-            pad: Pad::with_background(background).with_clear(),
+            pad: Pad::with_background(background),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text(TR::buttons__confirm.into())),
             middle_btn_details: None,
@@ -132,7 +132,6 @@ where
             content.request_complete_repaint(ctx);
         });
         self.update_buttons(ctx);
-        self.pad.clear();
     }
 
     /// Reflecting the current page in the buttons.

@@ -12,7 +12,7 @@ pub struct Welcome {
 impl Welcome {
     pub fn new() -> Self {
         Self {
-            bg: Pad::with_background(BLD_BG).with_clear(),
+            bg: Pad::with_background(BLD_BG),
         }
     }
 }

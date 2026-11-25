@@ -263,7 +263,6 @@ where
 
     /// Clearing the whole area and requesting repaint.
     fn clear_and_repaint(&mut self, ctx: &mut EventCtx) {
-        self.pad.clear();
         ctx.request_paint();
     }
 

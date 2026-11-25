@@ -29,7 +29,7 @@ impl Welcome {
         };
 
         Self {
-            bg: Pad::with_background(WELCOME_COLOR).with_clear(),
+            bg: Pad::with_background(WELCOME_COLOR),
             id,
             id_text_pos: None,
             qr,

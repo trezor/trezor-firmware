@@ -25,7 +25,7 @@ impl<'a> ErrorScreen<'a> {
         let footer = Label::centered(footer, theme::TEXT_NORMAL_UPPER).vertically_centered();
 
         Self {
-            bg: Pad::with_background(BG).with_clear(),
+            bg: Pad::with_background(BG),
             show_icons: true,
             title: Child::new(title),
             message: Child::new(message),

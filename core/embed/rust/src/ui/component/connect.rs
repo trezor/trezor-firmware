@@ -16,15 +16,12 @@ impl Connect {
     where
         T: Into<TString<'static>>,
     {
-        let mut instance = Self {
+        Self {
             fg,
             bg: Pad::with_background(bg),
             message: message.into(),
             font,
-        };
-
-        instance.bg.clear();
-        instance
+        }
     }
 }
 
