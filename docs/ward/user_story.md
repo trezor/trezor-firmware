@@ -191,8 +191,8 @@ Acceptance criteria:
   own MAC, and the WM accepted it, by the WM's signed record. A change that lost a race, or that a
   host held back, is never restored.
 - **Told at the end.** The Trezor shows "WARD history restored": the change number it restored to
-  and when the WM accepted the last restored change, in UTC. The user can compare that with when
-  they last made a change.
+  and when the WM last confirmed the last restored change, in UTC. The user can compare that with
+  when they last made a change.
 - **Then as usual.** The next sync adopts the restored head with no further screen.
 - **Reveals to the host and the WM:** that a restore was rolled forward, and how far.
 - **Not covered.** A Trezor that is not ahead of the restored WM, such as a new one, does not

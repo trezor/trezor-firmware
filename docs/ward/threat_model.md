@@ -234,7 +234,7 @@ and catch-up is how the stored head moves at all:
   no timestamp to date it by.
 - **What this gives up.** The attack in [Why links alone never move the stored head](#why-links-alone-never-move-the-stored-head)
   is open: a host can persist a lost race, or a branch a revert removed. With no WM there is also no
-  compare-and-swap, so two devices writing at once fork the chain, and nothing short of a WM can
+  predecessor check, so two devices writing at once fork the chain, and nothing short of a WM can
   rejoin them. The MVP accepts this until a WM exists.
 
 **With a WM, when the user allows it.** `WardSetPersistWithoutWm` turns persisting on for the active
@@ -414,7 +414,7 @@ An entry that belongs to one Trezor of the wallet, such as a display preference.
 
 ### Write, update or delete
 
-`WardSetEntry`, `WardDeleteEntry`: the Trezor derives the new leaf and root, the user confirms, the host stores the transition, and the WM accepts it by compare-and-swap.
+`WardSetEntry`, `WardDeleteEntry`: the Trezor derives the new leaf and root, the user confirms, the host stores the transition, and the WM accepts it by a predecessor check.
 
 - **Expects:**
     - Only the Trezor builds a leaf.
@@ -497,8 +497,8 @@ Its sessions do not come back, so it accepts none of the authorizations minted b
     - The user approves on the Trezor ("Restore WARD history") before anything is signed again.
     - The Trezor signs again only transitions that carry both its own `auth_commit` and the WM's
       record of accepting them, starting at the WM's attested head and staying on its own history.
-    - At the end, the Trezor shows the restored change number and when the WM accepted the last
-      restored change, in UTC.
+    - At the end, the Trezor shows the restored change number and when the WM last confirmed the
+      last restored change, in UTC.
     - A Trezor not ahead of the restored WM, such as a fresh one, does not detect it and adopts
       the WM's head.
 - **Reveals:**

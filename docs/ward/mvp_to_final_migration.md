@@ -12,7 +12,7 @@ Evolu holds the sealed changes and transition history. The device also holds the
 queue and its reconciliation records. Both builds use the same wallet keys, leaf format,
 and device-facing `auth_commit` for ordinary writes. Those parts can carry forward in place.
 The MVP's public step signatures authorize storage by wardd. The final build's public
-signatures authorize advances from a particular WM head, by compare-and-swap.
+signatures authorize advances from a particular WM head, by a predecessor check.
 
 Today the WM enrolls only at counter zero. The normal attestation verifier also expects a
 counter advance above zero. Migration therefore needs a distinct enrollment operation
@@ -30,12 +30,12 @@ and the [threat model](threat_model.md).
 3. The Trezor signs a dedicated migration authorization for the checkpoint. The WM
    verifies it against the wallet's public key and atomically creates the register if it
    is uninitialized. The verification key for the target WM comes from the firmware's
-   trusted configuration. The WM assigns its acceptance timestamp.
+   trusted configuration. The WM dates its signatures with its own clock and stores no time.
 4. The WM attests the checkpoint against a fresh device challenge. The Trezor verifies
    the attestation, checks that it matches the checkpoint it authorized, and records WM
    adoption. wardd pins the proof-serving view to that head for the session.
 5. Normal WM sync and writes resume. The first WM-authorized write starts from the same
-   root and counter and advances by compare-and-swap on that head. The app keeps the usual
+   root and counter and advances by a predecessor check on that head. The app keeps the usual
    confirmation flow for writes and conflicts.
 
 The imported counter and root stay the same. No leaves are decrypted, re-encrypted, or
@@ -48,7 +48,7 @@ its specific transition landed on the accepted chain.
 | --- | --- |
 | Firmware | Track the provenance of the stored head per wallet. Allow the migration round only for an eligible, locally persisted MVP head through the existing authorized WARD session. Add checkpoint attestation verification and persist WM adoption atomically with the head and its WM metadata. |
 | Wire protocol | Add an explicit migration capability and messages for the checkpoint authorization and attestation. Bind the authorization to its purpose, the wallet, the target WM deployment, the exact counter and root, and a fresh enrollment challenge. Sign the checkpoint kind as part of the WM attestation. |
-| WM | Add a one-time, transactional checkpoint enrollment to the production register. Store the enrollment origin and the WM's own acceptance time. Make retries idempotent for the accepted origin. Preserve enrollment history across recovery so a lost register is not treated as a new wallet. |
+| WM | Add a one-time, transactional checkpoint enrollment to the production register. Store the enrollment origin; the WM stores no time, and wardd keeps the WM-signed record of the enrollment with its date. Make retries idempotent for the accepted origin. Preserve enrollment history across recovery so a lost register is not treated as a new wallet. |
 | wardd | Extend `WmClient` and the existing sync path. Reuse Evolu, the trie, and proof serving. Materialize the candidate at the device's head and resume normal sync on retry. Keep the cached proof and the existing transition rows. |
 | Release and clients | Coordinate firmware, wardd, and WM capabilities. Run migration as part of the normal reconnect or sync for supported clients. Preserve local records if any component is too old, and report that the upgrade is pending. |
 

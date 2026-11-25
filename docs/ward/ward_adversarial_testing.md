@@ -126,7 +126,7 @@ catalogue](ward_testing.md#test-catalogue).
   `ward_unit_test test_apps.ward.py`
 - **`TestWardCas.test_the_chain_refuses_every_way_of_lying_with_real_links`** — Each link here is individually authentic; only its placement is wrong.
   `ward_unit_test test_apps.ward.py`
-- **`TestWardWmAuthorisation.test_it_binds_both_endpoints`** — Binding only the destination would let an authorisation be lifted out of its place and replayed after a different predecessor -- exactly what a compare-and-swap must prevent.
+- **`TestWardWmAuthorisation.test_it_binds_both_endpoints`** — Binding only the destination would let an authorisation be lifted out of its place and replayed after a different predecessor -- exactly what a predecessor check must prevent.
   `ward_unit_test test_apps.ward.py`
 - **`TestWardWmAuthorisation.test_another_wallet_cannot_use_it`**
   `ward_unit_test test_apps.ward.py`
@@ -257,7 +257,7 @@ catalogue](ward_testing.md#test-catalogue).
 
 ### `tests/test_ward_wm.py` (29) — the mock WARD Manager
 
-- **`test_an_authorisation_moves_the_head_at_most_once`** — THE COMPARE-AND-SWAP, stated as the attack it closes.
+- **`test_an_authorisation_moves_the_head_at_most_once`** — THE PREDECESSOR CHECK, stated as the attack it closes.
   `pytest "tests/test_ward_wm.py::test_an_authorisation_moves_the_head_at_most_once"`
 - **`test_a_new_sync_ends_the_session`** — An authorisation minted in one sync is refused once any device of the wallet syncs again:
   `pytest "tests/test_ward_wm.py::test_a_new_sync_ends_the_session"`

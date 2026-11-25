@@ -11,14 +11,19 @@ authorized links. Transitions, signatures, and sessions are described in
 For each wallet the WM holds:
 
 - **The register.** The step that reached the head, `(from_counter, from_root) ->
-  (counter, root)`, and the WM's acceptance timestamp. It is durable and is restored from backups.
+  (counter, root)`. It is durable and is restored from backups. It holds no time and no history:
+  only the current head's step.
 - **The opening challenge.** A volatile 32-byte challenge. A Trezor signs it to open a session,
   and the WM replaces it when that session opens.
 - **The session nonce.** The round nonce of the session a Trezor opened last. It is volatile: it is not
   persisted, backed up, or handed over in a failover. See
   [sessions](ward_transitions.md#sessions).
 
-The WM assigns every timestamp itself and refuses one supplied by a caller.
+The WM keeps no time. It dates each signature with its own clock when it signs, and refuses a
+timestamp supplied by a caller. When the WM accepted a step is therefore recorded only in the
+acceptance that `advance` returns. wardd keeps that record, with the WM's signature, in Evolu
+([the records](#the-records)). Once the head moves on, wardd's records are the only trace of the
+earlier steps and their times.
 
 ## API
 
@@ -33,15 +38,15 @@ The development WM serves this over HTTP (`packages/wardd/src/wmServer.ts`, star
 | `GET /v1/wards/{ward_id}/head` | | `{head: {counter, root} \| null}` |
 | `POST …/enrol` | `{root, headInitSig}` | `{}`. Genesis only. |
 | `GET …/challenge` | | `{challenge}`. Available before enrollment. |
-| `POST …/open` | `{nonce, proof}` | The attestation of the head's step under `nonce`. Verifies the proof under `ward_id` against the current challenge, replaces the challenge, and makes `nonce` the session nonce. Enrolled wallets only. |
-| `POST …/attest` | `{nonce}` | The attestation of the head's step under `nonce`. Read-only: the session is unchanged. |
-| `POST …/advance` | `{fromCounter, fromRoot, toCounter, toRoot, wmSig, session?}` | `{revert, acceptance}`. `acceptance` is the WM-signed record of the step under the session nonce, with that `nonce`. `session` is diagnostics only. |
+| `POST …/open` | `{nonce, proof}` | The attestation of the head's step under `nonce`, dated now. Verifies the proof under `ward_id` against the current challenge, replaces the challenge, and makes `nonce` the session nonce. Enrolled wallets only. |
+| `POST …/attest` | `{nonce}` | The attestation of the head's step under `nonce`, dated now. Read-only: the session is unchanged. |
+| `POST …/advance` | `{fromCounter, fromRoot, toCounter, toRoot, wmSig, session?}` | `{revert, acceptance}`. `acceptance` is the WM-signed record of the step under the session nonce, with that `nonce`, dated at acceptance. `session` is diagnostics only. |
 
 `open` refuses a proof that does not verify against the current challenge with `403` "invalid or
 expired session proof; sync again". The session protocol is described in
 [sessions](ward_transitions.md#sessions).
 
-A refused compare-and-swap returns `409 {error: "conflict", headCounter}`. `advance` fails with
+A refused predecessor check returns `409 {error: "conflict", headCounter}`. `advance` fails with
 "no session" when the wallet has no session nonce, and with "not authorised" when `wmSig` does not
 verify against it. If the request names a `session` that differs from the WM's, the refusal adds
 that the session it names has ended. The WM never verifies against the named session; see
@@ -63,12 +68,14 @@ directly.
 
 A WM record is any attestation the WM signed for exactly that step:
 
-- **The acceptance from `advance`.** It is signed under the session nonce.
-- **An attestation from a later sync.** It is signed under that sync's nonce, while the step was
-  the head.
+- **The acceptance from `advance`.** It is signed under the session nonce and dated when the WM
+  accepted the step.
+- **An attestation from a later sync.** It is signed under that sync's nonce while the step was
+  the head, and dated then.
 
-wardd keeps one verified record per step (`StoredAttestation`, replicated through Evolu with the
-links). The newest record replaces an older one for the same step.
+Either way, the timestamp is when the WM vouched for the step. wardd keeps one verified record per
+step (`StoredAttestation`, replicated through Evolu with the links). The newest record replaces an
+older one for the same step, so the kept time is the latest at which the WM vouched for that step.
 
 ### What wardd does
 
@@ -83,7 +90,8 @@ restore and not wardd:
 3. Use the path up to the first step without a kept record.
 4. Send the path to the Trezor in pages of 16, in `WardRollForward`, with the WM's live
    attestation and each step's record, marking the last page `final`. The user approves on the
-   first page; on the last, the Trezor shows when the WM accepted the last restored change.
+   first page; on the last, the Trezor shows the time of the WM's record of the last restored
+   change ("Last confirmed").
 5. Submit each returned signature to the WM with `advance`, naming the round nonce as the
    diagnostic `session`, and keep each acceptance.
 6. Before the next page, attest again under the same round nonce, because the Trezor's round is

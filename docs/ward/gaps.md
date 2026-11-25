@@ -218,10 +218,13 @@ Test an upgrade from populated v6 history, including interruption and a subseque
 
 ### Recovery dates
 
-The WM timestamps a replayed advance at reacceptance. wardd favors the newest receipt per step,
-so a later restore can display that newer time as “Last change accepted.” Retain the original
-WM-signed acceptance time alongside the WM-signed replay time and label both distinctly.
-Exercise two restores of the same step. All authoritative times still come from the WM.
+The WM keeps no time and dates each signature when it signs, so a replayed advance is dated
+at reacceptance. wardd keeps only the newest record per step, so after a replay the original
+acceptance record is gone, and a later restore shows the replay time as "Last confirmed".
+That is true (the WM vouched for the step then) but hides when the change was first accepted.
+Keep the original acceptance record alongside the newest one, and show both if the difference
+matters. Exercise two restores of the same step. All authoritative times still come from the
+WM's signatures, which only wardd stores.
 
 ### Recovery through relay clients
 
@@ -249,7 +252,7 @@ receipt chain is unambiguous within one register history; see the previous secti
 
 The screen distinguishes the current device state, current WM state, verified target
 counter, and new transition counter. It shows how many changes followed the target.
-The revert extends the WM head, and the WM accepts it only by compare-and-swap on that
+The revert extends the WM head, and the WM accepts it only by a predecessor check on that
 head. A host that lost the chain evidence must recover it from another replica or
 backup before using this flow. Rolling a restored WM forward (previous section) avoids
 the regressed case altogether.
@@ -278,7 +281,7 @@ MVP wallets before an empty device can enroll the same wallet at genesis.
 
 ### Cached catch-up and proof views
 
-The WM is the only source of acceptance time. Firmware rejects a cached attestation
+The WM's signatures are the only source of time. Firmware rejects a cached attestation
 with a timestamp below the persisted floor, while equal timestamps remain eligible.
 A one-second clock and register restore mean a signed time cannot establish a strict
 recovery order. Use a signed recovery generation that survives restore. Keep time

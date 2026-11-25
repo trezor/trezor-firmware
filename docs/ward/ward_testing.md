@@ -454,7 +454,7 @@ Run the file: `ward_unit_test test_apps.ward.py`
   `ward_unit_test test_apps.ward.py`
 - **`TestWardWmAuthorisation.test_a_signature_verifies_against_ward_id_alone`** — `ward_id` IS the verifying key, so a WM needs nothing but the identifier it keys by.
   `ward_unit_test test_apps.ward.py`
-- **`TestWardWmAuthorisation.test_it_binds_both_endpoints`** — Binding only the destination would let an authorisation be lifted out of its place and replayed after a different predecessor -- exactly what a compare-and-swap must prevent.
+- **`TestWardWmAuthorisation.test_it_binds_both_endpoints`** — Binding only the destination would let an authorisation be lifted out of its place and replayed after a different predecessor -- exactly what a predecessor check must prevent.
   `ward_unit_test test_apps.ward.py`
 - **`TestWardWmAuthorisation.test_another_wallet_cannot_use_it`**
   `ward_unit_test test_apps.ward.py`
@@ -1357,9 +1357,9 @@ Run the file: `pytest tests/test_ward_stack.py`
 - **`test_display_is_visible_by_default_and_hidden_only_explicitly`**
   `pytest "tests/test_ward_stack.py::test_display_is_visible_by_default_and_hidden_only_explicitly"`
 
-#### `tests/test_ward_wm.py` (30)
+#### `tests/test_ward_wm.py` (31)
 
-The mock WARD Manager (`tests/ward_wm.py`): enrolment, compare-and-swap, session opening, acceptance records, and a register that goes back. Run the file: `pytest tests/test_ward_wm.py`
+The mock WARD Manager (`tests/ward_wm.py`): enrolment, predecessor check, session opening, acceptance records, and a register that goes back. Run the file: `pytest tests/test_ward_wm.py`
 
 - **`test_an_unenrolled_wallet_cannot_be_advanced_at_all`** — ENROLMENT IS NOT AN ADVANCE, and cannot be folded into one.
   `pytest "tests/test_ward_wm.py::test_an_unenrolled_wallet_cannot_be_advanced_at_all"`
@@ -1369,7 +1369,7 @@ The mock WARD Manager (`tests/ward_wm.py`): enrolment, compare-and-swap, session
   `pytest "tests/test_ward_wm.py::test_head_init_names_the_head_it_opens"`
 - **`test_a_first_head_starts_at_zero`** — SIGNED FOR COUNTER 7, so the rule under test is the one that actually fires.
   `pytest "tests/test_ward_wm.py::test_a_first_head_starts_at_zero"`
-- **`test_an_advance_attests_the_head_it_created`** — Not "the head now", which a concurrent winner could have moved -- the whole reason CAS and attestation are one call.
+- **`test_an_advance_attests_the_head_it_created`** — Not "the head now", which a concurrent winner could have moved -- the whole reason the predecessor check and the attestation are one call.
   `pytest "tests/test_ward_wm.py::test_an_advance_attests_the_head_it_created"`
 - **`test_a_stale_predecessor_is_a_conflict_not_an_overwrite`** — The device must be told it lost, so it can sync and retry, rather than have its transition silently replace the winner's.
   `pytest "tests/test_ward_wm.py::test_a_stale_predecessor_is_a_conflict_not_an_overwrite"`
@@ -1391,7 +1391,7 @@ The mock WARD Manager (`tests/ward_wm.py`): enrolment, compare-and-swap, session
   `pytest "tests/test_ward_wm.py::test_a_revert_is_authorised_but_distinguishable"`
 - **`test_a_revert_signature_is_not_accepted_as_an_ordinary_advance`** — The two tags are not interchangeable in either direction.
   `pytest "tests/test_ward_wm.py::test_a_revert_signature_is_not_accepted_as_an_ordinary_advance"`
-- **`test_an_authorisation_moves_the_head_at_most_once`** — THE COMPARE-AND-SWAP, stated as the attack it closes.
+- **`test_an_authorisation_moves_the_head_at_most_once`** — THE PREDECESSOR CHECK, stated as the attack it closes.
   `pytest "tests/test_ward_wm.py::test_an_authorisation_moves_the_head_at_most_once"`
 - **`test_one_session_carries_several_transitions`** — The session is the device's sync, not the head:
   `pytest "tests/test_ward_wm.py::test_one_session_carries_several_transitions"`
@@ -1401,6 +1401,8 @@ The mock WARD Manager (`tests/ward_wm.py`): enrolment, compare-and-swap, session
   `pytest "tests/test_ward_wm.py::test_only_a_fresh_device_proof_can_replace_the_write_session"`
 - **`test_restarting_the_python_service_discards_its_session_and_pending_challenge`** — A restart starts with no session and a fresh challenge, so a proof minted before it does not open a session after it.
   `pytest "tests/test_ward_wm.py::test_restarting_the_python_service_discards_its_session_and_pending_challenge"`
+- **`test_the_wm_dates_each_attestation_when_it_signs`** — The WM keeps no time in its register.
+  `pytest "tests/test_ward_wm.py::test_the_wm_dates_each_attestation_when_it_signs"`
 - **`test_an_advance_returns_the_wm_signed_acceptance`** — The WM's own record of the transition, under the session nonce:
   `pytest "tests/test_ward_wm.py::test_an_advance_returns_the_wm_signed_acceptance"`
 - **`test_a_restored_wm_is_rolled_forward_by_steps_signed_again`**
@@ -1463,7 +1465,7 @@ Run the file: `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tes
 - **`treats a result with no authorisation as no transition`**
   `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tests__/serve.test.ts -t 'treats a result with no authorisation as no transition'`
 
-#### `packages/ward-core/src/__tests__/wm.test.ts` (10)
+#### `packages/ward-core/src/__tests__/wm.test.ts` (12)
 
 Run the file: `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tests__/wm.test.ts`
 
@@ -1475,8 +1477,12 @@ Run the file: `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tes
   `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tests__/wm.test.ts -t 'verifies the wm_sig ward_keys mints, under the right tag only'`
 - **`accepts the head_init_sig ward_keys mints`**
   `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tests__/wm.test.ts -t 'accepts the head_init_sig ward_keys mints'`
+- **`consumes a session challenge once and keeps head reads independent of writes`**
+  `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tests__/wm.test.ts -t 'consumes a session challenge once and keeps head reads independent of writes'`
 - **`enrols at genesis, and attests against the round nonce`**
   `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tests__/wm.test.ts -t 'enrols at genesis, and attests against the round nonce'`
+- **`dates each signature by its clock when signing, and keeps no time in the register`**
+  `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tests__/wm.test.ts -t 'dates each signature by its clock when signing, and keeps no time in the register'`
 - **`advances on a genuine wm_sig, and refuses a replay`**
   `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tests__/wm.test.ts -t 'advances on a genuine wm_sig, and refuses a replay'`
 - **`carries several transitions in one session, and a new sync ends it`**
@@ -1682,12 +1688,14 @@ Run the file: `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__
 - **`binds, serves sync / fetch / publish, logs every exchange, and stops`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/service.test.ts -t 'binds, serves sync / fetch / publish, logs every exchange, and stops'`
 
-#### `packages/wardd/src/__tests__/wmServer.test.ts` (10)
+#### `packages/wardd/src/__tests__/wmServer.test.ts` (11)
 
 Run the file: `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/wmServer.test.ts`
 
 - **`enrols, attests and advances for wardd as the in-process WM does`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/wmServer.test.ts -t 'enrols, attests and advances for wardd as the in-process WM does'`
+- **`only opens a write session with the proof for the outstanding challenge`**
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/wmServer.test.ts -t 'only opens a write session with the proof for the outstanding challenge'`
 - **`refuses a stale advance as a conflict`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/wmServer.test.ts -t 'refuses a stale advance as a conflict'`
 - **`keeps its heads across a restart`**
