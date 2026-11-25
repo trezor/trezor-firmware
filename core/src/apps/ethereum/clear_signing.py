@@ -79,6 +79,9 @@ _ADDRESS_BYTES = const(20)
 _MAX_ABI_NESTING = const(8)
 # Encoding depth counting just array nesting. To be increased cautiously.
 _MAX_NESTED_ARRAYS = const(2)
+# EthereumERC7730EnumEntry.key reserved for "the real key is in wide_key"
+# (definitions/ethereum/erc7730/params.py)
+_ENUM_WIDE_KEY = const(0xFFFF_FFFF)
 
 
 class ClearSigningFailed(Exception):
@@ -1201,9 +1204,24 @@ class FieldDefinition:
                 raise InvalidFormatDefinition
             enum_entries: dict[int, str] = {}
             for e in info.enum_values:
-                if e.key in enum_entries:
+                if e.wide_key is not None:
+                    # the real key, minimal big-endian; `key` is just the
+                    # reserved marker
+                    if e.key != _ENUM_WIDE_KEY:
+                        # Hardening. Defns shouldn't emit it, normally.
+                        raise InvalidFormatDefinition
+                    key = int.from_bytes(e.wide_key, "big")
+                elif e.key == _ENUM_WIDE_KEY:
+                    # reserved marker without a wide_key: the guard entry that
+                    # makes older firmware reject the enum (duplicate `key`)
+                    continue
+                else:
+                    key = e.key
+                if key in enum_entries:
                     raise InvalidFormatDefinition
-                enum_entries[e.key] = e.value
+                enum_entries[key] = e.value
+            if not enum_entries:
+                raise InvalidFormatDefinition
             formatter = EnumFormatter(enum_entries)
         else:
             raise InvalidFormatDefinition
