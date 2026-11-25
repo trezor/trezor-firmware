@@ -14,9 +14,9 @@ and device-facing `auth_commit` for ordinary writes. Those parts can carry forwa
 The MVP's public step signatures authorize storage by wardd. The final build's public
 signatures authorize advances from a particular WM head, by a predecessor check.
 
-Today the WM enrolls only at counter zero. The normal attestation verifier also expects a
+The WM enrolls only at counter zero. The normal attestation verifier also expects a
 counter advance above zero. Migration therefore needs a distinct enrollment operation
-and a signed way to represent the imported checkpoint. See the [leaf format](ward-leaf.md)
+and a signed way to represent the imported checkpoint. See the [leaf format](ward_leaf_encryption.md)
 and the [threat model](threat_model.md).
 
 ## Normal upgrade

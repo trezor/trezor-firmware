@@ -142,7 +142,7 @@ message WardSetPointer {
 }
 
 /**
- * A leaf is TWO independently sealed parts (docs/ward/ward-leaf.md), each `bytes`:
+ * A leaf is TWO independently sealed parts (docs/ward/ward_leaf_encryption.md), each `bytes`:
  *
  *   sealed_content   = seal(K_data,  0x02, leaf_content)    -- in the trie
  *   sealed_identity  = seal(K_ident, 0x04, leaf_identity)   -- stored BESIDE the leaf

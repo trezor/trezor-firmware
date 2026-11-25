@@ -28,7 +28,7 @@ new counter. Within one WM register history, a `(counter, root)` pair therefore 
 | MVP host step | Ed25519 under `K_sig` | `WARD STEP v2` | nothing | wardd without a WM |
 
 `head_init_sig` is a self-transition `(0, root) -> (0, root)`. The WM enrolls a wallet only at
-genesis. Code: [`apps/ward/transition.py`](../../core/src/apps/ward/transition.py).
+genesis.
 
 The Trezor signs one more statement with `K_sig`, which is not a transition: the
 [session proof](#sessions), `"WARD SESSION OPEN v1" || ward_id || wm_challenge || nonce`.
@@ -61,8 +61,7 @@ attestation it adopted, so its offline warning reads "Not reflecting changes sin
 WM last confirmed its head.
 
 The signature uses the WM key. Release firmware carries a placeholder key and refuses every
-attestation. Debug and emulator firmware accept the debug key. Code:
-[`apps/ward/attest.py`](../../core/src/apps/ward/attest.py).
+attestation. Debug and emulator firmware accept the debug key.
 
 The same statement serves three purposes, distinguished by where the nonce comes from:
 
@@ -82,17 +81,16 @@ which anyone may read without effect.
 
 1. **The Trezor signs an opening.** It draws a fresh 32-byte round nonce and signs it, with the
    WM's current challenge, under `K_sig`:
-   `session_proof = Sig("WARD SESSION OPEN v1" || ward_id || challenge || nonce)`. wardd passes
-   the challenge in `WardSync.wm_challenge`; the service channel fetches it with
-   `WardSyncRequest.challenge_only`. Without a challenge there is no proof, and the round can only
-   read.
+   `session_proof = Sig("WARD SESSION OPEN v1" || ward_id || challenge || nonce)`. The host
+   fetches the challenge from the WM and passes it to the Trezor with the sync request. Without a
+   challenge there is no proof, and the round can only read.
 2. **The WM opens the session.** It verifies the proof against its challenge, replaces the
    challenge, makes the nonce the wallet's session nonce, and returns its head's attestation under
    it. The previous session ends. Only a Trezor of the wallet can open a session, and each proof
    opens one once: see [why the opening is authenticated](#why-the-opening-is-authenticated).
-3. **The Trezor latches it.** After verifying the attestation, the Trezor stores
-   `(counter, root, nonce, timestamp)` in its session cache (`round.wm_head`). It latches the
-   nonce even if it then refuses the head.
+3. **The Trezor latches it.** After verifying the attestation, the Trezor remembers
+   `(counter, root, nonce, timestamp)` for the rest of the connection. It latches the nonce even
+   if it then refuses the head.
 4. **The Trezor binds each authorization.** Every `wm_sig` it produces signs the transition
    together with the session nonce: `transition_preimage || nonce`. Without a session it signs
    nothing and answers "no WM session; sync first".
@@ -107,12 +105,7 @@ A head change does not end the session, so one session can carry several transit
 read-only `attest` signs the head under any nonce the host names and leaves the session as it
 is. Roll-forward uses it between pages, and the service channel uses it for each publication:
 the publication carries a fresh nonce, the WM attests the new step against it, and the Trezor
-keeps the session nonce of its sync (`write_session` in `adopt.verify_round_attestation`).
-
-Code: [`apps/ward/sync.py`](../../core/src/apps/ward/sync.py),
-[`apps/ward/round.py`](../../core/src/apps/ward/round.py), `transition.session_proof`; the WM side is
-`DevWm.openSession` in `packages/ward-core/src/wm.ts` and `MockWM.open_session` in
-`tests/ward_wm.py`.
+keeps the session nonce of its sync.
 
 ```mermaid
 sequenceDiagram
@@ -129,7 +122,7 @@ sequenceDiagram
     Note over M: verify proof against C<br/>replace C, session := N<br/>(the previous session ends)
     M-->>W: attestation of the head under N
     W->>T: WardIngestAttestation
-    Note over T: verify under N<br/>latch round.wm_head = (counter, root, N, timestamp)
+    Note over T: verify under N<br/>latch (counter, root, N, timestamp)
     W->>T: write
     Note over T: wm_sig = Sig_K_sig(transition ‖ N)
     T-->>W: auth_commit, wm_sig
@@ -185,22 +178,6 @@ sequenceDiagram
     H->>M: open(N1, old proof)
     M-->>H: refused: invalid or expired session proof
 ```
-
-Tests:
-
-- **Firmware device tests** in `tests/device_tests/misc/test_ward.py`:
-  - `test_ward_attack_a_write_from_an_ended_session_is_refused`: a held write is refused after the
-    same device syncs again.
-  - `test_ward_attack_another_devices_sync_ends_this_devices_session`: the same, after another
-    device of the wallet syncs.
-  - `test_ward_attack_a_revert_from_an_ended_session_is_refused`: a held REVERT is refused after a
-    new sync.
-  - `test_ward_a_write_is_bound_to_the_latest_sync`: the Trezor binds to its latest attestation.
-- **Mock WM tests** in `tests/test_ward_wm.py`:
-  `test_only_a_fresh_device_proof_can_replace_the_write_session` replays an old opening proof.
-- **wardd tests** in the "ADVERSARIAL: a transition is invalidated by a new sync" group of
-  `host.test.ts`, and in `service.test.ts`: the host and the WM each refuse a result whose session
-  has ended. `wmServer.test.ts` opens a session only with the proof for the outstanding challenge.
 
 ### What a session does not prevent
 
@@ -270,9 +247,13 @@ that sign each step it accepted.
 A WM whose register goes back no longer holds transitions it accepted. A Trezor of the wallet
 signs the accepted steps again for its current session, checking its own MAC and the WM's record
 of each, and wardd submits them as ordinary advances. The alternative, the WM accepting its own
-records directly, is not implemented. See [WARD roll-forward](ward_roll_forward.md).
+records directly, was not chosen. See [WARD roll-forward](ward_roll_forward.md).
 
-## The optional session field
+## Design decisions
+
+Choices made in the protocol, and the alternatives that were considered and not used.
+
+### The optional session field
 
 The advance request may carry `session`: the nonce the host believes the WM holds. It is
 **diagnostics only**. The WM always verifies the signature against the nonce it holds and never
@@ -281,11 +262,11 @@ refusal says that the session it names has ended. A host can then sync and ask t
 rather than treat the refusal as a forgery. wardd sends the nonce of the latest session it opened
 with a Trezor's proof.
 
-## Alternative: transitions without `from`
+### Alternative: transitions without `from`
 
 Two variants remove the `from` end. Neither is used.
 
-### Omitting `from` from the advance request only
+#### Omitting `from` from the advance request only
 
 The Trezor still signs `from_counter` and `from_root`. The WM substitutes its own head when it
 verifies, so a transition built on another head fails verification. The predecessor check becomes
@@ -298,7 +279,7 @@ implicit.
   - The links, attestations, acceptance records and `WardRollForward` still carry `from`. Only
     the advance request shrinks, by 36 bytes.
 
-### Omitting `from` from the signature
+#### Omitting `from` from the signature
 
 The Trezor would sign only `(to_counter, to_root, session)`. The WM would have to infer where a
 transition starts.

@@ -1,13 +1,12 @@
 # WARD: who talks to whom
 
-> **The service channel is DEPRECATED and off by default.** It is built only behind
-> `--enable-ward-service-channel`; expect removal, and do not build new work on it. The connect
+> **The service channel is DEPRECATED and off by default.** It is built only on request; expect
+> removal, and do not build new work on it. The connect
 > transport — everything below marked "wallet channel" — is the one WARD is developed and tested
 > against. The service path has no `WardRollback` or `WardRecoverCounter` at all and its sync is
 > chain-only with no `reconcile` fallback, so a daemon with incomplete replica history strands the
 > device; and the two transports' WM authorisation surfaces have drifted apart in opposite
-> directions. See `apps/ward/service.py` for the full reasoning. The document is kept because the
-> split it describes is still what the code does, and because what the second channel was *for*
+> directions. The document is kept because the split it describes still holds, and because what the second channel was *for*
 > matters if the capability is ever rebuilt.
 
 WARD splits its two conversations across two channels, and which conversation goes where is the whole
@@ -30,7 +29,7 @@ of this document.
   WARD backend / WM
 ```
 
-**The user-facing app** — DisplayApp today — reaches the device over the **wallet channel**, the
+**The user-facing app** reaches the device over the **wallet channel**, the
 ordinary interface any host uses. It asks the device to show, write or publish an entry, and that is
 the whole of its part: it never sees a value it did not supply, it holds no key, and on a service
 build it is handed no leaf. It is a proof of concept for functionality a wallet will eventually carry
@@ -71,11 +70,11 @@ the wallet channel only (see [roll-forward](ward_roll_forward.md)).
 ## What differs between the two builds
 
 WARD's transport is chosen at **build time** and a firmware serves it one way only. The connect
-build is the default; a service build is the opt-in (`--enable-ward-service-channel`). Bitcoin-only
+build is the default; a service build is an opt-in build option. Bitcoin-only
 firmware registers no WARD handlers at all, so asking for the channel there is refused rather than
 silently dropped.
 
-| | connect build (default) | service build (`--enable-ward-service-channel`) |
+| | connect build (default) | service build (opt-in) |
 |---|---|---|
 | who owns the replica | the calling app, on the wallet channel | the WARD host app + wardd, behind the service channel |
 | how the device reads a leaf | `WardEntryRequest` on the wallet channel, answered by the caller inside the workflow it interrupted | `WardServiceFetch` on the service channel |
@@ -87,8 +86,8 @@ to be. On a connect build it has to own the replica as well as invoke the operat
 build it invokes and nothing more.
 
 Which of the two a firmware is cannot be asked over the wire, deliberately: a host that could be
-*told* could be lied to about it. Hosts that need to care are told by their operator (connect-cli's
-`--service` flag is exactly such an assertion, and it fails closed when it is wrong).
+*told* could be lied to about it. Hosts that need to care are told by their operator, and such a
+setting fails closed when it is wrong.
 
 ### And what differs between the two transports
 
@@ -106,21 +105,15 @@ persistent daemon pin whose first bind can be denied by anyone who reaches the i
 a channel table shared with the wallet interface and evicted by a global LRU. None of that is built
 even when the service channel is.
 
-WHICH BUILD THE TESTS RUN AGAINST. The default emulator is a connect build, so the service request
-set is covered by the `ward: service` legs in `.github/workflows/core.yml`, which build with
-`WARD_SERVICE_CHANNEL=1` and run `-m ward_transport`. Deleting those legs deletes that coverage:
-`tests/conftest.py` probes the device and skips the inapplicable half silently, so the loss would
-not show up as a failure.
+A THP service path is kept behind a further build option, which requires the service build: there
+is otherwise no interface for it to speak on. The column below describes it so the choice stays
+reviewable.
 
-The THP service path is kept compiling behind `--ward-service-thp`, which requires
-`--enable-ward-service-channel`: there is otherwise no interface for it to speak on. It is not built
-for any shipping configuration; the column below describes it so the choice stays reviewable.
-
-| | THP service channel (`--ward-service-thp`) | codec service endpoint (default transport of a service build) |
+| | THP service channel (gated) | codec service endpoint (default transport of a service build) |
 |---|---|---|
 | what binding records | interface, channel id and session id | the interface, and nothing else |
 | daemon identity | the Noise static key, pinned in flash | **none** — see below |
-| what inverts the direction | the dispatcher lets go (`release_dispatch`), leaving the workflow the only reader | the reader keeps the interface and routes the answer into the workflow's mailbox |
+| what inverts the direction | the dispatcher lets go, leaving the workflow the only reader | the reader keeps the interface and routes the answer into the workflow's mailbox |
 | a daemon restart | a new channel; the old binding counts only while its channel is open | just another announcement, answered again |
 | resetting the binding | `WardResetService`, a held confirmation | nothing to reset |
 | the large message buffer | shared with the wallet channel, leased per message | the same, leased for the length of one RPC |
@@ -157,10 +150,10 @@ the same way — see "Which party a request came from" below.
 
 ## Which party a request came from
 
-**The daemon is pinned only on a `--ward-service-thp` build, which nothing ships.** By default the
+**The daemon is pinned only on a THP service build.** By default the
 service endpoint pins nobody, exactly as the codec column above says, and the paragraph below
 describes the gated path. The first daemon to announce itself on the WARD interface
-has its static public key written to flash (`storage.ward.get_service_host_key`), and every other key is refused
+has its static public key written to flash, and every other key is refused
 from then on. Pairing alone would not do: it proves a host holds a credential this device issued, and
 every paired host holds one, so "some paired host" is the wrong granularity for the party the device
 asks for proofs. Recovering from a lost daemon key is an ownership migration with a user decision in
@@ -168,7 +161,7 @@ it — `WardResetService` — and it discards no data.
 
 **The WARD-capable host is pinned too, and there is exactly one of it — on THP.** The first host to
 send a user-facing WARD message on the wallet channel has its static public key written to flash
-(`storage.ward.get_app_host_key`) after the user holds to allow it, and every other key is refused
+after the user holds to allow it, and every other key is refused
 from then on. `WardResetApp` retires that pin, on a held confirmation, and discards no data.
 
 **On protocol v1 there is no pin, because there is no identity.** A codec transport carries no
@@ -192,8 +185,8 @@ that it is asked even when the operation turns out to be a no-op. The operations
 what the caller sent, and the replica plumbing that shows nothing, are not asked about.
 
 What this does not do is make `app_id` a permission. Any connected application may still *ask* to
-display any entry — it simply cannot do so without the user reading which one first. See the gap in
-`common.require_key`, which is the deeper problem the THP pin also only papers over.
+display any entry — it simply cannot do so without the user reading which one first. That is the
+deeper problem the THP pin also only papers over; see the [security gaps](gaps.md).
 
 Note carefully what this is and is not. It is **not** a boundary between "the wallet" and "the WARD
 app" — they share the ordinary interface, and in production they are expected to be the same program.
@@ -205,23 +198,9 @@ without the pin any of them could read, write or queue this wallet's entries.
 may name any `app_id` and reach any app's entries; the pin narrows who can do that to one host but
 does not stop it. The intended model has the device fill `app_id` in from the caller's identity, which
 the pin now makes possible — it changes `entry_key` derivation, so it is a breaking change of its own.
-The gap is recorded at `apps.ward.common.require_key`, and closing it is the work the pin starts.
+Closing that gap is the work the pin starts.
 
 Both checks are enforced where they cannot be forgotten: the daemon's in the `WardServiceOpen`
-handler, which is the only way to bind that role, and the app's in a `trezor.wire` filter installed at
-boot (`apps.ward.app_role.ward_app_filter`), so a WARD handler added later is covered without anyone
-remembering to cover it.
-
-## The debug harness
-
-`connect-cli`'s `ward_*` commands and `packages/connect-cli/e2e/ward-queue.sh` in trezor-suite stand
-in for the user-facing app, and `packages/connect-cli/e2e/ward-service-daemon.py` stands in for the
-WARD host app and wardd together. They exist so both conversations can be exercised end to end from a
-shell against real firmware.
-
-They are a harness and not an example: the CLI reaches the device over the wallet channel, which is
-where the user-facing operations belong anyway, but a real app would not do it with `--pairing=skip`.
-Skipped pairing issues no credential, and connect then generates a fresh static key per run — so the
-harness has to pair once for real and reuse the persisted credential, or the pin above would see a
-different app on every invocation. That requirement is a feature of the harness meeting the same rule
-as everything else, not an exception carved out for it.
+handler, which is the only way to bind that role, and the app's in a filter on every incoming
+message, installed at boot, so a WARD handler added later is covered without anyone remembering to
+cover it.

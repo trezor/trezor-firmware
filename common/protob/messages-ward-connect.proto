@@ -33,7 +33,7 @@ import "messages-ward.proto";
  * cannot steer a read or a write at a slot of its choosing:
  *
  *   K_path    = SLIP21(seed, ["ward", "K_path"])
- *   entry_key = HMAC-SHA256(K_path, "WARD PATH v1" || leaf_identity)   -- docs/ward/ward-leaf.md
+ *   entry_key = HMAC-SHA256(K_path, "WARD PATH v1" || leaf_identity)   -- docs/ward/ward_leaf_encryption.md
  *
  * K_path is passphrase-dependent, so every hidden wallet has its own key space and the
  * same identifier maps to different paths under different passphrases.

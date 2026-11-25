@@ -195,7 +195,7 @@ class TestWardKeys(unittest.TestCase):
 
 
 class TestWardLeaf(unittest.TestCase):
-    """The leaf format of docs/ward/ward-leaf.md: AES-256-GCM parts, domain-only AAD, and a
+    """The leaf format of docs/ward/ward_leaf_encryption.md: AES-256-GCM parts, domain-only AAD, and a
     commitment to the sealed content alone. The known answers are byte-identical to the
     service-channel branch's `test_apps.ward.security.py::test_leaf_known_answer`."""
 

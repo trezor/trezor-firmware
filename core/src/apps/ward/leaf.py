@@ -1,5 +1,5 @@
 """The WARD leaf: two independently sealed parts, and the digest the trie commits to
-(docs/ward/ward-leaf.md).
+(docs/ward/ward_leaf_encryption.md).
 
     leaf_identity   = len8(device_id) || device_id || len8(app_id) || app_id
                       || len16(identifier) || identifier

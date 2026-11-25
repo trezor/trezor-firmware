@@ -7,32 +7,27 @@ once the user enables WARD sync and the device can reach wardd.
 
 ## Source and destination
 
-This design uses public [firmware main at `95f789708e`](https://github.com/trezor/trezor-firmware/tree/95f789708e726fce68cb3e479b5d4fbde42918ab)
-as the source baseline. The mini-WARD store has the same version-0 record layout on the
-checked [`jjanku/ward/trie` tip](https://github.com/trezor/trezor-firmware/tree/2f12ddcdd64b1dff64cc096f97071c862095442f).
-The destination is the no-WM build on `petrsusil/ward-draft`.
+The source is the public mini-WARD store, with its version-0 record layout. The destination is
+the WARD MVP without a WM.
 
 | | Public mini-WARD | WARD MVP |
 | --- | --- | --- |
 | Stored data | A local map scoped by passphrase wallet, app and optional subscope. A protected storage slot holds a version-0 record with a wallet-ID prefix, app bytes, key and value. | Sealed leaves and authenticated transitions in wardd/Evolu. The device persists the adopted root plus offline copies and queued intents. |
-| Identity | The original wallet ID is derived under `TREZOR / WARD / Wallet ID`. App and subscope identifiers are binary. | The draft derives a different local wallet ID. A leaf uses the MVP application namespace, identifier and device scope, with entry type encoded in sealed content. |
-| Limits | Up to 32 records, 8,192 bytes in total and 2,560 bytes per record including the header. | The draft offline store holds up to 20 records, with a 6,144-byte budget and a per-value limit of 1,024 bytes. Each mapped record must also fit its destination's wire and leaf limits. |
+| Identity | The original wallet ID is derived under `TREZOR / WARD / Wallet ID`. App and subscope identifiers are binary. | The MVP derives a different local wallet ID. A leaf uses the MVP application namespace, identifier and device scope, with entry type encoded in sealed content. |
+| Limits | Up to 32 records, 8,192 bytes in total and 2,560 bytes per record including the header. | The MVP offline store holds up to 20 records, with a 6,144-byte budget and a per-value limit of 1,024 bytes. Each mapped record must also fit its destination's wire and leaf limits. |
 
-Sources for the public format and identity rules are the [Rust store](https://github.com/trezor/trezor-firmware/blob/95f789708e726fce68cb3e479b5d4fbde42918ab/core/embed/rust/src/ward/store.rs),
-the [app and subscope API](https://github.com/trezor/trezor-firmware/blob/95f789708e726fce68cb3e479b5d4fbde42918ab/core/src/apps/ward/store.py),
-and the [wallet ID derivation](https://github.com/trezor/trezor-firmware/blob/95f789708e726fce68cb3e479b5d4fbde42918ab/core/src/apps/ward/keys.py).
-See also the MVP [leaf format](ward-leaf.md).
+See also the MVP [leaf format](ward_leaf_encryption.md).
 
 ### Resolve the flash key collision first
 
 Both implementations use the protected `APP_WARD` namespace (`0x05`). Public mini-WARD
-uses slot keys `0x00` through `0x1f`. The draft MVP assigns keys in that range to roots,
+uses slot keys `0x00` through `0x1f`. The MVP assigns keys in that range to roots,
 host pins, and wallet settings. On an upgraded device, a normal MVP write can therefore
 overwrite a source record before any migration runs.
 
 Move the MVP layout to disjoint storage keys before enabling MVP on devices that may
 hold public mini-WARD records. Reserve the full legacy range and retain a read-only
-legacy reader outside the MVP layout. If a draft MVP layout has already been deployed,
+legacy reader outside the MVP layout. If an MVP layout has already been deployed,
 recognize it by trusted provenance and migrate it separately. Cover the case where a
 legacy slot contains bytes that resemble MVP metadata. Account for storage limits and
 interrupted updates before retiring any legacy slots.
@@ -74,7 +69,7 @@ IDs, and seed material on the device.
 
 - **Source coverage.** Build upgrade fixtures with the public firmware implementation.
   Cover multiple passphrases, app subscopes, binary keys and values, and occupied legacy
-  slots where the draft currently places roots, pins, or settings.
+  slots where the MVP places roots, pins, or settings.
 - **Capacity and unsupported types.** Use a full 32-slot source and a record that exceeds
   the MVP queue or leaf limits. An entry that cannot be copied remains accessible at its
   source. Report incomplete migration without eviction or truncation.

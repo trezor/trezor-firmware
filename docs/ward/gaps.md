@@ -1,8 +1,7 @@
 # WARD security gaps
 
-This review includes the session-bound WM and roll-forward changes through firmware
-`2e4f35c7d2` and Suite `299d49287e`, and the session activation fix described below.
-It follows the [WARD threat model](threat_model.md). The Trezor is responsible for wallet authentication
+This review covers the WARD design with the session-bound WM, roll-forward, and the session
+activation fix described below. It follows the [WARD threat model](threat_model.md). The Trezor is responsible for wallet authentication
 and user consent. wardd, the relay, and a replica peer can fail or supply misleading
 data. With a WM, ordering and live freshness depend on a trusted, durable register.
 
@@ -39,34 +38,32 @@ on a WM and still relies on an authenticated chain from a device's stored head. 
 needs a controlled single-writer cutover for automatic migration.
 
 Before distributing the WM build, provision the production verification key and a
-compatible durable register. The release key in [firmware](../../core/src/apps/ward/attest.py)
-is a placeholder, so release verification currently fails closed. Test both migrations,
+compatible durable register. The release key in the firmware is a placeholder, so release verification fails closed. Test both migrations,
 including interruption and divergent histories, under the production trust configuration.
 
 ## Deep dive
 
 ### Connect relay permissions
 
-`wardRelay` accepts a caller-supplied endpoint. `DeviceCurrentSession.relayCall()`
-checks the protobuf schema and lets the peer choose which recognized firmware
-message to send. Connect grants permission for a WARD operation. A generic firmware
+Connect's WARD relay accepts a caller-supplied endpoint. It checks the message schema and
+lets the peer choose which recognized firmware message to send. Connect grants permission for a WARD operation. A generic firmware
 schema is wider than that permission. Device authorization and confirmations still
 apply, but they do not enforce the Connect method boundary.
 
-Since relay v2, `openStore` also sends the WARD owner secret to that caller-supplied
+Since relay v2, opening the replica also sends the WARD owner secret to that caller-supplied
 endpoint, so the endpoint choice is a credential exposure as well as a permission gap.
 
 Give each relay operation an allowlist and enforce the conversation phase, including
 which pull acknowledgment is expected. Apply the check before invoking a device
-command, and bind the endpoint to the installation's trusted daemon. The Python
-[binding](../../python/src/trezorlib/ward_relay.py) already restricts message names, but
+command, and bind the endpoint to the installation's trusted daemon. The Python relay
+binding already restricts message names, but
 it does not check the phase, and it checks only the `ws` scheme, not that the host is local.
 Verify that ordinary sync, catch-up, and batch flush still work and that out-of-scope
 messages never reach the transport.
 
 ### Evolu credential scope
 
-Previously, relay `openStore` sent the full node returned by `EvoluGetNode` to the
+Previously, opening the replica sent the full Evolu node from the device to the
 daemon. That node carries access beyond the WARD replica. The device-message logger
 also lacked redaction for that response.
 
@@ -80,8 +77,8 @@ the parent credential in a daemon or old logs are outside the scope of this fix.
 
 ### Transition authorization and chain data
 
-The device's public signature commits to both heads. wardd stores `auth_commit` for subsequent device chain verification. Today
-it can accept a result with a genuine public signature and a damaged chain MAC. It
+The device's public signature commits to both heads. wardd stores `auth_commit` for subsequent device chain verification. It
+can accept a result with a genuine public signature and a damaged chain MAC. It
 can then advance the WM to a root whose stored inbound link the Trezor refuses.
 Firmware verifies the chain MAC and rejects that history, so the direct consequence
 is recovery or sync failure. The failure outlives the faulty daemon: the WM's head is
@@ -96,8 +93,7 @@ repeated roots, reverts, and an unusable row beside a healthy chain.
 
 ### Durable WM state
 
-The development WM (`packages/wardd/src/wmServer.ts` around `DevWm`) updates the
-in-memory head before its file write finishes. An attestation can observe that change
+The development WM updates the in-memory head before its file write finishes. An attestation can observe that change
 while persistence is still pending. If the write fails, the head stays advanced in
 memory while the writer receives a refusal, so the writer and later readers disagree
 about whether the step landed.
@@ -156,10 +152,9 @@ storage cannot take it back. No acceptable store exists:
 The design therefore relies on a restore being rare and on these bounds: nothing is
 forged, every step that lands is one a Trezor authorized, and a Trezor never goes below
 its stored counter without a separately approved demotion.
-`test_a_restored_wm_can_be_stopped_at_any_prefix` in `tests/test_ward_wm.py` records this limit.
 
 A WM that lost the wallet entirely holds no head to replay onto. Re-enrollment needs the
-genesis `head_init_sig`, which only a Trezor at counter 0 supplies today. A re-enrollment
+genesis `head_init_sig`, which only a Trezor at counter 0 supplies. A re-enrollment
 at genesis, two competing branches, and a write racing the replay remain open.
 
 ### Authenticated write sessions
@@ -235,7 +230,7 @@ each client, preserving rejection of unrelated device messages.
 
 ### Verified rollback
 
-[`WardRollback`](../../core/src/apps/ward/rollback.py) now checks the proposed counter
+`WardRollback` now checks the proposed counter
 and root before showing the hold screen. For normal rollback, the device walks back
 from the live WM-attested head. If the WM has regressed, the device establishes that
 the WM head is an ancestor of its own stored head, then proves the target from the
@@ -245,7 +240,7 @@ discards no changes; this is intended. A branch switch belongs in the separate r
 The device checks both checkpoints during one backward walk. The live attestation
 identifies the newest WM transition. Every older link must carry the WM's archived
 attestation of that exact step, verified over the link's own `(counter, root)` ends.
-The device asks for these with `WardChainRequest.with_acceptance`. When the WM has
+The device asks the host for these with each chain page. When the WM has
 regressed, the link into the WM's restored head must start at the predecessor named
 by the WM's live attestation. A pair repeats only if the register went back, so the
 receipt chain is unambiguous within one register history; see the previous section.
@@ -307,9 +302,8 @@ wallet remains usable.
 
 ### Display-time authorization
 
-[`DisplayAddress`](../../core/src/apps/display_address/show.py) resolves a label in
-a domain supplied by the host, outside the WARD app-role filter. The v1
-[reveal filter](../../core/src/apps/ward/app_role.py) also excludes flush, while a flush
+`DisplayAddress` resolves a label in a domain supplied by the host, outside the WARD
+app-role filter. The v1 reveal filter also excludes flush, while a flush
 conflict can show the published value before confirmation. Both affect what can be
 shown on the device screen. Apply the role or reveal policy where stored plaintext
 is about to be shown. Show an address without a WARD label when the caller lacks
@@ -317,14 +311,14 @@ authorization, and ask before revealing the conflicting value on v1.
 
 ### Queued changes and crash consistency
 
-[`flush_queue`](../../core/src/apps/ward/flush_queue.py) treats proven absence as safe
+Flushing the queue treats proven absence as safe
 to overwrite and uses the leaf's original write counter to judge other conflicts.
 A subsequent deletion yields an absence. A revert can restore a value stamped
 before the queued intent even though the effective value changed afterward.
 Record the entry state proven when the user queued the intent, where available, and
 ask if intervening history leaves the result ambiguous.
 
-[`adopt`](../../core/src/apps/ward/adopt.py) settles claims before the new root is
+Adoption settles claims before the new root is
 persisted. Interruption can leave a queued change marked settled while the old root
 remains in flash. Journal the adoption and its settlement together or make settlement
 recoverable from the committed root and the verified links. Test reboots at each
@@ -338,7 +332,7 @@ The wallet lock is released as the conversation unwinds. If a publication alread
 landed, the next sync resolves its outcome.
 
 The service sends one WM attestation and lets the device pull up to 64 links
-per response. Each page fits the [codec buffer](../../core/src/trezor/wire/buffers.py).
+per response. Each page fits the wire buffer.
 The device walks backward from the attested step to its exact stored counter and root
 before adopting, and keeps only the verified commitments needed for its pending
 claims. Service protocol v3 adds idle binding renewal to the codec daemon. A retry

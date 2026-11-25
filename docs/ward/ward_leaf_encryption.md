@@ -52,8 +52,7 @@ stored beside the leaf
 ```
 
 ```
-leaf_identity = len8(device_id) || device_id || len8(app_id) || app_id
-                || len16(identifier) || identifier
+leaf_identity = len8(device_id) || device_id || app_id(2 B) || identifier
 leaf_content  = len8(entry_type) || entry_type || C_leaf:u32 || value
 entry_key     = HMAC-SHA256(K_path(app), "WARD PATH v1" || leaf_identity)
 value_digest  = SHA256(0x03 || sealed_content)
@@ -63,12 +62,12 @@ leaf_hash     = SHA256(0x00 || entry_key || value_digest)
 | Field | Bound |
 | --- | --- |
 | `device_id` | Empty, or 1 byte |
-| `app_id` | At most 255 bytes |
+| `app_id` | 2 bytes |
 | `entry_type` | At most 255 bytes |
-| `identifier` | At most 65,535 bytes |
+| `identifier` | Unbounded; runs to the end of `leaf_identity` |
 | `value` | Runs to the end of `leaf_content`; no bound of its own |
 
-- **`leaf_identity`:** it is not in the trie, because `entry_key` already authenticates it. It is kept only for listing.
+- **`leaf_identity`:** it is not in the trie, because `entry_key` already authenticates it. It is kept only for listing and restore.
 - **`entry_type`:** it marks an entry as a pointer (symlink) or a plain value. The WARD service follows a pointer automatically during a lookup, so the caller receives the target's value.
 - **`C_leaf`:** every leaf of one transition carries that transition's counter. The device reads it with the value, and the offline cache stores it with each cached entry.
 - **`value_digest`:** it covers sealed bytes only, so a host can compute it and serve proofs for leaves it cannot open. `0x03` is the trie's value domain; it is a hash prefix, not a sealing domain.
@@ -107,23 +106,9 @@ sealed_identity = seal(K_ident(app), 0x04, leaf_identity)
     - A longer chain or a cycle fails the lookup.
     - A target proven absent is "not found".
 
-A pointer is written with `WardSetPointer`, which names the target identifier in
-the caller's own `app_id`; the target need not exist yet. Overwriting or deleting
-a pointer shows what it pointed to; deleting it leaves the target untouched.
+A lookup never needs `sealed_identity`.
 
-A lookup never needs `sealed_identity`. It knows the identity, though, so it
-returns a freshly sealed one, which the host uses to repair a missing or bad
-identity row.
-
-**Privacy limit:** `K_path` keeps parties that only store the trie (Evolu, the
-WARD Manager) from mapping identifiers to paths. It does not hold against the
-host connected to an unlocked device: a lookup shows no screen, so that host can
-have the device compute the `entry_key` of any identifier it can guess. Values
-stay sealed under `K_data` either way.
-
-### Listing
-
-Not implemented on this branch. This is the specified behavior.
+### Listing and restore
 
 The key holder walks every leaf of the verified trie, taking each leaf's
 `entry_key` from its path:
@@ -133,16 +118,48 @@ The key holder walks every leaf of the verified trie, taking each leaf's
     - Under the global key set, a tag failure is an error.
     - Under per-application keys, a tag failure means another application's
       leaf: skip it.
-2. Open the `sealed_identity` candidates stored beside the leaf, at most 4,
-   newest first, with `K_ident(app)`. Use the first one for which
-   `HMAC(leaf_identity) = entry_key`. If none passes, show the entry as unknown
-   and report its `entry_key` to the host for repair; never skip it.
+2. Open the `sealed_identity` stored beside the leaf with `K_ident(app)`, and
+   verify that `HMAC(leaf_identity) = entry_key`.
 3. Skip the leaf if its `app_id` is not the caller's.
-4. A pointer is shown as a pointer and not followed:
-    - The screen shows the pointer's own identifier, an arrow, and the target's
-      identifier, taken from the `leaf_identity` in the pointer's value.
-    - The listing does not look the target up, so it shows no target value and
-      does not prove the target exists. An existing target appears as its own
-      entry.
-    - A pointer whose target `app_id` is not the caller's is shown as invalid,
-      because a lookup would refuse to follow it.
+4. A pointer is shown as a pointer and not followed.
+
+## Appendix
+
+Details of the current design, kept apart from the format above.
+
+### Writing a pointer
+
+A pointer is written with `WardSetPointer`, which names the target identifier in
+the caller's own `app_id`; the target need not exist yet. Overwriting or deleting
+a pointer shows what it pointed to; deleting it leaves the target untouched.
+
+### Identity repair on lookup
+
+A lookup never needs `sealed_identity`. It knows the identity, though, so it
+returns a freshly sealed one, which the host uses to repair a missing or bad
+identity row.
+
+### Privacy limit of `K_path`
+
+`K_path` keeps parties that only store the trie (Evolu, the WARD Manager) from
+mapping identifiers to paths. It does not hold against the host connected to an
+unlocked device: a lookup shows no screen, so that host can have the device
+compute the `entry_key` of any identifier it can guess. Values stay sealed under
+`K_data` either way.
+
+### Choosing among identity candidates
+
+Several `sealed_identity` rows can be stored beside one leaf. Listing opens at
+most 4, newest first, and uses the first one for which
+`HMAC(leaf_identity) = entry_key`. If none passes, it shows the entry as
+unknown and reports its `entry_key` to the host for repair; it never skips it.
+
+### How a listing shows a pointer
+
+- The screen shows the pointer's own identifier, an arrow, and the target's
+  identifier, taken from the `leaf_identity` in the pointer's value.
+- The listing does not look the target up, so it shows no target value and
+  does not prove the target exists. An existing target appears as its own
+  entry.
+- A pointer whose target `app_id` is not the caller's is shown as invalid,
+  because a lookup would refuse to follow it.

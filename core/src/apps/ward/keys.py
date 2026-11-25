@@ -7,7 +7,7 @@
     K_sig     = SLIP21(seed, [b"ward", b"K_sig"]).key()      -- Ed25519 secret
     ward_id   = ed25519.publickey(K_sig)                     -- the WM-facing handle
 
-One global key set (docs/ward/ward-leaf.md). The entry type is in the sealed content, not in
+One global key set (docs/ward/ward_leaf_encryption.md). The entry type is in the sealed content, not in
 the path or the keys: one identity has one leaf, whatever it holds.
 
 Byte-identical to the reference implementation; its vectors in `core/tests/test_apps.ward.py`

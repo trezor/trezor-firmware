@@ -7,9 +7,8 @@ agree on to the byte.
 
 ## Why this document exists
 
-The device **derives** each new root from the previous one plus a proof
-(`apps.ward.trie.compute_new_root`) and **verifies** by reconstructing a single path. It
-never rebuilds the tree. A host, a second device, or a batch path rebuilds from the key set.
+The device **derives** each new root from the previous one plus a proof and **verifies** by
+reconstructing a single path. It never rebuilds the tree. A host, a second device, or a batch path rebuilds from the key set.
 
 Those two ways of arriving at a root must produce the same number, and nothing inside the
 device can check that they do: reconstruction along one path stays perfectly self-consistent
@@ -37,7 +36,7 @@ All hashes are SHA-256. `u8(split_bit)` is the bit position in one byte, which h
 position of a 32-byte key; this is `rust/trezor-ward`'s `BitPos` encoding.
 
 ```
-sealed_content = 0x01 ‖ nonce(12B) ‖ tag(16B) ‖ AES-256-GCM ciphertext   (ward-leaf.md)
+sealed_content = 0x01 ‖ nonce(12B) ‖ tag(16B) ‖ AES-256-GCM ciphertext   (ward_leaf_encryption.md)
 
 commit    = value_digest = sha256( 0x03 ‖ sealed_content )
 
@@ -192,11 +191,9 @@ The trie is built over the rows where `isDeleted = false`.
 
 There is no WARD-specific history table, because the store already has one. In Evolu:
 
-- **`evolu_history`** is append-only — `(ownerId, table, id, column, timestamp, value)`, one
-  row per column write (`packages/common/src/local-first/Db.ts`). Its own comment notes that
-  *"time travel is available when last-write-win isn't desired"*. It is written by
-  `applyColumnChange` on every message application, so a freshly synced replica reconstructs
-  the full history rather than only current state.
+- **Evolu's history is append-only** — one row per column write, with the owner, table, row,
+  column, timestamp and value. Evolu writes it on every message it applies, so a freshly synced
+  replica reconstructs the full history rather than only current state.
 - **There is no hard delete.** `isDeleted` is a *system column* that user tables may not
   redefine, and deleting a row means `update(table, { id, isDeleted: true })`. A deleted row
   and its history both survive.
@@ -237,49 +234,35 @@ It proves nothing about **authenticity or currency**. The history is the host's 
 malicious host can write a self-consistent one. The anchors are unchanged and both live
 outside the store: the `mac`, which only a seed-holding device can compute, and the WM's
 attestation of `(counter, mac)`. So replay narrows the device's role from *the only
-completeness oracle* to *the authority on currency* — see the note in `apps/ward/common.py`.
+completeness oracle* to *the authority on currency*.
 
 ### Open
 
-`evolu_history` is an internal table with no exported history API. Reading it from the
+Evolu's history is an internal table with no exported history API. Reading it from the
 application — raw SQL against the local database — needs confirming before the host code is
 written. If it turns out to be inaccessible, a WARD-owned append-only log comes back, with the
 counter, the sealed leaf and the `auth_commit` per row.
 
 ## Conformance
 
-Two artefacts back this document.
-
-**`core/tests/test_apps.ward.canonicity.py`** — a differential test run by `make test`. It
-drives randomised operation sequences through the firmware's incremental deriver and asserts
-after **every** operation that the result equals a from-scratch rebuild
-(`core/tests/ward_trie_model.py`, this specification transcribed into deliberately naive
-code).
-
-Geometry matters far more than operation count, which was measured rather than assumed: a
-sweep of 2880 operations over random keys never reached a `split_bit` above 8 — and depth is
-what every known bug turned on, since all of them were about a node moving between levels. So
-the test runs four key geometries, and **fails** if the sweep stops reaching the deep shapes
-rather than merely reporting that it did not:
+The firmware's incremental deriver is checked against a from-scratch rebuild of this
+specification after every operation, over randomised sequences. Depth, not operation count, is
+what every known bug turned on, since all of them were about a node moving between levels, so the
+check covers four key geometries:
 
 | geometry | what it forces |
 |---|---|
-| `random` | what real `entry_key`s are — HMAC outputs. Shallow, `split_bit` ≤ 8 |
-| `shared_prefix` | keys agreeing on 160 bits: deep branches, `split_bit` up to ~168 |
-| `ladder` | key *i* is *i* leading 1-bits: a compressed run at every level, and branch siblings throughout |
-| `mixed` | both at once |
+| random | what real `entry_key`s are — HMAC outputs. Shallow, `split_bit` ≤ 8 |
+| shared prefix | keys agreeing on 160 bits: deep branches, `split_bit` up to ~168 |
+| ladder | key *i* is *i* leading 1-bits: a compressed run at every level, and branch siblings throughout |
+| mixed | both at once |
 
-Each trial also **drains** the tree to empty one leaf at a time and then writes again, since
-last-leaf deletes and the empty-tree-is-writable case are not reached by random operation
-mixes at all.
+Each trial also drains the tree to empty one leaf at a time and writes again, since last-leaf
+deletes and the empty-tree-is-writable case are not reached by random operation mixes.
 
-**`common/tests/fixtures/ward/trie_canonicity.json`** — a fixed, diffable operation script
-with the canonical root after each step, for implementations that are not this firmware.
-Replay it in order and compare. Regenerate or verify with
-`core/tools/ward_trie_fixture.py [--check]`; the generator writes nothing unless the deriver
-and the rebuilder agree, and refuses to write a fixture that does not exercise all three
-delete-sibling kinds. It is not wired into CI — run `--check` by hand until a second
-implementation consumes it.
+A fixed operation script with the canonical root after each step serves implementations that
+are not this firmware: replay it in order and compare the roots. It exercises all three
+delete-sibling kinds.
 
 ## What canonicity does and does not buy
 

@@ -13,9 +13,9 @@ The mini-WARD is what the Trezor keeps in its own flash, and can read with no ho
 It is small, and it exists only on that Trezor. Losing, wiping or replacing the device loses it,
 unless it was backed up.
 
-Today the backup is manual. The host exports one record it names (`WardQueueGetEntry`) as a
-plaintext blob with an intent MAC, and hands it back to restore it (`WardQueueSetEntry`). The two
-policies below replace that.
+A manual backup exports one record the host names (`WardQueueGetEntry`) as a plaintext blob
+with an intent MAC, and hands it back to restore it (`WardQueueSetEntry`). The two policies below
+replace that.
 
 ### 1. Backup policy: automatic
 
@@ -30,7 +30,7 @@ Acceptance criteria:
 - **Whole snapshot.** A backup holds the whole mini-WARD, not one named record. A host does not
   need to know an identifier to back it up.
 - **Sealed.** The snapshot is sealed with AES-256-GCM under a key derived from the seed. Unlike
-  today's manual export, the host cannot read it: a backup made without the user's consent must
+  the manual export, the host cannot read it: a backup made without the user's consent must
   not reveal what a confirmed export would.
 - **Bound to the wallet.** Each hidden wallet has its own key and its own backups. A backup of
   one wallet cannot be opened by another.
@@ -69,7 +69,7 @@ Acceptance criteria:
       flush, against the head at that time.
     - An offline copy comes back marked as restored, not proven current, until a sync verifies it.
 - **Conflicts are shown.** If the Trezor already holds an entry under the same key, the screen
-  shows both values, and the user picks one, as the "Replace pending change" screen does today.
+  shows both values, and the user picks one, as the "Replace pending change" screen does.
 - **Capacity.** If the selection does not fit in flash, the Trezor says so before writing
   anything.
 - **Reveals to the host:** which backup was chosen and how many entries were restored, from what
@@ -82,8 +82,6 @@ Acceptance criteria:
 > As a user sending a transaction, I want the Trezor to show the label I gave each recipient
 > address, so that I can recognise who I am paying.
 
-Specified, not implemented: today only `DisplayAddress` shows a label.
-
 Acceptance criteria:
 
 - **On the output screen.** Each external output shows its full address, its amount, and the
@@ -95,7 +93,7 @@ Acceptance criteria:
   current. With no label, the screen says "No label", so a missing label is visible.
 - **Never blocking.** A lookup that fails shows "Label unavailable", and the user still decides
   whether to sign.
-- **Change outputs.** Recognised by their derivation path as today. A label does not make an
+- **Change outputs.** Recognised by their derivation path. A label does not make an
   output change, or the reverse.
 - **No extra confirmations.** Reading a label during signing adds no screen of its own.
 - **Reveals to the host:** which output addresses were looked up, and when. It built the
@@ -135,16 +133,13 @@ Two devices queue a change to the same entry, each from the state it last synced
 flush publishes its change. The second device's change was formed without seeing it: a
 conflict.
 
-Implemented on this branch, as below. The stack (`tools/ward_stack.py`) runs it with two devices:
-one entry resolved each way.
-
 Acceptance criteria:
 
 - **Detected by the Trezor.** A pending change records the counter of the head it was formed
   on. At the flush, the Trezor pulls the entry and reads its `C_leaf`. If the entry was written
   after that counter, by any device, the change is in conflict. The host does not decide this.
 - **No conflict when nothing differs.** If the published value equals the queued one, or the
-  entry was not written since, the change settles or is published as today, with no screen.
+  entry was not written since, the change settles or is published as usual, with no screen.
 - **Held back, not published.** A change in conflict is left out of the batch. The other queued
   changes are published as usual.
 - **Shown on the Trezor.** For each conflict, the screen shows the domain and key, then:
@@ -175,9 +170,6 @@ Acceptance criteria:
 A restored WM holds an older head than the user's Trezor and has forgotten every session, so the
 Trezor's earlier authorizations no longer work. The host still holds the newer changes and the
 WM's records of accepting them.
-
-Implemented on this branch, as below. The stack (`tools/ward_stack.py`) restores the WM from a
-backup taken three changes earlier and rolls it forward.
 
 Acceptance criteria:
 

@@ -1,7 +1,7 @@
 # WARD threat model
 
 What WARD protects, from whom, and what each party still learns. The leaf format is specified in
-[WARD leaf encryption](ward-leaf.md), and the trie in [WARD trie canonical form](ward-trie.md).
+[WARD leaf encryption](ward_leaf_encryption.md), and the trie in [WARD trie canonical form](ward-trie.md).
 
 ## Parties
 
@@ -153,7 +153,7 @@ The results:
   changes that the WM actually holds.
 - Writes built on that head lose at the WM.
 
-`ac7c4a19d9` removed exactly this: an archived anchor that raised the persisted counter with no
+An earlier design did exactly this: an archived anchor raised the persisted counter with no
 live attestation, and so undid a confirmed recovery. `WardCatchUp` therefore keeps the walked-to
 head for the session only, under the warning. A host can show an old or abandoned value for one
 session, but it cannot move the floor.
@@ -167,8 +167,8 @@ While the WM is down, `wardd` names the newest head on its replica's chain that 
 names, which may be below the replica's head. The Trezor then:
 
 1. Refuses a head below its stored counter.
-2. Verifies the attestation's signature over the host-supplied nonce. This is not
-   `verify_round_attestation`: it does not need this round's nonce, and it latches nothing.
+2. Verifies the attestation's signature over the host-supplied nonce. Unlike a live attestation,
+   it does not need this round's nonce, and it latches nothing.
 3. Refuses an attestation whose timestamp is older than the stored head's (the timestamp floor).
 4. Walks the links back from the named head to its stored head.
 5. Reads from the named head for this session only. Nothing is persisted.
@@ -202,23 +202,23 @@ What it does not fix:
   backwards, including across a restore of its register. The timestamp is in seconds since the
   Unix epoch. A WM that colludes with the host is out of scope either way, because it can sign a
   live attestation for anything.
-- **A weaker form of the epoch.** `ac7c4a19d9` leaves a GAP note for a counter epoch that a revert
-  bumps and the preimage binds. The epoch needs a wire break and a WM change, but it does not
+- **A weaker form of the epoch.** A counter epoch that a revert bumps and the preimage binds is
+  a possible alternative. The epoch needs a wire break and a WM change, but it does not
   depend on a clock.
 
-The service channel on this branch still falls back to the stored head without catching up: it
+The service channel still falls back to the stored head without catching up: it
 has no `WardCatchUp` RPC.
 
 ### When the caught-up head is persisted
 
 Whether `WardCatchUp` keeps the head it reaches depends on the deployment and, with a WM, on the
-user. `WardCatchUpAck.persisted` says which happened.
+user. The Trezor reports which happened.
 
 | Build | User setting | `WardCatchUp` needs | Head |
 | --- | --- | --- | --- |
 | With a WM (default) | off (default) | a cached attestation, no older than the stored head's | this session only |
 | With a WM (default) | on, for this wallet | the same | persisted |
-| Without a WM (`--ward-without-wm`, the MVP) | none | the chain alone | persisted |
+| Without a WM (the MVP) | none | the chain alone | persisted |
 
 **Without a WM (the MVP).** There is nothing to attest a head, so the chain is the only authority
 and catch-up is how the stored head moves at all:
@@ -244,9 +244,8 @@ can keep a head on the abandoned branch until recovery with the WM. The timestam
 the ordering limits described above. The setting is stored per wallet in flash (keys 0x18..),
 and enabling it requires the confirmed request.
 
-**Which build a device is cannot be asked over the wire.** The test suite tells them apart by how
-the device answers `WardSetPersistWithoutWm` (`ward_wm` marker in `tests/conftest.py`). A host must
-not let a device's claim decide what it trusts.
+**Which build a device is cannot be asked over the wire.** A host must not let a device's claim
+decide what it trusts.
 
 ## What each party learns
 
@@ -286,8 +285,7 @@ An application stores a label per address or account, and the Trezor shows it ne
 ### Labels in the signing flow
 
 While signing a transaction, the Trezor looks up the label of each output address and shows it
-with the address on the output's confirmation screen. Specified, not implemented: on this branch
-only `DisplayAddress` may read labels (`label._CAPABILITIES`).
+with the address on the output's confirmation screen.
 
 - **Expects:**
     - The full address is always shown. The label is shown beside it, never instead of it.
@@ -390,7 +388,7 @@ A hidden wallet behind a passphrase has its own ward.
 
 ### Per-device setting
 
-An entry that belongs to one Trezor of the wallet, such as a display preference. `device_id` is the device's slot, 1 to 255, and is part of `leaf_identity`. This is specified but not yet on the wire: this branch writes `device_id` empty.
+An entry that belongs to one Trezor of the wallet, such as a display preference. `device_id` is the device's slot, 1 to 255, and is part of `leaf_identity`.
 
 - **Expects:**
     - Each Trezor reads and writes its own entry, under its own path.
@@ -509,7 +507,7 @@ Its sessions do not come back, so it accepts none of the authorizations minted b
 
 ### Key export and listing
 
-Specified, not implemented on this branch. `WARDExportKeys` releases `K_path`, `K_ident` and `K_data` to the host after the user confirms.
+`WARDExportKeys` releases `K_path`, `K_ident` and `K_data` to the host after the user confirms.
 
 - **Expects:**
     - Only the user can release the keys.
