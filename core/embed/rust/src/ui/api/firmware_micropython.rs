@@ -1592,11 +1592,7 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
 
-        let ipc_cb = unwrap!(ipc_callback.map(|cb| {
-            move |bytes: Obj| {
-                unwrap!(cb.call_with_n_args(&[bytes]));
-            }
-        }));
+        let ipc_cb = ipc_callback.ok_or(Error::TypeError)?;
 
         // Map MicroPython UiResult object to Rust enum for serialization
         let msg = if obj == CONFIRMED.as_obj() {
@@ -1615,8 +1611,9 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
 
         let bytes = crate::util::archive::to_bytes_obj(&msg)?;
 
-        //Send the response back via the ipc_cb callback
-        ipc_cb(bytes);
+        // Send the response back via the ipc_cb callback; a failed send raises to
+        // the caller
+        ipc_cb.call_with_n_args(&[bytes])?;
 
         Ok(Obj::const_none())
     };

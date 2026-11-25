@@ -78,6 +78,23 @@ class TestProcessIpcMessage(unittest.TestCase):
         self.assertEqual(br_code, 0)
         self.assertIsNone(br_name)
 
+    def test_send_ui_result(self):
+        sent = []
+        trezorui_api.send_ui_result(result=trezorui_api.CONFIRMED, ipc_cb=sent.append)
+        self.assertEqual(len(sent), 1)
+
+    def test_send_ui_result_send_fails(self):
+        # a failed send (app gone, inbox full) must raise, not crash Core
+        def send(_data):
+            raise RuntimeError("send failed")
+
+        with self.assertRaises(RuntimeError):
+            trezorui_api.send_ui_result(result=trezorui_api.CONFIRMED, ipc_cb=send)
+
+    def test_send_ui_result_no_callback(self):
+        with self.assertRaises(TypeError):
+            trezorui_api.send_ui_result(result=trezorui_api.CONFIRMED)
+
 
 if __name__ == "__main__":
     unittest.main()
