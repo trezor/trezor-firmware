@@ -14,6 +14,7 @@ if not utils.BITCOIN_ONLY:
         EthereumERC7730EnumEntry,
         EthereumERC7730FieldInfo,
         EthereumERC7730Path,
+        EthereumERC7730PathStep,
     )
     from trezor.ui.layouts.properties import AboveThreshold
 
@@ -1193,7 +1194,8 @@ class TestEthereumClearSigning(unittest.TestCase):
 
     def test_multi_value_token_amount(self):
         # Multi-value with TokenAmountFormatter: every element shares the one
-        # (constant) token, rendered one amount-per-line.
+        # (constant) token, rendered one amount-per-line. An array reports no
+        # token.
         token_addr = bytes.fromhex("ae7ab96520de3a18e5e111b5eaab095312d7fe84")
 
         class _Defs:
@@ -1207,8 +1209,8 @@ class TestEthereumClearSigning(unittest.TestCase):
             _format_field_value(fmt, [1_000_000, 2_000_000], None, _Defs(), None)
         )
         self.assertEqual(formatted, "1 TST\n2 TST")
-        self.assertEqual(token.symbol, "TST")
-        self.assertEqual(addr, token_addr)
+        self.assertIsNone(token)
+        self.assertIsNone(addr)
 
     def test_multi_value_date(self):
         # Multi-value with DateFormatter: a list of timestamps -> one date per line.
@@ -1581,7 +1583,8 @@ class TestEthereumClearSigning(unittest.TestCase):
             _format_field_value(fmt, [1, 2], None, self._eth_defs(), None)
         )
         self.assertEqual(formatted, "1 Wei UNKN\n2 Wei UNKN")
-        self.assertIs(token, UNKNOWN_TOKEN)
+        # an array reports no token, not even an unknown one
+        self.assertIsNone(token)
         self.assertIsNone(addr)
 
     def test_token_amount_explicit_zero_token_is_native(self):
@@ -2469,6 +2472,361 @@ class TestEthereumClearSigning(unittest.TestCase):
         fields, defs = self._expand_array([])
         self.assertEqual(fields, [])
         self.assertEqual(defs.token_requests, [])
+
+    # --- `steps` paths and `each` (`.[]`) ---
+
+    @staticmethod
+    def _decode_path(**kwargs):
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(**kwargs),
+            label="Field",
+            formatter=FT.FORMATTER_RAW,
+        )
+        return FieldDefinition.from_proto(info).path
+
+    def test_from_proto_steps_match_legacy(self):
+        # Field and index steps both decode to ints, a slice step to the
+        # trailing tuple: the same Path as the legacy form.
+        S = EthereumERC7730PathStep
+        for legacy, steps, expected in (
+            ({"path": [0]}, [S(field=0)], (0,)),
+            # params.path.[0] / params.path.[-1]
+            ({"path": [1, 0]}, [S(field=1), S(index=0)], (1, 0)),
+            ({"path": [1, -1]}, [S(field=1), S(index=-1)], (1, -1)),
+            # token.[-20:]
+            (
+                {"path": [0], "slice_start": -20},
+                [S(field=0), S(slice_start=-20)],
+                (0, (-20,)),
+            ),
+            # params.path.[0:20]
+            (
+                {"path": [1, 0], "slice_start": 0, "slice_end": 20},
+                [S(field=1), S(field=0), S(slice_start=0, slice_end=20)],
+                (1, 0, (0, 20)),
+            ),
+            # takerTraits.[:1] - start defaults to 0
+            (
+                {"path": [2], "slice_end": 1},
+                [S(field=2), S(slice_end=1)],
+                (2, (0, 1)),
+            ),
+        ):
+            self.assertEqual(self._decode_path(**legacy), expected)
+            self.assertEqual(self._decode_path(steps=steps), expected)
+
+        # `.[]` has no legacy form; it decodes to None
+        self.assertEqual(
+            self._decode_path(steps=[S(field=1), S(each=True), S(field=2)]),
+            (1, None, 2),
+        )
+
+    def test_from_proto_steps_rejected(self):
+        S = EthereumERC7730PathStep
+        for kwargs in (
+            # mixed with the legacy form (a slice start of 0 counts as set)
+            {"steps": [S(field=0)], "path": [0]},
+            {"steps": [S(field=0)], "slice_start": 0},
+            {"steps": [S(field=0)], "slice_end": 20},
+            # a step sets exactly one kind
+            {"steps": [S(field=0), S()]},
+            {"steps": [S(field=0, index=1)]},
+            {"steps": [S(field=0), S(index=1, slice_start=0)]},
+            {"steps": [S(field=0), S(each=True, field=1)]},
+            # `each` must be true
+            {"steps": [S(field=0), S(each=False)]},
+            # a slice must be the last step
+            {"steps": [S(field=0), S(slice_end=20), S(field=1)]},
+            # at most `_MAX_EACH_STEPS` (1) `each` steps
+            {"steps": [S(field=0), S(each=True), S(field=1), S(each=True)]},
+            # `each` can't come first: the parameters are themselves a list
+            {"steps": [S(each=True), S(field=0)]},
+        ):
+            with self.assertRaises(InvalidFormatDefinition):
+                self._decode_path(**kwargs)
+
+    @staticmethod
+    def _encode_dynamic_array(elements):
+        # ABI body of an array of dynamic (already encoded) elements: element
+        # count, one offset word per element (relative to the start of the
+        # offsets block), then the elements.
+        offsets = []
+        tails = b""
+        for element in elements:
+            offsets.append(32 * len(elements) + len(tails))
+            tails += element
+        return to_bytes(len(elements)) + b"".join(to_bytes(o) for o in offsets) + tails
+
+    def _parse_offer_fills(self, units):
+        """Parse `fn(uint256 targetUnits, OfferFill[] offerFills)` displaying
+        `offerFills.[].units`, one fill per `units` value.
+
+        `OfferFill = (Offer offer, bytes ratifierData, uint256 units)` as in
+        Morpho's MidnightBundlesV1, with `Offer` cut down to
+        `(address maker, uint256 tick)`."""
+
+        def offer_fill(units):
+            return (
+                pad_left(self.RECIPIENT)  # offer.maker
+                + to_bytes(5)  # offer.tick
+                + to_bytes(4 * 32)  # offset of `ratifierData` within the struct
+                + to_bytes(units)
+                + to_bytes(1)  # ratifierData
+                + pad_right(b"\xab")
+            )
+
+        display_format = DisplayFormat(
+            binding_context=None,
+            func_sig=b"\x00\x00\x00\x00",
+            intent="Test",
+            parameter_definitions=[
+                Atomic(parse_uint256),  # targetUnits
+                Array(
+                    Tuple(
+                        (
+                            # offer
+                            Tuple((Atomic(parse_address), Atomic(parse_uint256))),
+                            DynamicLeaf(parse_bytes),  # ratifierData
+                            Atomic(parse_uint256),  # units
+                        )
+                    )
+                ),
+            ],
+            field_definitions=[FieldDefinition((1, None, 2), "Units", RawFormatter)],
+        )
+        calldata = (
+            to_bytes(7)  # targetUnits
+            + to_bytes(64)  # pointer to `offerFills`
+            + self._encode_dynamic_array([offer_fill(u) for u in units])
+        )
+        return await_result(
+            display_format.parse_calldata(memoryview(calldata), None, None)
+        )
+
+    def test_each_step_walks_to_list(self):
+        # offerFills.[].units walks to the `offerFills` array, then to `units`
+        # on each fill. Only a list renders as one value per line.
+        parameters, fields = self._parse_offer_fills([10, 20])
+
+        self.assertEqual(len(parameters[1]), 2)
+        self.assertEqual(len(fields), 1)
+        self.assertEqual(fields[0][0][:2], ("Units", "10\n20"))
+
+    def _expand_bundle(self, calls):
+        """Parse a MorphoBundlerV3 `multicall(Call[] bundle)` displaying
+        `bundle.[].data` as calldata, with `calleePath` `bundle.[].to` and
+        `amountPath` `bundle.[].value`, and return the rows.
+
+        `Call = (address to, bytes data, uint256 value, bool skipRevert,
+        bytes32 callbackHash)`; `calls` are (to, data, value) triples. The
+        built-in formats are replaced by one for `INNER_SIG` that displays its
+        call's `@.value`."""
+
+        def call(to, data, value):
+            return (
+                pad_left(to)
+                + to_bytes(5 * 32)  # offset of `data` within the struct
+                + to_bytes(value)
+                + to_bytes(0)  # skipRevert
+                + b"\x00" * 32  # callbackHash
+                + to_bytes(len(data))
+                + pad_right(data)
+            )
+
+        display_format = DisplayFormat(
+            binding_context=None,
+            func_sig=b"\x00\x00\x00\x00",
+            intent="Test",
+            parameter_definitions=[
+                Array(
+                    Tuple(
+                        (
+                            Atomic(parse_address),  # to
+                            DynamicLeaf(parse_bytes),  # data
+                            Atomic(parse_uint256),  # value
+                            Atomic(parse_bool),  # skipRevert
+                            Atomic(parse_bytes32),  # callbackHash
+                        )
+                    )
+                )
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (0, None, 1),
+                    "Wrapped call",
+                    CalldataFormatter(
+                        callee=PathOrConst((0, None, 0)),
+                        amount=PathOrConst((0, None, 2)),
+                    ),
+                )
+            ],
+        )
+        inner_format = DisplayFormat(
+            binding_context=None,
+            func_sig=self.INNER_SIG,
+            intent="Inner",
+            parameter_definitions=[],
+            field_definitions=[
+                FieldDefinition(ContainerPath.Value, "Value", AmountFormatter)
+            ],
+        )
+        calldata = (
+            to_bytes(32)  # pointer to `bundle`
+            + self._encode_dynamic_array([call(*c) for c in calls])
+        )
+
+        original = clear_signing_definitions.all_display_formats
+        clear_signing_definitions.all_display_formats = lambda: iter([inner_format])
+        try:
+            _, fields = await_result(
+                display_format.parse_calldata(
+                    memoryview(calldata), self._msg(), self._defs()
+                )
+            )
+        finally:
+            clear_signing_definitions.all_display_formats = original
+        return fields
+
+    def test_each_step_morpho_bundler_v3(self):
+        # bundle.[].data expands into one subcall per Call, each against its
+        # own callee (bundle.[].to) and with its own `@.value` (bundle.[].value).
+        other_callee = b"\x99" * 20  # not in KNOWN_ADDRESSES
+        fields = self._expand_bundle(
+            [
+                (self.CALLEE, self.INNER_SIG, 10**18),
+                (other_callee, self.INNER_SIG, 2 * 10**18),
+            ]
+        )
+
+        self.assertEqual(len(fields), 6)
+        self.assertEqual(fields[0][0][:2], ("(Subcall #1) Provider", self.CALLEE_STR))
+        self.assertEqual(fields[1][0][:2], ("(Subcall #1) Intent", "Inner"))
+        self.assertEqual(fields[2][0][:2], ("(Subcall #1) Value", "1 FAKE"))
+        (label, provider, _), _, _ = fields[3]
+        self.assertEqual(label, "(Subcall #2) Provider")
+        self.assertEqual(provider.lower(), "0x" + other_callee.hex())
+        self.assertEqual(fields[4][0][:2], ("(Subcall #2) Intent", "Inner"))
+        self.assertEqual(fields[5][0][:2], ("(Subcall #2) Value", "2 FAKE"))
+
+    def test_each_step_empty_array(self):
+        # `.[]` over an empty array walks to an empty list: an empty value
+        # (like any empty array, see test_multi_value_empty_and_single), and
+        # no subcall rows for an empty bundle.
+        parameters, fields = self._parse_offer_fills([])
+        self.assertEqual(parameters, [7, []])
+        self.assertEqual(fields[0][0][:2], ("Units", ""))
+
+        self.assertEqual(self._expand_bundle([]), [])
+
+    TST1 = b"\x11" * 20
+    TST2 = b"\x22" * 20
+    UNKNOWN = b"\xaa" * 20
+    # known tokens: address -> (symbol, decimals)
+    KNOWN_TOKENS = {TST1: ("TST1", 6), TST2: ("TST2", 2)}
+
+    def _parse_token_amounts(self, tokens, amounts, token_path):
+        """Parse `fn(address[] tokens, uint256[] amounts)` displaying
+        `amounts.[]` as token amounts, with the token at `token_path`. Only
+        `KNOWN_TOKENS` are known, any other token is unknown."""
+        known = self.KNOWN_TOKENS
+
+        class _Defs:
+            network = make_eth_network()
+
+            def get_token(self, address):
+                if address not in known:
+                    return UNKNOWN_TOKEN
+                symbol, decimals = known[address]
+                return make_eth_token(symbol=symbol, decimals=decimals, address=address)
+
+        display_format = DisplayFormat(
+            binding_context=None,
+            func_sig=b"\x00\x00\x00\x00",
+            intent="Test",
+            parameter_definitions=[
+                Array(Atomic(parse_address)),
+                Array(Atomic(parse_uint256)),
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (1, None),
+                    "Amounts",
+                    TokenAmountFormatter(token=PathOrConst(token_path)),
+                )
+            ],
+        )
+        tokens_body = to_bytes(len(tokens)) + b"".join(pad_left(t) for t in tokens)
+        calldata = (
+            to_bytes(64)  # pointer to `tokens`
+            + to_bytes(64 + len(tokens_body))  # pointer to `amounts`
+            + tokens_body
+            + to_bytes(len(amounts))
+            + b"".join(to_bytes(a) for a in amounts)
+        )
+        _, fields = await_result(
+            display_format.parse_calldata(memoryview(calldata), self._msg(), _Defs())
+        )
+        return fields
+
+    def test_each_token_path_per_element(self):
+        # `tokenPath: tokens.[]` next to `amounts.[]`: each amount is formatted
+        # with the token at its own index; unknown ones as raw "Wei UNKN"
+        # amounts. No token is reported, so no unknown token address is shown.
+        other_unknown = b"\xbb" * 20
+        fields = self._parse_token_amounts(
+            [self.UNKNOWN, self.TST1, other_unknown],
+            [5_000_000, 1_000_000, 7],
+            (0, None),
+        )
+        (label, formatted, _), token, token_address = fields[0]
+        self.assertEqual(label, "Amounts")
+        self.assertEqual(formatted, "5,000,000 Wei UNKN\n1 TST1\n7 Wei UNKN")
+        self.assertIsNone(token)
+        self.assertIsNone(token_address)
+
+    def test_each_token_path_two_known_tokens(self):
+        # two different known tokens: each amount takes the symbol and the
+        # decimals of its own token (TST1: 6 decimals, TST2: 2 decimals)
+        fields = self._parse_token_amounts(
+            [self.TST1, self.TST2], [1_500_000, 250], (0, None)
+        )
+        (_, formatted, _), token, token_address = fields[0]
+        self.assertEqual(formatted, "1.5 TST1\n2.5 TST2")
+        self.assertIsNone(token)
+        self.assertIsNone(token_address)
+
+        # same tokens, swapped: the token follows the index, not the position
+        # of the first known token
+        fields = self._parse_token_amounts(
+            [self.TST2, self.TST1], [250, 1_500_000], (0, None)
+        )
+        self.assertEqual(fields[0][0][1], "2.5 TST2\n1.5 TST1")
+
+    def test_each_token_path_known_and_unknown(self):
+        # one known token (TST1) and one unknown: the unknown amount is raw,
+        # not scaled by its known neighbour's decimals, and no token (thus no
+        # unknown token address) is reported
+        fields = self._parse_token_amounts(
+            [self.TST1, self.UNKNOWN], [1_000_000, 1_000_000], (0, None)
+        )
+        (_, formatted, _), token, token_address = fields[0]
+        self.assertEqual(formatted, "1 TST1\n1,000,000 Wei UNKN")
+        self.assertIsNone(token)
+        self.assertIsNone(token_address)
+
+    def test_each_token_path_length_mismatch(self):
+        # the token array must be as long as the amount array
+        for tokens in ([self.TST1], [self.TST1] * 3):
+            with self.assertRaises(InvalidFormatDefinition):
+                self._parse_token_amounts(tokens, [1, 2], (0, None))
+
+    def test_each_value_shared_token_path(self):
+        # a token path without `.[]` (here `tokens.[0]`) is shared by all the
+        # amounts, whatever the length of the array it points into
+        fields = self._parse_token_amounts(
+            [self.TST1, self.TST2], [1_000_000, 2_000_000, 3_000_000], (0, 0)
+        )
+        self.assertEqual(fields[0][0][1], "1 TST1\n2 TST1\n3 TST1")
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

@@ -43,10 +43,14 @@ if TYPE_CHECKING:
     ListValue = list[TupleValue]
     AnyValue = Value | TupleValue | list["AnyValue"]
 
+    PathStep = int | tuple[int] | tuple[int, int] | None
     # A data path (tuple of steps), a container path (int enum), or a literal
     # constant value (str, resolved by the parser — not walked from calldata).
-    Path = tuple[int | tuple[int] | tuple[int, int], ...] | int | str
+    Path = tuple[PathStep, ...] | int | str
     PathWalker = Callable[[Path], AnyValue]
+    # A PathWalker that can pin a `.[]` path to a single array element:
+    # `bounds` is (index, expected array length); None yields the whole array.
+    BoundedPathWalker = Callable[[Path, tuple[int, int] | None], AnyValue]
 
     # Parses a Value from a slice of the calldata.
     # Assumes that the memoryview contains just that value.
@@ -82,6 +86,8 @@ _MAX_NESTED_ARRAYS = const(2)
 # EthereumERC7730EnumEntry.key reserved for "the real key is in wide_key"
 # (definitions/ethereum/erc7730/params.py)
 _ENUM_WIDE_KEY = const(0xFFFF_FFFF)
+# Max `each` (`.[]`) steps within one path (EthereumERC7730PathStep.each).
+_MAX_EACH_STEPS = const(1)
 
 
 class ClearSigningFailed(Exception):
@@ -205,6 +211,40 @@ def _word_bytes(value: AnyValue) -> AnyValue:
             raise InvalidFormatDefinition
         return value.to_bytes(_EVM_WORD_SIZE, "big")
     return value
+
+
+def _walk(start: AnyValue, steps: tuple[PathStep, ...]) -> AnyValue:
+    """Walk `steps` (field, index and slice steps; no `each`) down from `start`."""
+    p = start
+    for step in steps:
+        if p is None:
+            p = None
+            break
+        if isinstance(step, tuple):
+            # slices view numeric values as bytes (see _word_bytes)
+            p = _word_bytes(p)
+        if isinstance(p, (list, tuple, bytes)):
+            # walk inside Arrays or Tuples
+            try:
+                if isinstance(step, int):
+                    p = p[step]
+                elif isinstance(step, tuple) and len(step) in (1, 2):
+                    # steps encoded as tuples represent slices... [a:b] or [a:]
+                    if len(step) == 1:
+                        p = p[step[0] :]
+                    else:
+                        p = p[step[0] : step[1]]
+                else:
+                    raise InvalidFormatDefinition
+            except (IndexError, TypeError):
+                raise InvalidFormatDefinition
+        else:
+            # can't walk inside basic types
+            raise InvalidFormatDefinition
+    if isinstance(p, tuple):
+        # Array/list makes sense. Not expecting tuples here.
+        raise InvalidFormatDefinition
+    return p
 
 
 def _to_bytes(value: AnyValue) -> bytes:
@@ -819,7 +859,7 @@ async def _format_field_value(
     value: AnyValue,
     msg: MsgInSignTx,
     defs: Definitions,
-    path_walker: PathWalker,
+    path_walker: BoundedPathWalker,
 ) -> FormattedValue:
     """Format a field value.
 
@@ -830,21 +870,35 @@ async def _format_field_value(
     at an array (amount, address, raw, ...). A non-list value is formatted
     directly.
 
+    For an array, a formatter param given by a `.[]` path (eg. `tokenPath:
+    tokens.[]` next to `amounts.[]`) resolves to the element at the same index;
+    that array must be as long as the value's. Any other param (a plain path,
+    a container path or a constant) is shared by all elements.
+
+    No token is returned for an array: an unknown token is flagged only by its
+    raw "Wei UNKN" amount line, without the address and chain rows that
+    `_handle_generic_ui` adds for a single value.
+
     Only flat arrays of formattable leaves are handled."""
     if not isinstance(value, list):
-        return await formatter.format(value, msg, defs, path_walker)
+        return await formatter.format(
+            value, msg, defs, lambda path: path_walker(path, None)
+        )
 
     from trezor.ui.layouts.properties import AboveThreshold
 
     lines: list[str] = []
-    # The same formatter instance is reused for every element, so a
-    # `tokenAmount`'s single `token_path` resolves to the same token on each
-    # iteration: the token is shared across the array and returned once.
-    token: EthereumTokenInfo | None = None
-    token_address: AnyBytes | None = None
-    for element in value:
-        formatted, element_token, element_address = await formatter.format(
-            element, msg, defs, path_walker
+
+    # Hardening. Just making sure the lengths are constant everywhere.
+    number_of_values = len(value)
+
+    for i, single_value in enumerate(value):
+
+        def single_value_path_walker(path: Path, index: int = i) -> AnyValue:
+            return path_walker(path, (index, number_of_values))
+
+        formatted, _, _ = await formatter.format(
+            single_value, msg, defs, single_value_path_walker
         )
         if isinstance(formatted, AboveThreshold):
             formatted = formatted.message
@@ -852,11 +906,7 @@ async def _format_field_value(
             # Raise if any member returns None.
             raise InvalidFormatDefinition
         lines.append(formatted)
-        if element_token is not None:
-            token = element_token
-        if element_address is not None:
-            token_address = element_address
-    return "\n".join(lines), token, token_address
+    return "\n".join(lines), None, None
 
 
 # https://eips.ethereum.org/EIPS/eip-7730#context-section
@@ -1102,7 +1152,46 @@ class FieldDefinition:
                 # A literal constant value, resolved by the parser — not walked
                 # from calldata. Rendered as-is (typically by the raw formatter).
                 return p.const_value
-            steps: list[int | tuple[int] | tuple[int, int]] = list(p.path)
+
+            steps: list[PathStep]
+            if p.steps:
+                if p.path or p.slice_start is not None or p.slice_end is not None:
+                    raise InvalidFormatDefinition  # mixed with the legacy form
+                steps = []
+                each_step_count = 0
+                for s in p.steps:
+                    if steps and isinstance(
+                        steps[-1], tuple
+                    ):  # tuple = slice. see below.
+                        raise InvalidFormatDefinition  # a slice must be last
+                    if s.slice_end is not None:
+                        # `data.[0:20]` or `takerTraits.[:1]` (start defaults to 0)
+                        slice_ = (s.slice_start or 0, s.slice_end)
+                    elif s.slice_start is not None:
+                        slice_ = (s.slice_start,)  # `token.[-20:]`
+                    else:
+                        slice_ = None
+                    kinds = [
+                        k for k in (s.field, s.index, s.each, slice_) if k is not None
+                    ]
+                    if len(kinds) != 1:
+                        raise InvalidFormatDefinition  # hardening
+                    if slice_ is not None:
+                        steps.append(slice_)
+                    elif s.field is not None:
+                        steps.append(s.field)
+                    elif s.index is not None:
+                        steps.append(s.index)
+                    else:
+                        each_step_count += 1
+                        # `.[]` can't come first: the parameters are themselves a list
+                        if not s.each or not steps or each_step_count > _MAX_EACH_STEPS:
+                            raise InvalidFormatDefinition
+                        steps.append(None)
+                return tuple(steps)
+
+            # legacy form
+            steps = list(p.path)
             if p.slice_end is not None:
                 # `data.[0:20]` or `takerTraits.[:1]` (start defaults to 0)
                 steps.append((p.slice_start or 0, p.slice_end))
@@ -1307,7 +1396,9 @@ class DisplayFormat:
             parameters.append(value)
             offset += consumed
 
-        def get_value_for_path(path: Path) -> AnyValue:
+        def get_value_for_path(
+            path: Path, bounds: tuple[int, int] | None = None
+        ) -> AnyValue:
             if isinstance(path, str):
                 # a literal constant value, not walked from calldata
                 return path
@@ -1345,43 +1436,28 @@ class DisplayFormat:
                 elif path == ContainerPath.Value:
                     return int.from_bytes(msg.value, "big")
                 else:
-                    raise InvalidFormatDefinition  # TODO
+                    raise InvalidFormatDefinition
             else:
                 if len(path) == 0:
                     # can't get anywhere by walking an inexisting path!
                     raise InvalidFormatDefinition
+                if None not in path:
+                    return _walk(parameters, path)
 
-                # walk the path
-                p = parameters
-                for step in path:
-                    if p is None:
-                        p = None
-                        break
-                    if isinstance(step, tuple):
-                        # slices view numeric values as bytes (see _word_bytes)
-                        p = _word_bytes(p)
-                    if isinstance(p, (list, tuple, bytes)):
-                        # walk inside Arrays or Tuples
-                        try:
-                            if isinstance(step, int):
-                                p = p[step]
-                            elif isinstance(step, tuple) and len(step) in (1, 2):
-                                # steps encoded as tuples represent slices... [a:b] or [a:]
-                                if len(step) == 1:
-                                    p = p[step[0] :]
-                                else:
-                                    p = p[step[0] : step[1]]
-                            else:
-                                raise InvalidFormatDefinition
-                        except (IndexError, TypeError):
-                            raise InvalidFormatDefinition
-                    else:
-                        # can't walk inside basic types
-                        raise InvalidFormatDefinition
-                if isinstance(p, tuple):
-                    # Array/list makes sense. Not expecting tuples here.
+                # `.[]`: walk to the array, then the rest of the path on each element
+                each = path.index(None)
+                array = _walk(parameters, path[:each])
+                if not isinstance(array, list):
+                    # only ABI arrays, not structs (tuple) or bytes
                     raise InvalidFormatDefinition
-                return p
+                rest = path[each + 1 :]
+                if bounds is None:
+                    return [_walk(element, rest) for element in array]
+
+                index, number_of_values = bounds
+                if len(array) != number_of_values:
+                    raise InvalidFormatDefinition
+                return _walk(array[index], rest)
 
         fields: list[RenderedField] = []
         for field_definition in self.field_definitions:
@@ -1691,7 +1767,7 @@ async def _expand_one_subcall(
         _, inner_fields = await inner_format.parse_calldata(
             body, msg, inner_defs, container
         )
-    except (ClearSigningFailed, DataError) as e:
+    except (ClearSigningFailed, DataError):
         return await raw_rows()
 
     rows: list[RenderedField] = [
