@@ -160,11 +160,12 @@ async def _stop_app(session: Session) -> None:
             session.send(SERVICE_LIFECYCLE, LIFECYCLE_ABORT, b"")
         except Exception:
             pass  # the timeout below takes care of it
-        while image.is_running():
-            try:
-                await loop.wait(_APP_EXIT_EVENT, timeout_ms=_STOP_TIMEOUT_MS)
-            except loop.Timeout:
-                session.die("App did not stop")
+        try:
+            await loop.wait(_APP_EXIT_EVENT, timeout_ms=_STOP_TIMEOUT_MS)
+        except loop.Timeout:
+            session.die("App did not stop")
+        if image.is_running():
+            session.die("App still running after its exit event")  # can't happen
 
     if not image.exited_normally():
         session.die("App crashed")
