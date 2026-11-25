@@ -1387,6 +1387,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 tstr_opt(&m.verb_view_all)?,
                 m.hold,
                 m.chunkify,
+                false, // the app API has no external menu
             )?,
             m.br_code.to_native(),
             match m.br_name.as_ref() {
