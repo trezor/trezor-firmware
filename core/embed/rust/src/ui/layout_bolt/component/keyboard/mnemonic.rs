@@ -1,7 +1,7 @@
 use super::super::super::theme;
 use super::super::{Button, ButtonMsg, Swipe, SwipeDirection};
 use crate::strutil::TString;
-use crate::ui::component::{Child, Component, Event, EventCtx, Label, Maybe};
+use crate::ui::component::{Component, Event, EventCtx, Label, Maybe};
 use crate::ui::geometry::{Alignment2D, Grid, Offset, Rect};
 use crate::ui::shape::Renderer;
 
@@ -15,13 +15,13 @@ pub enum MnemonicKeyboardMsg {
 
 pub struct MnemonicKeyboard<T> {
     /// Initial prompt, displayed on empty input.
-    prompt: Child<Maybe<Label<'static>>>,
+    prompt: Maybe<Label<'static>>,
     /// Backspace button.
-    back: Child<Maybe<Button>>,
+    back: Maybe<Button>,
     /// Input area, acting as the auto-complete and confirm button.
-    input: Child<Maybe<T>>,
+    input: Maybe<T>,
     /// Key buttons.
-    keys: [Child<Button>; MNEMONIC_KEY_COUNT],
+    keys: [Button; MNEMONIC_KEY_COUNT],
     /// Swipe controller - allowing for going to the previous word.
     swipe: Swipe,
     /// Whether going back is allowed (is not on the very first word).
@@ -43,16 +43,16 @@ where
                     .styled(theme::button_pin())
                     .initially_enabled(input.can_key_press_lead_to_a_valid_word(key));
             }
-            array.map(Child::new)
+            array
         };
 
         Self {
-            prompt: Child::new(Maybe::new(
+            prompt: Maybe::new(
                 theme::BG,
                 Label::centered(prompt, theme::label_keyboard_prompt()).vertically_centered(),
                 prompt_visible,
-            )),
-            back: Child::new(Maybe::new(
+            ),
+            back: Maybe::new(
                 theme::BG,
                 Button::with_icon_blend(
                     theme::IMAGE_BG_BACK_BTN_TALL,
@@ -62,8 +62,8 @@ where
                 .styled(theme::button_reset())
                 .with_long_press(theme::ERASE_HOLD_DURATION),
                 !prompt_visible,
-            )),
-            input: Child::new(Maybe::new(theme::BG, input, !prompt_visible)),
+            ),
+            input: Maybe::new(theme::BG, input, !prompt_visible),
             keys,
             swipe: Swipe::new().right(),
             can_go_back,
@@ -79,29 +79,22 @@ where
     /// completion mask and the pending key.
     fn toggle_key_buttons(&mut self, ctx: &mut EventCtx) {
         for (key, btn) in self.keys.iter_mut().enumerate() {
-            let enabled = self
-                .input
-                .inner()
-                .inner()
-                .can_key_press_lead_to_a_valid_word(key);
-            btn.mutate(ctx, |ctx, b| b.enable_if(ctx, enabled));
+            let enabled = self.input.inner().can_key_press_lead_to_a_valid_word(key);
+            btn.enable_if(ctx, enabled);
         }
     }
 
     /// After edit operations, we need to either show or hide the prompt, the
     /// input, and the back button.
     fn toggle_prompt_or_input(&mut self, ctx: &mut EventCtx) {
-        let prompt_visible = self.input.inner().inner().is_empty();
-        self.prompt
-            .mutate(ctx, |ctx, p| p.show_if(ctx, prompt_visible));
-        self.input
-            .mutate(ctx, |ctx, i| i.show_if(ctx, !prompt_visible));
-        self.back
-            .mutate(ctx, |ctx, b| b.show_if(ctx, !prompt_visible));
+        let prompt_visible = self.input.inner().is_empty();
+        self.prompt.show_if(ctx, prompt_visible);
+        self.input.show_if(ctx, !prompt_visible);
+        self.back.show_if(ctx, !prompt_visible);
     }
 
     pub fn mnemonic(&self) -> Option<&'static str> {
-        self.input.inner().inner().mnemonic()
+        self.input.inner().mnemonic()
     }
 }
 
@@ -164,14 +157,12 @@ where
 
         match self.back.event(ctx, event) {
             Some(ButtonMsg::Clicked) => {
-                self.input
-                    .mutate(ctx, |ctx, i| i.inner_mut().on_backspace_click(ctx));
+                self.input.inner_mut().on_backspace_click(ctx);
                 self.on_input_change(ctx);
                 return None;
             }
             Some(ButtonMsg::LongPressed) => {
-                self.input
-                    .mutate(ctx, |ctx, i| i.inner_mut().on_backspace_long_press(ctx));
+                self.input.inner_mut().on_backspace_long_press(ctx);
                 self.on_input_change(ctx);
                 return None;
             }
@@ -179,8 +170,7 @@ where
         }
         for (key, btn) in self.keys.iter_mut().enumerate() {
             if let Some(ButtonMsg::Clicked) = btn.event(ctx, event) {
-                self.input
-                    .mutate(ctx, |ctx, i| i.inner_mut().on_key_click(ctx, key));
+                self.input.inner_mut().on_key_click(ctx, key);
                 self.on_input_change(ctx);
                 return None;
             }
@@ -189,7 +179,7 @@ where
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        if self.input.inner().inner().is_empty() {
+        if self.input.inner().is_empty() {
             self.prompt.render(target);
         } else {
             self.input.render(target);

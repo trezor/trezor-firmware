@@ -8,7 +8,7 @@ use crate::translations::TR;
 use crate::trezorhal::random;
 use crate::trezorhal::wordlist::Wordlist;
 use crate::ui::component::text::common::TextBox;
-use crate::ui::component::{Child, Component, ComponentExt, Event, EventCtx};
+use crate::ui::component::{Component, ComponentExt, Event, EventCtx};
 use crate::ui::geometry::Rect;
 use crate::ui::shape::Renderer;
 use crate::ui::util::char_to_string;
@@ -158,7 +158,7 @@ impl ChoiceFactory for ChoiceFactoryWordlist {
 /// Component for entering a mnemonic from a wordlist - BIP39 or SLIP39.
 pub struct WordlistEntry {
     choice_page: ChoicePage<ChoiceFactoryWordlist, WordlistAction>,
-    chosen_letters: Child<ChangingTextLine>,
+    chosen_letters: ChangingTextLine,
     textbox: TextBox,
     offer_words: bool,
     wordlist_type: WordlistType,
@@ -176,7 +176,7 @@ impl WordlistEntry {
                 .with_incomplete(true)
                 .with_initial_page_counter(get_random_position(choices_count))
                 .with_controls(ChoiceControls::Carousel),
-            chosen_letters: Child::new(ChangingTextLine::center_mono(PROMPT, LINE_CAPACITY)),
+            chosen_letters: ChangingTextLine::center_mono(PROMPT, LINE_CAPACITY),
             textbox: TextBox::empty(MAX_WORD_LENGTH),
             offer_words: false,
             wordlist_type,
@@ -196,7 +196,7 @@ impl WordlistEntry {
             choice_page: ChoicePage::new(choices)
                 .with_incomplete(true)
                 .with_initial_page_counter(1),
-            chosen_letters: Child::new(ChangingTextLine::center_mono(word, LINE_CAPACITY)),
+            chosen_letters: ChangingTextLine::center_mono(word, LINE_CAPACITY),
             textbox: TextBox::new(word, MAX_WORD_LENGTH),
             offer_words: false,
             wordlist_type,
@@ -266,10 +266,8 @@ impl WordlistEntry {
     /// Reflects currently chosen letters in the textbox.
     fn update_chosen_letters(&mut self, ctx: &mut EventCtx) {
         let text = uformat!("{}{}", self.textbox.content(), PROMPT);
-        self.chosen_letters.mutate(ctx, |ctx, chosen_letters| {
-            chosen_letters.update_text(&text);
-            chosen_letters.request_complete_repaint(ctx);
-        });
+        self.chosen_letters.update_text(&text);
+        self.chosen_letters.request_complete_repaint(ctx);
     }
 }
 
@@ -277,7 +275,7 @@ impl Component for WordlistEntry {
     type Msg = &'static str;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let letters_area_height = self.chosen_letters.inner().needed_height();
+        let letters_area_height = self.chosen_letters.needed_height();
         let (letters_area, choice_area) = bounds.split_top(letters_area_height);
         self.chosen_letters.place(letters_area);
         self.choice_page.place(choice_area);

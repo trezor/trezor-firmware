@@ -3,9 +3,7 @@ use super::{
     constant, theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos,
 };
 use crate::translations::TR;
-use crate::ui::component::{
-    Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate,
-};
+use crate::ui::component::{Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate};
 use crate::ui::display::Color;
 use crate::ui::geometry::{Insets, Rect};
 use crate::ui::shape::Renderer;
@@ -32,7 +30,7 @@ pub struct ButtonPage<T>
 where
     T: Component + Paginate,
 {
-    content: Child<T>,
+    content: T,
     pad: Pad,
     cancel_btn_details: Option<ButtonDetails>,
     confirm_btn_details: Option<ButtonDetails>,
@@ -45,7 +43,7 @@ where
     back_on_first_page: bool,
     /// Whether the left button is being held as "Shift" (menu navigation only).
     shift_active: bool,
-    buttons: Child<ButtonController>,
+    buttons: ButtonController,
 }
 
 impl<T> ButtonPage<T>
@@ -54,7 +52,7 @@ where
 {
     pub fn new(content: T, background: Color) -> Self {
         Self {
-            content: Child::new(content),
+            content,
             pad: Pad::with_background(background).with_clear(),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text(TR::buttons__confirm.into())),
@@ -65,7 +63,7 @@ where
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call
             // `content.page_count()`.
-            buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
+            buttons: ButtonController::new(ButtonLayout::empty()),
         }
     }
 
@@ -119,7 +117,7 @@ where
     /// Can only be called when we know the final page_count.
     fn set_buttons_for_initial_page(&mut self, page_count: u16) {
         let btn_layout = self.get_button_layout(false, page_count > 1);
-        self.buttons = Child::new(ButtonController::new(btn_layout));
+        self.buttons = ButtonController::new(btn_layout);
     }
 
     /// Called when user pressed "BACK" or "NEXT".
@@ -127,10 +125,8 @@ where
     /// sure it gets completely repainted. Also updating the buttons.
     fn change_page(&mut self, ctx: &mut EventCtx) {
         let curr_page = self.pager().current();
-        self.content.mutate(ctx, |ctx, content| {
-            content.change_page(curr_page);
-            content.request_complete_repaint(ctx);
-        });
+        self.content.change_page(curr_page);
+        self.content.request_complete_repaint(ctx);
         self.update_buttons(ctx);
         self.pad.clear();
     }
@@ -140,13 +136,11 @@ where
         let pager = self.pager();
         let btn_layout = self.get_button_layout(pager.has_prev(), pager.has_next());
         let shift_active = self.shift_active;
-        self.buttons.mutate(ctx, |ctx, buttons| {
-            buttons.set(btn_layout);
-            if shift_active {
-                // The new left button is still being held.
-                buttons.refresh_pressed(ctx);
-            }
-        });
+        self.buttons.set(btn_layout);
+        if shift_active {
+            // The new left button is still being held.
+            self.buttons.refresh_pressed(ctx);
+        }
     }
 
     fn get_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout {

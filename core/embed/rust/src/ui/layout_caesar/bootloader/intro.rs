@@ -3,7 +3,7 @@ use super::super::theme::bootloader::{
 };
 use super::buttons::{Button, ButtonPos, Buttons};
 use crate::strutil::TString;
-use crate::ui::component::{Child, Component, Event, EventCtx, Label, Pad};
+use crate::ui::component::{Component, Event, EventCtx, Label, Pad};
 use crate::ui::geometry::{Alignment, Alignment2D, Rect};
 use crate::ui::layout::simplified::ReturnToC;
 use crate::ui::shape;
@@ -25,27 +25,27 @@ impl ReturnToC for IntroMsg {
 
 pub struct Intro<'a> {
     bg: Pad,
-    title: Child<Label<'a>>,
+    title: Label<'a>,
     buttons: Buttons,
-    text: Child<Label<'a>>,
-    warn: Option<Child<Label<'a>>>,
+    text: Label<'a>,
+    warn: Option<Label<'a>>,
 }
 
 impl<'a> Intro<'a> {
     pub fn new(title: TString<'a>, content: TString<'a>, fw_ok: bool) -> Self {
         Self {
             bg: Pad::with_background(BLD_BG).with_clear(),
-            title: Child::new(Label::centered(title, TEXT_NORMAL).vertically_centered()),
+            title: Label::centered(title, TEXT_NORMAL).vertically_centered(),
             buttons: Buttons::new(
                 Some(Button::menu()),
                 None,
                 Some(Button::Text(RIGHT_BUTTON_TEXT)),
             ),
-            text: Child::new(Label::left_aligned(content, TEXT_NORMAL).vertically_centered()),
-            warn: (!fw_ok).then_some(Child::new(
+            text: Label::left_aligned(content, TEXT_NORMAL).vertically_centered(),
+            warn: (!fw_ok).then_some(
                 Label::new("FIRMWARE CORRUPTED".into(), Alignment::Start, TEXT_NORMAL)
                     .vertically_centered(),
-            )),
+            ),
         }
     }
 }

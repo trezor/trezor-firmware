@@ -3,20 +3,20 @@ use crate::strutil::TString;
 use crate::ui::component::base::ComponentExt;
 use crate::ui::component::label::Label;
 use crate::ui::component::text::TextStyle;
-use crate::ui::component::{Child, Component, Event, EventCtx};
+use crate::ui::component::{Component, Event, EventCtx};
 use crate::ui::display::Icon;
 use crate::ui::geometry::{Alignment, Insets, Offset, Rect};
 use crate::ui::shape::Renderer;
 
 pub struct Frame<T> {
     border: Insets,
-    title: Child<Label<'static>>,
-    subtitle: Option<Child<Label<'static>>>,
-    button: Option<Child<Button>>,
+    title: Label<'static>,
+    subtitle: Option<Label<'static>>,
+    button: Option<Button>,
     button_msg: CancelInfoConfirmMsg,
     #[cfg(feature = "ui_debug")]
     has_menu: bool,
-    content: Child<T>,
+    content: T,
 }
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
@@ -36,14 +36,14 @@ where
         content: T,
     ) -> Self {
         Self {
-            title: Child::new(Label::new(title, alignment, style)),
+            title: Label::new(title, alignment, style),
             subtitle: None,
             border: theme::borders(),
             button: None,
             button_msg: CancelInfoConfirmMsg::Cancelled,
             #[cfg(feature = "ui_debug")]
             has_menu: false,
-            content: Child::new(content),
+            content,
         }
     }
 
@@ -65,11 +65,7 @@ where
     }
 
     pub fn with_subtitle(mut self, style: TextStyle, subtitle: TString<'static>) -> Self {
-        self.subtitle = Some(Child::new(Label::new(
-            subtitle,
-            self.title.inner().alignment(),
-            style,
-        )));
+        self.subtitle = Some(Label::new(subtitle, self.title.alignment(), style));
         self
     }
 
@@ -79,11 +75,11 @@ where
             bottom: self.border.bottom * 4,
             ..self.border
         };
-        self.button = Some(Child::new(
+        self.button = Some(
             Button::with_icon(icon)
                 .with_expanded_touch_area(touch_area)
                 .styled(theme::button_moreinfo()),
-        ));
+        );
         self.button_msg = msg;
         self
     }
@@ -121,35 +117,31 @@ where
             bottom: 0,
             ..self.border
         };
-        self.button = Some(Child::new(
+        self.button = Some(
             Button::with_icon(theme::ICON_CORNER_MENU)
                 .with_expanded_touch_area(touch_area)
                 .styled(theme::button_moreinfo()),
-        ));
+        );
         self.button_msg = msg;
         self
     }
 
     pub fn inner(&self) -> &T {
-        self.content.inner()
+        &self.content
     }
 
     pub fn update_title(&mut self, ctx: &mut EventCtx, new_title: TString<'static>) {
-        self.title.mutate(ctx, |ctx, t| {
-            t.set_text(new_title);
-            t.request_complete_repaint(ctx)
-        })
+        self.title.set_text(new_title);
+        self.title.request_complete_repaint(ctx)
     }
 
     pub fn update_content<F, R>(&mut self, ctx: &mut EventCtx, update_fn: F) -> R
     where
         F: Fn(&mut T) -> R,
     {
-        self.content.mutate(ctx, |ctx, c| {
-            let res = update_fn(c);
-            c.request_complete_repaint(ctx);
-            res
-        })
+        let res = update_fn(&mut self.content);
+        self.content.request_complete_repaint(ctx);
+        res
     }
 }
 

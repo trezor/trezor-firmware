@@ -1,7 +1,7 @@
 use super::super::theme::{BG, FG, TITLE_AREA_HEIGHT};
 use super::super::{cshape, theme};
 use crate::strutil::TString;
-use crate::ui::component::{Child, Component, Event, EventCtx, Label, Never, Pad};
+use crate::ui::component::{Component, Event, EventCtx, Label, Never, Pad};
 use crate::ui::constant::{screen, WIDTH};
 use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
 use crate::ui::shape;
@@ -13,9 +13,9 @@ const DIVIDER_POSITION: i16 = 43;
 pub struct ErrorScreen<'a> {
     bg: Pad,
     show_icons: bool,
-    title: Child<Label<'a>>,
-    message: Child<Label<'a>>,
-    footer: Child<Label<'a>>,
+    title: Label<'a>,
+    message: Label<'a>,
+    footer: Label<'a>,
 }
 
 impl<'a> ErrorScreen<'a> {
@@ -27,9 +27,9 @@ impl<'a> ErrorScreen<'a> {
         Self {
             bg: Pad::with_background(BG).with_clear(),
             show_icons: true,
-            title: Child::new(title),
-            message: Child::new(message),
-            footer: Child::new(footer),
+            title,
+            message,
+            footer,
         }
     }
 }
@@ -40,7 +40,7 @@ impl Component for ErrorScreen<'_> {
     fn place(&mut self, _bounds: Rect) -> Rect {
         self.bg.place(screen());
 
-        let text_width = self.title.inner().max_size().x;
+        let text_width = self.title.max_size().x;
         if text_width > screen().width() - 2 * TITLE_AREA_HEIGHT {
             // if the title is too long, don't show the icons
             self.show_icons = false;

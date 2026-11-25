@@ -1,6 +1,5 @@
 use super::{theme, Button, ButtonMsg};
-use crate::ui::component::base::ComponentExt;
-use crate::ui::component::{Child, Component, Event, EventCtx};
+use crate::ui::component::{Component, Event, EventCtx};
 use crate::ui::constant::screen;
 use crate::ui::event::TouchEvent;
 use crate::ui::geometry::{Grid, Insets, Point, Rect};
@@ -14,9 +13,9 @@ pub enum NumberInputSliderDialogMsg {
 
 pub struct NumberInputSliderDialog {
     area: Rect,
-    input: Child<NumberInputSlider>,
-    cancel_button: Child<Button>,
-    confirm_button: Child<Button>,
+    input: NumberInputSlider,
+    cancel_button: Button,
+    confirm_button: Button,
 }
 
 impl NumberInputSliderDialog {
@@ -24,16 +23,14 @@ impl NumberInputSliderDialog {
         debug_assert!(min < max);
         Self {
             area: Rect::zero(),
-            input: NumberInputSlider::new(min, max, init_value).into_child(),
-            cancel_button: Button::with_icon(theme::ICON_CANCEL).into_child(),
-            confirm_button: Button::with_icon(theme::ICON_CONFIRM)
-                .styled(theme::button_confirm())
-                .into_child(),
+            input: NumberInputSlider::new(min, max, init_value),
+            cancel_button: Button::with_icon(theme::ICON_CANCEL),
+            confirm_button: Button::with_icon(theme::ICON_CONFIRM).styled(theme::button_confirm()),
         }
     }
 
     pub fn value(&self) -> u8 {
-        self.input.inner().value
+        self.input.value
     }
 }
 

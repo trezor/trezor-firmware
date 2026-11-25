@@ -3,7 +3,7 @@ use sys::time::{Duration, Instant};
 use super::{theme, Progress};
 use crate::strutil::TString;
 use crate::ui::animation::Animation;
-use crate::ui::component::{Child, Component, Event, EventCtx};
+use crate::ui::component::{Component, Event, EventCtx};
 use crate::ui::display::{self, Color, Font, LOADER_MAX};
 use crate::ui::geometry::{Offset, Point, Rect};
 use crate::ui::shape::Renderer;
@@ -289,7 +289,7 @@ impl LoaderStyleSheet {
 }
 
 pub struct ProgressLoader {
-    loader: Child<Progress>,
+    loader: Progress,
     duration_ms: u32,
     start_time: Option<Instant>,
 }
@@ -299,9 +299,7 @@ impl ProgressLoader {
 
     pub fn new(loader_description: TString<'static>, duration_ms: u32) -> Self {
         Self {
-            loader: Child::new(
-                Progress::new(false, loader_description).with_icon(theme::ICON_LOCK_SMALL),
-            ),
+            loader: Progress::new(false, loader_description).with_icon(theme::ICON_LOCK_SMALL),
             duration_ms,
             start_time: None,
         }
@@ -310,9 +308,7 @@ impl ProgressLoader {
     pub fn start(&mut self, ctx: &mut EventCtx) {
         self.start_time = Some(Instant::now());
         self.loader.event(ctx, Event::Progress(0, "".into()));
-        self.loader.mutate(ctx, |ctx, loader| {
-            loader.request_paint(ctx);
-        });
+        self.loader.request_paint(ctx);
         ctx.request_anim_frame();
     }
 

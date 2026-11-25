@@ -1,7 +1,7 @@
 use super::super::{
     constant, theme, AutomaticMover, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
 };
-use crate::ui::component::{Child, Component, Event, EventCtx, Pad};
+use crate::ui::component::{Component, Event, EventCtx, Pad};
 use crate::ui::geometry::{Offset, Rect};
 use crate::ui::shape::Renderer;
 use crate::ui::util::animation_disabled;
@@ -74,7 +74,7 @@ where
 {
     choices: F,
     pad: Pad,
-    buttons: Child<ButtonController>,
+    buttons: ButtonController,
     page_counter: usize,
     /// How many pixels are between the items.
     items_distance: i16,
@@ -116,10 +116,8 @@ where
         Self {
             choices,
             pad: Pad::with_background(theme::BG),
-            buttons: Child::new(
-                ButtonController::new(initial_btn_layout)
-                    .with_ignore_btn_delay(constant::IGNORE_OTHER_BTN_MS),
-            ),
+            buttons: ButtonController::new(initial_btn_layout)
+                .with_ignore_btn_delay(constant::IGNORE_OTHER_BTN_MS),
             page_counter: 0,
             items_distance: DEFAULT_ITEMS_DISTANCE,
             controls: ChoiceControls::Cancellable,
@@ -150,10 +148,8 @@ where
 
     fn reset_initial_buttons(&mut self) {
         let initial_btn_layout = self.get_current_item().btn_layout();
-        self.buttons = Child::new(
-            ButtonController::new(initial_btn_layout)
-                .with_ignore_btn_delay(constant::IGNORE_OTHER_BTN_MS),
-        );
+        self.buttons = ButtonController::new(initial_btn_layout)
+            .with_ignore_btn_delay(constant::IGNORE_OTHER_BTN_MS);
     }
 
     pub fn with_controls(mut self, controls: ChoiceControls) -> Self {
@@ -417,14 +413,12 @@ where
     /// whether they are long-pressed, and painting them.
     fn set_buttons(&mut self, ctx: &mut EventCtx) {
         let btn_layout = self.get_current_item().btn_layout();
-        self.buttons.mutate(ctx, |ctx, buttons| {
-            buttons.set(btn_layout);
-            // When user holds one of the buttons, highlighting it.
-            if let Some(btn_down) = self.holding_mover.moving_direction() {
-                buttons.highlight_button(ctx, btn_down);
-            }
-            ctx.request_paint();
-        });
+        self.buttons.set(btn_layout);
+        // When user holds one of the buttons, highlighting it.
+        if let Some(btn_down) = self.holding_mover.moving_direction() {
+            self.buttons.highlight_button(ctx, btn_down);
+        }
+        ctx.request_paint();
     }
 
     pub fn choice_factory(&self) -> &F {
@@ -594,9 +588,7 @@ where
         // Only doing this when the item is configured to do so
         if let Some(ButtonControllerMsg::LongPressed(ButtonPos::Middle)) = button_event {
             if self.get_current_item().trigger_middle_without_release() {
-                self.buttons.mutate(ctx, |ctx, buttons| {
-                    buttons.reset_state(ctx);
-                });
+                self.buttons.reset_state(ctx);
                 self.clear_and_repaint(ctx);
                 return Some(ChoiceMsg::Choice {
                     item: self.get_current_action(),

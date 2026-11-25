@@ -10,7 +10,7 @@ use crate::strutil::{ShortString, TString};
 use crate::trezorhal::random;
 use crate::ui::component::base::ComponentExt;
 use crate::ui::component::text::TextStyle;
-use crate::ui::component::{Child, Component, Event, EventCtx, Marquee, Maybe, Never, Pad, Timer};
+use crate::ui::component::{Component, Event, EventCtx, Marquee, Maybe, Never, Pad, Timer};
 use crate::ui::display::Font;
 use crate::ui::event::TouchEvent;
 use crate::ui::geometry::{Alignment, Alignment2D, Grid, Insets, Offset, Point, Rect};
@@ -44,12 +44,12 @@ pub struct PinKeyboard {
     major_prompt: Marquee,
     minor_prompt: Marquee,
     major_warning: Option<Marquee>,
-    textbox: Child<PinInput>,
+    textbox: PinInput,
     textbox_pad: Pad,
-    erase_btn: Child<Maybe<Button>>,
-    cancel_btn: Child<Maybe<Button>>,
-    confirm_btn: Child<Button>,
-    digit_btns: [Child<Button>; DIGIT_COUNT],
+    erase_btn: Maybe<Button>,
+    cancel_btn: Maybe<Button>,
+    confirm_btn: Button,
+    digit_btns: [Button; DIGIT_COUNT],
     warning_timer: Timer,
 }
 
@@ -73,10 +73,10 @@ impl PinKeyboard {
         .styled(theme::button_reset())
         .with_long_press(theme::ERASE_HOLD_DURATION)
         .initially_enabled(false);
-        let erase_btn = Maybe::hidden(theme::BG, erase_btn).into_child();
+        let erase_btn = Maybe::hidden(theme::BG, erase_btn);
 
         let cancel_btn = Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel());
-        let cancel_btn = Maybe::new(theme::BG, cancel_btn, allow_cancel).into_child();
+        let cancel_btn = Maybe::new(theme::BG, cancel_btn, allow_cancel);
 
         Self {
             allow_cancel,
@@ -85,32 +85,30 @@ impl PinKeyboard {
                 .with_alignment(Alignment::End),
             major_warning: major_warning
                 .map(|text| Self::prompt_marquee(text, theme::label_keyboard_warning())),
-            textbox: PinInput::new(theme::label_default()).into_child(),
+            textbox: PinInput::new(theme::label_default()),
             textbox_pad: Pad::with_background(theme::label_default().background_color),
             erase_btn,
             cancel_btn,
             confirm_btn: Button::with_icon(theme::ICON_CONFIRM)
                 .styled(theme::button_confirm())
-                .initially_enabled(false)
-                .into_child(),
+                .initially_enabled(false),
             digit_btns: Self::generate_digit_buttons(),
             warning_timer: Timer::new(),
         }
     }
 
-    fn generate_digit_buttons() -> [Child<Button>; DIGIT_COUNT] {
+    fn generate_digit_buttons() -> [Button; DIGIT_COUNT] {
         // Generate a random sequence of digits from 0 to 9.
         let mut digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
         random::shuffle(&mut digits);
         digits
             .map(|c| Button::with_text(c.into()))
             .map(|b| b.styled(theme::button_pin()))
-            .map(Child::new)
     }
 
     fn pin_modified(&mut self, ctx: &mut EventCtx) {
-        let is_full = self.textbox.inner().is_full();
-        let is_empty = self.textbox.inner().is_empty();
+        let is_full = self.textbox.is_full();
+        let is_empty = self.textbox.is_empty();
 
         self.textbox_pad.clear();
         self.textbox.request_complete_repaint(ctx);
@@ -124,18 +122,13 @@ impl PinKeyboard {
 
         let cancel_enabled = is_empty && self.allow_cancel;
         for btn in &mut self.digit_btns {
-            btn.mutate(ctx, |ctx, btn| btn.enable_if(ctx, !is_full));
+            btn.enable_if(ctx, !is_full);
         }
-        self.erase_btn.mutate(ctx, |ctx, btn| {
-            btn.show_if(ctx, !is_empty);
-            btn.inner_mut().enable_if(ctx, !is_empty);
-        });
-        self.cancel_btn.mutate(ctx, |ctx, btn| {
-            btn.show_if(ctx, cancel_enabled);
-            btn.inner_mut().enable_if(ctx, is_empty);
-        });
-        self.confirm_btn
-            .mutate(ctx, |ctx, btn| btn.enable_if(ctx, !is_empty));
+        self.erase_btn.show_if(ctx, !is_empty);
+        self.erase_btn.inner_mut().enable_if(ctx, !is_empty);
+        self.cancel_btn.show_if(ctx, cancel_enabled);
+        self.cancel_btn.inner_mut().enable_if(ctx, is_empty);
+        self.confirm_btn.enable_if(ctx, !is_empty);
     }
 
     /// Scroll the visible prompts from the beginning. The prompts are visible
@@ -143,7 +136,7 @@ impl PinKeyboard {
     /// prompt. Their marquees are driven only while visible, so this is to be
     /// called whenever the visible prompts change.
     fn restart_prompts(&mut self, ctx: &mut EventCtx) {
-        if !self.textbox.inner().is_empty() {
+        if !self.textbox.is_empty() {
             return;
         }
         let now = Instant::now();
@@ -158,7 +151,7 @@ impl PinKeyboard {
     }
 
     pub fn pin(&self) -> &str {
-        self.textbox.inner().pin()
+        self.textbox.pin()
     }
 
     fn prompt_marquee(text: TString<'static>, style: TextStyle) -> Marquee {
@@ -255,7 +248,7 @@ impl Component for PinKeyboard {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         // Drive only the visible prompt marquees (see `restart_prompts`).
-        if self.textbox.inner().is_empty() {
+        if self.textbox.is_empty() {
             match &mut self.major_warning {
                 Some(w) => w.event(ctx, event),
                 None => self.major_prompt.event(ctx, event),
@@ -291,12 +284,12 @@ impl Component for PinKeyboard {
         }
         match self.erase_btn.event(ctx, event) {
             Some(ButtonMsg::Clicked) => {
-                self.textbox.mutate(ctx, |ctx, t| t.pop(ctx));
+                self.textbox.pop(ctx);
                 self.pin_modified(ctx);
                 return None;
             }
             Some(ButtonMsg::LongPressed) => {
-                self.textbox.mutate(ctx, |ctx, t| t.clear(ctx));
+                self.textbox.clear(ctx);
                 self.pin_modified(ctx);
                 return None;
             }
@@ -304,15 +297,13 @@ impl Component for PinKeyboard {
         }
         for btn in &mut self.digit_btns {
             if let Some(Clicked) = btn.event(ctx, event) {
-                if let ButtonContent::Text(text) = btn.inner().content() {
+                if let ButtonContent::Text(text) = btn.content() {
                     text.map(|text| {
-                        self.textbox.mutate(ctx, |ctx, t| t.push(ctx, text));
+                        self.textbox.push(ctx, text);
                     });
                     self.pin_modified(ctx);
-                    self.textbox.mutate(ctx, |ctx, t| {
-                        t.last_digit_timer.start(ctx, LAST_DIGIT_TIMEOUT);
-                        t.display_style = DisplayStyle::LastOnly;
-                    });
+                    self.textbox.last_digit_timer.start(ctx, LAST_DIGIT_TIMEOUT);
+                    self.textbox.display_style = DisplayStyle::LastOnly;
                     self.textbox.request_complete_repaint(ctx);
                     ctx.request_paint();
                     return None;
@@ -325,7 +316,7 @@ impl Component for PinKeyboard {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.erase_btn.render(target);
         self.textbox_pad.render(target);
-        if self.textbox.inner().is_empty() {
+        if self.textbox.is_empty() {
             if let Some(ref w) = self.major_warning {
                 w.render(target);
             } else {
@@ -565,7 +556,7 @@ impl crate::trace::Trace for PinKeyboard {
         // So that debuglink knows the locations of the buttons
         let mut digits_order = ShortString::new();
         for btn in self.digit_btns.iter() {
-            let btn_content = btn.inner().content();
+            let btn_content = btn.content();
 
             if let ButtonContent::Text(text) = btn_content {
                 text.map(|text| {
@@ -573,9 +564,9 @@ impl crate::trace::Trace for PinKeyboard {
                 });
             }
         }
-        let display_style = uformat!("{:?}", self.textbox.inner().display_style);
+        let display_style = uformat!("{:?}", self.textbox.display_style);
         t.string("digits_order", digits_order.as_str().into());
-        t.string("pin", self.textbox.inner().pin().into());
+        t.string("pin", self.textbox.pin().into());
         t.string("display_style", display_style.as_str().into());
     }
 }

@@ -4,7 +4,7 @@ use super::super::theme::bootloader::{
     button_bld, button_bld_menu, text_title, BLD_BG, BUTTON_HEIGHT, CONTENT_PADDING,
     CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, FIRE24, REFRESH24, TITLE_AREA, X32,
 };
-use crate::ui::component::{Child, Component, Event, EventCtx, Label, Pad};
+use crate::ui::component::{Component, Event, EventCtx, Label, Pad};
 use crate::ui::constant::{screen, WIDTH};
 use crate::ui::display::Icon;
 use crate::ui::geometry::{Insets, Point, Rect};
@@ -23,10 +23,10 @@ pub enum MenuMsg {
 
 pub struct Menu {
     bg: Pad,
-    title: Child<Label<'static>>,
-    close: Child<Button>,
-    reboot: Child<Button>,
-    reset: Child<Button>,
+    title: Label<'static>,
+    close: Button,
+    reboot: Button,
+    reset: Button,
 }
 
 impl Menu {
@@ -36,16 +36,13 @@ impl Menu {
 
         let mut instance = Self {
             bg: Pad::with_background(BLD_BG),
-            title: Child::new(
-                Label::left_aligned("BOOTLOADER".into(), text_title(BLD_BG)).vertically_centered(),
-            ),
-            close: Child::new(
-                Button::with_icon(Icon::new(X32))
-                    .styled(button_bld_menu())
-                    .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
-            ),
-            reboot: Child::new(Button::with_icon_and_text(content_reboot).styled(button_bld())),
-            reset: Child::new(Button::with_icon_and_text(content_reset).styled(button_bld())),
+            title: Label::left_aligned("BOOTLOADER".into(), text_title(BLD_BG))
+                .vertically_centered(),
+            close: Button::with_icon(Icon::new(X32))
+                .styled(button_bld_menu())
+                .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
+            reboot: Button::with_icon_and_text(content_reboot).styled(button_bld()),
+            reset: Button::with_icon_and_text(content_reset).styled(button_bld()),
         };
         instance.bg.clear();
         instance

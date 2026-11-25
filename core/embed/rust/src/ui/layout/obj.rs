@@ -293,9 +293,6 @@ impl LayoutObjInner {
             self.repaint = Repaint::Partial;
         }
 
-        // All concerning `Child` wrappers should have already marked themselves for
-        // painting by now, and we're prepared for a paint pass.
-
         // Drain any pending timers into the callback.
         while let Some((token, duration)) = self.event_ctx.pop_timer() {
             let token = token.try_into();

@@ -4,7 +4,7 @@ use super::super::theme::{
 };
 use super::{ResultFooter, ResultStyle};
 use crate::strutil::TString;
-use crate::ui::component::{Child, Component, Event, EventCtx, Label, Never, Pad};
+use crate::ui::component::{Component, Event, EventCtx, Label, Never, Pad};
 use crate::ui::constant::screen;
 use crate::ui::geometry::{Alignment2D, Point, Rect};
 use crate::ui::shape;
@@ -21,9 +21,9 @@ const STYLE: &ResultStyle = &theme::RESULT_ERROR;
 
 pub struct ErrorScreen<'a> {
     bg: Pad,
-    title: Child<Label<'a>>,
-    message: Child<Label<'a>>,
-    footer: Child<ResultFooter<'a>>,
+    title: Label<'a>,
+    message: Label<'a>,
+    footer: ResultFooter<'a>,
 }
 
 impl<'a> ErrorScreen<'a> {
@@ -37,9 +37,9 @@ impl<'a> ErrorScreen<'a> {
 
         Self {
             bg: Pad::with_background(FATAL_ERROR_COLOR).with_clear(),
-            title: Child::new(title),
-            message: Child::new(message),
-            footer: Child::new(footer),
+            title,
+            message,
+            footer,
         }
     }
 }

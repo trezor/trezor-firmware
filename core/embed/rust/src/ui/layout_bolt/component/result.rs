@@ -3,7 +3,7 @@ use super::super::fonts;
 use super::super::theme::{FG, RESULT_FOOTER_START, RESULT_PADDING};
 use crate::strutil::TString;
 use crate::ui::component::text::TextStyle;
-use crate::ui::component::{Child, Component, Event, EventCtx, Label, Never, Pad};
+use crate::ui::component::{Component, Event, EventCtx, Label, Never, Pad};
 use crate::ui::constant::screen;
 use crate::ui::display::{Color, Icon};
 use crate::ui::geometry::{Alignment2D, Insets, Offset, Point, Rect};
@@ -100,8 +100,8 @@ pub struct ResultScreen<'a> {
     footer_pad: Pad,
     style: &'a ResultStyle,
     icon: Icon,
-    message: Child<Label<'a>>,
-    footer: Child<ResultFooter<'a>>,
+    message: Label<'a>,
+    footer: ResultFooter<'a>,
 }
 
 impl<'a> ResultScreen<'a> {
@@ -117,8 +117,8 @@ impl<'a> ResultScreen<'a> {
             footer_pad: Pad::with_background(style.bg_color),
             style,
             icon,
-            message: Child::new(Label::centered(message, style.message_style())),
-            footer: Child::new(ResultFooter::new(footer, style)),
+            message: Label::centered(message, style.message_style()),
+            footer: ResultFooter::new(footer, style),
         };
 
         if complete_draw {

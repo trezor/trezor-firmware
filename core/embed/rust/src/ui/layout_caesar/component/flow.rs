@@ -5,7 +5,7 @@ use super::{
     CancelConfirmMsg, FlowPages, Page, ScrollBar,
 };
 use crate::strutil::TString;
-use crate::ui::component::{Child, Component, ComponentExt, Event, EventCtx, Pad, Paginate};
+use crate::ui::component::{Component, ComponentExt, Event, EventCtx, Pad, Paginate};
 use crate::ui::constant::SCREEN;
 use crate::ui::geometry::Rect;
 use crate::ui::shape::Renderer;
@@ -21,11 +21,11 @@ where
     /// Title being shown at the top in bold upper
     title: Option<Title>,
     has_common_title: bool,
-    scrollbar: Child<ScrollBar>,
+    scrollbar: ScrollBar,
     content_area: Rect,
     title_area: Rect,
     pad: Pad,
-    buttons: Child<ButtonController>,
+    buttons: ButtonController,
     page_counter: usize,
     return_confirmed_index: bool,
 }
@@ -44,12 +44,12 @@ where
             has_common_title: false,
             content_area: Rect::zero(),
             title_area: Rect::zero(),
-            scrollbar: Child::new(ScrollBar::to_be_filled_later()),
+            scrollbar: ScrollBar::to_be_filled_later(),
             pad: Pad::with_background(theme::BG),
             // Setting empty layout for now, we do not yet know how many sub-pages the first page
             // has. Initial button layout will be set in `place()` after we can call
             // `content.page_count()`.
-            buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
+            buttons: ButtonController::new(ButtonLayout::empty()),
             page_counter: 0,
             return_confirmed_index: false,
         }
@@ -76,7 +76,7 @@ where
     /// Getting new current page according to page counter.
     /// Also updating the possible title and moving the scrollbar to correct
     /// position.
-    fn change_current_page(&mut self, ctx: &mut EventCtx) {
+    fn change_current_page(&mut self) {
         self.current_page = self.pages.get(self.page_counter);
         if !self.has_common_title {
             if let Some(title) = self.current_page.title() {
@@ -91,18 +91,16 @@ where
         let scrollbar_active_index = self
             .pages
             .scrollbar_page_index(self.content_area, self.page_counter);
-        self.scrollbar.mutate(ctx, |_ctx, scrollbar| {
-            scrollbar.change_page(scrollbar_active_index);
-        });
+        self.scrollbar.change_page(scrollbar_active_index);
     }
 
     /// Placing current page, setting current buttons and clearing.
     fn update(&mut self, ctx: &mut EventCtx, get_new_page: bool) {
         if get_new_page {
-            self.change_current_page(ctx);
+            self.change_current_page();
             self.current_page.place(self.content_area);
         }
-        self.set_buttons(ctx);
+        self.set_buttons();
         self.scrollbar.request_complete_repaint(ctx);
         self.clear_and_repaint(ctx);
     }
@@ -147,11 +145,9 @@ where
     /// All three buttons are handled based upon the current choice.
     /// If defined in the current choice, setting their text,
     /// whether they are long-pressed, and painting them.
-    fn set_buttons(&mut self, ctx: &mut EventCtx) {
+    fn set_buttons(&mut self) {
         let btn_layout = self.current_page.btn_layout();
-        self.buttons.mutate(ctx, |_ctx, buttons| {
-            buttons.set(btn_layout);
-        });
+        self.buttons.set(btn_layout);
     }
 
     /// Current choice is still the same, only its inner state has changed
@@ -161,10 +157,8 @@ where
             .pages
             .scrollbar_page_index(self.content_area, self.page_counter);
         let inner_page = self.current_page.pager().current();
-        self.scrollbar.mutate(ctx, |ctx, scrollbar| {
-            scrollbar.change_page(preceding_pages + inner_page);
-            scrollbar.request_complete_repaint(ctx);
-        });
+        self.scrollbar.change_page(preceding_pages + inner_page);
+        self.scrollbar.request_complete_repaint(ctx);
         self.update(ctx, false);
     }
 
@@ -204,14 +198,14 @@ where
         // Finding out the total amount of pages in this flow
         let complete_page_count = self.pages.scrollbar_page_count(content_area);
         // Redefining scrollbar now when we have its page_count
-        self.scrollbar = Child::new(ScrollBar::new(complete_page_count));
+        self.scrollbar = ScrollBar::new(complete_page_count);
 
         // Placing a title and scrollbar in case the title is there
         // (scrollbar will be active - counting pages - even when not placed and
         // painted)
         if self.title.is_some() {
             let (title_area, scrollbar_area) =
-                title_area.split_right(self.scrollbar.inner().overall_width() + SCROLLBAR_SPACE);
+                title_area.split_right(self.scrollbar.overall_width() + SCROLLBAR_SPACE);
 
             self.title.place(title_area);
             self.title_area = title_area;
@@ -220,7 +214,7 @@ where
 
         // We finally found how long is the first page, and can set its button layout.
         self.current_page.place(content_area);
-        self.buttons = Child::new(ButtonController::new(self.current_page.btn_layout()));
+        self.buttons = ButtonController::new(self.current_page.btn_layout());
 
         self.pad.place(title_content_area);
         self.buttons.place(button_area);

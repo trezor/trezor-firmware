@@ -6,7 +6,7 @@ use crate::strutil::{ShortString, TString};
 use crate::translations::TR;
 use crate::trezorhal::random;
 use crate::ui::component::text::common::TextBox;
-use crate::ui::component::{Child, Component, ComponentExt, Event, EventCtx};
+use crate::ui::component::{Component, ComponentExt, Event, EventCtx};
 use crate::ui::display::Icon;
 use crate::ui::geometry::Rect;
 use crate::ui::shape::Renderer;
@@ -262,7 +262,7 @@ impl ChoiceFactory for ChoiceFactoryPassphrase {
 /// Component for entering a passphrase.
 pub struct PassphraseEntry {
     choice_page: ChoicePage<ChoiceFactoryPassphrase, PassphraseAction>,
-    passphrase_dots: Child<ChangingTextLine>,
+    passphrase_dots: ChangingTextLine,
     show_plain_passphrase: bool,
     show_last_digit: bool,
     textbox: TextBox,
@@ -276,7 +276,7 @@ impl PassphraseEntry {
             choice_page: ChoicePage::new(ChoiceFactoryPassphrase::new(ChoiceCategory::Menu, true))
                 .with_initial_page_counter(random_menu_position())
                 .with_controls(ChoiceControls::Carousel),
-            passphrase_dots: Child::new(ChangingTextLine::center_mono("", max_len)),
+            passphrase_dots: ChangingTextLine::center_mono("", max_len),
             show_plain_passphrase: false,
             show_last_digit: false,
             textbox: TextBox::empty(max_len),
@@ -309,10 +309,8 @@ impl PassphraseEntry {
             unwrap!(dots.push(last_char));
             dots
         };
-        self.passphrase_dots.mutate(ctx, |ctx, passphrase_dots| {
-            passphrase_dots.update_text(&text_to_show);
-            passphrase_dots.request_complete_repaint(ctx);
-        });
+        self.passphrase_dots.update_text(&text_to_show);
+        self.passphrase_dots.request_complete_repaint(ctx);
     }
 
     fn append_char(&mut self, ctx: &mut EventCtx, ch: char) {
@@ -375,7 +373,7 @@ impl Component for PassphraseEntry {
     type Msg = CancelConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let passphrase_area_height = self.passphrase_dots.inner().needed_height();
+        let passphrase_area_height = self.passphrase_dots.needed_height();
         let (passphrase_area, choice_area) = bounds.split_top(passphrase_area_height);
         self.passphrase_dots.place(passphrase_area);
         self.choice_page.place(choice_area);

@@ -1,7 +1,7 @@
 use super::{theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos};
 use crate::micropython::Error;
 use crate::strutil::TString;
-use crate::ui::component::{Child, Component, Event, EventCtx, Pad, Qr};
+use crate::ui::component::{Component, Event, EventCtx, Pad, Qr};
 use crate::ui::geometry::Rect;
 use crate::ui::shape::Renderer;
 
@@ -12,7 +12,7 @@ const QR_BORDER: i16 = 3;
 pub struct AddressDetails {
     qr_code: Qr,
     pad: Pad,
-    buttons: Child<ButtonController>,
+    buttons: ButtonController,
 }
 
 impl AddressDetails {
@@ -23,11 +23,11 @@ impl AddressDetails {
         Ok(Self {
             qr_code,
             pad: Pad::with_background(theme::BG).with_clear(),
-            buttons: Child::new(ButtonController::new(ButtonLayout::new(
+            buttons: ButtonController::new(ButtonLayout::new(
                 Some(ButtonDetails::cancel_icon()),
                 None,
                 None,
-            ))),
+            )),
         })
     }
 }

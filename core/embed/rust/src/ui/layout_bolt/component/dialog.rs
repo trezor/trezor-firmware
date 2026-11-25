@@ -5,7 +5,7 @@ use crate::ui::component::text::paragraphs::{
     Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
 };
 use crate::ui::component::text::{PageBreaking, TextStyle};
-use crate::ui::component::{Child, Component, Empty, Event, EventCtx, Never, Paginate};
+use crate::ui::component::{Component, Empty, Event, EventCtx, Never, Paginate};
 use crate::ui::geometry::{Insets, LinearPlacement, Rect};
 use crate::ui::shape::Renderer;
 use crate::ui::util::Pager;
@@ -17,8 +17,8 @@ pub enum DialogMsg<T, U> {
 }
 
 pub struct Dialog<T, U> {
-    content: Child<T>,
-    controls: Child<U>,
+    content: T,
+    controls: U,
 }
 
 impl<T, U> Dialog<T, U>
@@ -27,14 +27,11 @@ where
     U: Component,
 {
     pub fn new(content: T, controls: U) -> Self {
-        Self {
-            content: Child::new(content),
-            controls: Child::new(controls),
-        }
+        Self { content, controls }
     }
 
     pub fn inner(&self) -> &T {
-        self.content.inner()
+        &self.content
     }
 }
 
@@ -88,9 +85,9 @@ const TEXT_NORMAL_OFF_WHITE_CUT: TextStyle =
 const TEXT_MONO_DATA_CUT: TextStyle = theme::TEXT_MONO_DATA.with_page_breaking(PageBreaking::Cut);
 
 pub struct IconDialog<U> {
-    image: Option<Child<BlendedImage>>,
+    image: Option<BlendedImage>,
     paragraphs: Paragraphs<ParagraphVecShort<'static>>,
-    controls: Child<U>,
+    controls: U,
     allow_pagination: bool,
 }
 
@@ -116,7 +113,7 @@ where
             let style = Self::style(allow_pagination, &theme::TEXT_DEMIBOLD, &TEXT_DEMIBOLD_CUT);
             let title = Paragraph::new(style, title).centered();
             let para = ParagraphVecShort::from_iter([title]);
-            (Some(Child::new(icon)), para)
+            (Some(icon), para)
         } else {
             (None, ParagraphVecShort::new())
         };
@@ -127,7 +124,7 @@ where
                     .align_at_center()
                     .with_spacing(Self::VALUE_SPACE),
             ),
-            controls: Child::new(controls),
+            controls,
             allow_pagination,
         }
     }
@@ -181,13 +178,13 @@ where
     pub fn new_shares(lines: [impl Into<TString<'static>>; 4], controls: U) -> Self {
         let [l0, l1, l2, l3] = lines;
         Self {
-            image: Some(Child::new(BlendedImage::new(
+            image: Some(BlendedImage::new(
                 theme::IMAGE_BG_CIRCLE,
                 theme::IMAGE_FG_SUCCESS,
                 theme::SUCCESS_COLOR,
                 theme::FG,
                 theme::BG,
-            ))),
+            )),
             paragraphs: ParagraphVecShort::from_iter([
                 Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, l0).centered(),
                 Paragraph::new(&theme::TEXT_DEMIBOLD, l1).centered(),
@@ -196,7 +193,7 @@ where
             ])
             .into_paragraphs()
             .with_placement(LinearPlacement::vertical().align_at_center()),
-            controls: Child::new(controls),
+            controls,
             allow_pagination: false,
         }
     }

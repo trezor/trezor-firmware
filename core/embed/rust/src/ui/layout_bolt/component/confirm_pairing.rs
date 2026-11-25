@@ -7,7 +7,7 @@ use super::theme::WHITE;
 use super::Button;
 use super::ButtonMsg::Clicked;
 use crate::strutil::format_i64;
-use crate::ui::component::{Child, Component, Event, EventCtx, Label, Pad};
+use crate::ui::component::{Component, Event, EventCtx, Label, Pad};
 use crate::ui::display::Color;
 use crate::ui::event::BLEEvent;
 use crate::ui::geometry::{Offset, Point, Rect};
@@ -35,8 +35,8 @@ pub struct ConfirmPairing<'a> {
     bg_color: Color,
     title: Label<'a>,
     code: u32,
-    left_button: Child<Button>,
-    right_button: Child<Button>,
+    left_button: Button,
+    right_button: Button,
 }
 
 impl<'a> ConfirmPairing<'a> {
@@ -52,8 +52,8 @@ impl<'a> ConfirmPairing<'a> {
             content_pad: Pad::with_background(bg_color),
             bg_color,
             title,
-            left_button: Child::new(left_button),
-            right_button: Child::new(right_button),
+            left_button,
+            right_button,
             code,
         }
     }

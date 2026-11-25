@@ -6,7 +6,7 @@ use super::super::theme::bootloader::{
     CONTENT_PADDING, CORNER_BUTTON_AREA, MENU32, TEXT_NORMAL, TEXT_WARNING, TITLE_AREA,
 };
 use crate::strutil::TString;
-use crate::ui::component::{Child, Component, Event, EventCtx, Label, Pad};
+use crate::ui::component::{Component, Event, EventCtx, Label, Pad};
 use crate::ui::constant::screen;
 use crate::ui::display::Icon;
 use crate::ui::geometry::{Alignment, Insets, Point, Rect};
@@ -21,33 +21,29 @@ pub enum IntroMsg {
 
 pub struct Intro<'a> {
     bg: Pad,
-    title: Child<Label<'a>>,
-    menu: Child<Button>,
-    host: Child<Button>,
-    text: Child<Label<'a>>,
-    warn: Option<Child<Label<'a>>>,
+    title: Label<'a>,
+    menu: Button,
+    host: Button,
+    text: Label<'a>,
+    warn: Option<Label<'a>>,
 }
 
 impl<'a> Intro<'a> {
     pub fn new(title: TString<'a>, content: TString<'a>, fw_ok: bool) -> Self {
         Self {
             bg: Pad::with_background(BLD_BG).with_clear(),
-            title: Child::new(Label::left_aligned(title, text_title(BLD_BG)).vertically_centered()),
-            menu: Child::new(
-                Button::with_icon(Icon::new(MENU32))
-                    .styled(button_bld_menu())
-                    .with_expanded_touch_area(Insets::uniform(13)),
-            ),
-            host: Child::new(
-                Button::with_text("INITIATE CONNECTION".into())
-                    .styled(button_bld())
-                    .with_text_align(Alignment::Center),
-            ),
-            text: Child::new(Label::left_aligned(content, TEXT_NORMAL).vertically_centered()),
-            warn: (!fw_ok).then_some(Child::new(
+            title: Label::left_aligned(title, text_title(BLD_BG)).vertically_centered(),
+            menu: Button::with_icon(Icon::new(MENU32))
+                .styled(button_bld_menu())
+                .with_expanded_touch_area(Insets::uniform(13)),
+            host: Button::with_text("INITIATE CONNECTION".into())
+                .styled(button_bld())
+                .with_text_align(Alignment::Center),
+            text: Label::left_aligned(content, TEXT_NORMAL).vertically_centered(),
+            warn: (!fw_ok).then_some(
                 Label::new("FIRMWARE CORRUPTED".into(), Alignment::Start, TEXT_WARNING)
                     .vertically_centered(),
-            )),
+            ),
         }
     }
 }

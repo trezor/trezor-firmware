@@ -1,4 +1,4 @@
-use crate::ui::component::{Child, Component, Event, EventCtx, Label, Never, Pad};
+use crate::ui::component::{Component, Event, EventCtx, Label, Never, Pad};
 use crate::ui::constant::{screen, HEIGHT, WIDTH};
 use crate::ui::display::{Color, Icon};
 use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
@@ -17,8 +17,8 @@ pub struct ResultScreen<'a> {
     fg_color: Color,
     bg_color: Color,
     icon: Icon,
-    message_top: Child<Label<'static>>,
-    message_bottom: Child<Label<'a>>,
+    message_top: Label<'static>,
+    message_bottom: Label<'a>,
 }
 
 impl<'a> ResultScreen<'a> {
@@ -36,8 +36,8 @@ impl<'a> ResultScreen<'a> {
             fg_color,
             bg_color,
             icon,
-            message_top: Child::new(title),
-            message_bottom: Child::new(content),
+            message_top: title,
+            message_bottom: content,
         };
 
         if complete_draw {
@@ -58,7 +58,7 @@ impl Component for ResultScreen<'_> {
         let bottom_area = Rect::new(Point::new(0, FOOTER_AREA_START), Point::new(WIDTH, HEIGHT));
 
         self.message_bottom.place(bottom_area);
-        let h = self.message_bottom.inner().text_height(WIDTH);
+        let h = self.message_bottom.text_height(WIDTH);
 
         if h > 8 {
             self.message_top.place(Rect::new(

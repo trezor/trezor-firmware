@@ -6,7 +6,7 @@ use super::{theme, CancelConfirmMsg, ScrollBar};
 use crate::strutil::TString;
 use crate::ui::component::image::Image;
 use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource, Paragraphs};
-use crate::ui::component::{Child, Component, Event, EventCtx, Label, Paginate};
+use crate::ui::component::{Component, Event, EventCtx, Label, Paginate};
 use crate::ui::display;
 use crate::ui::geometry::{Insets, Rect};
 use crate::ui::shape::{self, Renderer};
@@ -28,7 +28,7 @@ pub struct FidoConfirm<F: Fn(usize) -> TString<'static>, U> {
     page_swipe: Swipe,
     app_name: Label<'static>,
     account_name: Paragraphs<Paragraph<'static>>,
-    icon: Child<Image>,
+    icon: Image,
     /// Function/closure that will return appropriate page on demand.
     get_account: F,
     scrollbar: ScrollBar,
@@ -68,7 +68,7 @@ where
             )
             .into_paragraphs(),
             page_swipe,
-            icon: Child::new(Image::new(icon_data)),
+            icon: Image::new(icon_data),
             get_account,
             scrollbar,
             fade: Cell::new(false),

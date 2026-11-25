@@ -1,7 +1,6 @@
 use heapless::Vec;
 use sys::time::Duration;
 
-use super::Paginate;
 use crate::strutil::{ShortString, TString};
 use crate::ui::button_request::{ButtonRequest, ButtonRequestCode};
 use crate::ui::component::{MsgMap, PageMap};
@@ -18,7 +17,6 @@ use crate::ui::event::{SwipeEvent, TouchEvent};
 use crate::ui::geometry::Direction;
 use crate::ui::geometry::{Offset, Rect};
 use crate::ui::shape::Renderer;
-use crate::ui::util::Pager;
 use crate::ui::UIError;
 
 /// Type used by components that do not return any messages.
@@ -59,94 +57,6 @@ pub trait Component {
 
     /// Render to screen, based on current internal state.
     fn render<'s>(&'s self, _target: &mut impl Renderer<'s>);
-}
-
-/// Components should always avoid unnecessary overpaint to prevent obvious
-/// tearing and flickering. `Child` wraps an inner component `T`. Any mutation
-/// of `T` has to happen through the `mutate` accessor, `T` can then request a
-/// paint call to be scheduled later by calling `EventCtx::request_paint` in its
-/// `event` pass.
-#[derive(Clone)]
-pub struct Child<T> {
-    component: T,
-}
-
-impl<T> Child<T> {
-    pub const fn new(component: T) -> Self {
-        Self { component }
-    }
-
-    pub fn inner(&self) -> &T {
-        &self.component
-    }
-
-    pub fn into_inner(self) -> T {
-        self.component
-    }
-
-    /// Access inner component mutably, track whether a paint call has been
-    /// requested, and propagate the flag upwards the component tree.
-    pub fn mutate<F, U>(&mut self, ctx: &mut EventCtx, component_func: F) -> U
-    where
-        F: FnOnce(&mut EventCtx, &mut T) -> U,
-    {
-        let prev_requested = core::mem::replace(&mut ctx.paint_requested, false);
-        let result = component_func(ctx, &mut self.component);
-        if !ctx.paint_requested {
-            // Paint has not been requested in the *inner* component, but we need to
-            // preserve the previous flag carried in `ctx` so it properly propagates
-            // upwards (i.e. from our previous siblings).
-            ctx.paint_requested = prev_requested;
-        }
-        result
-    }
-}
-
-impl<T> Component for Child<T>
-where
-    T: Component,
-{
-    type Msg = T::Msg;
-
-    fn place(&mut self, bounds: Rect) -> Rect {
-        self.component.place(bounds)
-    }
-
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.mutate(ctx, |ctx, c| {
-            // Handle the internal invalidation event here, so components don't have to. We
-            // still pass it inside, so the event propagates correctly to all components in
-            // the sub-tree.
-            if matches!(event, Event::RequestPaint | Event::Attach(_)) {
-                ctx.request_paint();
-            }
-            c.event(ctx, event)
-        })
-    }
-
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.component.render(target);
-    }
-}
-
-impl<T: Paginate> Paginate for Child<T> {
-    fn pager(&self) -> Pager {
-        self.component.pager()
-    }
-
-    fn change_page(&mut self, active_page: u16) {
-        self.component.change_page(active_page);
-    }
-}
-
-#[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Child<T>
-where
-    T: crate::trace::Trace,
-{
-    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        self.component.trace(t)
-    }
 }
 
 impl<M, T, U> Component for (T, U)
@@ -245,7 +155,6 @@ where
 pub trait ComponentExt: Sized {
     fn map<F>(self, func: F) -> MsgMap<Self, F>;
     fn with_pages<F>(self, func: F) -> PageMap<Self, F>;
-    fn into_child(self) -> Child<Self>;
     fn request_complete_repaint(&mut self, ctx: &mut EventCtx);
 }
 
@@ -261,10 +170,6 @@ where
         PageMap::new(self, func)
     }
 
-    fn into_child(self) -> Child<Self> {
-        Child::new(self)
-    }
-
     fn request_complete_repaint(&mut self, ctx: &mut EventCtx) {
         if self.event(ctx, Event::RequestPaint).is_some() {
             // Messages raised during a `RequestPaint` dispatch are not propagated, let's
@@ -272,9 +177,7 @@ where
             #[cfg(feature = "ui_debug")]
             fatal_error!("Cannot raise messages during RequestPaint");
         }
-        // Make sure to at least a propagate the paint flag upwards (in case there are
-        // no `Child` instances in `self`, paint would not get automatically requested
-        // by sending `Event::RequestPaint` down the tree).
+        // Make sure to propagate the paint flag upwards.
         ctx.request_paint();
     }
 }
@@ -364,8 +267,8 @@ pub enum Event {
     /// params are responsible for unpacking and applying them.
     #[cfg(feature = "micropython")]
     UpdateParams(ParamsObj),
-    /// Internally-handled event to inform all `Child` wrappers in a sub-tree to
-    /// get scheduled for painting.
+    /// Internally-handled event to inform all components in a sub-tree that
+    /// they are going to be repainted.
     RequestPaint,
     /// Swipe and transition events
     #[cfg(feature = "touch")]
@@ -542,7 +445,7 @@ impl EventCtx {
 
     /// Indicate that the inner state of the component has changed, any screen
     /// content it has painted before is now invalid, and it should be painted
-    /// again by the nearest `Child` wrapper.
+    /// again.
     pub fn request_paint(&mut self) {
         self.paint_requested = true;
     }

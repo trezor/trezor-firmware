@@ -3,7 +3,7 @@ use core::mem;
 use super::super::{cshape, fonts, theme};
 use crate::strutil::TString;
 use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
-use crate::ui::component::{Child, Component, Event, EventCtx, Label, Never, Pad};
+use crate::ui::component::{Component, Event, EventCtx, Label, Never, Pad};
 use crate::ui::display::{Icon, LOADER_MAX};
 use crate::ui::geometry::{Alignment2D, Offset, Rect};
 use crate::ui::shape::Renderer;
@@ -15,11 +15,11 @@ const LOADER_Y_OFFSET_TITLE: i16 = -10;
 const LOADER_Y_OFFSET_NO_TITLE: i16 = -20;
 
 pub struct Progress {
-    title: Option<Child<Label<'static>>>,
+    title: Option<Label<'static>>,
     value: u16,
     loader_y_offset: i16,
     indeterminate: bool,
-    description: Child<Paragraphs<Paragraph<'static>>>,
+    description: Paragraphs<Paragraph<'static>>,
     description_pad: Pad,
     icon: Icon,
 }
@@ -33,16 +33,16 @@ impl Progress {
             value: 0,
             loader_y_offset: 0,
             indeterminate,
-            description: Child::new(Paragraphs::new(
+            description: Paragraphs::new(
                 Paragraph::new(&theme::TEXT_NORMAL, description).centered(),
-            )),
+            ),
             description_pad: Pad::with_background(theme::BG),
             icon: theme::ICON_TICK_FAT,
         }
     }
 
     pub fn with_title(mut self, title: TString<'static>) -> Self {
-        self.title = Some(Child::new(Label::centered(title, theme::TEXT_BOLD_UPPER)));
+        self.title = Some(Label::centered(title, theme::TEXT_BOLD_UPPER));
         self
     }
 
@@ -73,19 +73,18 @@ impl Component for Progress {
         let description_lines = 1 + self
             .description
             .inner()
-            .inner()
             .content()
             .map(|t| t.chars().filter(|c| *c == '\n').count() as i16);
 
         let no_title_case = (Rect::zero(), Self::AREA);
         let (title, rest, single_line_title) = if let Some(self_title) = &self.title {
-            if !self_title.inner().text().is_empty() {
+            if !self_title.text().is_empty() {
                 // Give the title as much height as it needs when wrapped to
                 // the screen width, so that longer translations do not
                 // overflow the (otherwise single-line) title area.
-                let title_height = self_title.inner().text_height(Self::AREA.width());
+                let title_height = self_title.text_height(Self::AREA.width());
                 let (title, rest) = Self::AREA.split_top(title_height);
-                let single_line = title_height <= self_title.inner().max_size().y;
+                let single_line = title_height <= self_title.max_size().y;
                 (title, rest, single_line)
             } else {
                 let (title, rest) = no_title_case;
@@ -125,15 +124,13 @@ impl Component for Progress {
             if mem::replace(&mut self.value, new_value) != new_value {
                 self.request_paint(ctx);
             }
-            self.description.mutate(ctx, |ctx, para| {
-                // NOTE: not doing any change for empty new descriptions
-                // (currently, there is no use-case for deleting the description)
-                if !new_description.is_empty() && para.content() != &new_description {
-                    para.update(new_description);
-                    ctx.request_paint();
-                    self.description_pad.clear();
-                }
-            });
+            // NOTE: not doing any change for empty new descriptions
+            // (currently, there is no use-case for deleting the description)
+            if !new_description.is_empty() && self.description.content() != &new_description {
+                self.description.update(new_description);
+                ctx.request_paint();
+                self.description_pad.clear();
+            }
         } else {
             self.title.event(ctx, event);
             self.description.event(ctx, event);

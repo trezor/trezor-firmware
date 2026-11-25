@@ -9,7 +9,7 @@ use crate::io::BinaryData;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::trezorhal::usb::usb_configured;
-use crate::ui::component::{Child, Component, Event, EventCtx, Label, Marquee};
+use crate::ui::component::{Component, Event, EventCtx, Label, Marquee};
 use crate::ui::constant::{HEIGHT, WIDTH};
 use crate::ui::display::image::{ImageInfo, ToifFormat};
 use crate::ui::display::{Font, Icon};
@@ -56,17 +56,15 @@ enum CurrentScreen {
 }
 
 pub struct Homescreen {
-    // TODO label should be a Child in theory, but the homescreen image is not, so it is
-    // always painted, so we need to always paint the label too
     label: Marquee,
     notification: Option<Notification>,
     /// Notification text that does not fit is scrolling in this marquee.
     notification_marquee: Marquee,
     custom_image: Option<BinaryData<'static>>,
     /// Used for HTC functionality to lock device from homescreen
-    invisible_buttons: Child<ButtonController>,
+    invisible_buttons: ButtonController,
     /// Holds the loader component
-    loader: Option<Child<ProgressLoader>>,
+    loader: Option<ProgressLoader>,
     /// Whether to show the loader or not
     show_loader: bool,
     /// Which screen is currently shown
@@ -82,8 +80,7 @@ impl Homescreen {
         // Buttons will not be visible, we only need both left and right to be existing
         // so we can get the events from them.
         let invisible_btn_layout = ButtonLayout::text_none_text("".into(), "".into());
-        let loader =
-            loader_description.map(|desc| Child::new(ProgressLoader::new(desc, HOLD_TO_LOCK_MS)));
+        let loader = loader_description.map(|desc| ProgressLoader::new(desc, HOLD_TO_LOCK_MS));
 
         Self {
             label: Marquee::new(label, fonts::FONT_BIG, theme::FG, theme::BG)
@@ -96,7 +93,7 @@ impl Homescreen {
                 theme::BG,
             ),
             custom_image: get_homescreen_image(),
-            invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
+            invisible_buttons: ButtonController::new(invisible_btn_layout),
             loader,
             show_loader: false,
             current_screen: CurrentScreen::EmptyAtStart,
@@ -258,6 +255,12 @@ impl Component for Homescreen {
         // Only care about button and loader events when there is a possibility of
         // locking the device
         if let Some(self_loader) = &mut self.loader {
+            if let Event::Attach(_) = event {
+                // Request a repaint on attach, even if `skip_first_paint` was used (this
+                // was previously done implicitly by the removed `Child` wrapper).
+                ctx.request_paint();
+            }
+
             // When loader has completely grown, we can lock the device
             if let Some(LoaderMsg::GrownCompletely) = self_loader.event(ctx, event) {
                 return Some(());
@@ -269,18 +272,14 @@ impl Component for Homescreen {
             if let Some(ButtonControllerMsg::Pressed(..)) = button_event {
                 if !self.show_loader {
                     self.show_loader = true;
-                    self_loader.mutate(ctx, |ctx, loader| {
-                        loader.start(ctx);
-                        ctx.request_paint();
-                    });
+                    self_loader.start(ctx);
+                    ctx.request_paint();
                 }
             }
             if let Some(ButtonControllerMsg::Triggered(..)) = button_event {
                 self.show_loader = false;
-                self_loader.mutate(ctx, |ctx, loader| {
-                    loader.stop(ctx);
-                    ctx.request_paint();
-                });
+                self_loader.stop(ctx);
+                ctx.request_paint();
             }
         }
 
@@ -302,10 +301,10 @@ impl Component for Homescreen {
 }
 
 pub struct Lockscreen<'a> {
-    label: Child<Label<'a>>,
-    instruction: Child<Label<'static>>,
+    label: Label<'a>,
+    instruction: Label<'static>,
     /// Used for unlocking the device from lockscreen
-    invisible_buttons: Child<ButtonController>,
+    invisible_buttons: ButtonController,
     /// Display coinjoin icon?
     coinjoin_icon: Option<Icon>,
     /// Screensaver mode (keep screen black)
@@ -323,9 +322,9 @@ impl<'a> Lockscreen<'a> {
             TR::homescreen__click_to_unlock
         };
         Self {
-            label: Child::new(Label::centered(label, theme::TEXT_BIG)),
-            instruction: Child::new(Label::centered(instruction_str.into(), theme::TEXT_NORMAL)),
-            invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
+            label: Label::centered(label, theme::TEXT_BIG),
+            instruction: Label::centered(instruction_str.into(), theme::TEXT_NORMAL),
+            invisible_buttons: ButtonController::new(invisible_btn_layout),
             coinjoin_icon: coinjoin_authorized.then_some(theme::ICON_COINJOIN),
             screensaver: !bootscreen,
         }
@@ -342,6 +341,12 @@ impl Component for Lockscreen<'_> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Event::Attach(_) = event {
+            // Request a repaint on attach, even if `skip_first_paint` was used (this
+            // was previously done implicitly by the removed `Child` wrapper).
+            ctx.request_paint();
+        }
+
         // Press of any button will unlock the device
         if let Some(ButtonControllerMsg::Triggered(..)) = self.invisible_buttons.event(ctx, event) {
             return Some(());
@@ -378,7 +383,7 @@ pub struct ConfirmHomescreen {
     title: Marquee,
     title_bar: Rect,
     image: BinaryData<'static>,
-    buttons: Child<ButtonController>,
+    buttons: ButtonController,
 }
 
 impl ConfirmHomescreen {
@@ -393,7 +398,7 @@ impl ConfirmHomescreen {
             ),
             title_bar: Rect::zero(),
             image,
-            buttons: Child::new(ButtonController::new(btn_layout)),
+            buttons: ButtonController::new(btn_layout),
         }
     }
 }

@@ -3,9 +3,8 @@ use super::{theme, Button, ButtonMsg};
 use crate::micropython::Error;
 use crate::strutil::{self, TString};
 use crate::translations::TR;
-use crate::ui::component::base::ComponentExt;
 use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
-use crate::ui::component::{Child, Component, Event, EventCtx, Pad};
+use crate::ui::component::{Component, Event, EventCtx, Pad};
 use crate::ui::geometry::{Alignment, Grid, GridCellSpan, Insets, Offset, Rect};
 use crate::ui::shape::{self, Renderer};
 
@@ -21,11 +20,11 @@ where
 {
     area: Rect,
     description_func: F,
-    input: Child<NumberInput>,
-    paragraphs: Child<Paragraphs<Paragraph<'static>>>,
+    input: NumberInput,
+    paragraphs: Paragraphs<Paragraph<'static>>,
     paragraphs_pad: Pad,
-    back_button: Child<Button>,
-    confirm_button: Child<Button>,
+    back_button: Button,
+    confirm_button: Button,
 }
 
 impl<F> NumberInputDialog<F>
@@ -37,28 +36,25 @@ where
         Ok(Self {
             area: Rect::zero(),
             description_func,
-            input: NumberInput::new(min, max, init_value).into_child(),
-            paragraphs: Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, text)).into_child(),
+            input: NumberInput::new(min, max, init_value),
+            paragraphs: Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, text)),
             paragraphs_pad: Pad::with_background(theme::BG),
-            back_button: Button::with_icon(theme::ICON_UP).into_child(),
+            back_button: Button::with_icon(theme::ICON_UP),
             confirm_button: Button::with_text(TR::buttons__continue.into())
-                .styled(theme::button_confirm())
-                .into_child(),
+                .styled(theme::button_confirm()),
         })
     }
 
     fn update_text(&mut self, ctx: &mut EventCtx, value: u32) {
         let text = (self.description_func)(value);
-        self.paragraphs.mutate(ctx, |ctx, p| {
-            p.update(text);
-            ctx.request_paint()
-        });
+        self.paragraphs.update(text);
+        ctx.request_paint();
         self.paragraphs_pad.clear();
         ctx.request_paint();
     }
 
     pub fn value(&self) -> u32 {
-        self.input.inner().value
+        self.input.value
     }
 }
 
@@ -136,8 +132,8 @@ pub enum NumberInputMsg {
 
 pub struct NumberInput {
     area: Rect,
-    dec: Child<Button>,
-    inc: Child<Button>,
+    dec: Button,
+    inc: Button,
     min: u32,
     max: u32,
     value: u32,
@@ -145,12 +141,8 @@ pub struct NumberInput {
 
 impl NumberInput {
     pub fn new(min: u32, max: u32, value: u32) -> Self {
-        let dec = Button::with_text("-".into())
-            .styled(theme::button_counter())
-            .into_child();
-        let inc = Button::with_text("+".into())
-            .styled(theme::button_counter())
-            .into_child();
+        let dec = Button::with_text("-".into()).styled(theme::button_counter());
+        let inc = Button::with_text("+".into()).styled(theme::button_counter());
         let value = value.clamp(min, max);
         Self {
             area: Rect::zero(),
@@ -185,10 +177,8 @@ impl Component for NumberInput {
             changed = true;
         };
         if changed {
-            self.dec
-                .mutate(ctx, |ctx, btn| btn.enable_if(ctx, self.value > self.min));
-            self.inc
-                .mutate(ctx, |ctx, btn| btn.enable_if(ctx, self.value < self.max));
+            self.dec.enable_if(ctx, self.value > self.min);
+            self.inc.enable_if(ctx, self.value < self.max);
             ctx.request_paint();
             return Some(NumberInputMsg::Changed(self.value));
         }

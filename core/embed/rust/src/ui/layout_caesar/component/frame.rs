@@ -5,7 +5,7 @@ use super::scrollbar::SCROLLBAR_SPACE;
 use super::title::Title;
 use super::{theme, ScrollBar};
 use crate::strutil::TString;
-use crate::ui::component::{Child, Component, ComponentExt, Event, EventCtx, Paginate};
+use crate::ui::component::{Component, ComponentExt, Event, EventCtx, Paginate};
 use crate::ui::geometry::{Insets, Rect};
 use crate::ui::shape::Renderer;
 use crate::ui::util::Pager;
@@ -16,7 +16,7 @@ where
     T: Component,
 {
     title: Title,
-    content: Child<T>,
+    content: T,
 }
 
 impl<T> Frame<T>
@@ -26,7 +26,7 @@ where
     pub fn new(title: TString<'static>, content: T) -> Self {
         Self {
             title: Title::new(title),
-            content: Child::new(content),
+            content,
         }
     }
 
@@ -37,7 +37,7 @@ where
     }
 
     pub fn inner(&self) -> &T {
-        self.content.inner()
+        &self.content
     }
 
     pub fn update_title(&mut self, ctx: &mut EventCtx, new_title: TString<'static>) {
@@ -48,11 +48,9 @@ where
     where
         F: Fn(&mut T) -> R,
     {
-        self.content.mutate(ctx, |ctx, c| {
-            let res = update_fn(c);
-            c.request_complete_repaint(ctx);
-            res
-        })
+        let res = update_fn(&mut self.content);
+        self.content.request_complete_repaint(ctx);
+        res
     }
 }
 
@@ -103,11 +101,11 @@ pub struct ScrollableFrame<T>
 where
     T: Component + Paginate,
 {
-    title: Option<Child<Title>>,
+    title: Option<Title>,
     /// Titles of the individual pages, replacing `title` when the page changes.
     page_titles: Vec<TString<'static>, MAX_PAGE_TITLES>,
     scrollbar: ScrollBar,
-    content: Child<T>,
+    content: T,
 }
 
 /// How many pages can have their own title in `ScrollableFrame`.
@@ -122,16 +120,16 @@ where
             title: None,
             page_titles: Vec::new(),
             scrollbar: ScrollBar::to_be_filled_later(),
-            content: Child::new(content),
+            content,
         }
     }
 
     pub fn inner(&self) -> &T {
-        self.content.inner()
+        &self.content
     }
 
     pub fn with_title(mut self, title: TString<'static>) -> Self {
-        self.title = Some(Child::new(Title::new(title)));
+        self.title = Some(Title::new(title));
         self
     }
 
@@ -154,7 +152,7 @@ where
         let (content_area, scrollbar_area, title_area) = if self.title.is_none() {
             // When the content fits on one page, no need for allocating place for scrollbar
             self.content.place(bounds);
-            let pager = self.content.inner().pager();
+            let pager = self.content.pager();
             self.scrollbar.set_pager(pager);
             if pager.is_single() {
                 (bounds, Rect::zero(), Rect::zero())
@@ -173,7 +171,7 @@ where
             // When there is only one page, do not allocate anything for scrollbar,
             // which would reduce the space for title
             self.content.place(content_area);
-            let pager = self.content.inner().pager();
+            let pager = self.content.pager();
             self.scrollbar.set_pager(pager);
             let (title_area, scrollbar_area) = if pager.is_single() {
                 (title_and_scrollbar_area, Rect::zero())
@@ -193,7 +191,7 @@ where
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let msg = self.content.event(ctx, event);
-        let content_active_page = self.content.inner().pager().current();
+        let content_active_page = self.content.pager().current();
         if self.scrollbar.pager().current() != content_active_page {
             self.scrollbar.change_page(content_active_page);
             self.scrollbar.request_complete_repaint(ctx);
@@ -202,10 +200,8 @@ where
                 .get(content_active_page as usize)
                 .or(self.page_titles.last());
             if let (Some(&page_title), Some(title)) = (page_title, &mut self.title) {
-                title.mutate(ctx, |ctx, title| {
-                    title.set_text(ctx, page_title);
-                    title.request_complete_repaint(ctx);
-                });
+                title.set_text(ctx, page_title);
+                title.request_complete_repaint(ctx);
             }
         }
         self.title.event(ctx, event);

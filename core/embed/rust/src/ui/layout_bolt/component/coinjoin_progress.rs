@@ -6,9 +6,7 @@ use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
 use crate::ui::component::base::Never;
-use crate::ui::component::{
-    Bar, Child, Component, ComponentExt, Empty, Event, EventCtx, Label, Split,
-};
+use crate::ui::component::{Bar, Component, Empty, Event, EventCtx, Label, Split};
 use crate::ui::geometry::{Insets, Offset, Rect};
 use crate::ui::shape::Renderer;
 use crate::ui::util::animation_disabled;
@@ -24,7 +22,7 @@ const LOADER_SPEED: u16 = 5;
 pub struct CoinJoinProgress<U> {
     value: u16,
     indeterminate: bool,
-    content: Child<Frame<Split<Empty, U>>>,
+    content: Frame<Split<Empty, U>>,
     // Label is not a child since circular loader paints large black rectangle which overlaps it.
     // To work around this, draw label every time loader is drawn.
     label: Label<'static>,
@@ -60,8 +58,7 @@ where
                 theme::label_title(),
                 TR::coinjoin__title_progress.into(),
                 Split::bottom(RECTANGLE_HEIGHT, 0, Empty, inner),
-            )
-            .into_child(),
+            ),
             label: Label::centered(text, theme::TEXT_NORMAL),
         })
     }
@@ -81,6 +78,11 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Event::Attach(_) = event {
+            // Request a repaint on attach, even if `skip_first_paint` was used (this
+            // was previously done implicitly by the removed `Child` wrapper).
+            ctx.request_paint();
+        }
         self.content.event(ctx, event);
         self.label.event(ctx, event);
         match event {

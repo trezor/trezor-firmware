@@ -7,7 +7,7 @@ use super::theme::WHITE;
 use super::ButtonMsg::Clicked;
 use super::{Button, ButtonStyleSheet};
 use crate::strutil::TString;
-use crate::ui::component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad};
+use crate::ui::component::{Component, ComponentExt, Event, EventCtx, Label, Pad};
 use crate::ui::constant::screen;
 use crate::ui::display::{Color, Icon};
 use crate::ui::geometry::{Alignment2D, Insets, Offset, Point, Rect};
@@ -34,10 +34,10 @@ pub enum ConfirmTitle {
 }
 
 pub struct ConfirmInfo<'a> {
-    pub title: Child<Label<'a>>,
-    pub text: Child<Label<'a>>,
-    pub info_button: Child<Button>,
-    pub close_button: Child<Button>,
+    pub title: Label<'a>,
+    pub text: Label<'a>,
+    pub info_button: Button,
+    pub close_button: Button,
 }
 
 pub struct Confirm<'a> {
@@ -45,10 +45,10 @@ pub struct Confirm<'a> {
     content_pad: Pad,
     bg_color: Color,
     title: ConfirmTitle,
-    message: Child<Label<'a>>,
-    alert: Option<Child<Label<'static>>>,
-    left_button: Child<Button>,
-    right_button: Child<Button>,
+    message: Label<'a>,
+    alert: Option<Label<'static>>,
+    left_button: Button,
+    right_button: Button,
     info: Option<ConfirmInfo<'a>>,
     show_info: bool,
 }
@@ -66,9 +66,9 @@ impl<'a> Confirm<'a> {
             content_pad: Pad::with_background(bg_color),
             bg_color,
             title,
-            message: Child::new(message.vertically_centered()),
-            left_button: Child::new(left_button),
-            right_button: Child::new(right_button),
+            message: message.vertically_centered(),
+            left_button,
+            right_button,
             alert: None,
             info: None,
             show_info: false,
@@ -76,7 +76,7 @@ impl<'a> Confirm<'a> {
     }
 
     pub fn with_alert(mut self, alert: Label<'static>) -> Self {
-        self.alert = Some(Child::new(alert.vertically_centered()));
+        self.alert = Some(alert.vertically_centered());
         self
     }
 
@@ -87,22 +87,14 @@ impl<'a> Confirm<'a> {
         menu_button: ButtonStyleSheet,
     ) -> Self {
         self.info = Some(ConfirmInfo {
-            title: Child::new(
-                Label::left_aligned(title, text_title(self.bg_color)).vertically_centered(),
-            ),
-            text: Child::new(
-                Label::left_aligned(text, text_fingerprint(self.bg_color)).vertically_centered(),
-            ),
-            info_button: Child::new(
-                Button::with_icon(Icon::new(INFO32))
-                    .styled(menu_button)
-                    .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
-            ),
-            close_button: Child::new(
-                Button::with_icon(Icon::new(X32))
-                    .styled(menu_button)
-                    .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
-            ),
+            title: Label::left_aligned(title, text_title(self.bg_color)).vertically_centered(),
+            text: Label::left_aligned(text, text_fingerprint(self.bg_color)).vertically_centered(),
+            info_button: Button::with_icon(Icon::new(INFO32))
+                .styled(menu_button)
+                .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
+            close_button: Button::with_icon(Icon::new(X32))
+                .styled(menu_button)
+                .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
         });
         self
     }
@@ -132,7 +124,7 @@ impl Component for Confirm<'_> {
         };
 
         if self.alert.is_some() {
-            let message_height = self.message.inner().text_height(content_area.width());
+            let message_height = self.message.text_height(content_area.width());
             self.message.place(Rect::from_top_left_and_size(
                 content_area.top_left(),
                 Offset::new(content_area.width(), message_height),

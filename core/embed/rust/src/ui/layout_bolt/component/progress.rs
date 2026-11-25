@@ -4,20 +4,19 @@ use super::super::cshape::{render_loader, LoaderRange};
 use super::super::{constant, fonts};
 use super::theme;
 use crate::strutil::TString;
-use crate::ui::component::base::ComponentExt;
 use crate::ui::component::text::paragraphs::{Paragraph, Paragraphs};
-use crate::ui::component::{Child, Component, Event, EventCtx, Label, Never, Pad};
+use crate::ui::component::{Component, Event, EventCtx, Label, Never, Pad};
 use crate::ui::display::LOADER_MAX;
 use crate::ui::geometry::{Insets, Offset, Rect};
 use crate::ui::shape::Renderer;
 use crate::ui::util::animation_disabled;
 
 pub struct Progress {
-    title: Child<Label<'static>>,
+    title: Label<'static>,
     value: u16,
     loader_y_offset: i16,
     indeterminate: bool,
-    description: Child<Paragraphs<Paragraph<'static>>>,
+    description: Paragraphs<Paragraph<'static>>,
     description_pad: Pad,
 }
 
@@ -30,14 +29,13 @@ impl Progress {
         description: TString<'static>,
     ) -> Self {
         Self {
-            title: Label::centered(title, theme::label_progress()).into_child(),
+            title: Label::centered(title, theme::label_progress()),
             value: 0,
             loader_y_offset: 0,
             indeterminate,
             description: Paragraphs::new(
                 Paragraph::new(&theme::TEXT_NORMAL, description).centered(),
-            )
-            .into_child(),
+            ),
             description_pad: Pad::with_background(theme::BG),
         }
     }
@@ -50,10 +48,9 @@ impl Component for Progress {
         let description_lines = 1 + self
             .description
             .inner()
-            .inner()
             .content()
             .map(|t| t.chars().filter(|c| *c == '\n').count() as i16);
-        let (title, rest) = Self::AREA.split_top(self.title.inner().max_size().y);
+        let (title, rest) = Self::AREA.split_top(self.title.max_size().y);
         let (loader, description) =
             rest.split_bottom(fonts::FONT_NORMAL.line_height() * description_lines);
         let loader = loader.inset(Insets::top(theme::CONTENT_BORDER));
@@ -70,13 +67,11 @@ impl Component for Progress {
                 if !animation_disabled() {
                     ctx.request_paint();
                 }
-                self.description.mutate(ctx, |ctx, para| {
-                    if para.content() != &new_description {
-                        para.update(new_description);
-                        ctx.request_paint();
-                        self.description_pad.clear();
-                    }
-                });
+                if self.description.content() != &new_description {
+                    self.description.update(new_description);
+                    ctx.request_paint();
+                    self.description_pad.clear();
+                }
             }
         } else {
             self.title.event(ctx, event);
