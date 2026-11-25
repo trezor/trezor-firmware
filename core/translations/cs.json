@@ -484,7 +484,7 @@
     "cardano__addr_reward": "Odměna",
     "cardano__address_no_staking": "adresa - žádné odměny za staking.",
     "cardano__always_abstain": "Vždy se zdržet",
-    "cardano__always_no_confidence": "Vždy hlasovat Ne",
+    "cardano__always_no_confidence": "Vždy vyslovit nedůvěru",
     "cardano__amount_burned_decimals_unknown": "Spálená částka (neznámý počet desetinných míst)",
     "cardano__amount_minted_decimals_unknown": "Vytěžená částka (neznámý počet nedesetinných míst)",
     "cardano__amount_sent_decimals_unknown": "Odeslaná částka (neznámý počet desetinných míst)",

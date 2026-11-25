@@ -1208,7 +1208,7 @@
     "monero__processing_outputs": "Procesando salidas",
     "monero__signing": "Firmando...",
     "monero__signing_inputs": "Firmando entradas",
-    "monero__unlock_time_set_template": "Tiiempo de desbloqueo de esta transacción está configurado en {0}",
+    "monero__unlock_time_set_template": "Tiempo de desbloqueo de esta transacción está configurado en {0}",
     "monero__wanna_export_tx_der": "¿Quieres exportar tx_der\npara tx_proof?",
     "monero__wanna_export_tx_key": "¿Quieres exportar tx_key?",
     "monero__wanna_export_watchkey": "¿Quieres exportar las credenciales de solo lectura?",
@@ -1362,7 +1362,12 @@
     },
     "pin__title_settings": "Configuración del PIN",
     "pin__title_wrong_pin": "PIN incorrecto",
-    "pin__tries_left": "intentos restantes",
+    "pin__tries_left": {
+      "Bolt": "rest.",
+      "Caesar": "intentos restantes",
+      "Delizia": "rest.",
+      "Eckhart": "intentos restantes"
+    },
     "pin__turn_off": "¿Quieres desactivar la protección con PIN?",
     "pin__turn_on": "¿Activar la protección con PIN?",
     "pin__wipe_code_exists_description": "Antes de desactivar el PIN debe ser desactivado el código de borrado.",
@@ -1567,7 +1572,12 @@
       "Delizia": "Verificar parte {0}",
       "Eckhart": ""
     },
-    "reset__check_wallet_backup_title": "Verificar el respaldo de la billetera",
+    "reset__check_wallet_backup_title": {
+      "Bolt": "Verificar el respaldo",
+      "Caesar": "Verificar el respaldo de la billetera",
+      "Delizia": "Verificar el respaldo",
+      "Eckhart": "Verificar el respaldo de la billetera"
+    },
     "reset__continue_with_next_share": {
       "Bolt": "Continúa con la próxima parte.",
       "Caesar": "Continúa con la próxima parte.",
@@ -1693,12 +1703,12 @@
     "reset__num_shares_for_group_template": {
       "Bolt": "El número de partes requeridas para formar el grupo {0}.",
       "Caesar": "",
-      "Delizia": "El número  de partes requeridas para formar el grupo {0}.",
-      "Eckhart": "El número  de partes requeridas para formar el grupo {0}."
+      "Delizia": "El número de partes requeridas para formar el grupo {0}.",
+      "Eckhart": "El número de partes requeridas para formar el grupo {0}."
     },
     "reset__number_of_shares_info": {
       "Bolt": "",
-      "Caesar": "= el número  total de partes usadas para el respaldo de la billetera.",
+      "Caesar": "= el número total de partes usadas para el respaldo de la billetera.",
       "Delizia": "",
       "Eckhart": ""
     },

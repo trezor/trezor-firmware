@@ -99,7 +99,12 @@
       "Delizia": "XPUB",
       "Eckhart": "Public Key (XPUB)"
     },
-    "address__xpub_export_warning": "Ein Quantencomputer könnte diesen öffentlichen Schlüssel nutzen, um alle daraus abgeleiteten Schlüssel offenzulegen.",
+    "address__xpub_export_warning": {
+      "Bolt": "Ein Quanten- computer könnte aus diesem öffentlichen Schlüssel alle abgeleiteten Schlüssel ermitteln.",
+      "Caesar": "Ein Quantencomputer könnte aus diesem öffentlichen Schlüssel alle abgeleiteten Schlüssel ermitteln.",
+      "Delizia": "Ein Quantencomputer könnte aus diesem öffentlichen Schlüssel alle abgeleiteten Schlüssel ermitteln.",
+      "Eckhart": "Ein Quanten- computer könnte aus diesem öffentlichen Schlüssel alle abgeleiteten Schlüssel ermitteln."
+    },
     "address_details__account_info": "Konto-Info",
     "address_details__derivation_path": "Ableitungspfad",
     "address_details__title_receive_address": "Empfangsadresse",
@@ -534,7 +539,7 @@
     "cardano__addr_reward": "Belohnung",
     "cardano__address_no_staking": "Adresse - keine Staking-Belohnungen.",
     "cardano__always_abstain": "Immer enthalten",
-    "cardano__always_no_confidence": "Immer „Nein“",
+    "cardano__always_no_confidence": "Immer Misstrauensvotum",
     "cardano__amount_burned_decimals_unknown": "Verbrannter Betrag (Dezimalstellen unbekannt)",
     "cardano__amount_minted_decimals_unknown": "Geminteter Betrag (Dezimalstellen unbekannt)",
     "cardano__amount_sent_decimals_unknown": "Gesendeter Betrag (Dezimalstellen unbekannt)",
@@ -1695,7 +1700,12 @@
     },
     "recovery__title_cancel_recovery": "Wiederherst. abbr.",
     "recovery__title_dry_run": "Backup-Prüfung",
-    "recovery__title_recover": "Wallet wiederherstellen",
+    "recovery__title_recover": {
+      "Bolt": "Wiederherstellen",
+      "Caesar": "Wallet wiederherstellen",
+      "Delizia": "Wallet wiederherstellen",
+      "Eckhart": "Wallet wiederherstellen"
+    },
     "recovery__title_remaining_shares": "Verbleibende Shares",
     "recovery__title_unlock_repeated_backup": "Multi-Share-Backup",
     "recovery__type_word_x_of_y_template": "Tippe Wort {0} von {1}",
