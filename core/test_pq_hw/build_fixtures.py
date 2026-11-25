@@ -43,7 +43,7 @@ FIXTURES_BRANCH = "tychovrahe/pq/hw_fixtures"
 MODEL = "T3W1"
 
 DEFAULT_REFS = {
-    "pq": "tychovrahe/pq/bootloader12",
+    "pq": "tychovrahe/pq/final_t3w1_test",
     "intermediary": "tychovrahe/pq/intermediary_exp",
     # main plus the early-debuglink and boot-wipe-option commits, so a legacy
     # unit can be unlocked over debuglink at the boot PIN prompt.
@@ -526,6 +526,15 @@ def artifacts(ctx: Ctx) -> Path:
     return build_dir(ctx.wt) / "artifacts" / MODEL
 
 
+def release_layout(wt: Path) -> tuple[Path, str]:
+    """Where `xtask release` writes, and the --bootloader value for the
+    bootloader just built: artifacts/release and `fresh` since the
+    bundle/release split (xtask/src/release.rs), tree/ and `built` before."""
+    if (wt / "core" / "embed" / "xtask" / "src" / "release.rs").exists():
+        return build_dir(wt) / "artifacts" / "release", "fresh"
+    return build_dir(wt) / "tree", "built"
+
+
 def build_vendorheader_btc(ctx: Ctx) -> None:
     """Dev-signed vendor header with fw_type 3.
 
@@ -618,7 +627,7 @@ def build_legacy(ctx: Ctx) -> None:
 
 def build_release(ctx: Ctx, name: str) -> None:
     out = artifacts(ctx)
-    tree = build_dir(ctx.wt) / "tree"
+    tree, fresh_bootloader = release_layout(ctx.wt)
 
     xtask(ctx, "build", "boardloader", "-m", MODEL, *DEVEL)
     args_bl = ["build", "bootloader", "-m", MODEL, *DEVEL, *DEBUG_BL]
@@ -627,7 +636,7 @@ def build_release(ctx: Ctx, name: str) -> None:
     # artifacts directory; checked against the released bootloader below.
     bl_elf = LOGS / f"{name}-bootloader.elf"
     shutil.copyfile(out / "bootloader.elf", bl_elf)
-    args = ["release", "--bootloader", "built", *DEVEL, *DEBUG_FW]
+    args = ["release", "--bootloader", fresh_bootloader, *DEVEL, *DEBUG_FW]
     xtask(ctx, *args)
 
     bundle = json.loads((tree / MODEL / "bundle.json").read_text())

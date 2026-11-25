@@ -13,7 +13,7 @@ source branches, each in its own persistent worktree under
 | source | default ref | builds |
 | --- | --- | --- |
 | `legacy` | `tychovrahe/debuglink/early` (main + early debuglink) | boardloader, bootloader, universal and btc-only firmware |
-| `pq` | `tychovrahe/pq/bootloader12` | releases A, B, B-fix, C-minprev, E-mono |
+| `pq` | `tychovrahe/pq/final_t3w1_test` | releases A, B, B-fix, C-minprev, E-mono |
 | `intermediary` | `tychovrahe/pq/intermediary_exp` | universal and btc-only intermediaries, embedding release A |
 
 Outputs go to `~/.local/share/trezor-pqhw/fixtures/`, a worktree of the local
