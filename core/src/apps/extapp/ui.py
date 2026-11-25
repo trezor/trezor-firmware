@@ -26,10 +26,8 @@ async def handle(session: Session, msg: IpcMessage) -> None:
     if __debug__:
         log.debug(__name__, f"UI interaction result: {result}")
 
-    def send(data: bytes) -> None:
-        session.send(SERVICE_UI, 0, data)
-
     try:
-        trezorui_api.send_ui_result(result=result, ipc_cb=send)
+        data = trezorui_api.serialize_ui_result(result=result)
+        session.send(SERVICE_UI, 0, data)
     except Exception:
         session.die("Failed to serialize or send UI result")
