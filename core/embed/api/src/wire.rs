@@ -23,13 +23,13 @@ use sys::ipc::IpcInbox;
 use sys::sysevent::{self, SysEvents};
 use sys::task::TaskId;
 use sys::time::{Instant, Timeout};
-use trezor_app_sdk::traits::util::{CoreServiceError, ServiceResult, TIMEOUT_MAX};
+use trezor_app_sdk::traits::util::{CoreServiceError, Never, ServiceResult, TIMEOUT_MAX};
 use trezor_app_sdk::traits::wire::{FailureKind, WireMessage, WireV1};
 
 use crate::app_state;
 
 /// A failed call into Core, as reported to the app.
-pub(crate) type CallError = CoreServiceError<()>;
+pub(crate) type CallError = CoreServiceError<Never>;
 
 /// Logs why a call failed and reports it as
 /// [`CoreServiceError::ServiceCallFailed`]; the details stay in Core's log.
@@ -41,9 +41,8 @@ pub(crate) fn call_failed<E>(reason: &str) -> CoreServiceError<E> {
 /// Re-types a failed call for a service with errors of its own.
 pub(crate) fn service_error<E>(error: CallError) -> CoreServiceError<E> {
     match error {
-        CoreServiceError::ServiceError(()) | CoreServiceError::ServiceCallFailed => {
-            CoreServiceError::ServiceCallFailed
-        }
+        CoreServiceError::ServiceError(_) => unreachable!(),
+        CoreServiceError::ServiceCallFailed => CoreServiceError::ServiceCallFailed,
         CoreServiceError::Timeout => CoreServiceError::Timeout,
         CoreServiceError::StopApplication => CoreServiceError::StopApplication,
     }
