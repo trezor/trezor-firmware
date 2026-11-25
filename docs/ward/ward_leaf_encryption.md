@@ -32,7 +32,7 @@ The `app_id` is the domain the WARD service assigns to the caller. It is part of
 
 ## Device ID
 
-`device_id` is empty for an entry shared by all devices. Otherwise it is a single byte, 1 to 255: the slot of the device the entry belongs to, as the firmware assigns it.
+`device_id` is always one byte. `0x00` marks an entry shared by all devices; 1 to 255 is the slot of the device the entry belongs to, as the firmware assigns it.
 
 ## Leaf
 
@@ -46,13 +46,13 @@ leaf (in the trie)
 
 stored beside the leaf
 └── sealed_identity     leaf_identity sealed under K_ident(app), domain 0x04
-      device_id         empty, or the slot of the device the entry belongs to
+      device_id         0x00 for all devices, or the slot of the device the entry belongs to
       app_id            the caller's domain
       identifier        what the application looks the entry up by (xpub, address)
 ```
 
 ```
-leaf_identity = len8(device_id) || device_id || app_id(2 B) || identifier
+leaf_identity = device_id(1 B) || len8(app_id) || app_id || identifier
 leaf_content  = len8(entry_type) || entry_type || C_leaf:u32 || value
 entry_key     = HMAC-SHA256(K_path(app), "WARD PATH v1" || leaf_identity)
 value_digest  = SHA256(0x03 || sealed_content)
@@ -61,8 +61,8 @@ leaf_hash     = SHA256(0x00 || entry_key || value_digest)
 
 | Field | Bound |
 | --- | --- |
-| `device_id` | Empty, or 1 byte |
-| `app_id` | 2 bytes |
+| `device_id` | 1 byte |
+| `app_id` | A string of at most 255 bytes |
 | `entry_type` | At most 255 bytes |
 | `identifier` | Unbounded; runs to the end of `leaf_identity` |
 | `value` | Runs to the end of `leaf_content`; no bound of its own |
@@ -88,7 +88,21 @@ sealed_content  = seal(K_data(app),  0x02, leaf_content)
 sealed_identity = seal(K_ident(app), 0x04, leaf_identity)
 ```
 
-- **Random nonce:** the nonce is never derived from the leaf, because a rollback or a second device can write the same `(entry_key, C_leaf)` again.
+- **Random nonce:** every seal draws a fresh random nonce; it is never derived from the leaf.
+  A landed write is unique in `(entry_key, C_leaf)`: a revert raises the counter, and another
+  device syncs before it writes. Seals that never land are not unique, and the host sees them:
+    - **A lost race.** Two devices write the same entry from the same head. Both seal it at the
+      same counter; one lands, and the host keeps the other.
+    - **A publication that failed.** The WM was unreachable, or the response was lost. The head
+      has not moved, so the device seals the entry again at the same counter, possibly with a
+      different value.
+    - **A publication held back.** The host withholds a sealed write, and the device, still at
+      the same head, writes the entry again.
+    - **An interrupted flush.** A batch that did not land is sealed again at the same counter
+      when the queue is flushed again.
+
+  In each case a nonce derived from `(entry_key, C_leaf)` would repeat under `K_data` with
+  different plaintexts, which breaks AES-GCM's confidentiality and its authentication.
 - **AAD:** The sealing is separated by domain, but as long as `K_data` and `K_ident` are different keys, this separation is redundant. The identity domain is `0x04` so that no sealing domain equals the trie's value domain `0x03`.
 - **Scheme byte:** the first byte is the scheme. `0x01`, AES-256-GCM, is the only one.
 - **Length:** a sealed part is at least 29 bytes: scheme, nonce and tag.

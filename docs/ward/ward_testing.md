@@ -322,7 +322,7 @@ Run the file: `ward_unit_test test_apps.ward.handlers.py`
 - **`TestWardRevealPolicy.test_the_revealing_set_is_exactly_this_list`** — Pinned by name, so adding a handler that shows a stored value is a deliberate act.
   `ward_unit_test test_apps.ward.handlers.py`
 
-#### `core/tests/test_apps.ward.py` (82)
+#### `core/tests/test_apps.ward.py` (83)
 
 Run the file: `ward_unit_test test_apps.ward.py`
 
@@ -334,7 +334,7 @@ Run the file: `ward_unit_test test_apps.ward.py`
   `ward_unit_test test_apps.ward.py`
 - **`TestWardKeys.test_scope_rejects_out_of_range_device_id`** — device_id occupies exactly one byte, so a wider value has no encoding.
   `ward_unit_test test_apps.ward.py`
-- **`TestWardKeys.test_nul_in_app_id_is_unambiguous`** — leaf_identity length-prefixes every field, so NUL is ordinary data in app_id too: the re-split that the offline store's NUL-delimited scope must refuse cannot happen here.
+- **`TestWardKeys.test_nul_in_app_id_is_unambiguous`** — leaf_identity length-prefixes app_id, so NUL is ordinary data in it: the re-split that the offline store's NUL-delimited scope must refuse cannot happen here.
   `ward_unit_test test_apps.ward.py`
 - **`TestWardKeys.test_identifier_may_contain_nul`** — identifier is the terminal field, so NUL in it is unambiguous and allowed.
   `ward_unit_test test_apps.ward.py`
@@ -344,7 +344,9 @@ Run the file: `ward_unit_test test_apps.ward.py`
   `ward_unit_test test_apps.ward.py`
 - **`TestWardLeaf.test_pack_layouts`**
   `ward_unit_test test_apps.ward.py`
-- **`TestWardLeaf.test_non_canonical_identity_is_refused`**
+- **`TestWardLeaf.test_truncated_identity_is_refused`**
+  `ward_unit_test test_apps.ward.py`
+- **`TestWardLeaf.test_the_identifier_runs_to_the_end`** — No length prefix and no bound: trailing bytes are the identifier's.
   `ward_unit_test test_apps.ward.py`
 - **`TestWardLeaf.test_pack_identity_rejects_oversized_fields`**
   `ward_unit_test test_apps.ward.py`

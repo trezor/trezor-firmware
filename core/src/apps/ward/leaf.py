@@ -1,8 +1,7 @@
 """The WARD leaf: two independently sealed parts, and the digest the trie commits to
 (docs/ward/ward_leaf_encryption.md).
 
-    leaf_identity   = len8(device_id) || device_id || len8(app_id) || app_id
-                      || len16(identifier) || identifier
+    leaf_identity   = device_id(1B) || len8(app_id) || app_id || identifier
     leaf_content    = len8(entry_type) || entry_type || C_leaf(4B BE) || value
     seal(K, d, pt)  = 0x01 || nonce(12B) || tag(16B) || AES-256-GCM(K, nonce, aad=d, pt)
     sealed_content  = seal(K_data,  0x02, leaf_content)
@@ -82,8 +81,8 @@ def leaf_hash(entry_key: bytes, sealed_content: bytes) -> bytes:
 
 def seal(key: bytes, domain: int, pt: bytes, nonce: "bytes | None" = None) -> bytes:
     """0x01 || nonce || tag || ct. The nonce is fresh-random per seal -- never derived from the
-    leaf: a rollback or a second device can write the same (entry_key, C_leaf) again. `nonce`
-    is for known-answer tests ONLY."""
+    leaf: in a lost race two devices seal the same entry at the same counter, and the host keeps
+    both seals. `nonce` is for known-answer tests ONLY."""
     from trezor.crypto import aesgcm_encrypt, random
 
     nonce = nonce or random.bytes(_NONCE_LEN)
@@ -123,52 +122,27 @@ def check_sealed(sealed: bytes) -> None:
 
 
 def pack_identity(identifier: bytes, app_id: "str | bytes", device_id: int = 0) -> bytes:
-    """len8(device_id) || device_id || len8(app_id) || app_id || len16(identifier) ||
-    identifier, with device slot 0 (shared by all devices) as an empty device_id and slot n as
-    the single byte n. The single source of canonicalization -- both entry_key and
-    sealed_identity go through it."""
+    """device_id(1B) || len8(app_id) || app_id || identifier. device_id 0 means an entry shared
+    by all devices, and 1 to 255 is one device's slot. The identifier runs to the end. The single
+    source of canonicalization -- both entry_key and sealed_identity go through it."""
     from trezor.wire import DataError
 
     app = _as_bytes(app_id)
-    if len(app) > 255 or len(identifier) > 65535 or not 0 <= device_id <= 255:
+    if len(app) > 255 or not 0 <= device_id <= 255:
         raise DataError("WARD identity exceeds canonical encoding bounds")
-    dev = bytes([device_id]) if device_id else b""
-    return (
-        bytes([len(dev)])
-        + dev
-        + bytes([len(app)])
-        + app
-        + len(identifier).to_bytes(2, "big")
-        + identifier
-    )
+    return bytes([device_id, len(app)]) + app + identifier
 
 
 def unpack_identity(pt: bytes) -> "tuple[bytes, bytes, int]":
-    """Return (identifier, app_id, device_id). Only the canonical encoding is read: trailing
-    bytes, a short buffer or a non-canonical device_id raise DataError."""
+    """Return (identifier, app_id, device_id). A buffer too short for its app_id raises
+    DataError; the identifier is whatever follows."""
     from trezor.wire import DataError
 
-    try:
-        dev_len = pt[0]
-        if dev_len > 1:
-            raise ValueError
-        device_id = pt[1] if dev_len else 0
-        if dev_len and device_id == 0:
-            raise ValueError  # slot 0 is the empty device_id, never b"\x00"
-        off = 1 + dev_len
-        app_len = pt[off]
-        app_id = pt[off + 1 : off + 1 + app_len]
-        off += 1 + app_len
-        id_len = int.from_bytes(pt[off : off + 2], "big")
-        off += 2
-        identifier = pt[off : off + id_len]
-        if len(app_id) != app_len or len(identifier) != id_len:
-            raise ValueError
-        if off + id_len != len(pt):
-            raise ValueError
-    except (IndexError, ValueError):
+    if len(pt) < 2 or len(pt) < 2 + pt[1]:
         raise DataError("WARD: malformed leaf identity")
-    return bytes(identifier), bytes(app_id), device_id
+    device_id = pt[0]
+    app_len = pt[1]
+    return bytes(pt[2 + app_len :]), bytes(pt[2 : 2 + app_len]), device_id
 
 
 def seal_identity(

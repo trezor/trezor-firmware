@@ -100,7 +100,7 @@ The commands run exactly that test, from the shell the section names in [WARD te
 Setup](ward_testing.md#setup). The complete list of tests is the [test
 catalogue](ward_testing.md#test-catalogue).
 
-### `core/tests/test_apps.ward.py` (82)
+### `core/tests/test_apps.ward.py` (83)
 
 - **`TestWardTrie.test_membership_against_a_wrong_root_fails`**
   `ward_unit_test test_apps.ward.py`

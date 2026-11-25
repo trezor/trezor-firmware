@@ -164,14 +164,14 @@ class TestWardKeys(unittest.TestCase):
         self.assertEqual(_scope("a", "b", 255)[-1:], b"\xff")
 
     def test_nul_in_app_id_is_unambiguous(self):
-        """leaf_identity length-prefixes every field, so NUL is ordinary data in app_id too: the
-        re-split that the offline store's NUL-delimited scope must refuse cannot happen here."""
+        """leaf_identity length-prefixes app_id, so NUL is ordinary data in it: the re-split that
+        the offline store's NUL-delimited scope must refuse cannot happen here."""
         k_path = slip21_key(SEED, [b"ward", b"K_path"])
         self.assertNotEqual(
             entry_key(k_path, "a\x00b", b"c"), entry_key(k_path, "a", b"\x00bc")
         )
         self.assertEqual(
-            pack_identity(b"c", "a\x00b"), b"\x00\x03a\x00b\x00\x01c"
+            pack_identity(b"c", "a\x00b"), b"\x00\x03a\x00bc"
         )
 
     def test_identifier_may_contain_nul(self):
@@ -241,27 +241,32 @@ class TestWardLeaf(unittest.TestCase):
             b"\x07address\x00\x00\x00\x05data_alice",
         )
         self.assertEqual(
-            pack_identity(b"alice", "bitcoin", 7), b"\x01\x07\x07bitcoin\x00\x05alice"
+            pack_identity(b"alice", "bitcoin", 7), b"\x07\x07bitcoinalice"
         )
-        # device slot 0 is an EMPTY device_id, never b"\x00"
-        self.assertEqual(pack_identity(b"a", "b"), b"\x00\x01b\x00\x01a")
+        # device_id is always one byte; 0x00 is an entry shared by all devices
+        self.assertEqual(pack_identity(b"a", "b"), b"\x00\x01ba")
         self.assertEqual(unpack_identity(pack_identity(b"a", "b", 9)), (b"a", b"b", 9))
         self.assertEqual(
             unpack_content(pack_content("pointer", 3, b"")), ("pointer", 3, b"")
         )
 
-    def test_non_canonical_identity_is_refused(self):
+    def test_truncated_identity_is_refused(self):
         for bad in (
-            b"\x01\x00\x01b\x00\x01a",  # device_id 0 spelled as a byte
-            b"\x02\x01\x02\x01b\x00\x01a",  # a two-byte device_id
-            pack_identity(b"a", "b") + b"x",  # trailing bytes
-            pack_identity(b"a", "b")[:-1],  # short
+            b"",  # no device_id
+            b"\x00",  # no app_id length
+            b"\x00\x05ab",  # shorter than its app_id
         ):
             with self.assertRaises(DataError):
                 unpack_identity(bad)
 
+    def test_the_identifier_runs_to_the_end(self):
+        """No length prefix and no bound: trailing bytes are the identifier's."""
+        long = b"x" * 70000
+        self.assertEqual(unpack_identity(pack_identity(long, "b")), (long, b"b", 0))
+        self.assertEqual(unpack_identity(b"\x00\x01b"), (b"", b"b", 0))
+
     def test_pack_identity_rejects_oversized_fields(self):
-        for args in ((b"x" * 65536, "a", 0), (b"x", "a" * 256, 0), (b"x", "a", 256)):
+        for args in ((b"x", "a" * 256, 0), (b"x", "a", 256)):
             with self.assertRaises(DataError):
                 pack_identity(*args)
 

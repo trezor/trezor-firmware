@@ -263,31 +263,17 @@ def derive_k_data(seed: bytes) -> bytes:
 
 
 def pack_identity(identifier: bytes, app_id: str | bytes, device_id: int = 0) -> bytes:
-    """leaf_identity = len8(device_id) || device_id || len8(app_id) || app_id
-    || len16(identifier) || identifier; slot 0 is an empty device_id."""
+    """leaf_identity = device_id(1B) || len8(app_id) || app_id || identifier; device_id 0 is an
+    entry shared by all devices."""
     if isinstance(app_id, str):
         app_id = app_id.encode()
-    dev = bytes([device_id]) if device_id else b""
-    return (
-        bytes([len(dev)])
-        + dev
-        + bytes([len(app_id)])
-        + app_id
-        + len(identifier).to_bytes(2, "big")
-        + identifier
-    )
+    return bytes([device_id, len(app_id)]) + app_id + identifier
 
 
 def unpack_identity(pt: bytes) -> tuple[bytes, bytes, int]:
     """Inverse of `pack_identity`: (identifier, app_id, device_id)."""
-    dev_len = pt[0]
-    device_id = pt[1] if dev_len else 0
-    off = 1 + dev_len
-    app_len = pt[off]
-    app_id = pt[off + 1 : off + 1 + app_len]
-    off += 1 + app_len
-    id_len = int.from_bytes(pt[off : off + 2], "big")
-    return pt[off + 2 : off + 2 + id_len], app_id, device_id
+    app_len = pt[1]
+    return pt[2 + app_len :], pt[2 : 2 + app_len], pt[0]
 
 
 def entry_key(

@@ -84,7 +84,7 @@ Why it is built this way:
 - **The trie commits to ciphertext.** A host can compute the digest and serve proofs for leaves it cannot open, and the Trezor checks the proof before opening anything.
 - **Authenticated encryption.** AES-256-GCM, so a modified leaf fails to open. The trie binds the ciphertext to its path, so a leaf cannot be moved to another path either.
 - **Type and counter inside.** `entry_type` and `C_leaf` are sealed. The host cannot tell a pointer from a value, and cannot tell which transition wrote a leaf from the leaf alone.
-- **Random nonce.** A rollback or a second Trezor can write the same `(entry_key, C_leaf)` again, so the nonce is never derived from the leaf.
+- **Random nonce.** The nonce is never derived from the leaf. Two Trezors that race from the same head both seal the entry at the same counter, and the host keeps the loser's seal, so a derived nonce could repeat under one key.
 
 What it does not hide:
 
@@ -388,7 +388,7 @@ A hidden wallet behind a passphrase has its own ward.
 
 ### Per-device setting
 
-An entry that belongs to one Trezor of the wallet, such as a display preference. `device_id` is the device's slot, 1 to 255, and is part of `leaf_identity`.
+An entry that belongs to one Trezor of the wallet, such as a display preference. `device_id` is the device's slot, 1 to 255 (`0x00` marks an entry shared by all devices), and is part of `leaf_identity`.
 
 - **Expects:**
     - Each Trezor reads and writes its own entry, under its own path.
