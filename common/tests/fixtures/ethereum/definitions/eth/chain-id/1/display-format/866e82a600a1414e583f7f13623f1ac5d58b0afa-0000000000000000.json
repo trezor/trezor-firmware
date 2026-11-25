@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "866e82a600a1414e583f7f13623f1ac5d58b0afa",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "Base L1CrossDomainMessenger"
+  }
+}

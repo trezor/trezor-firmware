@@ -6,6 +6,7 @@ from .clear_signing import (
     ContainerPath,
     DisplayFormat,
     FieldDefinition,
+    PathOrConst,
     TokenAmountFormatter,
     parse_address,
     parse_uint256,
@@ -31,7 +32,7 @@ APPROVE_DISPLAY_FORMAT = DisplayFormat(
             (1,),
             "Amount",
             TokenAmountFormatter(
-                token_path=ContainerPath.To,
+                token=PathOrConst(ContainerPath.To),
                 threshold=0x8000000000000000000000000000000000000000000000000000000000000000,
             ),
         ),
@@ -50,7 +51,7 @@ TRANSFER_DISPLAY_FORMAT = DisplayFormat(
     field_definitions=[
         FieldDefinition((0,), "To", AddressNameFormatter),
         FieldDefinition(
-            (1,), "Amount", TokenAmountFormatter(token_path=ContainerPath.To)
+            (1,), "Amount", TokenAmountFormatter(token=PathOrConst(ContainerPath.To))
         ),
     ],
 )
@@ -186,12 +187,16 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
             ],
             field_definitions=[
                 FieldDefinition(
-                    (1,), "Token (via path)", TokenAmountFormatter(token_path=(0,))
+                    (1,),
+                    "Token (via path)",
+                    TokenAmountFormatter(token=PathOrConst((0,))),
                 ),
                 FieldDefinition(
                     (2,),
                     "Token (via constant)",
-                    TokenAmountFormatter(const_token_address=TREZOR_TEST_CONST_TOKEN),
+                    TokenAmountFormatter(
+                        token=PathOrConst(const=TREZOR_TEST_CONST_TOKEN)
+                    ),
                 ),
             ],
         )
@@ -217,7 +222,9 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
                 FieldDefinition(
                     (1,),
                     "Token Amounts (array)",
-                    TokenAmountFormatter(const_token_address=TREZOR_TEST_CONST_TOKEN),
+                    TokenAmountFormatter(
+                        token=PathOrConst(const=TREZOR_TEST_CONST_TOKEN)
+                    ),
                 ),
                 FieldDefinition(
                     (2,), "Dates (array)", DateFormatter
@@ -249,18 +256,18 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
                 FieldDefinition(
                     (0,),
                     "Token (path[0:20] slice)",
-                    TokenAmountFormatter(token_path=(1, (0, 20))),
+                    TokenAmountFormatter(token=PathOrConst((1, (0, 20)))),
                 ),
                 FieldDefinition(
                     (0,),
                     "Token (path[-20:] slice)",
-                    TokenAmountFormatter(token_path=(1, (-20,))),
+                    TokenAmountFormatter(token=PathOrConst((1, (-20,)))),
                 ),
                 # nested array-of-structs: swapData[0].fromAmount, token sendingAssetId
                 FieldDefinition(
                     (2, 0, 2),
                     "Token (nested swap[0])",
-                    TokenAmountFormatter(token_path=(2, 0, 0)),
+                    TokenAmountFormatter(token=PathOrConst((2, 0, 0))),
                 ),
                 # negative index + native currency: swapData[-1].fromAmount, token
                 # swapData[-1].receivingAssetId (the native sentinel -> renders native)
@@ -268,7 +275,7 @@ def all_display_formats() -> Generator[DisplayFormat, None, None]:
                     (2, -1, 2),
                     "Token (neg index swap[-1], native)",
                     TokenAmountFormatter(
-                        token_path=(2, -1, 1),
+                        token=PathOrConst((2, -1, 1)),
                         native_currency_address=[TREZOR_TEST_NATIVE],
                     ),
                 ),

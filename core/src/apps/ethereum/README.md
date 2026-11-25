@@ -90,12 +90,22 @@ the two struct bodies following after the heads.
 
 A display field with `FORMATTER_CALLDATA` points at a dynamic `bytes` value
 holding an **embedded function call** (a router/multicall/`execute()`-style
-wrapper forwarding a call to another contract). The formatter carries two
-params: `callee_path`, a path to the address of the called contract, and an
-optional `selector` - per ERC-7730, an explicit selector means the blob is
-args-only; otherwise the blob's first 4 bytes are the selector.
+wrapper forwarding a call to another contract). Per ERC-7730 the formatter
+carries these params, each either a path (`*_path`) or a constant (at most
+one of the two), resolved in the context of the call holding the field:
 
-`_expand_calldata_field` resolves a display format for `(chain_id, callee,
+| param      | sets the inner | default                                     |
+|------------|----------------|---------------------------------------------|
+| callee     | `@.to`         | required                                    |
+| selector   | function       | the blob's first 4 bytes; if set, the blob is args-only |
+| amount     | `@.value`      | unresolvable                                |
+| spender    | `@.from`       | unresolvable                                |
+| chain ID   | `@.chainId`    | the chain of the call holding the field     |
+
+The resolved values form the subcall's `EmbeddedContainer`, which the inner
+parse uses for its container paths.
+
+`_expand_calldata_field` resolves a display format for `(chain ID, callee,
 inner selector)` via `find_display_format` - built-ins, then a wire
 definition request; the host-provided blob slot is skipped for nested lookups
 since it holds the one format embedded for the *outer* call - and, on
@@ -105,27 +115,40 @@ subcall is **flattened** into the outer confirm screen as plain rows: a
 the callee's `KNOWN_ADDRESSES` name, falling back to the callee
 address), a `(Subcall) Intent` row, then the inner format's own fields with
 `(Subcall) `-prefixed labels. There is no separate confirmation for the
-subcall. The field's path must resolve to exactly one `bytes` blob -
-multicall-style `bytes[]` arrays are not (yet) supported.
+subcall. The field's path resolves to one `bytes` blob, or to a `bytes[]`
+array of subcalls labeled `(Subcall #1)`, ...; each param then resolves
+either to one value shared by all subcalls, or (from a path) to a parallel
+array of the same length.
+
+**A subcall on another chain** (chain ID param differing from the current
+call's chain) has its display format looked up on its own chain, and its
+fields formatted with that chain's definitions. A `(Subcall) Network` row
+(or `Chain ID` if the network is unknown) names the chain, and unknown
+tokens are tagged with it. Formatters read the chain of the call they
+display via the `@.chainId` container path, never `msg.chain_id` directly,
+so their `chainId` params and token lookups are relative to the subcall's
+chain.
 
 Rules that keep the nested parse honest:
 
-* **Depth is capped at 1.** The inner parse runs with `nested=True`: a
-  `calldata` field found *inside* a subcall degrades as below, with no
+* **Depth is capped at 1.** The inner parse runs with an `EmbeddedContainer`:
+  a `calldata` field found *inside* a subcall degrades as below, with no
   tertiary lookup.
 * **`@.to` is overridden to the callee.** Container paths in the inner format
   refer to the subcall, not the outer transaction - critically, the built-in
   ERC-20 `transfer`/`approve` formats resolve their token via
   `token_path=@.to`, which must be the callee (the token contract), never the
   outer `to` (the wrapper).
-* **`@.from` and `@.value` are rejected when nested.** The subcall's
-  `msg.sender` is ambiguous: it is the wrapper contract if the wrapper
-  `CALL`s the callee, but the original signer if it `DELEGATECALL`s
+* **`@.from` and `@.value` are never guessed.** They resolve only when the
+  outer descriptor sets the `spender` / `amount` params. Otherwise the
+  subcall's `msg.sender` is ambiguous: it is the wrapper contract if the
+  wrapper `CALL`s the callee, but the original signer if it `DELEGATECALL`s
   (self-multicall / `execute()`-style wrappers) - and the device cannot tell
   which from the transaction. Since `@.from` typically labels a beneficiary,
   guessing wrong would confidently display the wrong recipient. The
-  forwarded `@.value` is decided by wrapper logic and genuinely unknowable.
-  Either field raises and the subcall degrades as below.
+  forwarded `@.value` is decided by wrapper logic. An unset one raises and
+  the subcall degrades as below. `spenderPath: @.from` forwards the signer's
+  account label, the same as the outer `@.from` displays.
 * **The response to a definition request is pinned to the request**: every
   candidate must pass `DisplayFormat.matches_call` (selector + binding
   context against the callee), so a validly-signed blob for a different
@@ -136,9 +159,11 @@ e.g. contract not supported), or the inner parse fails
 (`ClearSigningFailed`/`DataError`), the subcall degrades to two rows - the
 callee under `Subcall to`, and the raw hex blob under the field's own label -
 and the outer transaction still clear-signs. Only a malformed `calldata`
-field *definition* itself (a path that isn't `bytes`, a callee that isn't an
-address) fails the whole display format, falling back to blind signing like
-any other malformed definition.
+field *definition* itself (a path that isn't `bytes`, a param of the wrong
+type - a callee or spender that isn't an address, a selector that isn't 4
+bytes, a negative amount, an invalid chain ID - or a param array not parallel
+to the subcall array) fails the whole display format, falling back to blind
+signing like any other malformed definition.
 
 ## Failure behavior
 

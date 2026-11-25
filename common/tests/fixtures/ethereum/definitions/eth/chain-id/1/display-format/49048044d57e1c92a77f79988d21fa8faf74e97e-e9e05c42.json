@@ -1,0 +1,126 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "49048044d57e1c92a77f79988d21fa8faf74e97e",
+    "func_sig": "e9e05c42",
+    "intent": "Deposit ETH to Base",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      },
+      {
+        "atomic": "ABI_UINT64"
+      },
+      {
+        "atomic": "ABI_BOOL"
+      },
+      {
+        "dynamic": "ABI_BYTES"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "const_value": "From a contract wallet, the deposit runs from its aliased address on Base. The L2 Call and the ETH not sent to the L2 Recipient use that address."
+        },
+        "label": "Note",
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "container_path": "VALUE"
+        },
+        "label": "ETH to Bridge",
+        "formatter": "FORMATTER_AMOUNT",
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "ETH Sent on L2",
+        "formatter": "FORMATTER_AMOUNT",
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "L2 Recipient",
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "L2 Gas Limit",
+        "formatter": "FORMATTER_UNIT",
+        "base": "gas",
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      },
+      {
+        "path": {
+          "path": [
+            3
+          ]
+        },
+        "label": "Contract Creation",
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false,
+        "must_match": [
+          "0000000000000000000000000000000000000000000000000000000000000000"
+        ]
+      },
+      {
+        "path": {
+          "path": [
+            4
+          ]
+        },
+        "label": "L2 Call",
+        "formatter": "FORMATTER_CALLDATA",
+        "callee_path": {
+          "path": [
+            0
+          ]
+        },
+        "amount_path": {
+          "path": [
+            1
+          ]
+        },
+        "spender_path": {
+          "container_path": "FROM"
+        },
+        "lookup_address": false,
+        "lookup_token": false,
+        "lookup_contract": false
+      }
+    ],
+    "provider_name": "Base Portal (OptimismPortal2)"
+  }
+}
