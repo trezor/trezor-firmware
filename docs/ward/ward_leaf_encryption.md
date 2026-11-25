@@ -128,12 +128,15 @@ The key holder walks every leaf of the verified trie, taking each leaf's
 `entry_key` from its path:
 
 1. Open `sealed_content` with `K_data(app)`. The trie commits to the sealed
-   content, so this step decides whose leaf it is.
-    - Under the global key set, a tag failure is an error.
+   content.
+    - Under the global key set, every application's leaf opens, so this step
+      cannot tell whose leaf it is: the `app_id` in `sealed_identity` does
+      (steps 2 and 3). A tag failure is an error.
     - Under per-application keys, a tag failure means another application's
       leaf: skip it.
 2. Open the `sealed_identity` stored beside the leaf with `K_ident(app)`, and
-   verify that `HMAC(leaf_identity) = entry_key`.
+   verify that `HMAC(leaf_identity) = entry_key`. The verified `leaf_identity`
+   carries the leaf's `app_id`.
 3. Skip the leaf if its `app_id` is not the caller's.
 4. A pointer is shown as a pointer and not followed.
 

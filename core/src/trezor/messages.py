@@ -8023,6 +8023,7 @@ if TYPE_CHECKING:
         app_id: "str | None"
         identifier: "AnyBytes | None"
         value: "AnyBytes | None"
+        retry: "WardWriteRetry | None"
 
         def __init__(
             self,
@@ -8030,6 +8031,7 @@ if TYPE_CHECKING:
             app_id: "str | None" = None,
             identifier: "AnyBytes | None" = None,
             value: "AnyBytes | None" = None,
+            retry: "WardWriteRetry | None" = None,
         ) -> None:
             pass
 
@@ -8037,15 +8039,35 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WardSetEntry"]:
             return isinstance(msg, cls)
 
+    class WardWriteRetry(protobuf.MessageType):
+        base: "int | None"
+        seen: "int | None"
+        mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            base: "int | None" = None,
+            seen: "int | None" = None,
+            mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["WardWriteRetry"]:
+            return isinstance(msg, cls)
+
     class WardDeleteEntry(protobuf.MessageType):
         app_id: "str | None"
         identifier: "AnyBytes | None"
+        retry: "WardWriteRetry | None"
 
         def __init__(
             self,
             *,
             app_id: "str | None" = None,
             identifier: "AnyBytes | None" = None,
+            retry: "WardWriteRetry | None" = None,
         ) -> None:
             pass
 
@@ -8057,6 +8079,7 @@ if TYPE_CHECKING:
         app_id: "str | None"
         identifier: "AnyBytes | None"
         target_identifier: "AnyBytes | None"
+        retry: "WardWriteRetry | None"
 
         def __init__(
             self,
@@ -8064,6 +8087,7 @@ if TYPE_CHECKING:
             app_id: "str | None" = None,
             identifier: "AnyBytes | None" = None,
             target_identifier: "AnyBytes | None" = None,
+            retry: "WardWriteRetry | None" = None,
         ) -> None:
             pass
 
@@ -8360,6 +8384,7 @@ if TYPE_CHECKING:
         counter: "int | None"
         auth_commit: "AnyBytes | None"
         wm_sig: "AnyBytes | None"
+        retry: "WardWriteRetry | None"
 
         def __init__(
             self,
@@ -8370,6 +8395,7 @@ if TYPE_CHECKING:
             counter: "int | None" = None,
             auth_commit: "AnyBytes | None" = None,
             wm_sig: "AnyBytes | None" = None,
+            retry: "WardWriteRetry | None" = None,
         ) -> None:
             pass
 

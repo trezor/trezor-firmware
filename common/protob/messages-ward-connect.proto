@@ -137,6 +137,9 @@ message WardLeafAck {
     // ABSENT ON A NO-OP. An idempotent delete of a path that already held nothing produced no
     // transition, so it carries neither this nor `auth_commit`.
     optional bytes wm_sig = 10;
+
+    // To present this write again if it loses a race (WardWriteRetry). Absent on a no-op.
+    optional WardWriteRetry retry = 13;
 }
 
 /**

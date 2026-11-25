@@ -189,6 +189,46 @@ def verify_chain_step_back(
 # --- the queued INTENT: a MAC under K_auth so a backed-up queued change can be recognised when it
 # comes back. It binds the identity (a queued change has no path yet), not a counter.
 
+TAG_RETRY = b"WARD RETRY v1"
+
+
+def retry_preimage(
+    ward_id: bytes,
+    base: int,
+    seen: int,
+    entry_key: bytes,
+    entry_type: str,
+    value: "bytes | None",
+) -> bytes:
+    """The bytes a write's retry token covers: the write itself and where it was formed.
+
+    `base` is the counter it was formed on and `seen` the C_leaf of the entry there (0: absent).
+    `value` None is a delete, which has no type. Length-prefixed where a field is variable.
+    """
+    from trezor.wire import DataError
+
+    from .codec import lp, u32
+
+    if len(ward_id) != 32 or len(entry_key) != 32:
+        raise DataError("WARD: retry operands must be 32 bytes")
+    body = TAG_RETRY + ward_id + u32(base) + u32(seen) + entry_key
+    if value is None:
+        return body + b"\x00"
+    return body + b"\x01" + lp(1, entry_type.encode(), "WARD: entry_type too long") + value
+
+
+def retry_mac(k_auth: bytes, *operands) -> bytes:
+    """Authenticate a write so that, if it loses a race, the host can present it again."""
+    return _mac(k_auth, retry_preimage(*operands))
+
+
+def verify_retry_mac(k_auth: bytes, mac: bytes, *operands) -> bool:
+    """Did a device of this wallet form EXACTLY this write, on this base?"""
+    from trezor.utils import consteq
+
+    return consteq(retry_mac(k_auth, *operands), mac)
+
+
 TAG_INTENT = b"WARD INTENT v1"
 
 OP_SET = 1  # queue a value at a path; there is no delete intent yet

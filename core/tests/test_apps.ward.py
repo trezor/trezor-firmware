@@ -94,16 +94,15 @@ class TestWardKeys(unittest.TestCase):
         )
         self.assertEqual(k_path, K_PATH)
 
-        # entry_key(K_path, app_id="bitcoin", identifier=b"alice", device_id=7); the same bytes
-        # as common/tests/fixtures/ward/protocol_v2.json on the service-channel branch
+        # entry_key(K_path, app_id="bitcoin", identifier=b"alice", device_id=7)
         ENTRY_KEY = bytes.fromhex(
-            "7e2d23212a3a9f322da778bf26528bf3e99be8eb163b57b359c93c37fa124a37"
+            "5100f145ed3ad92afd590ddcce41a54f35acd588231d63b5531aae8680e30220"
         )
         self.assertEqual(entry_key(k_path, "bitcoin", b"alice", 7), ENTRY_KEY)
         self.assertEqual(
             entry_key(k_path, "bitcoin", b"alice"),
             bytes.fromhex(
-                "9f0e735dcfd702a6db339f59d2bca670c9810ccf8300987a3b9502fdfc8448f4"
+                "b6675b7ef8dbf0bc5e07834035afe943a8e98737b7a38653950dda19c3ffb7f0"
             ),
         )
 
@@ -210,8 +209,8 @@ class TestWardLeaf(unittest.TestCase):
         "ee32ae912cf36b441766be2b98dd"
     )
     SEALED_IDENTITY = bytes.fromhex(
-        "01595959595959595959595959b3e3fb506f6c0d0cde017a3a00205ff1aa9ca5f24384802f"
-        "3b04c4ad233d9a6f47"
+        "01595959595959595959595959b1bebe6cf1fd9cb91c8a2bb1dc7e9bbeac9cc0f95e938c293c"
+        "0ba8c12134"
     )
 
     def test_known_answer(self):

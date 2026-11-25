@@ -183,15 +183,20 @@ def set_entry(
     identifier: bytes,
     value: Optional[bytes],
     provider: EntryProvider,
+    retry: Optional[messages.WardWriteRetry] = None,
 ) -> WardResult:
     """Create or replace an entry, on confirmation. Needs a synced session.
 
     The device does not write: store the returned leaf with `apply`. `value=None` is rejected by
     the device; pass b"" for an empty value.
+
+    `retry`: this same write lost a race. Pass the `retry` of its earlier `WardLeafAck`
+    (`result.response.retry`) after a sync; the device re-signs it silently if the entry is
+    unchanged since, answers a no-op if it already holds this value, and asks otherwise.
     """
     return _call_answering_pulls(
         session,
-        messages.WardSetEntry(app_id=app_id, identifier=identifier, value=value),
+        messages.WardSetEntry(app_id=app_id, identifier=identifier, value=value, retry=retry),
         provider,
     )
 
@@ -202,6 +207,7 @@ def set_pointer(
     identifier: bytes,
     target_identifier: bytes,
     provider: EntryProvider,
+    retry: Optional[messages.WardWriteRetry] = None,
 ) -> WardResult:
     """Make an entry point at `target_identifier` in the same `app_id`, on confirmation. Needs a
     synced session. A read of the pointer returns the target's value. Store the returned leaf with
@@ -209,7 +215,10 @@ def set_pointer(
     return _call_answering_pulls(
         session,
         messages.WardSetPointer(
-            app_id=app_id, identifier=identifier, target_identifier=target_identifier
+            app_id=app_id,
+            identifier=identifier,
+            target_identifier=target_identifier,
+            retry=retry,
         ),
         provider,
     )
@@ -220,13 +229,18 @@ def delete_entry(
     app_id: str,
     identifier: bytes,
     provider: EntryProvider,
+    retry: Optional[messages.WardWriteRetry] = None,
 ) -> WardResult:
     """Delete an entry, on confirmation; remove the record with `apply`.
 
     Idempotent on an absent path (no `auth_commit`, no screen), but the absence must still be
-    proved with a non-membership witness.
+    proved with a non-membership witness. `retry` as for `set_entry`.
     """
-    return _keyed_pull(session, messages.WardDeleteEntry, app_id, identifier, provider)
+    return _call_answering_pulls(
+        session,
+        messages.WardDeleteEntry(app_id=app_id, identifier=identifier, retry=retry),
+        provider,
+    )
 
 
 # --- the offline queue: the device's own store; no pulls, own ack types ---------------------

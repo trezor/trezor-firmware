@@ -148,8 +148,10 @@ stateDiagram-v2
 
 An authorization that did not land in its session is dead once the wallet syncs again:
 
-- **A lost race.** Two Trezors mint from the same head and one lands first. The loser's `wm_sig`
-  fails the predecessor check, and the next sync ends its session.
+- **A lost race.** Two Trezors sign from the same head and one lands first. The loser's `wm_sig`
+  fails the predecessor check, and the next sync ends its session. The write itself is not lost:
+  the host presents it again after the sync, and the Trezor resolves it (see
+  [a lost race](threat_model.md#a-lost-race)).
 - **A publication the host held back.** It is refused after any later sync.
 - **A replayed opening.** An opening proof is bound to the challenge it consumed, so an old proof
   cannot reopen its session. The challenge is volatile too: after a restart or a restore, no

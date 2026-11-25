@@ -684,7 +684,7 @@ Run the file: `ward_unit_test test_trezor.wire.codec.ward_context.py`
 pytest against a throwaway emulator (`ward_device_test`, see Setup). A test written for another build is reported as skipped, not failed.
 
 
-#### `tests/device_tests/misc/test_ward.py` (185) — connect build (T3T1)
+#### `tests/device_tests/misc/test_ward.py` (190) — connect build (T3T1)
 
 Run the file: `ward_device_test tests/device_tests/misc/test_ward.py`
 
@@ -894,6 +894,16 @@ Run the file: `ward_device_test tests/device_tests/misc/test_ward.py`
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_a_write_from_an_ended_session_is_refused"`
 - **`test_ward_attack_another_devices_sync_ends_this_devices_session`** — THE SAME, WITH ANOTHER DEVICE OF THE WALLET SYNCING IN BETWEEN.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_another_devices_sync_ends_this_devices_session"`
+- **`test_ward_lost_race_on_another_entry_is_signed_again_without_asking`** — The winner changed a different entry, so mine is untouched since I formed it:
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_lost_race_on_another_entry_is_signed_again_without_asking"`
+- **`test_ward_lost_race_on_the_same_entry_asks_and_keeps_mine`** — The winner wrote the same entry with another value:
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_lost_race_on_the_same_entry_asks_and_keeps_mine"`
+- **`test_ward_lost_race_on_the_same_entry_declined_keeps_theirs`** — Declining the conflict signs nothing:
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_lost_race_on_the_same_entry_declined_keeps_theirs"`
+- **`test_ward_lost_race_to_the_same_value_is_a_no_op`** — The winner wrote exactly my change:
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_lost_race_to_the_same_value_is_a_no_op"`
+- **`test_ward_attack_a_forged_retry_is_refused`** — A host cannot skip the confirmation by inventing a retry:
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_a_forged_retry_is_refused"`
 - **`test_ward_a_write_is_bound_to_the_latest_sync`** — The device binds to the nonce of the LATEST attestation it verified, not an earlier one: after two syncs, the write's `wm_sig` verifies under the second nonce only.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_a_write_is_bound_to_the_latest_sync"`
 - **`test_ward_attack_a_revert_from_an_ended_session_is_refused`** — A DEMOTION THE USER APPROVED, HELD BACK PAST A NEW SYNC: refused like any other write.

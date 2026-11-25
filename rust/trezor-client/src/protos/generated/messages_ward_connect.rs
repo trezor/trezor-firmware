@@ -695,6 +695,8 @@ pub struct WardLeafAck {
     pub auth_commit: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardLeafAck.wm_sig)
     pub wm_sig: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardLeafAck.retry)
+    pub retry: ::protobuf::MessageField<super::messages_ward::WardWriteRetry>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardLeafAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -911,7 +913,7 @@ impl WardLeafAck {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(6);
+        let mut fields = ::std::vec::Vec::with_capacity(7);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "entry_key",
@@ -943,6 +945,11 @@ impl WardLeafAck {
             |m: &WardLeafAck| { &m.wm_sig },
             |m: &mut WardLeafAck| { &mut m.wm_sig },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::messages_ward::WardWriteRetry>(
+            "retry",
+            |m: &WardLeafAck| { &m.retry },
+            |m: &mut WardLeafAck| { &mut m.retry },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardLeafAck>(
             "WardLeafAck",
             fields,
@@ -958,6 +965,11 @@ impl ::protobuf::Message for WardLeafAck {
         if self.entry_key.is_none() {
             return false;
         }
+        for v in &self.retry {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -981,6 +993,9 @@ impl ::protobuf::Message for WardLeafAck {
                 },
                 82 => {
                     self.wm_sig = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                106 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.retry)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -1012,6 +1027,10 @@ impl ::protobuf::Message for WardLeafAck {
         if let Some(v) = self.wm_sig.as_ref() {
             my_size += ::protobuf::rt::bytes_size(10, &v);
         }
+        if let Some(v) = self.retry.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1036,6 +1055,9 @@ impl ::protobuf::Message for WardLeafAck {
         if let Some(v) = self.wm_sig.as_ref() {
             os.write_bytes(10, v)?;
         }
+        if let Some(v) = self.retry.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(13, v, os)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -1059,6 +1081,7 @@ impl ::protobuf::Message for WardLeafAck {
         self.counter = ::std::option::Option::None;
         self.auth_commit = ::std::option::Option::None;
         self.wm_sig = ::std::option::Option::None;
+        self.retry.clear();
         self.special_fields.clear();
     }
 
@@ -1070,6 +1093,7 @@ impl ::protobuf::Message for WardLeafAck {
             counter: ::std::option::Option::None,
             auth_commit: ::std::option::Option::None,
             wm_sig: ::std::option::Option::None,
+            retry: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -6385,90 +6409,92 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     commit\"\x8a\x01\n\x0fWardBatchedLeaf\x12\x1b\n\tentry_key\x18\x01\x20\
     \x01(\x0cR\x08entryKey\x12'\n\x0fsealed_identity\x18\x04\x20\x01(\x0cR\
     \x0esealedIdentity\x12%\n\x0esealed_content\x18\x05\x20\x01(\x0cR\rseale\
-    dContentJ\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04\"\xf0\x01\n\x0bWardLe\
+    dContentJ\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04\"\xaf\x02\n\x0bWardLe\
     afAck\x12\x1b\n\tentry_key\x18\x01\x20\x02(\x0cR\x08entryKey\x12'\n\x0fs\
     ealed_identity\x18\x0b\x20\x01(\x0cR\x0esealedIdentity\x12%\n\x0esealed_\
     content\x18\x0c\x20\x01(\x0cR\rsealedContent\x12\x18\n\x07counter\x18\
     \x04\x20\x01(\rR\x07counter\x12\x1f\n\x0bauth_commit\x18\x06\x20\x01(\
-    \x0cR\nauthCommit\x12\x15\n\x06wm_sig\x18\n\x20\x01(\x0cR\x05wmSigJ\x04\
+    \x0cR\nauthCommit\x12\x15\n\x06wm_sig\x18\n\x20\x01(\x0cR\x05wmSig\x12=\
+    \n\x05retry\x18\r\x20\x01(\x0b2'.hw.trezor.messages.ward.WardWriteRetryR\
+    \x05retryJ\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x05\x10\x06\
+    J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\x08\t\x10\n\"\xed\x02\n\
+    \x11WardFlushQueueAck\x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08entr\
+    yKey\x12'\n\x0fsealed_identity\x18\x0c\x20\x01(\x0cR\x0esealedIdentity\
+    \x12%\n\x0esealed_content\x18\r\x20\x01(\x0cR\rsealedContent\x12\x18\n\
+    \x07counter\x18\x04\x20\x01(\rR\x07counter\x12\x1f\n\x0bauth_commit\x18\
+    \x06\x20\x01(\x0cR\nauthCommit\x12\x1c\n\tremaining\x18\x08\x20\x02(\rR\
+    \tremaining\x12\x15\n\x06wm_sig\x18\t\x20\x01(\x0cR\x05wmSig\x12!\n\x0cf\
+    rom_counter\x18\n\x20\x01(\rR\x0bfromCounter\x12@\n\x06leaves\x18\x0b\
+    \x20\x03(\x0b2(.hw.trezor.messages.ward.WardBatchedLeafR\x06leavesJ\x04\
     \x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x05\x10\x06J\x04\x08\x07\
-    \x10\x08J\x04\x08\x08\x10\tJ\x04\x08\t\x10\n\"\xed\x02\n\x11WardFlushQue\
-    ueAck\x12\x1b\n\tentry_key\x18\x01\x20\x01(\x0cR\x08entryKey\x12'\n\x0fs\
-    ealed_identity\x18\x0c\x20\x01(\x0cR\x0esealedIdentity\x12%\n\x0esealed_\
-    content\x18\r\x20\x01(\x0cR\rsealedContent\x12\x18\n\x07counter\x18\x04\
-    \x20\x01(\rR\x07counter\x12\x1f\n\x0bauth_commit\x18\x06\x20\x01(\x0cR\n\
-    authCommit\x12\x1c\n\tremaining\x18\x08\x20\x02(\rR\tremaining\x12\x15\n\
-    \x06wm_sig\x18\t\x20\x01(\x0cR\x05wmSig\x12!\n\x0cfrom_counter\x18\n\x20\
-    \x01(\rR\x0bfromCounter\x12@\n\x06leaves\x18\x0b\x20\x03(\x0b2(.hw.trezo\
-    r.messages.ward.WardBatchedLeafR\x06leavesJ\x04\x08\x02\x10\x03J\x04\x08\
-    \x03\x10\x04J\x04\x08\x05\x10\x06J\x04\x08\x07\x10\x08\"A\n\x0fWardVerif\
-    yChainJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\
-    \x04\x08\x04\x10\x05J\x04\x08\x05\x10\x06J\x04\x08\x06\x10\x07J\x04\x08\
-    \x07\x10\x08J\x04\x08\x08\x10\t\"y\n\x10WardChainRequest\x12\x1d\n\nto_c\
-    ounter\x18\x01\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x02\x20\
-    \x01(\x0cR\x06toRoot\x12'\n\x0fwith_acceptance\x18\x04\x20\x01(\x08R\x0e\
-    withAcceptanceJ\x04\x08\x03\x10\x04\"P\n\x10WardChainLinkAck\x12<\n\x05l\
-    inks\x18\x01\x20\x03(\x0b2&.hw.trezor.messages.ward.WardChainLinkR\x05li\
-    nks\"r\n\x12WardVerifyChainAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\
-    \x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12'\
-    \n\x0freverts_crossed\x18\x03\x20\x01(\rR\x0erevertsCrossed\"\xe8\x01\n\
-    \x0bWardCatchUp\x12\x1d\n\nto_counter\x18\x01\x20\x02(\rR\ttoCounter\x12\
-    \x17\n\x07to_root\x18\x02\x20\x01(\x0cR\x06toRoot\x12\x14\n\x05nonce\x18\
-    \x03\x20\x01(\x0cR\x05nonce\x12!\n\x0cfrom_counter\x18\x04\x20\x01(\rR\
-    \x0bfromCounter\x12\x1b\n\tfrom_root\x18\x05\x20\x01(\x0cR\x08fromRoot\
-    \x12\x1c\n\ttimestamp\x18\x08\x20\x01(\x04R\ttimestamp\x12!\n\x0cwm_sign\
-    ature\x18\t\x20\x01(\x0cR\x0bwmSignatureJ\x04\x08\x06\x10\x07J\x04\x08\
-    \x07\x10\x08\"q\n\x0eWardCatchUpAck\x12\x18\n\x07counter\x18\x01\x20\x01\
-    (\rR\x07counter\x12'\n\x0freverts_crossed\x18\x02\x20\x01(\rR\x0ereverts\
-    Crossed\x12\x1c\n\tpersisted\x18\x03\x20\x01(\x08R\tpersisted\"\x9e\x02\
-    \n\x0fWardRollForward\x12!\n\x0cfrom_counter\x18\x01\x20\x01(\rR\x0bfrom\
-    Counter\x12\x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fromRoot\x12\x1d\n\
-    \nto_counter\x18\x03\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x04\
-    \x20\x01(\x0cR\x06toRoot\x12\x1c\n\ttimestamp\x18\x05\x20\x01(\x04R\ttim\
-    estamp\x12!\n\x0cwm_signature\x18\x06\x20\x01(\x0cR\x0bwmSignature\x12<\
-    \n\x05links\x18\x07\x20\x03(\x0b2&.hw.trezor.messages.ward.WardChainLink\
-    R\x05links\x12\x14\n\x05final\x18\x08\x20\x01(\x08R\x05final\"T\n\x12War\
-    dRollForwardAck\x12\x17\n\x07wm_sigs\x18\x01\x20\x03(\x0cR\x06wmSigs\x12\
-    %\n\x0elast_timestamp\x18\x02\x20\x01(\x04R\rlastTimestamp\"/\n\x17WardS\
-    etPersistWithoutWm\x12\x14\n\x05allow\x18\x01\x20\x02(\x08R\x05allow\"/\
-    \n\nWardRejoin\x12!\n\x0cfork_counter\x18\x01\x20\x01(\rR\x0bforkCounter\
-    \"\x8b\x01\n\rWardRejoinAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07\
-    counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x1c\n\
-    \tdiscarded\x18\x03\x20\x01(\rR\tdiscarded\x12'\n\x0freverts_crossed\x18\
-    \x04\x20\x01(\rR\x0erevertsCrossed\"-\n\x08WardSync\x12!\n\x0cwm_challen\
-    ge\x18\x01\x20\x01(\x0cR\x0bwmChallenge\"\xb3\x01\n\x0bWardSyncAck\x12#\
-    \n\rsession_proof\x18\x06\x20\x01(\x0cR\x0csessionProof\x12\x14\n\x05non\
-    ce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x17\n\x07ward_id\x18\x02\x20\x01(\
-    \x0cR\x06wardId\x12\x18\n\x07counter\x18\x03\x20\x01(\rR\x07counter\x12\
-    \x12\n\x04root\x18\x04\x20\x01(\x0cR\x04root\x12\"\n\rhead_init_sig\x18\
-    \x05\x20\x01(\x0cR\x0bheadInitSig\"\xe8\x01\n\x15WardIngestAttestation\
-    \x12!\n\x0cwm_signature\x18\x03\x20\x01(\x0cR\x0bwmSignature\x12\x1c\n\t\
-    timestamp\x18\x04\x20\x01(\x04R\ttimestamp\x12\x1d\n\nto_counter\x18\x05\
-    \x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x06\x20\x01(\x0cR\x06to\
-    Root\x12!\n\x0cfrom_counter\x18\x07\x20\x01(\rR\x0bfromCounter\x12\x1b\n\
-    \tfrom_root\x18\x08\x20\x01(\x0cR\x08fromRootJ\x04\x08\x01\x10\x02J\x04\
-    \x08\x02\x10\x03J\x04\x08\t\x10\nJ\x04\x08\n\x10\x0b\"x\n\x18WardIngestA\
-    ttestationAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\
-    \x1b\n\twm_behind\x18\x02\x20\x01(\x08R\x08wmBehind\x12%\n\x0estored_cou\
-    nter\x18\x03\x20\x01(\rR\rstoredCounter\"B\n\rWardReconcile\x12\x1f\n\
-    \x0bauth_commit\x18\x04\x20\x01(\x0cR\nauthCommitJ\x04\x08\x01\x10\x02J\
-    \x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04\"G\n\x10WardReconcileAck\x12\
-    \x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_root\
-    \x18\x02\x20\x01(\x0cR\x07newRoot\"\xd7\x02\n\x0cWardRollback\x12!\n\x0c\
-    from_counter\x18\t\x20\x01(\rR\x0bfromCounter\x12\x1b\n\tfrom_root\x18\n\
-    \x20\x01(\x0cR\x08fromRoot\x12\x1d\n\nto_counter\x18\x0b\x20\x01(\rR\tto\
-    Counter\x12\x17\n\x07to_root\x18\x0c\x20\x01(\x0cR\x06toRoot\x12!\n\x0cw\
-    m_signature\x18\r\x20\x01(\x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\
-    \x0e\x20\x01(\x04R\ttimestamp\x12%\n\x0erecovered_root\x18\x0f\x20\x01(\
-    \x0cR\rrecoveredRoot\x12+\n\x11recovered_counter\x18\x12\x20\x01(\rR\x10\
-    recoveredCounterJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\x03\
-    \x10\x04J\x04\x08\x04\x10\x05J\x04\x08\x05\x10\x06J\x04\x08\x06\x10\x07J\
-    \x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\x08\x10\x10\x11J\x04\x08\
-    \x11\x10\x12\"\x84\x01\n\x0fWardRollbackAck\x12\x18\n\x07counter\x18\x01\
-    \x20\x01(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07n\
-    ewRoot\x12\x1f\n\x0bauth_commit\x18\x03\x20\x01(\x0cR\nauthCommit\x12\
-    \x15\n\x06wm_sig\x18\x05\x20\x01(\x0cR\x05wmSigJ\x04\x08\x04\x10\x05B?\n\
-    #com.satoshilabs.trezor.lib.protobufB\x18TrezorMessageWardConnect\
+    \x10\x08\"A\n\x0fWardVerifyChainJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\
+    \x03J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\x05J\x04\x08\x05\x10\x06J\x04\
+    \x08\x06\x10\x07J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\t\"y\n\x10WardCha\
+    inRequest\x12\x1d\n\nto_counter\x18\x01\x20\x01(\rR\ttoCounter\x12\x17\n\
+    \x07to_root\x18\x02\x20\x01(\x0cR\x06toRoot\x12'\n\x0fwith_acceptance\
+    \x18\x04\x20\x01(\x08R\x0ewithAcceptanceJ\x04\x08\x03\x10\x04\"P\n\x10Wa\
+    rdChainLinkAck\x12<\n\x05links\x18\x01\x20\x03(\x0b2&.hw.trezor.messages\
+    .ward.WardChainLinkR\x05links\"r\n\x12WardVerifyChainAck\x12\x18\n\x07co\
+    unter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\
+    \x01(\x0cR\x07newRoot\x12'\n\x0freverts_crossed\x18\x03\x20\x01(\rR\x0er\
+    evertsCrossed\"\xe8\x01\n\x0bWardCatchUp\x12\x1d\n\nto_counter\x18\x01\
+    \x20\x02(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x02\x20\x01(\x0cR\x06to\
+    Root\x12\x14\n\x05nonce\x18\x03\x20\x01(\x0cR\x05nonce\x12!\n\x0cfrom_co\
+    unter\x18\x04\x20\x01(\rR\x0bfromCounter\x12\x1b\n\tfrom_root\x18\x05\
+    \x20\x01(\x0cR\x08fromRoot\x12\x1c\n\ttimestamp\x18\x08\x20\x01(\x04R\tt\
+    imestamp\x12!\n\x0cwm_signature\x18\t\x20\x01(\x0cR\x0bwmSignatureJ\x04\
+    \x08\x06\x10\x07J\x04\x08\x07\x10\x08\"q\n\x0eWardCatchUpAck\x12\x18\n\
+    \x07counter\x18\x01\x20\x01(\rR\x07counter\x12'\n\x0freverts_crossed\x18\
+    \x02\x20\x01(\rR\x0erevertsCrossed\x12\x1c\n\tpersisted\x18\x03\x20\x01(\
+    \x08R\tpersisted\"\x9e\x02\n\x0fWardRollForward\x12!\n\x0cfrom_counter\
+    \x18\x01\x20\x01(\rR\x0bfromCounter\x12\x1b\n\tfrom_root\x18\x02\x20\x01\
+    (\x0cR\x08fromRoot\x12\x1d\n\nto_counter\x18\x03\x20\x01(\rR\ttoCounter\
+    \x12\x17\n\x07to_root\x18\x04\x20\x01(\x0cR\x06toRoot\x12\x1c\n\ttimesta\
+    mp\x18\x05\x20\x01(\x04R\ttimestamp\x12!\n\x0cwm_signature\x18\x06\x20\
+    \x01(\x0cR\x0bwmSignature\x12<\n\x05links\x18\x07\x20\x03(\x0b2&.hw.trez\
+    or.messages.ward.WardChainLinkR\x05links\x12\x14\n\x05final\x18\x08\x20\
+    \x01(\x08R\x05final\"T\n\x12WardRollForwardAck\x12\x17\n\x07wm_sigs\x18\
+    \x01\x20\x03(\x0cR\x06wmSigs\x12%\n\x0elast_timestamp\x18\x02\x20\x01(\
+    \x04R\rlastTimestamp\"/\n\x17WardSetPersistWithoutWm\x12\x14\n\x05allow\
+    \x18\x01\x20\x02(\x08R\x05allow\"/\n\nWardRejoin\x12!\n\x0cfork_counter\
+    \x18\x01\x20\x01(\rR\x0bforkCounter\"\x8b\x01\n\rWardRejoinAck\x12\x18\n\
+    \x07counter\x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\
+    \x20\x01(\x0cR\x07newRoot\x12\x1c\n\tdiscarded\x18\x03\x20\x01(\rR\tdisc\
+    arded\x12'\n\x0freverts_crossed\x18\x04\x20\x01(\rR\x0erevertsCrossed\"-\
+    \n\x08WardSync\x12!\n\x0cwm_challenge\x18\x01\x20\x01(\x0cR\x0bwmChallen\
+    ge\"\xb3\x01\n\x0bWardSyncAck\x12#\n\rsession_proof\x18\x06\x20\x01(\x0c\
+    R\x0csessionProof\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\
+    \x17\n\x07ward_id\x18\x02\x20\x01(\x0cR\x06wardId\x12\x18\n\x07counter\
+    \x18\x03\x20\x01(\rR\x07counter\x12\x12\n\x04root\x18\x04\x20\x01(\x0cR\
+    \x04root\x12\"\n\rhead_init_sig\x18\x05\x20\x01(\x0cR\x0bheadInitSig\"\
+    \xe8\x01\n\x15WardIngestAttestation\x12!\n\x0cwm_signature\x18\x03\x20\
+    \x01(\x0cR\x0bwmSignature\x12\x1c\n\ttimestamp\x18\x04\x20\x01(\x04R\tti\
+    mestamp\x12\x1d\n\nto_counter\x18\x05\x20\x01(\rR\ttoCounter\x12\x17\n\
+    \x07to_root\x18\x06\x20\x01(\x0cR\x06toRoot\x12!\n\x0cfrom_counter\x18\
+    \x07\x20\x01(\rR\x0bfromCounter\x12\x1b\n\tfrom_root\x18\x08\x20\x01(\
+    \x0cR\x08fromRootJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\t\
+    \x10\nJ\x04\x08\n\x10\x0b\"x\n\x18WardIngestAttestationAck\x12\x18\n\x07\
+    counter\x18\x01\x20\x01(\rR\x07counter\x12\x1b\n\twm_behind\x18\x02\x20\
+    \x01(\x08R\x08wmBehind\x12%\n\x0estored_counter\x18\x03\x20\x01(\rR\rsto\
+    redCounter\"B\n\rWardReconcile\x12\x1f\n\x0bauth_commit\x18\x04\x20\x01(\
+    \x0cR\nauthCommitJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\x03\
+    \x10\x04\"G\n\x10WardReconcileAck\x12\x18\n\x07counter\x18\x01\x20\x01(\
+    \rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\"\
+    \xd7\x02\n\x0cWardRollback\x12!\n\x0cfrom_counter\x18\t\x20\x01(\rR\x0bf\
+    romCounter\x12\x1b\n\tfrom_root\x18\n\x20\x01(\x0cR\x08fromRoot\x12\x1d\
+    \n\nto_counter\x18\x0b\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\
+    \x0c\x20\x01(\x0cR\x06toRoot\x12!\n\x0cwm_signature\x18\r\x20\x01(\x0cR\
+    \x0bwmSignature\x12\x1c\n\ttimestamp\x18\x0e\x20\x01(\x04R\ttimestamp\
+    \x12%\n\x0erecovered_root\x18\x0f\x20\x01(\x0cR\rrecoveredRoot\x12+\n\
+    \x11recovered_counter\x18\x12\x20\x01(\rR\x10recoveredCounterJ\x04\x08\
+    \x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\
+    \x05J\x04\x08\x05\x10\x06J\x04\x08\x06\x10\x07J\x04\x08\x07\x10\x08J\x04\
+    \x08\x08\x10\tJ\x04\x08\x10\x10\x11J\x04\x08\x11\x10\x12\"\x84\x01\n\x0f\
+    WardRollbackAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\
+    \x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x1f\n\x0bauth_co\
+    mmit\x18\x03\x20\x01(\x0cR\nauthCommit\x12\x15\n\x06wm_sig\x18\x05\x20\
+    \x01(\x0cR\x05wmSigJ\x04\x08\x04\x10\x05B?\n#com.satoshilabs.trezor.lib.\
+    protobufB\x18TrezorMessageWardConnect\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

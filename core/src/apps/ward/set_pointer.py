@@ -44,6 +44,21 @@ async def set_pointer(msg: WardSetPointer) -> "WardLeafAck | WardMutationApplied
 
     old, old_leaf, material = await pull_leaf(entry_key)
 
+    if msg.retry is not None:
+        from .common import retry_write
+
+        return await retry_write(
+            msg.retry,
+            entry_key,
+            app_id,
+            identifier,
+            value,
+            old,
+            old_leaf,
+            material,
+            entry_type=ENTRY_TYPE_POINTER,
+        )
+
     props = entry_props(app_id, identifier)
     if old is None:
         title = "Add pointer"

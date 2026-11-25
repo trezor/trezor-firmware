@@ -246,6 +246,8 @@ pub struct WardSetEntry {
     pub identifier: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSetEntry.value)
     pub value: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSetEntry.retry)
+    pub retry: ::protobuf::MessageField<WardWriteRetry>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardSetEntry.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -371,7 +373,7 @@ impl WardSetEntry {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "app_id",
@@ -387,6 +389,11 @@ impl WardSetEntry {
             "value",
             |m: &WardSetEntry| { &m.value },
             |m: &mut WardSetEntry| { &mut m.value },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, WardWriteRetry>(
+            "retry",
+            |m: &WardSetEntry| { &m.retry },
+            |m: &mut WardSetEntry| { &mut m.retry },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardSetEntry>(
             "WardSetEntry",
@@ -415,6 +422,9 @@ impl ::protobuf::Message for WardSetEntry {
                 26 => {
                     self.value = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                34 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.retry)?;
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -436,6 +446,10 @@ impl ::protobuf::Message for WardSetEntry {
         if let Some(v) = self.value.as_ref() {
             my_size += ::protobuf::rt::bytes_size(3, &v);
         }
+        if let Some(v) = self.retry.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -450,6 +464,9 @@ impl ::protobuf::Message for WardSetEntry {
         }
         if let Some(v) = self.value.as_ref() {
             os.write_bytes(3, v)?;
+        }
+        if let Some(v) = self.retry.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(4, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -471,6 +488,7 @@ impl ::protobuf::Message for WardSetEntry {
         self.app_id = ::std::option::Option::None;
         self.identifier = ::std::option::Option::None;
         self.value = ::std::option::Option::None;
+        self.retry.clear();
         self.special_fields.clear();
     }
 
@@ -479,6 +497,7 @@ impl ::protobuf::Message for WardSetEntry {
             app_id: ::std::option::Option::None,
             identifier: ::std::option::Option::None,
             value: ::std::option::Option::None,
+            retry: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -502,6 +521,238 @@ impl ::protobuf::reflect::ProtobufValue for WardSetEntry {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.ward.WardWriteRetry)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WardWriteRetry {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardWriteRetry.base)
+    pub base: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardWriteRetry.seen)
+    pub seen: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardWriteRetry.mac)
+    pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardWriteRetry.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WardWriteRetry {
+    fn default() -> &'a WardWriteRetry {
+        <WardWriteRetry as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WardWriteRetry {
+    pub fn new() -> WardWriteRetry {
+        ::std::default::Default::default()
+    }
+
+    // optional uint32 base = 1;
+
+    pub fn base(&self) -> u32 {
+        self.base.unwrap_or(0)
+    }
+
+    pub fn clear_base(&mut self) {
+        self.base = ::std::option::Option::None;
+    }
+
+    pub fn has_base(&self) -> bool {
+        self.base.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_base(&mut self, v: u32) {
+        self.base = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 seen = 2;
+
+    pub fn seen(&self) -> u32 {
+        self.seen.unwrap_or(0)
+    }
+
+    pub fn clear_seen(&mut self) {
+        self.seen = ::std::option::Option::None;
+    }
+
+    pub fn has_seen(&self) -> bool {
+        self.seen.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_seen(&mut self, v: u32) {
+        self.seen = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes mac = 3;
+
+    pub fn mac(&self) -> &[u8] {
+        match self.mac.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_mac(&mut self) {
+        self.mac = ::std::option::Option::None;
+    }
+
+    pub fn has_mac(&self) -> bool {
+        self.mac.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_mac(&mut self, v: ::std::vec::Vec<u8>) {
+        self.mac = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_mac(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.mac.is_none() {
+            self.mac = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.mac.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_mac(&mut self) -> ::std::vec::Vec<u8> {
+        self.mac.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "base",
+            |m: &WardWriteRetry| { &m.base },
+            |m: &mut WardWriteRetry| { &mut m.base },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "seen",
+            |m: &WardWriteRetry| { &m.seen },
+            |m: &mut WardWriteRetry| { &mut m.seen },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "mac",
+            |m: &WardWriteRetry| { &m.mac },
+            |m: &mut WardWriteRetry| { &mut m.mac },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardWriteRetry>(
+            "WardWriteRetry",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WardWriteRetry {
+    const NAME: &'static str = "WardWriteRetry";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.base = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                16 => {
+                    self.seen = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                26 => {
+                    self.mac = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.base {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        if let Some(v) = self.seen {
+            my_size += ::protobuf::rt::uint32_size(2, v);
+        }
+        if let Some(v) = self.mac.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(3, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.base {
+            os.write_uint32(1, v)?;
+        }
+        if let Some(v) = self.seen {
+            os.write_uint32(2, v)?;
+        }
+        if let Some(v) = self.mac.as_ref() {
+            os.write_bytes(3, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WardWriteRetry {
+        WardWriteRetry::new()
+    }
+
+    fn clear(&mut self) {
+        self.base = ::std::option::Option::None;
+        self.seen = ::std::option::Option::None;
+        self.mac = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WardWriteRetry {
+        static instance: WardWriteRetry = WardWriteRetry {
+            base: ::std::option::Option::None,
+            seen: ::std::option::Option::None,
+            mac: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WardWriteRetry {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WardWriteRetry").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WardWriteRetry {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WardWriteRetry {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.ward.WardDeleteEntry)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct WardDeleteEntry {
@@ -510,6 +761,8 @@ pub struct WardDeleteEntry {
     pub app_id: ::std::option::Option<::std::string::String>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardDeleteEntry.identifier)
     pub identifier: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardDeleteEntry.retry)
+    pub retry: ::protobuf::MessageField<WardWriteRetry>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardDeleteEntry.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -599,7 +852,7 @@ impl WardDeleteEntry {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "app_id",
@@ -610,6 +863,11 @@ impl WardDeleteEntry {
             "identifier",
             |m: &WardDeleteEntry| { &m.identifier },
             |m: &mut WardDeleteEntry| { &mut m.identifier },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, WardWriteRetry>(
+            "retry",
+            |m: &WardDeleteEntry| { &m.retry },
+            |m: &mut WardDeleteEntry| { &mut m.retry },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardDeleteEntry>(
             "WardDeleteEntry",
@@ -635,6 +893,9 @@ impl ::protobuf::Message for WardDeleteEntry {
                 18 => {
                     self.identifier = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                26 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.retry)?;
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -653,6 +914,10 @@ impl ::protobuf::Message for WardDeleteEntry {
         if let Some(v) = self.identifier.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
+        if let Some(v) = self.retry.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -664,6 +929,9 @@ impl ::protobuf::Message for WardDeleteEntry {
         }
         if let Some(v) = self.identifier.as_ref() {
             os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.retry.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -684,6 +952,7 @@ impl ::protobuf::Message for WardDeleteEntry {
     fn clear(&mut self) {
         self.app_id = ::std::option::Option::None;
         self.identifier = ::std::option::Option::None;
+        self.retry.clear();
         self.special_fields.clear();
     }
 
@@ -691,6 +960,7 @@ impl ::protobuf::Message for WardDeleteEntry {
         static instance: WardDeleteEntry = WardDeleteEntry {
             app_id: ::std::option::Option::None,
             identifier: ::std::option::Option::None,
+            retry: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -724,6 +994,8 @@ pub struct WardSetPointer {
     pub identifier: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSetPointer.target_identifier)
     pub target_identifier: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardSetPointer.retry)
+    pub retry: ::protobuf::MessageField<WardWriteRetry>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardSetPointer.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -849,7 +1121,7 @@ impl WardSetPointer {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "app_id",
@@ -865,6 +1137,11 @@ impl WardSetPointer {
             "target_identifier",
             |m: &WardSetPointer| { &m.target_identifier },
             |m: &mut WardSetPointer| { &mut m.target_identifier },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, WardWriteRetry>(
+            "retry",
+            |m: &WardSetPointer| { &m.retry },
+            |m: &mut WardSetPointer| { &mut m.retry },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardSetPointer>(
             "WardSetPointer",
@@ -893,6 +1170,9 @@ impl ::protobuf::Message for WardSetPointer {
                 26 => {
                     self.target_identifier = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                34 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.retry)?;
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -914,6 +1194,10 @@ impl ::protobuf::Message for WardSetPointer {
         if let Some(v) = self.target_identifier.as_ref() {
             my_size += ::protobuf::rt::bytes_size(3, &v);
         }
+        if let Some(v) = self.retry.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -928,6 +1212,9 @@ impl ::protobuf::Message for WardSetPointer {
         }
         if let Some(v) = self.target_identifier.as_ref() {
             os.write_bytes(3, v)?;
+        }
+        if let Some(v) = self.retry.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(4, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -949,6 +1236,7 @@ impl ::protobuf::Message for WardSetPointer {
         self.app_id = ::std::option::Option::None;
         self.identifier = ::std::option::Option::None;
         self.target_identifier = ::std::option::Option::None;
+        self.retry.clear();
         self.special_fields.clear();
     }
 
@@ -957,6 +1245,7 @@ impl ::protobuf::Message for WardSetPointer {
             app_id: ::std::option::Option::None,
             identifier: ::std::option::Option::None,
             target_identifier: ::std::option::Option::None,
+            retry: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -4265,55 +4554,61 @@ impl ::protobuf::reflect::ProtobufValue for WardResetAppAck {
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x13messages-ward.proto\x12\x17hw.trezor.messages.ward\"E\n\x0cWardGet\
     Entry\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nidenti\
-    fier\x18\x02\x20\x01(\x0cR\nidentifier\"[\n\x0cWardSetEntry\x12\x15\n\
-    \x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\
-    \x20\x01(\x0cR\nidentifier\x12\x14\n\x05value\x18\x03\x20\x01(\x0cR\x05v\
-    alue\"H\n\x0fWardDeleteEntry\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05\
-    appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifier\"t\n\x0eWa\
-    rdSetPointer\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\
+    fier\x18\x02\x20\x01(\x0cR\nidentifier\"\x9a\x01\n\x0cWardSetEntry\x12\
+    \x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\
+    \x02\x20\x01(\x0cR\nidentifier\x12\x14\n\x05value\x18\x03\x20\x01(\x0cR\
+    \x05value\x12=\n\x05retry\x18\x04\x20\x01(\x0b2'.hw.trezor.messages.ward\
+    .WardWriteRetryR\x05retry\"J\n\x0eWardWriteRetry\x12\x12\n\x04base\x18\
+    \x01\x20\x01(\rR\x04base\x12\x12\n\x04seen\x18\x02\x20\x01(\rR\x04seen\
+    \x12\x10\n\x03mac\x18\x03\x20\x01(\x0cR\x03mac\"\x87\x01\n\x0fWardDelete\
+    Entry\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nidenti\
+    fier\x18\x02\x20\x01(\x0cR\nidentifier\x12=\n\x05retry\x18\x03\x20\x01(\
+    \x0b2'.hw.trezor.messages.ward.WardWriteRetryR\x05retry\"\xb3\x01\n\x0eW\
+    ardSetPointer\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\
     \nidentifier\x18\x02\x20\x01(\x0cR\nidentifier\x12+\n\x11target_identifi\
-    er\x18\x03\x20\x01(\x0cR\x10targetIdentifier\"\xce\x01\n\x0cWardEntryAck\
-    \x12%\n\x0esealed_content\x18\x0c\x20\x01(\x0cR\rsealedContent\x12\x14\n\
-    \x05proof\x18\x04\x20\x03(\x0cR\x05proof\x12*\n\x11witness_entry_key\x18\
-    \x05\x20\x01(\x0cR\x0fwitnessEntryKey\x12%\n\x0ewitness_commit\x18\x06\
-    \x20\x01(\x0cR\rwitnessCommitJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\
-    \x04\x08\x03\x10\x04J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\x08\t\
-    \x10\nJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\x0c\"\x98\x01\n\x11WardQueueS\
-    etEntry\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\niden\
-    tifier\x18\x02\x20\x01(\x0cR\nidentifier\x12\x14\n\x05value\x18\x03\x20\
-    \x01(\x0cR\x05value\x12\x10\n\x03mac\x18\x04\x20\x01(\x0cR\x03mac\x12\
-    \x18\n\x07compact\x18\x07\x20\x01(\x08R\x07compactJ\x04\x08\x05\x10\x06J\
-    \x04\x08\x06\x10\x07\"\x17\n\x0fWardQueueSetAckJ\x04\x08\x01\x10\x02\"M\
-    \n\x14WardQueueDeleteEntry\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05ap\
-    pId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifier\"4\n\x12Ward\
-    QueueDeleteAck\x12\x18\n\x07missing\x18\x02\x20\x01(\x08R\x07missingJ\
-    \x04\x08\x01\x10\x02\"J\n\x11WardQueueGetEntry\x12\x15\n\x06app_id\x18\
-    \x01\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\ni\
-    dentifier\"\xd7\x01\n\x0fWardQueueGetAck\x12\x18\n\x07missing\x18\x02\
-    \x20\x01(\x08R\x07missing\x12\x18\n\x07pending\x18\x03\x20\x01(\x08R\x07\
-    pending\x12\x19\n\x08key_type\x18\x07\x20\x01(\tR\x07keyType\x12\x15\n\
-    \x06app_id\x18\x08\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\t\x20\
-    \x01(\x0cR\nidentifier\x12\x14\n\x05value\x18\n\x20\x01(\x0cR\x05value\
-    \x12\x10\n\x03mac\x18\x0b\x20\x01(\x0cR\x03macJ\x04\x08\x01\x10\x02J\x04\
-    \x08\x04\x10\x05J\x04\x08\x05\x10\x06J\x04\x08\x06\x10\x07\"\xf6\x01\n\r\
-    WardChainLink\x12!\n\x0cfrom_counter\x18\x01\x20\x01(\rR\x0bfromCounter\
-    \x12\x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\x08fromRoot\x12\x1d\n\nto_co\
-    unter\x18\x03\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\x04\x20\
-    \x01(\x0cR\x06toRoot\x12\x1f\n\x0bauth_commit\x18\x05\x20\x01(\x0cR\naut\
-    hCommit\x12L\n\nacceptance\x18\x06\x20\x01(\x0b2,.hw.trezor.messages.war\
-    d.WardChainAcceptanceR\nacceptance\"r\n\x13WardChainAcceptance\x12\x14\n\
-    \x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12\x1c\n\ttimestamp\x18\x03\
-    \x20\x01(\x04R\ttimestamp\x12!\n\x0cwm_signature\x18\x04\x20\x01(\x0cR\
-    \x0bwmSignatureJ\x04\x08\x02\x10\x03\"K\n\x12WardPinCachedEntry\x12\x15\
-    \n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\
-    \x20\x01(\x0cR\nidentifier\"M\n\x14WardEraseCachedEntry\x12\x15\n\x06app\
-    _id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\
-    \x0cR\nidentifier\"d\n\x0eWardFlushQueue\x12\x15\n\x06app_id\x18\x01\x20\
-    \x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifie\
-    r\x12\x1b\n\tmax_batch\x18\x03\x20\x01(\rR\x08maxBatch\"\x0e\n\x0cWardRe\
-    setApp\".\n\x0fWardResetAppAck\x12\x1b\n\twas_bound\x18\x01\x20\x01(\x08\
-    R\x08wasBoundB8\n#com.satoshilabs.trezor.lib.protobufB\x11TrezorMessageW\
-    ard\
+    er\x18\x03\x20\x01(\x0cR\x10targetIdentifier\x12=\n\x05retry\x18\x04\x20\
+    \x01(\x0b2'.hw.trezor.messages.ward.WardWriteRetryR\x05retry\"\xce\x01\n\
+    \x0cWardEntryAck\x12%\n\x0esealed_content\x18\x0c\x20\x01(\x0cR\rsealedC\
+    ontent\x12\x14\n\x05proof\x18\x04\x20\x03(\x0cR\x05proof\x12*\n\x11witne\
+    ss_entry_key\x18\x05\x20\x01(\x0cR\x0fwitnessEntryKey\x12%\n\x0ewitness_\
+    commit\x18\x06\x20\x01(\x0cR\rwitnessCommitJ\x04\x08\x01\x10\x02J\x04\
+    \x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x07\x10\x08J\x04\x08\x08\
+    \x10\tJ\x04\x08\t\x10\nJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\x0c\"\x98\
+    \x01\n\x11WardQueueSetEntry\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05a\
+    ppId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifier\x12\x14\n\
+    \x05value\x18\x03\x20\x01(\x0cR\x05value\x12\x10\n\x03mac\x18\x04\x20\
+    \x01(\x0cR\x03mac\x12\x18\n\x07compact\x18\x07\x20\x01(\x08R\x07compactJ\
+    \x04\x08\x05\x10\x06J\x04\x08\x06\x10\x07\"\x17\n\x0fWardQueueSetAckJ\
+    \x04\x08\x01\x10\x02\"M\n\x14WardQueueDeleteEntry\x12\x15\n\x06app_id\
+    \x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\x02\x20\x01(\x0c\
+    R\nidentifier\"4\n\x12WardQueueDeleteAck\x12\x18\n\x07missing\x18\x02\
+    \x20\x01(\x08R\x07missingJ\x04\x08\x01\x10\x02\"J\n\x11WardQueueGetEntry\
+    \x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\
+    \x18\x02\x20\x01(\x0cR\nidentifier\"\xd7\x01\n\x0fWardQueueGetAck\x12\
+    \x18\n\x07missing\x18\x02\x20\x01(\x08R\x07missing\x12\x18\n\x07pending\
+    \x18\x03\x20\x01(\x08R\x07pending\x12\x19\n\x08key_type\x18\x07\x20\x01(\
+    \tR\x07keyType\x12\x15\n\x06app_id\x18\x08\x20\x01(\tR\x05appId\x12\x1e\
+    \n\nidentifier\x18\t\x20\x01(\x0cR\nidentifier\x12\x14\n\x05value\x18\n\
+    \x20\x01(\x0cR\x05value\x12\x10\n\x03mac\x18\x0b\x20\x01(\x0cR\x03macJ\
+    \x04\x08\x01\x10\x02J\x04\x08\x04\x10\x05J\x04\x08\x05\x10\x06J\x04\x08\
+    \x06\x10\x07\"\xf6\x01\n\rWardChainLink\x12!\n\x0cfrom_counter\x18\x01\
+    \x20\x01(\rR\x0bfromCounter\x12\x1b\n\tfrom_root\x18\x02\x20\x01(\x0cR\
+    \x08fromRoot\x12\x1d\n\nto_counter\x18\x03\x20\x01(\rR\ttoCounter\x12\
+    \x17\n\x07to_root\x18\x04\x20\x01(\x0cR\x06toRoot\x12\x1f\n\x0bauth_comm\
+    it\x18\x05\x20\x01(\x0cR\nauthCommit\x12L\n\nacceptance\x18\x06\x20\x01(\
+    \x0b2,.hw.trezor.messages.ward.WardChainAcceptanceR\nacceptance\"r\n\x13\
+    WardChainAcceptance\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\
+    \x12\x1c\n\ttimestamp\x18\x03\x20\x01(\x04R\ttimestamp\x12!\n\x0cwm_sign\
+    ature\x18\x04\x20\x01(\x0cR\x0bwmSignatureJ\x04\x08\x02\x10\x03\"K\n\x12\
+    WardPinCachedEntry\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\
+    \x1e\n\nidentifier\x18\x02\x20\x01(\x0cR\nidentifier\"M\n\x14WardEraseCa\
+    chedEntry\x12\x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nid\
+    entifier\x18\x02\x20\x01(\x0cR\nidentifier\"d\n\x0eWardFlushQueue\x12\
+    \x15\n\x06app_id\x18\x01\x20\x01(\tR\x05appId\x12\x1e\n\nidentifier\x18\
+    \x02\x20\x01(\x0cR\nidentifier\x12\x1b\n\tmax_batch\x18\x03\x20\x01(\rR\
+    \x08maxBatch\"\x0e\n\x0cWardResetApp\".\n\x0fWardResetAppAck\x12\x1b\n\t\
+    was_bound\x18\x01\x20\x01(\x08R\x08wasBoundB8\n#com.satoshilabs.trezor.l\
+    ib.protobufB\x11TrezorMessageWard\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -4331,9 +4626,10 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(18);
+            let mut messages = ::std::vec::Vec::with_capacity(19);
             messages.push(WardGetEntry::generated_message_descriptor_data());
             messages.push(WardSetEntry::generated_message_descriptor_data());
+            messages.push(WardWriteRetry::generated_message_descriptor_data());
             messages.push(WardDeleteEntry::generated_message_descriptor_data());
             messages.push(WardSetPointer::generated_message_descriptor_data());
             messages.push(WardEntryAck::generated_message_descriptor_data());

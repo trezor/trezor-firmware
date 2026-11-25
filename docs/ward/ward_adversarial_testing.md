@@ -150,7 +150,7 @@ catalogue](ward_testing.md#test-catalogue).
 - **`TestWardCodecExchange.test_a_stale_answer_is_dropped_and_its_lease_given_back`** — An answer to a question that already gave up must not become the NEXT question's.
   `ward_unit_test test_trezor.wire.codec.ward_context.py`
 
-### `tests/device_tests/misc/test_ward.py` (185) — connect build (T3T1)
+### `tests/device_tests/misc/test_ward.py` (190) — connect build (T3T1)
 
 - **`test_ward_rejects_a_tampered_leaf`** — A leaf the host edited is refused.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_rejects_a_tampered_leaf"`
@@ -220,6 +220,8 @@ catalogue](ward_testing.md#test-catalogue).
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_a_write_from_an_ended_session_is_refused"`
 - **`test_ward_attack_another_devices_sync_ends_this_devices_session`** — THE SAME, WITH ANOTHER DEVICE OF THE WALLET SYNCING IN BETWEEN.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_another_devices_sync_ends_this_devices_session"`
+- **`test_ward_attack_a_forged_retry_is_refused`** — A host cannot skip the confirmation by inventing a retry:
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_attack_a_forged_retry_is_refused"`
 - **`test_ward_a_write_is_bound_to_the_latest_sync`** — The device binds to the nonce of the LATEST attestation it verified, not an earlier one: after two syncs, the write's `wm_sig` verifies under the second nonce only.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_a_write_is_bound_to_the_latest_sync"`
 - **`test_ward_attack_a_revert_from_an_ended_session_is_refused`** — A DEMOTION THE USER APPROVED, HELD BACK PAST A NEW SYNC: refused like any other write.

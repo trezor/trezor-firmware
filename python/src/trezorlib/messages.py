@@ -10118,6 +10118,7 @@ class WardSetEntry(protobuf.MessageType):
         1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
         2: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("retry", "WardWriteRetry", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10126,10 +10127,32 @@ class WardSetEntry(protobuf.MessageType):
         app_id: Optional["str"] = None,
         identifier: Optional["bytes"] = None,
         value: Optional["bytes"] = None,
+        retry: Optional["WardWriteRetry"] = None,
     ) -> None:
         self.app_id = app_id
         self.identifier = identifier
         self.value = value
+        self.retry = retry
+
+
+class WardWriteRetry(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("base", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("seen", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        base: Optional["int"] = None,
+        seen: Optional["int"] = None,
+        mac: Optional["bytes"] = None,
+    ) -> None:
+        self.base = base
+        self.seen = seen
+        self.mac = mac
 
 
 class WardDeleteEntry(protobuf.MessageType):
@@ -10137,6 +10160,7 @@ class WardDeleteEntry(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
         2: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("retry", "WardWriteRetry", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10144,9 +10168,11 @@ class WardDeleteEntry(protobuf.MessageType):
         *,
         app_id: Optional["str"] = None,
         identifier: Optional["bytes"] = None,
+        retry: Optional["WardWriteRetry"] = None,
     ) -> None:
         self.app_id = app_id
         self.identifier = identifier
+        self.retry = retry
 
 
 class WardSetPointer(protobuf.MessageType):
@@ -10155,6 +10181,7 @@ class WardSetPointer(protobuf.MessageType):
         1: protobuf.Field("app_id", "string", repeated=False, required=False, default=None),
         2: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("target_identifier", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("retry", "WardWriteRetry", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10163,10 +10190,12 @@ class WardSetPointer(protobuf.MessageType):
         app_id: Optional["str"] = None,
         identifier: Optional["bytes"] = None,
         target_identifier: Optional["bytes"] = None,
+        retry: Optional["WardWriteRetry"] = None,
     ) -> None:
         self.app_id = app_id
         self.identifier = identifier
         self.target_identifier = target_identifier
+        self.retry = retry
 
 
 class WardEntryAck(protobuf.MessageType):
@@ -10486,6 +10515,7 @@ class WardLeafAck(protobuf.MessageType):
         4: protobuf.Field("counter", "uint32", repeated=False, required=False, default=None),
         6: protobuf.Field("auth_commit", "bytes", repeated=False, required=False, default=None),
         10: protobuf.Field("wm_sig", "bytes", repeated=False, required=False, default=None),
+        13: protobuf.Field("retry", "WardWriteRetry", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10497,6 +10527,7 @@ class WardLeafAck(protobuf.MessageType):
         counter: Optional["int"] = None,
         auth_commit: Optional["bytes"] = None,
         wm_sig: Optional["bytes"] = None,
+        retry: Optional["WardWriteRetry"] = None,
     ) -> None:
         self.entry_key = entry_key
         self.sealed_identity = sealed_identity
@@ -10504,6 +10535,7 @@ class WardLeafAck(protobuf.MessageType):
         self.counter = counter
         self.auth_commit = auth_commit
         self.wm_sig = wm_sig
+        self.retry = retry
 
 
 class WardFlushQueueAck(protobuf.MessageType):

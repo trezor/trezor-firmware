@@ -100,6 +100,25 @@ message WardSetEntry {
     optional string app_id     = 1;  // domain that owns the entry
     optional bytes  identifier = 2;  // key within that domain
     optional bytes  value      = 3;  // the new value; empty is allowed, absent is not
+    optional WardWriteRetry retry = 4;  // this same write lost a race; see WardWriteRetry
+}
+
+/**
+ * A write that lost a race, presented again. The device returned it with the write's
+ * WardLeafAck; the host hands it back, after a sync, with the SAME request.
+ *
+ * `mac` = HMAC(K_auth, "WARD RETRY v1" || ward_id || u32(base) || u32(seen) || entry_key
+ *              || 0x00                                 for a delete
+ *              || 0x01 || len8(entry_type) || entry_type || value   otherwise)
+ *
+ * `base` is the counter the write was formed on, `seen` the C_leaf of the entry there (0 when
+ * absent). The device re-signs silently when the entry is unchanged since, answers a no-op when it
+ * already holds this change, and otherwise asks the user which change to keep.
+ */
+message WardWriteRetry {
+    optional uint32 base = 1;
+    optional uint32 seen = 2;
+    optional bytes  mac  = 3;
 }
 
 /**
@@ -119,6 +138,7 @@ message WardSetEntry {
 message WardDeleteEntry {
     optional string app_id     = 1;  // domain that owns the entry
     optional bytes  identifier = 2;  // key within that domain
+    optional WardWriteRetry retry = 3;  // this same delete lost a race
 }
 
 /**
@@ -139,6 +159,7 @@ message WardSetPointer {
     optional string app_id            = 1;  // domain that owns the pointer and its target
     optional bytes  identifier        = 2;  // the pointer's own key
     optional bytes  target_identifier = 3;  // the key it points to, in the same domain
+    optional WardWriteRetry retry     = 4;  // this same pointer write lost a race
 }
 
 /**

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from trezor import utils
 
 if TYPE_CHECKING:
-    from trezor.messages import WardLeafAck, WardMutationApplied
+    from trezor.messages import WardLeafAck, WardMutationApplied, WardWriteRetry
     from trezor.ui.layouts import StrPropertyType
 
 # Sealing and the trie stop a host forging a value or moving a leaf between paths, but against a
@@ -351,8 +351,19 @@ async def commit_change(
         )
         return WardMutationApplied(entry_key=entry_key, counter=counter)
 
-    from trezor.messages import WardLeafAck
+    from trezor.messages import WardLeafAck, WardWriteRetry
 
+    from .keys import derive_k_auth, derive_ward_id
+    from .leaf import open_content
+    from .transition import retry_mac
+
+    # THE RETRY TOKEN: if this write loses a race, the host presents it again and the device can
+    # tell it formed exactly this write, on this base, without asking the user a second time.
+    seen = 0 if old_leaf is None else open_content(await derive_k_data(), old_leaf)[1]
+    base = counter - 1
+    mac = retry_mac(
+        await derive_k_auth(), await derive_ward_id(), base, seen, entry_key, entry_type, value
+    )
     return WardLeafAck(
         entry_key=entry_key,
         sealed_identity=sealed_identity,
@@ -360,4 +371,91 @@ async def commit_change(
         counter=counter,
         auth_commit=step,
         wm_sig=advance,
+        retry=WardWriteRetry(base=base, seen=seen, mac=mac),
+    )
+
+
+async def retry_write(
+    retry: "WardWriteRetry",
+    entry_key: bytes,
+    app_id: str,
+    identifier: bytes,
+    value: "bytes | None",
+    current: "tuple[str, bytes] | None",
+    old_leaf: "bytes | None",
+    material: tuple,
+    entry_type: str = "address",
+) -> "WardLeafAck | WardMutationApplied":
+    """A write that lost a race, presented again with its retry token after a sync.
+
+    The token proves this device formed exactly this write on `retry.base`, where the entry's
+    C_leaf was `retry.seen`. Against the entry as it stands now:
+
+    - UNCHANGED since (same C_leaf): nobody else touched it, so the user's approval still covers
+      this write. Signed again on the current head with no screen.
+    - ALREADY THIS CHANGE (the same value, or already absent for a delete): nothing to write. A
+      no-op answer, with no authorisation.
+    - CHANGED to something else: a conflict. The user sees the entry as it is now and their own
+      change, and keeps theirs only by confirming; declining cancels, leaving the current value.
+    """
+    from trezor.messages import WardLeafAck
+    from trezor.ui.layouts import confirm_properties
+    from trezor.wire import DataError
+
+    from .keys import derive_k_auth, derive_k_data, derive_k_ident, derive_ward_id
+    from .leaf import EMPTY, open_content, seal_identity
+    from .root import get_counter
+    from .transition import verify_retry_mac
+
+    if retry.base is None or retry.seen is None or not retry.mac:
+        raise DataError("WARD: an incomplete retry")
+    if not verify_retry_mac(
+        await derive_k_auth(),
+        retry.mac,
+        await derive_ward_id(),
+        retry.base,
+        retry.seen,
+        entry_key,
+        entry_type,
+        value,
+    ):
+        raise DataError("WARD: this retry is not a write this wallet formed")
+
+    seen_now = 0 if old_leaf is None else open_content(await derive_k_data(), old_leaf)[1]
+    if seen_now != retry.seen:
+        already = current is None if value is None else current == (entry_type, value)
+        if already:
+            if utils.USE_WARD_SERVICE_CHANNEL:
+                from trezor.messages import WardMutationApplied
+
+                return WardMutationApplied(entry_key=entry_key, counter=await get_counter())
+            # NO TRANSITION, so no authorisation: a host branches on the missing `auth_commit`
+            return WardLeafAck(
+                entry_key=entry_key,
+                sealed_identity=(
+                    EMPTY
+                    if value is None
+                    else seal_identity(await derive_k_ident(), identifier, app_id)
+                ),
+                sealed_content=EMPTY if old_leaf is None else old_leaf,
+                counter=await get_counter(),
+            )
+
+        props = entry_props(app_id, identifier)
+        props.append(
+            ("Now", "Deleted" if current is None else display_content(current), True)
+        )
+        props.append(
+            (
+                "Your change",
+                "Delete" if value is None else display_content((entry_type, value)),
+                True,
+            )
+        )
+        await confirm_properties(
+            "ward_write_conflict", "Changed on another device", props, verb="Keep yours"
+        )
+
+    return await commit_change(
+        entry_key, app_id, identifier, value, old_leaf, material, entry_type
     )

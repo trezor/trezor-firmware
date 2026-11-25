@@ -44,6 +44,12 @@ async def delete_entry(msg: WardDeleteEntry) -> "WardLeafAck | WardMutationAppli
 
     entry_key = await entry_key_for(app_id, identifier)
     current, old_leaf, material = await pull_leaf(entry_key)
+    if msg.retry is not None:
+        from .common import retry_write
+
+        return await retry_write(
+            msg.retry, entry_key, app_id, identifier, None, current, old_leaf, material
+        )
     if current is None:
         # No transition, so no authorisation of either kind: a host branches on the missing
         # `auth_commit`. A service build must not drop the online latch or file a claim either.

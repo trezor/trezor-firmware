@@ -3650,6 +3650,142 @@ def test_ward_a_write_is_bound_to_the_latest_sync(session: Session):
     assert not verify_wm_sig(*ops, TAG_WM_HEAD, first)
 
 
+# --- a lost race: the same write presented again ---------------------------------------------
+#
+# Two devices write from the same head; one lands. The loser's host syncs and presents the losing
+# write again with the retry token its WardLeafAck carried. The device re-signs silently when the
+# entry is untouched since, answers a no-op when the entry already holds this change, and otherwise
+# shows both values and keeps the user's only on confirmation.
+
+
+def _lost_race(session: Session, mine: tuple, theirs: tuple) -> tuple:
+    """`mine` is formed and held back; `theirs` lands first (written by the same seed, as another
+    device of the wallet would). Returns (store at the new head, my held result)."""
+    store = WardTrie()
+    _seed(session, store, b"a", b"one")
+    _go_online(session, store)
+    held, _pending = _mint_unpublished(session, store, *mine)
+
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, theirs[0], theirs[1], p),
+        "ward_set_entry",
+    )
+    ward.apply(store, res)
+    _confirm(session, store)
+    assert held.response.retry is not None
+    return store, held
+
+
+def _retry(session: Session, store: WardTrie, identifier: bytes, value: bytes, held, screen=None):
+    """Present `held` again. `screen`: the conflict screen's name, or None for no screen."""
+    rec = _Recorded()
+    with session.test_ctx as ctx:
+        ctx.set_expected_responses(
+            reveal_prefix(m.WardSetEntry)
+            + [m.WardEntryRequest]
+            + ([m.ButtonRequest(name=screen)] if screen else [])
+            + [m.WardLeafAck]
+        )
+        if screen:
+            ctx.set_input_flow(InputFlowConfirmAllWarnings(session, on_page=rec.on_page).get())
+        res = ward.set_entry(
+            session,
+            _APP,
+            identifier,
+            value,
+            ward.store_provider(store),
+            retry=held.response.retry,
+        )
+    return res, rec
+
+
+def _value(store: WardTrie, identifier: bytes) -> bytes:
+    leaf = store.blobs[expected_entry_key(_K_PATH, _APP, identifier)]
+    return unpack_content(open_content(_K_DATA, leaf.content))[2]
+
+
+@pytest.mark.models("core")
+def test_ward_lost_race_on_another_entry_is_signed_again_without_asking(session: Session):
+    """The winner changed a different entry, so mine is untouched since I formed it: the user's
+    approval still covers it, and the device signs it again on the new head with no screen."""
+    store, held = _lost_race(session, (b"b", b"mine"), (b"c", b"theirs"))
+
+    res, _rec = _retry(session, store, b"b", b"mine", held)
+
+    assert res.auth_commit is not None and res.counter == held.counter + 1
+    ward.apply(store, res)
+    _confirm(session, store)
+    assert _value(store, b"b") == b"mine" and _value(store, b"c") == b"theirs"
+
+
+@pytest.mark.models("core")
+def test_ward_lost_race_on_the_same_entry_asks_and_keeps_mine(session: Session):
+    """The winner wrote the same entry with another value: a conflict. The device shows the value
+    now and mine, and keeps mine only on confirmation."""
+    store, held = _lost_race(session, (b"b", b"mine"), (b"b", b"theirs"))
+
+    res, rec = _retry(session, store, b"b", b"mine", held, screen="ward_write_conflict")
+
+    assert "changed on another device" in rec.title
+    assert "theirs" in rec.squashed and "mine" in rec.squashed
+    assert res.auth_commit is not None
+    ward.apply(store, res)
+    _confirm(session, store)
+    assert _value(store, b"b") == b"mine"
+
+
+@pytest.mark.models("delizia")
+def test_ward_lost_race_on_the_same_entry_declined_keeps_theirs(session: Session):
+    """Declining the conflict signs nothing: the value the winner wrote stays.
+
+    Delizia only: declining is a different gesture per layout."""
+    store, held = _lost_race(session, (b"b", b"mine"), (b"b", b"theirs"))
+    debug = session.test_ctx.debug
+
+    def decline():
+        br = yield
+        while br.name != "ward_write_conflict":  # the v1 reveal screen comes first
+            debug.press_yes()
+            br = yield
+        for _ in range((br.pages or 1) - 1):
+            debug.swipe_up()
+        debug.press_no()
+
+    with pytest.raises(exceptions.Cancelled), session.test_ctx as ctx:
+        ctx.set_input_flow(decline)
+        ward.set_entry(
+            session, _APP, b"b", b"mine", ward.store_provider(store), retry=held.response.retry
+        )
+    assert _value(store, b"b") == b"theirs"
+
+
+@pytest.mark.models("core")
+def test_ward_lost_race_to_the_same_value_is_a_no_op(session: Session):
+    """The winner wrote exactly my change: nothing to write, no screen, no authorisation."""
+    store, held = _lost_race(session, (b"b", b"same"), (b"b", b"same"))
+    counter = store.counter
+
+    res, _rec = _retry(session, store, b"b", b"same", held)
+
+    assert res.auth_commit is None and res.wm_sig is None and res.counter == counter
+
+
+@pytest.mark.models("core")
+def test_ward_attack_a_forged_retry_is_refused(session: Session):
+    """A host cannot skip the confirmation by inventing a retry: the token is this wallet's MAC
+    over the exact write, so another value or a forged MAC is refused."""
+    store, held = _lost_race(session, (b"b", b"mine"), (b"c", b"theirs"))
+    forged = m.WardWriteRetry(
+        base=held.response.retry.base, seen=held.response.retry.seen, mac=bytes(32)
+    )
+
+    for value, retry in ((b"other", held.response.retry), (b"mine", forged)):
+        with pytest.raises(exceptions.TrezorFailure, match="not a write this wallet formed"):
+            ward.set_entry(session, _APP, b"b", value, ward.store_provider(store), retry=retry)
+
+
 @pytest.mark.models("core")
 def test_ward_attack_a_revert_from_an_ended_session_is_refused(session: Session):
     """A DEMOTION THE USER APPROVED, HELD BACK PAST A NEW SYNC: refused like any other write.

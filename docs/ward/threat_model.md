@@ -418,11 +418,36 @@ An entry that belongs to one Trezor of the wallet, such as a display preference.
     - Only the Trezor builds a leaf.
     - The screen names what is replaced.
     - The transition lands only on the head it was built on.
-    - A lost race is refused, not merged.
+    - A lost race is refused, never merged by the host. The host syncs and presents the same
+      write again, see [a lost race](#a-lost-race).
 - **Reveals:**
     - **Host:** the path, the sizes, an update versus a delete, and the time.
     - **Evolu relay:** one more encrypted message, and its size.
     - **WM:** one more transition of this ward.
+
+### A lost race
+
+Two Trezors of one wallet write from the same head, and one lands first. The loser's write is
+refused at the WM. With each write the Trezor returns a retry token: a MAC under `K_auth` over the
+write, the counter it was formed on, and the entry's `C_leaf` there. The host syncs and sends the
+same request again with the token.
+
+- **Expects:**
+    - The Trezor accepts only its own token, for exactly this write: another value, entry or
+      base is refused.
+    - **Untouched since:** the entry's `C_leaf` is unchanged, so nobody else wrote it. The user's
+      approval still covers the write, and the Trezor signs it again on the new head with no
+      screen.
+    - **Already done:** the entry holds this value, or is absent for a delete. Nothing is written
+      and nothing is signed.
+    - **Changed:** the Trezor shows "Changed on another device", with the entry as it is now and
+      the user's change. It keeps the user's change only on confirmation; declining leaves the
+      current value.
+- **Reveals:**
+    - **Host:** that the write was presented again, and whether it landed.
+- **What the host can still do:** not present the write again, or present it later. It cannot
+  skip the conflict screen: the token binds the entry's `C_leaf` when the write was formed, and
+  only an unchanged entry is signed again without asking.
 
 ### Pointer
 
