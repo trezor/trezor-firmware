@@ -2,7 +2,7 @@
 use alloc::boxed::Box;
 
 use crate::traits::crypto::CryptoError;
-use crate::traits::util::{CoreServiceError, FastResult, ServiceResult};
+use crate::traits::util::{CoreServiceError, FastResult, Never, ServiceResult};
 use crate::traits::wire::FailureKind;
 
 /// The SDK's result type.
@@ -160,13 +160,13 @@ pub trait ServiceResultExt<T, E> {
     /// Splits into the service's own result and the system errors.
     fn split_service_error(
         self,
-    ) -> core::result::Result<core::result::Result<T, E>, CoreServiceError<()>>;
+    ) -> core::result::Result<core::result::Result<T, E>, CoreServiceError<Never>>;
 }
 
 impl<T, E> ServiceResultExt<T, E> for ServiceResult<T, E> {
     fn split_service_error(
         self,
-    ) -> core::result::Result<core::result::Result<T, E>, CoreServiceError<()>> {
+    ) -> core::result::Result<core::result::Result<T, E>, CoreServiceError<Never>> {
         match self {
             FastResult::Ok(t) => Ok(Ok(t)),
             FastResult::Err(CoreServiceError::ServiceError(e)) => Ok(Err(e)),
@@ -181,14 +181,13 @@ impl<T, E> ServiceResultExt<T, E> for ServiceResult<T, E> {
     }
 }
 
-impl From<CoreServiceError<()>> for Error {
-    fn from(error: CoreServiceError<()>) -> Self {
+impl From<CoreServiceError<Never>> for Error {
+    fn from(error: CoreServiceError<Never>) -> Self {
         match error {
+            CoreServiceError::ServiceError(_) => unreachable!(),
             CoreServiceError::StopApplication => Error::Stopped,
             // details are in Core's log
-            CoreServiceError::ServiceError(())
-            | CoreServiceError::Timeout
-            | CoreServiceError::ServiceCallFailed => Error::ServiceError,
+            CoreServiceError::Timeout | CoreServiceError::ServiceCallFailed => Error::ServiceError,
         }
     }
 }
@@ -203,7 +202,7 @@ impl From<CoreServiceError<CryptoError>> for Error {
     fn from(error: CoreServiceError<CryptoError>) -> Self {
         match error {
             CoreServiceError::ServiceError(e) => e.into(),
-            e => e.system::<()>().into(),
+            e => e.system::<Never>().into(),
         }
     }
 }
@@ -344,9 +343,9 @@ mod tests {
 
     #[test]
     fn stop_signal_survives_conversion() {
-        assert!(Error::from(CoreServiceError::<()>::StopApplication).is_stopped());
+        assert!(Error::from(CoreServiceError::<Never>::StopApplication).is_stopped());
         assert!(Error::from(CoreServiceError::<CryptoError>::StopApplication).is_stopped());
-        assert!(!Error::from(CoreServiceError::<()>::ServiceCallFailed).is_stopped());
+        assert!(!Error::from(CoreServiceError::<Never>::ServiceCallFailed).is_stopped());
         assert!(!Error::DataError("stopped").is_stopped());
     }
 
@@ -364,7 +363,7 @@ mod tests {
     #[cfg(feature = "debug")]
     #[test]
     fn stop_signal_survives_context() {
-        let error = Error::from(CoreServiceError::<()>::StopApplication)
+        let error = Error::from(CoreServiceError::<Never>::StopApplication)
             .c_at(core::panic::Location::caller());
         assert!(error.is_stopped());
     }

@@ -62,8 +62,20 @@ pub enum CoreServiceError<E> {
     StopApplication,
 }
 
-/// Result of an API call that goes through a Core service.
-pub type ServiceResult<T, E = ()> = FastResult<T, CoreServiceError<E>>;
+/// A struct that cannot be instantiated (outside of this crate).
+///
+/// An alternative to the `!` type, which currently cannot be represented by
+/// stabby.
+///
+/// ```compile_fail
+/// let _ = trezor_app_sdk::traits::util::Never(());
+/// ```
+#[stabby::stabby]
+pub struct Never(());
+
+/// Result of an API call that goes through a Core service; services without
+/// errors of their own use the default [`Never`].
+pub type ServiceResult<T, E = Never> = FastResult<T, CoreServiceError<E>>;
 
 /// Longest timeout, in milliseconds, an API call accepts.
 pub const TIMEOUT_MAX: u32 = u32::MAX / 2 - 1;
