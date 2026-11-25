@@ -1,6 +1,9 @@
 from typing import TYPE_CHECKING
 
 import trezorcrypto_api
+from trezor import loop
+from trezor.ui import Shutdown as ui_shutdown
+from trezor.wire import context
 from trezor.wire.errors import DataError
 
 from apps.common import paths
@@ -50,6 +53,9 @@ async def handle(session: Session, msg: IpcMessage) -> None:
     try:
         obj = trezorcrypto_api.deserialize_crypto_message(data=bytes(msg.data))
         result = await handler(session, obj)
+    except (loop.TaskClosed, ui_shutdown, context.UnexpectedMessageException):
+        # workflow control flow, e.g. the host interrupting a passphrase prompt
+        raise
     except Exception as e:
         if __debug__:
             log.error(
