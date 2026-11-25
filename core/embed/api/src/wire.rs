@@ -48,8 +48,8 @@ pub(crate) fn service_error<E>(error: CallError) -> CoreServiceError<E> {
     }
 }
 
-fn coreapp() -> TaskId {
-    TaskId::from(RemoteSysTask::CoreApp as u8)
+const fn coreapp() -> TaskId {
+    TaskId::new(RemoteSysTask::CoreApp as u8)
 }
 
 /// Converts an app-provided timeout in milliseconds to a [`Timeout`],

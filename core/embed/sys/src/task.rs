@@ -12,6 +12,11 @@ impl TaskId {
     /// The maximum number of tasks supported by the system.
     pub const MAX: usize = ffi::SYSTASK_MAX_TASKS as usize;
 
+    /// Wraps a raw task id; usable in const contexts, unlike `From`.
+    pub const fn new(id: ffi::systask_id_t) -> Self {
+        TaskId(id)
+    }
+
     /// Converts the task identifier to a zero-based index.
     pub const fn into_index(self) -> usize {
         self.0 as usize
