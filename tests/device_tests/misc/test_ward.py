@@ -3680,8 +3680,8 @@ def test_ward_attack_a_revert_from_an_ended_session_is_refused(session: Session)
 # sessions that are gone, so the host feeds the device the accepted transitions instead, each with
 # the WM's record that it accepted that step. The device DETECTS the restored WM when it ingests
 # the attestation, the user APPROVES, the device checks its own auth_commit AND the WM's record,
-# signs each step again for this round's session, and on the last page SHOWS when the WM accepted
-# the last restored change. See docs/ward/ward_transitions.md.
+# signs each step again for this round's session, and on the last page SHOWS when the WM last
+# confirmed the last restored change. See docs/ward/ward_roll_forward.md.
 
 
 def _restored_three(session: Session):

@@ -591,7 +591,7 @@ def conflicts(
             # THE WM IS RESTORED FROM A BACKUP: its register goes back to #10 and its sessions are
             # gone. Device 1 detects it during its sync, the user approves, the device signs the
             # changes the WM accepted since again for this session, and finally shows when the WM
-            # last confirmed the last of them (docs/ward/ward_transitions.md, roll-forward)
+            # last confirmed the last of them (docs/ward/ward_roll_forward.md)
             print("== WARD stack: the WM restored from a backup, rolled forward", flush=True)
             restored_to = base + 10
             switch_wm(run_dir, down=True)

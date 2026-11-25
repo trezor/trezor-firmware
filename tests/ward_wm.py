@@ -82,7 +82,7 @@ MAX_BATCH = 8
 # had ACCEPTED comes back by ROLL-FORWARD: a host feeds a device the transitions with this WM's
 # signed record of each, and the device signs them again for the current session
 # (`WardRollForward`); they then arrive here as ordinary advances. Whoever holds the records still
-# chooses where the replay stops; see docs/ward/ward_transitions.md.
+# chooses where the replay stops; see docs/ward/ward_roll_forward.md.
 
 
 class WMRecord(NamedTuple):

@@ -433,7 +433,7 @@ def test_an_advance_returns_the_wm_signed_acceptance():
 # WM had accepted comes back by ROLL-FORWARD: a device checks each step's auth_commit and the WM's
 # record of it, and signs it again for the session now current (`WardRollForward`, tested on the
 # device). Here the oracle stands in for that device. Whoever holds the records still decides where
-# the replay stops. See docs/ward/ward_transitions.md.
+# the replay stops. See docs/ward/ward_roll_forward.md.
 
 
 def _history(wm):

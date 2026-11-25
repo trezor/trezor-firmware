@@ -133,7 +133,7 @@ Some genuine links are not on the WM's current line:
   moved it since. The stored `wm_sig`s for 10 → … → 57 stay refused: each is bound to the session
   of the sync it was minted in, and a restore ends every session. A host holding the WM's own
   signed records of those steps can roll the WM forward, or stop early. See
-  [roll-forward](ward_manager.md#roll-forward) and
+  [roll-forward](ward_roll_forward.md) and
   [WM restore and roll-forward](gaps.md#wm-restore-and-roll-forward).
 
 Suppose a failed sync persisted the furthest head that the links reach. Then a host could do this:
@@ -504,7 +504,7 @@ Its sessions do not come back, so it accepts none of the authorizations minted b
 - **Reveals:**
     - **WM and host:** that a restore was rolled forward, and how far.
 - **What the host supplies:** the accepted transitions from the WM's head, each with its WM
-  acceptance record, in pages of up to 16. See [roll-forward](ward_transitions.md#roll-forward).
+  acceptance record, in pages of up to 16. See [roll-forward](ward_roll_forward.md).
 - **Accepted gap:** whoever holds the records chooses how far the replay goes. See [WM restore and roll-forward](gaps.md#wm-restore-and-roll-forward).
 
 ### Key export and listing

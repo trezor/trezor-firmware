@@ -66,7 +66,7 @@ Protocol v3 lets the codec daemon renew its binding while idle. Firmware ignores
 during an RPC, and the next renewal rebinds the endpoint after a timeout. Version 4 removed the
 WM head nonce. The current version is 5, which added the session challenge and proof; the device
 requires an exact match. The service channel does not roll a restored WM forward; that runs on
-the wallet channel only (see [transitions and sessions](ward_transitions.md#roll-forward)).
+the wallet channel only (see [roll-forward](ward_roll_forward.md)).
 
 ## What differs between the two builds
 

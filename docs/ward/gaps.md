@@ -123,7 +123,7 @@ roll-forward. wardd feeds a Trezor the accepted steps with the WM's record of ea
 Trezor checks its own MAC and the WM's signature, and signs each step again for the
 current session (`WardRollForward`). wardd then submits the new signatures as ordinary
 advances. A step with no WM record cannot come back. See
-[roll-forward](ward_transitions.md#roll-forward), which also covers the alternative of
+[roll-forward](ward_roll_forward.md), which also covers the alternative of
 the WM accepting its own records directly.
 
 The following **accepted gap** concerns recovery after the register goes back.
