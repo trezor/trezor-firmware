@@ -207,7 +207,7 @@ def _answer_definition_request(
     encoded_network = source.get_eth_network(req.chain_id)
     encoded_token = (
         source.get_eth_token(req.chain_id, req.token_address)
-        if req.token_address is not None
+        if req.token_address  # empty when only the network is requested
         else None
     )
     if encoded_network is None and encoded_token is None:

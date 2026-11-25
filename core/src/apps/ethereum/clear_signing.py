@@ -375,7 +375,7 @@ def _resolve_other_chain_id(
 
 
 async def _definitions_for_another_chain(
-    chain_id: int, token_address: bytes, native: bool, msg: MsgInSignTx
+    chain_id: int, token_address: bytes, *, native: bool, defn_lookup: bool | None
 ) -> Definitions:
 
     from .definitions import Definitions
@@ -386,7 +386,7 @@ async def _definitions_for_another_chain(
     missing = defs.network is UNKNOWN_NETWORK or (
         not native and defs.get_token(token_address) is UNKNOWN_TOKEN
     )
-    if missing and msg.supports_definition_request:
+    if missing and defn_lookup:
         received, _ = await request_definitions(chain_id, token_address, None)
         if received is not None:
             defs = received
@@ -530,7 +530,10 @@ class TokenAmountFormatter(FieldFormatter):
 
                 # the other chain's native currency
                 token_defs = await _definitions_for_another_chain(
-                    other_chain_id, token_address, True, msg
+                    other_chain_id,
+                    token_address,
+                    native=True,
+                    defn_lookup=msg.supports_definition_request,
                 )
                 if token_defs.network is UNKNOWN_NETWORK:
                     # its symbol is unknown: show the raw value instead
@@ -538,7 +541,10 @@ class TokenAmountFormatter(FieldFormatter):
             token_address = None
         elif other_chain_id is not None:
             token_defs = await _definitions_for_another_chain(
-                other_chain_id, token_address, False, msg
+                other_chain_id,
+                token_address,
+                native=False,
+                defn_lookup=msg.supports_definition_request,
             )
             token = token_defs.get_token(token_address)
         else:
@@ -684,6 +690,36 @@ class DurationFormatter(FieldFormatter):
             hours, minutes = divmod(minutes, 60)
             return f"{hours:02d}:{minutes:02d}:{seconds:02d}", None, None
         raise InvalidFormatDefinition
+
+
+class ChainIdFormatter(FieldFormatter):
+    async def format(
+        self,
+        value: AnyValue,
+        msg: MsgInSignTx,
+        defs: Definitions,
+        path_walker: PathWalker,
+    ) -> FormattedValue:
+        from .networks import UNKNOWN_NETWORK
+
+        if value is None:
+            return None, None, None
+        # only (u)int values; rejects bytes slices, bools, 0, > uint64
+        chain_id = _validate_chain_id(value)
+        if chain_id == _validate_chain_id(path_walker(ContainerPath.ChainId)):
+            network = defs.network
+        else:
+            network = (
+                await _definitions_for_another_chain(
+                    chain_id,
+                    b"",
+                    native=True,
+                    defn_lookup=msg.supports_definition_request,
+                )
+            ).network
+        if network is UNKNOWN_NETWORK:
+            return str(chain_id), None, None
+        return network.name, None, None
 
 
 class CalldataFormatter(RawFormatter):
@@ -1140,6 +1176,8 @@ class FieldDefinition:
             formatter = DateFormatter
         elif fmt_type == FT.FORMATTER_DURATION:
             formatter = DurationFormatter
+        elif fmt_type == FT.FORMATTER_CHAIN_ID:
+            formatter = ChainIdFormatter
         elif fmt_type == FT.FORMATTER_CALLDATA:
             callee = param(info.callee_path, info.const_callee, _ADDRESS_BYTES)
             if callee is None:
@@ -1575,7 +1613,12 @@ async def _expand_one_subcall(
         # already inside a subcall: no tertiary lookups
         inner_defs = Definitions.from_encoded(None, None, chain_id)
     else:
-        inner_defs = await _definitions_for_another_chain(chain_id, callee, True, msg)
+        inner_defs = await _definitions_for_another_chain(
+            chain_id,
+            callee,
+            native=True,
+            defn_lookup=msg.supports_definition_request,
+        )
 
     subcall = TR.ethereum__subcall
     if index is not None:

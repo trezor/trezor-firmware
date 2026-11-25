@@ -342,6 +342,7 @@ if TYPE_CHECKING:
         FORMATTER_CALLDATA = 6
         FORMATTER_ENUM = 7
         FORMATTER_DURATION = 8
+        FORMATTER_CHAIN_ID = 10
         FORMATTER_NFT_NAME = 9
 
     class EthereumERC7730ContainerPath(IntEnum):

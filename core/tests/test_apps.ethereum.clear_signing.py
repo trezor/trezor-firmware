@@ -27,6 +27,7 @@ if not utils.BITCOIN_ONLY:
         Atomic,
         BindingContext,
         CalldataFormatter,
+        ChainIdFormatter,
         ClearSigningFailed,
         ContainerPath,
         DateFormatter,
@@ -3341,6 +3342,70 @@ class TestCrossChainToken(unittest.TestCase):
         )
         formatted, _, _ = self._format(fmt, self.TOKEN)
         self.assertEqual(formatted.lower(), "0x" + self.TOKEN.hex())
+
+    # --- chainId formatter ---
+
+    def test_chain_id_formatter_dispatch(self):
+        info = EthereumERC7730FieldInfo(
+            path=EthereumERC7730Path(path=[0]),
+            label="Destination chain",
+            formatter=FT.FORMATTER_CHAIN_ID,
+        )
+        fmt = FieldDefinition.from_proto(info).get_formatter()
+        self.assertIsInstance(fmt, ChainIdFormatter)
+
+        # the format takes no params
+        info.const_chain_id = self.POLYGON
+        with self.assertRaises(InvalidFormatDefinition):
+            FieldDefinition.from_proto(info)
+
+    def test_chain_id_formatter_current_chain(self):
+        # `@.chainId` is named from the transaction's definitions
+        formatted, token, token_address = self._format(
+            ChainIdFormatter(), self.TX_CHAIN_ID
+        )
+        self.assertEqual(formatted, "Fake network")
+        self.assertIsNone(token)
+        self.assertIsNone(token_address)
+        self.assertEqual(self.requests, [])
+
+    def test_chain_id_formatter_other_chain(self):
+        fmt = ChainIdFormatter()
+        msg = self._msg(supports_definition_request=True)
+
+        # built-in network: no request
+        formatted, _, _ = self._format(fmt, self.POLYGON, msg)
+        self.assertEqual(formatted, "Polygon")
+        self.assertEqual(self.requests, [])
+
+        # unknown network, not provided by the host: the decimal chain ID
+        self._stub_request()
+        formatted, _, _ = self._format(fmt, self.UNKNOWN_CHAIN_ID, msg)
+        self.assertEqual(formatted, str(self.UNKNOWN_CHAIN_ID))
+        self.assertEqual(self.requests, [(self.UNKNOWN_CHAIN_ID, b"", None)])
+
+        # unknown network, provided by the host
+        self._stub_request(
+            network=make_eth_network(
+                chain_id=self.UNKNOWN_CHAIN_ID, symbol="FOO", name="Foo chain"
+            )
+        )
+        formatted, _, _ = self._format(fmt, self.UNKNOWN_CHAIN_ID, msg)
+        self.assertEqual(formatted, "Foo chain")
+
+        # unknown network, host can't be asked
+        formatted, _, _ = self._format(fmt, self.UNKNOWN_CHAIN_ID)
+        self.assertEqual(formatted, str(self.UNKNOWN_CHAIN_ID))
+
+    def test_chain_id_formatter_invalid(self):
+        fmt = ChainIdFormatter()
+        formatted, _, _ = self._format(fmt, None)
+        self.assertIsNone(formatted)
+
+        # only uint64 > 0 integers
+        for bad in (0, -1, 1 << 64, b"\x01", "1", True):
+            with self.assertRaises(InvalidFormatDefinition):
+                self._format(fmt, bad)
 
 
 if __name__ == "__main__":
