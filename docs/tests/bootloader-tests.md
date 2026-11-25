@@ -56,6 +56,7 @@ it only verifies it, so that is enough for the install, upgrade and boot
 flows. The suite therefore needs a bootloader built with the development
 keys (`BOOTLOADER_DEVEL=1`).
 
-The bootloader emulator prints its flash layout with `-p` and takes a boot
+The bootloader emulator prints its model and flash layout with
+`--emulator-properties`, like the firmware emulator, and takes a boot
 command from a file with `-B`; `BootArgs.wipe(...)`, `BootArgs.show_rsod(...)`
 and friends build such files.

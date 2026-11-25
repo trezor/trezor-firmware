@@ -96,7 +96,7 @@ class BootloaderRunner:
 
     @property
     def properties(self) -> dict[str, t.Any]:
-        """What the emulator binary reports with -p: model, flash layout."""
+        """What the emulator binary reports with --emulator-properties."""
         if self._properties is None:
             # a wrapper that is never started: only its properties are read
             probe = BootloaderEmulator(
@@ -108,7 +108,7 @@ class BootloaderRunner:
     @property
     def model(self) -> str:
         """Internal model name of the emulator binary, e.g. "T3T1"."""
-        return self.properties["model"]
+        return self.properties["internal_model"]
 
     def make_firmware(self, **kwargs: t.Any) -> bytes:
         """A dev-key signed firmware image the emulator's bootloader accepts."""
@@ -124,7 +124,10 @@ class BootloaderRunner:
         # emulator reports; take them from a throwaway properties query.
         name, group = ui_tests.common._get_test_name_and_group(self.request.node.nodeid)
         self._testcase = TestCase(
-            model=emu.properties()["model"], group=group, name=name, language="en"
+            model=emu.properties()["internal_model"],
+            group=group,
+            name=name,
+            language="en",
         )
         self._testcase.dir.mkdir(exist_ok=True, parents=True)
         shutil.rmtree(self._testcase.actual_dir, ignore_errors=True)
