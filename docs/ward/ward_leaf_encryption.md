@@ -103,7 +103,7 @@ sealed_identity = seal(K_ident(app), 0x04, leaf_identity)
 
   In each case a nonce derived from `(entry_key, C_leaf)` would repeat under `K_data` with
   different plaintexts, which breaks AES-GCM's confidentiality and its authentication.
-- **AAD:** The sealing is separated by domain, but as long as `K_data` and `K_ident` are different keys, this separation is redundant. The identity domain is `0x04` so that no sealing domain equals the trie's value domain `0x03`.
+- **AAD:** The sealing is separated by domain, but as long as `K_data` and `K_ident` are different keys, this separation is redundant.
 - **Scheme byte:** the first byte is the scheme. `0x01`, AES-256-GCM, is the only one.
 - **Length:** a sealed part is at least 29 bytes: scheme, nonce and tag.
 
