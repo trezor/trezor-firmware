@@ -416,6 +416,12 @@ class FakeDevice:
             )
             # the session nonce: this device picks it, and binds its next wm_sig to it
             self.session = os.urandom(32)
+            # with the WM's challenge, prove the opening, as the firmware does
+            proof = (
+                self._sign(b"WARD SESSION OPEN v1" + self.ward_id + msg.wm_challenge + self.session)
+                if msg.wm_challenge
+                else None
+            )
             return messages.WardSyncAck(
                 nonce=self.session,
                 ward_id=self.ward_id,
@@ -423,6 +429,7 @@ class FakeDevice:
                 # as the firmware: the root only at genesis (apps/ward/sync.py)
                 root=self.root if self.counter == 0 else None,
                 head_init_sig=self._sign(pre),
+                session_proof=proof,
             )
         if isinstance(msg, messages.WardIngestAttestation):
             self.pending = msg
