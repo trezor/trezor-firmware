@@ -1,7 +1,7 @@
 #[cfg(feature = "app_loading")]
-use rkyv::{rancor::Failure, Archived};
-#[cfg(feature = "app_loading")]
 use api::crypto_ipc::{TrezorCryptoEnum, TrezorCryptoResult};
+#[cfg(feature = "app_loading")]
+use rkyv::{rancor::Failure, Archived};
 #[cfg(feature = "app_loading")]
 use trezor_app_sdk::structs::Slice;
 
