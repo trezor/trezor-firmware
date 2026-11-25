@@ -1,6 +1,6 @@
 use sys::time::{Duration, Instant};
 
-use super::loader::{Loader, DEFAULT_DURATION_MS};
+use super::loader::{Loader, ARROW_EXTRA_WIDTH, DEFAULT_DURATION_MS};
 use super::{theme, ButtonContent, ButtonDetails, LoaderMsg, LoaderStyleSheet};
 use crate::ui::component::{Component, Event, EventCtx};
 use crate::ui::event::ButtonEvent;
@@ -39,7 +39,7 @@ impl Component for HoldToConfirm {
     type Msg = HoldToConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let button_width = self.text_width + 2 * theme::BUTTON_OUTLINE;
+        let button_width = self.text_width + 2 * theme::BUTTON_OUTLINE + ARROW_EXTRA_WIDTH;
         let loader_area = bounds.split_right(button_width).1;
         self.loader.place(loader_area)
     }

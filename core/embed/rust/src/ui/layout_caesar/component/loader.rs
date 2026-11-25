@@ -5,13 +5,22 @@ use crate::strutil::TString;
 use crate::ui::animation::Animation;
 use crate::ui::component::{Child, Component, Event, EventCtx};
 use crate::ui::display::{self, Color, Font, LOADER_MAX};
-use crate::ui::geometry::{Offset, Point, Rect};
+use crate::ui::geometry::{Alignment2D, Offset, Point, Rect};
 use crate::ui::shape::Renderer;
 use crate::ui::util::animation_disabled;
 use crate::ui::{constant, shape};
 
 pub const DEFAULT_DURATION_MS: u32 = 1000;
 pub const SHRINKING_DURATION_MS: u32 = 500;
+
+/// Width of the filled part with the arrow at the left side of the loader
+/// before it starts growing.
+const ARROW_FILL_WIDTH: i16 = 8;
+/// Gap between the filled part and the text.
+const ARROW_TEXT_GAP: i16 = 2;
+/// How much wider the loader is than an outlined text button, to fit the
+/// arrow in place of the left outline.
+pub const ARROW_EXTRA_WIDTH: i16 = ARROW_FILL_WIDTH + ARROW_TEXT_GAP - theme::BUTTON_OUTLINE;
 
 pub enum LoaderMsg {
     GrownCompletely,
@@ -168,42 +177,47 @@ impl Loader {
         style: &LoaderStyle,
         done: i32,
     ) {
-        let width = self.area.width();
+        // The filled part grows from the arrow to the full width, covering the text.
+        let growing_width = self.area.width() - ARROW_FILL_WIDTH;
         // NOTE: need to calculate this in `i32`, it would overflow using `i16`
-        let split_point = (((i32::from(width) + 1) * done) / i32::from(display::LOADER_MAX)) as i16;
-        let (r_left, r_right) = self.area.split_left(split_point);
-        let parts = [(r_left, true), (r_right, false)];
-        parts.iter().for_each(|&(r, invert)| {
-            target.in_clip(r, &|target| {
-                if invert {
-                    shape::Bar::new(self.area)
-                        .with_radius(3)
-                        .with_bg(style.fg_color)
-                        .render(target);
-                } else {
-                    shape::Bar::new(self.area)
-                        .with_radius(3)
-                        .with_fg(style.fg_color)
-                        .render(target);
-                }
+        let fill_width = ARROW_FILL_WIDTH
+            + ((i32::from(growing_width) * done) / i32::from(display::LOADER_MAX)) as i16;
+        let (r_filled, r_outlined) = self.area.split_left(fill_width);
 
-                let text_color = if invert {
-                    style.bg_color
-                } else {
-                    style.fg_color
-                };
+        target.in_clip(r_filled, &|target| {
+            shape::Bar::new(self.area)
+                .with_radius(3)
+                .with_bg(style.fg_color)
+                .render(target);
+        });
 
-                self.get_text().map(|t| {
-                    let pt = Point::new(
-                        style.font.horz_center(self.area.x0, self.area.x1, t),
-                        style.font.vert_center(self.area.y0, self.area.y1, "A"),
-                    );
-                    shape::Text::new(pt, t, style.font)
-                        .with_fg(text_color)
-                        .render(target);
-                });
+        target.in_clip(r_outlined, &|target| {
+            shape::Bar::new(self.area)
+                .with_radius(3)
+                .with_fg(style.fg_color)
+                .render(target);
+
+            self.get_text().map(|t| {
+                let text_x0 = self.area.x0 + ARROW_EXTRA_WIDTH;
+                let pt = Point::new(
+                    style.font.horz_center(text_x0, self.area.x1, t),
+                    style.font.vert_center(self.area.y0, self.area.y1, "A"),
+                );
+                shape::Text::new(pt, t, style.font)
+                    .with_fg(style.fg_color)
+                    .render(target);
             });
         });
+
+        // The arrow is moving with the right edge of the filled part, two pixels
+        // away from it (the icon has an empty column on both sides).
+        shape::ToifImage::new(
+            Point::new(r_filled.x1 - 1, self.area.center().y),
+            theme::ICON_ARROW_RIGHT_HTC.toif,
+        )
+        .with_align(Alignment2D::CENTER_RIGHT)
+        .with_fg(style.bg_color)
+        .render(target);
     }
 }
 
