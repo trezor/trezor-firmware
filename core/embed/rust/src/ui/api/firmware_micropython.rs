@@ -1313,7 +1313,8 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
         Archived::<TrezorUiEnum>::SelectMenu(m) => {
             let mut vec = heapless::Vec::<SelectMenuItem, MAX_MENU_ITEMS>::new();
             for item in m.items.as_ref() {
-                unwrap!(vec.push(SelectMenuItem::new(tstr(item), MenuItemIntent::Standard)));
+                vec.push(SelectMenuItem::new(tstr(item), MenuItemIntent::Standard))
+                    .map_err(|_| Error::ValueError(c"Too many menu items"))?;
             }
             if let Some(cancel) = m.cancel.as_ref() {
                 vec.push(SelectMenuItem::new(tstr(cancel), MenuItemIntent::Danger))
