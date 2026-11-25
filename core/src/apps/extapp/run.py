@@ -9,9 +9,9 @@ from trezor.messages import ExtAppMessage
 from trezor.ui import Shutdown as ui_shutdown
 from trezor.ui.layouts import error_popup, interact_simple
 from trezor.wire import context
-from trezor.wire.errors import DataError, Error, ProcessError
+from trezor.wire.errors import DataError, Error
 
-from apps.common import paths, safety_checks
+from apps.common import paths
 
 from . import crypto, progress, ui, wire
 from .session import (
@@ -115,11 +115,6 @@ async def _start_app(request: ExtAppMessage) -> Session:
     image_handle, instance_id = ustruct.unpack("<II", instance_ids)
     if instance_id != request.instance_id:
         raise DataError("Invalid instance ID")
-
-    # apps can't see the level, so they only run with strict checks; the level
-    # can't change while an app runs
-    if not safety_checks.is_strict():
-        raise ProcessError("Safety checks must be strict")
 
     image = app.image_by_handle(image_handle)
     image.stop()

@@ -83,7 +83,8 @@ def _check_path(session: Session, address_n: list[int]) -> None:
     # apps get no SLIP-25 paths
     if address_n and address_n[0] == paths.SLIP25_PURPOSE:
         raise ValueError("Forbidden key path")
-    # the manifest's paths on any curve; apps only run with strict checks
+    # the manifest's paths on any curve, whatever the safety-check level
+    # (apps can't see it)
     if not any(schema.match(address_n) for schema in session.schemas):
         raise ValueError("Forbidden key path")
 
