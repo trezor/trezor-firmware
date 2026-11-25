@@ -2,6 +2,7 @@
 from common import *  # isort:skip
 
 import trezorui_api
+from trezor import utils
 
 # rkyv-archived `TrezorUiEnum::SelectMenu` requests (trezor-app-sdk) with
 # items "1".."7" and "1".."6", no cancel entry, br_code 0
@@ -14,6 +15,21 @@ SELECT_MENU_6 = bytes.fromhex(
     "3132333435360000f8ffffff01000000f1ffffff01000000eaffffff01000000"
     "e3ffffff01000000dcffffff01000000d5ffffff0100000000000000ccffffff"
     "06000000" + "00" * 108
+)
+# `TrezorUiEnum::ShowProperties` with title "t" and properties "1".."5" or
+# "1".."4", each with value "v", no subtitle, no br_name, br_code 0
+SHOW_PROPERTIES_5 = bytes.fromhex(
+    "743176327633763476357600f5ffffff01000000eeffffff0100000000000000"
+    "e3ffffff01000000dcffffff0100000000000000d1ffffff01000000caffffff"
+    "0100000000000000bfffffff01000000b8ffffff0100000000000000adffffff"
+    "01000000a6ffffff01000000000000000c0000008cffffff0100000090ffffff"
+    "05000000" + "00" * 100
+)
+SHOW_PROPERTIES_4 = bytes.fromhex(
+    "743176327633763476000000f5ffffff01000000eeffffff0100000000000000"
+    "e3ffffff01000000dcffffff0100000000000000d1ffffff01000000caffffff"
+    "0100000000000000bfffffff01000000b8ffffff01000000000000000c000000"
+    "a0ffffff01000000a4ffffff04000000" + "00" * 100
 )
 
 
@@ -30,6 +46,21 @@ class TestProcessIpcMessage(unittest.TestCase):
         # more items than MAX_MENU_ITEMS must be rejected, not crash Core
         with self.assertRaises(ValueError):
             trezorui_api.process_ipc_message(data=SELECT_MENU_7)
+
+    def test_show_properties_max(self):
+        _layout, br_code, br_name = trezorui_api.process_ipc_message(
+            data=SHOW_PROPERTIES_4
+        )
+        self.assertEqual(br_code, 0)
+        self.assertIsNone(br_name)
+
+    @unittest.skipUnless(
+        utils.UI_LAYOUT in ("DELIZIA", "ECKHART"), "limit of 4 properties"
+    )
+    def test_show_properties_too_many(self):
+        # more properties than the layout holds must be rejected, not crash Core
+        with self.assertRaises(ValueError):
+            trezorui_api.process_ipc_message(data=SHOW_PROPERTIES_5)
 
 
 if __name__ == "__main__":

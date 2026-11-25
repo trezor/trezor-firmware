@@ -1416,7 +1416,8 @@ impl FirmwareUI for UIEckhart {
                     header_paragraph =
                         header_paragraph.with_bottom_padding(theme::PROP_INNER_SPACING);
                 }
-                unwrap!(vec.push(header_paragraph));
+                vec.push(header_paragraph)
+                    .map_err(|_| Error::ValueError(c"Too many properties"))?;
 
                 let text = text
                     .try_into_option::<TString>()?
@@ -1429,7 +1430,8 @@ impl FirmwareUI for UIEckhart {
                     Paragraph::new(&theme::TEXT_MONO_LIGHT, text)
                         .with_bottom_padding(theme::PROPS_SPACING)
                 };
-                unwrap!(vec.push(value_paragraph));
+                vec.push(value_paragraph)
+                    .map_err(|_| Error::ValueError(c"Too many properties"))?;
             }
         };
 
