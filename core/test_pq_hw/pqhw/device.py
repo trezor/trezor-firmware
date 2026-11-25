@@ -83,13 +83,40 @@ def host_usb_devices() -> str:
                     continue
                 desc = f"{dev.getVendorID():04x}:{dev.getProductID():04x}"
                 desc += f" bus {dev.getBusNumber()} addr {dev.getDeviceAddress()}"
+                # getProduct() is a control transfer on EP0: the same read
+                # WebUsbTransport.enumerate makes. Its error is the clue
+                # when the kernel enumerated the unit but trezorlib does
+                # not see it.
                 try:
                     desc += f" '{dev.getProduct()}'"
-                except Exception:
-                    pass
+                except Exception as e:
+                    desc += f" product read FAILED: {type(e).__name__}: {e}"
                 seen.append(desc)
     except Exception as e:
-        return f"enumeration failed: {type(e).__name__}: {e}"
+        seen.append(f"enumeration failed: {type(e).__name__}: {e}")
+    return (", ".join(seen) or "none") + f"; kernel: {_sysfs_usb_devices()}"
+
+
+def _sysfs_usb_devices() -> str:
+    """The host kernel's view from sysfs: what it read at enumeration, with no
+    transfer to the device now. Present here but failing above = EP0 stopped
+    answering after the kernel enumerated the unit."""
+
+    def attr(d: Path, name: str) -> str:
+        try:
+            return (d / name).read_text().strip()
+        except OSError:
+            return "?"
+
+    seen = []
+    for d in sorted(Path("/sys/bus/usb/devices").glob("*")):
+        if attr(d, "idVendor") != "1209":
+            continue
+        seen.append(
+            f"{d.name} 1209:{attr(d, 'idProduct')} devnum {attr(d, 'devnum')} "
+            f"{attr(d, 'speed')} Mb/s config {attr(d, 'bConfigurationValue') or 'none'} "
+            f"'{attr(d, 'product')}' serial {attr(d, 'serial')}"
+        )
     return ", ".join(seen) or "none"
 
 
@@ -150,6 +177,10 @@ class Unit:
         #: Flow recorder for the HTML report (set by conftest under --hw).
         self.recorder: t.Any = None
         self._last_enum_error: str | None = None
+        #: How often _last_enum_error repeated, and since when: one log line
+        #: per message hides a unit that fails every poll for minutes.
+        self._enum_error_count = 0
+        self._enum_error_since = 0.0
         #: USB identity of the last connection, for wait_gone.
         self._connected: tuple[int, int] | None = None
         #: Seconds without an answer after which a request counts as waiting on
@@ -343,6 +374,11 @@ class Unit:
             if msg != self._last_enum_error:
                 LOG.info("USB enumeration failed (device in transition?): %s", msg)
                 self._last_enum_error = msg
+                self._enum_error_count = 0
+                self._enum_error_since = time.monotonic()
+            self._enum_error_count += 1
+            if self._enum_error_count % 20 == 0:
+                LOG.info("USB enumeration still failing: %s", self.enum_error_summary())
             return None
         self._last_enum_error = None
         if len(devices) > 1:
@@ -351,6 +387,16 @@ class Unit:
                 f"{len(devices)} USB devices ({paths}); pass --unit-path"
             )
         return devices[0] if devices else None
+
+    def enum_error_summary(self) -> str | None:
+        """The enumeration error the polls are failing with right now, how
+        often and for how long; None when the last poll enumerated cleanly."""
+        if self._last_enum_error is None:
+            return None
+        return (
+            f"{self._last_enum_error} (x{self._enum_error_count}, for "
+            f"{time.monotonic() - self._enum_error_since:.0f} s)"
+        )
 
     def present(self) -> bool:
         return self._find() is not None

@@ -117,6 +117,11 @@ def wait_firmware(unit: Unit, timeout: float = REBOOT) -> TrezorTestContext:
                         unit.step("the firmware did not come up on USB in time")
                         # Which side is at fault: the host, or a firmware
                         # that never connected to the bus.
+                        unit.step(
+                            "harness enumeration: "
+                            f"{unit.enum_error_summary() or 'no error, no unit'}",
+                            screenshot=False,
+                        )
                         unit.step(f"host USB: {host_usb_devices()}", screenshot=False)
                         unit.step(
                             f"STM USB controller: {screen.usb_controller_state()}",

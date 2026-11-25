@@ -386,7 +386,7 @@ def usb_stall_state() -> str:
         try:
             core = read_memory(base, 0x20)
             dev = read_memory(base + 0x800, 0x20)
-            ep_in = read_memory(base + 0x900, 0x10)
+            ep_in = read_memory(base + 0x900, 0x1C)
             ep_out = read_memory(base + 0xB00, 0x14)
             pcgcctl = _u32(read_memory(base + 0xE00, 4), 0)
         except ScreenError as e:
@@ -396,12 +396,18 @@ def usb_stall_state() -> str:
         if not (gahbcfg | gintsts | gintmsk):
             continue  # the alias the firmware does not use reads as zero
         daint, daintmsk = _u32(dev, 0x18), _u32(dev, 0x1C)
+        diepmsk, doepmsk = _u32(dev, 0x10), _u32(dev, 0x14)
+        # GRXSTSR peeks the RX FIFO head without popping it.
+        grxstsr = _u32(core, 0x1C)
         parts.append(
             f"OTG {name}: global int {'on' if gahbcfg & 1 else 'OFF'}, "
             f"pending&unmasked {gintsts & gintmsk:#010x} "
             f"(GINTSTS {gintsts:#010x} GINTMSK {gintmsk:#010x}), "
             f"DAINT {daint:#010x}/{daintmsk:#010x}, "
-            f"EP0 in ctl {_u32(ep_in, 0):#010x} int {_u32(ep_in, 8):#010x}, "
+            f"DIEPMSK {diepmsk:#010x} DOEPMSK {doepmsk:#010x}, "
+            f"GRXSTSR {grxstsr:#010x}, "
+            f"EP0 in ctl {_u32(ep_in, 0):#010x} int {_u32(ep_in, 8):#010x} "
+            f"tsiz {_u32(ep_in, 0x10):#010x} txfsts {_u32(ep_in, 0x18):#010x}, "
             f"out ctl {_u32(ep_out, 0):#010x} int {_u32(ep_out, 8):#010x} "
             f"tsiz {_u32(ep_out, 0x10):#010x}, "
             f"PCGCCTL {pcgcctl:#010x} (PHY clock "
