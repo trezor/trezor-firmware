@@ -228,8 +228,10 @@ def main() -> int:
 
             def write(call: t.Callable[[ward_relay.WarddProvider], t.Any]) -> int:
                 result = call(provider)
-                provider.apply_result(result)
-                return ward_relay.sync(session, wardd)["counter"]
+                # wardd publishes and, given the session, syncs the device in the same call
+                applied = provider.apply_result(result, session)
+                synced = applied.get("synced") or ward_relay.sync(session, wardd)
+                return synced["counter"]
 
             def read(identifier: bytes) -> str:
                 ward.get_entry(session, APP_ID, identifier, provider)

@@ -364,5 +364,14 @@ class WarddProvider:
     def with_staged(self, staged: list) -> "WarddProvider":
         return WarddProvider(self.client, list(staged))
 
-    def apply_result(self, result: WardResult) -> dict:
-        return self.client.call("applyResult", protobuf.to_dict(result.response))
+    def apply_result(self, result: WardResult, session: "Session | None" = None) -> dict:
+        """Store the write and publish it. With `session`, wardd also syncs the device at once
+        (the result's `synced`): signing a write leaves the device's head unconfirmed until a sync
+        adopts it, so syncing here keeps its reads fresh."""
+        if session is None:
+            return self.client.call("applyResult", protobuf.to_dict(result.response))
+        return self.client.call(
+            "applyResult",
+            {**protobuf.to_dict(result.response), "sync": True},
+            session_device(session),
+        )

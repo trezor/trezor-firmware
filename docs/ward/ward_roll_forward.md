@@ -3,11 +3,11 @@
 A WM whose register goes back no longer holds transitions it accepted. That happens after a
 restored backup, a failover onto a stale replica, or a lost register. Roll-forward brings the WM
 back to its newest head. A Trezor of the wallet signs the accepted steps again for its current
-session, and wardd submits them to the WM as ordinary advances.
+session, and the host submits them to the WM as ordinary advances.
 
-The Trezor's original signatures cannot be reused. Each `wm_sig` is bound to the session it was
-minted in, and a restore ends every session. After a session ends, nobody can tell a stored
-`wm_sig` for an accepted step from one for a lost race (see
+The Trezor's original WM signatures cannot be reused. Each is bound to the session it was made in,
+and a restore ends every session. After a session ends, nobody can tell a stored signature for an
+accepted step from one for a lost race (see
 [a stored signature cannot be verified later](ward_transitions.md#consequence-a-stored-signature-cannot-be-verified-later)).
 So roll-forward starts from what only the WM produced: its signed records of the steps it
 accepted.
@@ -15,52 +15,49 @@ accepted.
 ## Overview
 
 1. **The Trezor detects the restore** during an ordinary sync.
-2. **wardd feeds it the accepted steps**, each with the WM's record of it, in pages of at most 16.
+2. **The host feeds it the accepted steps**, each with the WM's record of it, a page at a time.
 3. **The Trezor checks every step**, the user approves once, and the Trezor signs each step again
-   under its session nonce.
-4. **wardd submits the signatures** to the WM as ordinary advances.
+   for its current session.
+4. **The host submits the signatures** to the WM as ordinary advances.
 5. **The Trezor shows the result**: how far the history was restored and when the WM last
    confirmed its last step.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant W as wardd
+    participant H as host
     participant T as Trezor
     participant M as WM (restored to #10)
     Note over T: stored head #20
-    W->>M: GET challenge
-    M-->>W: C
-    W->>T: WardSync(wm_challenge = C)
-    T-->>W: nonce N, session_proof
-    W->>M: open(N, proof)
-    M-->>W: attestation of #10 under N
-    W->>T: WardIngestAttestation(#10)
-    Note over T: 10 < 20: not adopted, round not attested<br/>roll-forward DETECTED, cursor #10
-    T-->>W: wm_behind, stored_counter = 20
-    loop each page of at most 16 steps
-        W->>T: WardRollForward(live attestation, links + WM records, final?)
-        Note over T: check every link (see below)<br/>first page: user approves "Restore WARD history"<br/>final page: "WARD history restored", last confirmed UTC
-        T-->>W: wm_sigs under N, last_timestamp
+    H->>T: sync, with the WM's challenge
+    T-->>H: fresh round nonce N, session proof
+    H->>M: open the session N
+    M-->>H: attestation of #10 under N
+    H->>T: the attestation of #10
+    Note over T: 10 is below 20: nothing adopted<br/>the restore is detected, starting at #10
+    T-->>H: the WM is behind, the Trezor is at #20
+    loop each page of steps
+        H->>T: the WM's attested head, the next steps and the WM's record of each
+        Note over T: check every step (see below)<br/>first page: the user approves the restore<br/>last page: shows how far, and when
+        T-->>H: a signature of each step under N
         loop each step
-            W->>M: advance(step, wm_sig, session = N)
-            M-->>W: acceptance under N
+            H->>M: advance the step with its new signature
+            M-->>H: the WM's acceptance under N
         end
-        W->>M: attest(N), read-only
-        M-->>W: attestation of the advanced head
+        H->>M: attest the advanced head under N
+        M-->>H: attestation
     end
-    W->>T: WardIngestAttestation(#20)
-    Note over T: at its head: attested, reconciled as usual
+    H->>T: the attestation of #20
+    Note over T: at its own head: adopted as usual
 ```
 
 ## Detection
 
-The Trezor, not wardd, decides that the WM was restored. When `WardIngestAttestation` attests a
-head below the Trezor's stored head, the Trezor neither adopts it nor fails. It answers
-`wm_behind` with its stored counter, and records the detection for this round, with the WM's
-head as the starting point. The round stays open but is not
-attested, so nothing can be adopted from it. The Trezor refuses `WardRollForward` in a round
-without that detection.
+The Trezor, not the host, decides that the WM was restored. When a sync attests a head below the
+Trezor's stored head, the Trezor neither adopts it nor fails. It reports that the WM is behind,
+with its own counter, and remembers the detection for this round, with the WM's head as the
+starting point. The round stays open, but nothing can be adopted from it. Without that detection,
+the Trezor refuses to sign anything again.
 
 A Trezor that is not ahead of the restored WM, such as a fresh one, does not detect the restore and
 adopts the WM's head as usual.
@@ -69,68 +66,37 @@ adopts the WM's head as usual.
 
 A WM record is any attestation the WM signed for exactly that step:
 
-- **The acceptance from `advance`.** It is signed under the session nonce and dated when the WM
+- **The acceptance of an advance.** It is signed under the session nonce and dated when the WM
   accepted the step.
 - **An attestation from a later sync.** It is signed under that sync's nonce while the step was
   the head, and dated then.
 
-Either way, the timestamp is when the WM vouched for the step; the WM itself keeps no time. wardd
-keeps one verified record per step, replicated with the links.
-The newest record replaces an older one for the same step, so the kept time is the latest at which
-the WM vouched for that step.
+Either way, the timestamp is when the WM vouched for the step; the WM itself keeps no time. The
+host keeps one verified record per step, replicated with the links. The newest record replaces an
+older one for the same step, so the kept time is the latest at which the WM vouched for that step.
 
 ## What the Trezor checks
 
-Each `WardRollForward` message carries:
+Each page carries the WM's live attestation of its current head, under the round nonce of the
+session the Trezor opened in this sync, and a run of steps, each with the Trezor's own MAC of it
+and the WM's record of it.
 
-- the WM's live attestation of its current head, against the round nonce of the session the
-  Trezor opened in this sync;
-- each transition with its `auth_commit` and the WM's record of exactly that step.
+The Trezor considers a step valid only if **both** of its checks pass:
 
-The Trezor considers a transition valid only if **both** of its checks pass:
-
-1. **Its own MAC.** The `auth_commit` verifies under `K_auth`, so a Trezor of this wallet made the
-   step. A WM cannot sign itself a history.
+1. **Its own MAC.** The MAC verifies under `K_auth`, so a Trezor of this wallet made the step. A WM
+   cannot sign itself a history.
 2. **The WM's signature.** The record verifies under the WM key over exactly this step, so the WM
    accepted it. A lost race or a publication held back has no record.
 
 It also checks two things about the chain:
 
-- **Contiguity.** The first step of the round starts at the attested head, and each step starts
-  where the previous one ended. A later page starts where the previous page ended ("not where the
-  roll-forward stands" otherwise).
+- **Contiguity.** The first step starts at the attested head, and each step starts where the
+  previous one ended. A later page starts where the previous page ended.
 - **Its own history.** No step jumps over the Trezor's stored counter, and a step that starts or
-  ends at the stored counter has the stored root there. The Trezor re-authorizes history it is
-  on, and steps beyond its head that continue from it; never a branch it would refuse.
+  ends at the stored counter has the stored root there. The Trezor re-authorizes history it is on,
+  and steps beyond its head that continue from it; never a branch it would refuse.
 
-It then signs each step again under the session nonce, with the step's original tag: a revert
-stays a revert. It returns the signatures in `WardRollForwardAck`.
-
-```mermaid
-flowchart TD
-    S([WardRollForward]) --> D{"this round detected<br/>a restored WM?"}
-    D -- no --> X1["refuse: no restored WM detected"]
-    D -- yes --> A{"live attestation verifies<br/>under the round nonce, at the cursor?"}
-    A -- no --> X2["refuse: not where the<br/>roll-forward stands"]
-    A -- yes --> L["next link"]
-    L --> C{"starts where the previous ended,<br/>advances 1..MAX_BATCH,<br/>auth_commit verifies under K_auth?"}
-    C -- no --> X3["refuse"]
-    C -- yes --> R{"WM record verifies<br/>for exactly this step?"}
-    R -- no --> X4["refuse: no WM record"]
-    R -- yes --> H{"agrees with the stored head<br/>where it meets the stored counter?"}
-    H -- no --> X5["refuse: not on this<br/>device's history"]
-    H -- yes --> G["sign again under the session nonce,<br/>with the original tag"]
-    G --> M{"more links?"}
-    M -- yes --> L
-    M -- no --> P{"approved in this round?"}
-    P -- no --> U["user approves<br/>Restore WARD history"]
-    P -- yes --> F
-    U --> F{"final page?"}
-    F -- yes --> Z["show: WARD history restored<br/>end the roll-forward"]
-    F -- no --> K["move the cursor to the last step"]
-    Z --> O([WardRollForwardAck: wm_sigs, last_timestamp])
-    K --> O
-```
+It then signs each step again for the current session, keeping its kind: a revert stays a revert.
 
 ## What the user sees
 
@@ -138,38 +104,36 @@ flowchart TD
   the WM's change number, its own, and how many changes that page signs again. Later pages of the
   same round need no new approval. Declining signs nothing, and the WM stays where it was
   restored to.
-- **Result.** On the last page (`final`), it shows "WARD history restored": the change number the
-  pages reached and, as "Last confirmed", the time of the WM's record of the last of those
-  changes, in UTC: when the WM last vouched for it, as far as wardd's records go. It also returns
-  that time as `last_timestamp`. The user can compare it with when they last made a change.
+- **Result.** On the last page it shows "WARD history restored": the change number reached and,
+  as "Last confirmed", the time of the WM's record of the last restored change, in UTC: when the
+  WM last vouched for it, as far as the host's records go. The user can compare it with when they
+  last made a change.
 
 The user confirmed each change when it was made, and the WM accepted it. The approval is for the
 restore itself: re-binding history the WM had lost to the current session.
 
-## What wardd does
+## What the host does
 
-wardd rolls the WM forward during a sync on the wallet channel, when the Trezor answers
-`WardIngestAttestation` with `wm_behind`:
+The host rolls the WM forward during a sync on the wallet channel, when the Trezor reports that
+the WM is behind:
 
-1. Take the verified kept records whose `to_counter` is above the WM's head, newest first.
-2. For each, walk the replica's links back from its head. The WM's current head must lie on that
-   walk. If no candidate's walk passes through it, the WM is on another branch, which is a rejoin
-   case, and nothing is replayed. The walk is bounded by the counter distance.
+1. Take the kept records of steps above the WM's head, newest first.
+2. For each, walk the replica's links back from it. The WM's current head must lie on that walk.
+   If no walk passes through it, the WM is on another branch, which is a rejoin case, and nothing
+   is replayed.
 3. Use the path up to the first step without a kept record.
-4. Send the path to the Trezor in pages of 16, in `WardRollForward`, with the WM's live
-   attestation and each step's record, marking the last page `final`.
-5. Submit each returned signature to the WM with `advance`, naming the round nonce as the
-   diagnostic `session`, and keep each acceptance.
-6. Before the next page, attest again under the same round nonce, because the Trezor's round is
-   still open. That anchors the next page on the advanced head. The attestation is read-only and
-   leaves the session open.
-7. When done, attest once more, ingest it, and continue the normal sync, where the Trezor now
-   reconciles. The sync reports how many steps were restored, the counter reached, and the time
-   of the last record.
+4. Send the path to the Trezor a page at a time, with the WM's live attestation and each step's
+   record, marking the last page.
+5. Submit each returned signature to the WM as an advance, and keep each acceptance.
+6. Before the next page, have the WM attest its advanced head under the same round nonce, because
+   the Trezor's round is still open. That attestation only reads and leaves the session open.
+7. When done, attest once more, hand it to the Trezor, and continue the normal sync, where the
+   Trezor now adopts its head. The sync reports how many steps were restored, the counter reached,
+   and the time of the last record.
 
 A refusal by the Trezor or the WM, or a declined approval, ends the roll-forward there, and a
-Trezor still ahead of the WM then fails the sync with `wm_behind`. wardd can be configured not to
-roll forward. The deprecated service channel does not roll forward.
+Trezor still ahead of the WM then fails the sync. The host can be configured not to roll forward.
+The deprecated service channel does not roll forward.
 
 ## Trade-offs
 
@@ -191,7 +155,7 @@ checks the predecessor against its head, and installs the step. No Trezor is inv
 
 ```mermaid
 flowchart LR
-    H["host with the WM's<br/>acceptance records"] -->|"replay(record)"| M["WM: verify its own signature,<br/>predecessor check, install"]
+    H["host with the WM's<br/>acceptance records"] -->|"replay a record"| M["WM: verify its own signature,<br/>predecessor check, install"]
     M -.->|"no Trezor, no wallet MAC,<br/>no session"| M
 ```
 
@@ -214,8 +178,8 @@ flowchart LR
 - **Open findings** in [gaps.md](gaps.md):
   [freshness after detected regression](gaps.md#freshness-after-detected-regression),
   [roll-forward consent and completion](gaps.md#roll-forward-consent-and-completion) (the
-  approval counts only the first page, and the final screen shows before wardd submits the
+  approval counts only the first page, and the final screen shows before the host submits the
   signatures), [recovery dates](gaps.md#recovery-dates), and
   [recovery through relay clients](gaps.md#recovery-through-relay-clients).
-- **A wallet the WM lost entirely** has no head to roll onto. Re-enrollment needs the genesis
-  `head_init_sig`, which only a Trezor at counter 0 supplies.
+- **A wallet the WM lost entirely** has no head to roll onto. Re-enrollment needs the Trezor's
+  genesis authorization, which only a Trezor at counter 0 supplies.

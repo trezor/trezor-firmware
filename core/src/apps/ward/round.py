@@ -87,7 +87,9 @@ def clear() -> None:
 # --- the online latch ---------------------------------------------------------------
 #
 # Set only by ADOPTING a WM-attested head (`adopt`); minting a nonce or ingesting an attestation
-# proves nothing about the tree and must not set it. Session lifetime makes every new session
+# proves nothing about the tree and must not set it. Dropped again when the device signs a step the
+# WM may accept (`transition.authorise`): "online" means current as of the latest adoption, and a
+# signed write may already have moved the WM past it. Session lifetime makes every new session
 # start offline by construction.
 _ONLINE = const(1)
 
@@ -98,10 +100,11 @@ def mark_online() -> None:
 
 
 def mark_offline() -> None:
-    """Drop the latch before a service build hands a mutation to the daemon.
+    """Drop the latch once the device signs a step the WM may accept.
 
-    From that moment the outcome is unknown, so it is recorded before the request; `adopt` sets
-    the latch again. Connect builds do not drop it: there only the host can re-establish a head.
+    From that moment the device's head may be behind the WM's, and it learns otherwise only from
+    the attestation of its next sync; `adopt` sets the latch again. A service build also drops it
+    before handing a mutation to its daemon.
     """
     _set(_cc.APP_WARD_ONLINE, bytes(1))
 

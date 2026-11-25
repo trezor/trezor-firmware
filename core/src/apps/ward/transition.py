@@ -361,15 +361,17 @@ async def authorise(
     step = auth_commit(await derive_k_auth(), *ops, TAG_REVERT if revert else TAG_COMMIT)
     if not utils.USE_WARD_WM:
         return step, wm_sig(await derive_k_sig(), *ops, TAG_STEP)
-    return (
-        step,
-        wm_sig(
-            await derive_k_sig(),
-            *ops,
-            TAG_WM_REVERT if revert else TAG_WM_HEAD,
-            sync_round.require_session_nonce(),
-        ),
+    advance = wm_sig(
+        await derive_k_sig(),
+        *ops,
+        TAG_WM_REVERT if revert else TAG_WM_HEAD,
+        sync_round.require_session_nonce(),
     )
+    # NO LONGER CURRENT. The WM may accept this step at any moment, and the device learns of it
+    # only from the attestation of its next sync. Until then its head may be behind the WM's, so
+    # reads carry the dated warning and the next write needs a sync.
+    sync_round.mark_offline()
+    return step, advance
 
 
 def session_proof(

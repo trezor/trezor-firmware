@@ -684,7 +684,7 @@ Run the file: `ward_unit_test test_trezor.wire.codec.ward_context.py`
 pytest against a throwaway emulator (`ward_device_test`, see Setup). A test written for another build is reported as skipped, not failed.
 
 
-#### `tests/device_tests/misc/test_ward.py` (190) — connect build (T3T1)
+#### `tests/device_tests/misc/test_ward.py` (191) — connect build (T3T1)
 
 Run the file: `ward_device_test tests/device_tests/misc/test_ward.py`
 
@@ -1014,6 +1014,8 @@ Run the file: `ward_device_test tests/device_tests/misc/test_ward.py`
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_discarding_a_queued_change_is_confirmed_and_says_what_it_is"`
 - **`test_ward_delete_requires_a_connection`** — A queued delete cannot be made safe yet: `EMPTY_PART` is plaintext, so any host can construct a delete leaf for any entry_key, and uploading queued deletes would hand a host the power to delete anything.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_delete_requires_a_connection"`
+- **`test_ward_a_signed_write_ends_freshness_until_the_next_sync`** — Once the device signs a write, the WM may accept it at any moment, and the device learns of it only from its next sync.
+  `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_a_signed_write_ends_freshness_until_the_next_sync"`
 - **`test_ward_set_entry_refuses_offline_and_names_the_queue_request`** — The online write no longer falls back to queueing, and the refusal says what to use.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_set_entry_refuses_offline_and_names_the_queue_request"`
 - **`test_ward_get_entry_refuses_offline_and_names_the_queue_request`** — Same for a read with NO stored head: nothing to prove against, so it refuses.
@@ -1052,7 +1054,7 @@ Run the file: `ward_device_test tests/device_tests/misc/test_ward.py`
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_both_record_forms_share_one_store"`
 - **`test_ward_rewriting_an_entry_compactly_replaces_it`** — Changing form must take over the slot, not leave the old form behind.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_rewriting_an_entry_compactly_replaces_it"`
-- **`test_ward_a_named_flush_may_hand_over_the_same_change_twice`** — The offered flag stops the UNNAMED loop repeating itself; a caller naming an entry overrides it.
+- **`test_ward_a_named_flush_may_hand_over_the_same_change_twice`** — A change handed over that never landed is handed over again after the next sync.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_a_named_flush_may_hand_over_the_same_change_twice"`
 - **`test_ward_takes_an_unmoved_head`** — Re-confirming the same head is an ordinary, frequent thing: a host that syncs twice without writing gets the same attestation content back.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_takes_an_unmoved_head"`
@@ -1506,7 +1508,7 @@ Run the file: `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tes
 - **`accepts a batch of up to MAX_BATCH and a revert, and refuses a forged step`**
   `yarn workspace @trezor/ward-core test:unit --coverage=0 src/__tests__/wm.test.ts -t 'accepts a batch of up to MAX_BATCH and a revert, and refuses a forged step'`
 
-#### `packages/wardd/src/__tests__/connect.test.ts` (7)
+#### `packages/wardd/src/__tests__/connect.test.ts` (8)
 
 Run the file: `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/connect.test.ts`
 
@@ -1520,6 +1522,8 @@ Run the file: `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/connect.test.ts -t 'keeps wardd'"'"'s refusal code in Connect'"'"'s error'`
 - **`carries a device Failure back to wardd, which ends the call as device_failure`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/connect.test.ts -t 'carries a device Failure back to wardd, which ends the call as device_failure'`
+- **`applies a write and, asked to, syncs the device in the same call`**
+  `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/connect.test.ts -t 'applies a write and, asked to, syncs the device in the same call'`
 - **`answers a device's pulls from wardd's replica`**
   `yarn workspace @trezor/wardd test:unit --coverage=0 src/__tests__/connect.test.ts -t 'answers a device'"'"'s pulls from wardd'"'"'s replica'`
 - **`walks a second device up the chain with catchUp, persisting nothing`**

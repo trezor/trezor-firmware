@@ -56,9 +56,22 @@ b"WARD ATTEST v1" || 0x07 || nonce(32) || ward_id(32)
 The timestamp is the WM's clock when it signs: the WM vouches that this step reached its head by
 then. The WM keeps no time in its register. An acceptance record is dated when the WM accepted the
 step; a later attestation of the same head is dated later. wardd keeps the signed records, and with
-them the times (see [the records](ward_roll_forward.md#the-records)). The Trezor stores the time of the
-attestation it adopted, so its offline warning reads "Not reflecting changes since" the moment the
-WM last confirmed its head.
+them the times (see [the records](ward_roll_forward.md#the-records)).
+
+**With the WM.** In a sync the WM attests the head under the Trezor's own nonce. The Trezor adopts
+it and persists the root, the counter and the attestation's time. Reads in that session are fresh
+and show no warning.
+
+**Without the WM.** wardd catches the Trezor up to the newest head a cached attestation names. The
+Trezor reads against that head for the current session only and does not persist it, so a head the
+WM never confirmed to this Trezor cannot become its stored head and fork its history. Reads show
+the warning "Not reflecting changes since" the cached attestation's time.
+
+**After a write.** Once the Trezor signs a write, the WM may accept it at any moment, and the
+Trezor learns of it only from its next sync. Until then its reads show the warning, dated by the
+last head it adopted, and its next write needs a sync. wardd syncs right after it publishes a
+write, so in normal use the window closes at once. "Fresh" therefore means current as of the
+session's latest adoption.
 
 The signature uses the WM key. Release firmware carries a placeholder key and refuses every
 attestation. Debug and emulator firmware accept the debug key.
@@ -131,19 +144,6 @@ sequenceDiagram
     M-->>W: revert, acceptance (attestation of the step under N)
 ```
 
-The WM's session state per wallet:
-
-```mermaid
-stateDiagram-v2
-    [*] --> NoSession: enrollment, restore, failover or WM restart
-    NoSession --> Open: open with a proof over the current challenge
-    Open --> Open: advance bound to N, the head moves and the session stays
-    Open --> Open: attest under any nonce, read-only
-    Open --> Open: open with a new proof, N ends and N2 begins
-    Open --> NoSession: restore, failover or WM restart
-    NoSession --> NoSession: advance refused, no session
-```
-
 ### What a session prevents
 
 An authorization that did not land in its session is dead once the wallet syncs again:
@@ -151,7 +151,7 @@ An authorization that did not land in its session is dead once the wallet syncs 
 - **A lost race.** Two Trezors sign from the same head and one lands first. The loser's `wm_sig`
   fails the predecessor check, and the next sync ends its session. The write itself is not lost:
   the host presents it again after the sync, and the Trezor resolves it (see
-  [a lost race](threat_model.md#a-lost-race)).
+  [a lost race](#a-lost-race)).
 - **A publication the host held back.** It is refused after any later sync.
 - **A replayed opening.** An opening proof is bound to the challenge it consumed, so an old proof
   cannot reopen its session. The challenge is volatile too: after a restart or a restore, no
@@ -189,6 +189,112 @@ sequenceDiagram
 - **A withheld opening.** A host can hold an opening proof back and submit it later. It stays
   valid until another opening consumes the challenge. This is the same delay, moved before the
   session opens.
+
+## The life of a transition
+
+A write takes three steps, and the Trezor's head moves only at the last:
+
+1. **The Trezor generates the transition.** It proves the entry's current state against its own
+   head, shows the change, and on confirmation seals the new leaf, derives the new root, and signs
+   the step twice: `auth_commit` for other Trezors and `wm_sig` for the WM, bound to the session
+   nonce. It also returns a retry token for the case that the write [loses a race](#a-lost-race).
+   Its head does not move yet, and its reads are no longer fresh.
+2. **The WM confirms it.** The host stores the step in the replica and submits it as an advance.
+   The WM checks the predecessor and `wm_sig`, moves its head, and returns its signed acceptance.
+3. **The Trezor accepts it.** wardd syncs it right after publishing: the WM attests the new head
+   under a fresh round nonce. The Trezor verifies the attestation, checks its own `auth_commit` over the attested
+   step, and adopts the head: its stored counter, root and the WM's timestamp.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant T as Trezor
+    participant H as host
+    participant M as WM
+    Note over T,M: session N open, Trezor and WM at head (c, R)
+    H->>T: WardSetEntry(app_id, identifier, value)
+    T->>H: WardEntryRequest(entry_key)
+    H-->>T: WardEntryAck(sealed_content, proof)
+    Note over T: verify the proof against R<br/>open the current value
+    Note over T: user confirms the change
+    Note over T: seal the leaf with C_leaf = c+1<br/>derive the new root R'<br/>auth_commit = MAC_K_auth(c, R → c+1, R')<br/>wm_sig = Sig_K_sig(c, R → c+1, R' ‖ N)
+    T-->>H: WardLeafAck(leaf, auth_commit, wm_sig, retry)
+    Note over T: head still (c, R), reads no longer fresh
+    H->>H: store the link in the replica
+    H->>M: advance(c, R → c+1, R', wm_sig)
+    Note over M: predecessor is (c, R)<br/>wm_sig verifies under N
+    M-->>H: acceptance of (c, R → c+1, R') under N
+    Note over M: head (c+1, R')
+    Note over H: sync the Trezor at once
+    H->>T: WardSync(challenge)
+    T-->>H: round nonce N2, session proof
+    H->>M: open(N2, proof)
+    M-->>H: attestation of (c, R → c+1, R') under N2
+    H->>T: WardIngestAttestation
+    Note over T: verify under N2
+    H->>T: WardReconcile(auth_commit)
+    Note over T: auth_commit verifies over the attested step<br/>its predecessor is the Trezor's head
+    Note over T: adopt and persist (c+1, R') with the WM's timestamp<br/>reads fresh again
+```
+
+## A lost race
+
+Two Trezors of one wallet write from the same head, and one lands first. The other's advance fails
+the predecessor check: the WM's head has moved. The write is not lost. The host syncs and sends
+the same request again with the retry token it got with the write.
+
+The retry token is a MAC under `K_auth` over the write and the state it was formed in:
+
+```
+retry = HMAC(K_auth, "WARD RETRY v1" || ward_id || base || seen || entry_key
+             || 0x00                                     for a delete
+             || 0x01 || len8(entry_type) || entry_type || value   otherwise)
+```
+
+`base` is the counter the write was formed on, and `seen` the entry's `C_leaf` there (0 when the
+entry was absent). Only a Trezor of the wallet can produce it, so a host cannot use a retry to skip
+a confirmation.
+
+The Trezor accepts only its own token for exactly this write. Then it compares the entry as it is
+now with `seen`:
+
+- **Unchanged since** (the same `C_leaf`): nobody else wrote this entry. The user's approval still
+  covers the write, so the Trezor signs it again on the new head with no screen.
+- **Already this change** (the same value, or absent for a delete): nothing is written and nothing
+  is signed.
+- **Changed to something else:** a conflict. The Trezor shows "Changed on another device", with
+  the entry as it is now and the user's change. It keeps the user's change only on
+  confirmation; declining leaves the current value.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant A as Trezor A
+    participant H as host of A
+    participant M as WM
+    participant B as Trezor B
+    Note over A,B: both at head (c, R)
+    A-->>H: write X := mine, formed on c, retry token
+    B->>M: write X := theirs, lands
+    Note over M: head (c+1, R_B)
+    H->>M: advance(c, R → c+1, R_A, wm_sig)
+    M-->>H: conflict, head is c+1
+    H->>A: sync, adopt (c+1, R_B)
+    H->>A: WardSetEntry(X := mine, retry)
+    Note over A: verify the token is its own,<br/>for exactly this write
+    alt X untouched since c
+        Note over A: sign again on c+1, no screen
+    else X already holds mine
+        Note over A: no-op, nothing signed
+    else X changed to theirs
+        Note over A: "Changed on another device"<br/>keep mine only on confirmation
+    end
+    A-->>H: WardLeafAck on c+1, or no-op
+    H->>M: advance(c+1, R_B → c+2, R', wm_sig)
+```
+
+Queued changes resolve the same conflict when the queue is flushed: a change formed before the
+entry was written elsewhere is shown with both values, and the user chooses.
 
 ## Why the session is part of the signature
 

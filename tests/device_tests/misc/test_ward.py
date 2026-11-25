@@ -1035,6 +1035,8 @@ def test_ward_delete_entry_retry_after_a_lost_response_succeeds(session: Session
         "ward_delete_entry",
     )
     assert ward.sync(session).counter == before  # the ack was lost; nothing landed
+    # signing the delete ended the session's freshness: the retry starts with a sync
+    _go_online(session, store)
 
     res2, _rec = _write(
         session,
@@ -3665,6 +3667,8 @@ def _lost_race(session: Session, mine: tuple, theirs: tuple) -> tuple:
     _seed(session, store, b"a", b"one")
     _go_online(session, store)
     held, _pending = _mint_unpublished(session, store, *mine)
+    # signing a write drops the session's freshness; the winner's write needs a sync first
+    _go_online(session, store)
 
     res, _rec = _write(
         session,
@@ -5403,6 +5407,36 @@ def test_ward_delete_requires_a_connection(session: Session):
 
 
 @pytest.mark.models("core")
+def test_ward_a_signed_write_ends_freshness_until_the_next_sync(session: Session):
+    """Once the device signs a write, the WM may accept it at any moment, and the device learns of
+    it only from its next sync. So until then a read is unverified and dated by the last sync, and
+    another write needs a sync first. The sync that adopts the write makes reads fresh again."""
+    store = WardTrie()
+    _seed(session, store, b"a", b"one")
+    _go_online(session, store)
+    synced_at = _T0 + store.counter
+
+    res, _rec = _write(
+        session,
+        store,
+        lambda p: ward.set_entry(session, _APP, b"a", b"two", p),
+        "ward_set_entry",
+    )
+
+    # the same session, before any sync: the old head, flagged and dated
+    _r, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"a", p))
+    assert "unverified entry" in rec.title
+    assert "one" in rec.text and _not_reflecting(synced_at) in rec.squashed
+    with pytest.raises(exceptions.TrezorFailure, match="WardQueueSetEntry"):
+        ward.set_entry(session, _APP, b"b", b"x", ward.store_provider(store))
+
+    ward.apply(store, res)
+    _confirm(session, store)
+    _r, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"a", p))
+    assert "unverified entry" not in rec.title and "two" in rec.text
+
+
+@pytest.mark.models("core")
 def test_ward_set_entry_refuses_offline_and_names_the_queue_request(session: Session):
     """The online write no longer falls back to queueing, and the refusal says what to use.
 
@@ -5858,6 +5892,9 @@ def test_ward_replacing_an_entry_keeps_its_place_in_the_queue(session: Session):
         res = ward.flush_queue(session, ward.store_provider(store))
         published.append(res.entry_key)
         remaining.append(res.remaining)
+        # as a host does: store it, have it confirmed, and sync before the next one
+        ward.apply(store, res)
+        _confirm(session, store)
 
     assert published == [
         expected_entry_key(_K_PATH, _APP, ident)
@@ -5968,6 +6005,8 @@ def test_ward_naming_an_entry_publishes_that_one_not_the_first(session: Session)
     assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr2")
     # the other one is still waiting, and is what an unnamed flush takes
     assert res.remaining == 1
+    ward.apply(store, res)
+    _confirm(session, store)
     res = ward.flush_queue(session, ward.store_provider(store))
     assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr1")
     assert res.remaining == 0
@@ -6005,6 +6044,8 @@ def test_ward_both_record_forms_share_one_store(session: Session):
     res = ward.flush_queue(session, ward.store_provider(store))
     assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr1")
     assert res.remaining == 0
+    ward.apply(store, res)
+    _confirm(session, store)
 
     res = ward.flush_queue(
         session, ward.store_provider(store), app_id=_APP, identifier=b"addr2"
@@ -6054,11 +6095,11 @@ def test_ward_rewriting_an_entry_compactly_replaces_it(session: Session):
 
 @pytest.mark.models("core")
 def test_ward_a_named_flush_may_hand_over_the_same_change_twice(session: Session):
-    """The offered flag stops the UNNAMED loop repeating itself; a caller naming an entry overrides it.
+    """A change handed over that never landed is handed over again after the next sync.
 
-    This is the way back for a change offered by a session that then dropped: the claim ledger went
-    with the session, so no reconcile will settle it, and refusing to re-offer would strand it. A
-    re-send costs a round trip; refusing costs the change.
+    Signing a change ends the session's freshness, so every further flush starts with a sync. That
+    sync finds the change not landed and offers it again, so a named flush gets it again, and so does
+    the unnamed loop. Refusing to re-offer would strand it; a re-send costs a round trip.
     """
     store = WardTrie()
 
@@ -6071,6 +6112,7 @@ def test_ward_a_named_flush_may_hand_over_the_same_change_twice(session: Session
     first = ward.flush_queue(
         session, ward.store_provider(store), app_id=_APP, identifier=b"addr1"
     )
+    _go_online(session, store)  # it never landed
     again = ward.flush_queue(
         session, ward.store_provider(store), app_id=_APP, identifier=b"addr1"
     )
@@ -6079,8 +6121,10 @@ def test_ward_a_named_flush_may_hand_over_the_same_change_twice(session: Session
     value = unpack_content(open_content(_K_DATA, again.leaf.content))[2]
     assert value == b"offered_twice"
 
-    # ...while the unnamed loop still considers it handed over
-    assert ward.flush_queue(session, ward.store_provider(store)).remaining == 0
+    # ...and the unnamed loop offers it again too
+    _go_online(session, store)
+    unnamed = ward.flush_queue(session, ward.store_provider(store))
+    assert unnamed.entry_key == first.entry_key and unnamed.remaining == 0
 
 
 # --- a WM register that goes back ------------------------------------------------------------
@@ -6224,6 +6268,8 @@ def test_ward_demotion_consent_does_not_survive_an_unrelated_adoption(session: S
     # THE HOST NEVER PUBLISHES IT. Instead it carries the device forward with ordinary writes,
     # which is entirely unprivileged. Two of them, so the approved destination ends up strictly
     # below the floor and it is the floor -- not the one-step reconcile rule -- being tested.
+    # Signing the demotion ended the session's freshness, so the host syncs first.
+    _attest(session, wm, store)
     for name, value in ((b"b", b"two"), (b"c", b"three")):
         res, _rec = _write(
             session,

@@ -108,8 +108,8 @@ class Device:
     def _write(self, what: str, call: t.Callable[[t.Any], t.Any]) -> t.Any:
         def run() -> dict:
             result = call(self.provider)
-            self.provider.apply_result(result)
-            return ward_relay.sync(self.session, self.wardd)
+            applied = self.provider.apply_result(result, self.session)
+            return applied.get("synced") or ward_relay.sync(self.session, self.wardd)
 
         return self._call(what, run)
 

@@ -103,7 +103,7 @@ A host cannot replay an earlier attestation, because it does not know the nonce 
 
 The device signs the WM's current single-use challenge and its fresh nonce to open a **session**. The Trezor binds every authorization it gives the WM to the nonce of its latest sync, and the WM accepts an authorization only while that sync is the wallet's latest. A write the host holds back, or one that lost a race, cannot land after a later sync. A WM restore discards active sessions and outstanding challenges. See [transitions and sessions](ward_transitions.md#sessions).
 
-- **Fresh.** In a WARD session that adopted a WM-attested head, a read is proven against the WM's current head, and the screen shows no warning.
+- **Fresh.** In a WARD session that adopted a WM-attested head, a read is proven against the WM's current head, and the screen shows no warning. Signing a write ends this until the next sync adopts the new head: the WM may accept the write at any moment, and the Trezor learns of it only by that sync. wardd syncs right after it publishes.
 - **Not fresh.** Without the WM, a read is proven against the head the Trezor last adopted, and the screen shows "Not reflecting changes since <timestamp> UTC, nor user reverts.", dated by the WM's signed timestamp for that head. A host that fails the sync on purpose can show only an old value of this ward, and only under that warning.
 - **Caught up without the WM.** A host can walk the Trezor forward along the wallet's own chain (`WardCatchUp`), as far as a head the WM once attested. Reads in that session prove against the newer head, under the warning dated by that attestation, and nothing is persisted.
 - **Never older.** A head below the stored counter, or a read proved against an older tree, is refused, with or without the WM. A WM that attests a head below the stored counter is reported as behind (`wm_behind`) and nothing is adopted from it; see [WM restored from a backup](#wm-restored-from-a-backup).
@@ -448,6 +448,7 @@ same request again with the token.
 - **What the host can still do:** not present the write again, or present it later. It cannot
   skip the conflict screen: the token binds the entry's `C_leaf` when the write was formed, and
   only an unchanged entry is signed again without asking.
+- See [a lost race](ward_transitions.md#a-lost-race) for the token and the sequence.
 
 ### Pointer
 
