@@ -1294,7 +1294,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 )));
                 unwrap!(list.append(obj));
             }
-            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
+            list.leak().into()
         }
 
         fn obj_from_proplist(archived: &Archived<Slice<Property>>) -> Obj {
@@ -1308,7 +1308,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                 )));
                 unwrap!(list.append(obj));
             }
-            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
+            list.leak().into()
         }
 
         // the address flows take each xpub as a (title, xpub) pair
