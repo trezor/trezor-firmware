@@ -4,7 +4,6 @@ import trezorcrypto_api
 from trezor import loop
 from trezor.ui import Shutdown as ui_shutdown
 from trezor.wire import context
-from trezor.wire.errors import DataError
 
 from apps.common import paths
 
@@ -76,19 +75,17 @@ async def handle(session: Session, msg: IpcMessage) -> None:
 
 def _curve(value: int, curves: tuple[str, ...] = _CURVES) -> str:
     if not 0 <= value < len(curves):
-        raise DataError("Unknown curve")
+        raise ValueError("Unknown curve")
     return curves[value]
 
 
 def _check_path(session: Session, address_n: list[int]) -> None:
-    from apps.common.keychain import ForbiddenKeyPath
-
     # apps get no SLIP-25 paths
     if address_n and address_n[0] == paths.SLIP25_PURPOSE:
-        raise ForbiddenKeyPath
+        raise ValueError("Forbidden key path")
     # the manifest's paths on any curve; apps only run with strict checks
     if not any(schema.match(address_n) for schema in session.schemas):
-        raise ForbiddenKeyPath
+        raise ValueError("Forbidden key path")
 
 
 async def _get_xpub(session: Session, obj: Any) -> bytes:
@@ -142,12 +139,12 @@ async def _ecdsa_sign_digest(session: Session, obj: Any) -> bytes:
             return secp256k1.sign(
                 private_key, digest, compressed, secp256k1.CANONICAL_SIG_ETHEREUM
             )
-        raise DataError("Unsupported canonical signature type")
+        raise ValueError("Unsupported canonical signature type")
 
     if curve != "nist256p1":
-        raise DataError("Unsupported curve")
+        raise ValueError("Unsupported curve")
     if canonical != _CANONICAL_ANY:
-        raise DataError(f"Canonical signatures are not supported on {curve}")
+        raise ValueError(f"Canonical signatures are not supported on {curve}")
     from trezor.crypto.curve import nist256p1
 
     return nist256p1.sign(private_key, digest, compressed)

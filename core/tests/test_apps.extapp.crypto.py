@@ -1,14 +1,13 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor.wire.errors import DataError
 
 if utils.USE_APP_LOADING:
     from trezor.crypto import bip39
     from trezor.crypto.curve import curve25519, ed25519, nist256p1, secp256k1
     from trezor.wire import context
 
-    from apps.common.keychain import ForbiddenKeyPath, Keychain
+    from apps.common.keychain import Keychain
     from apps.common.paths import SLIP25_PURPOSE, AlwaysMatchingSchema
     from apps.extapp import crypto
     from apps.extapp.session import MSG_ID_ERROR, SERVICE_CRYPTO
@@ -65,7 +64,7 @@ class TestCryptoHandle(unittest.TestCase):
 
     def test_failure_reported_to_app(self):
         session = FakeSession()
-        self.handle_raising(DataError("failed"), session)
+        self.handle_raising(ValueError("failed"), session)
         self.assertEqual(session.sent, [(SERVICE_CRYPTO, MSG_ID_ERROR, b"")])
 
     def test_unexpected_message_propagates(self):
@@ -79,13 +78,13 @@ class TestCryptoHandle(unittest.TestCase):
         # even when the manifest matches them, e.g. for signing
         session = KeychainSession(bip39.seed(" ".join(["all"] * 12), ""))
         address_n = [SLIP25_PURPOSE, H_(0), H_(0)]
-        with self.assertRaises(ForbiddenKeyPath):
+        with self.assertRaises(ValueError):
             await_result(
                 crypto._ecdsa_sign_digest(
                     session, (0, address_n, b"\x01" * 32, True, 0)
                 )
             )
-        with self.assertRaises(ForbiddenKeyPath):
+        with self.assertRaises(ValueError):
             await_result(crypto._get_xpub(session, (0, address_n)))
 
     def test_ecdsa_sign_unsupported_curve(self):
@@ -94,7 +93,7 @@ class TestCryptoHandle(unittest.TestCase):
         ecdsa_curves = crypto._ECDSA_CURVES
         crypto._ECDSA_CURVES = crypto._CURVES
         try:
-            with self.assertRaises(DataError):
+            with self.assertRaises(ValueError):
                 await_result(
                     crypto._ecdsa_sign_digest(
                         session, (2, [H_(44), H_(1), H_(0)], b"\x01" * 32, True, 0)
