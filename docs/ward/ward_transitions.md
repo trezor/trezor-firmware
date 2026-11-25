@@ -30,6 +30,19 @@ new counter. Within one WM register history, a `(counter, root)` pair therefore 
 `head_init_sig` is a self-transition `(0, root) -> (0, root)`. The WM enrolls a wallet only at
 genesis. Code: [`apps/ward/cas.py`](../../core/src/apps/ward/cas.py).
 
+The Trezor signs one more statement with `K_sig`, which is not a transition: the
+[session proof](#sessions), `"WARD SESSION OPEN v1" || ward_id || wm_challenge || nonce`.
+
+```mermaid
+flowchart LR
+    T["transition<br/>(from_counter, from_root) → (to_counter, to_root)"]
+    T --> A["auth_commit<br/>HMAC under K_auth<br/>WARD COMMIT / REVERT v3"]
+    T --> W["wm_sig<br/>Ed25519 under K_sig<br/>WARD WM COMMIT / REVERT v5<br/>+ session nonce"]
+    A --> D["other Trezors of the wallet<br/>walk the chain"]
+    W --> M["the WM<br/>compare-and-swap on its head"]
+    M --> R["acceptance record<br/>WM-signed attestation of the step<br/>under the session nonce"]
+```
+
 ## The WM attestation
 
 The WM answers a sync by signing the step that reached its head, bound to the Trezor's nonce:
@@ -47,7 +60,7 @@ attestation. Debug and emulator firmware accept the debug key. Code:
 The same statement serves three purposes, distinguished by where the nonce comes from:
 
 - **Live attestation.** The nonce is the Trezor's open round. The Trezor adopts the head only
-  from this.
+  from this. The WM signs one when it opens a session, and on a read-only `attest`.
 - **WM acceptance record.** The WM signs the new step under the session nonce when it accepts an
   advance. Roll-forward presents it after a restore.
 - **Cached attestation or rollback receipt.** A host keeps a past attestation. It proves that the
@@ -57,40 +70,116 @@ The same statement serves three purposes, distinguished by where the nonce comes
 ## Sessions
 
 A session binds the Trezor's WM authorizations to its most recent sync. Only the Trezor picks
-the nonce. The WM never does.
+the nonce. The WM never does. Only a Trezor of the wallet can open a session, and each opening
+is single-use.
 
-1. **The Trezor opens a session.** For each sync it draws a fresh 32-byte round nonce:
-   `WardSyncAck.nonce` on the wallet channel, and `WardSyncRequest.nonce` or `WardPublish.nonce` on
-   the service channel.
-2. **The WM records it.** The WM attests its head against that nonce and keeps it as the
-   wallet's session nonce. A later sync by any Trezor of the wallet replaces it.
-3. **The Trezor latches it.** After verifying the attestation, the Trezor stores
-   `(counter, root, nonce, timestamp)` in its session cache (`round.wm_head`).
-4. **The Trezor binds each authorization.** It mints every `wm_sig` over
+1. **The WM supplies a challenge.** It keeps one volatile 32-byte challenge per wallet and hands
+   it to anyone who asks. Reading it changes nothing. wardd passes it to the Trezor in
+   `WardSync.wm_challenge`. On the service channel the Trezor asks for it first, with
+   `WardSyncRequest.challenge_only`.
+2. **The Trezor proves the opening.** It draws a fresh 32-byte round nonce and signs
+   `"WARD SESSION OPEN v1" || ward_id || wm_challenge || nonce` under `K_sig`. It returns both in
+   `WardSyncAck.nonce` and `WardSyncAck.session_proof`, or sends them in `WardSyncRequest` on the
+   service channel. Without a challenge it returns no proof, and the round can only read.
+3. **The WM opens the session.** In one step, it verifies the proof under `ward_id` against its
+   current challenge, replaces the challenge, and installs the nonce as the wallet's session
+   nonce. It returns the attestation of its head under that nonce. The previous session, of any
+   Trezor of the wallet, ends here.
+4. **The Trezor latches it.** After verifying the attestation, the Trezor stores
+   `(counter, root, nonce, timestamp)` in its session cache (`round.wm_head`). It latches the
+   nonce even if it then refuses the head.
+5. **The Trezor binds each authorization.** It mints every `wm_sig` over
    `transition_preimage || nonce` and refuses to mint one without a session: "no WM session; sync
    first".
-5. **The WM checks the binding.** It accepts an advance only if `wm_sig` verifies against the
+6. **The WM checks the binding.** It accepts an advance only if `wm_sig` verifies against the
    session nonce it holds, under the commit or revert tag, and the `from` end is its current head
    (compare-and-swap). The host may name the session it believes is current; see
    [the optional session field](#the-optional-session-field).
-6. **The WM signs its acceptance.** It returns an acceptance record: the attestation of the new
+7. **The WM signs its acceptance.** It returns an acceptance record: the attestation of the new
    step under the session nonce. The host keeps it.
 
-A head change does not end the session, so one session can carry several transitions. On the
-service channel, each publication carries a fresh nonce. The WM attests the new step against it,
-and that nonce becomes the session nonce on both sides.
+A head change does not end the session, so one session can carry several transitions. A
+read-only `attest` signs the head under any nonce the host names and leaves the session as it
+is. Roll-forward uses it between pages, and the service channel uses it for each publication:
+the publication carries a fresh nonce, the WM attests the new step against it, and the Trezor
+keeps the session nonce of its sync (`write_session` in `adopt.verify_round_attestation`).
+
+Code: [`apps/ward/sync.py`](../../core/src/apps/ward/sync.py),
+[`apps/ward/round.py`](../../core/src/apps/ward/round.py), `cas.session_proof`; the WM side is
+`DevWm.openSession` in `packages/ward-core/src/wm.ts` and `MockWM.open_session` in
+`tests/ward_wm.py`.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant W as wardd
+    participant T as Trezor
+    participant M as WM
+    W->>M: GET challenge
+    M-->>W: C
+    W->>T: WardSync(wm_challenge = C)
+    Note over T: draw round nonce N<br/>proof = Sig_K_sig("WARD SESSION OPEN v1" ‖ ward_id ‖ C ‖ N)
+    T-->>W: WardSyncAck(nonce = N, session_proof)
+    W->>M: POST open(N, proof)
+    Note over M: verify proof against C<br/>replace C, session := N<br/>(the previous session ends)
+    M-->>W: attestation of the head under N
+    W->>T: WardIngestAttestation
+    Note over T: verify under N<br/>latch round.wm_head = (counter, root, N, timestamp)
+    W->>T: write
+    Note over T: wm_sig = Sig_K_sig(transition ‖ N)
+    T-->>W: auth_commit, wm_sig
+    W->>M: POST advance(transition, wm_sig, session = N)
+    Note over M: compare-and-swap on the head<br/>verify wm_sig under its session N
+    M-->>W: revert, acceptance (attestation of the step under N)
+```
+
+The WM's session state per wallet:
+
+```mermaid
+stateDiagram-v2
+    [*] --> NoSession: enrollment, restore, failover or WM restart
+    NoSession --> Open: open with a proof over the current challenge
+    Open --> Open: advance bound to N, the head moves and the session stays
+    Open --> Open: attest under any nonce, read-only
+    Open --> Open: open with a new proof, N ends and N2 begins
+    Open --> NoSession: restore, failover or WM restart
+    NoSession --> NoSession: advance refused, no session
+```
 
 ### What a session prevents
 
-An authorization that did not land in its session is dead once the wallet syncs again. Two cases:
+An authorization that did not land in its session is dead once the wallet syncs again:
 
 - **A lost race.** Two Trezors mint from the same head and one lands first. The loser's `wm_sig`
   fails the compare-and-swap, and the next sync ends its session.
 - **A publication the host held back.** It is refused after any later sync.
+- **A replayed opening.** An opening proof is bound to the challenge it consumed, so an old proof
+  cannot reopen its session. The challenge is volatile too: after a restart or a restore, no
+  proof signed before verifies.
+- **A host ending a session.** Only a Trezor of the wallet can sign an opening. Reading the head
+  or the challenge does not disturb the Trezor that is writing.
 
 The session nonce is volatile WM state. A restored backup, a failover, or a lost register drops
 it. So a restored WM accepts none of the `wm_sig`s minted before the restore. What the WM had
 accepted comes back by [roll-forward](#roll-forward).
+
+```mermaid
+sequenceDiagram
+    participant H as host
+    participant T as Trezor
+    participant M as WM
+    Note over T,M: session N1 open
+    T-->>H: wm_sig for H0 → H1, bound to N1
+    Note over H: holds it back
+    H->>T: WardSync(wm_challenge = C)
+    T-->>H: nonce N2, proof over C
+    H->>M: open(N2, proof)
+    Note over M: replace C, session := N2
+    H->>M: advance(H0 → H1, wm_sig bound to N1)
+    M-->>H: refused: not authorised (the session it names has ended)
+    H->>M: open(N1, old proof)
+    M-->>H: refused: invalid or expired session proof
+```
 
 Tests:
 
@@ -102,22 +191,20 @@ Tests:
   - `test_ward_attack_a_revert_from_an_ended_session_is_refused`: a held REVERT is refused after a
     new sync.
   - `test_ward_a_write_is_bound_to_the_latest_sync`: the Trezor binds to its latest attestation.
+- **Mock WM tests** in `tests/test_ward_wm.py`:
+  `test_only_a_fresh_device_proof_can_replace_the_write_session` replays an old opening proof.
 - **wardd tests** in the "ADVERSARIAL: a transition is invalidated by a new sync" group of
   `host.test.ts`, and in `service.test.ts`: the host and the WM each refuse a result whose session
-  has ended.
+  has ended. `wmServer.test.ts` opens a session only with the proof for the outstanding challenge.
 
 ### What a session does not prevent
 
 - **Concurrent Trezors.** A sync by one Trezor of the wallet ends the session of every other.
-  Their next publication gets a conflict, and they sync again.
+  Their next publication is refused, and they sync again.
 - **Delay.** Within a session, a host may delay a publication while nothing else lands.
-- **A reopened nonce.** The WM cannot tell a fresh Trezor nonce from an old one that a host
-  replays. After a restore brings back a head, a host can ask the WM to attest that head under
-  the nonce of an old session and then submit that session's unlanded authorizations. This is an
-  accepted gap: closing it needs a WM high-water mark that a restore cannot take back, and no
-  acceptable store for one exists. See
-  [WM restore and roll-forward](gaps.md#wm-restore-and-roll-forward).
-  `test_known_gap_a_host_can_reopen_an_old_session` in `tests/test_ward_wm.py` pins the behavior.
+- **A withheld opening.** A host can hold an opening proof back and submit it later. It stays
+  valid until another opening consumes the challenge. This is the same delay, moved before the
+  session opens.
 
 ## Why the session is part of the signature
 
@@ -139,6 +226,16 @@ because the counter only rises. It does not stop an authorization from landing *
 The nonce lives inside the signature. That is the only place the WM can check it: the Trezor never
 sends a separate field the WM would have to trust.
 
+### Why the opening is authenticated
+
+A nonce alone does not tell the WM whether a Trezor just drew it or a host replays an old one.
+When any attestation request opened a session, a host could ask for an attestation under an old
+nonce and then land that session's held writes, and anyone able to ask could end the session of
+the Trezor that was writing. The opening proof closes both: it is signed under `K_sig`, so only a
+Trezor of the wallet can open a session, and it covers the WM's single-use challenge, so each
+proof opens one session once. See
+[authenticated write sessions](gaps.md#authenticated-write-sessions).
+
 ### Consequence: a stored signature cannot be verified later
 
 The session nonce is not part of the transition the Trezor sends. A result carries `counter`,
@@ -146,7 +243,7 @@ The session nonce is not part of the transition the Trezor sends. A result carri
 party that knows which session it was minted in:
 
 - **The WM:** only while that session is current.
-- **wardd:** only for the sessions it ran itself.
+- **wardd:** only for the sessions it opened itself.
 
 After the session ends, nobody can tell a stored `wm_sig` for an accepted transition from one for
 a lost race. So the stored signatures cannot be used to rebuild the WM's history. Rebuilding has
@@ -170,15 +267,17 @@ It runs in four stages:
 2. **The host feeds the accepted transitions.** Oldest first, in `WardRollForward`, at most 16
    per message. The Trezor refuses `WardRollForward` in a round without that detection.
 3. **The user approves.** On the first page, after checking it, the Trezor shows "Restore WARD
-   history": the WM's change number, its own, and how many changes it will sign again.
+   history": the WM's change number, its own, and how many changes that page signs again.
+   Later pages of the same round need no new approval.
 4. **The Trezor tells the result.** On the last page (`final`), it shows "WARD history
-   restored": the restored change number and when the WM accepted the last restored change, in
-   UTC. It also returns that time as `last_timestamp`. The user can see how recent the restored
-   history is.
+   restored": the change number the pages reached and when the WM accepted the last of those
+   changes, in UTC. It also returns that time as `last_timestamp`. The user can see how recent
+   the restored history is.
 
 Each `WardRollForward` message carries:
 
-- the WM's live attestation of its current head, against the round nonce the Trezor just picked;
+- the WM's live attestation of its current head, against the round nonce of the session the
+  Trezor opened in this sync;
 - each transition with its `auth_commit` and the WM's acceptance record of exactly that step
   (`WardChainLink.acceptance`).
 
@@ -191,22 +290,82 @@ The Trezor considers a transition valid only if **both** of its checks pass:
 
 It also checks two things about the chain:
 
-- **Contiguity.** The first step starts at the attested head, and each step starts where the
-  previous one ended.
-- **Its own history.** A step that reaches or crosses its stored counter agrees with its stored
-  head. The Trezor re-authorizes only history it is on.
+- **Contiguity.** The first step of the round starts at the attested head, and each step starts
+  where the previous one ended. A later page starts where the previous page ended
+  ("not where the roll-forward stands" otherwise).
+- **Its own history.** No step jumps over the Trezor's stored counter, and a step that starts or
+  ends at the stored counter has the stored root there. The Trezor re-authorizes history it is
+  on, and steps beyond its head that continue from it; never a branch it would refuse.
 
-It then signs each step again under the round nonce, with the step's original tag: a revert stays
-a revert. It returns the signatures in `WardRollForwardAck`, and the host submits them to the WM as
-ordinary advances. Before the next page, the host has the WM attest its advanced head against
-the same round nonce. A later page must start where the previous one ended, and needs no new
-approval. When roll-forward ends, the host ingests a fresh attestation and the Trezor reconciles
-as usual.
+It then signs each step again under the session nonce, with the step's original tag: a revert
+stays a revert. It returns the signatures in `WardRollForwardAck`, and the host submits them to
+the WM as ordinary advances. Before the next page, the host has the WM attest its advanced head
+against the same round nonce. That attestation is read-only and leaves the session open. When
+roll-forward ends, the host ingests a fresh attestation and the Trezor reconciles as usual.
 
 The user confirmed each change when it was made, and the WM accepted it. The approval is for the
 restore itself: re-binding history the WM had lost to the current session. Code:
 [`apps/ward/roll_forward.py`](../../core/src/apps/ward/roll_forward.py), wardd
 `WardHost.rollForward`. See [roll-forward in the WM](ward_manager.md#roll-forward).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant W as wardd
+    participant T as Trezor
+    participant M as WM (restored to #10)
+    Note over T: stored head #20
+    W->>M: GET challenge
+    M-->>W: C
+    W->>T: WardSync(wm_challenge = C)
+    T-->>W: nonce N, session_proof
+    W->>M: open(N, proof)
+    M-->>W: attestation of #10 under N
+    W->>T: WardIngestAttestation(#10)
+    Note over T: 10 < 20: not adopted, round not attested<br/>roll-forward DETECTED, cursor #10
+    T-->>W: wm_behind, stored_counter = 20
+    loop each page of at most 16 steps
+        W->>T: WardRollForward(live attestation, links + WM records, final?)
+        Note over T: check every link (see below)<br/>first page: user approves "Restore WARD history"<br/>final page: "WARD history restored", last accepted UTC
+        T-->>W: wm_sigs under N, last_timestamp
+        loop each step
+            W->>M: advance(step, wm_sig, session = N)
+            M-->>W: acceptance under N
+        end
+        W->>M: attest(N), read-only
+        M-->>W: attestation of the advanced head
+    end
+    W->>T: WardIngestAttestation(#20)
+    Note over T: at its head: attested, reconciled as usual
+```
+
+What the Trezor checks on each `WardRollForward` page:
+
+```mermaid
+flowchart TD
+    S([WardRollForward]) --> D{"this round detected<br/>a restored WM?"}
+    D -- no --> X1["refuse: no restored WM detected"]
+    D -- yes --> A{"live attestation verifies<br/>under the round nonce, at the cursor?"}
+    A -- no --> X2["refuse: not where the<br/>roll-forward stands"]
+    A -- yes --> L["next link"]
+    L --> C{"starts where the previous ended,<br/>advances 1..MAX_BATCH,<br/>auth_commit verifies under K_auth?"}
+    C -- no --> X3["refuse"]
+    C -- yes --> R{"WM record verifies<br/>for exactly this step?"}
+    R -- no --> X4["refuse: no WM record"]
+    R -- yes --> H{"agrees with the stored head<br/>where it meets the stored counter?"}
+    H -- no --> X5["refuse: not on this<br/>device's history"]
+    H -- yes --> G["sign again under the session nonce,<br/>with the original tag"]
+    G --> M{"more links?"}
+    M -- yes --> L
+    M -- no --> P{"approved in this round?"}
+    P -- no --> U["user approves<br/>Restore WARD history"]
+    P -- yes --> F
+    U --> F{"final page?"}
+    F -- yes --> Z["show: WARD history restored<br/>end the roll-forward"]
+    F -- no --> K["move the cursor to the last step"]
+    Z --> O([WardRollForwardAck: wm_sigs, last_timestamp])
+    K --> O
+```
 
 - **For:**
   - The WM keeps one way in: a Trezor-signed advance in the current session.
@@ -218,10 +377,23 @@ restore itself: re-binding history the WM had lost to the current session. Code:
   - Each step costs a MAC check, a WM signature check and a new signature on the device.
   - The deprecated service channel does not support it.
 
+Open findings about this flow are in [gaps.md](gaps.md):
+[freshness after detected regression](gaps.md#freshness-after-detected-regression),
+[roll-forward consent and completion](gaps.md#roll-forward-consent-and-completion) (the approval
+counts only the first page, and the final screen shows before wardd submits the signatures),
+[recovery dates](gaps.md#recovery-dates), and
+[recovery through relay clients](gaps.md#recovery-through-relay-clients).
+
 ### Option B: the WM accepts its own records directly (not implemented)
 
 The host presents the WM's acceptance records to the WM. The WM verifies its own signature over
 each step, compare-and-swaps on its head, and installs the step. No Trezor is involved.
+
+```mermaid
+flowchart LR
+    H["host with the WM's<br/>acceptance records"] -->|"replay(record)"| M["WM: verify its own signature,<br/>compare-and-swap, install"]
+    M -.->|"no Trezor, no wallet MAC,<br/>no session"| M
+```
 
 - **For:**
   - It works while no Trezor is connected.
@@ -245,8 +417,8 @@ The advance request may carry `session`: the nonce the host believes the WM hold
 **diagnostics only**. The WM always verifies the signature against the nonce it holds and never
 trusts the field. When verification fails and the named session differs from the WM's, the
 refusal says that the session it names has ended. A host can then sync and ask the Trezor again,
-rather than treat the refusal as a forgery. wardd sends the nonce of the latest attestation it
-obtained.
+rather than treat the refusal as a forgery. wardd sends the nonce of the latest session it opened
+with a Trezor's proof.
 
 ## Alternative: transitions without `from`
 

@@ -10,7 +10,7 @@ What WARD protects, from whom, and what each party still learns. The leaf format
 | Trezor | The seed; every key below | Everything: it is the only party that decides |
 | Host | The application connected to the unlocked Trezor, its `wardd`, and `wardd`'s database of transitions | Availability only |
 | Evolu relay | Encrypted Evolu messages that carry the transitions between `wardd` instances | Availability only |
-| WARD Manager (WM) | Each ward's head `(counter, root)`, the step that reached it, and the nonce of the latest sync | Ordering and freshness, never content |
+| WARD Manager (WM) | Each ward's head `(counter, root)`, the step that reached it, the nonce of the session a Trezor opened last, and an opening challenge | Ordering and freshness, never content |
 | Other Trezors of the wallet | The same seed | As the Trezor |
 
 - The host can talk to the Trezor and ask for anything it can name, so it can ask about any identifier it can guess. It cannot pass a screen the user refuses.
@@ -101,7 +101,7 @@ The trie proves that a leaf is in a tree. It does not prove the tree is the late
 
 A host cannot replay an earlier attestation, because it does not know the nonce in advance. The Trezor's root moves only through such an adoption.
 
-The same nonce opens a **session**. The Trezor binds every authorization it gives the WM to the nonce of its latest sync, and the WM accepts an authorization only while that sync is the wallet's latest. A write the host holds back, or one that lost a race, cannot land after a later sync. After a restore of the WM it can, if a host reopens its session: an [accepted gap](gaps.md#wm-restore-and-roll-forward). See [transitions and sessions](ward_transitions.md#sessions).
+The device signs the WM's current single-use challenge and its fresh nonce to open a **session**. The Trezor binds every authorization it gives the WM to the nonce of its latest sync, and the WM accepts an authorization only while that sync is the wallet's latest. A write the host holds back, or one that lost a race, cannot land after a later sync. A WM restore discards active sessions and outstanding challenges. See [transitions and sessions](ward_transitions.md#sessions).
 
 - **Fresh.** In a WARD session that adopted a WM-attested head, a read is proven against the WM's current head, and the screen shows no warning.
 - **Not fresh.** Without the WM, a read is proven against the head the Trezor last adopted, and the screen shows "Not reflecting changes since <timestamp> UTC, nor user reverts.", dated by the WM's signed timestamp for that head. A host that fails the sync on purpose can show only an old value of this ward, and only under that warning.
@@ -505,8 +505,7 @@ Its sessions do not come back, so it accepts none of the authorizations minted b
     - **WM and host:** that a restore was rolled forward, and how far.
 - **What the host supplies:** the accepted transitions from the WM's head, each with its WM
   acceptance record, in pages of up to 16. See [roll-forward](ward_transitions.md#roll-forward).
-- **Accepted gap:** whoever holds the records chooses how far the replay goes, and a host can
-  reopen an old session. See [WM restore and roll-forward](gaps.md#wm-restore-and-roll-forward).
+- **Accepted gap:** whoever holds the records chooses how far the replay goes. See [WM restore and roll-forward](gaps.md#wm-restore-and-roll-forward).
 
 ### Key export and listing
 

@@ -1,9 +1,8 @@
 # WARD security gaps
 
-This review covers firmware and Suite `petrsusil/ward-draft` through firmware
-`0271e08ab5` and Suite `8f2830e585`, plus the fixes described below (firmware
-`fcdbd3df97`, Suite `9b98067dc4`). It follows the
-[WARD threat model](threat_model.md). The Trezor is responsible for wallet authentication
+This review includes the session-bound WM and roll-forward changes through firmware
+`2e4f35c7d2` and Suite `299d49287e`, and the session activation fix described below.
+It follows the [WARD threat model](threat_model.md). The Trezor is responsible for wallet authentication
 and user consent. wardd, the relay, and a replica peer can fail or supply misleading
 data. With a WM, ordering and live freshness depend on a trusted, durable register.
 
@@ -15,9 +14,16 @@ data. With a WM, ordering and live freshness depend on a trusted, durable regist
 | P1 | Opening a replica sent the parent Evolu credential to wardd. | Fixed in relay v2 |
 | P1 | The public write signature leaves the chain MAC outside its scope. | Open |
 | P1 | The development WM can attest a head before committing it to disk. | Open |
-| P1 | After a WM restore, whoever holds the WM's records chooses how far it is replayed, and a host can reopen an old session. | Accepted |
+| P1 | A head attestation could reactivate a retired write authorization or interrupt the current writer. | Fixed by authenticated session activation |
+| P1 | After a WM restore, the holder of the records chooses how far it is replayed. | Accepted |
+| P1 | The device can report a label as current after detecting WM regression. | Open |
+| P1 | Recovery can publish a head whose encrypted leaves the replica cannot serve. | Open |
 | P1 | Rollback could approve a root with no historical proof. | Fixed in firmware |
 | P1 | The MVP flash keys overlap records from public mini-WARD. | Open |
+| P2 | Roll-forward approval covers the first page and completion precedes WM confirmation. | Open |
+| P2 | Missing or incompatible receipts can strand recovery after a successful write or upgrade. | Open |
+| P2 | Replaying a step can replace its original acceptance date in the recovery display. | Open |
+| P2 | Rust and Java relay clients refuse roll-forward. | Open |
 | P2 | Cached catch-up can accept an ambiguous timestamp or serve proofs from the wrong head. | Open |
 | P2 | Malformed or cyclic rows can block or hang replay of otherwise healthy history. | Open |
 | P2 | Two device display paths bypass the intended reveal policy. | Open |
@@ -104,8 +110,8 @@ restoration of an earlier register. Restoration is the subject of the next secti
 ### WM restore and roll-forward
 
 The WM holds no head nonce. A Trezor's `wm_sig` covers the transition and the session
-nonce: the round nonce the Trezor picked for its latest sync. The WM keeps the nonce of
-the wallet's latest sync and accepts an advance only when it is bound to that nonce
+nonce: the round nonce the Trezor authenticated with the WM's single-use challenge.
+The WM keeps the nonce of the wallet's latest authenticated session and accepts an advance only when it is bound to that nonce
 and starts at its head. After accepting, it signs its own record of the step under the
 session nonce. See [transitions and sessions](ward_transitions.md).
 
@@ -120,7 +126,7 @@ advances. A step with no WM record cannot come back. See
 [roll-forward](ward_transitions.md#roll-forward), which also covers the alternative of
 the WM accepting its own records directly.
 
-Two attack surfaces remain. Both are **accepted gaps**:
+The following **accepted gap** concerns recovery after the register goes back.
 
 - **Prefix choice.** Whoever holds the records chooses how far a restored WM is
   replayed. That includes wardd, a replica peer with the WARD owner secret, and old
@@ -131,14 +137,9 @@ Two attack surfaces remain. Both are **accepted gaps**:
   on top, which forks the history. Nothing can be forged, and a malicious WM could
   already present any genuine historical state. The difference is that an honest WM
   can now be steered by a host after a restore.
-- **Reopened session.** The WM cannot tell a fresh Trezor nonce from an old one that a
-  host replays. After a restore brings back a head, a host can ask the WM to attest it
-  under an old session's nonce and then land that session's unlanded authorizations.
-  Each is a genuine Trezor authorization from that head. It lands late, not forged.
 
-Closing either needs the WM to remember, across a restore, how far it had got: a
-per-wallet high-water mark, with a recovery mode that accepts only advances carrying the
-WM's own record and attests nothing until the mark is reached again. The mark would have
+Preventing prefix choice requires an independent per-wallet high-water mark and a recovery
+mode that withholds live attestation until the register reaches it. The mark would have
 to live where a restore, a failover onto a stale replica, and a total loss of the WM's
 storage cannot take it back. No acceptable store exists:
 
@@ -154,13 +155,80 @@ storage cannot take it back. No acceptable store exists:
 
 The design therefore relies on a restore being rare and on these bounds: nothing is
 forged, every step that lands is one a Trezor authorized, and a Trezor never goes below
-its stored counter. `test_a_restored_wm_can_be_stopped_at_any_prefix` and
-`test_known_gap_a_host_can_reopen_an_old_session` in `tests/test_ward_wm.py` pin the
-behavior.
+its stored counter without a separately approved demotion.
+`test_a_restored_wm_can_be_stopped_at_any_prefix` in `tests/test_ward_wm.py` records this limit.
 
 A WM that lost the wallet entirely holds no head to replay onto. Re-enrollment needs the
 genesis `head_init_sig`, which only a Trezor at counter 0 supplies today. A re-enrollment
 at genesis, two competing branches, and a write racing the replay remain open.
+
+### Authenticated write sessions
+
+Previously, asking for a head attestation changed the active session. A host could revive
+a held write at an unchanged predecessor even during ordinary operation. Anyone able to
+request attestations for that wallet could also interrupt its current writer.
+
+The development WM now requires a device signature over the wallet ID, its current
+32-byte challenge and the fresh nonce generated by the Trezor. It consumes the challenge
+and replaces the session in one operation. Head and challenge reads have no effect on
+the active writer. Restart and restore start with fresh challenges. The device, wardd
+and WM must support this handshake together. A production WM with multiple instances
+must serialize challenge consumption and session replacement per wallet and fence stale
+instances on failover. The MVP has no WM session.
+
+### Freshness after detected regression
+
+On the Connect channel a previously online device can ingest an authenticated lower WM
+counter and report `wm_behind` while the earlier online flag remains set. If recovery is
+declined or interrupted, a label proven against the stored root can still say “Label proven
+current.” Clear the online flag and the earlier adoptable attestation on detection. Restore
+freshness only after adoption. Verify the label and write paths before and after an
+interrupted recovery in the same device session.
+
+### Recoverable data before publication
+
+wardd materializes the restored WM head, then selects later links by their endpoints and
+verified receipts. Roll-forward checks their MACs and signatures. Neither check establishes
+that the recovering replica still has the encrypted leaf changes needed to serve those later
+roots. Before requesting signatures, apply the entire proposed path to a single snapshot and
+check each resulting root. Report the first unavailable transition before publishing any step.
+Cover a valid receipt and MAC paired with a damaged or missing leaf change.
+
+### Roll-forward consent and completion
+
+The first approval counts the changes on that page. Later pages reuse approval, and the
+device may release signatures before the path reaches its own stored checkpoint. The final
+screen announces restoration before wardd submits those signatures. Bind approval to the
+intended counter and root, prove the path through the device checkpoint before releasing
+signatures, and show completion only after a fresh attestation of the approved target.
+Cover page boundaries, a declined later page, and a disconnect before the final publication.
+
+### Receipt durability and upgrade
+
+wardd logs a receipt append failure and can still acknowledge publication. The WM exposes
+only its current step. Once it moves again, an unavailable historical receipt can stop
+roll-forward and deep rollback. Report WM acceptance and durable receipt storage separately,
+and support idempotent receipt retrieval by transition after a lost response or failed append.
+Test recovery after another writer has already advanced.
+
+The previous draft's v6 receipts fail current v7 verification. An intact Evolu archive can
+therefore lose its historical proof coverage on upgrade. Provide versioned historical
+verification or an authenticated migration checkpoint and state the recovery range it covers.
+Test an upgrade from populated v6 history, including interruption and a subsequent WM restore.
+
+### Recovery dates
+
+The WM timestamps a replayed advance at reacceptance. wardd favors the newest receipt per step,
+so a later restore can display that newer time as “Last change accepted.” Retain the original
+WM-signed acceptance time alongside the WM-signed replay time and label both distinctly.
+Exercise two restores of the same step. All authoritative times still come from the WM.
+
+### Recovery through relay clients
+
+Python permits `WardRollForward`. The Rust and Java relay allowlists omit it, so a wallet
+that syncs normally through either binding can lose its recovery path when the WM regresses.
+Permit the request specifically in the recovery phase and run a restored-wallet sync through
+each client, preserving rejection of unrelated device messages.
 
 ### Verified rollback
 

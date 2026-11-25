@@ -1357,9 +1357,9 @@ Run the file: `pytest tests/test_ward_stack.py`
 - **`test_display_is_visible_by_default_and_hidden_only_explicitly`**
   `pytest "tests/test_ward_stack.py::test_display_is_visible_by_default_and_hidden_only_explicitly"`
 
-#### `tests/test_ward_wm.py` (29)
+#### `tests/test_ward_wm.py` (30)
 
-The mock WARD Manager (`tests/ward_wm.py`): enrolment, compare-and-swap, sessions, acceptance records, and a register that goes back. Run the file: `pytest tests/test_ward_wm.py`
+The mock WARD Manager (`tests/ward_wm.py`): enrolment, compare-and-swap, session opening, acceptance records, and a register that goes back. Run the file: `pytest tests/test_ward_wm.py`
 
 - **`test_an_unenrolled_wallet_cannot_be_advanced_at_all`** — ENROLMENT IS NOT AN ADVANCE, and cannot be folded into one.
   `pytest "tests/test_ward_wm.py::test_an_unenrolled_wallet_cannot_be_advanced_at_all"`
@@ -1397,8 +1397,10 @@ The mock WARD Manager (`tests/ward_wm.py`): enrolment, compare-and-swap, session
   `pytest "tests/test_ward_wm.py::test_one_session_carries_several_transitions"`
 - **`test_a_new_sync_ends_the_session`** — An authorisation minted in one sync is refused once any device of the wallet syncs again:
   `pytest "tests/test_ward_wm.py::test_a_new_sync_ends_the_session"`
-- **`test_known_gap_a_host_can_reopen_an_old_session`** — ACCEPTED GAP, pinned so a change in behavior is noticed.
-  `pytest "tests/test_ward_wm.py::test_known_gap_a_host_can_reopen_an_old_session"`
+- **`test_only_a_fresh_device_proof_can_replace_the_write_session`** — Reads and consumed opening proofs preserve the current write session.
+  `pytest "tests/test_ward_wm.py::test_only_a_fresh_device_proof_can_replace_the_write_session"`
+- **`test_restarting_the_python_service_discards_its_session_and_pending_challenge`** — A restart starts with no session and a fresh challenge, so a proof minted before it does not open a session after it.
+  `pytest "tests/test_ward_wm.py::test_restarting_the_python_service_discards_its_session_and_pending_challenge"`
 - **`test_an_advance_returns_the_wm_signed_acceptance`** — The WM's own record of the transition, under the session nonce:
   `pytest "tests/test_ward_wm.py::test_an_advance_returns_the_wm_signed_acceptance"`
 - **`test_a_restored_wm_is_rolled_forward_by_steps_signed_again`**
