@@ -42,9 +42,8 @@ SHOW_ADDRESS_XPUB = bytes.fromhex(
 )
 
 
-@unittest.skipUnless(
-    hasattr(trezorui_api, "process_ipc_message"), "built without app loading"
-)
+# the functions exist without app loading too, but only to fail
+@unittest.skipUnless(utils.USE_APP_LOADING, "built without app loading")
 class TestProcessIpcMessage(unittest.TestCase):
     def test_select_menu_max_items(self):
         _layout, br_code, br_name = trezorui_api.process_ipc_message(data=SELECT_MENU_6)
