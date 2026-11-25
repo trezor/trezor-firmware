@@ -118,25 +118,19 @@ async def _get_public_key(session: Session, obj: Any) -> bytes:
     _check_path(session, address_n)
     curve = _curve(curve)
     keychain = await session.keychain(curve)
-    private_key = keychain.derive(address_n).private_key()
+    node = keychain.derive(address_n)
+    if curve not in _ECDSA_CURVES:
+        # drop the SLIP-10 0x00 prefix
+        return node.public_key()[1:]
+    if compressed:
+        return node.public_key()
 
+    # the node only holds the compressed key
     if curve == "secp256k1":
-        from trezor.crypto.curve import secp256k1
-
-        public_key = secp256k1.publickey(private_key, compressed)
-    elif curve == "nist256p1":
-        from trezor.crypto.curve import nist256p1
-
-        public_key = nist256p1.publickey(private_key, compressed)
-    elif curve == "ed25519":
-        from trezor.crypto.curve import ed25519
-
-        public_key = ed25519.publickey(private_key)
+        from trezor.crypto.curve import secp256k1 as ecdsa
     else:
-        from trezor.crypto.curve import curve25519
-
-        public_key = curve25519.publickey(private_key)
-    return public_key
+        from trezor.crypto.curve import nist256p1 as ecdsa
+    return ecdsa.publickey(node.private_key(), False)
 
 
 async def _ecdsa_sign_digest(session: Session, obj: Any) -> bytes:

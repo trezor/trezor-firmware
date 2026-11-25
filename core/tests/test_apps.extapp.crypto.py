@@ -4,8 +4,12 @@ from common import *  # isort:skip
 from trezor.wire.errors import DataError
 
 if utils.USE_APP_LOADING:
+    from trezor.crypto import bip39
+    from trezor.crypto.curve import curve25519, ed25519, nist256p1, secp256k1
     from trezor.wire import context
 
+    from apps.common.keychain import Keychain
+    from apps.common.paths import AlwaysMatchingSchema
     from apps.extapp import crypto
     from apps.extapp.session import MSG_ID_ERROR, SERVICE_CRYPTO
 
@@ -24,6 +28,16 @@ class FakeSession:
 
     def die(self, reason):
         raise AssertionError(reason)
+
+
+class KeychainSession(FakeSession):
+    def __init__(self, seed):
+        super().__init__()
+        self.seed = seed
+        self.schemas = [AlwaysMatchingSchema]
+
+    async def keychain(self, curve):
+        return Keychain(self.seed, curve, self.schemas)
 
 
 class FakeMessage:
@@ -60,6 +74,30 @@ class TestCryptoHandle(unittest.TestCase):
         with self.assertRaises(context.UnexpectedMessageException):
             self.handle_raising(context.UnexpectedMessageException(None), session)
         self.assertEqual(session.sent, [])
+
+    def test_get_public_key_formats(self):
+        # the formats the apps rely on: raw 32-byte EdDSA keys, and both
+        # compressed and uncompressed ECDSA keys
+        seed = bip39.seed(" ".join(["all"] * 12), "")
+        session = KeychainSession(seed)
+        address_n = [H_(44), H_(1), H_(0)]
+        curves = (
+            ("secp256k1", secp256k1),
+            ("nist256p1", nist256p1),
+            ("ed25519", ed25519),
+            ("curve25519", curve25519),
+        )
+        for index, (name, curve) in enumerate(curves):
+            node = Keychain(seed, name, [AlwaysMatchingSchema]).derive(address_n)
+            for compressed in (True, False):
+                if name in ("secp256k1", "nist256p1"):
+                    expected = curve.publickey(node.private_key(), compressed)
+                else:
+                    expected = curve.publickey(node.private_key())
+                result = await_result(
+                    crypto._get_public_key(session, (index, address_n, compressed))
+                )
+                self.assertEqual(result, expected)
 
 
 if __name__ == "__main__":
