@@ -65,6 +65,10 @@ include_icon!(
     ICON_ARROW_RIGHT_FAT,
     "layout_caesar/res/arrow_right_fat.toif"
 ); // 4*8
+include_icon!(
+    ICON_ARROW_RIGHT_HTC,
+    "layout_caesar/res/arrow_right_htc.toif"
+); // 5*5
 include_icon!(ICON_ARROW_UP, "layout_caesar/res/arrow_up.toif"); // 8*4
 include_icon!(ICON_ARROW_DOWN, "layout_caesar/res/arrow_down.toif"); // 7*4
 include_icon!(ICON_ARROW_BACK_UP, "layout_caesar/res/arrow_back_up.toif"); // 8*8
