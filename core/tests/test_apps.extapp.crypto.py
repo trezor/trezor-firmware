@@ -8,8 +8,8 @@ if utils.USE_APP_LOADING:
     from trezor.crypto.curve import curve25519, ed25519, nist256p1, secp256k1
     from trezor.wire import context
 
-    from apps.common.keychain import Keychain
-    from apps.common.paths import AlwaysMatchingSchema
+    from apps.common.keychain import ForbiddenKeyPath, Keychain
+    from apps.common.paths import SLIP25_PURPOSE, AlwaysMatchingSchema
     from apps.extapp import crypto
     from apps.extapp.session import MSG_ID_ERROR, SERVICE_CRYPTO
 
@@ -74,6 +74,19 @@ class TestCryptoHandle(unittest.TestCase):
         with self.assertRaises(context.UnexpectedMessageException):
             self.handle_raising(context.UnexpectedMessageException(None), session)
         self.assertEqual(session.sent, [])
+
+    def test_slip25_paths_forbidden(self):
+        # even when the manifest matches them, e.g. for signing
+        session = KeychainSession(bip39.seed(" ".join(["all"] * 12), ""))
+        address_n = [SLIP25_PURPOSE, H_(0), H_(0)]
+        with self.assertRaises(ForbiddenKeyPath):
+            await_result(
+                crypto._ecdsa_sign_digest(
+                    session, (0, address_n, b"\x01" * 32, True, 0)
+                )
+            )
+        with self.assertRaises(ForbiddenKeyPath):
+            await_result(crypto._get_xpub(session, (0, address_n)))
 
     def test_get_public_key_formats(self):
         # the formats the apps rely on: raw 32-byte EdDSA keys, and both

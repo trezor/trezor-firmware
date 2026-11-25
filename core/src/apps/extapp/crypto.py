@@ -80,17 +80,12 @@ def _curve(value: int, curves: tuple[str, ...] = _CURVES) -> str:
     return curves[value]
 
 
-def _check_not_slip25(address_n: list[int]) -> None:
-    from apps.common.keychain import ForbiddenKeyPath
-
-    if address_n and address_n[0] == paths.SLIP25_PURPOSE:
-        # UnlockPath is required to access SLIP25 paths.
-        raise ForbiddenKeyPath
-
-
 def _check_path(session: Session, address_n: list[int]) -> None:
     from apps.common.keychain import ForbiddenKeyPath
 
+    # apps get no SLIP-25 paths
+    if address_n and address_n[0] == paths.SLIP25_PURPOSE:
+        raise ForbiddenKeyPath
     # the manifest's paths on any curve; apps only run with strict checks
     if not any(schema.match(address_n) for schema in session.schemas):
         raise ForbiddenKeyPath
@@ -99,7 +94,6 @@ def _check_path(session: Session, address_n: list[int]) -> None:
 async def _get_xpub(session: Session, obj: Any) -> bytes:
     # a serialized xpub without its version, the app adds it
     curve, address_n = obj
-    _check_not_slip25(address_n)
     _check_path(session, address_n)
     keychain = await session.keychain(_curve(curve))
     node = keychain.derive(address_n)
@@ -114,7 +108,6 @@ async def _get_xpub(session: Session, obj: Any) -> bytes:
 
 async def _get_public_key(session: Session, obj: Any) -> bytes:
     curve, address_n, compressed = obj
-    _check_not_slip25(address_n)
     _check_path(session, address_n)
     curve = _curve(curve)
     keychain = await session.keychain(curve)
