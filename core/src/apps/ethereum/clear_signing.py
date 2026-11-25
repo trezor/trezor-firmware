@@ -330,16 +330,78 @@ class FieldFormatter:
         raise InvalidFormatDefinition
 
 
+def _resolve_other_chain_id(
+    chain_id_path: Path | None,
+    const_chain_id: int | None,
+    msg: MsgInSignTx,
+    path_walker: PathWalker,
+) -> int | None:
+    """Return other chainID"""
+    if const_chain_id is not None:
+        chain_id = const_chain_id
+    elif chain_id_path is not None:
+        chain_id = path_walker(chain_id_path)
+    else:
+        return None
+    # EthereumDefinitionRequest.chain_id is a uint64
+    if not isinstance(chain_id, int) or not 0 < chain_id < 1 << 64:
+        raise InvalidFormatDefinition
+    return None if chain_id == msg.chain_id else chain_id
+
+
+async def _definitions_for_another_chain(
+    chain_id: int, token_address: bytes, native: bool, msg: MsgInSignTx
+) -> Definitions:
+
+    from .definitions import Definitions
+    from .networks import UNKNOWN_NETWORK
+    from .tokens import UNKNOWN_TOKEN
+
+    defs = Definitions.from_encoded(None, None, chain_id)
+    missing = defs.network is UNKNOWN_NETWORK or (
+        not native and defs.get_token(token_address) is UNKNOWN_TOKEN
+    )
+    if missing and msg.supports_definition_request:
+        received, _ = await request_definitions(chain_id, token_address, None)
+        if received is not None:
+            defs = received
+    return defs
+
+
+def _unknown_token_on_chain(chain_id: int) -> EthereumTokenInfo:
+    """Needed to embed the foreign chain ID into the token info class.
+    address being empty is a key signal of the token being unknown (but the chain being known occassionally)."""
+
+    from trezor.messages import EthereumTokenInfo
+
+    from .tokens import UNKNOWN_TOKEN
+
+    return EthereumTokenInfo(
+        symbol=UNKNOWN_TOKEN.symbol,
+        decimals=UNKNOWN_TOKEN.decimals,
+        address=UNKNOWN_TOKEN.address,  # Empty address
+        chain_id=chain_id,
+        name=UNKNOWN_TOKEN.name,
+    )
+
+
 class AddressNameFormatter(FieldFormatter):
-    def __init__(self, lookup_address: bool = False) -> None:
+    def __init__(
+        self,
+        lookup_address: bool = False,
+        chain_id_path: Path | None = None,
+        const_chain_id: int | None = None,
+    ) -> None:
         self.lookup_address = lookup_address
+        self.chain_id_path = chain_id_path
+        self.const_chain_id = const_chain_id
 
     async def format(
         self,
         address: AnyValue,
         msg: MsgInSignTx,
         defs: Definitions,
-        _path_walker: PathWalker,
+        path_walker: PathWalker,
     ) -> FormattedValue:
         if address is None:
             return None, None, None
@@ -348,10 +410,15 @@ class AddressNameFormatter(FieldFormatter):
         else:
             if not isinstance(address, bytes):
                 raise InvalidFormatDefinition
+            other_chain_id = _resolve_other_chain_id(
+                self.chain_id_path, self.const_chain_id, msg, path_walker
+            )
             if self.lookup_address:
                 try:
                     address_name = await lookup_known_address(
-                        msg.chain_id, address, msg
+                        msg.chain_id if other_chain_id is None else other_chain_id,
+                        address,
+                        msg,
                     )
                 except UnexpectedMessageException:
                     # the host may abort the workflow by sending a new message
@@ -391,12 +458,16 @@ class TokenAmountFormatter(FieldFormatter):
         native_currency_address: list[bytes] | None = None,
         threshold: int | None = None,
         threshold_message: str | None = None,
+        chain_id_path: Path | None = None,
+        const_chain_id: int | None = None,
     ) -> None:
         self.token_path = token_path
         self.const_token_address = const_token_address
         self.native_currency_address = native_currency_address
         self.threshold = threshold
         self.threshold_message = threshold_message
+        self.chain_id_path = chain_id_path
+        self.const_chain_id = const_chain_id
 
     async def format(
         self,
@@ -426,21 +497,38 @@ class TokenAmountFormatter(FieldFormatter):
                 raise InvalidFormatDefinition
             token_address = walked
         else:
-            # The descriptor does not say which token this is. Per ERC-7730,
-            # show the raw value as an unknown token.
             token_address = None
+
+        other_chain_id = _resolve_other_chain_id(
+            self.chain_id_path, self.const_chain_id, msg, path_walker
+        )
+        token_defs = defs
 
         token: EthereumTokenInfo | None
         if token_address is None:
             token = UNKNOWN_TOKEN
         elif (
-            # Addresses the descriptor declares as the native currency.
-            # Typically zero's (0x000..), or ERC-7528 (0xeeee..) address.
+            # NATIVE CURRENCY CASE
             self.native_currency_address is not None
             and token_address in self.native_currency_address
         ):
             token = None
+            if other_chain_id is not None:
+                from .networks import UNKNOWN_NETWORK
+
+                # the other chain's native currency
+                token_defs = await _definitions_for_another_chain(
+                    other_chain_id, token_address, True, msg
+                )
+                if token_defs.network is UNKNOWN_NETWORK:
+                    # its symbol is unknown: show the raw value instead
+                    token = UNKNOWN_TOKEN
             token_address = None
+        elif other_chain_id is not None:
+            token_defs = await _definitions_for_another_chain(
+                other_chain_id, token_address, False, msg
+            )
+            token = token_defs.get_token(token_address)
         else:
             token = defs.get_token(token_address)
             if token is UNKNOWN_TOKEN:
@@ -451,10 +539,14 @@ class TokenAmountFormatter(FieldFormatter):
                     if received_definitions is not None:
                         token = received_definitions.get_token(token_address)
 
+        if other_chain_id is not None and token is UNKNOWN_TOKEN:
+            # remember the chain, so that it can be shown next to the token
+            token = _unknown_token_on_chain(other_chain_id)
+
         if self.threshold is not None and amount >= self.threshold:
             formatted = AboveThreshold(self.threshold_message or TR.words__unlimited)
         else:
-            formatted = format_ethereum_amount(amount, token, defs.network)
+            formatted = format_ethereum_amount(amount, token, token_defs.network)
         return formatted, token, token_address
 
 
@@ -928,13 +1020,38 @@ class FieldDefinition:
             # https://github.com/trezor/definitions/pull/156
             raise InvalidFormatDefinition
 
+        chain_id_path = (
+            decode_path(info.chain_id_path) if info.chain_id_path is not None else None
+        )
+        const_chain_id = info.const_chain_id
+        if chain_id_path is not None and const_chain_id is not None:
+            # Mutual exclusion violated
+            raise InvalidFormatDefinition
+
         fmt_type = info.formatter
+        if (chain_id_path is not None or const_chain_id is not None) and (
+            fmt_type
+            not in (
+                FT.FORMATTER_ADDRESS_NAME,
+                FT.FORMATTER_TOKEN_AMOUNT,
+                # TODO: uses tx.chain_id for now
+                FT.FORMATTER_CALLDATA,
+            )
+        ):
+            raise InvalidFormatDefinition
+
         if fmt_type == FT.FORMATTER_ADDRESS_NAME:
-            formatter = AddressNameFormatter(info.lookup_address)
+            formatter = AddressNameFormatter(
+                info.lookup_address, chain_id_path, const_chain_id
+            )
         elif fmt_type == FT.FORMATTER_AMOUNT:
             formatter = AmountFormatter
         elif fmt_type == FT.FORMATTER_TOKEN_AMOUNT:
             formatter_params = {}
+            if chain_id_path is not None:
+                formatter_params["chain_id_path"] = chain_id_path
+            if const_chain_id is not None:
+                formatter_params["const_chain_id"] = const_chain_id
             if info.token_path is not None:
                 formatter_params["token_path"] = decode_path(info.token_path)
             if info.const_token_address is not None:
@@ -1071,7 +1188,10 @@ class DisplayFormat:
                 # a literal constant value, not walked from calldata
                 return path
             if isinstance(path, int):  # ContainerPath
-                # standard container paths like @.from, @.value...
+                # standard container (transaction) paths like @.from, @.value...
+                if path == ContainerPath.ChainId:
+                    # Not used in registry to show a value yet. We can show chain name via lookup if required.
+                    return msg.chain_id
                 if path == ContainerPath.To:
                     # `@.to` means "the contract this call goes to". For the
                     # outer transaction that is `msg.to`. When parsing a
@@ -1608,7 +1728,6 @@ async def _handle_generic_ui(
 ) -> None:
     from trezor.ui.layouts.properties import AboveThreshold
 
-    from . import tokens
     from .helpers import bytes_from_address
     from .layout import require_confirm_clear_signing
     from .networks import UNKNOWN_NETWORK
@@ -1631,15 +1750,36 @@ async def _handle_generic_ui(
         if amount is not None and formatted == amount:
             value_shown_as_field = True
         properties_to_confirm.append((label, formatted, is_mono))
-        # a tokenless amount has no contract address to show
-        if actual_token is tokens.UNKNOWN_TOKEN and actual_token_address is not None:
-            token_address_str = address_from_bytes(actual_token_address, defs.network)
+
+        # Not a token field OR known token (address is not empty) so no additional property addition.
+        # TODO: This extra "unknown token" property can be moved to the menu, when this field is being displayed.
+        # That would need to call `confirm_properties` separately. Also a tiny design issue that the user is not prompted to know that they can know more info about this unknown token.
+        # The spec does ask (rightly so) to warn for unknow tokens. We can consider chaning the colour to yellow for whenever we have an unknown token.
+        if actual_token is None or actual_token.address:
+            continue
+
+        token_chain_id = (
+            actual_token.chain_id if actual_token.chain_id else msg.chain_id
+        )  # actual_token.chain_id is 0 for UNKNOWN_TOKEN (_unknown_token_on_chain)
+
+        # Unknown token, show its address
+        if actual_token_address is not None:
             token_address_property: StrPropertyType = (
                 f"{TR.words__address} ({TR.ethereum__unknown_token})",
-                token_address_str,
+                address_from_bytes(actual_token_address, defs.network),
                 None,
             )
             properties_to_confirm.append(token_address_property)
+
+        # Show when chain_id is different and token unknown
+        if token_chain_id != msg.chain_id:
+            properties_to_confirm.append(
+                (
+                    f"{TR.ethereum__approve_chain_id} ({TR.ethereum__unknown_token})",
+                    str(token_chain_id),
+                    None,
+                )
+            )
 
     contract_name = (
         (

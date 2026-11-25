@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_TOKEN",
+  "message": {
+    "address": "fde4c96c8593536e31f229ea8f37b2ada2699bb2",
+    "chain_id": 8453,
+    "symbol": "USDT",
+    "decimals": 6,
+    "name": "L2 Standard Bridged USDT (Base)"
+  }
+}
