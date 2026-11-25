@@ -551,7 +551,7 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "buttons__show_all": "Tout afficher",
+    "buttons__show_all": "Affichage complet",
     "buttons__show_details": "Afficher les détails",
     "buttons__show_next": {
       "Bolt": "Afficher la suite",
@@ -674,7 +674,12 @@
     "cardano__script_n_of_k": "N sur K",
     "cardano__script_reward": "récompense de script",
     "cardano__sending": "Envoi",
-    "cardano__show_simple": "Affich. simplif.",
+    "cardano__show_simple": {
+      "Bolt": "Affichage simplifié",
+      "Caesar": "Affich. simplif.",
+      "Delizia": "Affichage simplifié",
+      "Eckhart": "Affichage simplifié"
+    },
     "cardano__sign_message_path_template": "Signer le message avec {0}",
     "cardano__sign_tx_path_template": "Signer la transaction avec {0}",
     "cardano__stake_delegation": "Délégation du staking",
