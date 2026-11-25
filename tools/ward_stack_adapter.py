@@ -24,7 +24,7 @@ as a read -> after the WM restarted, a write from the session before is refused 
 and then deleted leaves exactly the root from before the add, on the device and in both replicas
 -> THE WM IS RESTORED FROM A BACKUP taken at #10 -> the first device detects it during its sync,
 the user approves, the device signs the changes since again (roll-forward) and shows when the WM
-accepted the last of them -> the WM is back at the head, and the next sync just reconciles.
+last confirmed the last of them -> the WM is back at the head, and the next sync just reconciles.
 
 Counters are relative to the head the session starts at, so the arc can be rerun on the same
 device. The WM steps need the stack's run directory (`WARD_STACK_RUN_DIR`) and are skipped
@@ -591,7 +591,7 @@ def conflicts(
             # THE WM IS RESTORED FROM A BACKUP: its register goes back to #10 and its sessions are
             # gone. Device 1 detects it during its sync, the user approves, the device signs the
             # changes the WM accepted since again for this session, and finally shows when the WM
-            # accepted the last of them (docs/ward/ward_transitions.md, roll-forward)
+            # last confirmed the last of them (docs/ward/ward_transitions.md, roll-forward)
             print("== WARD stack: the WM restored from a backup, rolled forward", flush=True)
             restored_to = base + 10
             switch_wm(run_dir, down=True)
@@ -621,9 +621,9 @@ def conflicts(
             accepted = outcome.get("lastTimestamp") or 0
             day = time.strftime("%Y-%m-%d", time.gmtime(accepted))
             step(
-                "device 1 showed when the WM accepted the last restored change (%s UTC)"
+                "device 1 showed when the WM last confirmed the last restored change (%s UTC)"
                 % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(accepted)),
-                "WARDhistoryrestored" in shown and "Lastchangeaccepted" in shown and day in shown,
+                "WARDhistoryrestored" in shown and "Lastconfirmed" in shown and day in shown,
                 shown,
             )
             st_a = ward_relay.status(wardd_a)

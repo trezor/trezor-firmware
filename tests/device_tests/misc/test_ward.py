@@ -3740,13 +3740,13 @@ def test_ward_roll_forward_brings_a_restored_wm_back(session: Session):
     store, wm, links = _restored_three(session)
     _nonce, res, rec = _roll_forward(session, wm, [_fed(wm, lnk) for lnk in links])
     assert len(res.wm_sigs) == len(links)
-    # the user approved, and was then told when the WM accepted the last restored change
+    # the user approved, and was then told when the WM last confirmed the last restored change
     last = wm.acceptance(_WARD_ID, *links[-1][:4]).timestamp
     assert res.last_timestamp == last
     assert "restore ward history" in rec.title
     assert "ward history restored" in rec.title
     assert "#%d" % store.counter in rec.squashed
-    assert "lastchangeaccepted" in rec.squashed.lower() and "UTC" in rec.text
+    assert "lastconfirmed" in rec.squashed.lower() and "UTC" in rec.text
     for lnk, sig in zip(links, res.wm_sigs):
         wm.advance(_WARD_ID, *lnk[:4], sig, _T0 + lnk[2])
     assert wm.head(_WARD_ID)[:2] == (store.counter, store.root())
