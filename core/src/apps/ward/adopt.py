@@ -34,7 +34,7 @@ async def verify_round_attestation(
 
     from . import round as sync_round
     from .attest import root_or_empty, same_root, verify_attestation
-    from .cas import MAX_BATCH
+    from .transition import MAX_BATCH
     from .keys import derive_ward_id
 
     ctx = sync_round.get()
@@ -117,7 +117,7 @@ async def verify_inbound_link(
     from trezor.wire import DataError
 
     from .attest import EMPTY_ROOT, root_or_empty
-    from .cas import link_kind
+    from .transition import link_kind
     from .keys import derive_k_auth, derive_ward_id
 
     if to_counter == 0:
@@ -161,9 +161,9 @@ async def adopt(
     # Before `set_root`: settlement reads the head being replaced.
     await reconcile_pending(counter, root, landed_commits=landed_commits)
 
-    # The WM's timestamp for this head, from the attestation that vouched for it. Every adoption
-    # follows one, so a mismatch is a caller bug; it then stores no timestamp rather than another
-    # head's.
+    # When the WM vouched for this head: the attestation's timestamp, its clock at signing. Every
+    # adoption follows one, so a mismatch is a caller bug; it then stores no timestamp rather than
+    # another head's.
     timestamp = None
     seen = sync_round.wm_head()
     if seen is not None and seen[0] == counter and same_root(seen[1], root):

@@ -21,8 +21,8 @@ A real WM keeps the authoritative head per wallet and signs, on demand, the STEP
 current", and it is the authority on FRESHNESS and ORDERING and on nothing else.
 
 IT REMEMBERS THE HEAD IT DISPLACED, which is the only structural thing the transition form asks
-of it. It already compare-and-swaps on the `from` end, so the value was always in hand -- this
-just keeps it.
+of it. It already checks the predecessor against the `from` end, so the value was always in hand --
+this just keeps it.
 
 IT SEES ROOTS, AND THAT IS A DELIBERATE NARROWING OF WHAT IT USED TO BE. The head was once a
 `root_mac` under a device-only K_mac, so the WM signed a value it could not compute and was
@@ -65,7 +65,7 @@ def _or_empty(root):
     return root if root is not None else EMPTY_ROOT
 
 
-# Mirrors `apps.ward.cas.MAX_BATCH`: the most changes one transition may carry.
+# Mirrors `apps.ward.transition.MAX_BATCH`: the most changes one transition may carry.
 MAX_BATCH = 8
 
 
@@ -74,8 +74,8 @@ MAX_BATCH = 8
 # A device's `wm_sig` is bound to the SESSION NONCE: the round nonce it picked for its latest sync,
 # which this WM's attestation answered. The WM never picks one. It keeps the nonce of each
 # wallet's latest sync, replaces it on the next sync (by any device of the wallet), and accepts an
-# authorisation only when it is bound to that nonce and its predecessor is the head (CAS). One
-# session can carry several transitions.
+# authorisation only when it is bound to that nonce and its predecessor is the head (the
+# predecessor check). One session can carry several transitions.
 #
 # THE SESSION NONCE IS VOLATILE: a restore, failover or lost wallet drops it. So a restored WM does
 # not take the authorisations devices minted before -- a lost race, a write held back. What it
@@ -86,13 +86,13 @@ MAX_BATCH = 8
 
 
 class WMRecord(NamedTuple):
-    """One wallet's register row: the step that reached the head, and when."""
+    """One wallet's register row: the step that reached the head. It holds no time: the WM signs
+    each attestation with its clock at signing, and wardd keeps the signed records."""
 
     from_counter: int
     from_root: bytes
     counter: int
     root: bytes
-    timestamp: int
 
 
 class MockWM:
@@ -104,9 +104,14 @@ class MockWM:
         # How many demotions this WM has been asked to accept. A real one would apply policy
         # here; recording it is how a test shows the REVERT tag actually reached the WM.
         self.reverts_seen = 0
-        # ward_id -> (from_counter, from_root, to_counter, to_root, timestamp). An absent root is
-        # the empty tree and is held as EMPTY_ROOT, the form it takes inside the preimage.
-        self._heads: dict[bytes, tuple[int, bytes, int, bytes, int]] = {}
+        # ward_id -> (from_counter, from_root, to_counter, to_root). An absent root is the empty
+        # tree and is held as EMPTY_ROOT, the form it takes inside the preimage.
+        self._heads: dict[bytes, tuple[int, bytes, int, bytes]] = {}
+        # ward_id -> the WM's clock as the test last set it. NOT REGISTER STATE: a real WM reads
+        # its own clock whenever it signs, and its register holds no time. The `timestamp` that
+        # scenarios and `advance` take sets this clock, so a test controls what the next
+        # attestation says.
+        self._clock: dict[bytes, int] = {}
         # (ward_id, from_counter, from_root, to_counter, to_root) -> (round nonce, attestation):
         # the newest attestation of each step, which wardd keeps and serves to WardRollback.
         self._accepted: dict[tuple, tuple] = {}
@@ -147,7 +152,7 @@ class MockWM:
         # firmware bug rather than a test bug. Make the omission impossible instead.
         """Force a head in with NO authorisation. Not what a real WM does, and named to say so.
 
-        A real WM takes its head from `advance`, which compare-and-swaps and verifies `wm_sig`.
+        A real WM takes its head from `advance`, which checks the predecessor and verifies `wm_sig`.
         This exists only to model a WM that has been told something by a party holding no
         signature -- a broken operator, a fixture standing in for history that predates the test,
         a hostile WM inventing state, or a register rebuilt from a backup.
@@ -162,13 +167,8 @@ class MockWM:
                 from_counter, from_root = known[2], known[3]
             else:
                 from_counter, from_root = counter, root
-        self._heads[ward_id] = (
-            from_counter,
-            _or_empty(from_root),
-            counter,
-            _or_empty(root),
-            timestamp,
-        )
+        self._heads[ward_id] = (from_counter, _or_empty(from_root), counter, _or_empty(root))
+        self._clock[ward_id] = timestamp
 
     # --- NAMED SCENARIOS --------------------------------------------------------------------
     #
@@ -232,16 +232,16 @@ class MockWM:
         self._session.pop(ward_id, None)
         self._challenges[ward_id] = token_bytes(32)
 
-    def take_over(self, ward_id: bytes, record: "WMRecord") -> None:
-        """A FAILOVER: this standby takes the primary's record as it stands. Sessions do not fail
-        over; devices sync with the standby first."""
+    def take_over(self, ward_id: bytes, record: "WMRecord", now: int = 0) -> None:
+        """A FAILOVER: this standby takes the primary's record as it stands, and signs with its
+        own clock (`now`). Sessions do not fail over; devices sync with the standby first."""
         self._session.pop(ward_id, None)
         self._challenges[ward_id] = token_bytes(32)
         self.install_unauthenticated(
             ward_id,
             record.counter,
             record.root,
-            record.timestamp,
+            now,
             record.from_counter,
             record.from_root,
         )
@@ -252,16 +252,20 @@ class MockWM:
         self._session.pop(ward_id, None)
         self._challenges[ward_id] = token_bytes(32)
 
-    def head(self, ward_id: bytes) -> Optional[tuple[int, bytes, int]]:
-        """The HEAD -- `(counter, root, timestamp)` -- not the step that reached it."""
+    def set_clock(self, ward_id: bytes, now: int) -> None:
+        """Time passes at the WM: its next signature for this wallet is dated `now`."""
+        self._clock[ward_id] = now
+
+    def head(self, ward_id: bytes) -> Optional[tuple[int, bytes]]:
+        """The HEAD -- `(counter, root)` -- not the step that reached it."""
         known = self._heads.get(ward_id)
         if known is None:
             return None
-        _fc, _fr, counter, root, timestamp = known
-        return counter, root, timestamp
+        _fc, _fr, counter, root = known
+        return counter, root
 
     def step(self, ward_id: bytes) -> Optional[tuple]:
-        """(from_counter, from_root, to_counter, to_root, timestamp)."""
+        """(from_counter, from_root, to_counter, to_root)."""
         return self._heads.get(ward_id)
 
     def challenge(self, ward_id: bytes) -> bytes:
@@ -294,8 +298,10 @@ class MockWM:
         return self._session.get(ward_id)
 
     def _sign_step(self, ward_id: bytes, nonce: bytes) -> tuple:
-        """Sign the step into the current head against `nonce`, and archive it."""
-        fc, fr, counter, root, timestamp = self._heads[ward_id]
+        """Sign the step into the current head against `nonce`, at the WM's clock, and archive it:
+        the archive stands in for the records wardd keeps."""
+        fc, fr, counter, root = self._heads[ward_id]
+        timestamp = self._clock.get(ward_id, 0)
         answer = (
             fc,
             fr,
@@ -343,14 +349,16 @@ class MockWM:
         timestamp: int,
         session: "bytes | None" = None,
     ) -> bool:
-        """Compare-and-swap the head, verifying the wallet's authorisation. Returns is_revert.
+        """Check the predecessor, verify the wallet's authorisation, advance the head. Returns
+        is_revert.
 
         `session` is what the host believes the session nonce is. DIAGNOSTICS ONLY: the signature
         is verified against the nonce this WM holds, and `session` only explains a refusal.
 
         THE AUTHENTICATED WAY IN, and the only one a real host has. THE SIGNATURE IS OVER THE TWO
-        ROOTS, which are exactly what this CASes on and what the attestation will name -- so a host
-        cannot pair a genuine signature with operands of its own choosing. It is checked against
+        ROOTS, which are exactly what this checks the predecessor against and what the attestation
+        will name -- so a host cannot pair a genuine signature with operands of its own choosing.
+        It is checked against
         `ward_id`, which IS the verifying key, so there is no enrolment and no second per-wallet
         value.
 
@@ -367,10 +375,10 @@ class MockWM:
         if known is None:
             raise ValueError("wallet is not enrolled with this WM; sync first")
 
-        # COMPARE-AND-SWAP. Refusing an advance from a head we do not hold is what stops two
+        # PREDECESSOR CHECK. Refusing an advance from a head we do not hold is what stops two
         # devices both believing they wrote counter N, and -- because the counter only rises --
         # what stops one authorisation landing twice.
-        _phc, _phr, head_counter, head_root, _ts = known
+        _phc, _phr, head_counter, head_root = known
         if (head_counter, head_root) != (from_counter, _or_empty(from_root)):
             raise MockWM.Conflict(head_counter)
 
@@ -404,8 +412,9 @@ class MockWM:
             _or_empty(from_root),
             to_counter,
             _or_empty(to_root),
-            timestamp,
         )
+        # `timestamp` is the WM's clock now: the acceptance is signed at it, the register keeps none
+        self._clock[ward_id] = timestamp
         # THE ACCEPTANCE, signed under the session nonce: this WM's own record of the transition
         self.last_acceptance = self._sign_step(ward_id, session)
         return is_revert
@@ -425,8 +434,8 @@ class MockWM:
 
         Returns (from_counter, from_root, to_counter, to_root, timestamp, signature).
 
-        ONE OPERATION, NOT TWO: between a separate CAS and a separate attest another device can
-        win, and the attest would then describe a head this caller did not publish.
+        ONE OPERATION, NOT TWO: between a separate predecessor check and a separate attest another
+        device can win, and the attest would then describe a head this caller did not publish.
         """
         self.advance(
             ward_id,
@@ -470,7 +479,6 @@ class MockWM:
                 _or_empty(current_root),
                 current_counter,
                 _or_empty(current_root),
-                0,
             )
 
         return self.attest(ward_id, nonce)

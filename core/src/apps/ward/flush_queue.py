@@ -181,7 +181,7 @@ async def flush_queue(
     from trezor.wire import DataError
 
     from . import offline_store
-    from .cas import authorise
+    from .transition import authorise
     from .common import online, pull_leaf, require_initialized
     from .keys import ENTRY_TYPE_ADDRESS, entry_key_for
     from .root import get_counter, get_root, root_for_write
@@ -195,7 +195,7 @@ async def flush_queue(
     max_batch = msg.max_batch or 1
     named = msg.app_id is not None and msg.identifier is not None
     if max_batch > 1 and not named and not utils.USE_WARD_SERVICE_CHANNEL:
-        from .cas import MAX_BATCH
+        from .transition import MAX_BATCH
 
         return await _flush_batch(min(max_batch, MAX_BATCH))
 
@@ -296,7 +296,7 @@ async def _flush_batch(limit: int) -> "WardFlushQueueAck":
     from trezor.wire import DataError
 
     from . import offline_store
-    from .cas import authorise
+    from .transition import authorise
     from .common import pull_leaf
     from .keys import derive_wallet_id, entry_key_for
     from .leaf import value_digest

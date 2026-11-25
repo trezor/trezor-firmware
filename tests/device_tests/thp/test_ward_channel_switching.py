@@ -397,10 +397,10 @@ def test_service_reconnect_does_not_kill_wallet_channel(client: Client) -> None:
             # A WRITE TAKES A FRESH SESSION, and that is a statement about the device rather than
             # about this daemon: session readiness is NOT invalidated when the binding is replaced,
             # so the session above stays "online" and publishes straight at a daemon it has never
-            # synced with. Harmless with two genesis replicas, and caught by the WM's CAS when it
-            # is not -- but it means a write on `session` would reach this daemon before any
-            # `WardSyncRequest`, which is a property of `become_ready` and not of the seam this
-            # file is about.
+            # synced with. Harmless with two genesis replicas, and caught by the WM's predecessor
+            # check when it is not -- but it means a write on `session` would reach this daemon
+            # before any `WardSyncRequest`, which is a property of `become_ready` and not of the
+            # seam this file is about.
             assert _write(client.get_session(), b"after", b"reconnect").counter == 1
         assert store.counter == 1
     finally:

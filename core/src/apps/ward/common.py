@@ -305,7 +305,7 @@ async def commit_change(
     authorisations; a service build publishes and adopts, returning no leaf -- a replica owner
     reads an empty sealed_content as a deletion.
     """
-    from .cas import authorise
+    from .transition import authorise
     from .keys import derive_k_data, derive_k_ident
     from .leaf import EMPTY, seal_content, seal_identity
     from .root import get_counter, get_root, root_for_write

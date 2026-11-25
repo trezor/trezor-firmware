@@ -20,7 +20,7 @@ async def queue_get_entry(msg: WardQueueGetEntry) -> WardQueueGetAck:
     from trezor.wire import DataError
 
     from . import offline_store
-    from .cas import OP_SET, intent_mac
+    from .transition import OP_SET, intent_mac
     from .common import display_bytes, entry_props
     from .keys import derive_k_auth, derive_ward_id
 

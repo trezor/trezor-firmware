@@ -107,7 +107,7 @@ _K_AUTH = derive_k_auth(_SEED)
 # A fixed wall-clock base for attestations. The device has no clock; it only ever compares
 # what it was told last with what it is being told now.
 _T0 = 1_700_000_000
-# Mirrors `apps.ward.cas.MAX_BATCH`: the most changes one transition may carry.
+# Mirrors `apps.ward.transition.MAX_BATCH`: the most changes one transition may carry.
 _MAX_BATCH = 8
 _WARD_ID = derive_ward_id(_SEED)
 
@@ -224,8 +224,8 @@ def _read(session: Session, store: WardTrie, call) -> tuple:
 def _wm_for(store: WardTrie) -> MockWM:
     """The ONE WM this store's wallet talks to, created on first use.
 
-    ONE WM PER WALLET, because the WM compare-and-swaps on the head it holds and archives the
-    attestations a rollback needs; a throwaway WM per round would lose both.
+    ONE WM PER WALLET, because the WM checks the predecessor against the head it holds and archives
+    the attestations a rollback needs; a throwaway WM per round would lose both.
 
     Tests that WANT a different WM say so explicitly, by constructing one -- an impostor with its
     own seed, or a standby in a failover.
@@ -269,7 +269,7 @@ def _publish(wm: MockWM, res, store: WardTrie) -> None:
     """
     # THE WHOLE STEP, not just the head it reaches. Both roots are the host's own -- it derived
     # them by applying the leaf the device handed back -- and the predecessor is what the WM
-    # compare-and-swaps on.
+    # checks the predecessor against.
     root = store.root()
     from_counter, from_root = _step_into(store, res.counter, root)
     wm.advance(
@@ -291,7 +291,8 @@ def _go_online(
     """Bring the session out of offline mode by completing one sync round.
 
     RETURNS THE WM IT USED, whether it was given one or made one, so a test that then publishes a
-    `wm_sig` can reach the WM that compare-and-swaps on it rather than have it swallowed here.
+    `wm_sig` can reach the WM that checks the predecessor against it rather than have it swallowed
+    here.
 
     A SESSION STARTS OFFLINE and stays there until a reconcile succeeds -- the device has no
     reason to believe anything it holds is current before then. Offline, `WardGetEntry` and
@@ -1379,7 +1380,7 @@ def _step_into(store: WardTrie, to_counter: int, to_root, links=()):
     """The step a WM would attest for `(to_counter, to_root)` -- its `from` end.
 
     Taken from the transition log, which is where a real WM's predecessor comes from too: it
-    compare-and-swapped on that end before installing this head.
+    checked the predecessor against that end before installing this head.
 
     `links` is searched FIRST, for the catch-up tests that mint a history "made elsewhere while
     this device was away". Those steps never entered this host's own log, but they are the real
@@ -1840,7 +1841,7 @@ def test_ward_the_wm_refuses_an_unauthorised_advance(session: Session):
     )
     ward.apply(store, res)
 
-    # THE WM MUST ALREADY KNOW THE WALLET, because an advance cannot enrol: a compare-and-swap
+    # THE WM MUST ALREADY KNOW THE WALLET, because an advance cannot enrol: a predecessor check
     # needs a head, and a WM that has never seen this wallet holds none. Enrolment is a sync-path operation. Here a fixture stands in for the history that put this
     # head there.
     wm = _wm_for(store)
@@ -2845,8 +2846,8 @@ class _World:
 
     THE OTHER DEVICES ARE THE ORACLE, which holds K_auth and K_sig because it holds the seed --
     exactly what a second device of this wallet would. Their writes go through `MockWM.advance`,
-    so the WM compare-and-swaps and checks a real `wm_sig` against its own head, rather than being
-    told a head. The links they mint are kept in `elsewhere`, and the host serves them
+    so the WM checks the predecessor against its own head and verifies a real `wm_sig`, rather than
+    being told a head. The links they mint are kept in `elsewhere`, and the host serves them
     alongside its own log -- a host sees every device's publications.
     """
 
@@ -2907,7 +2908,7 @@ class _World:
     def other_device_writes(self, *roots: bytes) -> tuple:
         """Another device syncs, then advances the WM from its current head, one new root per
         step, all in its one session."""
-        counter, root, _ts = self.wm.head(_WARD_ID)
+        counter, root = self.wm.head(_WARD_ID)
         other = self._other_session()
         for new_root in roots:
             sig = oracle_wm_sig(
@@ -2930,7 +2931,7 @@ class _World:
     def other_device_writes_batch(self, n: int, new_root: bytes) -> tuple:
         """Another device syncs and publishes ONE transition carrying `n` changes: counter += n,
         one link."""
-        counter, root, _ts = self.wm.head(_WARD_ID)
+        counter, root = self.wm.head(_WARD_ID)
         sig = oracle_wm_sig(
             self._k_sig,
             _WARD_ID,
@@ -3024,7 +3025,7 @@ class _World:
 
     def publish_demotion(self, ack) -> tuple:
         """Hand a minted REVERT to the WM (an authenticated advance) and log it. Returns the link."""
-        wm_counter, wm_root, _ts = self.wm.head(_WARD_ID)
+        wm_counter, wm_root = self.wm.head(_WARD_ID)
         return _publish_demotion(self.wm, self.store, ack, wm_counter, wm_root)
 
     def adopt(self, link: tuple) -> tuple:
@@ -3491,7 +3492,7 @@ def test_ward_attack_splicing_unrelated_genuine_transitions(session: Session):
 @pytest.mark.models("core")
 def test_ward_attack_pending_revert_authorization(session: Session):
     """A REVERT the user approved but the host never published is a live authorisation -- until
-    the wallet moves. Then the WM's compare-and-swap refuses it, because its head moved, and the
+    the wallet moves. Then the WM's predecessor check refuses it, because its head moved, and the
     next sync ends the session it was bound to.
 
     A register put back at the revert's predecessor refuses it too: a restore ends every session,
@@ -3938,7 +3939,7 @@ def test_ward_a_batch_that_loses_the_race_stays_queued_whole(session: Session):
     lost = ward.flush_queue(session, ward.store_provider(world.store), max_batch=8)
     assert len(lost.leaves) == 3
 
-    # another device publishes first; ours can no longer compare-and-swap
+    # another device publishes first; ours can no longer pass the predecessor check
     world.other_device_writes(world.tree_of(b"a"))
     with pytest.raises(MockWM.Conflict):
         world.wm.advance(
@@ -4045,7 +4046,7 @@ def _rollback(
 def _publish_demotion(wm: MockWM, store: WardTrie, ack, from_counter: int, from_root) -> tuple:
     """Put the minted demotion into the WM, as a host does, and record it in the log.
 
-    THE WM VERIFIES IT like any other advance: compare-and-swap on the head it holds, and
+    THE WM VERIFIES IT like any other advance: predecessor check on the head it holds, and
     `wm_sig` under the REVERT tag. A demotion the WM refuses simply does not happen.
     """
     wm.advance(
@@ -4185,8 +4186,8 @@ def test_ward_rollback_from_a_regressed_wm_is_the_same_operation(session: Sessio
 
     THAT IS THE WHOLE DIFFERENCE between what used to be two messages. A device only ever adopts
     what the WM attested, so normally the two heads are the same and this is an ordinary
-    rollback. When they differ, building from the WM's is the only thing it will
-    compare-and-swap against -- and the handler does not have to know which case it is in.
+    rollback. When they differ, building from the WM's is the only thing its predecessor check will
+    accept -- and the handler does not have to know which case it is in.
 
     The counter it lands on is BELOW this device's floor, so the adoption needs the consent
     recorded at the hold; one hold buys one descent.
@@ -4480,7 +4481,7 @@ def test_ward_write_authorises_its_transition_over_mac_heads(session: Session):
 
     WHAT THIS USED TO ASSERT. The ack also carried `auth_sig` -- Ed25519 under K_sig over the
     ROOT transition, nominally for the WM. It was removed: nothing verified it, in firmware or
-    in the mock WM, and nothing safely could. The WM compare-and-swaps on `(counter, mac)`,
+    in the mock WM, and nothing safely could. The WM checks the predecessor against `(counter, mac)`,
     which a root-naming signature did not bind. The WM-facing authorisation is `wm_sig`, which
     the connect path does not carry yet.
 
@@ -6131,7 +6132,7 @@ def test_ward_a_demotion_from_a_regressed_wm_records_the_wm_predecessor(
     """The recorded link must name the head the REVERT was minted over, not the store's.
 
     A demotion is authorised against the WM's head, because that is what the WM
-    compare-and-swaps on. Normally the two agree -- a device only ever adopts what the WM
+    checks the predecessor against. Normally the two agree -- a device only ever adopts what the WM
     attested -- so a host that read the predecessor off its own store was right by accident.
     When the WM's register has regressed they differ, and reading the store then writes a row
     whose `from` end the `auth_commit` does not cover: authentic bytes describing a transition

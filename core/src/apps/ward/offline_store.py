@@ -430,7 +430,7 @@ async def _claim_produced(
     if adopted_root is None or claimed != adopted:
         return False
 
-    from .cas import verify_auth_commit
+    from .transition import verify_auth_commit
     from .keys import derive_k_auth, derive_ward_id
     from .root import get_counter, get_root
 

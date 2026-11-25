@@ -12,7 +12,13 @@ what turns an attestation into a statement about state, and the counter floor bo
 The round nonce is the device's, minted per round, so signed anchors cannot be stockpiled and
 replayed. Every accepted transition raises the counter, so within one register history a
 transition names one occurrence; only a register that goes back (restore, lost state) repeats a
-`(counter, root)` pair. The timestamp is signed but not checked.
+`(counter, root)` pair.
+
+THE TIMESTAMP IS THE WM'S CLOCK WHEN IT SIGNED: the WM vouches that this step reached its head
+by then. The WM keeps no time in its register; for an acceptance record (signed by `advance`)
+it is the acceptance time, and for a later attestation of the same head it is later. wardd keeps
+the signed records. The timestamp is signed but not checked here. The version did not change
+with this meaning: a record signed at acceptance is also true under it.
 """
 
 _ATTEST_DOMAIN = b"WARD ATTEST v1"

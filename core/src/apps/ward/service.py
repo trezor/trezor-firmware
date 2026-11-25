@@ -364,7 +364,7 @@ async def sync() -> None:
     from . import round as sync_round
     from .adopt import adopt, verify_round_attestation
     from .attest import NONCE_LENGTH, same_root
-    from .cas import head_init_sig, session_proof
+    from .transition import head_init_sig, session_proof
     from .common import require_initialized
     from .keys import derive_k_auth, derive_k_sig, derive_wallet_id, derive_ward_id
     from .root import get_counter, get_root

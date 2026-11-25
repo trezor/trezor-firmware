@@ -233,7 +233,7 @@ class MockWardService:
         # wallet never reached -- but it is the freedom the device-side check here is about.
         self.publish_ack_override: tuple[int, bytes] | None = None
         # Move the WM's head between this device's sync and its publish, so the publish loses the
-        # compare-and-swap. THE ONLY PLACE A CONFLICT IS REACHABLE: a device re-syncs before every
+        # predecessor check. THE ONLY PLACE A CONFLICT IS REACHABLE: a device re-syncs before every
         # write, so any divergence that exists beforehand is caught there instead -- by the chain
         # check, since a daemon cannot explain a head it has no links for. A genuine conflict is a
         # RACE, and this is where the race has to be staged.
@@ -510,19 +510,20 @@ class MockWardService:
         )
 
     def _publish_response(self, request):
-        """CAS the WM, then apply locally. None means "say nothing", for the ambiguous case.
+        """Advance the WM, then apply locally. None means "say nothing", for the ambiguous case.
 
-        THE ORDER IS THE ONE A REAL wardd MUST FOLLOW, minus the durability. Its CAS-and-attest is
-        atomic at the WM, but the boundary between the WM and its own replica is not: a crash
-        between the two leaves the WM ahead of a replica that no longer holds the transition the
-        device needs to catch up on. wardd closes that with a write-ahead journal -- stage, CAS,
-        promote. An in-memory mock has nothing to crash between, so it collapses the two and only
-        the ORDER survives here: nothing is applied locally that the WM refused.
+        THE ORDER IS THE ONE A REAL wardd MUST FOLLOW, minus the durability. Its
+        predecessor-check-and-attest is atomic at the WM, but the boundary between the WM and its
+        own replica is not: a crash between the two leaves the WM ahead of a replica that no longer
+        holds the transition the device needs to catch up on. wardd closes that with a write-ahead
+        journal -- stage, check the predecessor, promote. An in-memory mock has nothing to crash
+        between, so it collapses the two and only the ORDER survives here: nothing is applied
+        locally that the WM refused.
 
         THE `from` HEAD COMES FROM THE WM, not from the request, and that is what makes the
-        compare-and-swap real. `WardPublish` does carry both roots now -- the WM needs them to
-        verify `wm_sig` -- but taking the predecessor it CASes on from its own record rather than
-        from the message is what makes a stale writer detectable: a device whose head has been
+        predecessor check real. `WardPublish` does carry both roots now -- the WM needs them to
+        verify `wm_sig` -- but taking the predecessor it checks from its own record rather than from
+        the message is what makes a stale writer detectable: a device whose head has been
         overtaken is refused on the counter, and one that forked at the same counter is refused on
         the signature. Both are definitive.
         """
@@ -546,7 +547,7 @@ class MockWardService:
 
         head = self.wm.head(ward_id)
         assert head is not None, "the sync bootstraps the WM, so a head must exist by now"
-        _head_counter, head_root, _ts = head
+        _head_counter, head_root = head
 
         try:
             (

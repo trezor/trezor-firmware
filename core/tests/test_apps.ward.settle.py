@@ -2,7 +2,7 @@
 from common import *  # isort:skip
 
 import apps.common.seed as seed_module
-from apps.ward import cas as CAS
+from apps.ward import transition as TR
 from apps.ward import offline_store as OS
 from apps.ward import root as R
 from apps.ward.keys import derive_k_auth, derive_ward_id
@@ -66,7 +66,7 @@ class TestWardClaimSettlement(unittest.TestCase):
         """
         await_result(OS.put("address", "btc", identifier, b"v1", True))
         _status, entry = await_result(OS.get("address", "btc", identifier))
-        step = CAS.auth_commit(
+        step = TR.auth_commit(
             await_result(derive_k_auth()),
             await_result(derive_ward_id()),
             counter - 1,

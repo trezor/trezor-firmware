@@ -194,7 +194,7 @@ def wm_sig(
     """The signature a WM checks before letting a head advance: Ed25519 over THE BYTES
     `auth_commit` MACs, under the WM's own tag, followed by the SESSION NONCE -- the round nonce
     the device picked for its latest sync. The WM accepts it only while that is the wallet's
-    latest sync, and only by compare-and-swap on the predecessor. Enrolment and the MVP's host
+    latest sync, and only after a predecessor check. Enrolment and the MVP's host
     step carry no nonce."""
     from trezorlib import _ed25519
 

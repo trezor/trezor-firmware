@@ -19,7 +19,7 @@ async def reconcile(msg: WardReconcile) -> WardReconcileAck:
     from . import round as sync_round
     from .adopt import adopt, require_attested_round, verify_inbound_link
     from .attest import app_root, same_root
-    from .cas import MAX_BATCH
+    from .transition import MAX_BATCH
     from .common import require_initialized
     from .root import get_counter, get_root
 

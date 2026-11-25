@@ -5,7 +5,7 @@ from trezor.crypto.hashlib import sha256
 from trezor.wire import DataError
 
 from apps.ward import attest as A
-from apps.ward import cas as CAS
+from apps.ward import transition as TR
 from apps.ward import round as ROUND
 from apps.ward import leaf as L
 from apps.ward import offline_store as OS
@@ -38,7 +38,7 @@ from apps.ward.trie import (
 )
 
 
-def verify_wm_sig(ward_id, fc, fr, tc, tr, sig, tag=CAS.TAG_WM_HEAD, session_nonce=b""):
+def verify_wm_sig(ward_id, fc, fr, tc, tr, sig, tag=TR.TAG_WM_HEAD, session_nonce=b""):
     """What the WM checks, against the session nonce it holds -- the WM's side, so it lives
     here."""
     from trezor.crypto.curve import ed25519
@@ -47,7 +47,7 @@ def verify_wm_sig(ward_id, fc, fr, tc, tr, sig, tag=CAS.TAG_WM_HEAD, session_non
         return False
     try:
         return ed25519.verify(
-            ward_id, sig, CAS.transition_preimage(tag, ward_id, fc, fr, tc, tr) + session_nonce
+            ward_id, sig, TR.transition_preimage(tag, ward_id, fc, fr, tc, tr) + session_nonce
         )
     except Exception:
         return False
@@ -55,7 +55,7 @@ def verify_wm_sig(ward_id, fc, fr, tc, tr, sig, tag=CAS.TAG_WM_HEAD, session_non
 
 def verify_head_init_sig(ward_id, counter, root, sig):
     """What the WM checks before adopting a wallet it has never seen."""
-    return verify_wm_sig(ward_id, counter, root, counter, root, sig, CAS.TAG_WM_INIT)
+    return verify_wm_sig(ward_id, counter, root, counter, root, sig, TR.TAG_WM_INIT)
 
 
 # Seed used by the reference implementation's own vectors, so the constants below are
@@ -458,26 +458,26 @@ class TestWardTrie(unittest.TestCase):
         ok = bytes(32)
         for bad in (short, long):
             with self.assertRaises(DataError):
-                CAS.transition_preimage(CAS.TAG_COMMIT, bad, 1, ok, 2, ok)
+                TR.transition_preimage(TR.TAG_COMMIT, bad, 1, ok, 2, ok)
             with self.assertRaises(DataError):
-                CAS.transition_preimage(CAS.TAG_COMMIT, ok, 1, bad, 2, ok)
+                TR.transition_preimage(TR.TAG_COMMIT, ok, 1, bad, 2, ok)
             with self.assertRaises(DataError):
                 A.attestation_preimage(bytes(32), bytes(32), 0, ok, 1, bad, 0)
 
         # and a shifted (from_mac, to_counter, to_mac) can no longer reproduce a genuine
         # authorisation, which it could byte-for-byte before
         wid, fm, tm = bytes(range(32)), bytes([7]) * 32, bytes([9]) * 32
-        genuine = CAS.transition_preimage(CAS.TAG_COMMIT, wid, 2, fm, 3, tm)
+        genuine = TR.transition_preimage(TR.TAG_COMMIT, wid, 2, fm, 3, tm)
         with self.assertRaises(DataError):
-            CAS.transition_preimage(
-                CAS.TAG_COMMIT,
+            TR.transition_preimage(
+                TR.TAG_COMMIT,
                 wid,
                 2,
                 fm + (3).to_bytes(4, "big")[:1],
                 int.from_bytes((3).to_bytes(4, "big")[1:] + tm[:1], "big"),
                 tm[1:],
             )
-        self.assertEqual(len(genuine), 1 + len(CAS.TAG_COMMIT) + 32 + 4 + 32 + 4 + 32)
+        self.assertEqual(len(genuine), 1 + len(TR.TAG_COMMIT) + 32 + 4 + 32 + 4 + 32)
 
     def test_relabelled_split_bit_is_rejected(self):
         """THE malleability attack, and the reason split_bit is inside the node hash.
@@ -1076,7 +1076,7 @@ class TestWardCas(unittest.TestCase):
 
     A MAC rather than a signature: K_auth is seed-derived, so exactly the parties that
     need to verify a transition -- the other devices of this wallet -- can, and nobody
-    else. See cas.py for when that would need to become a signature.
+    else. See transition.py for when that would need to become a signature.
     """
 
     K_AUTH = bytes(range(32))
@@ -1085,7 +1085,7 @@ class TestWardCas(unittest.TestCase):
     R2 = bytes([2]) * 32
 
     def _link(self, f, fr, t, tr):
-        return (f, fr, t, tr, CAS.auth_commit(self.K_AUTH, self.WARD_ID, f, fr, t, tr))
+        return (f, fr, t, tr, TR.auth_commit(self.K_AUTH, self.WARD_ID, f, fr, t, tr))
 
     def test_a_claim_distinguishes_two_candidates_at_one_counter(self):
         """What the counter-path settlement in `offline_store.reconcile_pending` now rests on.
@@ -1102,25 +1102,25 @@ class TestWardCas(unittest.TestCase):
         different to-root must not verify -- because if it did not, the new check would be the old
         one wearing a hash.
         """
-        mine = CAS.auth_commit(self.K_AUTH, self.WARD_ID, 41, self.R1, 42, self.R2)
+        mine = TR.auth_commit(self.K_AUTH, self.WARD_ID, 41, self.R1, 42, self.R2)
         theirs_root = bytes([3]) * 32
 
         # the winner's head at the same counter does not reproduce my authorisation
         self.assertFalse(
-            CAS.verify_auth_commit(
+            TR.verify_auth_commit(
                 self.K_AUTH, self.WARD_ID, 41, self.R1, 42, theirs_root, mine
             )
         )
         # ...and my own head does
         self.assertTrue(
-            CAS.verify_auth_commit(
+            TR.verify_auth_commit(
                 self.K_AUTH, self.WARD_ID, 41, self.R1, 42, self.R2, mine
             )
         )
         # the from-state is bound too, so a claim filed from a different head cannot be
         # re-read as one filed from this one
         self.assertFalse(
-            CAS.verify_auth_commit(
+            TR.verify_auth_commit(
                 self.K_AUTH, self.WARD_ID, 41, theirs_root, 42, self.R2, mine
             )
         )
@@ -1138,11 +1138,11 @@ class TestWardCas(unittest.TestCase):
         history and replayed after a different predecessor -- which is what a chain exists
         to prevent."""
         m0, m1 = bytes([7]) * 32, bytes([9]) * 32
-        pre = CAS.transition_preimage(CAS.TAG_COMMIT, self.WARD_ID, 4, m0, 5, m1)
+        pre = TR.transition_preimage(TR.TAG_COMMIT, self.WARD_ID, 4, m0, 5, m1)
         self.assertEqual(
             pre,
-            bytes([len(CAS.TAG_COMMIT)])
-            + CAS.TAG_COMMIT
+            bytes([len(TR.TAG_COMMIT)])
+            + TR.TAG_COMMIT
             + self.WARD_ID
             + (4).to_bytes(4, "big")
             + m0
@@ -1154,16 +1154,16 @@ class TestWardCas(unittest.TestCase):
         # preimage fixed-width when the tree is empty at either end. That normalisation used to
         # live one layer down, in `root_mac`.
         self.assertEqual(
-            CAS.transition_preimage(CAS.TAG_COMMIT, self.WARD_ID, 0, None, 1, m1),
-            CAS.transition_preimage(
-                CAS.TAG_COMMIT, self.WARD_ID, 0, A.EMPTY_ROOT, 1, m1
+            TR.transition_preimage(TR.TAG_COMMIT, self.WARD_ID, 0, None, 1, m1),
+            TR.transition_preimage(
+                TR.TAG_COMMIT, self.WARD_ID, 0, A.EMPTY_ROOT, 1, m1
             ),
         )
 
     def test_every_field_is_bound(self):
-        mac = CAS.auth_commit(self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2)
+        mac = TR.auth_commit(self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2)
         self.assertTrue(
-            CAS.verify_auth_commit(
+            TR.verify_auth_commit(
                 self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2, mac
             )
         )
@@ -1175,18 +1175,18 @@ class TestWardCas(unittest.TestCase):
             (self.K_AUTH, bytes(32), 4, self.R1, 5, self.R2),
             (bytes(32), self.WARD_ID, 4, self.R1, 5, self.R2),
         ):
-            self.assertFalse(CAS.verify_auth_commit(*args, mac))
+            self.assertFalse(TR.verify_auth_commit(*args, mac))
 
     def test_a_revert_is_not_a_commit(self):
         """Same endpoints, different meaning. Sharing a tag would let a rollback be
         replayed as an ordinary write, or the reverse."""
-        commit = CAS.auth_commit(self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2)
-        revert = CAS.auth_commit(
-            self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2, CAS.TAG_REVERT
+        commit = TR.auth_commit(self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2)
+        revert = TR.auth_commit(
+            self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2, TR.TAG_REVERT
         )
         self.assertNotEqual(commit, revert)
         self.assertFalse(
-            CAS.verify_auth_commit(
+            TR.verify_auth_commit(
                 self.K_AUTH, self.WARD_ID, 4, self.R1, 5, self.R2, revert
             )
         )
@@ -1197,7 +1197,7 @@ class TestWardCas(unittest.TestCase):
             self._link(0, None, 1, self.R1),
             self._link(1, self.R1, 2, self.R2),
         ):
-            counter, root, _reverted = CAS.verify_chain_step(
+            counter, root, _reverted = TR.verify_chain_step(
                 self.K_AUTH, self.WARD_ID, counter, root, link
             )
         self.assertEqual((counter, root), (2, self.R2))
@@ -1214,7 +1214,7 @@ class TestWardCas(unittest.TestCase):
             self._link(1, self.R1, 2, self.R2),
             self._link(0, None, 1, self.R1),
         ):
-            counter, root, _reverted = CAS.verify_chain_step_back(
+            counter, root, _reverted = TR.verify_chain_step_back(
                 self.K_AUTH, self.WARD_ID, counter, root, link
             )
         self.assertEqual((counter, root), (0, None))
@@ -1236,38 +1236,38 @@ class TestWardCas(unittest.TestCase):
 
         # forward, the orphan is indistinguishable: both fold cleanly off (0, None)
         for candidate in (orphan, real):
-            CAS.verify_chain_step(
+            TR.verify_chain_step(
                 self.K_AUTH, self.WARD_ID, 0, None, candidate
             )
 
         # backward, anchored at (1, R1), only the real one is admissible
-        counter, root, _r = CAS.verify_chain_step_back(
+        counter, root, _r = TR.verify_chain_step_back(
             self.K_AUTH, self.WARD_ID, 1, self.R1, real
         )
         self.assertEqual((counter, root), (0, None))
         with self.assertRaises(DataError):
-            CAS.verify_chain_step_back(
+            TR.verify_chain_step_back(
                 self.K_AUTH, self.WARD_ID, 1, self.R1, orphan
             )
 
     def test_a_batch_link_folds_in_both_directions(self):
         """One transition carrying MAX_BATCH changes is a single genuine step, either way."""
-        n = CAS.MAX_BATCH
+        n = TR.MAX_BATCH
         link = self._link(0, None, n, self.R2)
         self.assertEqual(
-            CAS.verify_chain_step(self.K_AUTH, self.WARD_ID, 0, None, link)[:2], (n, self.R2)
+            TR.verify_chain_step(self.K_AUTH, self.WARD_ID, 0, None, link)[:2], (n, self.R2)
         )
         self.assertEqual(
-            CAS.verify_chain_step_back(self.K_AUTH, self.WARD_ID, n, self.R2, link)[:2],
+            TR.verify_chain_step_back(self.K_AUTH, self.WARD_ID, n, self.R2, link)[:2],
             (0, None),
         )
 
     def test_the_backward_chain_refuses_every_way_of_lying_with_real_links(self):
         """The mirror of the forward case: authentic links, wrong placement."""
         # a jump longer than any batch may carry
-        far = CAS.MAX_BATCH + 1
+        far = TR.MAX_BATCH + 1
         with self.assertRaises(DataError):
-            CAS.verify_chain_step_back(
+            TR.verify_chain_step_back(
                 self.K_AUTH,
                 self.WARD_ID,
                 far,
@@ -1276,7 +1276,7 @@ class TestWardCas(unittest.TestCase):
             )
         # a link ending at another branch's root at the right counter
         with self.assertRaises(DataError):
-            CAS.verify_chain_step_back(
+            TR.verify_chain_step_back(
                 self.K_AUTH,
                 self.WARD_ID,
                 2,
@@ -1285,7 +1285,7 @@ class TestWardCas(unittest.TestCase):
             )
         # a link ending at a counter the walk is not at
         with self.assertRaises(DataError):
-            CAS.verify_chain_step_back(
+            TR.verify_chain_step_back(
                 self.K_AUTH,
                 self.WARD_ID,
                 5,
@@ -1294,7 +1294,7 @@ class TestWardCas(unittest.TestCase):
             )
         # and one that was never authorised at all
         with self.assertRaises(DataError):
-            CAS.verify_chain_step_back(
+            TR.verify_chain_step_back(
                 self.K_AUTH,
                 self.WARD_ID,
                 1,
@@ -1307,16 +1307,16 @@ class TestWardCas(unittest.TestCase):
         the interesting case -- forged links are the easy half."""
         # a jump longer than any batch may carry
         with self.assertRaises(DataError):
-            CAS.verify_chain_step(
+            TR.verify_chain_step(
                 self.K_AUTH,
                 self.WARD_ID,
                 0,
                 None,
-                self._link(0, None, CAS.MAX_BATCH + 1, self.R2),
+                self._link(0, None, TR.MAX_BATCH + 1, self.R2),
             )
         # a link from another branch
         with self.assertRaises(DataError):
-            CAS.verify_chain_step(
+            TR.verify_chain_step(
                 self.K_AUTH,
                 self.WARD_ID,
                 1,
@@ -1325,7 +1325,7 @@ class TestWardCas(unittest.TestCase):
             )
         # a link that starts somewhere the running head is not
         with self.assertRaises(DataError):
-            CAS.verify_chain_step(
+            TR.verify_chain_step(
                 self.K_AUTH,
                 self.WARD_ID,
                 5,
@@ -1334,7 +1334,7 @@ class TestWardCas(unittest.TestCase):
             )
         # and one that was never authorised at all
         with self.assertRaises(DataError):
-            CAS.verify_chain_step(
+            TR.verify_chain_step(
                 self.K_AUTH,
                 self.WARD_ID,
                 0,
@@ -1346,10 +1346,10 @@ class TestWardCas(unittest.TestCase):
 class TestWardWmAuthorisation(unittest.TestCase):
     """The authorisation a WM checks: over ROOTS, the identical bytes `auth_commit` MACs.
 
-    A WM stores `(counter, root)` and compare-and-swaps on the `from` end, so signing the root
-    transition means every operand it acts on is inside what it verifies. There used to be a mac
-    layer between the two -- `root_mac` under K_mac, which these operands were -- and its removal
-    is why the tags below are at v2.
+    A WM stores `(counter, root)` and checks the predecessor against the `from` end, so signing the
+    root transition means every operand it acts on is inside what it verifies. There used to be a
+    mac layer between the two -- `root_mac` under K_mac, which these operands were -- and its
+    removal is why the tags below are at v2.
     """
 
     _K_SIG = b"\x11" * 32
@@ -1366,7 +1366,7 @@ class TestWardWmAuthorisation(unittest.TestCase):
     def test_a_signature_verifies_against_ward_id_alone(self):
         """`ward_id` IS the verifying key, so a WM needs nothing but the identifier it keys by."""
         wid = self._ward_id()
-        sig = CAS.wm_sig(
+        sig = TR.wm_sig(
             self._K_SIG, wid, 41, self._ROOT_A, 42, self._ROOT_B
         )
         self.assertTrue(
@@ -1375,9 +1375,9 @@ class TestWardWmAuthorisation(unittest.TestCase):
 
     def test_it_binds_both_endpoints(self):
         """Binding only the destination would let an authorisation be lifted out of its place and
-        replayed after a different predecessor -- exactly what a compare-and-swap must prevent."""
+        replayed after a different predecessor -- exactly what a predecessor check must prevent."""
         wid = self._ward_id()
-        sig = CAS.wm_sig(
+        sig = TR.wm_sig(
             self._K_SIG, wid, 41, self._ROOT_A, 42, self._ROOT_B
         )
 
@@ -1400,7 +1400,7 @@ class TestWardWmAuthorisation(unittest.TestCase):
         wid = self._ward_id()
         from trezor.crypto.curve import ed25519
 
-        sig = CAS.wm_sig(
+        sig = TR.wm_sig(
             self._K_SIG, wid, 41, self._ROOT_A, 42, self._ROOT_B
         )
         other = ed25519.publickey(b"\x22" * 32)
@@ -1412,8 +1412,8 @@ class TestWardWmAuthorisation(unittest.TestCase):
         """An authorisation is good only for the sync it was minted in: the WM checks it against the
         nonce of the wallet's latest sync, and a new sync ends the session."""
         wid = self._ward_id()
-        sig = CAS.wm_sig(
-            self._K_SIG, wid, 41, self._ROOT_A, 42, self._ROOT_B, CAS.TAG_WM_HEAD, self._SESSION
+        sig = TR.wm_sig(
+            self._K_SIG, wid, 41, self._ROOT_A, 42, self._ROOT_B, TR.TAG_WM_HEAD, self._SESSION
         )
         self.assertTrue(
             verify_wm_sig(wid, 41, self._ROOT_A, 42, self._ROOT_B, sig, session_nonce=self._SESSION)
@@ -1429,14 +1429,14 @@ class TestWardWmAuthorisation(unittest.TestCase):
         """Its own tag, so the authorisation that opens a wallet's history cannot be re-presented
         as a step within it."""
         wid = self._ward_id()
-        init = CAS.head_init_sig(self._K_SIG, wid, 0, self._ROOT_A)
+        init = TR.head_init_sig(self._K_SIG, wid, 0, self._ROOT_A)
         self.assertTrue(verify_head_init_sig(wid, 0, self._ROOT_A, init))
         # the same bytes, offered as a 0 -> 0 advance
         self.assertFalse(
             verify_wm_sig(wid, 0, self._ROOT_A, 0, self._ROOT_A, init)
         )
 
-        advance = CAS.wm_sig(self._K_SIG, wid, 0, self._ROOT_A, 0, self._ROOT_A)
+        advance = TR.wm_sig(self._K_SIG, wid, 0, self._ROOT_A, 0, self._ROOT_A)
         self.assertFalse(verify_head_init_sig(wid, 0, self._ROOT_A, advance))
 
     def test_the_tag_is_the_only_thing_separating_the_two_authenticators(self):
@@ -1454,33 +1454,33 @@ class TestWardWmAuthorisation(unittest.TestCase):
         however the lengths move.
         """
         wid = self._ward_id()
-        commit = CAS.transition_preimage(
-            CAS.TAG_COMMIT, wid, 41, self._ROOT_A, 42, self._ROOT_B
+        commit = TR.transition_preimage(
+            TR.TAG_COMMIT, wid, 41, self._ROOT_A, 42, self._ROOT_B
         )
-        for other in (CAS.TAG_REVERT, CAS.TAG_WM_HEAD, CAS.TAG_WM_INIT):
+        for other in (TR.TAG_REVERT, TR.TAG_WM_HEAD, TR.TAG_WM_INIT):
             self.assertNotEqual(
                 commit,
-                CAS.transition_preimage(other, wid, 41, self._ROOT_A, 42, self._ROOT_B),
+                TR.transition_preimage(other, wid, 41, self._ROOT_A, 42, self._ROOT_B),
             )
 
         # ...and the operands really are identical now, which is the point of the change: an
         # auth_commit and a wm_sig over the same transition cover the same bytes.
         self.assertEqual(
-            CAS.transition_preimage(
-                CAS.TAG_WM_HEAD, wid, 41, self._ROOT_A, 42, self._ROOT_B
-            )[1 + len(CAS.TAG_WM_HEAD) :],
-            commit[1 + len(CAS.TAG_COMMIT) :],
+            TR.transition_preimage(
+                TR.TAG_WM_HEAD, wid, 41, self._ROOT_A, 42, self._ROOT_B
+            )[1 + len(TR.TAG_WM_HEAD) :],
+            commit[1 + len(TR.TAG_COMMIT) :],
         )
 
     def test_operands_must_be_fixed_width(self):
         """Same reason as everywhere else in WARD: a short operand lets the preimage be re-split."""
         wid = self._ward_id()
         with self.assertRaises(DataError):
-            CAS.transition_preimage(CAS.TAG_WM_HEAD, wid[:31], 0, self._ROOT_A, 1, self._ROOT_B)
+            TR.transition_preimage(TR.TAG_WM_HEAD, wid[:31], 0, self._ROOT_A, 1, self._ROOT_B)
         with self.assertRaises(DataError):
-            CAS.transition_preimage(CAS.TAG_WM_HEAD, wid, 0, self._ROOT_A[:31], 1, self._ROOT_B)
+            TR.transition_preimage(TR.TAG_WM_HEAD, wid, 0, self._ROOT_A[:31], 1, self._ROOT_B)
         with self.assertRaises(DataError):
-            CAS.transition_preimage(CAS.TAG_WM_HEAD, wid, 0, self._ROOT_A, 1, self._ROOT_B + b"\x00")
+            TR.transition_preimage(TR.TAG_WM_HEAD, wid, 0, self._ROOT_A, 1, self._ROOT_B + b"\x00")
 
     def test_known_answer(self):
         """Fixed vectors, so this agrees with `tests/ward_keys.py` -- which implements the same
@@ -1496,7 +1496,7 @@ class TestWardWmAuthorisation(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            CAS.transition_preimage(CAS.TAG_WM_HEAD, wid, 41, self._ROOT_A, 42, self._ROOT_B),
+            TR.transition_preimage(TR.TAG_WM_HEAD, wid, 41, self._ROOT_A, 42, self._ROOT_B),
             bytes.fromhex(
                 "115741524420574d20434f4d4d4954207635"
                 "d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737"
@@ -1504,14 +1504,14 @@ class TestWardWmAuthorisation(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            CAS.wm_sig(
+            TR.wm_sig(
                 self._K_SIG,
                 wid,
                 41,
                 self._ROOT_A,
                 42,
                 self._ROOT_B,
-                CAS.TAG_WM_HEAD,
+                TR.TAG_WM_HEAD,
                 self._SESSION,
             ),
             bytes.fromhex(
@@ -1523,7 +1523,7 @@ class TestWardWmAuthorisation(unittest.TestCase):
         # with a readable diff rather than an opaque 64-byte mismatch. `0f` is len("WARD WM
         # INIT v4"); both endpoints are (0, root), there being no predecessor to name.
         self.assertEqual(
-            CAS.transition_preimage(CAS.TAG_WM_INIT, wid, 0, self._ROOT_A, 0, self._ROOT_A),
+            TR.transition_preimage(TR.TAG_WM_INIT, wid, 0, self._ROOT_A, 0, self._ROOT_A),
             bytes.fromhex(
                 "0f5741524420574d20494e4954207634"
                 "d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737"
@@ -1531,7 +1531,7 @@ class TestWardWmAuthorisation(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            CAS.head_init_sig(self._K_SIG, wid, 0, self._ROOT_A),
+            TR.head_init_sig(self._K_SIG, wid, 0, self._ROOT_A),
             bytes.fromhex(
                 "d7702a698f249607637b93a8b3dd83707eb7b5e7291e86be1caad9e55ee0efee"
                 "d385da6aea7c7d6c700b1ded7720196801ad021c8460bef9043e9041dd67f008"

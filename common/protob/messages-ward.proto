@@ -351,7 +351,7 @@ message WardQueueGetEntry {
  * is in.
  *
  * `mac` IS THE POINT. It authenticates (entry_key, op, key_type, app_id, identifier, value) under
- * K_auth -- see `cas.intent_preimage` -- so a restore can be checked against what this wallet
+ * K_auth -- see `transition.intent_preimage` -- so a restore can be checked against what this wallet
  * actually queued rather than trusted because a host says so. Present ONLY for a pending record: a
  * pinned copy is not an intent, there is nothing to re-queue, and returning a MAC for one would
  * invite a restore that means nothing.

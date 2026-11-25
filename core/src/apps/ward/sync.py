@@ -21,7 +21,7 @@ async def sync(msg: WardSync) -> WardSyncAck:
 
     from . import round as sync_round
     from .attest import NONCE_LENGTH
-    from .cas import head_init_sig, session_proof
+    from .transition import head_init_sig, session_proof
     from .common import has_wm, require_initialized
     from .keys import derive_k_sig, derive_ward_id
     from .root import get_counter, get_root

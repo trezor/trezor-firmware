@@ -141,7 +141,7 @@ async def walk_back(
     from trezor.wire import DataError, context
 
     from .attest import same_root
-    from .cas import link_of, verify_chain_step_back
+    from .transition import link_of, verify_chain_step_back
 
     counter, root = start_counter, start_root
     crossed = []

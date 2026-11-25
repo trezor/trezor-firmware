@@ -27,7 +27,7 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     from . import round as sync_round
     from .adopt import verify_attested
     from .attest import NONCE_LENGTH, app_root, same_root, verify_attestation
-    from .cas import authorise
+    from .transition import authorise
     from .common import (
         change_no,
         count_changes,
@@ -39,7 +39,8 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
 
     require_initialized()
 
-    # The predecessor is the WM's own attested head, the pair it will compare-and-swap on.
+    # The predecessor is the WM's own attested head, the pair its predecessor check compares
+    # against.
     from_counter, from_root, wm_counter, wm_root = await verify_attested(msg)
 
     recovered_counter = msg.recovered_counter
@@ -170,7 +171,7 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
         )
 
     # A REVERT carries an older root under a new counter, so its pair is new. It is bound to this
-    # round's nonce, and the WM's compare-and-swap on (wm_counter, wm_root) lets it move the head
+    # round's nonce, and the WM's predecessor check on (wm_counter, wm_root) lets it move the head
     # once.
     step, advance = await authorise(
         wm_counter, wm_root, new_counter, recovered_root, revert=True

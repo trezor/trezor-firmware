@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-"""The mock WM's compare-and-swap, tested on its own.
+"""The mock WM's predecessor check, tested on its own.
 
 No device involved: this is the host half of the publish protocol, and the properties below are
 what the firmware in Stage 3d will be relying on. Getting them wrong here would make a device
@@ -80,7 +80,7 @@ def _opened() -> MockWM:
 def test_an_unenrolled_wallet_cannot_be_advanced_at_all():
     """ENROLMENT IS NOT AN ADVANCE, and cannot be folded into one.
 
-    A compare-and-swap needs a head to compare against, and a WM that has never seen this wallet
+    A predecessor check needs a head to compare against, and a WM that has never seen this wallet
     holds none. Enrolment is a SYNC-path operation: `attest_head` verifies `head_init_sig` and
     attests the genesis head; only then can a device authorise a write.
 
@@ -123,8 +123,8 @@ def test_a_first_head_starts_at_zero():
 
 
 def test_an_advance_attests_the_head_it_created():
-    """Not "the head now", which a concurrent winner could have moved -- the whole reason CAS and
-    attestation are one call."""
+    """Not "the head now", which a concurrent winner could have moved -- the whole reason the
+    predecessor check and the attestation are one call."""
     fc, fr, counter, root, ts, sig = _advance(_opened(), 1, ROOT_1, 2, ROOT_2)
     assert (fc, fr, counter, root, ts) == (1, ROOT_1, 2, ROOT_2, 1000)
     # THE WHOLE STEP IS SIGNED, both ends -- so an attestation cannot be paired with a link that
@@ -153,7 +153,7 @@ def test_a_stale_predecessor_is_a_conflict_not_an_overwrite():
         _advance(wm, 1, ROOT_1, 2, ROOT_0)
     assert e.value.head_counter == 2
     # ...and the head the winner installed is untouched
-    assert wm.head(WARD_ID) == (2, ROOT_2, 1000)
+    assert wm.head(WARD_ID) == (2, ROOT_2)
 
 
 def test_the_predecessor_root_is_compared_too():
@@ -190,7 +190,7 @@ def test_an_unauthorised_transition_is_refused():
             _sig(wm, 1, ROOT_1, 2, ROOT_2, k_sig=b"\x22" * 32),
             timestamp=1000,
         )
-    assert wm.head(WARD_ID) == (1, ROOT_1, 1000)
+    assert wm.head(WARD_ID) == (1, ROOT_1)
 
 
 def test_a_signature_for_another_transition_is_refused():
@@ -309,7 +309,7 @@ def test_a_revert_signature_is_not_accepted_as_an_ordinary_advance():
 
 
 def test_an_authorisation_moves_the_head_at_most_once():
-    """THE COMPARE-AND-SWAP, stated as the attack it closes.
+    """THE PREDECESSOR CHECK, stated as the attack it closes.
 
     A host that kept a `wm_sig` waits for its predecessor to come back. Roots do come back -- a
     tree returning to an earlier shape returns to an earlier root, and a REVERT carries an older
@@ -381,6 +381,26 @@ def test_restarting_the_python_service_discards_its_session_and_pending_challeng
     assert restarted.session(WARD_ID) is None
     with pytest.raises(ValueError, match="expired"):
         restarted.open_session(WARD_ID, candidate, proof)
+
+
+def test_the_wm_dates_each_attestation_when_it_signs():
+    """The WM keeps no time in its register. An attestation is dated by the WM's clock when it is
+    signed, so the acceptance carries the acceptance time and a later attestation of the same
+    head a later one; only the signed records, which wardd keeps, remember the acceptance time."""
+    wm = _opened()
+    wm.advance(WARD_ID, 1, ROOT_1, 2, ROOT_2, _sig(wm, 1, ROOT_1, 2, ROOT_2), timestamp=1000)
+    accepted = wm.last_acceptance
+    assert accepted[4] == 1000
+    assert wm.record(WARD_ID) == (1, ROOT_1, 2, ROOT_2)  # the step, and no time
+
+    wm.set_clock(WARD_ID, 5000)
+    later = wm.attest(WARD_ID, b"\x55" * 32)
+    assert later[:4] == accepted[:4] and later[4] == 5000
+    _ed25519.checkvalid(
+        later[5],
+        MockWM._preimage(WARD_ID, b"\x55" * 32, 1, ROOT_1, 2, ROOT_2, 5000),
+        wm.pubkey,
+    )
 
 
 def test_an_advance_returns_the_wm_signed_acceptance():

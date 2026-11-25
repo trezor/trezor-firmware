@@ -132,7 +132,7 @@ message WardLeafAck {
     // can advance the counter and have every genuine device refused from then on -- the WM
     // becomes a denial-of-service oracle. The service channel has carried this since it existed;
     // connect, the transport that is actually developed, did not, so the authenticated
-    // compare-and-swap the design rests on was performed nowhere.
+    // predecessor check the design rests on was performed nowhere.
     //
     // ABSENT ON A NO-OP. An idempotent delete of a path that already held nothing produced no
     // transition, so it carries neither this nor `auth_commit`.
@@ -486,7 +486,7 @@ message WardSyncAck {
     // THE OPENING HEAD, AND ITS AUTHORISATION -- how a connect host ENROLS a wallet with a WM
     // that has never seen it. NOT a way to re-seed a WM that lost its register; see below.
     //
-    // A compare-and-swap needs something to compare against, and a WM with no record of this
+    // A predecessor check needs something to compare against, and a WM with no record of this
     // wallet has nothing. The first head therefore has to come from the device and be
     // authenticated, or it is a value anyone who knows `ward_id` could set -- which is the same
     // denial of service `wm_sig` closes for ordinary advances.
@@ -641,7 +641,7 @@ message WardRollback {
     reserved 6, 7, 8;
 
     // THE WM'S OWN HEAD, attested against this round's nonce -- the step it most recently took.
-    // The demotion extends it, and it is the pair the WM compare-and-swaps on.
+    // The demotion extends it, and it is the pair the WM checks the predecessor against.
     //
     // FROM THE WM'S HEAD, NOT THE DEVICE'S, which is what lets this one message cover two
     // failures. A device only ever adopts what the WM attested, so normally the two heads are the

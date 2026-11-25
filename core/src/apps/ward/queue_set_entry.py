@@ -97,7 +97,7 @@ async def _restore(
     from trezor.wire import DataError
 
     from . import offline_store
-    from .cas import OP_SET, verify_intent_mac
+    from .transition import OP_SET, verify_intent_mac
     from .common import display_bytes, entry_props
     from .keys import derive_k_auth, derive_ward_id
 

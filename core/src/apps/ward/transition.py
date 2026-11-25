@@ -1,4 +1,4 @@
-"""CAS: authorising a transition from one root to the next. The ONLY authority on state.
+"""Transitions: authorising a transition from one root to the next. The ONLY authority on state.
 
     preimage   = len8(tag) || tag || ward_id || from_counter(4B BE) || from_root(32B)
                                              || to_counter(4B BE)   || to_root(32B)
@@ -29,8 +29,7 @@ TAG_REVERT = b"WARD REVERT v3"
 # happens before any session, so TAG_WM_INIT carries none.
 TAG_WM_HEAD = b"WARD WM COMMIT v5"
 TAG_WM_INIT = b"WARD WM INIT v4"
-# Lets a WM apply policy to demotions; the compare-and-swap on the predecessor is what stops
-# a replay.
+# Lets a WM apply policy to demotions; the predecessor check is what stops a replay.
 TAG_WM_REVERT = b"WARD WM REVERT v5"
 # Without a WM (the MVP build): the same step signed for the HOST, so a host can refuse to store
 # a write no device of this wallet made. Its own tag, so it is never a WM authorisation.
@@ -263,7 +262,7 @@ def verify_intent_mac(
 # for its latest sync, which the WM's attestation answered (`round.wm_head`); the WM never picks
 # one. The WM keeps the nonce of the wallet's latest sync, replaces it on the next sync, and
 # accepts an authorisation only when it is bound to that nonce and its predecessor is the WM's
-# head (compare-and-swap). One session may carry several transitions; every accepted one raises
+# head (predecessor check). One session may carry several transitions; every accepted one raises
 # the counter, so an authorisation moves the head at most once.
 #
 # A NEW SYNC ENDS THE SESSION, and with it every authorisation minted in it that has not landed:

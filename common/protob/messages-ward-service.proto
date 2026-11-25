@@ -86,7 +86,7 @@ message WardServiceOpenAck {
  * current_counter and current_root name the device's own head. The device walks backward from
  * the attested step and must reach this exact pair.
  *
- * head_init_sig matters only when the WM may not know this wallet yet: a compare-and-swap needs
+ * head_init_sig matters only when the WM may not know this wallet yet: a predecessor check needs
  * something to compare against, and a WM that has never seen this wallet has nothing. The opening
  * head is `(current_counter, current_root)` above -- the WM holds roots, so there is nothing to
  * derive -- and this authorises it, or a wallet's first head is whatever the first speaker claims.
@@ -170,8 +170,8 @@ message WardSyncRequired {
  *
  * wm_sig is what lets the WM require that only a holder of this wallet's K_sig may advance its
  * head. It covers EXACTLY the bytes auth_commit MACs -- the root transition -- so the two roots
- * the WM compare-and-swaps on and attests are both inside what it verifies, and a host cannot
- * pair a genuine signature with operands of its own. auth_commit remains the authenticator
+ * the WM checks the predecessor against and attests are both inside what it verifies, and a host
+ * cannot pair a genuine signature with operands of its own. auth_commit remains the authenticator
  * another DEVICE of this wallet checks, and the only proof that a state is real.
  */
 message WardPublish {
@@ -182,7 +182,7 @@ message WardPublish {
     optional uint32 counter     = 4;   // the counter this transition reaches
 
     // 5 was `mac`, the K_mac commitment to the state reached. The WM holds roots now, and the
-    // two below are what it compare-and-swaps on and attests.
+    // two below are what it checks the predecessor against and attests.
     reserved 5;
 
     optional bytes  auth_commit = 6;   // for another device of this wallet
@@ -190,7 +190,7 @@ message WardPublish {
     optional bytes  nonce       = 8;   // 32B, so the attestation that comes back is for THIS write
 
     // The two ends of the transition, because the WM verifies `wm_sig` over them and
-    // compare-and-swaps on `from_root`. Absent means the empty tree.
+    // checks the predecessor against `from_root`. Absent means the empty tree.
     optional bytes  from_root   = 9;
     optional bytes  new_root    = 10;
 }

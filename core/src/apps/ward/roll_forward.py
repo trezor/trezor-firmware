@@ -26,8 +26,9 @@ async def roll_forward(msg: WardRollForward) -> WardRollForwardAck:
     ONLY AFTER DETECTION, ONLY WITH APPROVAL. The round's WardIngestAttestation must have found the
     WM below this device's head (`round.roll_forward`). The first page is checked, then the user
     approves; later pages of the same round need no new approval but must start where the previous
-    page ended. On the `final` page the device shows the head it restored and when the WM accepted
-    its last change, so the user can tell how recent the restored history is. Nothing is adopted
+    page ended. On the `final` page the device shows the head it restored and the time of the WM's
+    record of its last change -- when the WM last vouched for that step, as far as the host's
+    records go -- so the user can tell how recent the restored history is. Nothing is adopted
     here; the host submits the signatures as ordinary advances and syncs.
     """
     from trezor.messages import WardRollForwardAck
@@ -38,7 +39,7 @@ async def roll_forward(msg: WardRollForward) -> WardRollForwardAck:
     from . import round as sync_round
     from .adopt import verify_attested
     from .attest import NONCE_LENGTH, root_or_empty, same_root, verify_attestation
-    from .cas import TAG_WM_HEAD, TAG_WM_REVERT, link_of, verify_chain_step, wm_sig
+    from .transition import TAG_WM_HEAD, TAG_WM_REVERT, link_of, verify_chain_step, wm_sig
     from .common import change_no, count_changes, has_wm, require_initialized
     from .keys import derive_k_auth, derive_k_sig, derive_ward_id
     from .root import get_counter, get_root
@@ -143,7 +144,7 @@ async def roll_forward(msg: WardRollForward) -> WardRollForwardAck:
             "WARD history restored",
             [
                 ("Restored to", change_no(counter), False),
-                ("Last change accepted", "%s UTC" % format_timestamp(last_timestamp), False),
+                ("Last confirmed", "%s UTC" % format_timestamp(last_timestamp), False),
             ],
         )
     else:
