@@ -11,7 +11,8 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
  * @next NostrPubkey
  */
 message NostrGetPubkey {
-    repeated uint32 address_n = 1;  // used to derive the key
+    repeated uint32 address_n = 1;   // used to derive the key
+    optional bool show_display = 2;  // show the npub on the display and wait for confirmation
 }
 
 /**

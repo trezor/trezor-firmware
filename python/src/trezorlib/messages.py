@@ -1340,6 +1340,7 @@ class GetAddress(protobuf.MessageType):
         5: protobuf.Field("script_type", "InputScriptType", repeated=False, required=False, default=InputScriptType.SPENDADDRESS),
         6: protobuf.Field("ignore_xpub_magic", "bool", repeated=False, required=False, default=None),
         7: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        11: protobuf.Field("contact_attestation", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1352,6 +1353,7 @@ class GetAddress(protobuf.MessageType):
         script_type: InputScriptType | None = InputScriptType.SPENDADDRESS,
         ignore_xpub_magic: bool | None = None,
         chunkify: bool | None = None,
+        contact_attestation: bool | None = None,
     ) -> None:
         self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.coin_name = coin_name
@@ -1360,6 +1362,7 @@ class GetAddress(protobuf.MessageType):
         self.script_type = script_type
         self.ignore_xpub_magic = ignore_xpub_magic
         self.chunkify = chunkify
+        self.contact_attestation = contact_attestation
 
 
 class Address(protobuf.MessageType):
@@ -1367,6 +1370,8 @@ class Address(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=True),
         2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("contact_signature", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("contact_pubkey", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1374,9 +1379,13 @@ class Address(protobuf.MessageType):
         *,
         address: str,
         mac: bytes | None = None,
+        contact_signature: bytes | None = None,
+        contact_pubkey: bytes | None = None,
     ) -> None:
         self.address = address
         self.mac = mac
+        self.contact_signature = contact_signature
+        self.contact_pubkey = contact_pubkey
 
 
 class GetOwnershipId(protobuf.MessageType):
@@ -1652,6 +1661,8 @@ class TxOutput(protobuf.MessageType):
         10: protobuf.Field("orig_hash", "bytes", repeated=False, required=False, default=None),
         11: protobuf.Field("orig_index", "uint32", repeated=False, required=False, default=None),
         12: protobuf.Field("payment_req_index", "uint32", repeated=False, required=False, default=None),
+        13: protobuf.Field("contact_pubkey", "bytes", repeated=False, required=False, default=None),
+        14: protobuf.Field("contact_signature", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1666,6 +1677,8 @@ class TxOutput(protobuf.MessageType):
         orig_hash: bytes | None = None,
         orig_index: int | None = None,
         payment_req_index: int | None = None,
+        contact_pubkey: bytes | None = None,
+        contact_signature: bytes | None = None,
     ) -> None:
         self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.amount = amount
@@ -1676,6 +1689,8 @@ class TxOutput(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.payment_req_index = payment_req_index
+        self.contact_pubkey = contact_pubkey
+        self.contact_signature = contact_signature
 
 
 class PrevTx(protobuf.MessageType):
@@ -2163,6 +2178,8 @@ class TxOutputType(protobuf.MessageType):
         10: protobuf.Field("orig_hash", "bytes", repeated=False, required=False, default=None),
         11: protobuf.Field("orig_index", "uint32", repeated=False, required=False, default=None),
         12: protobuf.Field("payment_req_index", "uint32", repeated=False, required=False, default=None),
+        13: protobuf.Field("contact_pubkey", "bytes", repeated=False, required=False, default=None),
+        14: protobuf.Field("contact_signature", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -2177,6 +2194,8 @@ class TxOutputType(protobuf.MessageType):
         orig_hash: bytes | None = None,
         orig_index: int | None = None,
         payment_req_index: int | None = None,
+        contact_pubkey: bytes | None = None,
+        contact_signature: bytes | None = None,
     ) -> None:
         self.address_n: Sequence[int] = address_n if address_n is not None else []
         self.amount = amount
@@ -2187,6 +2206,8 @@ class TxOutputType(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.payment_req_index = payment_req_index
+        self.contact_pubkey = contact_pubkey
+        self.contact_signature = contact_signature
 
 
 class TxAckInputWrapper(protobuf.MessageType):
@@ -9139,14 +9160,17 @@ class NostrGetPubkey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2001
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         address_n: Sequence[int] | None = None,
+        show_display: bool | None = None,
     ) -> None:
         self.address_n: Sequence[int] = address_n if address_n is not None else []
+        self.show_display = show_display
 
 
 class NostrPubkey(protobuf.MessageType):

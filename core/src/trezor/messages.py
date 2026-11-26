@@ -471,6 +471,7 @@ if TYPE_CHECKING:
         script_type: "InputScriptType"
         ignore_xpub_magic: "bool | None"
         chunkify: "bool | None"
+        contact_attestation: "bool | None"
 
         def __init__(
             self,
@@ -482,6 +483,7 @@ if TYPE_CHECKING:
             script_type: "InputScriptType | None" = None,
             ignore_xpub_magic: "bool | None" = None,
             chunkify: "bool | None" = None,
+            contact_attestation: "bool | None" = None,
         ) -> None:
             pass
 
@@ -492,12 +494,16 @@ if TYPE_CHECKING:
     class Address(protobuf.MessageType):
         address: "str"
         mac: "AnyBytes | None"
+        contact_signature: "AnyBytes | None"
+        contact_pubkey: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             address: "str",
             mac: "AnyBytes | None" = None,
+            contact_signature: "AnyBytes | None" = None,
+            contact_pubkey: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -715,6 +721,8 @@ if TYPE_CHECKING:
         orig_hash: "AnyBytes | None"
         orig_index: "int | None"
         payment_req_index: "int | None"
+        contact_pubkey: "AnyBytes | None"
+        contact_signature: "AnyBytes | None"
 
         def __init__(
             self,
@@ -728,6 +736,8 @@ if TYPE_CHECKING:
             orig_hash: "AnyBytes | None" = None,
             orig_index: "int | None" = None,
             payment_req_index: "int | None" = None,
+            contact_pubkey: "AnyBytes | None" = None,
+            contact_signature: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -7123,11 +7133,13 @@ if TYPE_CHECKING:
 
     class NostrGetPubkey(protobuf.MessageType):
         address_n: "list[int]"
+        show_display: "bool | None"
 
         def __init__(
             self,
             *,
             address_n: "list[int] | None" = None,
+            show_display: "bool | None" = None,
         ) -> None:
             pass
 
