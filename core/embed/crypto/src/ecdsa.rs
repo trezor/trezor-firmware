@@ -159,6 +159,34 @@ pub fn verify_recover(
     }
 }
 
+/// Uncompress the compressed SEC1 `public_key` on `curve`.
+pub fn uncompress_pubkey(
+    curve: Curve,
+    public_key: &[u8; ECDSA_PUBLIC_KEY_COMPRESSED_SIZE],
+) -> Result<EcdsaPublicKey, Error> {
+    // the C code reads 65 bytes for a 0x04 prefix
+    if !matches!(public_key[0], 0x02 | 0x03) {
+        return Err(Error::InvalidEncoding);
+    }
+    let mut uncompressed = [0u8; ECDSA_PUBLIC_KEY_SIZE];
+    // SAFETY:
+    // * the curve is one of the supported builtin curves
+    // * public_key is a compressed public key of correct size
+    // * uncompressed has room for an uncompressed public key
+    let result = unsafe {
+        ffi::ecdsa_uncompress_pubkey(
+            curve.to_ffi_curve(),
+            public_key.as_ptr(),
+            uncompressed.as_mut_ptr(),
+        )
+    };
+    if result == 1 {
+        Ok(uncompressed)
+    } else {
+        Err(Error::InvalidEncoding)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -444,6 +472,34 @@ mod test {
             // Recovered key must also verify the signature.
             verify_digest(v.curve, &recovered, &sig, &digest)
                 .expect("recovered key failed verification");
+        }
+    }
+
+    #[test]
+    fn test_uncompress_pubkey() {
+        for v in VERIFY_VECTORS.iter().filter(|v| v.valid) {
+            let uncompressed: EcdsaPublicKey = v.pubkey().as_slice().try_into().unwrap();
+            let compressed = compress(&uncompressed);
+            assert_eq!(
+                uncompress_pubkey(v.curve, &compressed).unwrap(),
+                uncompressed
+            );
+
+            let mut bad_prefix = compressed;
+            bad_prefix[0] = 0x04;
+            assert!(matches!(
+                uncompress_pubkey(v.curve, &bad_prefix),
+                Err(Error::InvalidEncoding)
+            ));
+        }
+        // x beyond the field, not a point on either curve
+        let mut not_on_curve = [0xff; ECDSA_PUBLIC_KEY_COMPRESSED_SIZE];
+        not_on_curve[0] = 0x02;
+        for curve in [Curve::Secp256k1, Curve::Nist256p1] {
+            assert!(matches!(
+                uncompress_pubkey(curve, &not_on_curve),
+                Err(Error::InvalidEncoding)
+            ));
         }
     }
 

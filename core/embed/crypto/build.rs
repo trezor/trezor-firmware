@@ -173,6 +173,7 @@ fn add_crypto_base(lib: &mut CLibrary, common_attrs: &CompileAttrs) -> Result<()
             .allowlist_var("nist256p1")
             .allowlist_function("ecdsa_verify_digest")
             .allowlist_function("ecdsa_recover_pub_from_sig")
+            .allowlist_function("ecdsa_uncompress_pubkey")
             .allowlist_function("zkp_context_init")
             // ed25519
             .allowlist_type("ed25519_signature")
