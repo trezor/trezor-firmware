@@ -58,10 +58,10 @@ the host cannot tell whether the changes are late or lost. The user decides. The
 kept manager attestation of an earlier head M, which carries the time T the manager signed it. The
 Trezor verifies the signature and shows the date T beside the manager's current head. The manager's
 signature alone does not authorize the revert: the user approves it on the Trezor. The screen says
-that changes made after T leave the current state, and that the Trezor can offer to re-add them if
-they arrive later. If the user approves, the device authorizes a revert from N to a new head N + 1
-with the root of M. The replica builds N + 1 from its tree at M, so it does not need the missing
-changes.
+that N − M changes made after T leave the current state, and that the Trezor can offer to re-add
+them if they arrive later. The count is exact unless a revert lies between M and N. If the user
+approves, the device authorizes a revert from N to a new head N + 1 with the root of M. The replica
+builds N + 1 from its tree at M, so it does not need the missing changes.
 
 The changes between M and N are not erased: if they arrive, the replica keeps them on a dead
 branch.
@@ -80,12 +80,13 @@ their own roots, but they are not part of the current state.
 The changes are re-added, not restored by a second revert. A revert back to N would also discard
 every change made after the first revert.
 
-The host reports the dead-branch changes it holds. The Trezor authenticates the branch from the
-fork point M, the last state it shares with the current history: it verifies each transition's
-wallet authentication tag from M up to the branch head, and each entry against the root of the
-transition that wrote it. A write counter alone is not enough to decide anything. For each changed
-entry the Trezor displays the entry in full: its identifier, its value at M, the late value and the
-current value.
+The host reports the dead-branch changes it holds. The Trezor authenticates the branch from the fork
+point M, the last state it shares with the current history: it verifies each transition's wallet
+authentication tag from M up to the branch head, and each entry against the root of the transition
+that wrote it. The branch must account for all N − M changes before the Trezor offers any of them,
+so a host cannot present part of it as the whole. A write counter alone is not enough to decide
+anything. For each changed entry the Trezor displays the entry in full: its identifier, its value at
+M, the late value and the current value.
 
 | What the device finds | What happens to the entry |
 | --- | --- |

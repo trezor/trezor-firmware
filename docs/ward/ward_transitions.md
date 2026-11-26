@@ -7,6 +7,32 @@ eight; the count itself comes from the writing Trezor.
 
 The manager accepts one successor per head, so along its history each counter names one state. A lost race, a manager restored from backup, or the MVP without a manager can still produce different roots at the same counter; the root tells them apart.
 
+## Why commits count changes and reverts count one
+
+**Commits advance by the number of changes.**
+
+- Pros:
+  - Batching does not change the result: the same changes, one by one or batched, end at the same
+    counter and root.
+  - The counter counts the user's changes, so screens can show it directly.
+  - After a sync failure, N − M tells exactly how many changes are missing, even before their
+    records arrive.
+  - When late records arrive, the Trezor can check that the dead branch holds all N − M changes.
+- Cons:
+  - Only the writing Trezor knows the count. Others check only that a step advances by one to eight.
+  - Counters inside a batch are never heads, so a chain walk must land on its target exactly.
+
+**Reverts advance by one.**
+
+- Pros:
+  - A revert does not need to know what changed, so it works when records are missing.
+  - It restores the exact earlier root, so earlier proofs against that root stay valid.
+- Cons:
+  - Across a revert, counter differences no longer equal the number of changes. A count shown on
+    screen that spans a revert is off.
+  - Restored entries get their old write counters back, so a write counter can move backwards.
+    Re-adding therefore compares values, not counters.
+
 ## From approval to adoption
 
 Suppose a user changes an address label while the Trezor and manager both hold head M. The
