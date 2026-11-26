@@ -8,7 +8,8 @@
 use crate::modui::Field;
 use crate::modui::call::{Decision, call, confirmed};
 use crate::modui::field::{check_fields, unwrap_slice, wire_fields};
-use crate::structs::{Answer, ReviewRequest, Slice, TrezorUiEnum, WireExtra};
+use crate::structs::Slice;
+use crate::traits::ui::{Answer, ReviewRequest, TrezorUiEnumV1, WireExtra};
 use crate::{Error, Result};
 
 /// Facts the person can open from a review's menu, under a label of their own.
@@ -84,9 +85,7 @@ fn check_request(fields: &[Field<'_>], extras: &[Extra<'_>], answer: Answer) -> 
     for fields in offered {
         check_fields(fields)?;
         if fields.iter().any(|field| field.is_streamed()) {
-            return Err(Error::DataError(
-                "a streamed field cannot be in an extra",
-            ));
+            return Err(Error::DataError("a streamed field cannot be in an extra"));
         }
     }
     Ok(())
@@ -178,7 +177,7 @@ impl<'a> Review<'a> {
     ///   when it is picked. An extra with no facts is not offered.
     ///
     /// **Limits.** Every entry of the menu counts against
-    /// [`MAX_MENU_ENTRIES`](crate::structs::MAX_MENU_ENTRIES): each offered extra
+    /// [`MAX_MENU_ENTRIES`](crate::traits::ui::MAX_MENU_ENTRIES): each offered extra
     /// takes one, the way out takes one, and [`details`](Review::details)' "Show
     /// all" takes one more. So [`confirm`](Review::confirm) and
     /// [`confirm_strong`](Review::confirm_strong) offer up to five extras,
@@ -358,7 +357,7 @@ impl<'a> Review<'a> {
     }
 
     fn send(self, answer: Answer) -> Result<Decision> {
-        call(TrezorUiEnum::Review(self.request(answer)?))
+        call(TrezorUiEnumV1::Review(self.request(answer)?))
     }
 }
 
@@ -467,9 +466,7 @@ mod tests {
             review("s", "t", &facts)
                 .extras(&[Extra::new("extra", &stream)])
                 .request(Answer::Confirm),
-            Err(Error::DataError(
-                "a streamed field cannot be in an extra"
-            ))
+            Err(Error::DataError("a streamed field cannot be in an extra"))
         ));
     }
 }

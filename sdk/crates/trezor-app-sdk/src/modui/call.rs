@@ -6,8 +6,7 @@
 use spin::Mutex;
 
 use crate::app_runtime::get_ui_or_die;
-use crate::structs::{TrezorUiEnum, TrezorUiResult};
-use crate::traits::ui::UiV1Dyn as _;
+use crate::traits::ui::{TrezorUiEnumV1, TrezorUiResultV1, UiV1Dyn as _};
 use crate::{Error, IntoAppResult, Result};
 
 /// The error a text source returned during the last call, until its answer is
@@ -39,13 +38,13 @@ pub(crate) enum Decision {
 /// read failed and core stopped the screen. Core asking the app to stop is
 /// `Err(Error::Stopped)`, and a request that cannot reach core is
 /// `Err(Error::ServiceError)`; both unwind to the app's entry point.
-pub(crate) fn call(request: TrezorUiEnum<'_>) -> Result<Decision> {
+pub(crate) fn call(request: TrezorUiEnumV1<'_>) -> Result<Decision> {
     // A source that failed on the last call must not fail this one.
     take_source_error();
-    match get_ui_or_die().ui_call(request).into_app_result()? {
-        TrezorUiResult::Confirmed => Ok(Decision::Confirmed),
-        TrezorUiResult::ShowDetails => Ok(Decision::ShowDetails),
-        TrezorUiResult::Cancelled => Err(take_source_error().unwrap_or(Error::Cancelled)),
+    match get_ui_or_die().ui_call_v1(request).into_app_result()? {
+        TrezorUiResultV1::Confirmed => Ok(Decision::Confirmed),
+        TrezorUiResultV1::ShowDetails => Ok(Decision::ShowDetails),
+        TrezorUiResultV1::Cancelled => Err(take_source_error().unwrap_or(Error::Cancelled)),
     }
 }
 
@@ -63,13 +62,13 @@ pub(crate) fn confirmed(decision: Decision) -> Result<()> {
 #[cfg(all(test, feature = "test"))]
 mod tests {
     use super::*;
-    use crate::structs::DoneRequest;
+    use crate::traits::ui::DoneRequest;
 
     #[test]
     fn a_stop_from_core_unwinds_instead_of_ending_the_app() {
         // The mock's core has asked the app to stop.
         crate::mock::sdk_init();
-        let request = TrezorUiEnum::Done(DoneRequest {
+        let request = TrezorUiEnumV1::Done(DoneRequest {
             step: "test/done".into(),
             text: "Done".into(),
         });

@@ -1,7 +1,7 @@
 //! The end of the flow. The public docs live on [`done`].
 
 use crate::modui::call::call;
-use crate::structs::{DoneRequest, TrezorUiEnum};
+use crate::traits::ui::{DoneRequest, TrezorUiEnumV1};
 
 /// Tells the person the flow is finished, such as "Transaction signed".
 ///
@@ -32,5 +32,5 @@ pub fn done(step: &str, text: &str) {
         step: step.into(),
         text: text.into(),
     };
-    let _ = call(TrezorUiEnum::Done(request));
+    let _ = call(TrezorUiEnumV1::Done(request));
 }

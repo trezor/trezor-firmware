@@ -7,7 +7,8 @@
 use stabby::slice::SliceMut;
 
 use crate::modui::call::set_source_error;
-use crate::structs::{MAX_STREAMED_FIELDS, Slice, Source, SourceRef, WireField};
+use crate::structs::Slice;
+use crate::traits::ui::{MAX_STREAMED_FIELDS, Source, SourceRef, WireField};
 use crate::traits::util::FastResult;
 use crate::{Error, Result};
 
@@ -279,7 +280,7 @@ pub(crate) fn check_fields(fields: &[WireField<'_>]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::structs::FieldKind;
+    use crate::traits::ui::FieldKind;
 
     /// The text a source hands out, range by range.
     struct Text(&'static str);
@@ -339,7 +340,10 @@ mod tests {
     #[test]
     fn a_second_text_source_is_refused() {
         let (a, b) = (Text("a"), Text("b"));
-        let fields = [Field::text_source("a", 1, &a), Field::text_source("b", 1, &b)];
+        let fields = [
+            Field::text_source("a", 1, &a),
+            Field::text_source("b", 1, &b),
+        ];
         assert!(matches!(
             check_fields(wire_fields(&fields).as_slice()),
             Err(Error::DataError("too many streamed fields"))
@@ -355,12 +359,12 @@ mod tests {
 
     #[test]
     fn the_request_does_not_grow_with_the_text() {
-        use crate::structs::{Answer, ReviewRequest, TrezorUiEnum};
+        use crate::traits::ui::{Answer, ReviewRequest, TrezorUiEnumV1};
 
         fn size(len: u32) -> usize {
             let source = Text("");
             let fields = [Field::text_source("a", len, &source)];
-            let request = TrezorUiEnum::Review(ReviewRequest {
+            let request = TrezorUiEnumV1::Review(ReviewRequest {
                 step: "s".into(),
                 title: "t".into(),
                 fields: wire_fields(&fields),

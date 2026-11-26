@@ -235,10 +235,10 @@
 // For maintainers of this module; none of this is the app's concern.
 //
 // This module is compiled into every app, so it holds as little code as it
-// can: a layout puts its arguments into the `crate::structs` request and makes
-// one `UiV1` call. Anything with behaviour — streaming, the menu, the progress
-// count, every default — is in the firmware: `core/embed/api` (which runs on
-// the app's task) or core. The limits are checked here as well, so that an app
+// can: a layout puts its arguments into the `crate::traits::ui` request and
+// makes one `UiV1` call. Anything with behaviour — streaming, the menu, the
+// progress count, every default — is in the firmware: `core/embed/api` (which
+// runs on the app's task) or core. The limits are checked here as well, so that an app
 // gets an `Err` it can see rather than being stopped by core.
 //
 // One type per request, from the app to core. The request crosses the `UiV1`
@@ -246,7 +246,7 @@
 // archived. Core runs the review's menu itself and replies once.
 //
 // So a new answer to a review means an `Answer` variant and its arm in core; a
-// new layout means a `structs` type and its `TrezorUiEnum` variant, an arm in
+// new layout means a `traits::ui` type and its `TrezorUiEnumV1` variant, an arm in
 // core's dispatch, and the layout's function here. A `text_source` field
 // crosses as its length, and core pulls the text from the app's source while
 // the person pages.

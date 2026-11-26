@@ -7,11 +7,11 @@
 
 use crate::Result;
 use crate::modui::call::{call, confirmed};
-use crate::structs::{TrezorUiEnum, VerifyRequest};
+use crate::traits::ui::{TrezorUiEnumV1, VerifyRequest};
 
 /// The request both verifications send; `variant` says which value it is.
 fn verify<'a>(
-    variant: fn(VerifyRequest<'a>) -> TrezorUiEnum<'a>,
+    variant: fn(VerifyRequest<'a>) -> TrezorUiEnumV1<'a>,
     step: &'a str,
     value: &'a str,
     account: Option<&'a str>,
@@ -66,7 +66,7 @@ pub fn verify_address(
     account: Option<&str>,
     path: Option<&str>,
 ) -> Result<()> {
-    verify(TrezorUiEnum::VerifyAddress, step, address, account, path)
+    verify(TrezorUiEnumV1::VerifyAddress, step, address, account, path)
 }
 
 /// Shows the person a public key of theirs to check against the host, and waits
@@ -109,5 +109,5 @@ pub fn verify_pubkey(
     account: Option<&str>,
     path: Option<&str>,
 ) -> Result<()> {
-    verify(TrezorUiEnum::VerifyPubkey, step, pubkey, account, path)
+    verify(TrezorUiEnumV1::VerifyPubkey, step, pubkey, account, path)
 }
