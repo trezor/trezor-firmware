@@ -85,7 +85,7 @@ fn check_request(fields: &[Field<'_>], extras: &[Extra<'_>], answer: Answer) -> 
         check_fields(fields)?;
         if fields.iter().any(|field| field.is_streamed()) {
             return Err(Error::DataError(
-                "a text source cannot be in an extra",
+                "a streamed field cannot be in an extra",
             ));
         }
     }
@@ -455,7 +455,7 @@ mod tests {
         ];
         assert!(matches!(
             review("s", "t", &facts).request(Answer::Confirm),
-            Err(Error::DataError("too many text sources"))
+            Err(Error::DataError("too many streamed fields"))
         ));
     }
 
@@ -468,7 +468,7 @@ mod tests {
                 .extras(&[Extra::new("extra", &stream)])
                 .request(Answer::Confirm),
             Err(Error::DataError(
-                "a text source cannot be in an extra"
+                "a streamed field cannot be in an extra"
             ))
         ));
     }

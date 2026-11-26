@@ -7,7 +7,7 @@
 use stabby::slice::SliceMut;
 
 use crate::modui::call::set_source_error;
-use crate::structs::{MAX_TEXT_SOURCES, Slice, Source, SourceRef, WireField};
+use crate::structs::{MAX_STREAMED_FIELDS, Slice, Source, SourceRef, WireField};
 use crate::traits::util::FastResult;
 use crate::{Error, Result};
 
@@ -264,13 +264,14 @@ pub(crate) fn wire_fields<'a>(fields: &'a [Field<'a>]) -> Slice<'a, WireField<'a
 }
 
 /// Checks one list of facts before it is sent: at most
-/// [`MAX_TEXT_SOURCES`] [`text_source`](Field::text_source) fields.
+/// [`MAX_STREAMED_FIELDS`] streamed fields, such as a
+/// [`text_source`](Field::text_source).
 ///
-/// The text itself is not limited: core pulls it from the app, so the request
+/// What they stream is not limited: core pulls it from the app, so the request
 /// only carries its length.
 pub(crate) fn check_fields(fields: &[WireField<'_>]) -> Result<()> {
-    if fields.iter().filter(|field| field.is_streamed()).count() > MAX_TEXT_SOURCES {
-        return Err(Error::DataError("too many text sources"));
+    if fields.iter().filter(|field| field.is_streamed()).count() > MAX_STREAMED_FIELDS {
+        return Err(Error::DataError("too many streamed fields"));
     }
     Ok(())
 }
@@ -341,7 +342,7 @@ mod tests {
         let fields = [Field::text_source("a", 1, &a), Field::text_source("b", 1, &b)];
         assert!(matches!(
             check_fields(wire_fields(&fields).as_slice()),
-            Err(Error::DataError("too many text sources"))
+            Err(Error::DataError("too many streamed fields"))
         ));
     }
 
