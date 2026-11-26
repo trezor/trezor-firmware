@@ -20,9 +20,9 @@ pub const IPC_BUFFER_MIN_SIZE: u64 = 256;
 ///
 /// Sized off the fixed API traffic, not off wire messages: the largest reply
 /// Core sends back over IPC is the 111-byte xpub from
-/// `CryptoV1::get_xpub`, and UI replies are a handful of bytes each. With the
-/// 12-byte `ipc_queue_item_t` header that is ~128 bytes for the biggest single
-/// message, so 1 KiB leaves 8x headroom for queued replies.
+/// `CryptoV1::get_public_node`, and UI replies are a handful of bytes each.
+/// With the 12-byte `ipc_queue_item_t` header that is ~128 bytes for the
+/// biggest single message, so 1 KiB leaves 8x headroom for queued replies.
 ///
 /// An app that receives host wire messages through the same inbox needs more
 /// than this and must say so explicitly -- there is no way to guess how large

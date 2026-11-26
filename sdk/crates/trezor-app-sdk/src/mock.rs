@@ -133,20 +133,11 @@ impl CryptoV1 for DummyCrypto {
         }
     }
 
-    extern "C" fn get_xpub<'a>(
+    extern "C" fn get_public_node<'a>(
         &self,
         _curve: Curve,
         _address_n: Slice<'a, u32>,
     ) -> ServiceResult<[u8; XPUB_RAW_LEN], CryptoError> {
-        unimplemented!("not exercised by the current test suite")
-    }
-
-    extern "C" fn get_public_key<'a>(
-        &self,
-        _curve: Curve,
-        _address_n: Slice<'a, u32>,
-        _compressed: bool,
-    ) -> ServiceResult<stabby::boxed::BoxedSlice<u8>, CryptoError> {
         unimplemented!("not exercised by the current test suite")
     }
 
@@ -204,6 +195,14 @@ impl CryptoV1 for DummyCrypto {
         _signature: Slice<'a, u8>,
         _digest: Slice<'a, u8>,
     ) -> FastResult<stabby::boxed::BoxedSlice<u8>, CryptoError> {
+        unimplemented!("not exercised by the current test suite")
+    }
+
+    extern "C" fn ecdsa_uncompress_pubkey(
+        &self,
+        _curve: EcdsaCurve,
+        _public_key: [u8; 33],
+    ) -> FastResult<[u8; 65], CryptoError> {
         unimplemented!("not exercised by the current test suite")
     }
 

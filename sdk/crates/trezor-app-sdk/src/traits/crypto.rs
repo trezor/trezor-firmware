@@ -5,8 +5,8 @@ use stabby::str::Str;
 
 use super::util::{FastResult, ServiceResult};
 
-/// Length of [`CryptoV1::get_xpub`]'s result: a serialized xpub without its
-/// 4-byte version.
+/// Length of [`CryptoV1::get_public_node`]'s result: a serialized xpub
+/// without its 4-byte version.
 pub const XPUB_RAW_LEN: usize = 74;
 
 /// Errors of the cryptographic functions.
@@ -115,20 +115,13 @@ pub trait CryptoV1: Send + Sync {
 
     /// Derives the public node for `address_n` on `curve`, as a serialized
     /// xpub without its version: depth (1), parent fingerprint (4), child
-    /// number (4), chain code (32) and compressed public key (33).
-    extern "C" fn get_xpub<'a>(
+    /// number (4), chain code (32) and public key (33): compressed for ECDSA
+    /// curves, `0x00` followed by the key for EdDSA curves (SLIP-10).
+    extern "C" fn get_public_node<'a>(
         &self,
         curve: Curve,
         address_n: Slice<'a, u32>,
     ) -> ServiceResult<[u8; XPUB_RAW_LEN], CryptoError>;
-
-    /// Derives the public key for `address_n` on `curve`.
-    extern "C" fn get_public_key<'a>(
-        &self,
-        curve: Curve,
-        address_n: Slice<'a, u32>,
-        compressed: bool,
-    ) -> ServiceResult<BoxedSlice<u8>, CryptoError>;
 
     /// Signs a raw 32-byte digest with the ECDSA key at `address_n`; Ed25519
     /// has no digest signing, see [`Self::ed25519_sign`].
@@ -195,6 +188,14 @@ pub trait CryptoV1: Send + Sync {
         signature: Slice<'a, u8>,
         digest: Slice<'a, u8>,
     ) -> FastResult<BoxedSlice<u8>, CryptoError>;
+
+    /// Uncompresses a 33-byte compressed ECDSA `public_key` into its 65-byte
+    /// `0x04`-prefixed form.
+    extern "C" fn ecdsa_uncompress_pubkey(
+        &self,
+        curve: EcdsaCurve,
+        public_key: [u8; 33],
+    ) -> FastResult<[u8; 65], CryptoError>;
 
     /// Verifies a 64-byte Ed25519 `signature` of `message` against the
     /// 32-byte `public_key`.
