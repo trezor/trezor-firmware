@@ -4,6 +4,21 @@ Suppose a Trezor remembers change 24 and a restored manager reports change 20. T
 stored head. On the wallet channel, a compatible host can ask it to help the manager recover the
 missing steps.
 
+```mermaid
+sequenceDiagram
+    participant T as Trezor at 24
+    participant H as Local service
+    participant M as Restored manager at 20
+    H->>T: Present the live attestation of head 20
+    T-->>H: Report that the manager is behind
+    H->>T: Offer the steps from 20 to 24 with their manager records
+    Note over T: Verify the path and ask the user to approve recovery
+    T-->>H: Release fresh authorizations after approval
+    H->>M: Resubmit each step in order
+    M-->>H: Attest the head actually reached
+    H->>T: Return that attestation to complete the sync
+```
+
 ## Evidence for each step
 
 The host supplies a continuous path from the manager's restored head. For each step the Trezor
@@ -21,7 +36,8 @@ The first screen shows the manager's and device's positions and the number of ch
 page. The Trezor requests user approval and releases recovery signatures to the host. 
 The screen shows the last step prepared for submission and the date
 the manager last confirmed it. A subsequent live sync establishes how far the manager advanced.
-If recovery stops partway, previously accepted steps remain in place.
+For example, if the host has records only through change 22, the manager can advance to 22.
+The device at 24 still reports that the manager is behind. The steps accepted up to 22 remain in place.
 
 ## Reverting and rejoining
 

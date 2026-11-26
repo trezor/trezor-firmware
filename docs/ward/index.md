@@ -12,7 +12,8 @@ changes across devices and attests the head it holds.
 
 - [Participants and channels](ward-channels.md)
 - [Entry privacy](ward_leaf_encryption.md) and [the authenticated tree](ward-trie.md)
-- [Transitions and write sessions](ward_transitions.md)
+- [A write from approval to adoption](ward_transitions.md#from-approval-to-adoption) and [competing writers](ward_transitions.md#competing-writers)
+- [Catching up a second Trezor](ward_manager.md#catching-up-a-second-trezor)
 - [Recovery after a manager restore](ward_roll_forward.md)
 - [Recovery after data loss in Evolu](ward-trie.md#recovery-after-data-loss-in-evolu)
 

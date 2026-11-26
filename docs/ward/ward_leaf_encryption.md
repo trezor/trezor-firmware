@@ -11,6 +11,13 @@ uses distinct keys for paths, identities and contents, shared across its applica
 
 Each AES-256-GCM encryption uses always a fresh random nonce. 
 
+## Reading a label
+
+The Trezor derives the path from the address and its namespace. The host returns the encrypted
+entry and a proof against the selected root. The device verifies the proof before decrypting and
+displaying the label. If the entry is missing, the host must prove absence. A proven empty label
+and a missing entry produce different results on screen.
+
 ## Pointers
 
 A pointer names an entry in the same namespace. The Trezor follows the hops and verifies both

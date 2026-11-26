@@ -13,6 +13,11 @@ Discarding a queued change removes the local intent. On reconnect, if the device
 the user can keep the published value, publish the queued one or defer the decision. A matching
 later value can settle without another write. See [conflict detection limits](gaps.md#publication-and-reads).
 
+On the wallet channel, several queued edits can be published as one transition. The Trezor verifies
+each entry against the root produced by the preceding edit and remembers which transition it
+offered. If the host disconnects after publication, the next sync can settle the whole batch when
+the device verifies that exact transition. Another writer reaching the same counter is insufficient.
+
 ## Backing up local work
 
 A confirmed export gives the host one named offline entry in plaintext. For a pending write, it

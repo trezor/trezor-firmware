@@ -7,16 +7,31 @@ The manager accepts one successor per head, so along its history each counter na
 
 ## From approval to adoption
 
-1. **Prepare.** The Trezor verifies the existing entry or its absence. For an ordinary write, the
-   user sees the proposed value and what it replaces. A queued write uses the previously approved
-   intent and checks for conflicts.
-2. **Authorize.** The device derives the new root and authenticates the transition twice. A wallet
-   authentication tag lets another Trezor verify the history later. A public signature authorizes
-   publication and, with a manager, binds it to the active write session.
-3. **Publish.** The service stores the encrypted changes. In the MVP it verifies the wallet
-   signature. With a manager, the manager must also accept the transition from its current head.
-4. **Adopt.** On sync the device verifies the resulting head. A missed publication response can
-   leave the device behind. A queued change can settle once the device verifies it landed.
+Suppose a user changes an address label while the Trezor and manager both hold head 12. The
+device can authorize head 13 before either party adopts it.
+
+```mermaid
+sequenceDiagram
+    participant T as Trezor
+    participant H as Local service
+    participant M as WARD Manager
+    T->>H: Request the current entry and proof
+    H-->>T: Encrypted entry with proof, or proof of absence
+    Note over T: Verify at head 12 and show the proposed edit for approval
+    T->>H: Sealed change and authorizations for 12 to 13
+    Note over T: Still at 12, freshness indication cleared
+    H->>H: Store the encrypted change
+    H->>M: Submit the authorized transition
+    M-->>H: Advance to 13 and return a signed receipt
+    Note over T,M: On the next sync
+    H-->>T: Fresh manager attestation and wallet history
+    T->>T: Verify the step and adopt head 13
+```
+
+The wallet authentication tag lets another Trezor verify the step later. The public signature lets
+the manager check the current writer and predecessor. If the reply is lost, the device can learn on
+sync whether its step landed. In the MVP the service checks the public signature itself, and the
+device adopts by verifying the chain back to its stored head.
 
 ## Sessions
 
@@ -30,9 +45,15 @@ device disconnects. A write displaced by another session or a competing change r
 
 ## Competing writers
 
-For a live write, a wallet-authenticated retry token binds the original approval to the proposed
-change and the entry's previous write counter. After sync the device can retry without another
-approval if that counter matches. If the counter differs, an entry already holding the intended
-result needs no write. A different result requires a user decision.
+Suppose a second Trezor opens a session and publishes a change before the first Trezor's label edit
+reaches the manager. The first device syncs to the winning head. Its host can then present the
+original edit with a wallet-authenticated retry token. The device verifies the token and checks
+the entry at the newly adopted root.
+
+| What the device finds | What happens to the edit |
+| --- | --- |
+| The entry has the same write counter as at approval. | The device can authorize the edit against the new head without asking again. |
+| The counter changed and the intended value is already there. | The edit is complete. Nothing is published. |
+| The counter changed and the values differ. | The device shows both values. Overwriting the published value requires confirmation. |
 
 Device on a competing branch requires proof of descent from its own head. A higher counter alone is insufficient.
