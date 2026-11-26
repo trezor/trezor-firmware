@@ -7,7 +7,7 @@
 
 use trezor_app_sdk::structs::{FieldKind, MAX_MENU_ENTRIES};
 
-use crate::micropython::buffer::{hexlify_bytes, StrBuffer};
+use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::Gc;
 use crate::micropython::list::List;
 use crate::micropython::util::iter_into_array;
@@ -22,15 +22,17 @@ use crate::ui::ui_firmware::MAX_MENU_ITEMS;
 // Every entry a request's menu may hold must fit the menu the models draw.
 const _: () = assert!(MAX_MENU_ENTRIES <= MAX_MENU_ITEMS);
 
-/// How many bytes of a `Data` field the screens take per page; the driver
-/// pulls a `Data` field by it. Sized to whole screens of hex, so the person
-/// confirms once per chunk.
-pub const DATA_CHUNK_BYTES: usize = 3 * MAX_HEX_CHARS_ON_SCREEN / 2;
+/// How many bytes of a `TextSource` field the screens take per page; the
+/// driver pulls the text by it. About three screens of text, so the person
+/// confirms once per chunk. The hex screen size is only a rough yardstick
+/// here: how much text fits a screen depends on the text and the model.
+pub const TEXT_CHUNK_BYTES: usize = 3 * MAX_HEX_CHARS_ON_SCREEN;
 
 /// The screens of `modui`, one method per kind of screen.
 ///
-/// `fields` always holds the facts of one page: the driver pulls a `Data`
-/// field's bytes chunk by chunk and passes each page with its chunk in place.
+/// `fields` always holds the facts of one page: the driver pulls a
+/// `TextSource` field's text chunk by chunk and passes each page with its chunk
+/// in place.
 /// Every page is drawn the same way, whatever it holds: the facts in the
 /// order given, each label above its value, paged by the screen when they do
 /// not fit.
@@ -85,7 +87,6 @@ pub struct FieldStyles {
     pub text: &'static TextStyle,
     pub amount: &'static TextStyle,
     pub address: &'static TextStyle,
-    pub data: &'static TextStyle,
     pub note: &'static TextStyle,
     pub warning: &'static TextStyle,
     /// Between a label and its value.
@@ -100,7 +101,7 @@ impl FieldStyles {
             FieldKind::Text => self.text,
             FieldKind::Amount => self.amount,
             FieldKind::Address => self.address,
-            FieldKind::Data => self.data,
+            FieldKind::TextSource => self.text,
             FieldKind::Note => self.note,
             FieldKind::Warning => self.warning,
         }
@@ -112,7 +113,7 @@ impl FieldStyles {
 ///
 /// `kind` is a [`FieldKind`] discriminant, read back with `FieldKind::try_from`
 /// so it cannot drift from the wire's; `label` is `str`, or `None` for notes
-/// and warnings; `value` is `str`, or `bytes` for a `Data` field's chunk.
+/// and warnings; `value` is `str`, a `TextSource` field's chunk included.
 /// [`Fields::new`] checks every fact, so the screens can trust them.
 #[derive(Clone, Copy)]
 pub struct Fields {
@@ -136,12 +137,7 @@ impl Fields {
             } else {
                 label == Obj::const_none()
             };
-            let value_ok = if kind == FieldKind::Data {
-                value.is_bytes()
-            } else {
-                value.is_str()
-            };
-            if !label_ok || !value_ok {
+            if !label_ok || !value.is_str() {
                 return Err(Error::ValueError(c"malformed field"));
             }
         }
@@ -165,10 +161,11 @@ impl Fields {
         }
     }
 
-    /// Whether one of the facts is a `Data` field's chunk, whose pages the
-    /// model may count.
-    pub fn has_data(&self) -> bool {
-        (0..self.items.len()).any(|index| matches!(self.get(index), Ok((FieldKind::Data, _, _))))
+    /// Whether one of the facts is a streamed field's chunk, such as a
+    /// `TextSource`'s, whose pages the model may count.
+    pub fn is_streamed(&self) -> bool {
+        (0..self.items.len())
+            .any(|index| matches!(self.get(index), Ok((FieldKind::TextSource, _, _))))
     }
 }
 
@@ -194,12 +191,8 @@ impl ParagraphSource<'static> for FieldList {
                     .with_bottom_padding(0)
                     .with_top_padding(0));
             }
-            let para = if obj.is_bytes() {
-                Paragraph::new(style, hexlify_bytes(obj, offset, MAX_HEX_CHARS_ON_SCREEN)?)
-            } else {
-                let content: StrBuffer = obj.try_into()?;
-                Paragraph::new(style, content.skip_prefix(offset))
-            };
+            let content: StrBuffer = obj.try_into()?;
+            let para = Paragraph::new(style, content.skip_prefix(offset));
             Ok::<_, Error>(if is_label {
                 para.with_bottom_padding(self.styles.label_spacing)
                     .no_break()

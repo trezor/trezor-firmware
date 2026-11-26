@@ -2,20 +2,20 @@ from typing import *
 from buffer_types import *
 from trezorui_api import LayoutObj, UiResult
 # A fact as the screens take it: `(kind, label, value)`, with the
-# page's chunk as the value of a `Data` field.
-Field = tuple[int, str | None, str | bytes]
+# page's chunk as the value of a `TextSource` field.
+Field = tuple[int, str | None, str]
 TEXT: int
 AMOUNT: int
 ADDRESS: int
-DATA: int
+TEXT_SOURCE: int
 NOTE: int
 WARNING: int
 CONFIRM: int
 STRONG: int
 DANGER: int
 DETAILS: int
-MAX_DATA_FIELDS: int
-DATA_CHUNK_BYTES: int
+MAX_STREAMED_FIELDS: int
+TEXT_CHUNK_BYTES: int
 
 
 # rust/src/ui/api/modui_micropython.rs

@@ -21,7 +21,6 @@ static FIELD_STYLES: FieldStyles = FieldStyles {
     text: &theme::PROPS_VALUE_FONT,
     amount: &theme::PROPS_VALUE_FONT,
     address: &theme::PROPS_VALUE_MONO_FONT,
-    data: &theme::PROPS_VALUE_MONO_FONT,
     note: &theme::PROPS_VALUE_FONT,
     warning: &theme::PROPS_VALUE_FONT,
     label_spacing: theme::PROP_INNER_SPACING,

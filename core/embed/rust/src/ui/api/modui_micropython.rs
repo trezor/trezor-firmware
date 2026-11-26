@@ -12,7 +12,7 @@ use rkyv::rancor::Failure;
 use rkyv::Archived;
 use trezor_app_sdk::structs::{
     Answer, FieldKind, Slice, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
-    UiChunkRequest, VerifyRequest, WireExtra, WireField, MAX_DATA_FIELDS, UI_MSG_CHUNK,
+    UiChunkRequest, VerifyRequest, WireExtra, WireField, MAX_STREAMED_FIELDS, UI_MSG_CHUNK,
     UI_MSG_CHUNK_FAILED, UI_MSG_DECISION,
 };
 
@@ -27,7 +27,7 @@ use crate::micropython::tuple::Tuple;
 use crate::micropython::{util, Error, Obj};
 use crate::strutil::TString;
 use crate::ui::layout::obj::LayoutObj;
-use crate::ui::ui_modui::{Fields, ModUI, DATA_CHUNK_BYTES};
+use crate::ui::ui_modui::{Fields, ModUI, TEXT_CHUNK_BYTES};
 use crate::ui::ModelUI;
 
 /// An optional string argument: `None` when it is missing.
@@ -125,18 +125,6 @@ fn opt_obj(s: &ArchivedOption<Archived<StrSlice>>) -> Result<Obj, Error> {
     }
 }
 
-/// The wire's kind, as the screens read it back.
-fn field_kind(kind: &Archived<FieldKind>) -> FieldKind {
-    match kind {
-        Archived::<FieldKind>::Text => FieldKind::Text,
-        Archived::<FieldKind>::Amount => FieldKind::Amount,
-        Archived::<FieldKind>::Address => FieldKind::Address,
-        Archived::<FieldKind>::Data => FieldKind::Data,
-        Archived::<FieldKind>::Note => FieldKind::Note,
-        Archived::<FieldKind>::Warning => FieldKind::Warning,
-    }
-}
-
 fn answer(answer: &Archived<Answer>) -> Answer {
     match answer {
         Archived::<Answer>::Confirm => Answer::Confirm,
@@ -147,24 +135,35 @@ fn answer(answer: &Archived<Answer>) -> Answer {
 }
 
 /// One fact of a request, as `(kind, label, value, ticker)`: `label` is `None`
-/// for notes and warnings, `value` is `str` for the text kinds and the total
-/// length for `Data`, whose bytes the driver pulls from the app while the
-/// person pages, and `ticker` is an amount's unit, `None` for the other kinds.
+/// for notes and warnings, `value` is `str`, or the length of a `TextSource`,
+/// whose text the driver pulls from the app while the person pages, and
+/// `ticker` is an amount's unit, `None` for the other kinds.
 fn obj_from_field(field: &Archived<WireField<'_>>) -> Result<Obj, Error> {
-    let kind = field_kind(&field.kind);
-    let value = if kind == FieldKind::Data {
-        Obj::try_from(field.len.to_native())?
-    } else {
-        let text = core::str::from_utf8(field.value.as_ref())
-            .map_err(|_| Error::ValueError(c"Invalid UI message"))?;
-        Obj::try_from(text)?
+    let none = Obj::const_none();
+    let str = |s: &Archived<StrSlice<'_>>| Obj::try_from(s.as_ref());
+    let (kind, label, value, ticker) = match field {
+        Archived::<WireField>::Text { label, value } => {
+            (FieldKind::Text, str(label)?, str(value)?, none)
+        }
+        Archived::<WireField>::Amount {
+            label,
+            value,
+            ticker,
+        } => (FieldKind::Amount, str(label)?, str(value)?, str(ticker)?),
+        Archived::<WireField>::Address { label, value } => {
+            (FieldKind::Address, str(label)?, str(value)?, none)
+        }
+        Archived::<WireField>::TextSource { label, len, .. } => (
+            FieldKind::TextSource,
+            str(label)?,
+            Obj::try_from(len.to_native())?,
+            none,
+        ),
+        Archived::<WireField>::Note { text } => (FieldKind::Note, none, str(text)?, none),
+        Archived::<WireField>::Warning { text } => (FieldKind::Warning, none, str(text)?, none),
+        Archived::<WireField>::Reserved(_) => return Err(Error::ValueError(c"unknown field kind")),
     };
-    Obj::try_from((
-        Obj::small_int(kind as u16),
-        opt_obj(&field.label)?,
-        value,
-        opt_obj(&field.ticker)?,
-    ))
+    Obj::try_from((Obj::small_int(kind as u16), label, value, ticker))
 }
 
 fn obj_from_fields(archived: &Archived<Slice<'_, WireField<'_>>>) -> Result<Obj, Error> {
@@ -283,8 +282,8 @@ pub static mp_module_trezormodui: Module = obj_module! {
     /// from trezorui_api import LayoutObj, UiResult
     ///
     /// # A fact as the screens take it: `(kind, label, value)`, with the
-    /// # page's chunk as the value of a `Data` field.
-    /// Field = tuple[int, str | None, str | bytes]
+    /// # page's chunk as the value of a `TextSource` field.
+    /// Field = tuple[int, str | None, str]
     /// mock:global
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezormodui.to_obj(),
 
@@ -297,8 +296,8 @@ pub static mp_module_trezormodui: Module = obj_module! {
     /// ADDRESS: int
     Qstr::MP_QSTR_ADDRESS => Obj::small_int(FieldKind::Address as u16),
 
-    /// DATA: int
-    Qstr::MP_QSTR_DATA => Obj::small_int(FieldKind::Data as u16),
+    /// TEXT_SOURCE: int
+    Qstr::MP_QSTR_TEXT_SOURCE => Obj::small_int(FieldKind::TextSource as u16),
 
     /// NOTE: int
     Qstr::MP_QSTR_NOTE => Obj::small_int(FieldKind::Note as u16),
@@ -318,11 +317,11 @@ pub static mp_module_trezormodui: Module = obj_module! {
     /// DETAILS: int
     Qstr::MP_QSTR_DETAILS => Obj::small_int(Answer::Details as u16),
 
-    /// MAX_DATA_FIELDS: int
-    Qstr::MP_QSTR_MAX_DATA_FIELDS => Obj::small_int(MAX_DATA_FIELDS as u16),
+    /// MAX_STREAMED_FIELDS: int
+    Qstr::MP_QSTR_MAX_STREAMED_FIELDS => Obj::small_int(MAX_STREAMED_FIELDS as u16),
 
-    /// DATA_CHUNK_BYTES: int
-    Qstr::MP_QSTR_DATA_CHUNK_BYTES => Obj::small_int(DATA_CHUNK_BYTES as u16),
+    /// TEXT_CHUNK_BYTES: int
+    Qstr::MP_QSTR_TEXT_CHUNK_BYTES => Obj::small_int(TEXT_CHUNK_BYTES as u16),
 
     /// def max_extras(answer: int) -> int:
     ///     """How many extras a review with this answer may offer: what is left

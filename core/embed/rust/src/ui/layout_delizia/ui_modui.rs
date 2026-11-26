@@ -22,7 +22,6 @@ static FIELD_STYLES: FieldStyles = FieldStyles {
     text: &theme::TEXT_NORMAL,
     amount: &theme::TEXT_MONO_GREY_LIGHT,
     address: &theme::TEXT_MONO_ADDRESS_CHUNKS,
-    data: &theme::TEXT_MONO_DATA,
     note: &theme::TEXT_MAIN_GREY_LIGHT,
     warning: &theme::TEXT_WARNING,
     label_spacing: theme::PROP_INNER_SPACING,
@@ -50,7 +49,7 @@ impl ModUI for UIDelizia {
             ConfirmActionStrings::new(title, None, verb, hold.then_some(title)),
             ConfirmActionOptions::new()
                 .with_hold(hold)
-                .with_page_counter(fields.has_data()),
+                .with_page_counter(fields.is_streamed()),
         )?)
     }
 
