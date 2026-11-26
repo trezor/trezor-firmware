@@ -56,7 +56,7 @@ leaf (in the trie)
       value             the entry; for a pointer, the target's leaf_identity
 
 stored beside the leaf
-└── sealed_identity     leaf_identity sealed under K_ident(app), domain 0x03
+└── sealed_identity     leaf_identity sealed under K_ident(app), domain 0x04
       device_id         empty, or the ID of the device the entry belongs to
       app_id            the caller's domain
       identifier        how the application looks up the entry (an xpub or an address)
@@ -90,7 +90,7 @@ seal(K, domain, pt) = 0x01 || nonce || tag || ct
                            aad   = domain || entry_key
 
 sealed_content  = seal(K_data(app),  0x02, leaf_content)
-sealed_identity = seal(K_ident(app), 0x03, leaf_identity)
+sealed_identity = seal(K_ident(app), 0x04, leaf_identity)
 ```
 
 - **Random nonce:** the nonce is never derived from the leaf, because a rollback or a second device
@@ -101,6 +101,8 @@ sealed_identity = seal(K_ident(app), 0x03, leaf_identity)
   then still refuses a part taken from another entry. For `sealed_identity`, the tag also lets a
   holder of `K_ident(app)` alone check that an identity belongs to its path. The domain byte is
   redundant while `K_data` and `K_ident` are different keys.
+- **Domains:** every domain and hash prefix byte is distinct: `0x00` leaf hash, `0x01` branch,
+  `0x02` content, `0x03` value digest, `0x04` identity.
 - **Scheme byte:** the first byte is the scheme. `0x01`, AES-256-GCM, is the only one.
 
 ## Reading

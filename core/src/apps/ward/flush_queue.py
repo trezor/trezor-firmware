@@ -14,20 +14,21 @@ if TYPE_CHECKING:
 
 
 async def _seal(
+    entry_key: bytes,
     key_type: str,
     app_id: str,
     identifier: bytes,
     value: bytes,
     c_leaf: int,
 ) -> tuple:
-    """The (sealed_identity, sealed_content) of a queued change, for publication. The queue's
-    `key_type` is the entry_type the value is sealed as."""
+    """The (sealed_identity, sealed_content) of a queued change at `entry_key`, for publication.
+    The queue's `key_type` is the entry_type the value is sealed as."""
     from .keys import derive_k_data, derive_k_ident
     from .leaf import seal_content, seal_identity
 
     return (
-        seal_identity(await derive_k_ident(), identifier, app_id),
-        seal_content(await derive_k_data(), key_type, c_leaf, value),
+        seal_identity(await derive_k_ident(), entry_key, identifier, app_id),
+        seal_content(await derive_k_data(), entry_key, key_type, c_leaf, value),
     )
 
 
@@ -49,12 +50,12 @@ def _derive(
     )
 
 
-async def _in_conflict(entry: StoredEntry, old_leaf: bytes) -> bool:
+async def _in_conflict(entry: StoredEntry, entry_key: bytes, old_leaf: bytes) -> bool:
     """Whether `_publish_or_settle` would ask the user about this change (equal values do not)."""
     from .keys import derive_k_data
     from .leaf import open_content
 
-    entry_type, c_leaf, theirs = open_content(await derive_k_data(), old_leaf)
+    entry_type, c_leaf, theirs = open_content(await derive_k_data(), entry_key, old_leaf)
     if entry.base is not None and c_leaf <= entry.base:
         return False
     return not (entry_type == entry.key_type and theirs == entry.value)
@@ -82,12 +83,13 @@ async def _publish_or_settle(
     from .leaf import open_content
 
     # the path, as wardd logs it; values never reach the log
-    shown = (await entry_key_for(app_id, identifier))[:6].hex()
+    entry_key = await entry_key_for(app_id, identifier)
+    shown = entry_key[:6].hex()
     base = "none (restored)" if entry.base is None else "#%d" % entry.base
     if old_leaf is None:
         log.info(__name__, "flush: entry=%s base=%s: nothing published there", shown, base)
         return True  # nothing published here, so nothing to overwrite
-    entry_type, c_leaf, theirs = open_content(await derive_k_data(), old_leaf)
+    entry_type, c_leaf, theirs = open_content(await derive_k_data(), entry_key, old_leaf)
     if entry.base is not None and c_leaf <= entry.base:
         log.info(
             __name__,
@@ -243,7 +245,7 @@ async def flush_queue(
     counter = await get_counter() + 1
 
     # sealed under the identity verified against the record (the request's, when compact)
-    parts = await _seal(key_type, app_id, identifier, entry.value, counter)
+    parts = await _seal(entry_key, key_type, app_id, identifier, entry.value, counter)
     new_root = _derive(entry_key, old_leaf, parts, material, root_for_write(from_root))
 
     step, advance = await authorise(counter - 1, from_root, counter, new_root)
@@ -323,13 +325,18 @@ async def _flush_batch(limit: int) -> "WardFlushQueueAck":
         _value, old_leaf, material = await pull_leaf(
             entry_key, root=running, staged=staged
         )
-        if folded and old_leaf is not None and await _in_conflict(entry, old_leaf):
+        if (
+            folded
+            and old_leaf is not None
+            and await _in_conflict(entry, entry_key, old_leaf)
+        ):
             break  # resolved at the head of the next flush, never in the middle of a batch
         if not await _publish_or_settle(
             entry, key_type, entry.app_id, entry.identifier, old_leaf
         ):
             continue
         parts = await _seal(
+            entry_key,
             key_type,
             entry.app_id,
             entry.identifier,

@@ -1,13 +1,19 @@
 """The WARD leaf: two independently sealed parts, and the digest the trie commits to
 (docs/ward/ward_leaf_encryption.md).
 
-    leaf_identity   = device_id(1B) || len8(app_id) || app_id || identifier
+    leaf_identity   = len8(device_id) || device_id || len8(app_id) || app_id
+                      || len16(identifier) || identifier
     leaf_content    = len8(entry_type) || entry_type || C_leaf(4B BE) || value
-    seal(K, d, pt)  = 0x01 || nonce(12B) || tag(16B) || AES-256-GCM(K, nonce, aad=d, pt)
-    sealed_content  = seal(K_data,  0x02, leaf_content)
-    sealed_identity = seal(K_ident, 0x04, leaf_identity)
+    seal(K, d, ek, pt) = 0x01 || nonce(12B) || tag(16B)
+                         || AES-256-GCM(K, nonce, aad = d || ek, pt)
+    sealed_content  = seal(K_data,  0x02, entry_key, leaf_content)
+    sealed_identity = seal(K_ident, 0x04, entry_key, leaf_identity)
     value_digest    = sha256(0x03 || sealed_content)
     leaf            = sha256(0x00 || entry_key || value_digest)
+
+The entry_key in the AAD binds each part to its path: a part moved to another leaf fails its tag,
+even where no trie proof is checked. Every domain and hash prefix byte is distinct: 0x00 leaf,
+0x01 branch, 0x02 content, 0x03 value digest, 0x04 identity.
 
 Only `sealed_content` is in the trie. `sealed_identity` is stored beside the leaf: the path
 already authenticates the identity, so the trie does not commit to it. An EMPTY
@@ -23,7 +29,8 @@ from micropython import const
 
 SCHEME_AESGCM = const(0x01)  # the first byte of a sealed part; the only scheme
 DOMAIN_CONTENT = const(0x02)  # AAD of sealed_content
-DOMAIN_IDENTITY = const(0x04)  # AAD of sealed_identity; 0x03 is the trie value domain
+DOMAIN_IDENTITY = const(0x04)  # AAD of sealed_identity; distinct from every other domain byte
+_ENTRY_KEY_LEN = const(32)
 
 _NONCE_LEN = const(12)
 _TAG_LEN = const(16)
@@ -76,32 +83,45 @@ def leaf_hash(entry_key: bytes, sealed_content: bytes) -> bytes:
     return leaf_hash_of(entry_key, value_digest(sealed_content))
 
 
-# --- sealing (AES-256-GCM, 12-byte random nonce, 1-byte domain as AAD) ---
+# --- sealing (AES-256-GCM, 12-byte random nonce, domain || entry_key as AAD) ---
 
 
-def seal(key: bytes, domain: int, pt: bytes, nonce: "bytes | None" = None) -> bytes:
-    """0x01 || nonce || tag || ct. The nonce is fresh-random per seal -- never derived from the
-    leaf: in a lost race two devices seal the same entry at the same counter, and the host keeps
-    both seals. `nonce` is for known-answer tests ONLY."""
+def _aad(domain: int, entry_key: bytes) -> bytes:
+    from trezor.wire import DataError
+
+    if len(entry_key) != _ENTRY_KEY_LEN:
+        raise DataError("WARD: a sealed part needs its 32-byte entry_key")
+    return bytes([domain]) + entry_key
+
+
+def seal(
+    key: bytes, domain: int, entry_key: bytes, pt: bytes, nonce: "bytes | None" = None
+) -> bytes:
+    """0x01 || nonce || tag || ct, bound to `entry_key`. The nonce is fresh-random per seal --
+    never derived from the leaf: in a lost race two devices seal the same entry at the same
+    counter, and the host keeps both seals. `nonce` is for known-answer tests ONLY."""
     from trezor.crypto import aesgcm_encrypt, random
 
+    aad = _aad(domain, entry_key)
     nonce = nonce or random.bytes(_NONCE_LEN)
     cipher = aesgcm_encrypt(key, nonce)
-    cipher.auth(bytes([domain]))
+    cipher.auth(aad)
     ct = cipher.encrypt(pt)
     return bytes([SCHEME_AESGCM]) + nonce + cipher.finish() + ct
 
 
-def open_sealed(key: bytes, domain: int, sealed: bytes) -> bytes:
-    """A sealed part's plaintext. An unknown scheme, a short part or a tag mismatch raises."""
+def open_sealed(key: bytes, domain: int, entry_key: bytes, sealed: bytes) -> bytes:
+    """A sealed part's plaintext. An unknown scheme, a short part, or a tag mismatch -- including
+    a part sealed for another entry_key -- raises."""
     from trezor.crypto import AuthenticationError, aesgcm_decrypt
     from trezor.wire import DataError
 
+    aad = _aad(domain, entry_key)
     check_sealed(sealed)
     nonce = sealed[1 : 1 + _NONCE_LEN]
     tag = sealed[1 + _NONCE_LEN : _SEALED_MIN]
     cipher = aesgcm_decrypt(key, nonce)
-    cipher.auth(bytes([domain]))
+    cipher.auth(aad)
     pt = cipher.decrypt(sealed[_SEALED_MIN:])
     try:
         cipher.finish(tag)
@@ -121,45 +141,88 @@ def check_sealed(sealed: bytes) -> None:
 # --- leaf_identity: the whole entry_key preimage ---
 
 
+def _device_field(device_id: int) -> bytes:
+    """Empty for an entry shared by all devices (device_id 0); else the one-byte slot 1 to 255."""
+    return b"" if device_id == 0 else bytes([device_id])
+
+
 def pack_identity(identifier: bytes, app_id: "str | bytes", device_id: int = 0) -> bytes:
-    """device_id(1B) || len8(app_id) || app_id || identifier. device_id 0 means an entry shared
-    by all devices, and 1 to 255 is one device's slot. The identifier runs to the end. The single
-    source of canonicalization -- both entry_key and sealed_identity go through it."""
+    """len8(device_id) || device_id || len8(app_id) || app_id || len16(identifier) || identifier.
+
+    device_id 0 is an entry shared by all devices and encodes as an empty field; 1 to 255 is one
+    device's slot. The single source of canonicalization -- entry_key, sealed_identity and a
+    pointer's value all go through it."""
     from trezor.wire import DataError
 
     app = _as_bytes(app_id)
-    if len(app) > 255 or not 0 <= device_id <= 255:
+    if len(app) > 255 or len(identifier) > 0xFFFF or not 0 <= device_id <= 255:
         raise DataError("WARD identity exceeds canonical encoding bounds")
-    return bytes([device_id, len(app)]) + app + identifier
+    dev = _device_field(device_id)
+    return (
+        bytes([len(dev)])
+        + dev
+        + bytes([len(app)])
+        + app
+        + len(identifier).to_bytes(2, "big")
+        + identifier
+    )
 
 
 def unpack_identity(pt: bytes) -> "tuple[bytes, bytes, int]":
-    """Return (identifier, app_id, device_id). A buffer too short for its app_id raises
-    DataError; the identifier is whatever follows."""
+    """Return (identifier, app_id, device_id). Refuses anything but the one canonical encoding:
+    fields that overrun or leave trailing bytes, a device field longer than one byte, or a
+    one-byte device field holding 0 (that entry is written with an empty field)."""
     from trezor.wire import DataError
 
-    if len(pt) < 2 or len(pt) < 2 + pt[1]:
-        raise DataError("WARD: malformed leaf identity")
-    device_id = pt[0]
-    app_len = pt[1]
-    return bytes(pt[2 + app_len :]), bytes(pt[2 : 2 + app_len]), device_id
+    def malformed() -> DataError:
+        return DataError("WARD: malformed leaf identity")
+
+    off = 0
+    if len(pt) < 1:
+        raise malformed()
+    dev_len = pt[0]
+    off = 1
+    if dev_len > 1 or len(pt) < off + dev_len + 1:
+        raise malformed()
+    device_id = pt[off] if dev_len else 0
+    if dev_len and device_id == 0:
+        raise malformed()
+    off += dev_len
+    app_len = pt[off]
+    off += 1
+    if len(pt) < off + app_len + 2:
+        raise malformed()
+    app_id = bytes(pt[off : off + app_len])
+    off += app_len
+    id_len = int.from_bytes(pt[off : off + 2], "big")
+    off += 2
+    if len(pt) != off + id_len:
+        raise malformed()
+    return bytes(pt[off:]), app_id, device_id
 
 
 def seal_identity(
     k_ident: bytes,
+    entry_key: bytes,
     identifier: bytes,
     app_id: "str | bytes",
     device_id: int = 0,
     nonce: "bytes | None" = None,
 ) -> bytes:
     return seal(
-        k_ident, DOMAIN_IDENTITY, pack_identity(identifier, app_id, device_id), nonce
+        k_ident,
+        DOMAIN_IDENTITY,
+        entry_key,
+        pack_identity(identifier, app_id, device_id),
+        nonce,
     )
 
 
-def open_identity(k_ident: bytes, sealed_identity: bytes) -> "tuple[bytes, bytes, int]":
-    """Return (identifier, app_id, device_id) from a sealed_identity."""
-    return unpack_identity(open_sealed(k_ident, DOMAIN_IDENTITY, sealed_identity))
+def open_identity(
+    k_ident: bytes, entry_key: bytes, sealed_identity: bytes
+) -> "tuple[bytes, bytes, int]":
+    """Return (identifier, app_id, device_id) from the sealed_identity stored at `entry_key`."""
+    return unpack_identity(open_sealed(k_ident, DOMAIN_IDENTITY, entry_key, sealed_identity))
 
 
 # --- leaf_content: entry_type, C_leaf and the value ---
@@ -190,15 +253,21 @@ def unpack_content(pt: bytes) -> "tuple[str, int, bytes]":
 
 def seal_content(
     k_data: bytes,
+    entry_key: bytes,
     entry_type: str,
     c_leaf: int,
     value: bytes,
     nonce: "bytes | None" = None,
 ) -> bytes:
-    """Seal a present value, including b''. Deletion is EMPTY, chosen by the caller."""
-    return seal(k_data, DOMAIN_CONTENT, pack_content(entry_type, c_leaf, value), nonce)
+    """Seal a present value, including b'', for the leaf at `entry_key`. Deletion is EMPTY,
+    chosen by the caller."""
+    return seal(
+        k_data, DOMAIN_CONTENT, entry_key, pack_content(entry_type, c_leaf, value), nonce
+    )
 
 
-def open_content(k_data: bytes, sealed_content: bytes) -> "tuple[str, int, bytes]":
-    """Return (entry_type, c_leaf, value) from a sealed_content."""
-    return unpack_content(open_sealed(k_data, DOMAIN_CONTENT, sealed_content))
+def open_content(
+    k_data: bytes, entry_key: bytes, sealed_content: bytes
+) -> "tuple[str, int, bytes]":
+    """Return (entry_type, c_leaf, value) from the sealed_content stored at `entry_key`."""
+    return unpack_content(open_sealed(k_data, DOMAIN_CONTENT, entry_key, sealed_content))

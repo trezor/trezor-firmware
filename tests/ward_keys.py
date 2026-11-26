@@ -263,17 +263,34 @@ def derive_k_data(seed: bytes) -> bytes:
 
 
 def pack_identity(identifier: bytes, app_id: str | bytes, device_id: int = 0) -> bytes:
-    """leaf_identity = device_id(1B) || len8(app_id) || app_id || identifier; device_id 0 is an
-    entry shared by all devices."""
+    """leaf_identity = len8(device_id) || device_id || len8(app_id) || app_id
+    || len16(identifier) || identifier. device_id 0 is an entry shared by all devices
+    and encodes as an empty field; 1 to 255 is one byte."""
     if isinstance(app_id, str):
         app_id = app_id.encode()
-    return bytes([device_id, len(app_id)]) + app_id + identifier
+    dev = b"" if device_id == 0 else bytes([device_id])
+    return (
+        bytes([len(dev)])
+        + dev
+        + bytes([len(app_id)])
+        + app_id
+        + len(identifier).to_bytes(2, "big")
+        + identifier
+    )
 
 
 def unpack_identity(pt: bytes) -> tuple[bytes, bytes, int]:
     """Inverse of `pack_identity`: (identifier, app_id, device_id)."""
-    app_len = pt[1]
-    return pt[2 + app_len :], pt[2 : 2 + app_len], pt[0]
+    dev_len = pt[0]
+    device_id = pt[1] if dev_len else 0
+    off = 1 + dev_len
+    app_len = pt[off]
+    app_id = pt[off + 1 : off + 1 + app_len]
+    off += 1 + app_len
+    id_len = int.from_bytes(pt[off : off + 2], "big")
+    identifier = pt[off + 2 :]
+    assert len(identifier) == id_len, "malformed leaf identity"
+    return identifier, app_id, device_id
 
 
 def entry_key(
@@ -305,46 +322,66 @@ def unpack_content(pt: bytes) -> tuple[str, int, bytes]:
 # single-device harness cannot reach: a never-synced device whose host already holds an
 # entry. Only a test may hold these keys, and only because it knows the device's seed.
 #
-#   seal(K, d, pt) = 0x01 || nonce(12B) || tag(16B) || AES-256-GCM(K, nonce, aad=d, pt)
+#   seal(K, d, ek, pt) = 0x01 || nonce(12B) || tag(16B)
+#                        || AES-256-GCM(K, nonce, aad = d || ek, pt)
+#
+# `ek` is the entry_key of the leaf the part belongs to; a part moved elsewhere fails.
 
 DOMAIN_CONTENT = 0x02
 DOMAIN_IDENTITY = 0x04
 
 
-def seal(key: bytes, domain: int, pt: bytes, nonce: bytes | None = None) -> bytes:
+def _aad(domain: int, entry_key: bytes) -> bytes:
+    assert len(entry_key) == 32, "a sealed part needs its 32-byte entry_key"
+    return bytes([domain]) + entry_key
+
+
+def seal(
+    key: bytes, domain: int, entry_key: bytes, pt: bytes, nonce: bytes | None = None
+) -> bytes:
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
     nonce = nonce or os.urandom(12)
-    sealed = AESGCM(key).encrypt(nonce, pt, bytes([domain]))
+    sealed = AESGCM(key).encrypt(nonce, pt, _aad(domain, entry_key))
     return b"\x01" + nonce + sealed[-16:] + sealed[:-16]
 
 
-def open_sealed(key: bytes, domain: int, sealed: bytes) -> bytes:
+def open_sealed(key: bytes, domain: int, entry_key: bytes, sealed: bytes) -> bytes:
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
     assert sealed[0] == 0x01, "unknown sealing scheme"
     nonce, tag, ct = sealed[1:13], sealed[13:29], sealed[29:]
-    return AESGCM(key).decrypt(nonce, ct + tag, bytes([domain]))
+    return AESGCM(key).decrypt(nonce, ct + tag, _aad(domain, entry_key))
 
 
-def open_identity(k_ident: bytes, sealed_identity: bytes) -> bytes:
-    return open_sealed(k_ident, DOMAIN_IDENTITY, sealed_identity)
+def open_identity(k_ident: bytes, entry_key: bytes, sealed_identity: bytes) -> bytes:
+    return open_sealed(k_ident, DOMAIN_IDENTITY, entry_key, sealed_identity)
 
 
-def open_content(k_data: bytes, sealed_content: bytes) -> bytes:
-    return open_sealed(k_data, DOMAIN_CONTENT, sealed_content)
+def open_content(k_data: bytes, entry_key: bytes, sealed_content: bytes) -> bytes:
+    return open_sealed(k_data, DOMAIN_CONTENT, entry_key, sealed_content)
 
 
 def seal_identity(
-    k_ident: bytes, identifier: bytes, app_id: str | bytes, device_id: int = 0
+    k_ident: bytes,
+    entry_key: bytes,
+    identifier: bytes,
+    app_id: str | bytes,
+    device_id: int = 0,
 ) -> bytes:
-    return seal(k_ident, DOMAIN_IDENTITY, pack_identity(identifier, app_id, device_id))
+    identity = pack_identity(identifier, app_id, device_id)
+    return seal(k_ident, DOMAIN_IDENTITY, entry_key, identity)
 
 
 def seal_content(
-    k_data: bytes, value: bytes, c_leaf: int = 0, entry_type: str = "address"
+    k_data: bytes,
+    entry_key: bytes,
+    value: bytes,
+    c_leaf: int = 0,
+    entry_type: str = "address",
 ) -> bytes:
-    return seal(k_data, DOMAIN_CONTENT, pack_content(entry_type, c_leaf, value))
+    content = pack_content(entry_type, c_leaf, value)
+    return seal(k_data, DOMAIN_CONTENT, entry_key, content)
 
 
 def value_digest(sealed_content: bytes) -> bytes:

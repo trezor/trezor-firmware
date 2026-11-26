@@ -67,7 +67,8 @@ def test_service_catches_up_across_multiple_chain_pages(client: Client, drop_pag
     for counter in range(1, 131):
         before = store.root()
         store.set(
-            key, ward.Leaf(b"", seal_content(k_data, str(counter).encode(), counter))
+            key,
+            ward.Leaf(b"", seal_content(k_data, key, str(counter).encode(), counter)),
         )
         after = store.root()
         mac = auth_commit(k_auth, DEFAULT_WARD_ID, counter - 1, before, counter, after)

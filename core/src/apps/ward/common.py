@@ -235,8 +235,8 @@ async def pull_leaf(
     if not present:
         return None, None, material
 
-    # The trie binds the sealed content to this path, so a successful open is authenticity.
-    entry_type, _c_leaf, value = open_content(await derive_k_data(), sealed)
+    # The trie binds the sealed content to this path, and so does the AAD.
+    entry_type, _c_leaf, value = open_content(await derive_k_data(), entry_key, sealed)
     return (entry_type, value), sealed, material
 
 
@@ -317,8 +317,10 @@ async def commit_change(
         sealed_identity = sealed_content = EMPTY
         new_leaf = None
     else:
-        sealed_identity = seal_identity(await derive_k_ident(), identifier, app_id)
-        sealed_content = seal_content(await derive_k_data(), entry_type, counter, value)
+        sealed_identity = seal_identity(await derive_k_ident(), entry_key, identifier, app_id)
+        sealed_content = seal_content(
+            await derive_k_data(), entry_key, entry_type, counter, value
+        )
         new_leaf = sealed_content
 
     # A delete has an old leaf, so it is never an insert and the witness goes unused.
@@ -359,7 +361,9 @@ async def commit_change(
 
     # THE RETRY TOKEN: if this write loses a race, the host presents it again and the device can
     # tell it formed exactly this write, on this base, without asking the user a second time.
-    seen = 0 if old_leaf is None else open_content(await derive_k_data(), old_leaf)[1]
+    seen = (
+        0 if old_leaf is None else open_content(await derive_k_data(), entry_key, old_leaf)[1]
+    )
     base = counter - 1
     mac = retry_mac(
         await derive_k_auth(), await derive_ward_id(), base, seen, entry_key, entry_type, value
@@ -421,7 +425,9 @@ async def retry_write(
     ):
         raise DataError("WARD: this retry is not a write this wallet formed")
 
-    seen_now = 0 if old_leaf is None else open_content(await derive_k_data(), old_leaf)[1]
+    seen_now = (
+        0 if old_leaf is None else open_content(await derive_k_data(), entry_key, old_leaf)[1]
+    )
     if seen_now != retry.seen:
         already = current is None if value is None else current == (entry_type, value)
         if already:
@@ -435,7 +441,9 @@ async def retry_write(
                 sealed_identity=(
                     EMPTY
                     if value is None
-                    else seal_identity(await derive_k_ident(), identifier, app_id)
+                    else seal_identity(
+                        await derive_k_ident(), entry_key, identifier, app_id
+                    )
                 ),
                 sealed_content=EMPTY if old_leaf is None else old_leaf,
                 counter=await get_counter(),

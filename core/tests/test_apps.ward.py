@@ -96,13 +96,13 @@ class TestWardKeys(unittest.TestCase):
 
         # entry_key(K_path, app_id="bitcoin", identifier=b"alice", device_id=7)
         ENTRY_KEY = bytes.fromhex(
-            "5100f145ed3ad92afd590ddcce41a54f35acd588231d63b5531aae8680e30220"
+            "7e2d23212a3a9f322da778bf26528bf3e99be8eb163b57b359c93c37fa124a37"
         )
         self.assertEqual(entry_key(k_path, "bitcoin", b"alice", 7), ENTRY_KEY)
         self.assertEqual(
             entry_key(k_path, "bitcoin", b"alice"),
             bytes.fromhex(
-                "b6675b7ef8dbf0bc5e07834035afe943a8e98737b7a38653950dda19c3ffb7f0"
+                "9f0e735dcfd702a6db339f59d2bca670c9810ccf8300987a3b9502fdfc8448f4"
             ),
         )
 
@@ -170,7 +170,7 @@ class TestWardKeys(unittest.TestCase):
             entry_key(k_path, "a\x00b", b"c"), entry_key(k_path, "a", b"\x00bc")
         )
         self.assertEqual(
-            pack_identity(b"c", "a\x00b"), b"\x00\x03a\x00bc"
+            pack_identity(b"c", "a\x00b"), b"\x00\x03a\x00b\x00\x01c"
         )
 
     def test_identifier_may_contain_nul(self):
@@ -194,9 +194,9 @@ class TestWardKeys(unittest.TestCase):
 
 
 class TestWardLeaf(unittest.TestCase):
-    """The leaf format of docs/ward/ward_leaf_encryption.md: AES-256-GCM parts, domain-only AAD, and a
-    commitment to the sealed content alone. The known answers are byte-identical to the
-    service-channel branch's `test_apps.ward.security.py::test_leaf_known_answer`."""
+    """The leaf format of docs/ward/ward_leaf_encryption.md: AES-256-GCM parts with
+    domain || entry_key as AAD, a length-prefixed identity, and a commitment to the sealed
+    content alone. The known answers are computed independently by tests/ward_keys.py."""
 
     K_IDENT = bytes.fromhex(
         "308afbfccfbadb30d40cf6bdb2aeee95f893327583bceb9c8e2ffa1533e41b32"
@@ -204,30 +204,36 @@ class TestWardLeaf(unittest.TestCase):
     K_DATA = bytes.fromhex(
         "8e274334f32b92bdf59969a3be5edac66deaaf1b9c6df46b772fa526ccef78e1"
     )
+    # entry_key(K_path, "bitcoin", b"alice", 7) under SEED, as TestWardKeys pins it
+    EK = bytes.fromhex(
+        "7e2d23212a3a9f322da778bf26528bf3e99be8eb163b57b359c93c37fa124a37"
+    )
+    OTHER_EK = bytes([7]) * 32
     SEALED_CONTENT = bytes.fromhex(
-        "015a5a5a5a5a5a5a5a5a5a5a5aaea42289df08d668e7ebc4f7505773b1b86985acabee6c38"
+        "015a5a5a5a5a5a5a5a5a5a5a5a35c3055372dfce33ca4d0b0192a4bf80b86985acabee6c38"
         "ee32ae912cf36b441766be2b98dd"
     )
     SEALED_IDENTITY = bytes.fromhex(
-        "01595959595959595959595959b1bebe6cf1fd9cb91c8a2bb1dc7e9bbeac9cc0f95e938c293c"
-        "0ba8c12134"
+        "015959595959595959595959591059ce17e26076911a48b7361bb0b890aa9ca5f24384802f"
+        "3b04c4ad233d9a6f47"
     )
 
     def test_known_answer(self):
         self.assertEqual(
-            seal_content(self.K_DATA, "address", 5, b"data_alice", b"Z" * 12),
+            seal_content(self.K_DATA, self.EK, "address", 5, b"data_alice", b"Z" * 12),
             self.SEALED_CONTENT,
         )
         self.assertEqual(
-            seal_identity(self.K_IDENT, b"alice", "bitcoin", 7, b"Y" * 12),
+            seal_identity(self.K_IDENT, self.EK, b"alice", "bitcoin", 7, b"Y" * 12),
             self.SEALED_IDENTITY,
         )
         self.assertEqual(
-            open_content(self.K_DATA, self.SEALED_CONTENT),
+            open_content(self.K_DATA, self.EK, self.SEALED_CONTENT),
             ("address", 5, b"data_alice"),
         )
         self.assertEqual(
-            open_identity(self.K_IDENT, self.SEALED_IDENTITY), (b"alice", b"bitcoin", 7)
+            open_identity(self.K_IDENT, self.EK, self.SEALED_IDENTITY),
+            (b"alice", b"bitcoin", 7),
         )
         self.assertEqual(
             value_digest(self.SEALED_CONTENT),
@@ -240,63 +246,77 @@ class TestWardLeaf(unittest.TestCase):
             b"\x07address\x00\x00\x00\x05data_alice",
         )
         self.assertEqual(
-            pack_identity(b"alice", "bitcoin", 7), b"\x07\x07bitcoinalice"
+            pack_identity(b"alice", "bitcoin", 7), b"\x01\x07\x07bitcoin\x00\x05alice"
         )
-        # device_id is always one byte; 0x00 is an entry shared by all devices
-        self.assertEqual(pack_identity(b"a", "b"), b"\x00\x01ba")
+        # an entry shared by all devices has an EMPTY device field, not a zero byte
+        self.assertEqual(pack_identity(b"a", "b"), b"\x00\x01b\x00\x01a")
         self.assertEqual(unpack_identity(pack_identity(b"a", "b", 9)), (b"a", b"b", 9))
+        self.assertEqual(unpack_identity(pack_identity(b"a", "b")), (b"a", b"b", 0))
         self.assertEqual(
             unpack_content(pack_content("pointer", 3, b"")), ("pointer", 3, b"")
         )
 
-    def test_truncated_identity_is_refused(self):
+    def test_non_canonical_identity_is_refused(self):
         for bad in (
-            b"",  # no device_id
+            b"",  # no device field
             b"\x00",  # no app_id length
             b"\x00\x05ab",  # shorter than its app_id
+            b"\x00\x01b\x00",  # no identifier length
+            b"\x00\x01b\x00\x02a",  # shorter than its identifier
+            b"\x00\x01b\x00\x01ax",  # trailing bytes
+            b"\x02\x01\x02\x01b\x00\x01a",  # device field longer than one byte
+            b"\x01\x00\x01b\x00\x01a",  # shared entry written as a zero byte
         ):
             with self.assertRaises(DataError):
                 unpack_identity(bad)
 
-    def test_the_identifier_runs_to_the_end(self):
-        """No length prefix and no bound: trailing bytes are the identifier's."""
-        long = b"x" * 70000
-        self.assertEqual(unpack_identity(pack_identity(long, "b")), (long, b"b", 0))
-        self.assertEqual(unpack_identity(b"\x00\x01b"), (b"", b"b", 0))
+    def test_the_identifier_is_length_prefixed(self):
+        longest = b"x" * 0xFFFF
+        self.assertEqual(unpack_identity(pack_identity(longest, "b")), (longest, b"b", 0))
+        self.assertEqual(unpack_identity(b"\x00\x01b\x00\x00"), (b"", b"b", 0))
 
     def test_pack_identity_rejects_oversized_fields(self):
-        for args in ((b"x", "a" * 256, 0), (b"x", "a", 256)):
+        for args in ((b"x", "a" * 256, 0), (b"x", "a", 256), (b"x" * 0x10000, "a", 0)):
             with self.assertRaises(DataError):
                 pack_identity(*args)
 
-    def test_parts_are_bound_to_key_domain_and_bytes(self):
-        content = seal_content(self.K_DATA, "address", 1, b"v")
-        identity = seal_identity(self.K_IDENT, b"id", "bitcoin")
-        self.assertEqual(open_identity(self.K_IDENT, identity), (b"id", b"bitcoin", 0))
+    def test_parts_are_bound_to_key_domain_path_and_bytes(self):
+        content = seal_content(self.K_DATA, self.EK, "address", 1, b"v")
+        identity = seal_identity(self.K_IDENT, self.EK, b"id", "bitcoin")
+        self.assertEqual(
+            open_identity(self.K_IDENT, self.EK, identity), (b"id", b"bitcoin", 0)
+        )
         for opener in (
-            lambda: open_content(self.K_IDENT, content),  # wrong key
-            lambda: open_identity(self.K_DATA, identity),
+            lambda: open_content(self.K_IDENT, self.EK, content),  # wrong key
+            lambda: open_identity(self.K_DATA, self.EK, identity),
             lambda: L.open_sealed(
-                self.K_DATA, L.DOMAIN_IDENTITY, content
+                self.K_DATA, L.DOMAIN_IDENTITY, self.EK, content
             ),  # wrong domain
-            lambda: open_content(self.K_DATA, content[:-1] + bytes([content[-1] ^ 1])),
-            lambda: open_content(self.K_DATA, content[:28]),  # short
-            lambda: open_content(self.K_DATA, b"\x02" + content[1:]),  # unknown scheme
+            lambda: open_content(self.K_DATA, self.OTHER_EK, content),  # another path
+            lambda: open_identity(self.K_IDENT, self.OTHER_EK, identity),
+            lambda: open_content(
+                self.K_DATA, self.EK, content[:-1] + bytes([content[-1] ^ 1])
+            ),
+            lambda: open_content(self.K_DATA, self.EK, content[:28]),  # short
+            lambda: open_content(
+                self.K_DATA, self.EK, b"\x02" + content[1:]
+            ),  # unknown scheme
+            lambda: open_content(self.K_DATA, self.EK[:31], content),  # no full path
         ):
             with self.assertRaises(DataError):
                 opener()
 
     def test_empty_value_is_not_a_delete(self):
         """b"" is a present value: its sealing is non-empty. Only EMPTY deletes."""
-        sealed = seal_content(self.K_DATA, "address", 7, b"")
+        sealed = seal_content(self.K_DATA, self.EK, "address", 7, b"")
         self.assertEqual(len(sealed), 1 + 12 + 16 + 1 + 7 + 4)
         self.assertFalse(is_delete(sealed))
         self.assertTrue(is_delete(EMPTY))
-        self.assertEqual(open_content(self.K_DATA, sealed), ("address", 7, b""))
+        self.assertEqual(open_content(self.K_DATA, self.EK, sealed), ("address", 7, b""))
 
     def test_fresh_nonce_per_write(self):
-        a = seal_content(self.K_DATA, "address", 1, b"v")
-        b = seal_content(self.K_DATA, "address", 1, b"v")
+        a = seal_content(self.K_DATA, self.EK, "address", 1, b"v")
+        b = seal_content(self.K_DATA, self.EK, "address", 1, b"v")
         self.assertNotEqual(a, b)
 
     def test_only_the_sealed_content_is_committed(self):

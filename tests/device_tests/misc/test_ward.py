@@ -477,11 +477,11 @@ def test_ward_sealed_leaf_really_contains_the_preimage(session: Session):
     key = _seed(session, store, b"addr1", b"Petr_label")
     leaf = store.blobs[key]
 
-    identity = open_identity(_K_IDENT, leaf.identity)
+    identity = open_identity(_K_IDENT, key, leaf.identity)
     assert unpack_identity(identity) == (b"addr1", _APP.encode(), 0)
     assert expected_entry_key(_K_PATH, _APP, b"addr1") == key
 
-    content = open_content(_K_DATA, leaf.content)
+    content = open_content(_K_DATA, key, leaf.content)
     entry_type, c_leaf, value = unpack_content(content)
     assert (entry_type, value) == ("address", b"Petr_label")
     # the leaf is stamped with the counter it was written at, so a later per-leaf
@@ -619,10 +619,11 @@ def test_ward_pointer_is_a_sealed_leaf_naming_its_target(session: Session):
     assert "add pointer" in rec.title
     assert "addr1" in rec.squashed
     assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"alias")
-    entry_type, _c_leaf, value = unpack_content(open_content(_K_DATA, res.leaf.content))
+    entry_type, _c_leaf, value = _opened(res)
     assert entry_type == "pointer"
     assert unpack_identity(value) == (b"addr1", _APP.encode(), 0)
-    assert unpack_identity(open_identity(_K_IDENT, res.leaf.identity)) == (
+    identity = open_identity(_K_IDENT, res.entry_key, res.leaf.identity)
+    assert unpack_identity(identity) == (
         b"alias",
         _APP.encode(),
         0,
@@ -3705,9 +3706,14 @@ def _retry(session: Session, store: WardTrie, identifier: bytes, value: bytes, h
     return res, rec
 
 
+def _opened(res) -> tuple:
+    """(entry_type, c_leaf, value) of the leaf a write or flush returned, at its path."""
+    return unpack_content(open_content(_K_DATA, res.entry_key, res.leaf.content))
+
+
 def _value(store: WardTrie, identifier: bytes) -> bytes:
-    leaf = store.blobs[expected_entry_key(_K_PATH, _APP, identifier)]
-    return unpack_content(open_content(_K_DATA, leaf.content))[2]
+    key = expected_entry_key(_K_PATH, _APP, identifier)
+    return unpack_content(open_content(_K_DATA, key, store.blobs[key].content))[2]
 
 
 @pytest.mark.models("core")
@@ -4053,7 +4059,8 @@ def test_ward_batched_flush_publishes_one_transition_for_several_changes(session
     ]
     assert (res.from_counter, res.counter, res.remaining) == (start, start + 3, 0)
     stamps = [
-        unpack_content(open_content(_K_DATA, leaf.content))[1] for k, leaf in res.leaves
+        unpack_content(open_content(_K_DATA, k, leaf.content))[1]
+        for k, leaf in res.leaves
     ]
     assert stamps == [start + 1, start + 2, start + 3]
 
@@ -4822,9 +4829,10 @@ def test_ward_pin_needs_a_synced_session(session: Session):
 
     Refused before the device pulls at all, and flash is untouched.
     """
+    key = expected_entry_key(_K_PATH, _APP, b"addr1")
     leaf = ward.Leaf(
-        seal_identity(_K_IDENT, b"addr1", _APP),
-        seal_content(_K_DATA, b"replayed_value"),
+        seal_identity(_K_IDENT, key, b"addr1", _APP),
+        seal_content(_K_DATA, key, b"replayed_value"),
     )
     pulls = []
 
@@ -5129,7 +5137,7 @@ def test_ward_flush_publishes_the_queued_change_sealed(session: Session):
     assert res.remaining == 0
 
     # the content really is sealed, and opens to what was queued
-    value = unpack_content(open_content(_K_DATA, res.leaf.content))[2]
+    value = _opened(res)[2]
     assert value == b"published_value"
 
 
@@ -5209,7 +5217,7 @@ def test_ward_conflict_keep_new_publishes_over_the_other_device(session: Session
 
     assert "conflicting change" in rec.title
     assert "keep published value" not in rec.title
-    assert unpack_content(open_content(_K_DATA, res.leaf.content))[2] == b"mine_offline"
+    assert _opened(res)[2] == b"mine_offline"
     ward.apply(store, res)
     _confirm(session, store)
     _res, shown = _read(
@@ -5264,7 +5272,7 @@ def test_ward_a_change_queued_over_its_own_unconfirmed_change_is_no_conflict(
     with session.test_ctx as ctx:
         ctx.set_expected_responses([m.WardEntryRequest, m.WardFlushQueueAck])
         res = ward.flush_queue(session, ward.store_provider(store))
-    assert unpack_content(open_content(_K_DATA, res.leaf.content))[2] == b"second"
+    assert _opened(res)[2] == b"second"
 
 
 @pytest.mark.models("core")
@@ -5278,7 +5286,7 @@ def test_ward_no_conflict_when_the_entry_was_published_before_queueing(session: 
     with session.test_ctx as ctx:
         ctx.set_expected_responses([m.WardEntryRequest, m.WardFlushQueueAck])
         res = ward.flush_queue(session, ward.store_provider(store))
-    assert unpack_content(open_content(_K_DATA, res.leaf.content))[2] == b"mine_offline"
+    assert _opened(res)[2] == b"mine_offline"
 
 
 @pytest.mark.models("core")
@@ -5655,7 +5663,7 @@ def test_ward_a_restored_change_still_publishes(session: Session):
     _go_online(session, store)
     res = ward.flush_queue(session, ward.store_provider(store))
     assert res.remaining == 0
-    value = unpack_content(open_content(_K_DATA, res.leaf.content))[2]
+    value = _opened(res)[2]
     assert value == b"from_backup"
 
 
@@ -6028,7 +6036,7 @@ def test_ward_a_compact_record_is_published_when_it_is_named(session: Session):
     )
     assert res.remaining == 0
     assert res.entry_key == expected_entry_key(_K_PATH, _APP, b"addr1")
-    value = unpack_content(open_content(_K_DATA, res.leaf.content))[2]
+    value = _opened(res)[2]
     assert value == b"needs_a_name"
 
 
@@ -6167,7 +6175,7 @@ def test_ward_a_named_flush_may_hand_over_the_same_change_twice(session: Session
     )
 
     assert first.entry_key == again.entry_key
-    value = unpack_content(open_content(_K_DATA, again.leaf.content))[2]
+    value = _opened(again)[2]
     assert value == b"offered_twice"
 
     # ...and the unnamed loop offers it again too
