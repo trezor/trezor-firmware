@@ -21,6 +21,7 @@ use stabby::boxed::{Box, BoxedSlice};
 use stabby::slice::Slice;
 use stabby::str::Str;
 
+use crate::structs::StrSlice;
 use crate::traits::ApiVariant;
 use crate::traits::allocator::{FfiLayout, GlobalAllocatorV1, GlobalAllocatorV1Vtable};
 use crate::traits::crypto::{
@@ -31,7 +32,7 @@ use crate::traits::syslog::{
     LogCallbackDyn as _, LogCallbackRef, LogLevel, LogRecord, SyslogV1, SyslogV1Vtable,
 };
 use crate::traits::trezor_v1::{TrezorApiV1, TrezorApiV1Struct, TrezorApiV1Vtable};
-use crate::traits::ui::{StrSlice, TrezorUiEnum, TrezorUiResult, UiV1, UiV1Vtable};
+use crate::traits::ui::{TrezorUiEnumV1, TrezorUiResultV1, UiV1, UiV1Vtable};
 use crate::traits::util::{CoreServiceError, FastResult, ServiceResult};
 use crate::traits::wire::{FailureKind, WireMessage, WireV1, WireV1Vtable};
 
@@ -278,7 +279,10 @@ impl WireV1 for DummyWire {
 struct DummyUi;
 
 impl UiV1 for DummyUi {
-    extern "C" fn ui_call<'a>(&self, _request: TrezorUiEnum<'a>) -> ServiceResult<TrezorUiResult> {
+    extern "C" fn ui_call_v1<'a>(
+        &self,
+        _request: TrezorUiEnumV1<'a>,
+    ) -> ServiceResult<TrezorUiResultV1> {
         Err(CoreServiceError::StopApplication).into()
     }
 

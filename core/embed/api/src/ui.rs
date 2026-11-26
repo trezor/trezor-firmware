@@ -1,14 +1,14 @@
 //! Implements [`trezor_app_sdk::traits::ui`]'s `UiV1` on top of
-//! [`crate::wire::ipc_call`]. `ui_call` takes the request exactly as the app
+//! [`crate::wire::ipc_call`]. `ui_call_v1` takes the request exactly as the app
 //! built it, serializes it, sends it to Core's UI service and returns the
 //! reply. The progress methods do the same for the progress service. There is
 //! nothing to convert: the vtable carries the wire types.
 //!
 //! A `TextSource` field travels as its length alone, so Core pulls the text
-//! from the app while the person pages: `ui_call` answers Core's chunk requests
-//! from the request's own source, and returns only the final decision. A source
-//! that cannot produce a range answers with the chunk-failed id instead, and
-//! Core stops the layout.
+//! from the app while the person pages: `ui_call_v1` answers Core's chunk
+//! requests from the request's own source, and returns only the final decision.
+//! A source that cannot produce a range answers with the chunk-failed id
+//! instead, and Core stops the layout.
 //!
 //! This runs on the app's task but is part of the firmware, so anything an
 //! app would otherwise carry in its own binary belongs here or in core.
@@ -17,11 +17,11 @@ use rkyv::api::high::{HighDeserializer, HighValidator};
 use rkyv::bytecheck::CheckBytes;
 use rkyv::rancor::Failure;
 use rkyv::{Archive, Deserialize};
-use trezor_app_sdk::structs::{
-    SourceRef, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult, UI_MSG_CHUNK,
-    UI_MSG_CHUNK_FAILED, UI_MSG_DECISION, UiChunkRequest, WireField,
+use trezor_app_sdk::structs::StrSlice;
+use trezor_app_sdk::traits::ui::{
+    SourceRef, TrezorProgressEnum, TrezorUiEnumV1, TrezorUiResultV1, UI_MSG_CHUNK,
+    UI_MSG_CHUNK_FAILED, UI_MSG_DECISION, UiChunkRequest, UiV1, WireField,
 };
-use trezor_app_sdk::traits::ui::UiV1;
 use trezor_app_sdk::traits::util::{ServiceResult, TIMEOUT_MAX};
 
 use crate::wire::{CallError, CoreIpcService, call_failed, ipc_call, to_bytes};
@@ -40,8 +40,8 @@ where
 /// The index counts the review's own fields first, then each extra's fields in
 /// order — every field counts, whatever its kind, and only a `TextSource` field
 /// has text to give.
-fn text_source<'a>(request: &TrezorUiEnum<'a>, index: u16) -> Option<SourceRef<'a>> {
-    let TrezorUiEnum::Review(review) = request else {
+fn text_source<'a>(request: &TrezorUiEnumV1<'a>, index: u16) -> Option<SourceRef<'a>> {
+    let TrezorUiEnumV1::Review(review) = request else {
         return None;
     };
     let extras = review.extras.as_slice().iter();
@@ -59,7 +59,7 @@ fn text_source<'a>(request: &TrezorUiEnum<'a>, index: u16) -> Option<SourceRef<'
 
 /// Serializes `request`, sends it to Core's UI service and waits for the
 /// request's final answer, answering Core's chunk requests on the way.
-fn ui_request(request: TrezorUiEnum) -> Result<TrezorUiResult, CallError> {
+fn ui_request(request: TrezorUiEnumV1) -> Result<TrezorUiResultV1, CallError> {
     let bytes = to_bytes(&request).map_err(|_| call_failed("failed to serialize UI request"))?;
     let ui = CoreIpcService::Ui.into();
     let (mut id, mut data) = ipc_call(ui, UI_MSG_DECISION, &bytes, TIMEOUT_MAX)?;
@@ -103,7 +103,10 @@ fn ipc_progress_call(value: &TrezorProgressEnum) -> Result<(), CallError> {
 pub struct TrezorUiV1Impl;
 
 impl UiV1 for TrezorUiV1Impl {
-    extern "C" fn ui_call<'a>(&self, request: TrezorUiEnum<'a>) -> ServiceResult<TrezorUiResult> {
+    extern "C" fn ui_call_v1<'a>(
+        &self,
+        request: TrezorUiEnumV1<'a>,
+    ) -> ServiceResult<TrezorUiResultV1> {
         ui_request(request).into()
     }
 
