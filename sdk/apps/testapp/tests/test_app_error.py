@@ -63,8 +63,8 @@ def test_lowered_safety_checks(
         # a mainnet path, outside the manifest
         address_n = parse_path("m/44h/0h/0h/0/0")
         assert_fails(
-            "get_public_key",
-            partial(testapp_ext.get_public_key, session, instance_id, address_n, True),
+            "get_public_node",
+            partial(testapp_ext.get_public_node, session, instance_id, address_n),
             SdkError.ServiceError,
         )
     finally:

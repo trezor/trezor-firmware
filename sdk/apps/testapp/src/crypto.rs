@@ -53,14 +53,16 @@ fn digest(mut hasher: sdk::BoxedHasher, chunks: &[Vec<u8>]) -> wire::Digest {
 // Keys and signatures (served by Core)
 // ============================================================================
 
-pub fn get_xpub(m: wire::GetXpub) -> Result<wire::Xpub> {
-    let xpub = sdk::get_xpub(key_curve(m.curve)?, &m.address_n, m.xpub_magic)?;
-    Ok(wire::Xpub { xpub })
-}
-
-pub fn get_public_key(m: wire::GetPublicKey) -> Result<wire::PublicKey> {
-    let public_key = sdk::get_public_key(key_curve(m.curve)?, &m.address_n, m.compressed)?;
-    Ok(wire::PublicKey { public_key })
+pub fn get_public_node(m: wire::GetPublicNode) -> Result<wire::PublicNode> {
+    let node = sdk::get_public_node(key_curve(m.curve)?, &m.address_n)?;
+    Ok(wire::PublicNode {
+        depth: node.depth.into(),
+        fingerprint: node.fingerprint,
+        child_num: node.child_num,
+        chain_code: node.chain_code.to_vec(),
+        public_key: node.public_key.to_vec(),
+        xpub: m.xpub_magic.map(|magic| node.to_xpub(magic)),
+    })
 }
 
 pub fn ecdsa_sign_digest(m: wire::EcdsaSignDigest) -> Result<wire::Signature> {
@@ -119,6 +121,13 @@ pub fn ecdsa_verify_digest(m: wire::EcdsaVerifyDigest) -> Result<wire::Success> 
 pub fn ecdsa_recover_pubkey(m: wire::EcdsaRecoverPubkey) -> Result<wire::PublicKey> {
     let public_key = sdk::ecdsa_recover_pubkey(curve(m.curve)?, &m.signature, &m.digest)?;
     Ok(wire::PublicKey { public_key })
+}
+
+pub fn ecdsa_uncompress_pubkey(m: wire::EcdsaUncompressPubkey) -> Result<wire::PublicKey> {
+    let public_key = sdk::ecdsa_uncompress_pubkey(curve(m.curve)?, array(&m.public_key)?)?;
+    Ok(wire::PublicKey {
+        public_key: public_key.to_vec(),
+    })
 }
 
 pub fn ed25519_verify(m: wire::Ed25519Verify) -> Result<wire::Success> {

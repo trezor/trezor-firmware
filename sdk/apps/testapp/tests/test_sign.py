@@ -37,10 +37,25 @@ DIGESTS = [
 ]
 
 
+KEY_CURVES = {
+    m.EcdsaCurve.Secp256k1: m.Curve.CurveSecp256k1,
+    m.EcdsaCurve.Nist256p1: m.Curve.CurveNist256p1,
+}
+
+
 def public_key(
-    session: Session, instance_id: int, curve: m.Curve = m.Curve.CurveSecp256k1
+    session: Session,
+    instance_id: int,
+    curve: m.EcdsaCurve = m.EcdsaCurve.Secp256k1,
+    address_n: list[int] = ADDRESS_N,
 ) -> bytes:
-    return testapp_ext.get_public_key(session, instance_id, ADDRESS_N, False, curve)
+    """The uncompressed key, as `ecdsa_recover_pubkey` returns it."""
+    node = testapp_ext.get_public_node(
+        session, instance_id, address_n, KEY_CURVES[curve]
+    )
+    return testapp_ext.ecdsa_uncompress_pubkey(
+        session, instance_id, node.public_key, curve
+    )
 
 
 def check_signature(
@@ -109,7 +124,7 @@ def test_ecdsa_sign_digest_other_address(session: Session, instance_id: int):
     signature = testapp_ext.ecdsa_sign_digest(
         session, instance_id, other, digest, False
     )
-    pubkey = testapp_ext.get_public_key(session, instance_id, other, False)
+    pubkey = public_key(session, instance_id, address_n=other)
     check_signature(signature, pubkey, digest, 27)
     assert pubkey != public_key(session, instance_id)
 
@@ -143,7 +158,7 @@ def test_ecdsa_sign_digest_nist256p1(
         compressed,
         curve=m.EcdsaCurve.Nist256p1,
     )
-    pubkey = public_key(session, instance_id, m.Curve.CurveNist256p1)
+    pubkey = public_key(session, instance_id, m.EcdsaCurve.Nist256p1)
     check_signature(
         signature, pubkey, digest, 31 if compressed else 27, m.EcdsaCurve.Nist256p1
     )
@@ -171,9 +186,11 @@ def test_ecdsa_sign_digest_canonical_nist256p1(session: Session, instance_id: in
 @pytest.mark.parametrize("message", [b"message", bytes(range(256))])
 def test_ed25519_sign(session: Session, instance_id: int, message: bytes):
     signature = testapp_ext.ed25519_sign(session, instance_id, ACCOUNT_N, message)
-    pubkey = testapp_ext.get_public_key(
-        session, instance_id, ACCOUNT_N, False, m.Curve.CurveEd25519
+    node = testapp_ext.get_public_node(
+        session, instance_id, ACCOUNT_N, m.Curve.CurveEd25519
     )
+    # drop SLIP-10's 0x00 prefix
+    pubkey = node.public_key[1:]
     # raises on a bad signature
     Ed25519PublicKey.from_public_bytes(pubkey).verify(signature, message)
 

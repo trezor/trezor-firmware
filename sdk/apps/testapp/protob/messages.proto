@@ -12,9 +12,9 @@ enum MessageType {
     MessageType_Hash = 0;
     MessageType_Hmac = 1;
     MessageType_Digest = 2;
-    MessageType_GetXpub = 3;
-    MessageType_Xpub = 4;
-    MessageType_GetPublicKey = 5;
+    MessageType_GetPublicNode = 3;
+    MessageType_PublicNode = 4;
+    MessageType_EcdsaUncompressPubkey = 5;
     MessageType_PublicKey = 6;
     MessageType_EcdsaSignDigest = 7;
     MessageType_Ed25519Sign = 8;

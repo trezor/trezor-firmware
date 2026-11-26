@@ -23,8 +23,7 @@ called.
 |---|---|---|
 | `Hash` | `get_hasher`, fed `chunks` one update at a time | `Digest` |
 | `Hmac` | `get_hmac`, fed `chunks` one update at a time | `Digest` |
-| `GetXpub` | `get_xpub` | `Xpub` |
-| `GetPublicKey` | `get_public_key` | `PublicKey` |
+| `GetPublicNode` | `get_public_node`, plus `PublicNode::to_xpub` if `xpub_magic` is set | `PublicNode` |
 | `EcdsaSignDigest` | `ecdsa_sign_digest` | `Signature` |
 | `Ed25519Sign` | `ed25519_sign` | `Signature` |
 | `GetAddressMac` | `get_address_mac` | `AddressMac` |
@@ -32,6 +31,7 @@ called.
 | `EcdsaVerify` | `ecdsa_verify_digest` of the message's SHA-256 digest | `Success` |
 | `EcdsaVerifyDigest` | `ecdsa_verify_digest` | `Success` |
 | `EcdsaRecoverPubkey` | `ecdsa_recover_pubkey` | `PublicKey` |
+| `EcdsaUncompressPubkey` | `ecdsa_uncompress_pubkey` | `PublicKey` |
 | `Ed25519Verify` | `ed25519_verify` | `Success` |
 | `Base58Encode` / `Base58Decode` | `base58_encode` / `base58_decode` | `Base58` / `Data` |
 | `Base58CheckEncode` / `Base58CheckDecode` | `base58check_encode` / `base58check_decode` | `Base58` / `Data` |

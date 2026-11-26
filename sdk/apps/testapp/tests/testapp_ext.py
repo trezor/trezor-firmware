@@ -166,6 +166,23 @@ def hmac(
 # ============================================================================
 
 
+def get_public_node(
+    session: "Session",
+    instance_id: int,
+    address_n: "Address",
+    curve: m.Curve = m.Curve.CurveSecp256k1,
+    xpub_magic: int | None = None,
+) -> m.PublicNode:
+    return call_ext(
+        session,
+        instance_id,
+        msg_data=m.GetPublicNode(
+            curve=curve, address_n=list(address_n), xpub_magic=xpub_magic
+        ),
+        expect=[m.PublicNode],
+    )
+
+
 def get_xpub(
     session: "Session",
     instance_id: int,
@@ -173,33 +190,9 @@ def get_xpub(
     xpub_magic: int,
     curve: m.Curve = m.Curve.CurveSecp256k1,
 ) -> str:
-    res = call_ext(
-        session,
-        instance_id,
-        msg_data=m.GetXpub(
-            curve=curve, address_n=list(address_n), xpub_magic=xpub_magic
-        ),
-        expect=[m.Xpub],
-    )
-    return res.xpub
-
-
-def get_public_key(
-    session: "Session",
-    instance_id: int,
-    address_n: "Address",
-    compressed: bool,
-    curve: m.Curve = m.Curve.CurveSecp256k1,
-) -> bytes:
-    res = call_ext(
-        session,
-        instance_id,
-        msg_data=m.GetPublicKey(
-            curve=curve, address_n=list(address_n), compressed=compressed
-        ),
-        expect=[m.PublicKey],
-    )
-    return res.public_key
+    node = get_public_node(session, instance_id, address_n, curve, xpub_magic)
+    assert node.xpub is not None
+    return node.xpub
 
 
 def ecdsa_sign_digest(
@@ -326,6 +319,21 @@ def ecdsa_recover_pubkey(
         session,
         instance_id,
         msg_data=m.EcdsaRecoverPubkey(curve=curve, signature=signature, digest=digest),
+        expect=[m.PublicKey],
+    )
+    return res.public_key
+
+
+def ecdsa_uncompress_pubkey(
+    session: "Session",
+    instance_id: int,
+    public_key: bytes,
+    curve: m.EcdsaCurve = m.EcdsaCurve.Secp256k1,
+) -> bytes:
+    res = call_ext(
+        session,
+        instance_id,
+        msg_data=m.EcdsaUncompressPubkey(curve=curve, public_key=public_key),
         expect=[m.PublicKey],
     )
     return res.public_key

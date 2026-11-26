@@ -31,7 +31,7 @@ from trezorlib.tools import parse_path
 
 from . import testapp_ext
 from .generated import messages as m
-from .testapp_ext import DEFAULT_BIP32_PATH, TPUB_MAGIC, SdkError, assert_fails
+from .testapp_ext import DEFAULT_BIP32_PATH, SdkError, assert_fails
 
 DIGEST = hashlib.sha256(b"message").digest()
 ADDRESS = "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
@@ -85,11 +85,8 @@ def ecdsa_calls(
     address_n = parse_path(path)
     calls: dict[str, Callable[[], object]] = {}
     for curve, ecdsa_curve in ECDSA_CURVES:
-        calls[f"get_xpub {curve.name}"] = partial(
-            testapp_ext.get_xpub, session, instance_id, address_n, TPUB_MAGIC, curve
-        )
-        calls[f"get_public_key {curve.name}"] = partial(
-            testapp_ext.get_public_key, session, instance_id, address_n, True, curve
+        calls[f"get_public_node {curve.name}"] = partial(
+            testapp_ext.get_public_node, session, instance_id, address_n, curve
         )
         calls[f"ecdsa_sign_digest {curve.name}"] = partial(
             testapp_ext.ecdsa_sign_digest,
@@ -121,12 +118,11 @@ def ed25519_calls(
     """Every function that takes a path, on Ed25519."""
     address_n = parse_path(path)
     return {
-        "get_public_key": partial(
-            testapp_ext.get_public_key,
+        "get_public_node": partial(
+            testapp_ext.get_public_node,
             session,
             instance_id,
             address_n,
-            False,
             m.Curve.CurveEd25519,
         ),
         "ed25519_sign": partial(
@@ -161,16 +157,7 @@ def test_forbidden_path(session: Session, instance_id: int, path: str):
 
 @pytest.mark.parametrize("path", FORBIDDEN_HARDENED_PATHS)
 def test_forbidden_path_ed25519(session: Session, instance_id: int, path: str):
-    calls = ed25519_calls(session, instance_id, path)
-    calls["get_xpub"] = partial(
-        testapp_ext.get_xpub,
-        session,
-        instance_id,
-        parse_path(path),
-        TPUB_MAGIC,
-        m.Curve.CurveEd25519,
-    )
-    for what, call in calls.items():
+    for what, call in ed25519_calls(session, instance_id, path).items():
         assert_fails(what, call, SdkError.ServiceError)
 
 
@@ -185,16 +172,7 @@ def test_curve_not_allowed(session: Session, instance_id: int):
     address_n = parse_path("m/44h/1h/0h")
     curve = m.Curve.CurveCurve25519
     assert_fails(
-        "get_public_key",
-        partial(
-            testapp_ext.get_public_key, session, instance_id, address_n, False, curve
-        ),
-        SdkError.ServiceError,
-    )
-    assert_fails(
-        "get_xpub",
-        partial(
-            testapp_ext.get_xpub, session, instance_id, address_n, TPUB_MAGIC, curve
-        ),
+        "get_public_node",
+        partial(testapp_ext.get_public_node, session, instance_id, address_n, curve),
         SdkError.ServiceError,
     )

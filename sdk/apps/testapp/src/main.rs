@@ -23,8 +23,9 @@ pub(crate) mod proto;
 use proto::messages::MessageType;
 use proto::testapp::{
     Base58CheckDecode, Base58CheckEncode, Base58Decode, Base58Encode, CheckAddressMac, Crash,
-    EcdsaRecoverPubkey, EcdsaSignDigest, EcdsaVerify, EcdsaVerifyDigest, Ed25519Sign,
-    Ed25519Verify, Failure, GetAddressMac, GetPublicKey, GetXpub, Hash, Hmac, failure::FailureType,
+    EcdsaRecoverPubkey, EcdsaSignDigest, EcdsaUncompressPubkey, EcdsaVerify, EcdsaVerifyDigest,
+    Ed25519Sign, Ed25519Verify, Failure, GetAddressMac, GetPublicNode, Hash, Hmac,
+    failure::FailureType,
 };
 
 /// Wire codec for [`wire_handler!`] — encodes/decodes messages via [`prost`].
@@ -57,18 +58,11 @@ wire_handler!(
     crypto::hmac
 );
 wire_handler!(
-    handle_get_xpub,
+    handle_get_public_node,
     ProstCodec,
-    GetXpub,
-    MessageType::Xpub,
-    crypto::get_xpub
-);
-wire_handler!(
-    handle_get_public_key,
-    ProstCodec,
-    GetPublicKey,
-    MessageType::PublicKey,
-    crypto::get_public_key
+    GetPublicNode,
+    MessageType::PublicNode,
+    crypto::get_public_node
 );
 wire_handler!(
     handle_ecdsa_sign_digest,
@@ -118,6 +112,13 @@ wire_handler!(
     EcdsaRecoverPubkey,
     MessageType::PublicKey,
     crypto::ecdsa_recover_pubkey
+);
+wire_handler!(
+    handle_ecdsa_uncompress_pubkey,
+    ProstCodec,
+    EcdsaUncompressPubkey,
+    MessageType::PublicKey,
+    crypto::ecdsa_uncompress_pubkey
 );
 wire_handler!(
     handle_ed25519_verify,
@@ -176,8 +177,7 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
     match id.try_into() {
         Ok(MessageType::Hash) => handle_hash(data),
         Ok(MessageType::Hmac) => handle_hmac(data),
-        Ok(MessageType::GetXpub) => handle_get_xpub(data),
-        Ok(MessageType::GetPublicKey) => handle_get_public_key(data),
+        Ok(MessageType::GetPublicNode) => handle_get_public_node(data),
         Ok(MessageType::EcdsaSignDigest) => handle_ecdsa_sign_digest(data),
         Ok(MessageType::Ed25519Sign) => handle_ed25519_sign(data),
         Ok(MessageType::GetAddressMac) => handle_get_address_mac(data),
@@ -185,6 +185,7 @@ pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
         Ok(MessageType::EcdsaVerify) => handle_ecdsa_verify(data),
         Ok(MessageType::EcdsaVerifyDigest) => handle_ecdsa_verify_digest(data),
         Ok(MessageType::EcdsaRecoverPubkey) => handle_ecdsa_recover_pubkey(data),
+        Ok(MessageType::EcdsaUncompressPubkey) => handle_ecdsa_uncompress_pubkey(data),
         Ok(MessageType::Ed25519Verify) => handle_ed25519_verify(data),
         Ok(MessageType::Base58Encode) => handle_base58_encode(data),
         Ok(MessageType::Base58Decode) => handle_base58_decode(data),
