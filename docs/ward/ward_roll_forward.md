@@ -50,14 +50,14 @@ A revert ends the session: a new sync is required before the device authorizes a
 
 A **rejoin** switches between diverging histories. The Trezor verifies their last common state and
 asks the user to confirm how much local history to discard before adopting the manager's branch.
-Changes discarded this way can later be re-added like
+The proposed recovery flow would let users re-add discarded changes like
 [changes that arrive after a revert](#changes-that-arrive-after-a-revert).
 
 ### Reverting to an attested state
 
-When a writer's changes have not reached Evolu, the replica cannot rebuild the manager's head N and
-the host cannot tell whether the changes are late or lost. The user decides. The host presents a
-kept manager attestation of an earlier head M, which carries the time T the manager signed it. The
+This proposed flow applies when a replica cannot rebuild the manager's head N and the user chooses
+to resume from a state it can still serve. The host presents a saved manager attestation of that
+earlier head M, dated T by the manager. The
 Trezor verifies the signature and shows the date T beside the manager's current head. The manager's
 signature alone does not authorize the revert: the user approves it on the Trezor. The screen says
 that N − M changes made after T leave the current state, and that the Trezor can offer to re-add
@@ -74,8 +74,8 @@ record has not arrived, and wardd cannot yet publish a revert.
 
 ### Changes that arrive after a revert
 
-Suppose the changes between M and N reach Evolu after the user accepted the revert to M. The
-manager's history runs from M to N, then reverts to N + 1, and may continue with later writes. The
+In the proposed flow, changes between M and N may reach Evolu after the user accepts the revert to M.
+The manager's history runs from M to N, then reverts to N + 1, and may continue with later writes. The
 changes between M and N form a dead branch. The replica holds them and can prove them against
 their own roots, but they are not part of the current state.
 
