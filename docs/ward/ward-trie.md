@@ -15,17 +15,17 @@ the contents. [Transitions and sessions](ward_transitions.md) establish how the 
 
 ## Recovery after data loss in Evolu
 
-Suppose the WARD Manager accepted change 24, but the writing host went offline before Evolu
-replicated it. A second host can rebuild only through change 23. The manager still holds the
-root for 24. Its attestation identifies the tree the replica needs to serve, but contains none
-of the missing entries. The replica reports that it is behind. Proofs against root 23 cannot
-establish what is stored at root 24.
+Suppose the WARD Manager accepted change N, but the writing host went offline before Evolu
+replicated it. A second host can rebuild only through an older change M, so M < N. The manager
+still holds the root for N. Its attestation identifies the tree the replica needs to serve, but
+contains none of the missing entries. The replica reports that it is behind. Proofs against root M
+cannot establish what is stored at root N.
 
 - **If the writing host, another replica or a backup still has the missing changes,** the host
   can rebuild from that history. It checks the root at each step. Once it reproduces the
-  manager's head at 24, it can serve proofs there again.
+  manager's head at N, it can serve proofs there again.
 - **If the only copy was lost before synchronization,** waiting for Evolu cannot recover it.
-  Returning to the contents at 23 requires a [verified revert](ward_roll_forward.md#reverting-and-rejoining).
+  Returning to the contents at M requires a [verified revert](ward_roll_forward.md#reverting-and-rejoining).
   The Trezor must have enough surviving transition evidence to verify the target, and the user
   must approve. The revert restores those contents under a new counter. Without that evidence,
   the older backup alone cannot restore service at the manager's head.
