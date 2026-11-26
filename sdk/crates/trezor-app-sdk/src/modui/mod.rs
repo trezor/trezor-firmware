@@ -104,14 +104,13 @@
 //! modui::review("send", "Send", &facts).confirm()?;
 //! ```
 //!
-//! Where refusing is not the end of the flow, match it:
+//! A layout with more than one yes is matched after the `?`, so a refusal still
+//! ends the flow:
 //!
 //! ```text
-//! match modui::review("message", "Confirm message", &facts).details() {
-//!     Ok(Details::Show) => { /* the person wants the details */ }
-//!     Ok(Details::Skip) => { /* they accepted without them */ }
-//!     Err(Error::Cancelled) => { /* no, carry on */ }
-//!     Err(e) => return Err(e),
+//! match modui::review("message", "Confirm message", &facts).details()? {
+//!     Details::Show => { /* the person wants the details */ }
+//!     Details::Skip => { /* they accepted without them */ }
 //! }
 //! ```
 //!
