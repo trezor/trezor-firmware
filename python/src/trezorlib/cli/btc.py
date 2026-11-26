@@ -176,6 +176,11 @@ def cli() -> None:
     help="Sort pubkeys lexicographically using BIP-67",
 )
 @click.option("-C", "--chunkify", is_flag=True)
+@click.option(
+    "--contact-attestation",
+    is_flag=True,
+    help="Ask the device to attest the shown address with the contact identity key",
+)
 @with_session
 def get_address(
     session: Session,
@@ -188,7 +193,8 @@ def get_address(
     multisig_suffix_length: int,
     multisig_sort_pubkeys: bool,
     chunkify: bool,
-) -> str:
+    contact_attestation: bool,
+) -> str | dict[str, str | None]:
     """Get address for specified path.
 
     To obtain a multisig address, provide XPUBs of all signers (including your own) in
@@ -235,6 +241,28 @@ def get_address(
             script_type = messages.InputScriptType.SPENDMULTISIG
     else:
         multisig = None
+
+    if contact_attestation:
+        resp = btc.get_authenticated_address(
+            session,
+            coin,
+            address_n,
+            show_display,
+            script_type=script_type,
+            multisig=multisig,
+            unlock_path=get_unlock_path(address_n),
+            chunkify=chunkify,
+            contact_attestation=True,
+        )
+        return {
+            "address": resp.address,
+            "contact_pubkey": (
+                resp.contact_pubkey.hex() if resp.contact_pubkey else None
+            ),
+            "contact_signature": (
+                resp.contact_signature.hex() if resp.contact_signature else None
+            ),
+        }
 
     return btc.get_address(
         session,

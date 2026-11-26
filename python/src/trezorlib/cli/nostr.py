@@ -38,10 +38,12 @@ def cli() -> None:
 
 @cli.command()
 @click.option("-a", "--account", default=0, help="Account index")
+@click.option("-d", "--show-display", is_flag=True, help="Show the npub on the device")
 @with_session
 def get_pubkey(
     session: Session,
     account: int,
+    show_display: bool,
 ) -> str:
     """Return the pubkey derived by the given path."""
 
@@ -50,6 +52,7 @@ def get_pubkey(
     return nostr.get_pubkey(
         session,
         address_n,
+        show_display=show_display,
     ).hex()
 
 

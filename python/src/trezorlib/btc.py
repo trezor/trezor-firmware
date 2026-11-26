@@ -154,6 +154,7 @@ def get_authenticated_address(
     ward_value: Optional[bytes] = None,
     ward_proof: Optional[List[bytes]] = None,
     ward_counter: Optional[int] = None,
+    contact_attestation: bool = False,
 ) -> messages.Address:
     if unlock_path:
         session.call(
@@ -173,6 +174,7 @@ def get_authenticated_address(
             ward_value=ward_value,
             ward_proof=ward_proof,
             ward_counter=ward_counter,
+            contact_attestation=contact_attestation or None,
         ),
         expect=messages.Address,
     )
