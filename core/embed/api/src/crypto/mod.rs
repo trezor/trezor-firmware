@@ -156,38 +156,17 @@ impl CryptoV1 for TrezorCryptoV1Impl {
         }
     }
 
-    extern "C" fn get_xpub<'a>(
+    extern "C" fn get_public_node<'a>(
         &self,
         curve: Curve,
         address_n: Slice<'a, u32>,
     ) -> ServiceResult<[u8; XPUB_RAW_LEN], CryptoError> {
         (|| {
-            let data = ipc_crypto_call(&TrezorCryptoEnum::GetXpub {
+            let data = ipc_crypto_call(&TrezorCryptoEnum::GetPublicNode {
                 curve: curve as u8,
                 address_n: address_n.as_slice().into(),
             })?;
             expect_array::<XPUB_RAW_LEN>(&data)
-        })()
-        .into()
-    }
-
-    extern "C" fn get_public_key<'a>(
-        &self,
-        curve: Curve,
-        address_n: Slice<'a, u32>,
-        compressed: bool,
-    ) -> ServiceResult<BoxedSlice<u8>, CryptoError> {
-        (|| {
-            let data = ipc_crypto_call(&TrezorCryptoEnum::GetPublicKey {
-                curve: curve as u8,
-                address_n: address_n.as_slice().into(),
-                compressed,
-            })?;
-            let key = expect_bytes(&data)?;
-            match key.len() {
-                32 | 33 | 65 => Ok(BoxedSlice::from(key)),
-                _ => Err(unexpected_response()),
-            }
         })()
         .into()
     }
@@ -309,6 +288,16 @@ impl CryptoV1 for TrezorCryptoV1Impl {
             Ok(BoxedSlice::from(&pubkey[..]))
         })()
         .into()
+    }
+
+    extern "C" fn ecdsa_uncompress_pubkey(
+        &self,
+        curve: EcdsaCurve,
+        public_key: [u8; 33],
+    ) -> FastResult<[u8; 65], CryptoError> {
+        crypto::ecdsa::uncompress_pubkey(ecdsa_curve(curve), &public_key)
+            .map_err(|_| CryptoError::InvalidPublicKey)
+            .into()
     }
 
     extern "C" fn ed25519_verify<'a>(

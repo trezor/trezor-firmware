@@ -10,23 +10,13 @@ use ufmt::derive::uDebug;
 /// `trezor_lib::crypto_api`.
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
 pub enum TrezorCryptoEnum<'a> {
-    /// Derive the raw xpub, see `CryptoV1::get_xpub`.
-    GetXpub {
+    /// Derive the public node, see `CryptoV1::get_public_node`.
+    GetPublicNode {
         /// A [`Curve`](trezor_app_sdk::traits::crypto::Curve), as its `u8`
         /// value.
         curve: u8,
         /// Derivation path.
         address_n: Slice<'a, u32>,
-    },
-    /// Derive a public key.
-    GetPublicKey {
-        /// A [`Curve`](trezor_app_sdk::traits::crypto::Curve), as its `u8`
-        /// value.
-        curve: u8,
-        /// Derivation path.
-        address_n: Slice<'a, u32>,
-        /// Return the compressed form.
-        compressed: bool,
     },
     /// Sign a digest with ECDSA.
     EcdsaSignDigest {
@@ -76,12 +66,11 @@ impl<'a> TrezorCryptoEnum<'a> {
     /// The IPC message id of the request.
     pub fn id(&self) -> u8 {
         match self {
-            Self::GetXpub { .. } => 0,
-            Self::GetPublicKey { .. } => 1,
-            Self::EcdsaSignDigest { .. } => 2,
-            Self::Ed25519Sign { .. } => 3,
-            Self::GetAddressMac { .. } => 4,
-            Self::CheckAddressMac { .. } => 5,
+            Self::GetPublicNode { .. } => 0,
+            Self::EcdsaSignDigest { .. } => 1,
+            Self::Ed25519Sign { .. } => 2,
+            Self::GetAddressMac { .. } => 3,
+            Self::CheckAddressMac { .. } => 4,
         }
     }
 }
@@ -118,21 +107,12 @@ mod tests {
         let empty_u8: &[u8] = &[];
         let variants: &[(u8, &str)] = &[
             (
-                GetXpub {
+                GetPublicNode {
                     curve: 0,
                     address_n: empty_u32.into(),
                 }
                 .id(),
-                "GetXpub",
-            ),
-            (
-                GetPublicKey {
-                    curve: 0,
-                    address_n: empty_u32.into(),
-                    compressed: false,
-                }
-                .id(),
-                "GetPublicKey",
+                "GetPublicNode",
             ),
             (
                 EcdsaSignDigest {
@@ -177,6 +157,6 @@ mod tests {
         for (id, name) in variants {
             assert!(seen.insert(id), "duplicate id {} for variant {}", id, name);
         }
-        assert_eq!(variants.len(), 6, "new variant added but test not updated");
+        assert_eq!(variants.len(), 5, "new variant added but test not updated");
     }
 }
