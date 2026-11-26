@@ -876,7 +876,7 @@ def tutorial() -> LayoutContext[UiResult]:
 def process_ipc_message(
     *,
     data: bytes,
-) -> tuple[LayoutObj[UiResult], ButtonRequestType, str | None]]:
+) -> tuple[LayoutObj[UiResult], ButtonRequestType, str | None]:
     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
 
 

@@ -2584,7 +2584,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def process_ipc_message(
     ///     *,
     ///     data: bytes,
-    /// ) -> tuple[LayoutObj[UiResult], ButtonRequestType, str | None]]:
+    /// ) -> tuple[LayoutObj[UiResult], ButtonRequestType, str | None]:
     ///     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
     Qstr::MP_QSTR_process_ipc_message => obj_fn_kw!(0, new_process_ipc_message).as_obj(),
 
