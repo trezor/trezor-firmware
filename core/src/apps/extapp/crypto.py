@@ -23,12 +23,11 @@ if TYPE_CHECKING:
 
     CryptoHandler = Callable[[Session, Any], Awaitable[Any]]
 
-_GET_XPUB = 0
-_GET_PUBLIC_KEY = 1
-_ECDSA_SIGN_DIGEST = 2
-_ED25519_SIGN = 3
-_GET_ADDRESS_MAC = 4
-_CHECK_ADDRESS_MAC = 5
+_GET_PUBLIC_NODE = 0
+_ECDSA_SIGN_DIGEST = 1
+_ED25519_SIGN = 2
+_GET_ADDRESS_MAC = 3
+_CHECK_ADDRESS_MAC = 4
 
 # `CanonicalSig` values in the SDK.
 _CANONICAL_ANY = 0
@@ -86,7 +85,7 @@ def _check_path(session: Session, address_n: list[int]) -> None:
         raise ValueError("Forbidden key path")
 
 
-async def _get_xpub(session: Session, obj: Any) -> bytes:
+async def _get_public_node(session: Session, obj: Any) -> bytes:
     # a serialized xpub without its version, the app adds it
     curve, address_n = obj
     _check_path(session, address_n)
@@ -99,26 +98,6 @@ async def _get_xpub(session: Session, obj: Any) -> bytes:
         + node.chain_code()
         + node.public_key()
     )
-
-
-async def _get_public_key(session: Session, obj: Any) -> bytes:
-    curve, address_n, compressed = obj
-    _check_path(session, address_n)
-    curve = _curve(curve)
-    keychain = await session.keychain(curve)
-    node = keychain.derive(address_n)
-    if curve not in _ECDSA_CURVES:
-        # drop the SLIP-10 0x00 prefix
-        return node.public_key()[1:]
-    if compressed:
-        return node.public_key()
-
-    # the node only holds the compressed key
-    if curve == "secp256k1":
-        from trezor.crypto.curve import secp256k1 as ecdsa
-    else:
-        from trezor.crypto.curve import nist256p1 as ecdsa
-    return ecdsa.publickey(node.private_key(), False)
 
 
 async def _ecdsa_sign_digest(session: Session, obj: Any) -> bytes:
@@ -185,8 +164,7 @@ async def _check_address_mac(session: Session, obj: Any) -> bool:
 
 
 _HANDLERS: dict[int, CryptoHandler] = {
-    _GET_XPUB: _get_xpub,
-    _GET_PUBLIC_KEY: _get_public_key,
+    _GET_PUBLIC_NODE: _get_public_node,
     _ECDSA_SIGN_DIGEST: _ecdsa_sign_digest,
     _ED25519_SIGN: _ed25519_sign,
     _GET_ADDRESS_MAC: _get_address_mac,

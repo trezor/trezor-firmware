@@ -4,7 +4,6 @@ from common import *  # isort:skip
 
 if utils.USE_APP_LOADING:
     from trezor.crypto import bip39
-    from trezor.crypto.curve import curve25519, ed25519, nist256p1, secp256k1
     from trezor.wire import context
 
     from apps.common.keychain import Keychain
@@ -40,7 +39,7 @@ class KeychainSession(FakeSession):
 
 
 class FakeMessage:
-    message_id = 0  # get_xpub
+    message_id = 0  # get_public_node
     data = b""
 
 
@@ -90,7 +89,7 @@ class TestCryptoHandle(unittest.TestCase):
                 )
             )
         with self.assertRaises(ValueError):
-            await_result(crypto._get_xpub(session, (0, address_n)))
+            await_result(crypto._get_public_node(session, (0, address_n)))
 
     def test_ecdsa_sign_unsupported_curve(self):
         # guards against `_ECDSA_CURVES` growing without a signer for the curve
@@ -106,30 +105,6 @@ class TestCryptoHandle(unittest.TestCase):
                 )
         finally:
             crypto._ECDSA_CURVES = ecdsa_curves
-
-    def test_get_public_key_formats(self):
-        # the formats the apps rely on: raw 32-byte EdDSA keys, and both
-        # compressed and uncompressed ECDSA keys
-        seed = bip39.seed(" ".join(["all"] * 12), "")
-        session = KeychainSession(seed)
-        address_n = [H_(44), H_(1), H_(0)]
-        curves = (
-            ("secp256k1", secp256k1),
-            ("nist256p1", nist256p1),
-            ("ed25519", ed25519),
-            ("curve25519", curve25519),
-        )
-        for index, (name, curve) in enumerate(curves):
-            node = Keychain(seed, name, [AlwaysMatchingSchema]).derive(address_n)
-            for compressed in (True, False):
-                if name in ("secp256k1", "nist256p1"):
-                    expected = curve.publickey(node.private_key(), compressed)
-                else:
-                    expected = curve.publickey(node.private_key())
-                result = await_result(
-                    crypto._get_public_key(session, (index, address_n, compressed))
-                )
-                self.assertEqual(result, expected)
 
 
 if __name__ == "__main__":
