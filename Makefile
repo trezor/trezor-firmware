@@ -1,6 +1,7 @@
 .PHONY: help \
 	style_check style \
 	pystyle_check pystyle_quick_check pystyle \
+	sdk_abi sdk_abi_check \
 	changelog_check changelog_style \
 	translations_style translations_style_check \
 	yaml_check editor_check \
@@ -158,6 +159,12 @@ mocks: ## generate mock python headers from C modules
 
 mocks_check: ## check validity of mock python headers
 	./core/tools/build_mocks --check
+
+sdk_abi: ## record the app UI ABI (sdk/crates/trezor-app-sdk/abi/ui_v1.json); not part of gen, on purpose
+	cd sdk/crates/trezor-app-sdk && TREZOR_ABI_RECORD=1 cargo test --features test --lib traits::ui::abi
+
+sdk_abi_check: ## check the app UI ABI against the recorded one
+	cd sdk/crates/trezor-app-sdk && cargo test --features test --lib traits::ui::abi
 	flake8 core/mocks/generated
 
 templates: icons ## rebuild coin lists from definitions in common

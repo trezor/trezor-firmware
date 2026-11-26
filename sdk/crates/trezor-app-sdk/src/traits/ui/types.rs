@@ -317,8 +317,8 @@ pub enum TrezorUiEnumV1<'a> {
     ) = 255,
 }
 
-// The discriminants by name, for core to tell the requests apart. A test checks
-// them against the enum's own tags.
+// The discriminants by name, for core to tell the requests apart. The ABI test
+// (`abi.rs`) checks them against the enum's own tags.
 impl TrezorUiEnumV1<'_> {
     /// The discriminant of [`TrezorUiEnumV1::Review`].
     pub const REVIEW: u16 = 0;
@@ -407,7 +407,6 @@ impl<'a> TrezorProgressEnum<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::structs::OptStrSlice;
 
     /// Ensures every variant of TrezorProgressEnum has a unique id()
     /// and that no variant is accidentally forgotten.
@@ -442,41 +441,6 @@ mod tests {
         assert_eq!(Answer::Strong.max_extras(), 5);
         assert_eq!(Answer::Details.max_extras(), 4);
         assert_eq!(Answer::Danger.max_extras(), 0);
-    }
-
-    #[test]
-    fn the_request_kinds_match_the_tags() {
-        // `#[repr(C, u8)]`: the tag is the first byte of the value.
-        fn tag(request: &TrezorUiEnumV1<'_>) -> u16 {
-            u16::from(unsafe { *(request as *const TrezorUiEnumV1<'_>).cast::<u8>() })
-        }
-        let verify = VerifyRequest {
-            step: "".into(),
-            value: "".into(),
-            account: OptStrSlice::NONE,
-            path: OptStrSlice::NONE,
-        };
-        let review = TrezorUiEnumV1::Review(ReviewRequest {
-            step: "".into(),
-            title: "".into(),
-            fields: Slice::new(&[]),
-            extras: Slice::new(&[]),
-            answer: Answer::Confirm,
-        });
-        let done = TrezorUiEnumV1::Done(DoneRequest {
-            step: "".into(),
-            text: "".into(),
-        });
-        assert_eq!(tag(&review), TrezorUiEnumV1::REVIEW);
-        assert_eq!(
-            tag(&TrezorUiEnumV1::VerifyAddress(verify)),
-            TrezorUiEnumV1::VERIFY_ADDRESS
-        );
-        assert_eq!(
-            tag(&TrezorUiEnumV1::VerifyPubkey(verify)),
-            TrezorUiEnumV1::VERIFY_PUBKEY
-        );
-        assert_eq!(tag(&done), TrezorUiEnumV1::DONE);
     }
 
     #[test]

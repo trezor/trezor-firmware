@@ -8,6 +8,8 @@
 //! changes beyond its reserved room becomes `…V2`, taken by a new `…_v2`
 //! method next to the old one, so apps built against `…V1` keep working.
 
+#[cfg(test)]
+mod abi;
 mod types;
 
 pub use types::*;

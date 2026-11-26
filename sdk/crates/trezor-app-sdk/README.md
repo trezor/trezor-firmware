@@ -260,6 +260,30 @@ With the `test` feature, the SDK runs on the host with mocked Core services.
 Call `trezor_app_sdk::mock::sdk_init()` at the start of a test that uses
 SDK functions backed by Core.
 
+## The App ABI
+
+An app and the firmware are built apart, so the `UiV1` vtable and the types it
+carries are frozen once an app ships against them. Their layout is recorded in
+`abi/ui_v1.json`, and a unit test fails when the code no longer matches it:
+
+- `layout`: each pinned type, its fields and their types, nested all the way
+  down (`UiV1Vtable`, `TrezorUiEnumV1`, `TrezorUiResultV1`).
+- `discriminants`: the number of every variant.
+- `words`: the size of the types that keep a `Reserved` variant.
+
+```sh
+make sdk_abi_check   # compare the code with the recorded ABI
+make sdk_abi         # record the code's ABI into the file
+```
+
+A failing check means the ABI changed. If that is intended and nothing has
+shipped with the old layout, record it and let review accept the diff of the
+file. Once it has shipped, make the change a new version instead: a new type
+such as `TrezorUiEnumV2`, taken by a new method such as `ui_call_v2`, next to
+the old ones. A new variant that fits the `Reserved` room is not a new
+version, but still a reviewed diff. `make gen` leaves the file alone on
+purpose, so the ABI only changes when someone records it.
+
 ## License
 
 GPL-3.0-only.
