@@ -19,16 +19,21 @@ Suppose the WARD Manager accepted change N, but the writing host went offline be
 replicated it. A second host can rebuild only through an older change M, so M < N. The manager
 still holds the root for N. Its attestation identifies the tree the replica needs to serve, but
 contains none of the missing entries. The replica reports that it is behind. Proofs against root M
-cannot establish what is stored at root N.
+cannot establish what is stored at root N, and new writes must build on N, so the wallet can
+neither read current values nor publish until the replica catches up.
 
-- **If the writing host, another replica or a backup still has the missing changes,** the host
-  can rebuild from that history. It checks the root at each step. Once it reproduces the
-  manager's head at N, it can serve proofs there again.
-- **If the only copy was lost before synchronization,** waiting for Evolu cannot recover it.
-  Returning to the contents at M requires a [verified revert](ward_roll_forward.md#reverting-and-rejoining).
-  The Trezor must have enough surviving transition evidence to verify the target, and the user
-  must approve. The revert restores those contents under a new counter. Without that evidence,
-  the older backup alone cannot restore service at the manager's head.
+Evolu cannot tell a late copy from a lost one. Each transition travels as one record that carries
+both the step and its encrypted entries, so the step from M to N is missing exactly as long as its
+entries are.
+
+- **If the changes are late,** the host rebuilds from them once they arrive. It checks the root at
+  each step. Once it reproduces the manager's head at N, it can serve proofs there again.
+- **If the user decides not to wait,** they can accept the contents at M as of the time the
+  manager attested M. The revert restores those contents under a new counter. See
+  [reverting to an attested state](ward_roll_forward.md#reverting-to-an-attested-state).
+- **If the changes arrive after that revert,** they are not lost. They sit on a dead branch and
+  can be re-applied. See
+  [changes that arrive after a revert](ward_roll_forward.md#changes-that-arrive-after-a-revert).
 
 The seed recovers the wallet keys. Individual values may also survive as
 [pinned copies or queued changes](user_story.md#keeping-a-contact-while-offline).
