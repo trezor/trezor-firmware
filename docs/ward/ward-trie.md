@@ -32,7 +32,7 @@ entries are.
   manager attested M. The revert restores those contents under a new counter. See
   [reverting to an attested state](ward_roll_forward.md#reverting-to-an-attested-state).
 - **If the changes arrive after that revert,** they are not lost. They sit on a dead branch and
-  can be re-applied. See
+  can be re-added. See
   [changes that arrive after a revert](ward_roll_forward.md#changes-that-arrive-after-a-revert).
 
 The seed recovers the wallet keys. Individual values may also survive as

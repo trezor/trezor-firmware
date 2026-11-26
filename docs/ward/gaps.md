@@ -31,10 +31,11 @@ freshness, application authority, manager durability and recovery completeness.
   head. Reads are not current and writes cannot be published. A host cannot tell a late writer from
   a lost one, so only the user can decide to
   [revert to an attested state](ward_roll_forward.md#reverting-to-an-attested-state).
-- **Revert and re-application.** Reverting to an attested state and re-applying
-  [changes that arrive after a revert](ward_roll_forward.md#changes-that-arrive-after-a-revert)
-  are not implemented. The firmware requires the transitions down to the target, and wardd cannot
-  publish or rebuild a revert.
+- **Revert and re-adding.** Reverting to an attested state, re-adding
+  [changes that arrive after a revert](ward_roll_forward.md#changes-that-arrive-after-a-revert) and
+  [closing a dead branch](ward_roll_forward.md#closing-a-dead-branch) are not implemented. The
+  firmware requires the transitions down to the target, and wardd cannot publish or rebuild a
+  revert.
 - **Replica availability.** Malformed records can block reconstruction. Device reply deadlines
   bound stalled relay exchanges, while a large rebuild can still occupy the service for that wallet.
 
