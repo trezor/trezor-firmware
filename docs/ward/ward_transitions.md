@@ -9,25 +9,26 @@ The manager accepts one successor per head, so along its history each counter na
 
 ## From approval to adoption
 
-Suppose a user changes an address label while the Trezor and manager both hold head 12. The
-device can authorize head 13 before either party adopts it.
+Suppose a user changes an address label while the Trezor and manager both hold head M. The
+device can authorize head N, with M < N (N = M + 1 for a single change), before either party
+adopts it.
 
 ```mermaid
 sequenceDiagram
     participant T as Trezor
     participant H as Local service
-    participant M as WARD Manager
+    participant W as WARD Manager
     T->>H: Request the current entry and proof
     H-->>T: Encrypted entry with proof, or proof of absence
-    Note over T: Verify at head 12 and show the proposed edit for approval
-    T->>H: Sealed change and authorizations for 12 to 13
-    Note over T: Still at 12, freshness indication cleared
+    Note over T: Verify at head M and show the proposed edit for approval
+    T->>H: Sealed change and authorizations for M to N
+    Note over T: Still at M, freshness indication cleared
     H->>H: Store the encrypted change
-    H->>M: Submit the authorized transition
-    M-->>H: Advance to 13 and return a signed receipt
-    Note over T,M: On the next sync
+    H->>W: Submit the authorized transition
+    W-->>H: Advance to N and return a signed receipt
+    Note over T,W: On the next sync
     H-->>T: Fresh manager attestation and wallet history
-    T->>T: Verify the step and adopt head 13
+    T->>T: Verify the step and adopt head N
 ```
 
 The wallet authentication tag lets another Trezor verify the step later. The public signature lets

@@ -1,21 +1,21 @@
 # Recovering manager history
 
-Suppose a Trezor remembers change 24 and a restored manager reports change 20. The device keeps its
-stored head. On the wallet channel, a compatible host can ask it to help the manager recover the
-missing steps.
+Suppose a Trezor remembers change N and a restored manager reports an older change M, so M < N.
+The device keeps its stored head. On the wallet channel, a compatible host can ask it to help the
+manager recover the missing steps.
 
 ```mermaid
 sequenceDiagram
-    participant T as Trezor at 24
+    participant T as Trezor at N
     participant H as Local service
-    participant M as Restored manager at 20
-    H->>T: Present the live attestation of head 20
+    participant W as Restored manager at M
+    H->>T: Present the live attestation of head M
     T-->>H: Report that the manager is behind
-    H->>T: Offer the steps from 20 to 24 with their manager records
+    H->>T: Offer the steps from M to N with their manager records
     Note over T: Verify the path and ask the user to approve recovery
     T-->>H: Release fresh authorizations after approval
-    H->>M: Resubmit each step in order
-    M-->>H: Attest the head actually reached
+    H->>W: Resubmit each step in order
+    W-->>H: Attest the head actually reached
     H->>T: Return that attestation to complete the sync
 ```
 
@@ -36,8 +36,9 @@ The first screen shows the manager's and device's positions and the number of ch
 page. The Trezor requests user approval and releases recovery signatures to the host. 
 The screen shows the last step prepared for submission and the date
 the manager last confirmed it. A subsequent live sync establishes how far the manager advanced.
-For example, if the host has records only through change 22, the manager can advance to 22.
-The device at 24 still reports that the manager is behind. The steps accepted up to 22 remain in place.
+For example, if the host has records only through change K, with M < K < N, the manager can
+advance to K. The device at N still reports that the manager is behind. The steps accepted up to K
+remain in place.
 
 ## Reverting and rejoining
 
