@@ -1,18 +1,23 @@
 # WARD
 
-WARD is an authenticated database for each wallet: the Trezor builds and verifies every entry,
-a host stores and replicates them, and the WARD Manager orders the changes and attests that a head is current.
+WARD lets a Trezor verify wallet data, such as address labels, while a host stores the encrypted
+entries. For each passphrase wallet, the device tracks a **head** consisting of a change counter
+and a root that commits to the entries.
 
-- [Leaf encryption](ward_leaf_encryption.md): `entry_key`, `sealed_identity` and `sealed_content`.
-- [Trie canonical form](ward-trie.md): the trie, its root and its proofs.
-- [Who talks to whom](ward-channels.md): the wallet and service channels.
-- [Transitions and sessions](ward_transitions.md): the two authorizations of every transition, the WM attestation, and the session that binds a Trezor's WM authorization to its latest sync.
-- [WARD Manager](ward_manager.md): its state and operations.
-- [Roll-forward](ward_roll_forward.md): bringing a restored WM back to its newest head, with the Trezor signing the accepted steps again.
-- [Threat model](threat_model.md): what each party learns, per use case.
-- [Security gaps](gaps.md): review findings, fixes, and remaining release gates.
-- [User stories](user_story.md): what a user expects, starting with the mini-WARD backup and restore.
-- [mini-WARD to MVP migration](miniscript_to_mvp.md): carrying on-device records into the replicated store.
-- [MVP to WARD Manager migration](mvp_to_final_migration.md): enrolling an existing wallet at its adopted head.
-- [Testing](ward_testing.md): setup, every test and the command that runs it, the stack, and testing from a shell.
-- [Adversarial testing](ward_adversarial_testing.md): the device against a host or WM that misbehaves on purpose.
+The MVP authenticates each change against the device's own history. Two writers can produce
+competing histories. The manager-backed design adds a [WARD Manager](ward_manager.md) that orders
+changes across devices and attests the head it holds.
+
+## Architecture
+
+- [Participants and channels](ward-channels.md)
+- [Entry privacy](ward_leaf_encryption.md) and [the authenticated tree](ward-trie.md)
+- [Transitions and write sessions](ward_transitions.md)
+- [Recovery after a manager restore](ward_roll_forward.md)
+
+## Security and use
+
+- [Threat model and accepted limitations](threat_model.md) · [Security gaps](gaps.md)
+- [Address labels, offline changes and backup](user_story.md)
+- Proposed upgrades from [mini-WARD to MVP](miniscript_to_mvp.md) and [MVP to a manager](mvp_to_final_migration.md)
+- [Verification coverage](ward_testing.md) · [Adversarial checks](ward_adversarial_testing.md)

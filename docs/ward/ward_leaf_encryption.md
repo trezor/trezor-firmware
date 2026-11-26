@@ -1,182 +1,21 @@
-# WARD leaf encryption
+# Entry privacy
 
-A WARD leaf sits at a keyed path, `entry_key`, and holds only `sealed_content`. The identity which derived `entry_key` is encrypted as `sealed_identity`, and it is stored only in database. Both are sealed with AES-256-GCM.
+Devices with the same seed and passphrase derive the same paths and encryption keys. Each wallet
+uses distinct keys for paths, identities and contents, shared across its application namespaces.
 
-## Keys
-
-It is envisioned that each application can have its own data key. However, we should start with a single global key set only.
-
-```
-global:          K_x = SLIP21(seed, ["ward", "K_x"])   for K_x in K_path, K_ident, K_data
-per application: K_data(app) = SLIP21(seed, ["ward", "app", app_id, "K_data"])
-```
-
-A "single global key" means one global set of the three keys. They stay distinct, so each remains a separate capability. Under the global key set, `K_x(app)` below is the global `K_x`.
-
-The seed includes the passphrase, so every hidden wallet has its own key set.
-
-The `app_id` is the domain the WARD service assigns to the caller. It is part of `leaf_identity`, so applications get separate paths even under the global key set.
-
-| Key | Lets its holder |
+| Part | Purpose |
 | --- | --- |
-| `K_path` | Compute the `entry_key` of an identifier it knows |
-| `K_data` | Read `leaf_content` |
-| `K_ident` | Read `leaf_identity` |
+| Path | A keyed digest of the application namespace, identifier and device scope. It lets the replica serve an entry without knowing its name. |
+| Content | The encrypted entry type, last write counter and value. The tree commits to this ciphertext at the path. |
+| Identity | The namespace, identifier and scope, encrypted separately beside the tree. Lookup by a known identifier works without this record. A recovered identity must reproduce the path. |
 
-`WARDExportKeys` releases keys only after the user confirms on the device:
+Each AES-256-GCM encryption uses a fresh random nonce, including on retries. Ordinary writes are wallet-wide.
+Per-device assignment, per-application key delegation, bulk key export, verified listing and
+automatic identity repair remain proposals. The [threat model](threat_model.md#what-each-party-learns)
+describes what observers can learn from a lookup.
 
-- Under the global key set, it releases `K_path`, `K_data` and `K_ident`.
-- With per-application keys, it releases one application's key after the user confirms that application.
+## Pointers
 
-`K_sig` is never exported. The host keeps exported keys in memory only.
-
-## Device ID
-
-`device_id` is always one byte. `0x00` marks an entry shared by all devices; 1 to 255 is the slot of the device the entry belongs to, as the firmware assigns it.
-
-## Leaf
-
-```
-leaf (in the trie)
-├── entry_key           32 B, the trie path in the clear
-└── sealed_content      leaf_content sealed under K_data(app), domain 0x02
-      entry_type        how to read the value: address, pointer, ...
-      C_leaf            counter of the transition that wrote the entry
-      value             the entry; for a pointer, the target's leaf_identity
-
-stored beside the leaf
-└── sealed_identity     leaf_identity sealed under K_ident(app), domain 0x04
-      device_id         0x00 for all devices, or the slot of the device the entry belongs to
-      app_id            the caller's domain
-      identifier        what the application looks the entry up by (xpub, address)
-```
-
-```
-leaf_identity = device_id(1 B) || len8(app_id) || app_id || identifier
-leaf_content  = len8(entry_type) || entry_type || C_leaf:u32 || value
-entry_key     = HMAC-SHA256(K_path(app), "WARD PATH v1" || leaf_identity)
-value_digest  = SHA256(0x03 || sealed_content)
-leaf_hash     = SHA256(0x00 || entry_key || value_digest)
-```
-
-| Field | Bound |
-| --- | --- |
-| `device_id` | 1 byte |
-| `app_id` | A string of at most 255 bytes |
-| `entry_type` | At most 255 bytes |
-| `identifier` | Unbounded; runs to the end of `leaf_identity` |
-| `value` | Runs to the end of `leaf_content`; no bound of its own |
-
-- **`leaf_identity`:** it is not in the trie, because `entry_key` already authenticates it. It is kept only for listing and restore.
-- **`entry_type`:** it marks an entry as a pointer (symlink) or a plain value. The WARD service follows a pointer automatically during a lookup, so the caller receives the target's value.
-- **`C_leaf`:** every leaf of one transition carries that transition's counter. The device reads it with the value, and the offline cache stores it with each cached entry.
-- **`value_digest`:** it covers sealed bytes only, so a host can compute it and serve proofs for leaves it cannot open. `0x03` is the trie's value domain; it is a hash prefix, not a sealing domain.
-- **`leaf_hash`:** both operands are exactly 32 bytes. Otherwise a host could pass a membership proof off as a non-membership proof.
-- **Delete:** a transition deletes an entry with an empty `sealed_content` at its `entry_key`, which removes the leaf from the trie. A delete has no `leaf_content` and no `sealed_identity`.
-
-## Sealing
-
-Each part is sealed independently with AES-256-GCM, under its own key and domain:
-
-```
-seal(K, domain, pt) = 0x01 || nonce || tag || ct
-                      with nonce = 12 random bytes, fresh for every seal
-                           tag   = 16 bytes
-                           aad   = domain
-
-sealed_content  = seal(K_data(app),  0x02, leaf_content)
-sealed_identity = seal(K_ident(app), 0x04, leaf_identity)
-```
-
-- **Random nonce:** every seal draws a fresh random nonce; it is never derived from the leaf.
-  A landed write is unique in `(entry_key, C_leaf)`: a revert raises the counter, and another
-  device syncs before it writes. Seals that never land are not unique, and the host sees them:
-    - **A lost race.** Two devices write the same entry from the same head. Both seal it at the
-      same counter; one lands, and the host keeps the other.
-    - **A publication that failed.** The WM was unreachable, or the response was lost. The head
-      has not moved, so the device seals the entry again at the same counter, possibly with a
-      different value.
-    - **A publication held back.** The host withholds a sealed write, and the device, still at
-      the same head, writes the entry again.
-    - **An interrupted flush.** A batch that did not land is sealed again at the same counter
-      when the queue is flushed again.
-
-  In each case a nonce derived from `(entry_key, C_leaf)` would repeat under `K_data` with
-  different plaintexts, which breaks AES-GCM's confidentiality and its authentication.
-- **AAD:** The sealing is separated by domain, but as long as `K_data` and `K_ident` are different keys, this separation is redundant.
-- **Scheme byte:** the first byte is the scheme. `0x01`, AES-256-GCM, is the only one.
-- **Length:** a sealed part is at least 29 bytes: scheme, nonce and tag.
-
-## Reading
-
-### Lookup
-
-1. Derive `entry_key` and get a proof against the authenticated root.
-2. Open `sealed_content` with `K_data(app)`. A tag failure is an error.
-3. If `entry_type` is `pointer`, the WARD service derives the target's
-   `entry_key` from the `leaf_identity` in the value and looks it up against
-   the same root, without the caller asking.
-    - The target's `app_id` must be the caller's.
-    - A longer chain or a cycle fails the lookup.
-    - A target proven absent is "not found".
-
-A lookup never needs `sealed_identity`.
-
-### Listing and restore
-
-The key holder walks every leaf of the verified trie, taking each leaf's
-`entry_key` from its path:
-
-1. Open `sealed_content` with `K_data(app)`. The trie commits to the sealed
-   content.
-    - Under the global key set, every application's leaf opens, so this step
-      cannot tell whose leaf it is: the `app_id` in `sealed_identity` does
-      (steps 2 and 3). A tag failure is an error.
-    - Under per-application keys, a tag failure means another application's
-      leaf: skip it.
-2. Open the `sealed_identity` stored beside the leaf with `K_ident(app)`, and
-   verify that `HMAC(leaf_identity) = entry_key`. The verified `leaf_identity`
-   carries the leaf's `app_id`.
-3. Skip the leaf if its `app_id` is not the caller's.
-4. A pointer is shown as a pointer and not followed.
-
-## Appendix
-
-Details of the current design, kept apart from the format above.
-
-### Writing a pointer
-
-A pointer is written with `WardSetPointer`, which names the target identifier in
-the caller's own `app_id`; the target need not exist yet. Overwriting or deleting
-a pointer shows what it pointed to; deleting it leaves the target untouched.
-
-### Identity repair on lookup
-
-A lookup never needs `sealed_identity`. It knows the identity, though, so it
-returns a freshly sealed one, which the host uses to repair a missing or bad
-identity row.
-
-### Privacy limit of `K_path`
-
-`K_path` keeps parties that only store the trie (Evolu, the WARD Manager) from
-mapping identifiers to paths. It does not hold against the host connected to an
-unlocked device: a lookup shows no screen, so that host can have the device
-compute the `entry_key` of any identifier it can guess. Values stay sealed under
-`K_data` either way.
-
-### Choosing among identity candidates
-
-Several `sealed_identity` rows can be stored beside one leaf. Listing opens at
-most 4, newest first, and uses the first one for which
-`HMAC(leaf_identity) = entry_key`. If none passes, it shows the entry as
-unknown and reports its `entry_key` to the host for repair; it never skips it.
-
-### How a listing shows a pointer
-
-- The screen shows the pointer's own identifier, an arrow, and the target's
-  identifier, taken from the `leaf_identity` in the pointer's value.
-- The listing does not look the target up, so it shows no target value and
-  does not prove the target exists. An existing target appears as its own
-  entry.
-- A pointer whose target `app_id` is not the caller's is shown as invalid,
-  because a lookup would refuse to follow it.
+A pointer names an entry in the same namespace. The Trezor follows one hop and verifies both
+lookups against the same root. A missing target yields absence. A second pointer or a target
+outside the namespace fails the lookup. Deleting the pointer leaves its target intact.
