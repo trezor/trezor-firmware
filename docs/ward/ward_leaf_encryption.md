@@ -5,17 +5,14 @@ uses distinct keys for paths, identities and contents, shared across its applica
 
 | Part | Purpose |
 | --- | --- |
-| Path | A keyed digest of the application namespace, identifier and device scope. It lets the replica serve an entry without knowing its name. |
+| Path | A keyed digest of the application namespace, identifier and device scope. It lets the wardd serve an entry while preserving privacy of the identity (only at rest). |
 | Content | The encrypted entry type, last write counter and value. The tree commits to this ciphertext at the path. |
-| Identity | The namespace, identifier and scope, encrypted separately beside the tree. Lookup by a known identifier works without this record. A recovered identity must reproduce the path. |
+| Identity | The namespace, identifier and scope, encrypted separately beside the tree. Lookup by a known identifier works without this record. |
 
-Each AES-256-GCM encryption uses a fresh random nonce, including on retries. Ordinary writes are wallet-wide.
-Per-device assignment, per-application key delegation, bulk key export, verified listing and
-automatic identity repair remain proposals. The [threat model](threat_model.md#what-each-party-learns)
-describes what observers can learn from a lookup.
+Each AES-256-GCM encryption uses always a fresh random nonce. 
 
 ## Pointers
 
-A pointer names an entry in the same namespace. The Trezor follows one hop and verifies both
-lookups against the same root. A missing target yields absence. A second pointer or a target
-outside the namespace fails the lookup. Deleting the pointer leaves its target intact.
+A pointer names an entry in the same namespace. The Trezor follows the hops and verifies both
+lookups against the same root. A missing target yields absence. Once maximum number of pointers is reached or a target
+is outside the namespace, the lookup fails. Deleting the pointer leaves its target intact. Deleting the target leaves its pointer intact, and the user is notified on next lookup.
