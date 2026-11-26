@@ -2,9 +2,13 @@
 
 ## Showing an address label
 
-When asked to display an address, the Trezor can show its label and the source of that label. If
-lookup fails, it still displays the address. The caller supplies the address, so the screen alone
-cannot establish ownership. Showing labels during transaction signing remains a proposal.
+When asked to display an address, the Trezor shows its label with a note that tells the user
+whether the label is current. A label proven against the head the manager attested in this session
+is marked current. A label proven against an older head, or read from the device's offline copy, is
+marked as not checked as current: it was the label once but may have changed since. A local change
+not yet published is marked as such. If lookup fails, the Trezor says the label is unavailable and
+still displays the address. The caller supplies the address, so the screen alone cannot establish
+ownership. Showing labels during transaction signing remains a proposal.
 
 ## Keeping a contact while offline
 
