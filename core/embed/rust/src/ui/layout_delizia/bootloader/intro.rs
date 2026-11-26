@@ -1,10 +1,9 @@
-use super::super::component::Button;
-use super::super::component::ButtonMsg::Clicked;
 use super::super::constant::WIDTH;
 use super::super::theme::bootloader::{
-    button_bld, button_bld_menu, text_title, BLD_BG, BUTTON_AREA_START, BUTTON_HEIGHT,
+    text_title, BLD_BG, BUTTON_AREA_START, BUTTON_BLD, BUTTON_BLD_MENU, BUTTON_HEIGHT,
     CONTENT_PADDING, CORNER_BUTTON_AREA, MENU32, TEXT_NORMAL, TEXT_WARNING, TITLE_AREA,
 };
+use super::button::Button;
 use crate::strutil::TString;
 use crate::ui::component::{Child, Component, Event, EventCtx, Label, Pad};
 use crate::ui::constant::screen;
@@ -34,15 +33,10 @@ impl<'a> Intro<'a> {
             bg: Pad::with_background(BLD_BG).with_clear(),
             title: Child::new(Label::left_aligned(title, text_title(BLD_BG)).vertically_centered()),
             menu: Child::new(
-                Button::with_icon(Icon::new(MENU32))
-                    .styled(button_bld_menu())
+                Button::with_icon(Icon::new(MENU32), &BUTTON_BLD_MENU)
                     .with_expanded_touch_area(Insets::uniform(13)),
             ),
-            host: Child::new(
-                Button::with_text("INITIATE CONNECTION".into())
-                    .styled(button_bld())
-                    .with_text_align(Alignment::Center),
-            ),
+            host: Child::new(Button::with_text("INITIATE CONNECTION", &BUTTON_BLD)),
             text: Child::new(Label::left_aligned(content, TEXT_NORMAL).vertically_centered()),
             warn: (!fw_ok).then_some(Child::new(
                 Label::new("FIRMWARE CORRUPTED".into(), Alignment::Start, TEXT_WARNING)
@@ -87,10 +81,10 @@ impl<'a> Component for Intro<'a> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(Clicked) = self.menu.event(ctx, event) {
+        if self.menu.event(ctx, event).is_some() {
             return Some(Self::Msg::Menu);
         };
-        if let Some(Clicked) = self.host.event(ctx, event) {
+        if self.host.event(ctx, event).is_some() {
             return Some(Self::Msg::Host);
         };
         None

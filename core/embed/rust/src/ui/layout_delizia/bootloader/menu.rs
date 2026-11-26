@@ -1,9 +1,8 @@
-use super::super::component::ButtonMsg::Clicked;
-use super::super::component::{Button, IconText};
 use super::super::theme::bootloader::{
-    button_bld, button_bld_menu, text_title, BLD_BG, BUTTON_HEIGHT, CONTENT_PADDING,
+    text_title, BLD_BG, BUTTON_BLD, BUTTON_BLD_MENU, BUTTON_HEIGHT, CONTENT_PADDING,
     CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, FIRE24, REFRESH24, TITLE_AREA, X32,
 };
+use super::button::{Button, ButtonContent};
 use crate::ui::component::{Child, Component, Event, EventCtx, Label, Pad};
 use crate::ui::constant::{screen, WIDTH};
 use crate::ui::display::Icon;
@@ -31,8 +30,8 @@ pub struct Menu {
 
 impl Menu {
     pub fn new() -> Self {
-        let content_reboot = IconText::new("REBOOT TREZOR", Icon::new(REFRESH24));
-        let content_reset = IconText::new("FACTORY RESET", Icon::new(FIRE24));
+        let content_reboot = ButtonContent::IconText("REBOOT TREZOR", Icon::new(REFRESH24));
+        let content_reset = ButtonContent::IconText("FACTORY RESET", Icon::new(FIRE24));
 
         let mut instance = Self {
             bg: Pad::with_background(BLD_BG),
@@ -40,12 +39,11 @@ impl Menu {
                 Label::left_aligned("BOOTLOADER".into(), text_title(BLD_BG)).vertically_centered(),
             ),
             close: Child::new(
-                Button::with_icon(Icon::new(X32))
-                    .styled(button_bld_menu())
+                Button::with_icon(Icon::new(X32), &BUTTON_BLD_MENU)
                     .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
             ),
-            reboot: Child::new(Button::with_icon_and_text(content_reboot).styled(button_bld())),
-            reset: Child::new(Button::with_icon_and_text(content_reset).styled(button_bld())),
+            reboot: Child::new(Button::new(content_reboot, &BUTTON_BLD)),
+            reset: Child::new(Button::new(content_reset, &BUTTON_BLD)),
         };
         instance.bg.clear();
         instance
@@ -77,13 +75,13 @@ impl Component for Menu {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(Clicked) = self.close.event(ctx, event) {
+        if self.close.event(ctx, event).is_some() {
             return Some(Self::Msg::Close);
         }
-        if let Some(Clicked) = self.reboot.event(ctx, event) {
+        if self.reboot.event(ctx, event).is_some() {
             return Some(Self::Msg::Reboot);
         }
-        if let Some(Clicked) = self.reset.event(ctx, event) {
+        if self.reset.event(ctx, event).is_some() {
             return Some(Self::Msg::FactoryReset);
         }
 
