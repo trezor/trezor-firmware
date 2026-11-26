@@ -120,26 +120,10 @@ impl PublicNode {
 /// Derives the public node for `address_n` on `curve`.
 pub fn get_public_node(curve: Curve, address_n: &[u32]) -> Result<PublicNode> {
     get_crypto_or_die()
-        .get_xpub(curve, address_n.into())
+        .get_public_node(curve, address_n.into())
         .into_app_result()
         .c()
         .map(|raw| PublicNode::from_raw(&raw))
-}
-
-/// Derives the extended public key (xpub) for `address_n` on `curve`,
-/// base58check-encoded with `version` as its version bytes (e.g. the
-/// "xpub"/"ypub"/"zpub" prefix bytes for the coin/script type in use).
-pub fn get_xpub(curve: Curve, address_n: &[u32], version: u32) -> Result<String> {
-    Ok(get_public_node(curve, address_n)?.to_xpub(version))
-}
-
-/// Derives the public key for `address_n` on `curve`.
-pub fn get_public_key(curve: Curve, address_n: &[u32], compressed: bool) -> Result<Vec<u8>> {
-    get_crypto_or_die()
-        .get_public_key(curve, address_n.into(), compressed)
-        .into_app_result()
-        .c()
-        .map(|b| b.as_ref().to_vec())
 }
 
 /// Signs a raw 32-byte digest with the ECDSA key at `address_n` on `curve`,
@@ -219,6 +203,15 @@ pub fn ecdsa_recover_pubkey(curve: EcdsaCurve, signature: &[u8], digest: &[u8]) 
         .into_app_result()
         .c()
         .map(|b| b.as_ref().to_vec())
+}
+
+/// Uncompresses a 33-byte compressed ECDSA `public_key`, e.g. a
+/// [`PublicNode::public_key`], into its 65-byte `0x04`-prefixed form.
+pub fn ecdsa_uncompress_pubkey(curve: EcdsaCurve, public_key: &[u8; 33]) -> Result<[u8; 65]> {
+    get_crypto_or_die()
+        .ecdsa_uncompress_pubkey(curve, *public_key)
+        .into_app_result()
+        .c()
 }
 
 /// Verifies a 64-byte Ed25519 `signature` of `message` against the 32-byte
