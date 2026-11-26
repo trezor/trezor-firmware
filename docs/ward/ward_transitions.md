@@ -1,7 +1,9 @@
 # Transitions and sessions
 
-A transition identifies the wallet and its starting and resulting heads. 
-The counter advances by the number of changes. -- This should be verified for batch updates and 
+A transition identifies the wallet and its starting and resulting heads. Publishing advances the
+counter by the number of entries it writes, at most eight in one batch. A revert advances it by
+one however many entries it restores. Verifiers check only that each step advances by one to
+eight; the count itself comes from the writing Trezor.
 
 The manager accepts one successor per head, so along its history each counter names one state. A lost race, a manager restored from backup, or the MVP without a manager can still produce different roots at the same counter; the root tells them apart.
 
