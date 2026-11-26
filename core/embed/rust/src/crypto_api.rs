@@ -41,17 +41,8 @@ extern "C" fn new_deserialize_crypto_message(
             .map_err(|_| Error::ValueError(c"Invalid crypto message"))?;
 
         let result: Obj = match archived {
-            Archived::<TrezorCryptoEnum>::GetXpub { curve, address_n } => {
+            Archived::<TrezorCryptoEnum>::GetPublicNode { curve, address_n } => {
                 (Obj::from(*curve), obj_from_dp_slice(address_n)?).try_into()?
-            }
-            Archived::<TrezorCryptoEnum>::GetPublicKey {
-                curve,
-                address_n,
-                compressed,
-            } => {
-                let dp_obj = obj_from_dp_slice(address_n)?;
-                let compressed_obj = Obj::from(*compressed);
-                (Obj::from(*curve), dp_obj, compressed_obj).try_into()?
             }
             Archived::<TrezorCryptoEnum>::EcdsaSignDigest {
                 curve,
