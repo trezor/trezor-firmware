@@ -1,7 +1,9 @@
 # Transitions and sessions
 
-A transition identifies the wallet and its starting and resulting heads. The counter advances by
-the number of changes. The root distinguishes different states at the same counter.
+A transition identifies the wallet and its starting and resulting heads. 
+The counter advances by the number of changes. -- This should be verified for batch updates and 
+
+The manager accepts one successor per head, so along its history each counter names one state. A lost race, a manager restored from backup, or the MVP without a manager can still produce different roots at the same counter; the root tells them apart.
 
 ## From approval to adoption
 
@@ -25,6 +27,7 @@ attestation leaves the active session in place.
 A delayed write can land while both its session and predecessor remain current, even after the
 device disconnects. A write displaced by another session or a competing change requires a new sync.
 
+
 ## Competing writers
 
 For a live write, a wallet-authenticated retry token binds the original approval to the proposed
@@ -32,5 +35,4 @@ change and the entry's previous write counter. After sync the device can retry w
 approval if that counter matches. If the counter differs, an entry already holding the intended
 result needs no write. A different result requires a user decision.
 
-In the MVP, a device on a competing branch requires proof of descent from its own head. A higher
-counter alone is insufficient.
+Device on a competing branch requires proof of descent from its own head. A higher counter alone is insufficient.
