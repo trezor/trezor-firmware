@@ -19,7 +19,7 @@ from trezor.ui.layouts.menu import (
     cancel_leaf,
     interact_with_menu,
 )
-from trezormodui import DANGER, DATA, DETAILS, STRONG
+from trezormodui import DANGER, DETAILS, STRONG, TEXT_SOURCE
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Sequence
@@ -33,20 +33,19 @@ if TYPE_CHECKING:
     T = TypeVar("T")
 
     # A fact: `(kind, label, value)`, the label `None` for notes and warnings.
-    # A `data` field's value is bytes in hand, or a source read while the person
-    # pages.
-    Field = tuple[int, str | None, "str | bytes | Source"]
+    # A `text_source` field's value is a source read while the person pages.
+    Field = tuple[int, str | None, "str | Source"]
 
 # How long the closing screen stays up before it goes away.
 _DONE_TIMEOUT_MS = const(3200)
 
 
 class Source:
-    """The bytes of a `data` field that are read while the person pages.
+    """The text of a `text_source` field, read while the person pages.
 
-    `read(offset, length)` returns them. The pager reads in order, from the
-    start, each range once, so a source may hash what it hands out: the bytes
-    on the screen are then the bytes that get signed.
+    `read(offset, length)` returns its UTF-8 bytes. The pager reads in order,
+    from the start, each range once, so a source may hash what it hands out:
+    the text on the screen is then the text that gets signed.
     """
 
     def __init__(
@@ -63,59 +62,78 @@ def check(
 
     A review needs at least one fact. Every entry of the menu counts against
     its size: each offered extra, the way out, and "Show all" of a details
-    answer. An extra with no facts is not offered. Each list of facts holds at
-    most `MAX_DATA_FIELDS` data fields. Anything else raises `ValueError`.
+    answer. An extra with no facts is not offered. A review's facts hold at
+    most `MAX_STREAMED_FIELDS` streamed fields, and an extra none: it can be
+    opened again, and what it streams would be read again. Anything else raises
+    `ValueError`.
     """
     if not fields:
         raise ValueError("a review needs a fact")
     offered = [extra for extra in extras if extra.fields]
     if len(offered) > trezormodui.max_extras(answer):
         raise ValueError("more extras than the menu has room for")
-    _check_data(fields)
-    for extra in offered:
-        _check_data(extra.fields)
+    if _streamed(fields) > trezormodui.MAX_STREAMED_FIELDS:
+        raise ValueError("too many streamed fields")
+    if any(_streamed(extra.fields) for extra in offered):
+        raise ValueError("a streamed field cannot be in an extra")
     return offered
 
 
-def _check_data(facts: "Sequence[Field]") -> None:
-    if sum(kind == DATA for kind, _, _ in facts) > trezormodui.MAX_DATA_FIELDS:
-        raise ValueError("too many data fields")
+def _streamed(facts: "Sequence[Field]") -> int:
+    """How many of `facts` are streamed: today, the text sources."""
+    return sum(kind == TEXT_SOURCE for kind, _, _ in facts)
 
 
 class Pager:
-    """The pages of a list of facts: one fact per page, a `data` field one
-    chunk per page.
+    """The pages of a list of facts: one fact per page, a `text_source` field
+    one chunk per page.
 
     A chunk is read only when its page is drawn, so a refusal between pages
-    reads nothing more.
+    reads nothing more. A chunk may end inside a character: its first bytes are
+    kept and shown with the next chunk.
     """
 
     def __init__(self, fields: "Sequence[Field]") -> None:
         self.fields = fields
         self.index = 0
         self.offset = 0
+        self.carry = b""
 
     async def next(self) -> "tuple[list[PageField], bool]":
         """The next page, and whether it is the last."""
         kind, label, value = self.fields[self.index]
-        if kind != DATA:
+        if kind != TEXT_SOURCE:
             assert isinstance(value, str)
             self.index += 1
             return [(kind, label, value)], self.index >= len(self.fields)
+        assert isinstance(value, Source)
         offset = self.offset
-        source = isinstance(value, Source)
-        total = value.total if source else len(value)
-        length = min(trezormodui.DATA_CHUNK_BYTES, total - offset)
-        if source:
-            chunk = await value.read(offset, length) if length else b""
-        else:
-            assert isinstance(value, bytes)
-            chunk = value[offset : offset + length]
+        length = min(trezormodui.TEXT_CHUNK_BYTES, value.total - offset)
+        chunk = self.carry + (await value.read(offset, length) if length else b"")
         self.offset = offset + length
-        if self.offset >= total:
+        end = self.offset >= value.total
+        text, self.carry = _decode(chunk, end)
+        if end:
             self.index += 1
             self.offset = 0
-        return [(kind, label, chunk)], self.index >= len(self.fields)
+        return [(kind, label, text)], self.index >= len(self.fields)
+
+
+def _decode(chunk: bytes, end: bool) -> "tuple[str, bytes]":
+    """The text of `chunk`, and the bytes of a character it cuts off at its end.
+
+    A UTF-8 character is at most four bytes, so at most three can be cut off.
+    At the end of the text nothing may be left over. Anything that is not
+    UTF-8 raises `ValueError`.
+    """
+    if end:
+        return chunk.decode(), b""
+    for cut in range(4):
+        try:
+            return chunk[: len(chunk) - cut].decode(), chunk[len(chunk) - cut :]
+        except UnicodeError:
+            pass
+    raise ValueError("text source is not UTF-8")
 
 
 async def paged(

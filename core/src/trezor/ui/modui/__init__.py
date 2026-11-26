@@ -1,15 +1,15 @@
 """modui: what an app asks the person, in the shape of the app SDK's `modui`.
 
 A review is a set of facts the person reads before answering. A fact says what
-it is - words, a sum, something compared character by character, raw bytes, a
+it is - words, a sum, something compared character by character, long text, a
 note, a warning - and each model decides how that kind looks. The extapp driver
 maps an app's request onto these calls, and core's own flows can make the same
 calls.
 
 A refusal raises `ActionCancelled`. A request the screens cannot draw raises
 `ValueError`: a review with no facts, more extras than the menu has room for,
-more than one `data` field in one list of facts, or a summary with neither
-amount nor fee.
+more than one `text_source` field in one list of facts, a `text_source` field
+in an extra, or a summary with neither amount nor fee.
 """
 
 from typing import TYPE_CHECKING
@@ -21,11 +21,11 @@ from trezormodui import (
     AMOUNT,
     CONFIRM,
     DANGER,
-    DATA,
     DETAILS,
     NOTE,
     STRONG,
     TEXT,
+    TEXT_SOURCE,
     WARNING,
 )
 
@@ -52,17 +52,13 @@ def address(label: str, value: str) -> "Field":
     return (ADDRESS, label, value)
 
 
-def data(label: str, value: bytes) -> "Field":
-    """Raw bytes of any length, shown as hex and paged."""
-    return (DATA, label, value)
-
-
-def data_source(
+def text_source(
     label: str, total: int, read: "Callable[[int, int], Awaitable[bytes]]"
 ) -> "Field":
-    """Raw bytes read while the person pages: `read(offset, length)` returns
-    them, in order, from the start, each range once."""
-    return (DATA, label, pages.Source(total, read))
+    """Long text read while the person pages: `read(offset, length)` returns
+    its UTF-8 bytes, in order, from the start, each range once. `total` is the
+    text's length in bytes."""
+    return (TEXT_SOURCE, label, pages.Source(total, read))
 
 
 def note(text: str) -> "Field":

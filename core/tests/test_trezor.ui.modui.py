@@ -15,11 +15,11 @@ if utils.USE_APP_LOADING:
         AMOUNT,
         CONFIRM,
         DANGER,
-        DATA,
         DETAILS,
         NOTE,
         STRONG,
         TEXT,
+        TEXT_SOURCE,
         WARNING,
     )
 
@@ -81,7 +81,7 @@ def run(coro):
 
 
 class FakeSource:
-    """A data source that records every range it is asked for."""
+    """A text source that records every range it is asked for."""
 
     def __init__(self, data: bytes) -> None:
         self.data = data
@@ -92,6 +92,22 @@ class FakeSource:
         return self.data[offset : offset + length]
 
 
+def text_source(text: str, label: str = "d"):
+    """A `text_source` field over `text`, and its source."""
+    source = FakeSource(text.encode())
+    return modui.text_source(label, len(source.data), source.read), source
+
+
+def read_all(pager) -> "list[str]":
+    """The values of every page the pager gives, to the last."""
+    values = []
+    while True:
+        page, last = run(pager.next())
+        values.append(page[0][2])
+        if last:
+            return values
+
+
 if utils.USE_APP_LOADING:
 
     class TestFields(unittest.TestCase):
@@ -100,7 +116,9 @@ if utils.USE_APP_LOADING:
                 modui.text("Resource", "Energy"), (TEXT, "Resource", "Energy")
             )
             self.assertEqual(modui.address("To", "TQ"), (ADDRESS, "To", "TQ"))
-            self.assertEqual(modui.data("Data", b"\x01"), (DATA, "Data", b"\x01"))
+            field, _ = text_source("abc", "Message")
+            self.assertEqual(field[:2], (TEXT_SOURCE, "Message"))
+            self.assertEqual(field[2].total, 3)
             self.assertEqual(modui.note("Sure?"), (NOTE, None, "Sure?"))
             self.assertEqual(modui.warning("Risky"), (WARNING, None, "Risky"))
 
@@ -129,34 +147,49 @@ if utils.USE_APP_LOADING:
             with self.assertRaises(ValueError):
                 pages.check([], [], CONFIRM)
 
-        def test_one_data_field_per_list(self):
-            two = [modui.data("a", b"\x01"), modui.data("b", b"\x02")]
+        def test_one_text_source_per_review(self):
+            one = [text_source("a")[0]]
+            pages.check(one, [], CONFIRM)
             with self.assertRaises(ValueError):
-                pages.check(two, [], CONFIRM)
+                pages.check(one * 2, [], CONFIRM)
+
+        def test_a_text_source_cannot_be_in_an_extra(self):
+            one = [text_source("a")[0]]
             with self.assertRaises(ValueError):
-                pages.check(self.FACTS, [modui.Extra("x", two)], CONFIRM)
+                pages.check(self.FACTS, [modui.Extra("x", one)], CONFIRM)
 
     class TestPager(unittest.TestCase):
-        def test_each_fact_is_a_page_and_data_a_page_per_chunk(self):
-            pager = pages.Pager([modui.text("a", "b"), modui.data("d", bytes(1000))])
+        def test_each_fact_is_a_page_and_a_text_source_a_page_per_chunk(self):
+            field, _ = text_source("x" * 2000)
+            pager = pages.Pager([modui.text("a", "b"), field])
             self.assertEqual(run(pager.next()), ([(TEXT, "a", "b")], False))
-            chunks = []
-            while True:
-                page, last = run(pager.next())
-                self.assertEqual(len(page), 1)
-                self.assertEqual(page[0][:2], (DATA, "d"))
-                chunks.append(len(page[0][2]))
-                if last:
-                    break
-            self.assertEqual(chunks, [384, 384, 232])
+            chunks = read_all(pager)
+            self.assertEqual([len(chunk) for chunk in chunks], [768, 768, 464])
+            self.assertEqual("".join(chunks), "x" * 2000)
 
         def test_a_source_is_read_in_order_each_range_once(self):
-            source = FakeSource(bytes(range(256)) * 4)
-            field = modui.data_source("d", 1024, source.read)
-            pager = pages.Pager([field])
-            while not run(pager.next())[1]:
-                pass
-            self.assertEqual(source.reads, [(0, 384), (384, 384), (768, 256)])
+            field, source = text_source("x" * 2000)
+            read_all(pages.Pager([field]))
+            self.assertEqual(source.reads, [(0, 768), (768, 768), (1536, 464)])
+
+        def test_a_character_cut_by_a_chunk_goes_to_the_next_page(self):
+            # "é" is two bytes: the first chunk ends between them.
+            text = "x" * 767 + "é" + "y" * 10
+            field, _ = text_source(text)
+            chunks = read_all(pages.Pager([field]))
+            self.assertEqual(chunks, ["x" * 767, "é" + "y" * 10])
+
+        def test_text_that_is_not_utf8_is_refused(self):
+            source = FakeSource(b"ab\xff" + b"c" * 800)
+            field = modui.text_source("d", len(source.data), source.read)
+            with self.assertRaises(ValueError):
+                read_all(pages.Pager([field]))
+
+        def test_text_cut_at_its_end_is_refused(self):
+            source = FakeSource("é".encode()[:1])
+            field = modui.text_source("d", 1, source.read)
+            with self.assertRaises(ValueError):
+                read_all(pages.Pager([field]))
 
         def test_the_last_fact_is_the_last_page(self):
             pager = pages.Pager([modui.note("n"), modui.text("a", "b")])
@@ -174,7 +207,7 @@ if utils.USE_APP_LOADING:
 
         def test_a_strong_review_holds_only_on_its_last_page(self):
             pages.interact = Answers(*[trezorui_api.CONFIRMED] * 3)
-            facts = [modui.data("d", bytes(1000))]
+            facts = [text_source("x" * 2000)[0]]
             run(modui.review("app/send", "Send", facts).confirm_strong())
             reviews = [kwargs for name, kwargs in self.screens.calls]
             self.assertEqual([r["hold"] for r in reviews], [False, False, True])

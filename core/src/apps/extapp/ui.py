@@ -7,7 +7,6 @@ from trezormodui import (
     AMOUNT,
     CONFIRM,
     DANGER,
-    DATA,
     DETAILS,
     MSG_CHUNK,
     MSG_CHUNK_FAILED,
@@ -20,6 +19,7 @@ from trezormodui import (
     RESULT_CONFIRMED,
     RESULT_SHOW_DETAILS,
     STRONG,
+    TEXT_SOURCE,
     deserialize_ui_message,
     encode_chunk_request,
     encode_ui_result,
@@ -108,19 +108,19 @@ def _fields(session: Session, fields: list, first: int) -> "list[Field]":
     for index, (kind, label, value, ticker) in enumerate(fields, first):
         if kind == AMOUNT:
             result.append(modui.amount(label, value, ticker))
-        elif kind == DATA:
-            result.append(modui.data_source(label, value, _pull(session, index)))
+        elif kind == TEXT_SOURCE:
+            result.append(modui.text_source(label, value, _pull(session, index)))
         else:
             result.append((kind, label, value))
     return result
 
 
 def _pull(session: Session, field: int) -> "Callable[[int, int], Awaitable[bytes]]":
-    """How the driver reads the bytes of the app's `data` field at `field`.
+    """How the driver reads the text of the app's `text_source` field at `field`.
 
     Core sends the range it wants and the app answers with exactly those bytes,
     or says its source could not produce them and the screen stops. The app's
-    bytes never leave its memory in full, and the answer doubles as the wait
+    text never leaves its memory in full, and the answer doubles as the wait
     for core's next request or its decision.
     """
 
@@ -136,13 +136,13 @@ def _pull(session: Session, field: int) -> "Callable[[int, int], Awaitable[bytes
         # a message for another service is the app's source calling out from
         # inside this call.
         if msg.service != SERVICE_UI:
-            session.die("Unexpected message while pulling data")
+            session.die("Unexpected message while pulling text")
         if msg.message_id == MSG_CHUNK_FAILED:
             raise ActionCancelled
         if msg.message_id != MSG_CHUNK:
-            session.die("Unexpected message while pulling data")
+            session.die("Unexpected message while pulling text")
         if len(msg.data) != length:
-            session.die("Wrong chunk size while pulling data")
+            session.die("Wrong chunk size while pulling text")
         # The app's `ipc_call` is still waiting; core's next message - another
         # request, or the decision - is its answer.
         return bytes(msg.data)
