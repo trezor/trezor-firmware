@@ -186,6 +186,15 @@ def wm_head() -> "tuple[int, bytes, bytes, int] | None":
     return r.uint(4), bytes(r.take(_ROOT_LEN)), bytes(r.take(_NONCE_LEN)), r.uint(8)
 
 
+def end_session() -> None:
+    """End the write session: forget the WM head this session saw and the nonce it is bound to.
+
+    Nothing more can be authorised until a new sync. A REVERT does this (`rollback`), so one
+    attestation backs at most one demotion and nothing else is minted after it.
+    """
+    _set(_cc.APP_WARD_WM_HEAD, bytes(_WM_HEAD_LEN))
+
+
 def require_session_nonce() -> bytes:
     """The nonce of this session's latest WM attestation, or refuse: the WM accepts an
     authorisation only when it is bound to the nonce of the wallet's latest sync."""

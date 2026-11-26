@@ -71,6 +71,10 @@ attestation leaves the active session in place.
 A delayed write can land while both its session and predecessor remain current, even after the
 device disconnects. A write displaced by another session or a competing change requires a new sync.
 
+A revert ends the session on the Trezor. After authorizing it, the device closes the sync round
+and forgets the session's manager head, so the same attestation cannot back a second revert and
+nothing else is authorized. The host publishes the revert and syncs again; that sync adopts it.
+
 
 ## Competing writers
 

@@ -45,6 +45,8 @@ remain in place.
 A **revert** restores a verified historical root under a new counter. The Trezor checks the validity 
 of the previous transition and the manager's historical evidence before asking for a confirmation. 
 If the manager has regressed due to restore, the rollback requirement may be undetected.
+A revert ends the session: a new sync is required before the device authorizes anything else
+([sessions](ward_transitions.md#sessions)).
 
 A **rejoin** switches between diverging histories. The Trezor verifies their last common state and
 asks the user to confirm how much local history to discard before adopting the manager's branch.

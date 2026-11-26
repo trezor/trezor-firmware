@@ -19,6 +19,7 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
 
     Nothing is adopted here. When the new counter does not advance this device, the user's
     consent for this exact transition is recorded so `ingest` and `reconcile` let it back in.
+    The revert ends the session: a new sync is required before anything else is authorised.
     """
     from trezor.messages import WardChainLinkAck, WardChainRequest, WardRollbackAck
     from trezor.ui.layouts import confirm_properties
@@ -176,6 +177,11 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
     step, advance = await authorise(
         wm_counter, wm_root, new_counter, recovered_root, revert=True
     )
+    # A REVERT ENDS THE SESSION. Close the round and forget the session's WM head, so the same
+    # attestation cannot back a second revert and nothing else is authorised after this one. The
+    # host publishes the REVERT and syncs again; that sync's adoption spends the consent above.
+    sync_round.clear()
+    sync_round.end_session()
     return WardRollbackAck(
         counter=new_counter,
         new_root=recovered_root,

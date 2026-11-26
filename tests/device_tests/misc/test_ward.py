@@ -4261,6 +4261,55 @@ def test_ward_rollback_undoes_the_last_write(session: Session):
 
 
 @pytest.mark.models("core")
+def test_ward_rollback_ends_the_session(session: Session):
+    """A REVERT ENDS THE SESSION it was approved in.
+
+    The genuine attestation that backed it cannot back a second revert, with another target, in
+    the same round. A new sync is required; the revert itself still lands and is adopted there.
+    """
+    store = WardTrie()
+    key_a = _seed(session, store, b"a", b"one")
+    before_root = store.root()
+    _seed(session, store, b"b", b"two")
+
+    wm = _wm_for(store)
+    _attest(session, wm, store)
+    from_counter, from_root = store.counter, store.root()
+
+    ack_sync = _sync_challenge(session, wm)
+    fc, fr, tc, tr, ts, sig = wm.open_session(
+        ack_sync.ward_id, ack_sync.nonce, ack_sync.session_proof
+    )
+
+    def revert_to(counter: int, root):
+        with session.test_ctx as ctx:
+            ctx.set_input_flow(InputFlowConfirmAllWarnings(session).get())
+            return ward.rollback(
+                session, fc, fr, tc, tr, sig,
+                recovered_counter=counter, link_source=store.links_ending_at,
+                acceptance_source=wm.acceptance_source(_WARD_ID),
+                recovered_root=root, timestamp=ts,
+            )
+
+    ack = revert_to(1, before_root)
+    assert ack.new_root == before_root
+
+    # the round is closed: the same attestation cannot back a second revert
+    with pytest.raises(exceptions.TrezorFailure, match="no sync round"):
+        revert_to(0, None)
+
+    link = _publish_demotion(wm, store, ack, from_counter, from_root)
+    _adopt_demotion(session, wm, store, ack, link)
+
+    rewound = _subset(store, [key_a])
+    rewound.counter = ack.counter
+    _res, rec = _read(
+        session, rewound, lambda p: ward.get_entry(session, _APP, b"b", p)
+    )
+    assert "entry not found" in rec.title
+
+
+@pytest.mark.models("core")
 def test_ward_rollback_requires_the_root_at_the_requested_counter(session: Session):
     """Each historical root is tied to its counter before the confirmation."""
     world = _World(session)
