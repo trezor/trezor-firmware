@@ -883,7 +883,7 @@ def process_ipc_message(
 # rust/src/ui/api/firmware_micropython.rs
 def serialize_ui_result(
     *,
-    result: UiResult | int | str | None,
+    result: UiResult | int,
 ) -> bytes:
     """Serialize a UI result into bytes to send to the app."""
 

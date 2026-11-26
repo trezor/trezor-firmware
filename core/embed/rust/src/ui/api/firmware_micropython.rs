@@ -2590,7 +2590,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// def serialize_ui_result(
     ///     *,
-    ///     result: UiResult | int | str | None,
+    ///     result: UiResult | int,
     /// ) -> bytes:
     ///     """Serialize a UI result into bytes to send to the app."""
     Qstr::MP_QSTR_serialize_ui_result => obj_fn_kw!(0, new_serialize_ui_result).as_obj(),
