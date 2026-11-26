@@ -18,6 +18,8 @@ from typing import TYPE_CHECKING
 from apps.common.paths import HARDENED
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from apps.common.paths import Bip32Path
 
 # m/44'/1237'/0'/0/0, the NIP-06 nostr identity key (same as NostrGetPubkey)
@@ -68,7 +70,7 @@ def attestation_digest(slip44: int, address: str) -> bytes:
     return ctx.digest()
 
 
-def encode_npub(pubkey: bytes) -> str:
+def encode_npub(pubkey: AnyBytes) -> str:
     """bech32 `npub1...` (NIP-19) of a 32-byte x-only public key."""
     from trezor.crypto import bech32
     from trezor.wire import DataError
@@ -80,7 +82,7 @@ def encode_npub(pubkey: bytes) -> str:
 
 
 def verify_attestation(
-    pubkey: bytes, signature: bytes, slip44: int, address: str
+    pubkey: AnyBytes, signature: AnyBytes, slip44: int, address: str
 ) -> bool:
     from trezor.crypto.curve import bip340
 

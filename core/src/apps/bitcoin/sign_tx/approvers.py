@@ -257,14 +257,29 @@ class BasicApprover(Approver):
             source_path = (
                 tx_info.change_detector.wallet_path.get_path() if tx_info else None
             )
-            await layout.confirm_output(
-                txo,
-                self.coin,
-                self.amount_unit,
-                self.external_output_index,
-                self.chunkify,
-                source_path,
-            )
+            if txo.contact_pubkey is None:
+                await layout.confirm_output(
+                    txo,
+                    self.coin,
+                    self.amount_unit,
+                    self.external_output_index,
+                    self.chunkify,
+                    source_path,
+                )
+            else:
+                # Pay-to-contact: name the output if the user's WARD knows the
+                # identity that attested the address.
+                from .contact import contact_label
+
+                await layout.confirm_output(
+                    txo,
+                    self.coin,
+                    self.amount_unit,
+                    self.external_output_index,
+                    self.chunkify,
+                    source_path,
+                    contact_label=await contact_label(txo, self.coin),
+                )
             self.external_output_index += 1
         else:
             # This is an external output in a standard transaction referencing a payment request,

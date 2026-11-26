@@ -66,6 +66,7 @@ def confirm_output(
     output_index: int,
     chunkify: bool,
     address_n: Bip32Path | None,
+    contact_label: str | None = None,
 ) -> Awaitable[None]:
     from trezor.enums import OutputScriptType
 
@@ -87,7 +88,8 @@ def confirm_output(
         else:
             title = None
 
-        address_label = None
+        # The verified contact name for an external address (sign_tx/contact.py).
+        address_label = contact_label
         if output.address_n and not output.multisig:
             from trezor import utils
 
