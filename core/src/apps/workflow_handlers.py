@@ -182,15 +182,11 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.evolu.sign_registration_request"
 
     if not utils.BITCOIN_ONLY:
-        # When promoting the Nostr app to production-level
-        # and removing the "if" guard don't forget to also remove
-        # the corresponding guards (PYOPT == '0') in Sconscript.*
-        if __debug__:
-            # nostr
-            if msg_type == MessageType.NostrGetPubkey:
-                return "apps.nostr.get_pubkey"
-            if msg_type == MessageType.NostrSignEvent:
-                return "apps.nostr.sign_event"
+        # nostr (also routed in non-debug builds: the contact identity lives there)
+        if msg_type == MessageType.NostrGetPubkey:
+            return "apps.nostr.get_pubkey"
+        if msg_type == MessageType.NostrSignEvent:
+            return "apps.nostr.sign_event"
 
         # tron
         if msg_type == MessageType.TronGetAddress:

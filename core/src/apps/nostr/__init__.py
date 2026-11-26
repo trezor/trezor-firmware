@@ -1,8 +1,3 @@
-if not __debug__:
-    from trezor import utils
-
-    utils.halt("Disabled in production mode")
-
 from apps.common.paths import PATTERN_BIP44
 
 CURVE = "secp256k1"

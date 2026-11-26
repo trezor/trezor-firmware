@@ -1260,11 +1260,9 @@ impl<'a> MpyBuilder<'a> {
                 files.add(src, "trezor/enums/NEM*.py")?;
             }
 
-            if cfg!(not(feature = "pyopt")) {
-                files.add(src, "apps/nostr/*.py")?;
-                files.add(src, "apps/nostr/*/*.py")?;
-                files.add(src, "trezor/enums/Nostr*.py")?;
-            }
+            files.add(src, "apps/nostr/*.py")?;
+            files.add(src, "apps/nostr/*/*.py")?;
+            files.add(src, "trezor/enums/Nostr*.py")?;
 
             files.add(src, "apps/tron/*.py")?;
             files.add(src, "trezor/enums/Tron*.py")?;
