@@ -5,7 +5,7 @@
 //! Each model draws them with its own components and styles: the driver never
 //! picks a screen, a font or a button.
 
-use trezor_app_sdk::structs::{FieldKind, MAX_MENU_ENTRIES};
+use trezor_app_sdk::traits::ui::{FieldKind, MAX_MENU_ENTRIES};
 
 use crate::micropython::buffer::StrBuffer;
 use crate::micropython::gc::Gc;

@@ -4,16 +4,17 @@
 //! The screens take the facts as plain Python values and draw them with the
 //! model's [`ModUI`]. The wire half reads an app's request into the same plain
 //! values and encodes core's answers back. Every number the two sides share
-//! comes from `trezor_app_sdk::structs` and is exported here, so Python keeps
-//! no copies of its own.
+//! comes from `trezor_app_sdk::traits::ui` and is exported here, so Python
+//! keeps no copies of its own.
 
 use rkyv::option::ArchivedOption;
 use rkyv::rancor::Failure;
 use rkyv::Archived;
-use trezor_app_sdk::structs::{
-    Answer, FieldKind, Slice, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult,
-    UiChunkRequest, VerifyRequest, WireExtra, WireField, MAX_STREAMED_FIELDS, UI_MSG_CHUNK,
-    UI_MSG_CHUNK_FAILED, UI_MSG_DECISION,
+use trezor_app_sdk::structs::{Slice, StrSlice};
+use trezor_app_sdk::traits::ui::{
+    Answer, FieldKind, TrezorProgressEnum, TrezorUiEnumV1, TrezorUiResultV1, UiChunkRequest,
+    VerifyRequest, WireExtra, WireField, MAX_STREAMED_FIELDS, UI_MSG_CHUNK, UI_MSG_CHUNK_FAILED,
+    UI_MSG_DECISION,
 };
 
 use crate::micropython::buffer::get_buffer;
@@ -201,29 +202,33 @@ fn verify_request(kind: u16, m: &Archived<VerifyRequest<'_>>) -> Result<[Obj; 5]
 extern "C" fn new_deserialize_ui_message(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
-        let archived = rkyv::access::<Archived<TrezorUiEnum>, Failure>(unsafe { get_buffer(obj) }?)
-            .map_err(|_| Error::ValueError(c"Invalid UI message"))?;
+        let archived =
+            rkyv::access::<Archived<TrezorUiEnumV1>, Failure>(unsafe { get_buffer(obj) }?)
+                .map_err(|_| Error::ValueError(c"Invalid UI message"))?;
 
         let fields: &[Obj] = match archived {
-            Archived::<TrezorUiEnum>::Review(m) => &[
-                Obj::small_int(TrezorUiEnum::REVIEW),
+            Archived::<TrezorUiEnumV1>::Review(m) => &[
+                Obj::small_int(TrezorUiEnumV1::REVIEW),
                 Obj::try_from(m.step.as_ref())?,
                 Obj::try_from(m.title.as_ref())?,
                 obj_from_fields(&m.fields)?,
                 obj_from_extras(&m.extras)?,
                 Obj::small_int(answer(&m.answer) as u16),
             ],
-            Archived::<TrezorUiEnum>::VerifyAddress(m) => {
-                &verify_request(TrezorUiEnum::VERIFY_ADDRESS, m)?
+            Archived::<TrezorUiEnumV1>::VerifyAddress(m) => {
+                &verify_request(TrezorUiEnumV1::VERIFY_ADDRESS, m)?
             }
-            Archived::<TrezorUiEnum>::VerifyPubkey(m) => {
-                &verify_request(TrezorUiEnum::VERIFY_PUBKEY, m)?
+            Archived::<TrezorUiEnumV1>::VerifyPubkey(m) => {
+                &verify_request(TrezorUiEnumV1::VERIFY_PUBKEY, m)?
             }
-            Archived::<TrezorUiEnum>::Done(m) => &[
-                Obj::small_int(TrezorUiEnum::DONE),
+            Archived::<TrezorUiEnumV1>::Done(m) => &[
+                Obj::small_int(TrezorUiEnumV1::DONE),
                 Obj::try_from(m.step.as_ref())?,
                 Obj::try_from(m.text.as_ref())?,
             ],
+            Archived::<TrezorUiEnumV1>::Reserved(_) => {
+                return Err(Error::ValueError(c"Invalid UI message"))
+            }
         };
         Ok(Tuple::alloc(fields)?.into())
     };
@@ -233,7 +238,7 @@ extern "C" fn new_deserialize_ui_message(n_args: usize, args: *const Obj, kwargs
 extern "C" fn new_encode_ui_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let result: u8 = kwargs.get(Qstr::MP_QSTR_result)?.try_into()?;
-        let msg = TrezorUiResult::try_from(result)
+        let msg = TrezorUiResultV1::try_from(result)
             .map_err(|_| Error::ValueError(c"unknown UI result"))?;
         crate::util::archive::to_bytes_obj(&msg)
     };
@@ -389,25 +394,25 @@ pub static mp_module_trezormodui: Module = obj_module! {
     Qstr::MP_QSTR_done => obj_fn_kw!(0, new_done).as_obj(),
 
     /// REQUEST_REVIEW: int
-    Qstr::MP_QSTR_REQUEST_REVIEW => Obj::small_int(TrezorUiEnum::REVIEW),
+    Qstr::MP_QSTR_REQUEST_REVIEW => Obj::small_int(TrezorUiEnumV1::REVIEW),
 
     /// REQUEST_VERIFY_ADDRESS: int
-    Qstr::MP_QSTR_REQUEST_VERIFY_ADDRESS => Obj::small_int(TrezorUiEnum::VERIFY_ADDRESS),
+    Qstr::MP_QSTR_REQUEST_VERIFY_ADDRESS => Obj::small_int(TrezorUiEnumV1::VERIFY_ADDRESS),
 
     /// REQUEST_VERIFY_PUBKEY: int
-    Qstr::MP_QSTR_REQUEST_VERIFY_PUBKEY => Obj::small_int(TrezorUiEnum::VERIFY_PUBKEY),
+    Qstr::MP_QSTR_REQUEST_VERIFY_PUBKEY => Obj::small_int(TrezorUiEnumV1::VERIFY_PUBKEY),
 
     /// REQUEST_DONE: int
-    Qstr::MP_QSTR_REQUEST_DONE => Obj::small_int(TrezorUiEnum::DONE),
+    Qstr::MP_QSTR_REQUEST_DONE => Obj::small_int(TrezorUiEnumV1::DONE),
 
     /// RESULT_CONFIRMED: int
-    Qstr::MP_QSTR_RESULT_CONFIRMED => Obj::small_int(TrezorUiResult::Confirmed as u16),
+    Qstr::MP_QSTR_RESULT_CONFIRMED => Obj::small_int(TrezorUiResultV1::Confirmed as u16),
 
     /// RESULT_CANCELLED: int
-    Qstr::MP_QSTR_RESULT_CANCELLED => Obj::small_int(TrezorUiResult::Cancelled as u16),
+    Qstr::MP_QSTR_RESULT_CANCELLED => Obj::small_int(TrezorUiResultV1::Cancelled as u16),
 
     /// RESULT_SHOW_DETAILS: int
-    Qstr::MP_QSTR_RESULT_SHOW_DETAILS => Obj::small_int(TrezorUiResult::ShowDetails as u16),
+    Qstr::MP_QSTR_RESULT_SHOW_DETAILS => Obj::small_int(TrezorUiResultV1::ShowDetails as u16),
 
     /// MSG_DECISION: int
     Qstr::MP_QSTR_MSG_DECISION => Obj::small_int(UI_MSG_DECISION),
