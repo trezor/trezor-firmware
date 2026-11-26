@@ -62,6 +62,11 @@ class TestCryptoHandle(unittest.TestCase):
         crypto._HANDLERS[FakeMessage.message_id] = handler
         return await_result(crypto.handle(session, FakeMessage()))
 
+    def test_deserialize_not_a_buffer(self):
+        # the real binding; `setUp` only stubs the module in `crypto`
+        with self.assertRaises(TypeError):
+            self.api.deserialize_crypto_message(data=123)
+
     def test_failure_reported_to_app(self):
         session = FakeSession()
         self.handle_raising(ValueError("failed"), session)

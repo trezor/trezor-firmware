@@ -78,6 +78,12 @@ class TestProcessIpcMessage(unittest.TestCase):
         self.assertEqual(br_code, 0)
         self.assertIsNone(br_name)
 
+    def test_not_a_buffer(self):
+        with self.assertRaises(TypeError):
+            trezorui_api.process_ipc_message(data=123)
+        with self.assertRaises(TypeError):
+            trezorui_api.deserialize_progress_message(data=123)
+
     def test_serialize_ui_result(self):
         # rkyv-archived `TrezorUiResult`s, as the app decodes them
         self.assertEqual(

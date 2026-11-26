@@ -25,7 +25,7 @@ extern "C" fn new_deserialize_crypto_message(
         // SAFETY: `kwargs` keeps `obj` alive for the whole block, and no
         // MicroPython code runs while `data` is borrowed (the block only
         // allocates the result objects), so nothing can modify the buffer.
-        let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
+        let data = unsafe { crate::micropython::buffer::get_buffer(obj) }?;
 
         fn obj_from_dp_slice(slice: &Archived<Slice<u32>>) -> Result<Obj, Error> {
             let slice = slice.as_ref();
