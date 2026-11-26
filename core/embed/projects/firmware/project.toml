@@ -77,7 +77,7 @@ mem-perf                      = { true = ["memperf"] }
 miniscript                    = { true = ["miniscript"] }
 k1n1                          = { true = ["k1n1"] }  # TODO: move back to `uses` section (after stabilization)
 perf-overlay                  = { true = ["ui_performance_overlay"] }
-production                    = { true = ["production"], false = ["dev_keys"] }
+production                    = { true = ["production"] }
 pyopt                         = { true = ["pyopt"], false = ["debug", "optiga_testing", "ui_debug_overlay"] }
 source-lines                  = { true = ["micropy_enable_source_lines"] }
 storage-insecure-testing-mode = { true = ["storage_insecure_testing_mode"] }
