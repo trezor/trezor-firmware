@@ -50,6 +50,7 @@ ADDRESS_LABELS = WardCaller(b"bitcoin", core=False)
 
 # Core apps that call the WARD service on the device.
 DISPLAY_ADDRESS = WardCaller(b"display_address", core=True)
+SIGN_TX = WardCaller(b"sign_tx", core=True)
 
 
 def extapp_caller(image_id: AnyBytes) -> WardCaller:

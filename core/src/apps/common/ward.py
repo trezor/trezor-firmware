@@ -29,13 +29,14 @@ if TYPE_CHECKING:
 
 def _label_domain(caller):
     """The domain `caller` may read labels from -- the firmware's grant, never the
-    caller's choice. DisplayAddress reads the host-written address labels; no other app
-    may read labels yet."""
+    caller's choice. DisplayAddress reads the host-written address labels, and SignTx
+    the contact names written there (it only asks for an identity whose attestation of
+    the output address it has verified); no other app may read labels yet."""
     from trezor.wire import DataError
 
-    from apps.ward.caller import ADDRESS_LABELS, DISPLAY_ADDRESS
+    from apps.ward.caller import ADDRESS_LABELS, DISPLAY_ADDRESS, SIGN_TX
 
-    if caller is DISPLAY_ADDRESS:
+    if caller is DISPLAY_ADDRESS or caller is SIGN_TX:
         return ADDRESS_LABELS
     raise DataError("app not authorized for WARD lookup")
 
