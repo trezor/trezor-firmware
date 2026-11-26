@@ -4,11 +4,11 @@
 //! reply. The progress methods do the same for the progress service. There is
 //! nothing to convert: the vtable carries the wire types.
 //!
-//! A `Data` field travels as its length alone, so Core pulls the bytes from the
-//! app while the person pages: `ui_call` answers Core's chunk requests from the
-//! request's own source, and returns only the final decision. A source that
-//! cannot produce a range answers with the chunk-failed id instead, and Core
-//! stops the layout.
+//! A `TextSource` field travels as its length alone, so Core pulls the text
+//! from the app while the person pages: `ui_call` answers Core's chunk requests
+//! from the request's own source, and returns only the final decision. A source
+//! that cannot produce a range answers with the chunk-failed id instead, and
+//! Core stops the layout.
 //!
 //! This runs on the app's task but is part of the firmware, so anything an
 //! app would otherwise carry in its own binary belongs here or in core.
@@ -18,8 +18,8 @@ use rkyv::bytecheck::CheckBytes;
 use rkyv::rancor::Failure;
 use rkyv::{Archive, Deserialize};
 use trezor_app_sdk::structs::{
-    Source, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult, UI_MSG_CHUNK,
-    UI_MSG_CHUNK_FAILED, UI_MSG_DECISION, UiChunkRequest,
+    SourceRef, StrSlice, TrezorProgressEnum, TrezorUiEnum, TrezorUiResult, UI_MSG_CHUNK,
+    UI_MSG_CHUNK_FAILED, UI_MSG_DECISION, UiChunkRequest, WireField,
 };
 use trezor_app_sdk::traits::ui::UiV1;
 use trezor_app_sdk::traits::util::{ServiceResult, TIMEOUT_MAX};
@@ -35,12 +35,12 @@ where
     rkyv::from_bytes::<T, Failure>(data).map_err(|_| call_failed(what))
 }
 
-/// The source of the `Data` field at flat index `index`, if there is one.
+/// The source of the `TextSource` field at flat index `index`, if there is one.
 ///
 /// The index counts the review's own fields first, then each extra's fields in
-/// order — every field counts, whatever its kind, and only a `Data` field has
-/// bytes to give.
-fn data_field<'a>(request: &TrezorUiEnum<'a>, index: u16) -> Option<Source<'a>> {
+/// order — every field counts, whatever its kind, and only a `TextSource` field
+/// has text to give.
+fn text_source<'a>(request: &TrezorUiEnum<'a>, index: u16) -> Option<SourceRef<'a>> {
     let TrezorUiEnum::Review(review) = request else {
         return None;
     };
@@ -50,8 +50,11 @@ fn data_field<'a>(request: &TrezorUiEnum<'a>, index: u16) -> Option<Source<'a>> 
         .as_slice()
         .iter()
         .chain(extras.flat_map(|extra| extra.fields.as_slice()))
-        .nth(index as usize)?
-        .source
+        .nth(index as usize)
+        .and_then(|field| match field {
+            WireField::TextSource { source, .. } => Some(*source),
+            _ => None,
+        })
 }
 
 /// Serializes `request`, sends it to Core's UI service and waits for the
@@ -66,8 +69,8 @@ fn ui_request(request: TrezorUiEnum) -> Result<TrezorUiResult, CallError> {
             UI_MSG_DECISION => return decode(&data, "failed to decode UI response"),
             UI_MSG_CHUNK => {
                 let asked: UiChunkRequest = decode(&data, "failed to decode UI chunk request")?;
-                let source = data_field(&request, asked.field)
-                    .ok_or_else(|| call_failed("UI chunk request names no data field"))?;
+                let source = text_source(&request, asked.field)
+                    .ok_or_else(|| call_failed("UI chunk request names no text source"))?;
                 chunk.resize(asked.len as usize, 0);
                 // The source runs inside this call: an `ipc_call` from it would
                 // be a second call in flight, and Core stops the app for it.

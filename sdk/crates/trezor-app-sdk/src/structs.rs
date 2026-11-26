@@ -433,9 +433,9 @@ pub struct WireExtra<'a> {
 /// menu already holds the way forward. See [`Answer::max_extras`].
 pub const MAX_MENU_ENTRIES: usize = 6;
 
-/// How many `TextSource` fields one list of facts may hold: a review's own
-/// facts, or one extra's.
-pub const MAX_TEXT_SOURCES: usize = 1;
+/// How many streamed fields, such as a `TextSource`, one list of facts may
+/// hold: a review's own facts, or one extra's.
+pub const MAX_STREAMED_FIELDS: usize = 1;
 
 /// How the person answers a review, which decides how core draws its yes.
 #[stabby::stabby]
