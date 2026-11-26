@@ -507,7 +507,6 @@ pub trait FirmwareUI {
         title: TString<'static>,
         indeterminate: bool,
         time_ms: u32,
-        skip_first_paint: bool,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn show_properties(

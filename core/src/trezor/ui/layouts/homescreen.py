@@ -109,7 +109,6 @@ async def run_homescreen(
             label=label or utils.MODEL_FULL_NAME,
             notification=notification,
             lockable=lockable,
-            skip_first_paint=Homescreen._should_resume(),
         )
     ) as layout:
         return await layout.get_result()
@@ -129,7 +128,6 @@ async def run_lockscreen(
             trezorui_api.show_lockscreen,
             label=label,
             bootscreen=bootscreen,
-            skip_first_paint=skip,
             coinjoin_authorized=coinjoin_authorized,
         )
     ) as layout:
@@ -155,7 +153,6 @@ async def run_busyscreen(delay_ms: int) -> ui.UiResult:
             title=TR.coinjoin__waiting_for_others,
             indeterminate=True,
             time_ms=delay_ms,
-            skip_first_paint=Busyscreen._should_resume(),
         )
     ) as layout:
         from trezor.wire import context

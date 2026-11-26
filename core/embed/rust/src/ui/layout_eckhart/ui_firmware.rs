@@ -1355,7 +1355,6 @@ impl FirmwareUI for UIEckhart {
         description: TString<'static>,
         indeterminate: bool,
         time_ms: u32,
-        skip_first_paint: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let progress = ProgressScreen::new_coinjoin_progress(
             TR::coinjoin__title_progress.into(),
@@ -1368,9 +1367,6 @@ impl FirmwareUI for UIEckhart {
         } else {
             LayoutObj::new(progress)?
         };
-        if skip_first_paint {
-            obj.skip_first_paint();
-        }
         Ok(obj)
     }
 

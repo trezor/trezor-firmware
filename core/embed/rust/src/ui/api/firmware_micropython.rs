@@ -883,7 +883,6 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
         let lockable: bool = kwargs.get(Qstr::MP_QSTR_lockable)?.try_into()?;
-        let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
         let notification = if let Some(notif_tuple) = notification {
             let [text, level, actionable]: [Obj; 3] = util::iter_into_array(notif_tuple)?;
@@ -900,11 +899,7 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
         };
 
         let layout = ModelUI::show_homescreen(label, notification, lockable)?;
-        let layout_obj = LayoutObj::new_root(layout)?;
-        if skip_first_paint {
-            layout_obj.skip_first_paint();
-        }
-        Ok(layout_obj.into())
+        Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1045,14 +1040,9 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
             .unwrap_or_else(|| model::FULL_NAME.into());
         let bootscreen: bool = kwargs.get(Qstr::MP_QSTR_bootscreen)?.try_into()?;
         let coinjoin_authorized: bool = kwargs.get_or(Qstr::MP_QSTR_coinjoin_authorized, false)?;
-        let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
         let layout = ModelUI::show_lockscreen(label, bootscreen, coinjoin_authorized)?;
-        let layout_obj = LayoutObj::new_root(layout)?;
-        if skip_first_paint {
-            layout_obj.skip_first_paint();
-        }
-        Ok(layout_obj.into())
+        Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1088,9 +1078,8 @@ extern "C" fn new_show_progress_coinjoin(n_args: usize, args: *const Obj, kwargs
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let indeterminate: bool = kwargs.get_or(Qstr::MP_QSTR_indeterminate, false)?;
         let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
-        let skip_first_paint: bool = kwargs.get_or(Qstr::MP_QSTR_skip_first_paint, false)?;
 
-        let obj = ModelUI::show_progress_coinjoin(title, indeterminate, time_ms, skip_first_paint)?;
+        let obj = ModelUI::show_progress_coinjoin(title, indeterminate, time_ms)?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1898,7 +1887,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     label: str,
     ///     notification: tuple[str, int, bool] | None = None,
     ///     lockable: bool,
-    ///     skip_first_paint: bool,
     /// ) -> LayoutContext[UiResult]:
     ///     """Idle homescreen."""
     Qstr::MP_QSTR_show_homescreen => obj_fn_kw!(0, new_show_homescreen).as_obj(),
@@ -2007,7 +1995,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     label: str | None,
     ///     bootscreen: bool,
-    ///     skip_first_paint: bool,
     ///     coinjoin_authorized: bool = False,
     /// ) -> LayoutContext[UiResult]:
     ///     """Homescreen for locked device."""
@@ -2034,7 +2021,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     indeterminate: bool = False,
     ///     time_ms: int = 0,
-    ///     skip_first_paint: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
     ///     time_ms timeout is passed."""

@@ -456,10 +456,6 @@ impl LayoutObj {
         };
         &TYPE
     }
-
-    pub fn skip_first_paint(&self) {
-        self.inner_mut().repaint = Repaint::None;
-    }
 }
 
 impl From<Gc<LayoutObj>> for Obj {

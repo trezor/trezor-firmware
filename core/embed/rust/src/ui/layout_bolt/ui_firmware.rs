@@ -1096,7 +1096,6 @@ impl FirmwareUI for UIBolt {
         title: TString<'static>,
         indeterminate: bool,
         time_ms: u32,
-        skip_first_paint: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let progress = CoinJoinProgress::<Never>::new(title, indeterminate)?;
         let obj = if time_ms > 0 && indeterminate {
@@ -1105,9 +1104,6 @@ impl FirmwareUI for UIBolt {
         } else {
             LayoutObj::new(progress)?
         };
-        if skip_first_paint {
-            obj.skip_first_paint();
-        }
         Ok(obj)
     }
 
