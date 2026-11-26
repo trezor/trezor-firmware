@@ -12,5 +12,3 @@ order. Adding and then deleting an entry can therefore restore an earlier root a
 
 An entry deleted from the current tree can survive in encrypted replica history. The root identifies
 the contents. [Transitions and sessions](ward_transitions.md) establish how the wallet reached them.
-
-The [trie conformance reference](../../common/tests/fixtures/ward/README.md) gives the hash and proof conventions.
