@@ -713,7 +713,6 @@ impl Component for Input {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if self.eye_hint.process(ctx, event) {
-            self.pad.clear();
             ctx.request_paint();
         }
 
