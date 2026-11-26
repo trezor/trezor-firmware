@@ -51,7 +51,8 @@ def cli() -> None:
     "--match-fingerprint",
     is_flag=True,
     default=False,
-    help="Reload the app unless the installed one has the same fingerprint (header hash).",
+    help="Reload the app unless the installed one has the same fingerprint (header hash). "
+    "Debug firmware only: release firmware reuses an installed app with the same ID and version.",
 )
 @with_session()
 def load(
