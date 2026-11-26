@@ -21,4 +21,15 @@ async def get_pubkey(msg: NostrGetPubkey, keychain: Keychain) -> NostrPubkey:
     node = keychain.derive(address_n)
     pk = node.public_key()[-32:]
 
+    if msg.show_display:
+        from trezor.ui.layouts import show_pubkey
+
+        from apps.common.contacts import encode_npub
+
+        await show_pubkey(
+            encode_npub(pk),
+            "Nostr public key",
+            path=paths.address_n_to_str(address_n),
+        )
+
     return NostrPubkey(pubkey=pk)
