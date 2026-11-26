@@ -12,3 +12,16 @@ order. Adding and then deleting an entry can therefore restore an earlier root a
 
 An entry deleted from the current tree can survive in encrypted replica history. The root identifies
 the contents. [Transitions and sessions](ward_transitions.md) establish how the wallet reached them.
+
+## Recovery after data loss in Evolu
+
+If an Evolu replica loses data, the host can rebuild the tree from encrypted change history
+retained by another replica or in a backup. It checks the root after each change. Once it reaches
+the wallet's trusted head, the host can again serve proofs for that state.
+
+A partial backup may reproduce only an older head. With a WARD Manager, reverting to that state
+requires enough surviving history to verify the target and the user's approval of the
+[revert](ward_roll_forward.md#reverting-and-rejoining).
+
+The wallet seed and the manager's signed head cannot recreate a value lost from every replica and
+backup. A Trezor may still hold individual [pinned copies or queued changes](user_story.md#keeping-a-contact-while-offline).

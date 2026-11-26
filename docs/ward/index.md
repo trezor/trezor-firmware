@@ -14,6 +14,7 @@ changes across devices and attests the head it holds.
 - [Entry privacy](ward_leaf_encryption.md) and [the authenticated tree](ward-trie.md)
 - [Transitions and write sessions](ward_transitions.md)
 - [Recovery after a manager restore](ward_roll_forward.md)
+- [Recovery after data loss in Evolu](ward-trie.md#recovery-after-data-loss-in-evolu)
 
 ## Security and use
 
