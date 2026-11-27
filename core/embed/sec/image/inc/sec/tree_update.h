@@ -28,7 +28,8 @@ typedef struct {
   // vendor string, derived from the authenticated firmware variant
   uint8_t vstr[64];
   size_t vstr_len;
-  // firmware version from the manifest: major, minor, patch, build
+  // release version from the boot header: major, minor, patch, build; for
+  // universal / bitcoin-only it equals the manifest's firmware_version
   uint8_t version[4];
   // firmware_root, as the bootloader's confirm screen shows it
   merkle_proof_node_t firmware_root;

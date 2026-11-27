@@ -84,12 +84,24 @@ secbool tree_update_check(const uint8_t *prefix, size_t prefix_len,
     return secfalse;
   }
 
+  // The release version decides upgrade / downgrade, as in the bootloader.
+  // Official variants carry it as their firmware_version too; refuse a
+  // mismatch here, before the user confirms, rather than in the bootloader
+  // after. CUSTOM and PRODTEST keep their own numbering.
+  const fw_variant_sec_t variant = manifest->firmware_variant;
+  if ((variant == FW_VARIANT_SEC_UNIVERSAL ||
+       variant == FW_VARIANT_SEC_BITCOIN_ONLY) &&
+      memcmp(&hdr->version, manifest->firmware_version,
+             sizeof(manifest->firmware_version)) != 0) {
+    return secfalse;
+  }
+
   // The variant is authenticated (inside the folded manifest).
-  const char *vendor = firmware_vendor_str(manifest->firmware_variant);
+  const char *vendor = firmware_vendor_str(variant);
   info->vstr_len = MIN(sizeof(info->vstr), strlen(vendor));
   memcpy(info->vstr, vendor, info->vstr_len);
 
-  memcpy(info->version, manifest->firmware_version, sizeof(info->version));
+  memcpy(info->version, &hdr->version, sizeof(info->version));
   info->firmware_root = root;
 
   return sectrue;
