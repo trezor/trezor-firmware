@@ -320,7 +320,7 @@ impl<D: DerefMut<Target = NoiseXXpsk3Ctx>> TapContext<D> {
 
     fn handle_sent_handshake_psk(&mut self) -> Result<TapState, NfcError> {
         let r_apdu = transceive_complete()?;
-        let card_share = r_apdu.as_slice();
+        let card_share = r_apdu.response_ok()?;
         let trezor_share = &self.response_buf.as_slice()[..NOISE_PSK_SHARE_LEN];
         let psk = combine_psk_shares(trezor_share, card_share)?;
         self.response_buf.write_with(|dest| {

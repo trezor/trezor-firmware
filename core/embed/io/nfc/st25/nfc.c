@@ -608,6 +608,11 @@ ts_t nfc_transceive_complete(nfc_apdu_message_t *resp) {
     ts_t status = nfc_parse_psk_frame(
         xfer->psk_rx_frame, rfalConvBitsToBytes(xfer->psk_rx_bits), resp->data,
         sizeof(resp->data), &resp->data_len);
+    if (ts_ok(status) && resp->data_len + 2 <= NFC_MAX_APDU_LEN) {
+      // Append synthetic success status.
+      resp->data[resp->data_len++] = 0x90;
+      resp->data[resp->data_len++] = 0x00;
+    }
     TSH_CHECK_OK(status);
   }
 

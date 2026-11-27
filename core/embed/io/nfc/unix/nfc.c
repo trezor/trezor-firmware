@@ -265,6 +265,10 @@ ts_t nfc_emu_set_response(uint32_t status, const uint8_t *resp, size_t len) {
     drv->state = NFC_EMU_STATE_RESPONSE_ERROR;
   } else {
     memcpy(&drv->apdu.data, resp, len);
+    if (drv->is_psk && len + 2 <= NFC_MAX_APDU_LEN) {
+      drv->apdu.data[len++] = 0x90;
+      drv->apdu.data[len++] = 0x00;
+    }
     drv->apdu.data_len = len;
     drv->state = NFC_EMU_STATE_RESPONSE_RECEIVED;
   }
