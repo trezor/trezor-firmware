@@ -1072,6 +1072,21 @@ __attribute__((no_stack_protector,
   systask_scheduler_t* scheduler = &g_systask_scheduler;
   systask_t* task = systask_active();
 
+#ifdef USE_APPLETS
+  // Force the lazy FP state preservation of the calling task now. If its
+  // exception frame is invalid, the fault is taken here and not later in
+  // the middle of the syscall processing, which could not be abandoned.
+  __asm__ volatile("vmov.f32 s0, s0");
+
+  if (task->killed) {
+    // The calling task was killed by the fault above (or by a fault in
+    // an interrupt handler preempting this one); the pending PendSV
+    // switches to the kernel task.
+    IRQ_LOG_EXIT();
+    return;
+  }
+#endif
+
   uint8_t svc_number = ((uint8_t*)stack[6])[-2];
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
@@ -1090,7 +1105,7 @@ __attribute__((no_stack_protector,
       if ((r6 & SYSCALL_THREAD_MODE) != 0) {
         syscall_ipc_enqueue(args, r6);
       } else {
-        syscall_handler(args, r6, systask_active()->applet);
+        syscall_handler(args, r6, task->applet);
         stack[0] = args[0];
         stack[1] = args[1];
       }
