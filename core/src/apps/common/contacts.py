@@ -33,6 +33,10 @@ _MAX_ADDRESS_LEN = const(90)
 # attested address is always found by the receiver's own wallet discovery.
 _MAX_ADDRESS_INDEX = const(1000)
 
+# The WARD domain (app_id) of the contact roster: the identifier is the UTF-8 npub
+# and the value the name. A domain of its own keeps names apart from address labels.
+WARD_DOMAIN = "contacts"
+
 
 def is_attestable_address(address: str) -> bool:
     """Address charset accepted by both the producer and the verifier."""
@@ -79,6 +83,23 @@ def encode_npub(pubkey: AnyBytes) -> str:
         raise DataError("Invalid contact pubkey")
     data = bech32.convertbits(pubkey, 8, 5)
     return bech32.bech32_encode("npub", data, bech32.Encoding.BECH32)
+
+
+def display_name(value: bytes) -> str | None:
+    """`value` as a name a trusted screen may show as-is, or None.
+
+    Only non-empty printable ASCII without a leading or trailing space: it maps back
+    to exactly one byte string, and no control, zero-width, bidi or look-alike
+    character can make one contact pass for another.
+    """
+    if (
+        value
+        and all(0x20 <= b <= 0x7E for b in value)
+        and value[0] != 0x20
+        and value[-1] != 0x20
+    ):
+        return value.decode()
+    return None
 
 
 def verify_attestation(

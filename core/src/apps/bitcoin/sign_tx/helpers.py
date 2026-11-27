@@ -55,6 +55,7 @@ class UiConfirmOutput(UiConfirm):
         output_index: int,
         chunkify: bool,
         address_n: Bip32Path | None,
+        lookup_contact: bool = False,
     ) -> None:
         self.output = output
         self.coin = coin
@@ -62,8 +63,11 @@ class UiConfirmOutput(UiConfirm):
         self.output_index = output_index
         self.chunkify = chunkify
         self.address_n = address_n
+        self.lookup_contact = lookup_contact
 
     def confirm_dialog(self) -> Awaitable[Any]:
+        if self.lookup_contact:
+            return self._confirm_contact_output()
         return layout.confirm_output(
             self.output,
             self.coin,
@@ -71,6 +75,22 @@ class UiConfirmOutput(UiConfirm):
             self.output_index,
             self.chunkify,
             self.address_n,
+        )
+
+    async def _confirm_contact_output(self) -> None:
+        # The name is looked up here rather than in the approver: the signer
+        # generator passes on only TxRequests and UiConfirms, and the WARD pull
+        # needs a host call, which only this outer loop can make.
+        from .contact import contact_label
+
+        await layout.confirm_output(
+            self.output,
+            self.coin,
+            self.amount_unit,
+            self.output_index,
+            self.chunkify,
+            self.address_n,
+            contact_label=await contact_label(self.output, self.coin),
         )
 
 
@@ -263,10 +283,10 @@ class UiConfirmMultipleAccounts(UiConfirm):
         return layout.confirm_multiple_accounts()
 
 
-def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit, output_index: int, chunkify: bool, address_n: Bip32Path | None) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
+def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit, output_index: int, chunkify: bool, address_n: Bip32Path | None, lookup_contact: bool = False) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
     return (
         yield UiConfirmOutput(  # type: ignore [awaitable-return-type]
-            output, coin, amount_unit, output_index, chunkify, address_n
+            output, coin, amount_unit, output_index, chunkify, address_n, lookup_contact
         )
     )
 
