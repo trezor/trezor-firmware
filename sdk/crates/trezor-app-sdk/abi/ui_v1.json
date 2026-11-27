@@ -9,10 +9,7 @@
       "      head: Struct trezor_app_sdk::traits::ui::StabbyVtableUiV1",
       "        ui_call_v1: Struct stabby_abi::stable_impls::&",
       "          inner: Struct stabby_abi::stable_impls::()",
-      "        init_progress: Struct stabby_abi::stable_impls::& (as above)",
-      "        step_progress: Struct stabby_abi::stable_impls::& (as above)",
-      "        label_progress: Struct stabby_abi::stable_impls::& (as above)",
-      "        end_progress: Struct stabby_abi::stable_impls::& (as above)"
+      "        progress_v1: Struct stabby_abi::stable_impls::& (as above)"
     ],
     "TrezorUiEnumV1": [
       "Enum(u8) trezor_app_sdk::traits::ui::types::TrezorUiEnumV1",
@@ -96,6 +93,18 @@
       "  Confirmed: Struct stabby_abi::stable_impls::()",
       "  Cancelled: Struct stabby_abi::stable_impls::() (as above)",
       "  ShowDetails: Struct stabby_abi::stable_impls::() (as above)"
+    ],
+    "ProgressV1": [
+      "Struct trezor_app_sdk::traits::ui::types::ProgressV1",
+      "  label: Struct trezor_app_sdk::structs::StrSlice",
+      "    inner: Struct stabby_abi::str::Str",
+      "      inner: Struct stabby_abi::slice::Slice",
+      "        start: Struct stabby_abi::stable_impls::core::ptr::NonNull",
+      "          inner: Struct stabby_abi::stable_impls::u8",
+      "        len: Struct stabby_abi::stable_impls::usize",
+      "        marker: Struct stabby_abi::stable_impls::core::marker::PhantomData",
+      "  done: Struct stabby_abi::stable_impls::u32",
+      "  total: Struct stabby_abi::stable_impls::u32 (as above)"
     ]
   },
   "discriminants": {

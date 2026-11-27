@@ -267,7 +267,7 @@ carries are frozen once an app ships against them. Their layout is recorded in
 `abi/ui_v1.json`, and a unit test fails when the code no longer matches it:
 
 - `layout`: each pinned type, its fields and their types, nested all the way
-  down (`UiV1Vtable`, `TrezorUiEnumV1`, `TrezorUiResultV1`).
+  down (`UiV1Vtable`, `TrezorUiEnumV1`, `TrezorUiResultV1`, `ProgressV1`).
 - `discriminants`: the number of every variant.
 - `words`: the size of the types that keep a `Reserved` variant.
 

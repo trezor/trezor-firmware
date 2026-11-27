@@ -27,8 +27,8 @@ use stabby::IStable;
 use stabby::abi::report::{TyTy, TypeReport};
 
 use super::{
-    Answer, DoneRequest, FieldKind, ReviewRequest, SourceRef, TrezorUiEnumV1, TrezorUiResultV1,
-    UiV1Vtable, VerifyRequest, WireField,
+    Answer, DoneRequest, FieldKind, ProgressV1, ReviewRequest, SourceRef, TrezorUiEnumV1,
+    TrezorUiResultV1, UiV1Vtable, VerifyRequest, WireField,
 };
 use crate::Result;
 use crate::modui::TextSource;
@@ -42,6 +42,7 @@ fn pinned() -> Vec<(&'static str, &'static TypeReport)> {
         ("UiV1Vtable", <UiV1Vtable as IStable>::REPORT),
         ("TrezorUiEnumV1", <TrezorUiEnumV1 as IStable>::REPORT),
         ("TrezorUiResultV1", <TrezorUiResultV1 as IStable>::REPORT),
+        ("ProgressV1", <ProgressV1 as IStable>::REPORT),
     ]
 }
 
