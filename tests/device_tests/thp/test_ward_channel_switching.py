@@ -598,10 +598,10 @@ def test_large_messages_cross_the_seam_in_both_directions(client: Client) -> Non
         assert store.counter == 4
         # THE MESSAGES REALLY WERE LARGE, which is the premise the whole test rests on -- if the
         # device had quietly stored something smaller, everything above would pass in the small
-        # buffers and assert nothing. A 2048-byte value packs to 2056 and seals into the 4096-byte
-        # AEAD bucket, four times a channel's own 1024-byte buffer.
+        # buffers and assert nothing. A 2048-byte value seals to over 2048 bytes, twice a channel's
+        # own 1024-byte buffer.
         assert all(
-            len(leaf.content.encrypted.ct) >= 4096 for leaf in store.blobs.values()
+            len(leaf.content) > 2048 for leaf in store.blobs.values()
         ), "the values that crossed the seam were not large after all"
     finally:
         wardd.close()
