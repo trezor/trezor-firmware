@@ -172,21 +172,21 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
                                            fw_begin_staged_t *out) {
   // Manifest region (manifest + proof); same bound as
   // fwt_upload_handler_t.manifest_buf.
-  static uint8_t module_headers[FW_MANIFEST_REGION];
+  static uint8_t manifest_region[FW_MANIFEST_REGION];
   // Boot header scratch borrowed from the upload engine; valid only until
   // the caller starts streaming.
   uint8_t *bh_buf = (uint8_t *)chunk_buffer;
   size_t bh_len = 0;
-  size_t mh_len = 0;
+  size_t region_len = 0;
   // Host-claimed digest of the incoming bootloader code.
   uint8_t code_hash[IMAGE_HASH_DIGEST_LENGTH] = {0};
   size_t ch_len = 0;
   // The static buffer persists across retries within one boot.
-  memset(module_headers, 0, sizeof(module_headers));
-  if (sectrue !=
-      recv_msg_firmware_begin(iface, msg, bh_buf, BOOT_HEADER_MAXSIZE, &bh_len,
-                              module_headers, sizeof(module_headers), &mh_len,
-                              code_hash, sizeof(code_hash), &ch_len, nrf_arg)) {
+  memset(manifest_region, 0, sizeof(manifest_region));
+  if (sectrue != recv_msg_firmware_begin(
+                     iface, msg, bh_buf, BOOT_HEADER_MAXSIZE, &bh_len,
+                     manifest_region, sizeof(manifest_region), &region_len,
+                     code_hash, sizeof(code_hash), &ch_len, nrf_arg)) {
     ui_screen_fail();  // recv already failed, no wire Failure to send
     return WF_ERROR;
   }
@@ -267,15 +267,15 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
   memcpy(firmware_root.bytes, hdr->firmware_root.bytes,
          sizeof(firmware_root.bytes));
   const firmware_manifest_t *manifest =
-      (const firmware_manifest_t *)module_headers;
-  if (mh_len < sizeof(firmware_manifest_t) ||
-      firmware_manifest_size(manifest) > mh_len) {
+      (const firmware_manifest_t *)manifest_region;
+  if (region_len < sizeof(firmware_manifest_t) ||
+      firmware_manifest_size(manifest) > region_len) {
     return fw_begin_fail(iface, "Invalid firmware manifest");
   }
   size_t manifest_len = firmware_manifest_size(manifest);
   const merkle_proof_node_t *fw_proof = NULL;
   size_t fw_proof_count = 0;
-  if (sectrue != firmware_manifest_read_proof(manifest, mh_len, &fw_proof,
+  if (sectrue != firmware_manifest_read_proof(manifest, region_len, &fw_proof,
                                               &fw_proof_count)) {
     return fw_begin_fail(iface, "Invalid firmware manifest proof");
   }
@@ -293,7 +293,7 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
   if (sectrue != boot_header_prefix_extent((const uint8_t *)hdr,
                                            hdr->header_size, &prefix_len) ||
       sectrue != boot_header_consent_digest((const uint8_t *)hdr, prefix_len,
-                                            module_headers, manifest_len,
+                                            manifest_region, manifest_len,
                                             &consent)) {
     return fw_begin_fail(iface, "Invalid boot header");
   }
