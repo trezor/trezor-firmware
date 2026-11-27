@@ -160,10 +160,16 @@ def firmware_begin(
     )
 
     # FirmwareRequest.stream routes each request: absent / Primary = bootloader
-    # code, Nrf = nRF image
+    # code, Nrf = nRF image. Refuse any other stream rather than serving the
+    # wrong image (an unknown enum value decodes as a plain int).
     served = {"code": 0, "nrf": 0}
     while isinstance(resp, messages.FirmwareRequest):
-        is_nrf = resp.stream == messages.FirmwareStream.Nrf
+        stream = resp.stream or messages.FirmwareStream.Primary
+        if stream not in (messages.FirmwareStream.Primary, messages.FirmwareStream.Nrf):
+            raise RuntimeError(
+                f"Device requested unsupported firmware stream {stream}; update trezorlib"
+            )
+        is_nrf = stream == messages.FirmwareStream.Nrf
         src = nrf_image if is_nrf else code
         assert src is not None, "device requested image bytes but none supplied"
         length = resp.length
