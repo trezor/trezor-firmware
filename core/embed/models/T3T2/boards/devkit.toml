@@ -16,6 +16,9 @@ panel = "io/touch_panel_lx200b4501ctp03"
 
 [ble]
 
+[nfc]
+driver = "io/nfc_st25r210"
+
 [nrf]
 
 [nrf_auth]
