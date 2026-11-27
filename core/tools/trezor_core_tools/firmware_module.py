@@ -263,7 +263,7 @@ def read_manifest_proof(fw: bytes | bytearray) -> list[bytes]:
 
 
 def read_manifest_region(fw: bytes | bytearray) -> bytes:
-    """[manifest || proof struct]: the FirmwareBegin preamble bytes."""
+    """[manifest || proof struct]: the manifest region the device parses."""
     off = _manifest_len(fw)
     (count,) = _PROOF_COUNT.unpack_from(fw, off)
     if count > FW_MANIFEST_PROOF_MAX_NODES:
