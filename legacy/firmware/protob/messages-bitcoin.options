@@ -10,6 +10,8 @@ GetAddress.coin_name                                        max_size:21
 
 Address.address                                             max_size:130
 Address.mac                                                 type:FT_IGNORE
+Address.contact_signature                                   type:FT_IGNORE
+Address.contact_pubkey                                      type:FT_IGNORE
 
 SignTx.coin_name                                            max_size:21
 
@@ -43,6 +45,8 @@ TxOutputType.address                                        max_size:130
 TxOutputType.address_n                                      max_count:8
 TxOutputType.op_return_data                                 max_size:150
 TxOutputType.orig_hash                                      max_size:32
+TxOutputType.contact_pubkey                                 type:FT_IGNORE
+TxOutputType.contact_signature                              type:FT_IGNORE
 
 TxOutputBinType.script_pubkey                               max_size:520
 
@@ -71,6 +75,8 @@ TxOutput.address                                            max_size:130
 TxOutput.address_n                                          max_count:8
 TxOutput.op_return_data                                     max_size:150
 TxOutput.orig_hash                                          max_size:32
+TxOutput.contact_pubkey                                     type:FT_IGNORE
+TxOutput.contact_signature                                  type:FT_IGNORE
 
 PrevInput.prev_hash                                         max_size:32
 PrevInput.script_sig                                        max_size:1650

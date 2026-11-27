@@ -120,8 +120,10 @@ message GetAddress {
     optional MultisigRedeemScriptType multisig = 4;       // filled if we are showing a multisig address
     optional InputScriptType script_type = 5
         [default = SPENDADDRESS];  // used to distinguish between various address formats (non-segwit, segwit, etc.)
-    optional bool ignore_xpub_magic = 6;  // ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
-    optional bool chunkify = 7;           // display the address in chunks of 4 characters
+    optional bool ignore_xpub_magic = 6;     // ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
+    optional bool chunkify = 7;              // display the address in chunks of 4 characters
+    optional bool contact_attestation = 11;  // sign the shown address with the contact identity key
+                                             // (requires show_display; see Address.contact_signature)
 }
 
 /**
@@ -129,8 +131,10 @@ message GetAddress {
  * @end
  */
 message Address {
-    required string address = 1;  // Coin address in Base58 encoding
-    optional bytes mac = 2;       // Address authentication code
+    required string address = 1;           // Coin address in Base58 encoding
+    optional bytes mac = 2;                // Address authentication code
+    optional bytes contact_signature = 3;  // BIP-340 signature of the contact address attestation digest
+    optional bytes contact_pubkey = 4;     // x-only public key of the contact identity (m/44'/1237'/0'/0/0)
 }
 
 /**
@@ -377,6 +381,8 @@ message TxAck {
             optional uint32 orig_index = 11;  // index of the output in the original transaction
                                               // (used when creating a replacement transaction)
             optional uint32 payment_req_index = 12;  // index of the PaymentRequest containing this output
+            optional bytes contact_pubkey = 13;      // x-only identity pubkey of the contact owning address
+            optional bytes contact_signature = 14;   // contact's BIP-340 attestation of address
         }
     }
 }
@@ -428,6 +434,8 @@ message TxOutput {
     optional uint32 orig_index = 11;    // index of the output in the original transaction (used when
                                         // creating a replacement transaction)
     optional uint32 payment_req_index = 12;  // index of the PaymentRequest containing this output
+    optional bytes contact_pubkey = 13;      // x-only identity pubkey of the contact owning address
+    optional bytes contact_signature = 14;   // contact's BIP-340 attestation of address (see GetAddress)
 }
 
 /** Data type for metadata about previous transaction which contains the UTXO being spent.
