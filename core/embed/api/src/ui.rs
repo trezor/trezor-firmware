@@ -1,7 +1,7 @@
 //! Implements [`trezor_app_sdk::traits::ui`]'s `UiV1` on top of
 //! [`crate::wire::ipc_call`]. `ui_call_v1` takes the request exactly as the app
 //! built it, serializes it, sends it to Core's UI service and returns the
-//! reply. The progress methods do the same for the progress service. There is
+//! reply. `progress_v1` does the same for the progress service. There is
 //! nothing to convert: the vtable carries the wire types.
 //!
 //! A `TextSource` field travels as its length alone, so Core pulls the text
@@ -17,9 +17,8 @@ use rkyv::api::high::{HighDeserializer, HighValidator};
 use rkyv::bytecheck::CheckBytes;
 use rkyv::rancor::Failure;
 use rkyv::{Archive, Deserialize};
-use trezor_app_sdk::structs::StrSlice;
 use trezor_app_sdk::traits::ui::{
-    SourceRef, TrezorProgressEnum, TrezorUiEnumV1, TrezorUiResultV1, UI_MSG_CHUNK,
+    PROGRESS_MSG, ProgressV1, SourceRef, TrezorUiEnumV1, TrezorUiResultV1, UI_MSG_CHUNK,
     UI_MSG_CHUNK_FAILED, UI_MSG_DECISION, UiChunkRequest, UiV1, WireField,
 };
 use trezor_app_sdk::traits::util::{ServiceResult, TIMEOUT_MAX};
@@ -89,11 +88,13 @@ fn ui_request(request: TrezorUiEnumV1) -> Result<TrezorUiResultV1, CallError> {
     }
 }
 
-fn ipc_progress_call(value: &TrezorProgressEnum) -> Result<(), CallError> {
-    let bytes = to_bytes(value).map_err(|_| call_failed("failed to serialize progress request"))?;
+/// Sends one progress state to Core's progress service.
+fn progress_request(progress: &ProgressV1) -> Result<(), CallError> {
+    let bytes =
+        to_bytes(progress).map_err(|_| call_failed("failed to serialize progress request"))?;
     ipc_call(
         CoreIpcService::Progress.into(),
-        value.id(),
+        PROGRESS_MSG,
         &bytes,
         TIMEOUT_MAX,
     )?;
@@ -110,19 +111,7 @@ impl UiV1 for TrezorUiV1Impl {
         ui_request(request).into()
     }
 
-    extern "C" fn init_progress<'a>(&self, label: StrSlice<'a>, total: u32) -> ServiceResult<()> {
-        ipc_progress_call(&TrezorProgressEnum::Init { label, total }).into()
-    }
-
-    extern "C" fn step_progress(&self, units: u32) -> ServiceResult<()> {
-        ipc_progress_call(&TrezorProgressEnum::Step { units }).into()
-    }
-
-    extern "C" fn label_progress<'a>(&self, label: StrSlice<'a>) -> ServiceResult<()> {
-        ipc_progress_call(&TrezorProgressEnum::Label { label }).into()
-    }
-
-    extern "C" fn end_progress(&self) -> ServiceResult<()> {
-        ipc_progress_call(&TrezorProgressEnum::End).into()
+    extern "C" fn progress_v1<'a>(&self, progress: ProgressV1<'a>) -> ServiceResult<()> {
+        progress_request(&progress).into()
     }
 }

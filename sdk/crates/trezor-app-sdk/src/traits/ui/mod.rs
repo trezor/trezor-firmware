@@ -15,7 +15,6 @@ mod types;
 pub use types::*;
 
 use super::util::ServiceResult;
-use crate::structs::StrSlice;
 
 /// Talks to Core's UI/progress screens — implemented in `core/embed/api`
 /// against [`super::wire::WireV1`].
@@ -28,14 +27,9 @@ pub trait UiV1: Send + Sync {
         request: TrezorUiEnumV1<'a>,
     ) -> ServiceResult<TrezorUiResultV1>;
 
-    /// `total` is in the app's own units; `0` means not known.
-    extern "C" fn init_progress<'a>(&self, label: StrSlice<'a>, total: u32) -> ServiceResult<()>;
-    /// Reports `units` more of the total done.
-    extern "C" fn step_progress(&self, units: u32) -> ServiceResult<()>;
-    /// Changes the text under the bar while the work goes on.
-    extern "C" fn label_progress<'a>(&self, label: StrSlice<'a>) -> ServiceResult<()>;
-    /// Closes the progress indicator.
-    extern "C" fn end_progress(&self) -> ServiceResult<()>;
+    /// Shows the progress bar as `progress` describes it, whatever was on the
+    /// screen before.
+    extern "C" fn progress_v1<'a>(&self, progress: ProgressV1<'a>) -> ServiceResult<()>;
 }
 
 /// The stabby vtable of [`UiV1`].

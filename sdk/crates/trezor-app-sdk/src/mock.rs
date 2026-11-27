@@ -21,7 +21,6 @@ use stabby::boxed::{Box, BoxedSlice};
 use stabby::slice::Slice;
 use stabby::str::Str;
 
-use crate::structs::StrSlice;
 use crate::traits::ApiVariant;
 use crate::traits::allocator::{FfiLayout, GlobalAllocatorV1, GlobalAllocatorV1Vtable};
 use crate::traits::crypto::{
@@ -32,7 +31,7 @@ use crate::traits::syslog::{
     LogCallbackDyn as _, LogCallbackRef, LogLevel, LogRecord, SyslogV1, SyslogV1Vtable,
 };
 use crate::traits::trezor_v1::{TrezorApiV1, TrezorApiV1Struct, TrezorApiV1Vtable};
-use crate::traits::ui::{TrezorUiEnumV1, TrezorUiResultV1, UiV1, UiV1Vtable};
+use crate::traits::ui::{ProgressV1, TrezorUiEnumV1, TrezorUiResultV1, UiV1, UiV1Vtable};
 use crate::traits::util::{CoreServiceError, FastResult, ServiceResult};
 use crate::traits::wire::{FailureKind, WireMessage, WireV1, WireV1Vtable};
 
@@ -286,19 +285,7 @@ impl UiV1 for DummyUi {
         Err(CoreServiceError::StopApplication).into()
     }
 
-    extern "C" fn init_progress<'a>(&self, _label: StrSlice<'a>, _total: u32) -> ServiceResult<()> {
-        Err(CoreServiceError::StopApplication).into()
-    }
-
-    extern "C" fn step_progress(&self, _units: u32) -> ServiceResult<()> {
-        Err(CoreServiceError::StopApplication).into()
-    }
-
-    extern "C" fn label_progress<'a>(&self, _label: StrSlice<'a>) -> ServiceResult<()> {
-        Err(CoreServiceError::StopApplication).into()
-    }
-
-    extern "C" fn end_progress(&self) -> ServiceResult<()> {
+    extern "C" fn progress_v1<'a>(&self, _progress: ProgressV1<'a>) -> ServiceResult<()> {
         Err(CoreServiceError::StopApplication).into()
     }
 }

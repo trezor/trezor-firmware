@@ -348,92 +348,30 @@ pub enum TrezorUiResultV1 {
     ShowDetails = 2,
 }
 
-/// Progress bar operations that can be requested from the app via IPC.
+/// The whole state of a progress bar, sent every time it changes.
 ///
-/// Built by `core/embed/api`; apps use `modui::progress`.
-///
-/// `Init` opens the progress, `Step` reports work done, `Label` changes the
-/// text under the bar, and `End` closes it. Core keeps the count and turns it
-/// into the bar. The app SDK pairs them with a guard that sends `End` on drop,
-/// so an app cannot leave a progress on screen for work that stopped; see the
-/// `modui` progress docs.
-///
-/// Only what the app chose travels; how the progress looks is core's.
-#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize, Deserialize)]
-pub enum TrezorProgressEnum<'a> {
-    /// Show a progress indicator.
-    Init {
-        /// What the work is, such as `"Signing"`.
-        label: StrSlice<'a>,
-        /// How much work there is, in the app's own units. `0` means not
-        /// known: the bar shows motion rather than a fill.
-        total: u32,
-    },
-    /// Reports more of the work done.
-    Step {
-        /// Units of work done since the last step.
-        units: u32,
-    },
-    /// Changes the text under the bar while the work goes on.
-    Label {
-        /// What the work is now, such as `"Signing input 2/3"`.
-        label: StrSlice<'a>,
-    },
-    /// Close the progress indicator.
-    End,
+/// Built by `modui::progress` and `modui::Progress`. Each one describes the
+/// bar completely, so there is nothing to start or end, and a lost or repeated
+/// one does no harm. Only what the app chose travels; how the bar looks is
+/// core's.
+#[stabby::stabby]
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, Archive, Serialize)]
+pub struct ProgressV1<'a> {
+    /// What the work is, such as `"Signing"`.
+    pub label: StrSlice<'a>,
+    /// How much of the work is done, in the app's own units.
+    pub done: u32,
+    /// How much work there is, in the same units. `0` means not known: the
+    /// bar shows motion rather than a fill.
+    pub total: u32,
 }
 
-impl<'a> TrezorProgressEnum<'a> {
-    /// The message id of [`TrezorProgressEnum::Init`].
-    pub const INIT: u16 = 0;
-    /// The message id of [`TrezorProgressEnum::Step`].
-    pub const STEP: u16 = 1;
-    /// The message id of [`TrezorProgressEnum::Label`].
-    pub const LABEL: u16 = 2;
-    /// The message id of [`TrezorProgressEnum::End`].
-    pub const END: u16 = 3;
-
-    /// The message id of the request.
-    pub fn id(&self) -> u16 {
-        match self {
-            TrezorProgressEnum::Init { .. } => Self::INIT,
-            TrezorProgressEnum::Step { .. } => Self::STEP,
-            TrezorProgressEnum::Label { .. } => Self::LABEL,
-            TrezorProgressEnum::End => Self::END,
-        }
-    }
-}
+/// The id of a [`ProgressV1`] on the progress service, and of core's reply.
+pub const PROGRESS_MSG: u16 = 0;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    /// Ensures every variant of TrezorProgressEnum has a unique id()
-    /// and that no variant is accidentally forgotten.
-    #[test]
-    fn progress_ids_are_unique_and_exhaustive() {
-        use TrezorProgressEnum::*;
-        let variants: &[(u16, &str)] = &[
-            (
-                Init {
-                    label: "".into(),
-                    total: 0,
-                }
-                .id(),
-                "Init",
-            ),
-            (Step { units: 0 }.id(), "Step"),
-            (Label { label: "".into() }.id(), "Label"),
-            (End.id(), "End"),
-        ];
-        // all IDs must be unique
-        let mut seen = std::collections::HashSet::new();
-        for (id, name) in variants {
-            assert!(seen.insert(id), "duplicate id {} for variant {}", id, name);
-        }
-        // total count must match — add new variants here when extending the enum
-        assert_eq!(variants.len(), 4, "new variant added but test not updated");
-    }
 
     #[test]
     fn the_menu_budget_leaves_room_for_each_answer() {
