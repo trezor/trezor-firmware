@@ -90,15 +90,7 @@ impl<T> Child<T> {
     where
         F: FnOnce(&mut EventCtx, &mut T) -> U,
     {
-        let prev_requested = core::mem::replace(&mut ctx.paint_requested, false);
-        let result = component_func(ctx, &mut self.component);
-        if !ctx.paint_requested {
-            // Paint has not been requested in the *inner* component, but we need to
-            // preserve the previous flag carried in `ctx` so it properly propagates
-            // upwards (i.e. from our previous siblings).
-            ctx.paint_requested = prev_requested;
-        }
-        result
+        component_func(ctx, &mut self.component)
     }
 }
 
