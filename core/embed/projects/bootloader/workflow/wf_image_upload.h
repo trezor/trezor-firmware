@@ -212,7 +212,7 @@ struct image_upload_handler {
    * @param len Number of valid bytes in @p data.
    * @param prev_hash Optional 32-byte value carried on this block's
    *        FirmwareUpload (the pq smart-hashing chain H_prev), or NULL if the
-   *        message carried none (e.g. legacy uploads, or the innermost/header
+   *        message carried none (e.g. CoSi uploads, or the innermost/header
    *        block). Handlers that don't use it ignore it.
    * @return UPLOAD_OK on success; UPLOAD_ERR_INVALID_CHUNK_HASH to let the
    *         engine retry the block; another negative upload_status_t to fail.
