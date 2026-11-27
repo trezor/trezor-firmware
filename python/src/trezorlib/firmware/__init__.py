@@ -159,10 +159,11 @@ def firmware_begin(
         )
     )
 
-    # coprocessor_index routes each request: 0 = bootloader code, 1 = nRF image
+    # FirmwareRequest.stream routes each request: absent / Primary = bootloader
+    # code, Nrf = nRF image
     served = {"code": 0, "nrf": 0}
     while isinstance(resp, messages.FirmwareRequest):
-        is_nrf = (resp.coprocessor_index or 0) != 0
+        is_nrf = resp.stream == messages.FirmwareStream.Nrf
         src = nrf_image if is_nrf else code
         assert src is not None, "device requested image bytes but none supplied"
         length = resp.length
