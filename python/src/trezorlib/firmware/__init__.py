@@ -88,7 +88,7 @@ def update(
         raise RuntimeError("Device must be in bootloader mode")
 
     # pq_secure_boot phase 2: prev_hashes maps a chunk's end offset to its chain
-    # H_prev (see PqSecureFirmware.chunk_prev_hashes); None for a legacy update
+    # H_prev (see PqSecureFirmware.chunk_prev_hashes); None for a CoSi update
     resp = session.call(messages.FirmwareErase(length=len(data)))
     _stream_firmware_upload(session, data, resp, progress_update, prev_hashes)
 

@@ -643,7 +643,7 @@ def reboot_to_bootloader(
     For ``INSTALL_UPGRADE`` pass the release the user confirms, so the bootloader
     installs it without asking again: ``boot_header_prefix`` and
     ``firmware_manifest_region`` (Merkle-tree layout: boot header prefix and
-    manifest + its proof) or ``firmware_header`` (legacy: vendor header + image header).
+    manifest + its proof) or ``firmware_header`` (CoSi: vendor header + image header).
     """
     session.call(
         messages.RebootToBootloader(

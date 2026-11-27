@@ -151,7 +151,7 @@ def check_scheme_match(features: messages.Features, wants_pq: bool, what: str) -
     """Refuse an image of the wrong layout before touching the device.
 
     Advisory only: the device fails safe either way. An absent `firmware_scheme`
-    means unknown, not legacy (pre-field pq_secure builds exist), so defer to
+    means unknown, not CoSi (pre-field pq_secure builds exist), so defer to
     the device.
     """
     scheme = features.firmware_scheme
@@ -164,11 +164,11 @@ def check_scheme_match(features: messages.Features, wants_pq: bool, what: str) -
     if wants_pq:
         click.echo(
             f"This is a pq_secure {what}, but the {where} on your device uses "
-            "the legacy image layout and cannot install it."
+            "the CoSi image layout and cannot install it."
         )
     else:
         click.echo(
-            f"This is a legacy {what}, but the {where} on your device uses the "
+            f"This is a CoSi-signed {what}, but the {where} on your device uses the "
             "pq_secure (Merkle-tree) layout and needs a bundle."
         )
     sys.exit(3)
@@ -1120,7 +1120,7 @@ def update(
 
             firmware_data = download_firmware_data(url)
 
-        # mirror of the bundle check: a legacy image on a pq_secure device
+        # mirror of the bundle check: a CoSi image on a pq_secure device
         if not raw:
             check_scheme_match(client.features, wants_pq=False, what="firmware image")
 
