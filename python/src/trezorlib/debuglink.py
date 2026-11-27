@@ -31,7 +31,7 @@ from pathlib import Path
 
 from mnemonic import Mnemonic
 
-from . import client, mapping, messages, models, protobuf, protocol_v1
+from . import client, extapp, mapping, messages, models, protobuf, protocol_v1
 from .exceptions import DeviceLockedError, TrezorFailure
 from .log import DUMP_BYTES
 from .messages import DebugTouchEventType, DebugWaitType
@@ -1514,7 +1514,7 @@ class TrezorTestContext:
         self.transport.open(reopen=True)
 
         # debug-specific initialization
-        self.ui: DebugUI = DebugUI(self.debug)
+        self.ui: t.Any = DebugUI(self.debug)
         self.app.pin_callback = self.ui.get_pin
         self.app.button_callback = self.ui.button_request
         self.reset_debug_features()
@@ -1536,6 +1536,13 @@ class TrezorTestContext:
         self.expected_responses: list[MessageFilter] | None = None
         self.actual_responses: list[protobuf.MessageType] = []
         self.filters: dict[
+            type[protobuf.MessageType],
+            t.Callable[[protobuf.MessageType], protobuf.MessageType],
+        ] = {}
+        self.reset_resp_mappings()
+
+    def reset_resp_mappings(self) -> None:
+        self.resp_mappings: dict[
             type[protobuf.MessageType],
             t.Callable[[protobuf.MessageType], protobuf.MessageType],
         ] = {}
@@ -1730,9 +1737,46 @@ class TrezorTestContext:
         else:
             self.filters[message_type] = callback
 
+    def set_resp_mapping(
+        self,
+        message_type: type[protobuf.MessageType],
+        callback: t.Callable[[protobuf.MessageType], protobuf.MessageType] | None,
+    ) -> None:
+        """Map received messages of `message_type` before they are checked against
+        `set_expected_responses` at the end of the `with` block.
+
+        The `callback` accepts a message and returns the message to compare instead.
+        It does not change what is sent or what `session.call` returns.
+
+        Useful when a response wraps the message to check, e.g. an `ExtAppResponse`
+        carrying an app's own message.
+        """
+        if not self.in_with_statement:
+            raise RuntimeError("Must be called inside 'with' statement")
+
+        if callback is None:
+            del self.resp_mappings[message_type]
+        else:
+            self.resp_mappings[message_type] = callback
+
     def _filter_message(self, msg: protobuf.MessageType) -> protobuf.MessageType:
         message_type = msg.__class__
         callback = self.filters.get(message_type)
+        if callable(callback):
+            return callback(deepcopy(msg))
+        else:
+            return msg
+
+    @staticmethod
+    def _map_resp_message(
+        msg: protobuf.MessageType,
+        resp_mappings: dict[
+            type[protobuf.MessageType],
+            t.Callable[[protobuf.MessageType], protobuf.MessageType],
+        ],
+    ) -> protobuf.MessageType:
+        message_type = msg.__class__
+        callback = resp_mappings.get(message_type)
         if callable(callback):
             return callback(deepcopy(msg))
         else:
@@ -1748,9 +1792,10 @@ class TrezorTestContext:
     def __exit__(self, exc_type: t.Any, value: t.Any, _traceback: t.Any) -> None:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
-        # copy expected/actual responses before clearing them
+        # copy expected/actual responses and mappings before clearing them
         expected_responses = self.expected_responses
         actual_responses = self.actual_responses
+        resp_mappings = self.resp_mappings
 
         # grab a copy of the inputflow generator to raise an exception through it
         if isinstance(self.ui, DebugUI):
@@ -1763,7 +1808,7 @@ class TrezorTestContext:
         if exc_type is None:
             # If no other exception was raised, evaluate missed responses
             # (raises AssertionError on mismatch)
-            self._verify_responses(expected_responses, actual_responses)
+            self._verify_responses(expected_responses, actual_responses, resp_mappings)
         elif isinstance(input_flow, t.Generator):
             # Propagate the exception through the input flow, so that we see in
             # traceback where it is stuck.
@@ -1775,6 +1820,10 @@ class TrezorTestContext:
         cls,
         expected: list[MessageFilter] | None,
         actual: list[protobuf.MessageType],
+        resp_mappings: dict[
+            type[protobuf.MessageType],
+            t.Callable[[protobuf.MessageType], protobuf.MessageType],
+        ],
     ) -> None:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
@@ -1791,12 +1840,13 @@ class TrezorTestContext:
                     )
                 raise AssertionError("\n".join(output))
 
-            if act is None:
+            act_mapped = cls._map_resp_message(act, resp_mappings)
+            if act_mapped is None:
                 output = cls._expectation_lines(expected, i)
                 output.append("This and the following message was not received.")
                 raise AssertionError("\n".join(output))
 
-            if not exp.match(act):
+            if not exp.match(act_mapped):
                 output = cls._expectation_lines(expected, i)
                 output.append("Actually received:")
                 output.append(textwrap.indent(protobuf.format_message(act), "    "))
@@ -1924,6 +1974,13 @@ def load_device(
         expect=messages.Success,
     )
     session.refresh_features()
+
+
+def load_extapp(session: client.Session, tapp_file: Path) -> int:
+    # Tests always want the freshly built binary: without `match_fingerprint`, the
+    # device keeps serving an already installed app with the same id/version.
+    # With it, the installed app is reused only if its fingerprint matches.
+    return extapp.load_tapp(session, tapp_file, match_fingerprint=True)
 
 
 # keep the old name for compatibility

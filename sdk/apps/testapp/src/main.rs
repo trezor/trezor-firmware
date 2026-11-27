@@ -1,0 +1,205 @@
+//! A test-only app that exposes every SDK crypto function to the host.
+//!
+//! Each wire request names one function and carries its parameters; the app
+//! calls the function and answers with its result, or with the error it
+//! returned. Meant for device tests of the crypto API; dev-signed only, and
+//! it must never ship.
+
+#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(test), no_main)]
+
+#[cfg(not(test))]
+extern crate alloc;
+
+use prost::Message;
+use trezor_app_sdk::{
+    Error, Result, ResultExt, WireDecode, WireEncode, error, wire_handler, wire_receive, wire_send,
+};
+
+pub(crate) mod alloc_types;
+mod crypto;
+pub(crate) mod proto;
+
+use proto::messages::MessageType;
+use proto::testapp::{
+    Base58CheckDecode, Base58CheckEncode, Base58Decode, Base58Encode, CheckAddressMac, Crash,
+    EcdsaRecoverPubkey, EcdsaSignDigest, EcdsaUncompressPubkey, EcdsaVerify, EcdsaVerifyDigest,
+    Ed25519Sign, Ed25519Verify, Failure, GetAddressMac, GetPublicNode, Hash, Hmac,
+    failure::FailureType,
+};
+
+/// Wire codec for [`wire_handler!`] — encodes/decodes messages via [`prost`].
+pub(crate) struct ProstCodec;
+
+impl<T: Message + Default> WireDecode<T> for ProstCodec {
+    fn decode(data: &[u8]) -> Result<T> {
+        T::decode(data).map_err(|_| Error::InvalidMessage)
+    }
+}
+
+impl<T: Message> WireEncode<T> for ProstCodec {
+    fn encode(val: &T) -> crate::alloc_types::Vec<u8> {
+        val.encode_to_vec()
+    }
+}
+
+wire_handler!(
+    handle_hash,
+    ProstCodec,
+    Hash,
+    MessageType::Digest,
+    crypto::hash
+);
+wire_handler!(
+    handle_hmac,
+    ProstCodec,
+    Hmac,
+    MessageType::Digest,
+    crypto::hmac
+);
+wire_handler!(
+    handle_get_public_node,
+    ProstCodec,
+    GetPublicNode,
+    MessageType::PublicNode,
+    crypto::get_public_node
+);
+wire_handler!(
+    handle_ecdsa_sign_digest,
+    ProstCodec,
+    EcdsaSignDigest,
+    MessageType::Signature,
+    crypto::ecdsa_sign_digest
+);
+wire_handler!(
+    handle_ed25519_sign,
+    ProstCodec,
+    Ed25519Sign,
+    MessageType::Signature,
+    crypto::ed25519_sign
+);
+wire_handler!(
+    handle_get_address_mac,
+    ProstCodec,
+    GetAddressMac,
+    MessageType::AddressMac,
+    crypto::get_address_mac
+);
+wire_handler!(
+    handle_check_address_mac,
+    ProstCodec,
+    CheckAddressMac,
+    MessageType::Success,
+    crypto::check_address_mac
+);
+wire_handler!(
+    handle_ecdsa_verify,
+    ProstCodec,
+    EcdsaVerify,
+    MessageType::Success,
+    crypto::ecdsa_verify
+);
+wire_handler!(
+    handle_ecdsa_verify_digest,
+    ProstCodec,
+    EcdsaVerifyDigest,
+    MessageType::Success,
+    crypto::ecdsa_verify_digest
+);
+wire_handler!(
+    handle_ecdsa_recover_pubkey,
+    ProstCodec,
+    EcdsaRecoverPubkey,
+    MessageType::PublicKey,
+    crypto::ecdsa_recover_pubkey
+);
+wire_handler!(
+    handle_ecdsa_uncompress_pubkey,
+    ProstCodec,
+    EcdsaUncompressPubkey,
+    MessageType::PublicKey,
+    crypto::ecdsa_uncompress_pubkey
+);
+wire_handler!(
+    handle_ed25519_verify,
+    ProstCodec,
+    Ed25519Verify,
+    MessageType::Success,
+    crypto::ed25519_verify
+);
+wire_handler!(
+    handle_base58_encode,
+    ProstCodec,
+    Base58Encode,
+    MessageType::Base58,
+    crypto::base58_encode
+);
+wire_handler!(
+    handle_base58_decode,
+    ProstCodec,
+    Base58Decode,
+    MessageType::Data,
+    crypto::base58_decode
+);
+wire_handler!(
+    handle_base58check_encode,
+    ProstCodec,
+    Base58CheckEncode,
+    MessageType::Base58,
+    crypto::base58check_encode
+);
+wire_handler!(
+    handle_base58check_decode,
+    ProstCodec,
+    Base58CheckDecode,
+    MessageType::Data,
+    crypto::base58check_decode
+);
+
+#[trezor_app_sdk::app]
+fn app() -> Result<()> {
+    let (id, data) = wire_receive().c()?;
+    handle_wire_message(id as i32, data.as_ref()).c()
+}
+
+/// Answers a request this app doesn't handle with its own `Failure`; it's the
+/// host's mistake, so the app neither fails nor crashes.
+fn unexpected_message() -> Result<()> {
+    let failure = Failure {
+        code: Some(FailureType::UnexpectedMessage as i32),
+        message: Some("Unexpected message".into()),
+    };
+    wire_send(MessageType::Failure as u16, &failure.encode_to_vec())
+}
+
+/// Dispatches one wire request to its handler.
+pub fn handle_wire_message(id: i32, data: &[u8]) -> Result<()> {
+    match id.try_into() {
+        Ok(MessageType::Hash) => handle_hash(data),
+        Ok(MessageType::Hmac) => handle_hmac(data),
+        Ok(MessageType::GetPublicNode) => handle_get_public_node(data),
+        Ok(MessageType::EcdsaSignDigest) => handle_ecdsa_sign_digest(data),
+        Ok(MessageType::Ed25519Sign) => handle_ed25519_sign(data),
+        Ok(MessageType::GetAddressMac) => handle_get_address_mac(data),
+        Ok(MessageType::CheckAddressMac) => handle_check_address_mac(data),
+        Ok(MessageType::EcdsaVerify) => handle_ecdsa_verify(data),
+        Ok(MessageType::EcdsaVerifyDigest) => handle_ecdsa_verify_digest(data),
+        Ok(MessageType::EcdsaRecoverPubkey) => handle_ecdsa_recover_pubkey(data),
+        Ok(MessageType::EcdsaUncompressPubkey) => handle_ecdsa_uncompress_pubkey(data),
+        Ok(MessageType::Ed25519Verify) => handle_ed25519_verify(data),
+        Ok(MessageType::Base58Encode) => handle_base58_encode(data),
+        Ok(MessageType::Base58Decode) => handle_base58_decode(data),
+        Ok(MessageType::Base58CheckEncode) => handle_base58check_encode(data),
+        Ok(MessageType::Base58CheckDecode) => handle_base58check_decode(data),
+        // an error out of `app()` ends the app as crashed; a panic would abort
+        // the whole emulator (`panic = "immediate-abort"`)
+        Ok(MessageType::Crash) => {
+            let _: Crash = ProstCodec::decode(data).c()?;
+            Err(Error::DataError("crash requested"))
+        }
+        _ => {
+            error!("Unexpected message: {:?}", id);
+            unexpected_message()
+        }
+    }
+}

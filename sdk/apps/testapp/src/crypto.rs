@@ -1,0 +1,195 @@
+//! One handler per SDK crypto function: convert the request's parameters to
+//! the function's types, call it, and hand its result back.
+//!
+//! A parameter the function's types can't hold (a digest that isn't 32 bytes,
+//! a sigmask over 255, an unknown enum value) is refused with
+//! `InvalidArgument` before the function is called; every other error is the
+//! function's own.
+
+use trezor_app_sdk::crypto::{
+    self as sdk, CanonicalSig, Curve, EcdsaCurve, HasherExt, HashingAlgorithm, HmacAlgorithm,
+};
+use trezor_app_sdk::{Error, Result};
+
+use crate::alloc_types::Vec;
+use crate::proto::testapp as wire;
+
+// ============================================================================
+// Hashing
+// ============================================================================
+
+pub fn hash(m: wire::Hash) -> Result<wire::Digest> {
+    let algorithm = match wire::HashAlgorithm::try_from(m.algorithm) {
+        Ok(wire::HashAlgorithm::Sha256) => HashingAlgorithm::Sha256,
+        Ok(wire::HashAlgorithm::Sha3256) => HashingAlgorithm::Sha3_256,
+        Ok(wire::HashAlgorithm::Sha512) => HashingAlgorithm::Sha512,
+        Ok(wire::HashAlgorithm::Keccak256) => HashingAlgorithm::Keccak256,
+        Ok(wire::HashAlgorithm::Sha3512) => HashingAlgorithm::Sha3_512,
+        Ok(wire::HashAlgorithm::Keccak512) => HashingAlgorithm::Keccak512,
+        Err(_) => return Err(Error::InvalidArgument),
+    };
+    Ok(digest(sdk::get_hasher(algorithm), &m.chunks))
+}
+
+pub fn hmac(m: wire::Hmac) -> Result<wire::Digest> {
+    let algorithm = match wire::HmacAlgorithm::try_from(m.algorithm) {
+        Ok(wire::HmacAlgorithm::HmacSha256) => HmacAlgorithm::Sha256,
+        Ok(wire::HmacAlgorithm::HmacSha512) => HmacAlgorithm::Sha512,
+        Err(_) => return Err(Error::InvalidArgument),
+    };
+    Ok(digest(sdk::get_hmac(algorithm, &m.key), &m.chunks))
+}
+
+fn digest(mut hasher: sdk::BoxedHasher, chunks: &[Vec<u8>]) -> wire::Digest {
+    for chunk in chunks {
+        hasher.update(chunk);
+    }
+    wire::Digest {
+        digest: hasher.finalize().as_ref().to_vec(),
+    }
+}
+
+// ============================================================================
+// Keys and signatures (served by Core)
+// ============================================================================
+
+pub fn get_public_node(m: wire::GetPublicNode) -> Result<wire::PublicNode> {
+    let node = sdk::get_public_node(key_curve(m.curve)?, &m.address_n)?;
+    Ok(wire::PublicNode {
+        depth: node.depth.into(),
+        fingerprint: node.fingerprint,
+        child_num: node.child_num,
+        chain_code: node.chain_code.to_vec(),
+        public_key: node.public_key.to_vec(),
+        xpub: m.xpub_magic.map(|magic| node.to_xpub(magic)),
+    })
+}
+
+pub fn ecdsa_sign_digest(m: wire::EcdsaSignDigest) -> Result<wire::Signature> {
+    let signature = sdk::ecdsa_sign_digest(
+        curve(m.curve)?,
+        &m.address_n,
+        array(&m.digest)?,
+        m.compressed,
+        canonical(m.canonical)?,
+    )?;
+    Ok(wire::Signature {
+        signature: signature.to_vec(),
+    })
+}
+
+pub fn ed25519_sign(m: wire::Ed25519Sign) -> Result<wire::Signature> {
+    let signature = sdk::ed25519_sign(&m.address_n, &m.message)?;
+    Ok(wire::Signature {
+        signature: signature.to_vec(),
+    })
+}
+
+pub fn get_address_mac(m: wire::GetAddressMac) -> Result<wire::AddressMac> {
+    let mac = sdk::get_address_mac(&m.address_n, &m.address, m.slip44)?;
+    Ok(wire::AddressMac { mac: mac.to_vec() })
+}
+
+pub fn check_address_mac(m: wire::CheckAddressMac) -> Result<wire::Success> {
+    sdk::check_address_mac(&m.address_n, array(&m.mac)?, &m.address, m.slip44)?;
+    Ok(wire::Success {})
+}
+
+// ============================================================================
+// Signature verification and key recovery
+// ============================================================================
+
+/// `ecdsa_verify_digest` of the message's SHA-256 digest.
+pub fn ecdsa_verify(m: wire::EcdsaVerify) -> Result<wire::Success> {
+    let mut hasher = sdk::get_hasher(HashingAlgorithm::Sha256);
+    hasher.update(&m.message);
+    let digest = hasher.finalize();
+    sdk::ecdsa_verify_digest(
+        curve(m.curve)?,
+        &m.public_key,
+        &m.signature,
+        digest.as_ref(),
+    )?;
+    Ok(wire::Success {})
+}
+
+pub fn ecdsa_verify_digest(m: wire::EcdsaVerifyDigest) -> Result<wire::Success> {
+    sdk::ecdsa_verify_digest(curve(m.curve)?, &m.public_key, &m.signature, &m.digest)?;
+    Ok(wire::Success {})
+}
+
+pub fn ecdsa_recover_pubkey(m: wire::EcdsaRecoverPubkey) -> Result<wire::PublicKey> {
+    let public_key = sdk::ecdsa_recover_pubkey(curve(m.curve)?, &m.signature, &m.digest)?;
+    Ok(wire::PublicKey { public_key })
+}
+
+pub fn ecdsa_uncompress_pubkey(m: wire::EcdsaUncompressPubkey) -> Result<wire::PublicKey> {
+    let public_key = sdk::ecdsa_uncompress_pubkey(curve(m.curve)?, array(&m.public_key)?)?;
+    Ok(wire::PublicKey {
+        public_key: public_key.to_vec(),
+    })
+}
+
+pub fn ed25519_verify(m: wire::Ed25519Verify) -> Result<wire::Success> {
+    sdk::ed25519_verify(&m.public_key, &m.signature, &m.message)?;
+    Ok(wire::Success {})
+}
+
+fn canonical(value: i32) -> Result<CanonicalSig> {
+    match wire::CanonicalSig::try_from(value) {
+        Ok(wire::CanonicalSig::Any) => Ok(CanonicalSig::Any),
+        Ok(wire::CanonicalSig::Ethereum) => Ok(CanonicalSig::Ethereum),
+        Err(_) => Err(Error::InvalidArgument),
+    }
+}
+
+fn curve(value: i32) -> Result<EcdsaCurve> {
+    match wire::EcdsaCurve::try_from(value) {
+        Ok(wire::EcdsaCurve::Secp256k1) => Ok(EcdsaCurve::Secp256k1),
+        Ok(wire::EcdsaCurve::Nist256p1) => Ok(EcdsaCurve::Nist256p1),
+        Err(_) => Err(Error::InvalidArgument),
+    }
+}
+
+fn key_curve(value: i32) -> Result<Curve> {
+    match wire::Curve::try_from(value) {
+        Ok(wire::Curve::Secp256k1) => Ok(Curve::Secp256k1),
+        Ok(wire::Curve::Nist256p1) => Ok(Curve::Nist256p1),
+        Ok(wire::Curve::Ed25519) => Ok(Curve::Ed25519),
+        Ok(wire::Curve::Curve25519) => Ok(Curve::Curve25519),
+        Err(_) => Err(Error::InvalidArgument),
+    }
+}
+
+// ============================================================================
+// Base58
+// ============================================================================
+
+pub fn base58_encode(m: wire::Base58Encode) -> Result<wire::Base58> {
+    let encoded = sdk::base58_encode(&m.data);
+    Ok(wire::Base58 { encoded })
+}
+
+pub fn base58_decode(m: wire::Base58Decode) -> Result<wire::Data> {
+    let data = sdk::base58_decode(&m.encoded)?;
+    Ok(wire::Data { data })
+}
+
+pub fn base58check_encode(m: wire::Base58CheckEncode) -> Result<wire::Base58> {
+    let encoded = sdk::base58check_encode(&m.data);
+    Ok(wire::Base58 { encoded })
+}
+
+pub fn base58check_decode(m: wire::Base58CheckDecode) -> Result<wire::Data> {
+    let data = sdk::base58check_decode(&m.encoded)?;
+    Ok(wire::Data { data })
+}
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+/// `bytes` as a fixed-size array, or `InvalidArgument` if the length differs.
+fn array<const N: usize>(bytes: &[u8]) -> Result<&[u8; N]> {
+    bytes.try_into().map_err(|_| Error::InvalidArgument)
+}
