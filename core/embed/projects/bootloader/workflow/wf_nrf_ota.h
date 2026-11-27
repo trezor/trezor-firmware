@@ -28,9 +28,6 @@
 #include "protob/protob.h"
 #include "workflow_common.h"
 
-// FirmwareRequest.coprocessor_index of the nRF stream (0 = primary stream).
-#define NRF_OTA_REQUEST_INDEX 1
-
 /**
  * Phase-1 nRF OTA: fold-verifies the offered image hash, streams the image
  * into NRF_STAGING_AREA, verifies it against `model_root` and stages it for

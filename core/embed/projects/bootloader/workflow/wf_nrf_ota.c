@@ -322,7 +322,7 @@ workflow_result_t workflow_nrf_ota_update(
 
   // Static to keep the co-path copy off the stack; zeroed across retries.
   // Suppresses its own Success (the phase-1 caller sends the single terminal
-  // one) and tags requests with NRF_OTA_REQUEST_INDEX.
+  // one) and tags requests with the Nrf stream.
   static nrf_upload_handler_t handler;
   memset(&handler, 0, sizeof(handler));
   memcpy(&handler.model_root, model_root, sizeof(handler.model_root));
@@ -333,7 +333,7 @@ workflow_result_t workflow_nrf_ota_update(
       .target_area = &NRF_STAGING_AREA,
       .target_offset = 0,
       .max_size = nrf_staging_image_capacity(),
-      .request_index = NRF_OTA_REQUEST_INDEX,
+      .stream = FirmwareStream_FirmwareStream_Nrf,
       .success_result = WF_OK,
       .suppress_success = true,
       .ui = &nrf_upload_ui,
