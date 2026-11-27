@@ -102,6 +102,8 @@ secbool tree_update_check(const uint8_t *prefix, size_t prefix_len,
   memcpy(info->vstr, vendor, info->vstr_len);
 
   memcpy(info->version, &hdr->version, sizeof(info->version));
+  memcpy(info->firmware_version, manifest->firmware_version,
+         sizeof(info->firmware_version));
   info->firmware_root = root;
 
   return sectrue;

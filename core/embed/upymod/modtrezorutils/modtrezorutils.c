@@ -659,6 +659,7 @@ static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_reboot_obj,
 
 /// class FirmwareHeaderInfo(NamedTuple):
 ///     version: VersionTuple
+///     display_version: VersionTuple
 ///     vendor: str
 ///     fingerprint: AnyBytes
 ///     hash: AnyBytes
@@ -675,6 +676,9 @@ static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_reboot_obj,
 ///     Merkle tree: `header` is the boot header prefix (without signatures)
 ///     and `manifest` the firmware manifest region; `fingerprint` is the
 ///     firmware_root and `hash` the consent digest for `reboot_and_upgrade`.
+///     `version` is the release version upgrade decisions compare,
+///     `display_version` the offered variant's own version, the one to show;
+///     they differ only for custom and prodtest variants.
 ///     """
 static mp_obj_t mod_trezorutils_check_firmware_update(size_t n_args,
                                                       const mp_obj_t *args) {
@@ -694,6 +698,7 @@ static mp_obj_t mod_trezorutils_check_firmware_update(size_t n_args,
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
   }
   const uint8_t *version = info.version;
+  const uint8_t *display_version = info.firmware_version;
   const uint8_t *fingerprint = info.firmware_root.bytes;
   const size_t fingerprint_len = sizeof(info.firmware_root.bytes);
   const uint8_t *hash = info.consent_digest.bytes;
@@ -708,6 +713,7 @@ static mp_obj_t mod_trezorutils_check_firmware_update(size_t n_args,
   }
   const uint8_t version[4] = {info.ver_major, info.ver_minor, info.ver_patch,
                               info.ver_build};
+  const uint8_t *display_version = version;
   const uint8_t *fingerprint = info.fingerprint;
   const size_t fingerprint_len = sizeof(info.fingerprint);
   const uint8_t *hash = info.hash;
@@ -716,11 +722,16 @@ static mp_obj_t mod_trezorutils_check_firmware_update(size_t n_args,
 
   mp_obj_t ver[4] = {mp_obj_new_int(version[0]), mp_obj_new_int(version[1]),
                      mp_obj_new_int(version[2]), mp_obj_new_int(version[3])};
+  mp_obj_t display_ver[4] = {
+      mp_obj_new_int(display_version[0]), mp_obj_new_int(display_version[1]),
+      mp_obj_new_int(display_version[2]), mp_obj_new_int(display_version[3])};
 
-  static const qstr fields[4] = {MP_QSTR_version, MP_QSTR_vendor,
-                                 MP_QSTR_fingerprint, MP_QSTR_hash};
-  const mp_obj_t values[4] = {
+  static const qstr fields[5] = {MP_QSTR_version, MP_QSTR_display_version,
+                                 MP_QSTR_vendor, MP_QSTR_fingerprint,
+                                 MP_QSTR_hash};
+  const mp_obj_t values[5] = {
       mp_obj_new_tuple(MP_ARRAY_SIZE(ver), ver),
+      mp_obj_new_tuple(MP_ARRAY_SIZE(display_ver), display_ver),
       mp_obj_new_str_copy(&mp_type_str, info.vstr, info.vstr_len),
       mp_obj_new_bytes(fingerprint, fingerprint_len),
       mp_obj_new_bytes(hash, hash_len)};

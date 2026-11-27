@@ -32,7 +32,7 @@ async def install_upgrade(
     if hdr.version <= utils.VERSION:
         raise wire.DataError("Not a firmware upgrade.")
 
-    version_str = ".".join(map(str, hdr.version[:3]))
+    version_str = ".".join(map(str, hdr.display_version[:3]))
 
     await confirm_firmware_update(
         description=TR.reboot_to_bootloader__version_by_template.format(

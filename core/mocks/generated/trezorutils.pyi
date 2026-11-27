@@ -201,6 +201,7 @@ VersionTuple = Tuple[int, int, int, int]
 # upymod/modtrezorutils/modtrezorutils.c
 class FirmwareHeaderInfo(NamedTuple):
     version: VersionTuple
+    display_version: VersionTuple
     vendor: str
     fingerprint: AnyBytes
     hash: AnyBytes
@@ -217,6 +218,9 @@ def check_firmware_update(
     Merkle tree: `header` is the boot header prefix (without signatures)
     and `manifest` the firmware manifest region; `fingerprint` is the
     firmware_root and `hash` the consent digest for `reboot_and_upgrade`.
+    `version` is the release version upgrade decisions compare,
+    `display_version` the offered variant's own version, the one to show;
+    they differ only for custom and prodtest variants.
     """
 
 
