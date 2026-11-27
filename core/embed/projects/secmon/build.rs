@@ -8,7 +8,7 @@ fn main() -> Result<()> {
 
         lib.add_source("main.c");
 
-        // Merkle-tree layout: code only (no legacy TSEC header).
+        // Merkle-tree layout: code only (no CoSi TSEC header).
         if cfg!(not(feature = "pq_secure_boot")) {
             lib.add_source("header.S");
         }
@@ -18,7 +18,7 @@ fn main() -> Result<()> {
             ["smcall_dispatch.c", "smcall_probe.c", "smcall_verifiers.c"],
         );
 
-        // No legacy vendor header in the Merkle-tree layout.
+        // No CoSi vendor header in the Merkle-tree layout.
         if !cfg!(feature = "pq_secure_boot") {
             lib.embed_binary(
                 xbuild::vendor_header_path("../../models", "secmon")?,

@@ -269,7 +269,7 @@ impl CLibrary {
                         "pq_secure_boot needs {target_ld}, which does not \
                          exist. Falling back to \
                          sys/linker/{mcu_dir}/{binary_type}.ld would link \
-                         {binary_type} with the legacy layout (no manifest \
+                         {binary_type} with the CoSi layout (no manifest \
                          region) -- it would build and then fail verification \
                          on device. Port the _pq variant for {mcu_dir} first."
                     );

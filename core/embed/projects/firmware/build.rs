@@ -27,7 +27,7 @@ fn main() -> Result<()> {
             lib.add_sources(["src/stm32/main.c", "src/stm32/coreapp_header.S"]);
 
             // Merkle-tree layout: a manifest at the image start; otherwise the
-            // legacy vendor + image header.
+            // CoSi vendor + image header.
             if cfg!(feature = "pq_secure_boot") {
                 lib.add_source("src/stm32/manifest_header.c");
                 // Authenticated variant stamped into the manifest. Must be a
@@ -45,7 +45,7 @@ fn main() -> Result<()> {
                 lib.add_source("src/stm32/header.S");
             }
 
-            // No legacy vendor header in the Merkle-tree layout, and the
+            // No CoSi vendor header in the Merkle-tree layout, and the
             // bootloader is installed through the UCB rather than carried by the
             // firmware -- so neither the image nor the code to install it.
             if !cfg!(feature = "pq_secure_boot") {
@@ -78,7 +78,7 @@ fn main() -> Result<()> {
 
             embed_kernel_binary(lib)?;
 
-            // Legacy layout only: under the Merkle-tree scheme the bootloader
+            // CoSi layout only: under the Merkle-tree scheme the bootloader
             // installs the nRF.
             if cfg!(feature = "nrf") && !cfg!(feature = "pq_secure_boot") {
                 embed_nrf_app_binary(lib)?;

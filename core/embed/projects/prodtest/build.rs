@@ -13,7 +13,7 @@ fn main() -> Result<()> {
         if cfg!(feature = "emulator") {
             lib.add_source("emulator.c");
         } else if cfg!(feature = "pq_secure_boot") {
-            // Merkle-tree layout: single-entry manifest, no legacy headers.
+            // Merkle-tree layout: single-entry manifest, no CoSi headers.
             // FW_VARIANT must be the hardened codeword; static-asserted in
             // manifest_header.c.
             lib.add_source("manifest_header.c");
@@ -76,7 +76,7 @@ fn main() -> Result<()> {
                 ],
             );
 
-            // No legacy vendor header in the Merkle-tree layout.
+            // No CoSi vendor header in the Merkle-tree layout.
             if !cfg!(feature = "pq_secure_boot") {
                 lib.embed_binary(
                     xbuild::vendor_header_path("../../models", "prodtest")?,

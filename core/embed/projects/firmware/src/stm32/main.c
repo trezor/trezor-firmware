@@ -65,7 +65,7 @@
 #include <io/nrf.h>
 #endif
 
-// The firmware carries and pushes an nRF image only on the legacy layout;
+// The firmware carries and pushes an nRF image only on the CoSi layout;
 // under the Merkle-tree scheme the bootloader installs it (workflow_nrf_ota).
 #if defined(USE_NRF) && !defined(PQ_SECURE_BOOT)
 #define FIRMWARE_UPDATES_NRF 1

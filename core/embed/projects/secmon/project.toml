@@ -21,7 +21,7 @@ uses = [
 
 # ELF sections to be included in the final binary.
 # The order of sections is important.
-# ".secmon_header"/".header" are legacy headers, absent (no-ops) in the
+# ".secmon_header"/".header" are CoSi headers, absent (no-ops) in the
 # Merkle-tree layout.
 elf_sections = [".secmon_header", ".header", ".flash", ".data", ".gnu.sgstubs"]
 
