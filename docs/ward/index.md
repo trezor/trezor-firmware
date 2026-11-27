@@ -21,3 +21,7 @@ changes across devices and attests the head it holds.
 
 - [Threat model and accepted limitations](threat_model.md) · [Security gaps](gaps.md)
 - [Address labels, offline changes and backup](user_story.md)
+
+## Implementation
+
+- [Implementation plan: firmware, host, online services and Suite](implementation/index.md)
