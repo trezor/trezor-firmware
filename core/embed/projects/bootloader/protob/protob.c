@@ -114,7 +114,7 @@ secbool send_msg_features(protob_io_t *iface, const fw_check_info_t *fw) {
                         (secret_bootloader_locked() == sectrue));
 #endif
 
-  // Always reported; an absent field means a (legacy) bootloader predating it.
+  // Always reported; an absent field means a bootloader predating it.
 #ifdef PQ_SECURE_BOOT
   MSG_SEND_ASSIGN_VALUE(firmware_scheme,
                         FirmwareScheme_FirmwareScheme_PqSecure);

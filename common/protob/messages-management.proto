@@ -148,7 +148,7 @@ message Features {
     optional bool tap_to_wake = 63;                                // tap to wake is enabled (None = not supported)
     optional uint32 max_passphrase_len = 64 [default = 50];        // maximal passphrase length (in bytes)
     optional FirmwareScheme firmware_scheme = 65;                  // image layout of the reporting binary (bootloader
-                                                                   // or firmware); absent means unknown, not Cosi
+                                                                   // or firmware); absent means unknown, not CoSi
     optional uint32 bootloader_code_major = 66;                    // bootloader mode, pq_secure_boot: version of the
     optional uint32 bootloader_code_minor = 67;                    // bootloader code itself; major..build_version then
     optional uint32 bootloader_code_patch = 68;                    // report the installed release version
@@ -701,7 +701,7 @@ message RebootToBootloader {
     // Action to be performed after rebooting to bootloader
     optional BootCommand boot_command = 1 [default = STOP_AND_WAIT];
     // Firmware header to be flashed after rebooting to bootloader
-    // (legacy image layout: vendor header followed by image header)
+    // (CoSi image layout: vendor header followed by image header)
     optional bytes firmware_header = 2;
     // Deprecated (length of language blob to be installed before upgrading firmware)
     reserved 3;
