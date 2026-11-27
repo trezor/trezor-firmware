@@ -1,0 +1,1 @@
+Fixed the last chunk of chunkified non-ASCII text being pushed to the next page even when it fits.

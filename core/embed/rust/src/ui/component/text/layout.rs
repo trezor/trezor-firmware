@@ -368,14 +368,12 @@ impl TextLayout {
             if let Some(chunk_config) = self.style.chunks {
                 // Last chunk on the page should not be rendered, put just ellipsis there
                 // Chunks is last when the next chunk would not fit on the page horizontally or
-                // the span doesn't cover the whole chunk size
-
+                // the span doesn't cover the whole chunk size.
+                // Chunk size is in characters, while `span.length` is in bytes.
+                let chunk_size = usize::from(chunk_config.chunk_size);
                 let is_last_chunk = (2 * span.advance.x - chunk_config.x_offset) > remaining_width
-                    || span.length < usize::from(chunk_config.chunk_size);
-                if is_last_line
-                    && is_last_chunk
-                    && remaining_text.len() > chunk_config.chunk_size.into()
-                {
+                    || remaining_text[..span.length].chars().count() < chunk_size;
+                if is_last_line && is_last_chunk && remaining_text.chars().count() > chunk_size {
                     // Making sure no text is rendered here, and that we force a line break
                     span.length = 0;
                     span.advance.x = 2; // To start at the same horizontal line as the chunk itself
@@ -869,6 +867,30 @@ mod tests {
         height: 1,
     };
 
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "layout_bolt")] {
+            use crate::ui::layout_bolt::fonts::FONT_NORMAL as FONT;
+        } else if #[cfg(feature = "layout_caesar")] {
+            use crate::ui::layout_caesar::fonts::FONT_NORMAL as FONT;
+        } else if #[cfg(feature = "layout_delizia")] {
+            use crate::ui::layout_delizia::fonts::FONT_DEMIBOLD as FONT;
+        } else if #[cfg(feature = "layout_eckhart")] {
+            use crate::ui::layout_eckhart::fonts::FONT_SATOSHI_MEDIUM_26 as FONT;
+        } else {
+            compile_error!("Non supported layout feature enabled");
+        }
+    }
+
+    /// Collects the text reported by `TextLayout::layout_text`.
+    #[derive(Default)]
+    struct TextCollector(Vec<String>);
+
+    impl LayoutSink for TextCollector {
+        fn text(&mut self, _cursor: Point, _layout: &TextLayout, text: &str) {
+            self.0.push(text.into());
+        }
+    }
+
     #[test]
     fn test_span() {
         assert_eq!(spans_from("hello", 5, None), vec![("hello", false)]);
@@ -918,6 +940,38 @@ mod tests {
             spans_from("+ěščřžýáíé", 100, Some(Chunks::new(4, 0))),
             vec![("+ěšč", false), ("řžýá", false), ("íé", false)]
         );
+    }
+
+    #[test]
+    fn test_chunks_multibyte_last_chunk_on_last_line() {
+        // Two-byte characters only: the final chunk "žýá" is shorter than
+        // `chunk_size` in characters, but longer in bytes.
+        let text = "ěščřžýá";
+        let chunks = Chunks::new(4, 10);
+        let style = TextStyle::new(
+            FONT,
+            Color::white(),
+            Color::black(),
+            Color::white(),
+            Color::white(),
+        )
+        .with_chunks(chunks);
+
+        // A single line, with room for exactly two full chunks.
+        let chunk_width = FONT.text_width("ěščř") + chunks.x_offset;
+        let size = Offset::new(2 * chunk_width - chunks.x_offset, FONT.line_height());
+        let layout =
+            TextLayout::new(style).with_bounds(Rect::from_top_left_and_size(Point::zero(), size));
+
+        let mut sink = TextCollector::default();
+        let fit = layout.layout_text(text, &mut layout.initial_cursor(), &mut sink);
+
+        // The final chunk must be rendered, not replaced by an ellipsis.
+        assert_eq!(sink.0, ["ěščř", "žýá"]);
+        assert!(matches!(
+            fit,
+            LayoutFit::Fitting { processed_chars, .. } if processed_chars == text.len()
+        ));
     }
 
     fn spans_from(text: &str, max_width: i16, chunks: Option<Chunks>) -> Vec<(&str, bool)> {
