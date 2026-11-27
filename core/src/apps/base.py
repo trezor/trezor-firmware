@@ -109,9 +109,7 @@ def get_features() -> Features:
         max_passphrase_len=MAX_PASSPHRASE_LEN,
         # reported unconditionally: an absent field means firmware predating it
         firmware_scheme=(
-            FirmwareScheme.PqSecure
-            if utils.USE_PQ_SECURE_BOOT
-            else FirmwareScheme.Legacy
+            FirmwareScheme.PqSecure if utils.USE_PQ_SECURE_BOOT else FirmwareScheme.Cosi
         ),
     )
 
