@@ -795,7 +795,7 @@ def test_ward_get_entry_pulls_and_shows(session: Session):
     assert "unverified" not in rec.title
     assert "Petr_label" in rec.text
     assert "not proven current" not in rec.text.lower()
-    assert "notreflecting" not in rec.squashed.lower()
+    assert "manager-signeddate" not in rec.squashed.lower()
 
 
 @pytest.mark.models("core")
@@ -817,7 +817,7 @@ def test_ward_get_entry_without_the_wm_proves_against_the_stored_head_and_warns(
     assert "unverified entry" in rec.title
     assert "Petr_label" in rec.text
     # dated by the WM's timestamp for the stored head, which `_attest` sets at _T0 + counter
-    assert _not_reflecting(_T0 + store.counter) in rec.squashed
+    assert _signed_date_warning(_T0 + store.counter) in rec.squashed
 
     # the same leaf in another tree: authentic content, but not under the stored head
     key = expected_entry_key(_K_PATH, _APP, b"addr1")
@@ -2171,12 +2171,12 @@ def _away(session: Session, store: WardTrie) -> tuple:
     return links, head, base_counter + 2, base_root
 
 
-def _not_reflecting(timestamp: int) -> str:
+def _signed_date_warning(timestamp: int) -> str:
     """The dated freshness warning as `_Recorded.squashed` holds it."""
     from datetime import datetime, timezone
 
     when = datetime.fromtimestamp(timestamp, timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    return "".join(f"Not reflecting changes since {when} UTC, nor user reverts.".split())
+    return "".join(f"Manager-signed date: {when} UTC. Later changes and reverts may be missing.".split())
 
 
 def _cached(
@@ -2222,7 +2222,7 @@ def test_ward_catch_up_without_the_wm_reads_the_newer_head_with_the_warning(sess
     _res, rec = _read(offline, head, lambda p: ward.get_entry(offline, _APP, b"b", p))
     assert "two" in rec.text
     assert "unverified entry" in rec.title
-    assert _not_reflecting(_T0 + target) in rec.squashed
+    assert _signed_date_warning(_T0 + target) in rec.squashed
 
 
 def _allow_persist(session: Session) -> _Recorded:
@@ -2257,7 +2257,7 @@ def test_ward_catch_up_persists_when_the_user_allows_it(session: Session):
     later = session.test_ctx.get_session()
     _res, rec = _read(later, head, lambda p: ward.get_entry(later, _APP, b"b", p))
     assert "two" in rec.text
-    assert _not_reflecting(_T0 + target) in rec.squashed
+    assert _signed_date_warning(_T0 + target) in rec.squashed
 
 
 @pytest.mark.models("core")
@@ -2279,22 +2279,20 @@ def test_ward_catch_up_stops_persisting_once_the_user_withdraws(session: Session
 
 
 @pytest.mark.models("core")
-def test_ward_persisting_still_refuses_an_attestation_older_than_the_stored_head(
-    session: Session,
-):
-    """The setting changes what is KEPT, not what is accepted: the timestamp floor still holds."""
+def test_ward_persists_a_verified_head_with_an_earlier_date(session: Session):
+    """A signed date is display metadata, including when the manager clock moves back."""
     store = WardTrie()
     links, head, target, _base_root = _away(session, store)
     _allow_persist(session)
-
-    with pytest.raises(exceptions.TrezorFailure, match="before this device's head"):
-        ward.catch_up(
-            session.test_ctx.get_session(),
-            target,
-            head.root(),
-            _cached(store, links, _T0),
-            _serves(links),
-        )
+    ack = ward.catch_up(
+        session.test_ctx.get_session(),
+        target,
+        head.root(),
+        _cached(store, links, _T0),
+        _serves(links),
+    )
+    assert ack.counter == target
+    assert ack.persisted
 
 
 # --- the MVP build: no WARD Manager (`--ward-without-wm`) ----------------------------------
@@ -2385,24 +2383,19 @@ def test_ward_catch_up_refuses_a_head_the_wm_never_attested(session: Session):
 
 
 @pytest.mark.models("core")
-def test_ward_catch_up_refuses_an_attestation_older_than_the_stored_head(session: Session):
-    """THE TIMESTAMP FLOOR: every head on a branch a revert removed was attested before that
-    revert, so an attestation older than the stored head's is refused before any link is asked."""
+def test_ward_catch_up_accepts_verified_history_with_an_earlier_date(session: Session):
+    """A signed date is display metadata, including when the manager clock moves back."""
     store = WardTrie()
-    links, head, target, base_root = _away(session, store)
-    stored_time = _T0 + target - 2  # `_attest` stamped the stored head at _T0 + its counter
-
-    def no_links(*_args):
-        raise AssertionError("the device must refuse before asking for links")
-
-    with pytest.raises(exceptions.TrezorFailure, match="before this device's head"):
-        ward.catch_up(
-            session.test_ctx.get_session(),
-            target,
-            head.root(),
-            _cached(store, links, stored_time - 1),
-            no_links,
-        )
+    links, head, target, _base_root = _away(session, store)
+    ack = ward.catch_up(
+        session.test_ctx.get_session(),
+        target,
+        head.root(),
+        _cached(store, links, _T0),
+        _serves(links),
+    )
+    assert ack.counter == target
+    assert not ack.persisted
 
 
 @pytest.mark.models("core")
@@ -4144,6 +4137,8 @@ def _rollback(
     wm_counter: "int | None" = None,
     wm_root=None,
     include_archive: bool = True,
+    attested_target=None,
+    link_source=None,
 ):
     """Walk the demotion confirmation and return (ack, recorder).
 
@@ -4180,7 +4175,8 @@ def _rollback(
             tr,
             sig,
             recovered_counter=recovered_counter,
-            link_source=store.links_ending_at,
+            link_source=link_source or store.links_ending_at,
+            attested_target=attested_target,
             acceptance_source=(
                 wm.acceptance_source(_WARD_ID) if include_archive else None
             ),
@@ -4265,6 +4261,64 @@ def test_ward_rollback_undoes_the_last_write(session: Session):
         session, rewound, lambda p: ward.get_entry(session, _APP, b"b", p)
     )
     assert "entry not found" in rec.title
+
+
+@pytest.mark.models("core")
+@pytest.mark.parametrize("writer_was_local", [True, False])
+def test_ward_revert_to_attested_target_with_missing_history(session: Session, writer_was_local):
+    store = WardTrie()
+    _seed(session, store, b"a", b"one")
+    target = store.root()
+    wm = _wm_for(store)
+    fc, fr, tc, tr, mac = _link_into(store, 1)[:5]
+    receipt = wm.acceptance(_WARD_ID, fc, fr, tc, tr)
+    assert receipt is not None
+    evidence = m.WardChainLink(
+        from_counter=fc,
+        from_root=fr,
+        to_counter=tc,
+        to_root=tr,
+        auth_commit=mac,
+        acceptance=receipt,
+    )
+    if writer_was_local:
+        _seed(session, store, b"b", b"two")
+        _seed(session, store, b"c", b"three")
+        live_root = store.root()
+    else:
+        # Another writer moved the manager. This Trezor still holds the target at #1.
+        live_root = bytes([3]) * 32
+        wm.force_head(_WARD_ID, 3, live_root, _T0, 2, bytes([2]) * 32)
+
+    def missing(*_):
+        raise AssertionError("the records above the recovery target are missing")
+
+    evidence.auth_commit = bytes(32)
+    with pytest.raises(exceptions.TrezorFailure, match="not authorised"):
+        _rollback(
+            session,
+            wm,
+            store,
+            target,
+            recovered_counter=1,
+            attested_target=evidence,
+            link_source=missing,
+        )
+    evidence.auth_commit = mac
+    ack, rec = _rollback(
+        session,
+        wm,
+        store,
+        target,
+        recovered_counter=1,
+        attested_target=evidence,
+        link_source=missing,
+    )
+    assert "UTC" in rec.text
+    assert ack.new_root == target
+    assert ack.counter == 4
+    link = _publish_demotion(wm, store, ack, 3, live_root)
+    _adopt_demotion(session, wm, store, ack, link)
 
 
 @pytest.mark.models("core")
@@ -5483,7 +5537,7 @@ def test_ward_a_signed_write_ends_freshness_until_the_next_sync(session: Session
     # the same session, before any sync: the old head, flagged and dated
     _r, rec = _read(session, store, lambda p: ward.get_entry(session, _APP, b"a", p))
     assert "unverified entry" in rec.title
-    assert "one" in rec.text and _not_reflecting(synced_at) in rec.squashed
+    assert "one" in rec.text and _signed_date_warning(synced_at) in rec.squashed
     with pytest.raises(exceptions.TrezorFailure, match="WardQueueSetEntry"):
         ward.set_entry(session, _APP, b"b", b"x", ward.store_provider(store))
 

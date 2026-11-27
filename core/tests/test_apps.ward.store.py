@@ -362,9 +362,7 @@ class TestWardStore(unittest.TestCase):
         self.assertEqual(ward_store.get_counter(_WALLET_A), 6)
 
     def test_a_root_slot_keeps_the_wm_timestamp_beside_the_head(self):
-        """The WM's timestamp for the adopted head dates the warning a read without the WM shows,
-        and floors which cached attestation `WardCatchUp` accepts. A slot written before it was
-        kept has none, rather than a zero that would date a head 1970 and floor nothing."""
+        """The saved date is for display. An older record with no timestamp stays undated."""
         ward_store.set_root(_WALLET_A, b"\x01" * 32, 5)
         self.assertIsNone(ward_store.get_timestamp(_WALLET_A))
 

@@ -10923,6 +10923,7 @@ class WardRollback(protobuf.MessageType):
         14: protobuf.Field("timestamp", "uint64", repeated=False, required=False, default=None),
         15: protobuf.Field("recovered_root", "bytes", repeated=False, required=False, default=None),
         18: protobuf.Field("recovered_counter", "uint32", repeated=False, required=False, default=None),
+        19: protobuf.Field("attested_target", "WardChainLink", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -10936,6 +10937,7 @@ class WardRollback(protobuf.MessageType):
         timestamp: Optional["int"] = None,
         recovered_root: Optional["bytes"] = None,
         recovered_counter: Optional["int"] = None,
+        attested_target: Optional["WardChainLink"] = None,
     ) -> None:
         self.from_counter = from_counter
         self.from_root = from_root
@@ -10945,6 +10947,7 @@ class WardRollback(protobuf.MessageType):
         self.timestamp = timestamp
         self.recovered_root = recovered_root
         self.recovered_counter = recovered_counter
+        self.attested_target = attested_target
 
 
 class WardRollbackAck(protobuf.MessageType):

@@ -75,15 +75,7 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
         request.with_acceptance = True
         return await context.call(request, expected_type=WardChainLinkAck)
 
-    def verify_acceptance(link: WardChainLink) -> None:
-        # Every accepted transition raises the WM's counter, so within one register history the
-        # (counter, root) ends that walk_back already pinned name one accepted step. A register
-        # that went back can repeat a pair; see docs/ward/gaps.md.
-        nonlocal use_live
-        if use_live:
-            # walk_back checked the exact predecessor from the fresh attestation.
-            use_live = False
-            return
+    def receipt_time(link: WardChainLink) -> int:
         receipt = link.acceptance
         if (
             receipt is None
@@ -105,46 +97,125 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
             raise DataError(
                 "WARD: missing or invalid WM acceptance for rollback history"
             )
-        if wm_behind and link.to_counter == wm_counter and (
-            link.from_counter != from_counter
-            or not same_root(link.from_root or None, from_root)
+        return receipt.timestamp
+
+    def verify_acceptance(link: WardChainLink) -> None:
+        # Every accepted transition raises the WM's counter, so within one register history the
+        # (counter, root) ends that walk_back already pinned name one accepted step. A register
+        # that went back can repeat a pair; see docs/ward/gaps.md.
+        nonlocal use_live
+        if use_live:
+            # walk_back checked the exact predecessor from the fresh attestation.
+            use_live = False
+            return
+        receipt_time(link)
+        if (
+            wm_behind
+            and link.to_counter == wm_counter
+            and (
+                link.from_counter != from_counter
+                or not same_root(link.from_root or None, from_root)
+            )
         ):
             # The WM's live attestation names the step into its restored head; this device's
             # history must reach that head by the same step.
             raise DataError("WARD: the restored WM head has a different predecessor")
 
-    # Check both checkpoints on one descent. Restarting at the anchor would let
-    # the host change which inbound links it reports for already verified states.
-    ancestor_counter = wm_counter if wm_behind else stored_counter
-    ancestor_root = wm_root if wm_behind else stored_root
-    expected_from = None if wm_behind else (from_counter, from_root)
-    cursor_counter, cursor_root = anchor_counter, anchor_root
-    checkpoints = [ancestor_counter, recovered_counter]
-    if wm_behind and wm_counter:
-        checkpoints.append(from_counter)
-    for checkpoint in sorted(checkpoints, reverse=True):
-        if checkpoint < cursor_counter:
-            cursor_root, _, _, _ = await walk_back(
+    target = msg.attested_target
+    target_time = None
+    if target is not None:
+        from .adopt import verify_inbound_link
+        from .transition import MAX_BATCH
+
+        if wm_behind:
+            raise DataError("WARD: verify the restored manager's history first")
+        fc, tc = target.from_counter, target.to_counter
+        if (
+            fc is None
+            or tc != recovered_counter
+            or not same_root(target.to_root, recovered_root)
+        ):
+            raise DataError("WARD: receipt is for a different recovery target")
+        if any(
+            r is not None and len(r) != 32 for r in (target.from_root, target.to_root)
+        ):
+            raise DataError("WARD: invalid recovery target root")
+        if tc == 0:
+            if fc != 0 or not same_root(target.from_root, None):
+                raise DataError("WARD: invalid recovery genesis")
+        elif not 1 <= tc - fc <= MAX_BATCH:
+            raise DataError("WARD: invalid recovery target step")
+        target_time = receipt_time(target)
+        await verify_inbound_link(
+            fc, target.from_root, tc, recovered_root, target.auth_commit
+        )
+        # The missing suffix need not be available. Still anchor the decision to this
+        # device's own history, or its exact live manager head.
+        if stored_counter == wm_counter:
+            if not same_root(stored_root, wm_root):
+                raise DataError(
+                    "WARD: the WM and device heads are on different branches"
+                )
+        elif stored_counter >= recovered_counter:
+            landed = stored_root
+            if stored_counter > recovered_counter:
+                landed, _, _, _ = await walk_back(
+                    k_auth, ward_id, stored_counter, stored_root, recovered_counter
+                )
+            if not same_root(landed, recovered_root):
+                raise DataError("WARD: target is not on this device's history")
+        else:
+            landed, _, _, _ = await walk_back(
                 k_auth,
                 ward_id,
-                cursor_counter,
-                cursor_root,
-                checkpoint,
-                expect_from=expected_from,
-                collect_commits=False,
-                pull=pull,
-                verify_acceptance=verify_acceptance,
+                tc,
+                recovered_root,
+                stored_counter,
+                expect_from=(fc, target.from_root),
             )
-            cursor_counter = checkpoint
-            expected_from = None
-        if checkpoint == ancestor_counter and not same_root(cursor_root, ancestor_root):
-            raise DataError("WARD: the WM and device heads are on different branches")
-        if checkpoint == recovered_counter and not same_root(
-            cursor_root, recovered_root
-        ):
-            raise DataError("WARD: recovery target does not match the verified history")
-        if checkpoint == recovered_counter:
-            recovered_root = app_root(cursor_root)
+            if not same_root(landed, stored_root):
+                raise DataError(
+                    "WARD: recovery target does not descend from the stored head"
+                )
+    else:
+        # Check both checkpoints on one descent. Restarting at the anchor would let
+        # the host change which inbound links it reports for already verified states.
+        ancestor_counter = wm_counter if wm_behind else stored_counter
+        ancestor_root = wm_root if wm_behind else stored_root
+        expected_from = None if wm_behind else (from_counter, from_root)
+        cursor_counter, cursor_root = anchor_counter, anchor_root
+        checkpoints = [ancestor_counter, recovered_counter]
+        if wm_behind and wm_counter:
+            checkpoints.append(from_counter)
+        for checkpoint in sorted(checkpoints, reverse=True):
+            if checkpoint < cursor_counter:
+                cursor_root, _, _, _ = await walk_back(
+                    k_auth,
+                    ward_id,
+                    cursor_counter,
+                    cursor_root,
+                    checkpoint,
+                    expect_from=expected_from,
+                    collect_commits=False,
+                    pull=pull,
+                    verify_acceptance=verify_acceptance,
+                )
+                cursor_counter = checkpoint
+                expected_from = None
+            if checkpoint == ancestor_counter and not same_root(
+                cursor_root, ancestor_root
+            ):
+                raise DataError(
+                    "WARD: the WM and device heads are on different branches"
+                )
+            if checkpoint == recovered_counter and not same_root(
+                cursor_root, recovered_root
+            ):
+                raise DataError(
+                    "WARD: recovery target does not match the verified history"
+                )
+            if checkpoint == recovered_counter:
+                recovered_root = app_root(cursor_root)
 
     changes = anchor_counter - recovered_counter
     props = [
@@ -152,8 +223,14 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
         ("WARD Manager", change_no(wm_counter), False),
         ("Restore state from", change_no(recovered_counter), False),
         ("New head", change_no(new_counter), False),
-        ("Changes after target", count_changes(changes), False),
+        ("Counter distance", str(changes), False)
+        if target is not None
+        else ("Changes after target", count_changes(changes), False),
     ]
+    if target_time is not None:
+        from .common import manager_date
+
+        props.append(("Target last confirmed", manager_date(target_time), False))
     if changes:
         props.append(
             (
@@ -165,8 +242,10 @@ async def rollback(msg: WardRollback) -> WardRollbackAck:
 
     await confirm_properties("ward_rollback", "Revert changes", props, hold=True)
 
-    # After the hold, and only when needed: an advancing demotion needs no exemption.
-    if new_counter <= stored_counter:
+    # Bind the approval to precisely this revert if ordinary one-step adoption cannot apply.
+    if new_counter <= stored_counter or (
+        target is not None and stored_counter != wm_counter
+    ):
         sync_round.authorise_demotion(
             stored_counter, wm_counter, wm_root, new_counter, recovered_root
         )

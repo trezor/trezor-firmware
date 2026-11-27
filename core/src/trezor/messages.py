@@ -8744,6 +8744,7 @@ if TYPE_CHECKING:
         timestamp: "int | None"
         recovered_root: "AnyBytes | None"
         recovered_counter: "int | None"
+        attested_target: "WardChainLink | None"
 
         def __init__(
             self,
@@ -8756,6 +8757,7 @@ if TYPE_CHECKING:
             timestamp: "int | None" = None,
             recovered_root: "AnyBytes | None" = None,
             recovered_counter: "int | None" = None,
+            attested_target: "WardChainLink | None" = None,
         ) -> None:
             pass
 

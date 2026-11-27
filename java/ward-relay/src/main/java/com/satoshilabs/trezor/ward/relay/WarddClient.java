@@ -132,7 +132,7 @@ public final class WarddClient implements AutoCloseable {
                                 ? (ObjectNode) call.get("message")
                                 : JSON.createObjectNode());
                 ObjectNode reply = JSON.createObjectNode().put("id", id);
-                reply.set("deviceReply", answer(pipe, request));
+                reply.set("deviceReply", answer(method, pipe, request));
                 send(reply);
                 continue;
             }
@@ -235,10 +235,11 @@ public final class WarddClient implements AutoCloseable {
         socket.abort();
     }
 
-    private static ObjectNode answer(WardPipe pipe, DeviceMessage request) {
+    private static ObjectNode answer(String method, WardPipe pipe, DeviceMessage request) {
         ObjectNode reply = JSON.createObjectNode();
         try {
-            if (!DEVICE_CALLS.contains(request.name())) {
+            if (!DEVICE_CALLS.contains(request.name())
+                    && !(method.equals("revert") && request.name().equals("WardRollback"))) {
                 throw PipeException.broken("wardd may not send " + request.name());
             }
             if (pipe == null) {

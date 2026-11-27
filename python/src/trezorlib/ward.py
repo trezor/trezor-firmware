@@ -396,8 +396,8 @@ def catch_up(
 ) -> messages.WardCatchUpAck:
     """Follow the wallet's own chain to `(to_counter, to_root)` WITHOUT the WM, for this session.
 
-    `attestation` is the WM's cached attestation of that head. The device checks it, refuses one
-    older than its stored head's, walks back to its stored head and reads from the named head
+    `attestation` is the WM's cached attestation of that head. The device verifies the signature,
+    walks back to its stored head and reads from the named head
     under a warning dated by the attestation. Nothing is persisted unless the user allowed it for
     this wallet (`set_persist_without_wm`); `persisted` in the ack says which. A head below the
     stored counter is refused.
@@ -515,6 +515,7 @@ def rollback(
     acceptance_source: "AcceptanceSource | None" = None,
     recovered_root: Optional[bytes] = None,
     timestamp: int = 0,
+    attested_target: Optional[messages.WardChainLink] = None,
 ) -> messages.WardRollbackAck:
     """Mint a REVERT to a verified historical head, on confirmation.
 
@@ -532,6 +533,7 @@ def rollback(
         recovered_counter=recovered_counter,
         recovered_root=recovered_root,
         timestamp=timestamp,
+        attested_target=attested_target,
     )
     return _chain_walk(
         session, msg, link_source, 64, messages.WardRollbackAck, "the revert", acceptance_source

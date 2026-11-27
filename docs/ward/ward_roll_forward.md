@@ -42,9 +42,9 @@ remain in place.
 
 ## Reverting and rejoining
 
-A **revert** restores a verified historical root under a new counter. The Trezor checks the validity 
-of the previous transition and the manager's historical evidence before asking for a confirmation. 
-If the manager has regressed due to restore, the rollback requirement may be undetected.
+A **revert** restores a historical root under a new counter. The Trezor checks either a
+saved attestation of the target and its wallet authorization, or the accepted transitions back to
+that target. The user approves on the device.
 A revert ends the session: a new sync is required before the device authorizes anything else
 ([sessions](ward_transitions.md#sessions)).
 
@@ -55,28 +55,28 @@ The proposed recovery flow would let users re-add discarded changes like
 
 ### Reverting to an attested state
 
-This proposed flow applies when a replica cannot rebuild the manager's head N and the user chooses
-to resume from a state it can still serve. The host presents a saved manager attestation of that
-earlier head M, dated T by the manager. The
-Trezor verifies the signature and shows the date T beside the manager's current head. The manager's
-signature alone does not authorize the revert: the user approves it on the Trezor. The screen says
-that N − M changes made after T leave the current state, and that the Trezor can offer to re-add
-them if they arrive later. The count is exact unless a revert lies between M and N. If the user
-approves, the device authorizes a revert from N to a new head N + 1 with the root of M. The replica
-builds N + 1 from its tree at M, so it does not need the missing changes.
+Suppose the manager is at N, but this host has received records through M only.
+wardd rebuilds the tree at M and presents its saved manager receipt to the Trezor.
+The device verifies the live manager head and the receipt for the exact target.
+Above genesis it also checks that the wallet authorized the target transition.
+It checks the target against its own stored history when it is behind N.
 
-The changes between M and N are not erased: if they arrive, the replica keeps them on a dead
-branch.
+The screen shows the device, manager and target counters, their distance, and when
+the manager signed the target. The signed date is for the user. Holding to approve
+authorizes one revert from N to N + 1 with M’s root. wardd saves the revert, submits
+it to the manager, and syncs the device again. If another writer has moved the
+manager head, the user must review the new situation.
 
-Today the Trezor verifies a revert by walking the transitions from the manager's head back to the
-target, and its screen shows change numbers rather than a date. It cannot revert past a step whose
-record has not arrived, and wardd cannot yet publish a revert.
+The manager records N as the predecessor. To serve entries at N + 1, wardd uses
+the encrypted records for M. Changes from M to N that arrive later stay in the
+host’s history. The original history-walk recovery remains available, including
+when a restored manager is behind the device.
 
 ### Changes that arrive after a revert
 
 In the proposed flow, changes between M and N may reach Evolu after the user accepts the revert to M.
 The manager's history runs from M to N, then reverts to N + 1, and may continue with later writes. The
-changes between M and N form a dead branch. The replica holds them and can prove them against
+changes between M and N form a dead branch. wardd holds them and can prove them against
 their own roots, but they are not part of the current state.
 
 The changes are re-added, not restored by a second revert. A revert back to N would also discard

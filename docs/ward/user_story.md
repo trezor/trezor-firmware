@@ -28,6 +28,6 @@ A confirmed export gives the host one named offline entry in plaintext. For a pe
 includes wallet authentication so a device of the same wallet can recognize the intent on restore.
 Restoring the intent requires confirmation. Pinned copies carry no write authorization.
 
-The seed and passphrase recover the wallet keys. Published entries also need the encrypted replica,
+The seed and passphrase recover the wallet keys. Published entries also need the encrypted entry records,
 and unpublished work needs a surviving local record or an explicit backup. Automatic encrypted
 snapshots and on-device selection from them remain proposals.

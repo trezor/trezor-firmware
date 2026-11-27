@@ -231,7 +231,7 @@ A refused operation prints `REFUSED` with the device's reason instead of raising
 d1.sync(); d1.get("contact3")          # "Entry", no warning
 wm_down(); d1.new_session()
 d1.sync()                              # REFUSED: wm_unavailable
-d1.get("contact3")                     # "Unverified entry", "Not reflecting changes since <date> UTC, nor user reverts."
+d1.get("contact3")                     # "Unverified entry", "Manager-signed date: <date> UTC. Later changes and reverts may be missing."
 wm_up(); d1.sync(); d1.get("contact3") # fresh again
 ```
 
@@ -596,7 +596,7 @@ Run the file: `ward_unit_test test_apps.ward.store.py`
   `ward_unit_test test_apps.ward.store.py`
 - **`TestWardStore.test_records_never_collide_with_root_slots`** — The two key ranges are disjoint, and a root write must not disturb a record.
   `ward_unit_test test_apps.ward.store.py`
-- **`TestWardStore.test_a_root_slot_keeps_the_wm_timestamp_beside_the_head`** — The WM's timestamp for the adopted head dates the warning a read without the WM shows, and floors which cached attestation `WardCatchUp` accepts.
+- **`TestWardStore.test_a_root_slot_keeps_the_wm_timestamp_beside_the_head`** — The WM's timestamp for the adopted head dates the warning a read without the WM shows.
   `ward_unit_test test_apps.ward.store.py`
 - **`TestWardStore.test_a_wallet_setting_is_its_own_and_gives_its_slot_back`** — Off by default, per wallet, and a wallet with nothing turned on holds no slot.
   `ward_unit_test test_apps.ward.store.py`
@@ -808,7 +808,7 @@ Run the file: `ward_device_test tests/device_tests/misc/test_ward.py`
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_without_the_wm_reads_the_newer_head_with_the_warning"`
 - **`test_ward_catch_up_refuses_a_head_the_wm_never_attested`** — A LOST RACE, or a head built from authorisations that were never published: every link is genuine, but no WM signature names the head, so the device does not read from it.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_refuses_a_head_the_wm_never_attested"`
-- **`test_ward_catch_up_refuses_an_attestation_older_than_the_stored_head`** — THE TIMESTAMP FLOOR: every head on a branch a revert removed was attested before that revert, so an attestation older than the stored head's is refused before any link is asked.
+- **`test_ward_catch_up_accepts_verified_history_with_an_earlier_date`** — A valid chain is accepted when the signed date moves back.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_refuses_an_attestation_older_than_the_stored_head"`
 - **`test_ward_catch_up_persists_nothing`** — The next session reads the STORED head again: a proof against the caught-up tree fails.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_persists_nothing"`
@@ -816,7 +816,7 @@ Run the file: `ward_device_test tests/device_tests/misc/test_ward.py`
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_persists_when_the_user_allows_it"`
 - **`test_ward_catch_up_stops_persisting_once_the_user_withdraws`** — Withdrawing needs no screen, and the next catch-up is for its session only again.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_catch_up_stops_persisting_once_the_user_withdraws"`
-- **`test_ward_persisting_still_refuses_an_attestation_older_than_the_stored_head`** — The setting changes what is KEPT, not what is accepted: the timestamp floor still holds.
+- **`test_ward_persists_a_verified_head_with_an_earlier_date`** — Persistence follows the same history checks.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_persisting_still_refuses_an_attestation_older_than_the_stored_head"`
 - **`test_ward_without_a_wm_catches_up_and_writes_on_its_own_chain`** — THE MVP LOOP (MVP build): catch up to genesis, write, store the write, catch up to it. Every head is moved by the chain alone and persisted, the write is signed for the HOST (TAG_STEP) so it can refuse one this wallet did not make, and a read is proved but never current.
   `ward_device_test "tests/device_tests/misc/test_ward.py::test_ward_without_a_wm_catches_up_and_writes_on_its_own_chain"`

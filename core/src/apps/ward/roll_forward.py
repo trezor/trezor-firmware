@@ -32,7 +32,6 @@ async def roll_forward(msg: WardRollForward) -> WardRollForwardAck:
     here; the host submits the signatures as ordinary advances and syncs.
     """
     from trezor.messages import WardRollForwardAck
-    from trezor.strings import format_timestamp
     from trezor.ui.layouts import confirm_properties
     from trezor.wire import DataError
 
@@ -40,7 +39,7 @@ async def roll_forward(msg: WardRollForward) -> WardRollForwardAck:
     from .adopt import verify_attested
     from .attest import NONCE_LENGTH, root_or_empty, same_root, verify_attestation
     from .transition import TAG_WM_HEAD, TAG_WM_REVERT, link_of, verify_chain_step, wm_sig
-    from .common import change_no, count_changes, has_wm, require_initialized
+    from .common import change_no, count_changes, has_wm, manager_date, require_initialized
     from .keys import derive_k_auth, derive_k_sig, derive_ward_id
     from .root import get_counter, get_root
 
@@ -144,7 +143,7 @@ async def roll_forward(msg: WardRollForward) -> WardRollForwardAck:
             "WARD history restored",
             [
                 ("Restored to", change_no(counter), False),
-                ("Last confirmed", "%s UTC" % format_timestamp(last_timestamp), False),
+                ("Last confirmed", manager_date(last_timestamp), False),
             ],
         )
     else:

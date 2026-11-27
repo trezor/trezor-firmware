@@ -294,8 +294,7 @@ message WardVerifyChainAck {
  *
  * The named head is the `to` end of a CACHED attestation: one the WM signed in some earlier round,
  * kept by the host with the round nonce it answered. The device verifies the signature over that
- * nonce -- it proves the head WAS the WM's at `timestamp`, not that it still is -- and refuses one
- * whose timestamp is older than its stored head's. It then walks back from the named head
+ * nonce. The timestamp dates the display. The device walks back from the named head
  * (WardChainRequest, as in WardVerifyChain) and must land exactly on its stored head; every link
  * is authorised by a device of this wallet. A head below the stored counter is refused before any
  * link is asked for.
@@ -664,6 +663,8 @@ message WardRollback {
     // displaying the confirmation. An absent root denotes the empty tree.
     optional bytes  recovered_root = 15;
     optional uint32 recovered_counter = 18;  // required by the device, including for genesis
+    // Archived manager receipt and wallet authorization for recovery across missing history.
+    optional WardChainLink attested_target = 19;
 }
 
 /**

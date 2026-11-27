@@ -11,19 +11,18 @@ with the device's stored head.
 | --- | --- |
 | Live manager sync | The manager attested the head in this sync, and the device verified its wallet history. |
 | Cached manager attestation | The manager held this head at the signed time. Later changes and reverts may be missing. By default the head is used only for reads in this session. |
-| Manager-free MVP | The device verified and persisted a chain from its own head. The replica may omit a later change or a competing branch. |
+| Manager-free MVP | The device verified and persisted a chain from its own head. The host may omit a later change or a competing branch. |
 | Local record | A pinned copy reflects the last value saved on this Trezor. A pending change may still be unpublished. |
 
-TBC: 
 A user can allow the device to persist a cached, attested head while the manager is unavailable.
-If the device missed a revert, it can advance along a discarded branch and require recovery.
+The signed date is for display. If the device missed a revert, it can advance along a discarded branch and require recovery.
 
 ## What each party learns
 
 | Party | Visible information |
 | --- | --- |
 | Wallet application | Its requests, supplied identifiers and values, and outcomes. Offline export gives the host plaintext it can retain -> encryption at rest guarantees, not "in motion" |
-| Local service and peers with replica access | Encrypted entries and identities, stable paths, sizes and history. A host observing a lookup can associate a known or guessed identifier with its path. |
+| Local service and peers with access to synchronized records | Encrypted entries and identities, stable paths, sizes and history. A host observing a lookup can associate a known or guessed identifier with its path. |
 | Evolu relay | Encrypted replication traffic, timing and volume. |
 | WARD Manager | The wallet's stable public identifier, counters, roots and session timing. |
 

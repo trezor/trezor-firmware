@@ -14,7 +14,7 @@ display yourself.
     d1.delete("contact")
     d1.queue("contact", "bob")     # WardQueueSetEntry: held on the device
     d1.flush()                     # publish the queue (conflicts are asked on the device)
-    d1.status()                    # wardd's replica head and the WM's
+    d1.status()                    # wardd's local head and the manager's
     wm_down(); wm_up()             # stop / start the WARD Manager
     start_second()                 # start device 2 and its wardd (if the adapter has not)
     d2.catch_up()                  # WardCatchUp: up to the newest WM-attested head, no WM
@@ -99,8 +99,22 @@ class Device:
     def sync(self) -> t.Any:
         return self._call("sync", lambda: ward_relay.sync(self.session, self.wardd))
 
+    def recovery_targets(self) -> list[dict]:
+        return ward_relay.recovery_targets(self.wardd)
+
+    def revert(self, counter: int, root: str | None) -> t.Any:
+        """Restore the given counter and hex root after confirmation on the Trezor."""
+        return self._call(
+            "revert",
+            lambda: ward_relay.revert(
+                self.session, self.wardd, counter, bytes.fromhex(root) if root else None
+            ),
+        )
+
     def catch_up(self) -> t.Any:
-        return self._call("catch-up", lambda: ward_relay.catch_up(self.session, self.wardd))
+        return self._call(
+            "catch-up", lambda: ward_relay.catch_up(self.session, self.wardd)
+        )
 
     def status(self) -> dict:
         return ward_relay.status(self.wardd)

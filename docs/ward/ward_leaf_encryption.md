@@ -134,7 +134,7 @@ The key holder walks every leaf of the verified trie, taking each leaf's `entry_
 
 ### Re-adding after a revert
 
-Changes that reach the replica after a revert sit on a dead branch from M to N, and the user can
+Changes that reach a host after a revert sit on a dead branch from M to N, and the user can
 [re-add](ward_roll_forward.md#changes-that-arrive-after-a-revert) them. A content tag shows only
 that a holder of `K_data(app)` sealed the value. Re-adding also needs the wallet authentication
 tags of the dead branch's transitions, which chain its roots back to the fork point M:

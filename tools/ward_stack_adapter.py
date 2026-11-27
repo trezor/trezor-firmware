@@ -67,8 +67,9 @@ if t.TYPE_CHECKING:
 
 APP_ID = "stack_app"
 # the freshness warning without the WM, as `Screens.take` squashes it: dated by the WM's timestamp
-# for the head the read proves against ("Not reflecting changes since <date> UTC, nor user reverts.")
-WARNING = "notreflectingchangessince"
+# for the head the read proves against ("Manager-signed date: <date> UTC. Later changes and reverts
+# may be missing.")
+WARNING = "manager-signeddate"
 
 
 def switch_wm(run_dir: Path, down: bool, timeout: float = 60) -> bool:

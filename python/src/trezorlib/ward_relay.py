@@ -239,7 +239,10 @@ class WarddClient:
             if "deviceCall" in frame:
                 call = frame["deviceCall"]
                 try:
-                    if call["name"] not in DEVICE_CALLS:
+                    if call["name"] not in DEVICE_CALLS and (method, call["name"]) != (
+                        "revert",
+                        "WardRollback",
+                    ):
                         raise RuntimeError(f"wardd may not send {call['name']}")
                     if device is None:
                         raise RuntimeError(f"no device to answer {call['name']}")
@@ -308,6 +311,22 @@ def sync(session: "Session", client: WarddClient, rejoin: bool = False) -> dict:
     rejoin after a fork, which discards this device's changes above it and is confirmed on the
     device). Run `open_store` first, on the same session."""
     return client.call("sync", {"rejoin": rejoin}, session_device(session))
+
+
+def recovery_targets(client: WarddClient) -> list[dict]:
+    """List earlier manager-attested heads this host can serve."""
+    return client.call("recoveryTargets")["targets"]
+
+
+def revert(
+    session: "Session", client: WarddClient, counter: int, root: bytes | None
+) -> dict:
+    """Confirm a historical target on the device and publish it as a new manager head."""
+    return client.call(
+        "revert",
+        {"counter": counter, "root": root.hex() if root else None},
+        session_device(session),
+    )
 
 
 def flush(session: "Session", client: WarddClient, max_batch: int = 1) -> dict:

@@ -5648,6 +5648,8 @@ pub struct WardRollback {
     pub recovered_root: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardRollback.recovered_counter)
     pub recovered_counter: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ward.WardRollback.attested_target)
+    pub attested_target: ::protobuf::MessageField<super::messages_ward::WardChainLink>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ward.WardRollback.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -5885,7 +5887,7 @@ impl WardRollback {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(8);
+        let mut fields = ::std::vec::Vec::with_capacity(9);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "from_counter",
@@ -5926,6 +5928,11 @@ impl WardRollback {
             "recovered_counter",
             |m: &WardRollback| { &m.recovered_counter },
             |m: &mut WardRollback| { &mut m.recovered_counter },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::messages_ward::WardChainLink>(
+            "attested_target",
+            |m: &WardRollback| { &m.attested_target },
+            |m: &mut WardRollback| { &mut m.attested_target },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WardRollback>(
             "WardRollback",
@@ -5969,6 +5976,9 @@ impl ::protobuf::Message for WardRollback {
                 144 => {
                     self.recovered_counter = ::std::option::Option::Some(is.read_uint32()?);
                 },
+                154 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.attested_target)?;
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -6005,6 +6015,10 @@ impl ::protobuf::Message for WardRollback {
         if let Some(v) = self.recovered_counter {
             my_size += ::protobuf::rt::uint32_size(18, v);
         }
+        if let Some(v) = self.attested_target.as_ref() {
+            let len = v.compute_size();
+            my_size += 2 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -6035,6 +6049,9 @@ impl ::protobuf::Message for WardRollback {
         if let Some(v) = self.recovered_counter {
             os.write_uint32(18, v)?;
         }
+        if let Some(v) = self.attested_target.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(19, v, os)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -6060,6 +6077,7 @@ impl ::protobuf::Message for WardRollback {
         self.timestamp = ::std::option::Option::None;
         self.recovered_root = ::std::option::Option::None;
         self.recovered_counter = ::std::option::Option::None;
+        self.attested_target.clear();
         self.special_fields.clear();
     }
 
@@ -6073,6 +6091,7 @@ impl ::protobuf::Message for WardRollback {
             timestamp: ::std::option::Option::None,
             recovered_root: ::std::option::Option::None,
             recovered_counter: ::std::option::Option::None,
+            attested_target: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -6480,21 +6499,23 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0cR\nauthCommitJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\x03\
     \x10\x04\"G\n\x10WardReconcileAck\x12\x18\n\x07counter\x18\x01\x20\x01(\
     \rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\"\
-    \xd7\x02\n\x0cWardRollback\x12!\n\x0cfrom_counter\x18\t\x20\x01(\rR\x0bf\
+    \xa8\x03\n\x0cWardRollback\x12!\n\x0cfrom_counter\x18\t\x20\x01(\rR\x0bf\
     romCounter\x12\x1b\n\tfrom_root\x18\n\x20\x01(\x0cR\x08fromRoot\x12\x1d\
     \n\nto_counter\x18\x0b\x20\x01(\rR\ttoCounter\x12\x17\n\x07to_root\x18\
     \x0c\x20\x01(\x0cR\x06toRoot\x12!\n\x0cwm_signature\x18\r\x20\x01(\x0cR\
     \x0bwmSignature\x12\x1c\n\ttimestamp\x18\x0e\x20\x01(\x04R\ttimestamp\
     \x12%\n\x0erecovered_root\x18\x0f\x20\x01(\x0cR\rrecoveredRoot\x12+\n\
-    \x11recovered_counter\x18\x12\x20\x01(\rR\x10recoveredCounterJ\x04\x08\
-    \x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x04\x10\
-    \x05J\x04\x08\x05\x10\x06J\x04\x08\x06\x10\x07J\x04\x08\x07\x10\x08J\x04\
-    \x08\x08\x10\tJ\x04\x08\x10\x10\x11J\x04\x08\x11\x10\x12\"\x84\x01\n\x0f\
-    WardRollbackAck\x12\x18\n\x07counter\x18\x01\x20\x01(\rR\x07counter\x12\
-    \x19\n\x08new_root\x18\x02\x20\x01(\x0cR\x07newRoot\x12\x1f\n\x0bauth_co\
-    mmit\x18\x03\x20\x01(\x0cR\nauthCommit\x12\x15\n\x06wm_sig\x18\x05\x20\
-    \x01(\x0cR\x05wmSigJ\x04\x08\x04\x10\x05B?\n#com.satoshilabs.trezor.lib.\
-    protobufB\x18TrezorMessageWardConnect\
+    \x11recovered_counter\x18\x12\x20\x01(\rR\x10recoveredCounter\x12O\n\x0f\
+    attested_target\x18\x13\x20\x01(\x0b2&.hw.trezor.messages.ward.WardChain\
+    LinkR\x0eattestedTargetJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\
+    \x08\x03\x10\x04J\x04\x08\x04\x10\x05J\x04\x08\x05\x10\x06J\x04\x08\x06\
+    \x10\x07J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\x08\x10\x10\x11J\
+    \x04\x08\x11\x10\x12\"\x84\x01\n\x0fWardRollbackAck\x12\x18\n\x07counter\
+    \x18\x01\x20\x01(\rR\x07counter\x12\x19\n\x08new_root\x18\x02\x20\x01(\
+    \x0cR\x07newRoot\x12\x1f\n\x0bauth_commit\x18\x03\x20\x01(\x0cR\nauthCom\
+    mit\x12\x15\n\x06wm_sig\x18\x05\x20\x01(\x0cR\x05wmSigJ\x04\x08\x04\x10\
+    \x05B?\n#com.satoshilabs.trezor.lib.protobufB\x18TrezorMessageWardConnec\
+    t\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

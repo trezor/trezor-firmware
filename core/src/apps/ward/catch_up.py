@@ -21,10 +21,7 @@ async def catch_up(msg: WardCatchUp) -> WardCatchUpAck:
     (`WardSetPersistWithoutWm`), accepting that a device which missed a revert can be walked up the
     branch it removed, and then needs a `WardRollback` once the WM is back.
 
-    THE TIMESTAMP FLOOR. An attestation older than the stored head's is refused: every head on a
-    branch a revert removed was attested before that revert, so a device that adopted the revert,
-    or anything after it, never reads from that branch again. A stored head adopted before
-    timestamps were kept has no floor.
+    The signed date is retained for display. Only the authenticated history orders heads.
 
     WITHOUT A WM (the MVP build) there is nothing to attest a head, so the chain alone decides and
     the head is always persisted: it is how the stored head moves at all, writes included.
@@ -42,7 +39,7 @@ async def catch_up(msg: WardCatchUp) -> WardCatchUpAck:
     from .attest import NONCE_LENGTH, root_or_empty, same_root, verify_attestation
     from .common import has_wm, require_initialized
     from .keys import derive_k_auth, derive_wallet_id, derive_ward_id
-    from .root import get_counter, get_root, get_timestamp
+    from .root import get_counter, get_root
     from .verify_chain import walk_back
 
     require_initialized()
@@ -93,16 +90,6 @@ async def catch_up(msg: WardCatchUp) -> WardCatchUpAck:
         ):
             log.info(__name__, "catch-up REFUSED: head #%d carries no valid WM attestation", to_counter)
             raise DataError("WARD: the WM never attested that head")
-        stored_time = await get_timestamp()
-        if stored_time is not None and msg.timestamp < stored_time:
-            log.info(
-                __name__,
-                "catch-up REFUSED: head #%d was attested at %d, before the stored head (%d)",
-                to_counter,
-                msg.timestamp,
-                stored_time,
-            )
-            raise DataError("WARD: that head was attested before this device's head")
         timestamp = msg.timestamp
 
     reverts = 0

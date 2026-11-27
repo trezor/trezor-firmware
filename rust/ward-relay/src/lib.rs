@@ -155,7 +155,8 @@ impl WarddClient {
                 let name = call.get("name").and_then(Value::as_str).unwrap_or_default().to_owned();
                 let message = call.get("message").cloned().unwrap_or_else(|| json!({}));
                 let outcome = match pipe.as_deref_mut() {
-                    _ if !DEVICE_CALLS.contains(&name.as_str()) => {
+                    _ if !DEVICE_CALLS.contains(&name.as_str())
+                        && (method, name.as_str()) != ("revert", "WardRollback") => {
                         Err(PipeError::Other(format!("wardd may not send {name}")))
                     }
                     Some(p) => p.call(&name, message).await,

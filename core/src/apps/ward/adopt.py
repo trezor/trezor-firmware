@@ -71,7 +71,7 @@ async def verify_round_attestation(
         to_counter, root_or_empty(to_root), write_session or nonce, timestamp
     )
     # The timestamp is signed but not checked here: anti-replay is the counter's job. `adopt`
-    # persists it, and `catch_up` holds a cached attestation to it.
+    # persists it for display.
     return from_counter, root_or_empty(from_root), to_counter, root_or_empty(to_root)
 
 

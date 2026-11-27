@@ -83,6 +83,15 @@ def is_fresh() -> bool:
     return sync_round.is_online()
 
 
+def manager_date(timestamp: int) -> str:
+    from trezor.strings import format_timestamp
+
+    # The manager signs uint64 seconds. The calendar formatter has a smaller range.
+    if timestamp > 0x7FFFFFFF + 946684800:
+        return "%d seconds since Unix epoch" % timestamp
+    return format_timestamp(timestamp) + " UTC"
+
+
 async def add_freshness(props: list) -> None:
     """Append the warning unless the WM attested this session's head (`is_fresh`).
 
@@ -93,8 +102,6 @@ async def add_freshness(props: list) -> None:
     if is_fresh():
         return
 
-    from trezor.strings import format_timestamp
-
     from .root import read_timestamp
 
     timestamp = await read_timestamp()
@@ -104,8 +111,8 @@ async def add_freshness(props: list) -> None:
         props.append(
             (
                 "Warning",
-                "Not reflecting changes since %s UTC, nor user reverts."
-                % format_timestamp(timestamp),
+                "Manager-signed date: %s. Later changes and reverts may be missing."
+                % manager_date(timestamp),
                 False,
             )
         )

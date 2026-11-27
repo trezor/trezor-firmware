@@ -238,7 +238,7 @@ def test_a_conflict_is_definitive_and_keeps_the_channel(client: Client) -> None:
                 on_page=lambda layout: pages.append(layout.text_content()),
             )
             assert (
-                "notreflectingchangessince" in "".join("".join(pages).split()).lower()
+                "manager-signeddate" in "".join("".join(pages).split()).lower()
             )
             assert "WardChainRequest" in wardd.served[before:]
             assert wardd.served[-1] == "WardServiceFetch"
