@@ -1,0 +1,104 @@
+name: trezor-ward
+
+on:
+  pull_request:
+    paths:
+      - 'rust/trezor-ward/**'
+      - '.github/workflows/ward.yml'
+      # the toolchains and tools of the crate's two shells
+      - 'flake.nix'
+      - 'flake.lock'
+  workflow_dispatch:
+
+# cancel any previous runs on the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read        # for actions/checkout
+
+defaults:
+  run:
+    working-directory: rust/trezor-ward
+
+jobs:
+  # The toolchain the firmware is built with.
+  dev:
+    name: Pinned toolchain
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: ./.github/actions/environment
+        with:
+          nix-dev-shell: ward
+          pre-download: "false"
+      # They enable every feature: the crate's dev-dependency on itself turns them on.
+      - name: Tests
+        run: $NIX_RUN cargo test
+      # As an optimized build has them, and with the exhaustive test over 4-bit keys, which
+      # is too slow to run without optimizations.
+      - name: Tests, optimized
+        run: $NIX_RUN cargo test --release
+      # What the tests run and what they never do: the table and the uncovered lines on the
+      # job's summary page, the same shown in the sources as an artifact.
+      - name: Coverage
+        run: |
+          $NIX_RUN cargo llvm-cov --branch --no-report
+          {
+            echo '```'
+            $NIX_RUN cargo llvm-cov report --branch --show-missing-lines
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          $NIX_RUN cargo llvm-cov report --branch --html
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
+        with:
+          name: trezor-ward-coverage
+          path: rust/trezor-ward/target/llvm-cov/html
+          retention-days: 7
+      - name: Every combination of features
+        run: $NIX_RUN cargo hack clippy --feature-powerset -- -D warnings
+      # Where the verifier runs. Without `use_std`, since these targets have no std.
+      - name: Embedded targets
+        run: >
+          $NIX_RUN cargo hack check --feature-powerset --exclude-features use_std
+          --target thumbv8m.main-none-eabihf
+          --target thumbv7em-none-eabihf
+          --target thumbv7m-none-eabi
+      # Also the one run on a 32-bit target. A panic aborts in WebAssembly and takes the
+      # captured output with it: --nocapture keeps the message of a failing test. Doctests
+      # are left to the host run.
+      - name: Tests in WebAssembly
+        run: $NIX_RUN cargo test --target wasm32-wasip1 --lib --tests -- --nocapture
+      # What a browser loads has no way to report a result, so the tests are compiled and
+      # linked but not run.
+      - name: WebAssembly without a system interface
+        run: $NIX_RUN cargo test --target wasm32-unknown-unknown --no-run
+
+  # The oldest toolchain the crate supports, `rust-version` in its Cargo.toml.
+  msrv:
+    name: Minimum supported toolchain
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
+      - uses: ./.github/actions/environment
+        with:
+          nix-dev-shell: ward-msrv
+          pre-download: "false"
+      - name: Tests
+        run: $NIX_RUN cargo test
+      - name: Every combination of features
+        run: $NIX_RUN cargo hack check --feature-powerset
+      # Where the prover runs. Compiled only: nothing in the crate depends on the platform
+      # beyond the width of a pointer, which the WebAssembly tests cover.
+      - name: Every platform of the prover
+        run: >
+          $NIX_RUN cargo check --features use_std,sha2
+          --target x86_64-unknown-linux-gnu
+          --target x86_64-pc-windows-msvc
+          --target aarch64-apple-darwin
+          --target aarch64-apple-ios
+          --target aarch64-linux-android
+          --target wasm32-unknown-unknown

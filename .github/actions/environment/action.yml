@@ -8,6 +8,8 @@ inputs:
     type: "choice"
     options:
       - "minimal"
+      - "ward"
+      - "ward-msrv"
       - "default"
       - "everything"
   pre-download:

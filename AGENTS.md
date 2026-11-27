@@ -100,6 +100,10 @@ Makefiles if in doubt; this file only captures what is non-obvious.
 - Python client: `make -C python test` (quick, current interpreter); full matrix as CI:
   `nix-shell --arg pythonTest true --run "unset LD_LIBRARY_PATH && cd python && uv run tox"`.
 - Rust: `make -C core test_rust` (embedded crates), `make -C core clippy`, `make -C rust check` (standalone crates).
+  `rust/trezor-ward` has more checks, the steps of `.github/workflows/ward.yml`. Run them from the crate's
+  directory in its own shells: `nix develop .#ward --command <step>` (pinned nightly, embedded and WebAssembly
+  targets, `cargo-hack`, `cargo-llvm-cov`, `wasmtime`) or `nix develop .#ward-msrv --command <step>` (its
+  `rust-version`).
 - Crypto: `make -C crypto` then e.g. `crypto/tests/test_check`. Storage: `make -C storage/tests build tests_all`.
 - Coverage: `make -C core coverage` (builds a frozen emulator if needed). CI threshold is 85%.
 
