@@ -98,10 +98,7 @@ RESULT_SHOW_DETAILS: int
 MSG_DECISION: int
 MSG_CHUNK: int
 MSG_CHUNK_FAILED: int
-PROGRESS_INIT: int
-PROGRESS_STEP: int
-PROGRESS_LABEL: int
-PROGRESS_END: int
+MSG_PROGRESS: int
 
 
 # rust/src/ui/api/modui_micropython.rs
@@ -113,8 +110,8 @@ def deserialize_ui_message(
     request's kind (`REQUEST_*`) and the second its step; a review goes on
     with `(title, fields, extras, answer)`, a verification with `(value,
     account, path)` and a done with `(text,)`. `fields` is a list of
-    `(kind, label, value, ticker)` whose `Data` value is its total
-    length, and `extras` is a list of `(label, fields)`."""
+    `(kind, label, value, ticker)` whose `TextSource` value is its
+    total length, and `extras` is a list of `(label, fields)`."""
 
 
 # rust/src/ui/api/modui_micropython.rs
@@ -133,15 +130,14 @@ def encode_chunk_request(
     offset: int,
     length: int,
 ) -> bytes:
-    """Serialize a request for one chunk of a `Data` field: its flat index,
-    the offset and the length."""
+    """Serialize a request for one chunk of a streamed field: its flat
+    index, the offset and the length."""
 
 
 # rust/src/ui/api/modui_micropython.rs
 def deserialize_progress_message(
     *,
     data: bytes,
-) -> Any:
-    """Read an app's progress message: `(label, total)` for a start, the
-    units for a step, the label for a change of label, `None` for the
-    end."""
+) -> tuple[str, int, int]:
+    """Read an app's progress message: the whole state of the bar,
+    `(label, done, total)`."""

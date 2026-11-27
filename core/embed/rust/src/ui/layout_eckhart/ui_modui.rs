@@ -28,8 +28,8 @@ const TEXT_WARNING: TextStyle = TextStyle::new(
 .with_line_spacing(-4);
 
 /// `amount` is the style the summary draws its amount with, `address` keeps
-/// the chunking this model gives addresses, `data` is mono without chunking,
-/// and a `note` is plain text: a label's style would make it read as one.
+/// the chunking this model gives addresses, and a `note` is plain text: a
+/// label's style would make it read as one.
 static FIELD_STYLES: FieldStyles = FieldStyles {
     label: &theme::TEXT_SMALL_LIGHT,
     text: &theme::TEXT_REGULAR,
@@ -51,7 +51,7 @@ impl ModUI for UIEckhart {
     ) -> Result<Gc<LayoutObj>, Error> {
         // One screen for every review, whatever it holds. The way out lives in
         // the menu: the driver's when the review has one, the screen's own
-        // otherwise. A `Data` field's pages are counted in the hint.
+        // otherwise. A streamed field's pages are counted in the hint.
         let paragraphs = fields
             .paragraphs(&FIELD_STYLES)
             .into_paragraphs()

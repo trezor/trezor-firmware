@@ -57,6 +57,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_MSG_CHUNK;
   MP_QSTR_MSG_CHUNK_FAILED;
   MP_QSTR_MSG_DECISION;
+  MP_QSTR_MSG_PROGRESS;
   MP_QSTR_MenuItemIntent;
   MP_QSTR_MessageType;
   MP_QSTR_Msg;
@@ -65,10 +66,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_NORMAL;
   MP_QSTR_NOTE;
   MP_QSTR_NotificationLevel;
-  MP_QSTR_PROGRESS_END;
-  MP_QSTR_PROGRESS_INIT;
-  MP_QSTR_PROGRESS_LABEL;
-  MP_QSTR_PROGRESS_STEP;
   MP_QSTR_PairDevice;
   MP_QSTR_REQUEST_DONE;
   MP_QSTR_REQUEST_REVIEW;

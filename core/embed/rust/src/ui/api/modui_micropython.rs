@@ -12,8 +12,8 @@ use rkyv::rancor::Failure;
 use rkyv::Archived;
 use trezor_app_sdk::structs::{Slice, StrSlice};
 use trezor_app_sdk::traits::ui::{
-    Answer, FieldKind, TrezorProgressEnum, TrezorUiEnumV1, TrezorUiResultV1, UiChunkRequest,
-    VerifyRequest, WireExtra, WireField, MAX_STREAMED_FIELDS, UI_MSG_CHUNK, UI_MSG_CHUNK_FAILED,
+    Answer, FieldKind, ProgressV1, TrezorUiEnumV1, TrezorUiResultV1, UiChunkRequest, VerifyRequest,
+    WireExtra, WireField, MAX_STREAMED_FIELDS, PROGRESS_MSG, UI_MSG_CHUNK, UI_MSG_CHUNK_FAILED,
     UI_MSG_DECISION,
 };
 
@@ -264,19 +264,13 @@ extern "C" fn new_deserialize_progress_message(
 ) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
-        let archived =
-            rkyv::access::<Archived<TrezorProgressEnum>, Failure>(unsafe { get_buffer(obj) }?)
-                .map_err(|_| Error::ValueError(c"Invalid progress message"))?;
-        Ok(match archived {
-            Archived::<TrezorProgressEnum>::Init { label, total } => (
-                Obj::try_from(label.as_ref())?,
-                Obj::try_from(total.to_native())?,
-            )
-                .try_into()?,
-            Archived::<TrezorProgressEnum>::Step { units } => Obj::try_from(units.to_native())?,
-            Archived::<TrezorProgressEnum>::Label { label } => Obj::try_from(label.as_ref())?,
-            Archived::<TrezorProgressEnum>::End => Obj::const_none(),
-        })
+        let progress = rkyv::access::<Archived<ProgressV1>, Failure>(unsafe { get_buffer(obj) }?)
+            .map_err(|_| Error::ValueError(c"Invalid progress message"))?;
+        Obj::try_from((
+            Obj::try_from(progress.label.as_ref())?,
+            Obj::try_from(progress.done.to_native())?,
+            Obj::try_from(progress.total.to_native())?,
+        ))
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -423,17 +417,8 @@ pub static mp_module_trezormodui: Module = obj_module! {
     /// MSG_CHUNK_FAILED: int
     Qstr::MP_QSTR_MSG_CHUNK_FAILED => Obj::small_int(UI_MSG_CHUNK_FAILED),
 
-    /// PROGRESS_INIT: int
-    Qstr::MP_QSTR_PROGRESS_INIT => Obj::small_int(TrezorProgressEnum::INIT),
-
-    /// PROGRESS_STEP: int
-    Qstr::MP_QSTR_PROGRESS_STEP => Obj::small_int(TrezorProgressEnum::STEP),
-
-    /// PROGRESS_LABEL: int
-    Qstr::MP_QSTR_PROGRESS_LABEL => Obj::small_int(TrezorProgressEnum::LABEL),
-
-    /// PROGRESS_END: int
-    Qstr::MP_QSTR_PROGRESS_END => Obj::small_int(TrezorProgressEnum::END),
+    /// MSG_PROGRESS: int
+    Qstr::MP_QSTR_MSG_PROGRESS => Obj::small_int(PROGRESS_MSG),
 
     /// def deserialize_ui_message(
     ///     *,
@@ -443,8 +428,8 @@ pub static mp_module_trezormodui: Module = obj_module! {
     ///     request's kind (`REQUEST_*`) and the second its step; a review goes on
     ///     with `(title, fields, extras, answer)`, a verification with `(value,
     ///     account, path)` and a done with `(text,)`. `fields` is a list of
-    ///     `(kind, label, value, ticker)` whose `Data` value is its total
-    ///     length, and `extras` is a list of `(label, fields)`."""
+    ///     `(kind, label, value, ticker)` whose `TextSource` value is its
+    ///     total length, and `extras` is a list of `(label, fields)`."""
     Qstr::MP_QSTR_deserialize_ui_message => obj_fn_kw!(0, new_deserialize_ui_message).as_obj(),
 
     /// def encode_ui_result(
@@ -461,16 +446,15 @@ pub static mp_module_trezormodui: Module = obj_module! {
     ///     offset: int,
     ///     length: int,
     /// ) -> bytes:
-    ///     """Serialize a request for one chunk of a `Data` field: its flat index,
-    ///     the offset and the length."""
+    ///     """Serialize a request for one chunk of a streamed field: its flat
+    ///     index, the offset and the length."""
     Qstr::MP_QSTR_encode_chunk_request => obj_fn_kw!(0, new_encode_chunk_request).as_obj(),
 
     /// def deserialize_progress_message(
     ///     *,
     ///     data: bytes,
-    /// ) -> Any:
-    ///     """Read an app's progress message: `(label, total)` for a start, the
-    ///     units for a step, the label for a change of label, `None` for the
-    ///     end."""
+    /// ) -> tuple[str, int, int]:
+    ///     """Read an app's progress message: the whole state of the bar,
+    ///     `(label, done, total)`."""
     Qstr::MP_QSTR_deserialize_progress_message => obj_fn_kw!(0, new_deserialize_progress_message).as_obj(),
 };

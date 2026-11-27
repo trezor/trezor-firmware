@@ -15,8 +15,8 @@ use crate::ui::ui_firmware::FirmwareUI;
 use crate::ui::ui_modui::{FieldStyles, Fields, ModUI};
 
 /// `amount` matches the summary's amount, `address` keeps the chunking this
-/// model gives addresses, `data` is mono without chunking, a `note` reads like
-/// the descriptions around it, and a `warning` is the caution row.
+/// model gives addresses, a `note` reads like the descriptions around it, and
+/// a `warning` is the caution row.
 static FIELD_STYLES: FieldStyles = FieldStyles {
     label: &theme::PROPS_KEY_FONT,
     text: &theme::TEXT_NORMAL,
@@ -38,7 +38,7 @@ impl ModUI for UIDelizia {
     ) -> Result<Gc<LayoutObj>, Error> {
         // One screen for every review, whatever it holds. The way out lives in
         // the menu: the driver's when the review has one, the screen's own
-        // otherwise. A `Data` field's pages are counted in the footer.
+        // otherwise. A streamed field's pages are counted in the footer.
         LayoutObj::new_root(new_confirm_action_simple(
             fields.paragraphs(&FIELD_STYLES).into_paragraphs(),
             if menu {
