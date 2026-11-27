@@ -36,7 +36,7 @@ use crate::ui::component::Label;
 use crate::ui::display::toif::Toif;
 use crate::ui::display::{self, Color, Icon, LOADER_MAX};
 use crate::ui::geometry::{Alignment, Alignment2D, Offset, Point, Rect};
-use crate::ui::layout::simplified::show;
+use crate::ui::layout::simplified::{debuglink_report_progress, show};
 use crate::ui::shape::{self, render_on_display};
 use crate::ui::ui_bootloader::BootloaderUI;
 use crate::ui::util::animation_disabled;
@@ -103,6 +103,7 @@ impl UIBolt {
         if initialize {
             Self::fadein();
         }
+        debuglink_report_progress(text, None, progress, initialize);
     }
 
     fn screen_install_success_bld(msg: &str, complete_draw: bool) {

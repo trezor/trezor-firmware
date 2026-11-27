@@ -174,3 +174,17 @@ impl<const N: usize> Component for Menu<N> {
         .render(target);
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl<const N: usize> crate::trace::Trace for Menu<N> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Menu");
+        t.in_list("items", &|l| {
+            for item in self.items {
+                l.string(&item.into());
+            }
+        });
+        t.int("index", self.index as i64);
+        t.child("buttons", &self.buttons);
+    }
+}

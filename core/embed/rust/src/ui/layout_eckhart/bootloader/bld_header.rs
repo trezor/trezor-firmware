@@ -202,3 +202,19 @@ impl<'a> Component for BldHeader<'a> {
         self.right_button.render(target);
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for BldHeader<'_> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Header");
+        match &self.left_content {
+            LeftContent::Title(title, _) | LeftContent::IconAndTitle(title, _, _) => {
+                t.child("title", title)
+            }
+            LeftContent::FuelGauge(_) => {}
+        }
+        if let Some(button) = &self.right_button {
+            t.child("right_button", button);
+        }
+    }
+}

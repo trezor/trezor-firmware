@@ -26,7 +26,7 @@ use crate::ui::component::Label;
 use crate::ui::display::toif::Toif;
 use crate::ui::display::{self, Color};
 use crate::ui::geometry::{Alignment, Alignment2D, Offset, Point, Rect};
-use crate::ui::layout::simplified::show;
+use crate::ui::layout::simplified::{debuglink_report_progress, show};
 use crate::ui::shape::{self, render_on_display};
 use crate::ui::ui_bootloader::BootloaderUI;
 use crate::ui::CommonUI;
@@ -58,6 +58,7 @@ impl UIEckhart {
         }
         display::sync();
 
+        let wait_text: &str = wait_msg;
         let mut label = Label::left_aligned(text.into(), TEXT_NORMAL);
         let mut wait_msg = Label::centered(wait_msg.into(), TEXT_SMALL_GREY).vertically_centered();
         render_on_display(None, Some(BLD_BG), |target| {
@@ -83,6 +84,7 @@ impl UIEckhart {
         if initialize {
             Self::fadein();
         }
+        debuglink_report_progress(text, Some(wait_text), loader_progress, initialize);
     }
 }
 

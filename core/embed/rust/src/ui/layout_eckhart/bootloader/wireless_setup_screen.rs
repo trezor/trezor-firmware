@@ -176,3 +176,21 @@ impl Component for WirelessSetupScreen<'_> {
         }
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for WirelessSetupScreen<'_> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("WirelessSetupScreen");
+        if self.more_info_showing {
+            t.bool("more_info", true);
+            t.child("Header", &self.more_info.header);
+            t.string("screen_content", *self.more_info.instruction_primary.text());
+            t.child("secondary", &self.more_info.instruction_secondary);
+            t.child("ActionBar", &self.more_info.action_bar);
+        } else {
+            t.child("Header", &self.header);
+            t.string("screen_content", *self.instruction.text());
+            t.child("ActionBar", &self.action_bar);
+        }
+    }
+}

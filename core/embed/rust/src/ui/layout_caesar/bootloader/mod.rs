@@ -30,7 +30,7 @@ use crate::ui::constant::{self, HEIGHT, SCREEN};
 use crate::ui::display::toif::Toif;
 use crate::ui::display::{self, Color, Icon};
 use crate::ui::geometry::{Alignment, Alignment2D, Offset, Point};
-use crate::ui::layout::simplified::{show, ReturnToC};
+use crate::ui::layout::simplified::{debuglink_report_progress, show, ReturnToC};
 use crate::ui::shape;
 use crate::ui::shape::render_on_display;
 use crate::ui::ui_bootloader::BootloaderUI;
@@ -49,7 +49,7 @@ impl UICaesar {
         text: &str,
         text2: &str,
         progress: u16,
-        _initialize: bool,
+        initialize: bool,
         fg_color: Color,
         bg_color: Color,
         icon: Option<(Icon, Color)>,
@@ -85,6 +85,7 @@ impl UICaesar {
         });
 
         display::refresh();
+        debuglink_report_progress(text, Some(text2), progress, initialize);
     }
 }
 

@@ -49,6 +49,12 @@ Finish with `bootloader.wait_exit()` for a run that ends by itself, or
 device. Both return an `ExitRecord` with `kind`, `bootargs` and
 `storage_erased`.
 
+The debug link reports the screen on display as layout tokens, like firmware:
+`ctx.debug.read_layout()` returns its component name, title, text and buttons,
+and `wait_for_screen()` in `bootloader_tests/common.py` polls until a given
+screen is up. Progress screens, which are drawn without a component, report
+themselves as `Progress` with their title and progress.
+
 Firmware images come from `bootloader_tests/images.py`: `make_firmware(model,
 vendor=..., version=...)` builds a dev-key signed image with filler code for
 any model, vendor trust level and version. The emulator never runs firmware,

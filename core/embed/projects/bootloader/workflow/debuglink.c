@@ -42,6 +42,35 @@ static protob_io_t g_debug_io;
 static bool layout_ready = false;
 static bool query_pending = false;
 
+// JSON trace of the screen on display, see debuglink_layout_begin()
+#define LAYOUT_TRACE_SIZE 4096
+static char g_layout[LAYOUT_TRACE_SIZE];
+static size_t g_layout_len = 0;
+static bool g_layout_overflow = false;
+
+void debuglink_layout_begin(void) {
+  g_layout_len = 0;
+  g_layout_overflow = false;
+}
+
+void debuglink_layout_append(const char *text, size_t len) {
+  if (g_layout_overflow || len > sizeof(g_layout) - g_layout_len) {
+    g_layout_overflow = true;
+    return;
+  }
+  memcpy(&g_layout[g_layout_len], text, len);
+  g_layout_len += len;
+}
+
+static secbool send_state(protob_io_t *io) {
+  if (g_layout_overflow) {
+    // A truncated trace is not valid JSON, report the overflow instead
+    static const char overflow[] = "{\"error\":\"layout trace overflow\"}";
+    return send_msg_debug_link_state(io, overflow, sizeof(overflow) - 1);
+  }
+  return send_msg_debug_link_state(io, g_layout, g_layout_len);
+}
+
 void debuglink_init(void) {
   wire_iface_t *wire = usb_debug_iface_init();
 
@@ -60,7 +89,7 @@ static void debuglink_process_get_state(protob_io_t *io) {
     if (!layout_ready) {
       query_pending = true;
     } else {
-      send_msg_debug_link_state(io);
+      send_state(io);
       query_pending = false;
     }
     return;
@@ -68,7 +97,7 @@ static void debuglink_process_get_state(protob_io_t *io) {
 
   switch (msg_recv.wait_layout) {
     case DebugWaitType_IMMEDIATE:
-      send_msg_debug_link_state(io);
+      send_state(io);
       query_pending = false;
       break;
     case DebugWaitType_NEXT_LAYOUT:
@@ -80,7 +109,7 @@ static void debuglink_process_get_state(protob_io_t *io) {
       if (!layout_ready) {
         query_pending = true;
       } else {
-        send_msg_debug_link_state(io);
+        send_state(io);
         query_pending = false;
       }
       break;
@@ -200,7 +229,7 @@ debuglink_result_t debuglink_process(void) {
 void debuglink_notify_layout_change(void) {
   layout_ready = true;
   if (query_pending) {
-    send_msg_debug_link_state(&g_debug_io);
+    send_state(&g_debug_io);
     query_pending = false;
   }
 }

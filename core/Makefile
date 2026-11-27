@@ -220,10 +220,10 @@ test_emu_prodtest: ## run prodtest device tests
 	$(PRODTEST_EMU) --headless -c $(PYTEST) $(TESTPATH)/prodtest_tests $(TESTOPTS)
 
 test_emu_bootloader: ## run bootloader emulator tests
-	TREZOR_PYTEST_LOGS_DIR=$(TESTPATH) $(PYTEST) $(TESTPATH)/bootloader_tests $(TESTOPTS)
+	TREZOR_PYTEST_LOGS_DIR=$(TESTPATH) $(PYTEST) $(TESTPATH)/bootloader_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT)
 
 test_emu_bootloader_ui: ## run bootloader emulator tests with UI recording
-	TREZOR_PYTEST_LOGS_DIR=$(TESTPATH) $(PYTEST) $(TESTPATH)/bootloader_tests $(TESTOPTS) \
+	TREZOR_PYTEST_LOGS_DIR=$(TESTPATH) $(PYTEST) $(TESTPATH)/bootloader_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT) \
 		--ui=test --ui-check-missing --do-master-diff
 
 pylint: ## run pylint on application sources and tests

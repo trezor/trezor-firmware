@@ -4,6 +4,7 @@ use io::haptic::{play, HapticEffect};
 #[cfg(feature = "power_manager")]
 use sys::time::{Duration, Instant};
 
+use crate::maybe_trace::MaybeTrace;
 #[cfg(feature = "ble")]
 use crate::trezorhal::bootloader::bootloader_process_ble;
 use crate::trezorhal::bootloader::{bootloader_process_usb, BootloaderWFResult};
@@ -35,7 +36,7 @@ const SUSPEND_TIME: Duration = Duration::from_millis(40000);
 const HIBERNATE_TIME: Duration = Duration::from_millis(3000);
 
 pub fn run(
-    frame: &mut impl Component<Msg = impl ReturnToC>,
+    frame: &mut (impl Component<Msg = impl ReturnToC> + MaybeTrace),
     fade_transition: bool,
     communication: bool,
 ) -> (u32, u32) {

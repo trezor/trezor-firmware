@@ -96,3 +96,14 @@ impl Component for Menu {
         self.reset.render(target);
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for Menu {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("Menu");
+        t.child("title", &self.title);
+        t.child("close", &self.close);
+        t.child("reboot", &self.reboot);
+        t.child("reset", &self.reset);
+    }
+}
