@@ -10,6 +10,9 @@ from pathlib import Path
 import click
 
 LINK_RE = re.compile(r"\[#(\d+)\]")
+# Markdown strips surrounding whitespace from reference labels, so "[#123 ]"
+# also refers to the "[#123]" link definition.
+LINK_LABEL_RE = re.compile(r"\[\s*#(\d+)\s*\]")
 ISSUE_URL = "https://github.com/trezor/trezor-firmware/pull/{issue}"
 
 VERSION_HEADER_RE = re.compile(r"## \[([.0-9]+)\]")
@@ -47,9 +50,12 @@ for project in KNOWN_PROJECTS:
 IGNORED_FILES = (".gitignore", ".keep")
 
 
-def linkify_changelog(changelog_file: Path, only_check: bool = False) -> bool:
+def linkify_changelog(
+    changelog_file: Path, only_check: bool = False, drop_unused: bool = False
+) -> bool:
     links = {}
     orig_links = {}
+    referenced = set()
     result_lines = []
 
     with open(changelog_file, "r+") as changelog:
@@ -61,6 +67,7 @@ def linkify_changelog(changelog_file: Path, only_check: bool = False) -> bool:
             else:
                 for issue in LINK_RE.findall(line):
                     links[int(issue)] = ISSUE_URL.format(issue=issue)
+                referenced.update(int(issue) for issue in LINK_LABEL_RE.findall(line))
                 result_lines.append(line)
 
         if only_check:
@@ -71,6 +78,9 @@ def linkify_changelog(changelog_file: Path, only_check: bool = False) -> bool:
             else:
                 return True
 
+        if drop_unused:
+            # keep only the existing links that are referenced in the text
+            orig_links = {k: v for k, v in orig_links.items() if k in referenced}
         links.update(orig_links)
 
         changelog.seek(0)
@@ -181,11 +191,18 @@ def filter_changelog(changelog_file: Path, internal_name: str) -> None:
             if res is not None:
                 destination.write(res)
 
+        # Copy the link definitions skipped by the truncation, so that the links
+        # keep their URLs from the main changelog
+        for line in changelog:
+            if LINK_RE.match(line):
+                destination.write(line)
+
     # Drop empty sub-sections
     destination_file.write_text(re.sub(r"### .*\n\n", "", destination_file.read_text()))
 
-    # Ensure issue links are present even if we truncated before the link block
-    linkify_changelog(destination_file)
+    # Ensure issue links are present, and drop links copied from the main
+    # changelog that the model doesn't use
+    linkify_changelog(destination_file, drop_unused=True)
 
 
 def _iter_fragments(project: Path) -> Iterator[Path]:
