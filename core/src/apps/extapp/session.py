@@ -63,12 +63,11 @@ class Session:
         self.schemas = schemas
         # keychains created so far, by curve
         self.keychains: dict[str, Keychain] = {}
-        # progress layout opened by the app via `SERVICE_PROGRESS`; the app
-        # counts in its own units, the fill is ours
+        # progress layout shown for the app via `SERVICE_PROGRESS`, and the
+        # state it shows, `(label, done, total)`; the app counts in its own
+        # units, the fill is ours
         self.progress: ProgressLayout | None = None
-        self.progress_label = ""
-        self.progress_total = 0
-        self.progress_done = 0
+        self.progress_state: tuple[str, int, int] | None = None
         # whether the app answered the host's last message
         self.response_sent = False
         # set once Core killed the app

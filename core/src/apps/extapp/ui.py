@@ -25,6 +25,7 @@ from trezormodui import (
     encode_ui_result,
 )
 
+from . import progress
 from .session import IPC_TIMEOUT_MS, SERVICE_UI
 
 if __debug__:
@@ -53,9 +54,9 @@ async def handle(session: Session, msg: IpcMessage) -> None:
         log.debug(__name__, f"UI interaction result: {result}")
 
     session.send(SERVICE_UI, MSG_DECISION, encode_ui_result(result=result))
-    if session.progress is not None:
+    if session.progress_state is not None:
         # The screen covered the bar while the person decided; show it again.
-        session.progress.report(session.progress.value, session.progress_label)
+        progress.show(session, *session.progress_state)
 
 
 async def _show(session: Session, request: tuple) -> int:
@@ -69,7 +70,7 @@ async def _show(session: Session, request: tuple) -> int:
 
     if kind == REQUEST_REVIEW:
         title, fields, extras, answer = args
-        # A `data` field is pulled by its flat index: the review's own fields
+        # A streamed field is pulled by its flat index: the review's own fields
         # first, then each extra's, in order.
         index = len(fields)
         offered = []

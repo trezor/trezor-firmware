@@ -85,9 +85,8 @@ async def run(request: ExtAppMessage) -> ExtAppResponse | None:
 async def _show_error(session: Session, exception: Exception) -> None:
     """Briefly show why the app was stopped."""
     try:
-        if session.progress is not None:
-            session.progress.stop()
-            session.progress = None
+        session.progress = None
+        session.progress_state = None
         # passed as a parameter so braces in the message aren't format fields
         with error_popup(
             TR.words__error,
