@@ -12,13 +12,15 @@ if TYPE_CHECKING:
 _REBOOT_SUCCESS_TIMEOUT_MS = const(500)
 
 
-async def install_upgrade(firmware_header: AnyBytes) -> AnyBytes:
+async def install_upgrade(
+    firmware_header: AnyBytes, firmware_manifest_region: AnyBytes | None
+) -> AnyBytes:
     from trezor import TR, utils, wire
     from trezor.ui.layouts import confirm_firmware_update
 
     # check and parse received firmware header
     try:
-        hdr = utils.check_firmware_update(firmware_header)
+        hdr = utils.check_firmware_update(firmware_header, firmware_manifest_region)
     except Exception:
         raise wire.DataError("Invalid firmware header.")
 
@@ -57,14 +59,17 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
     # (It would be somewhat nicer if this was a compile-time flag, but oh well.)
     # any UNSAFE-prefixed vendor (custom, prodtest) is not an official image
     is_official = not utils.firmware_vendor().startswith("UNSAFE")
-    # each scheme reads only its own field
-    offered = msg.firmware_preamble if utils.USE_PQ_SECURE_BOOT else msg.firmware_header
+    # each scheme reads only its own fields
+    if utils.USE_PQ_SECURE_BOOT:
+        header, manifest = msg.boot_header_prefix, msg.firmware_manifest_region
+    else:
+        header, manifest = msg.firmware_header, None
     if (
         msg.boot_command == BootCommand.INSTALL_UPGRADE
-        and offered is not None
+        and header is not None
         and is_official
     ):
-        fw_hash = await install_upgrade(offered)
+        fw_hash = await install_upgrade(header, manifest)
 
     else:
         await confirm_action(

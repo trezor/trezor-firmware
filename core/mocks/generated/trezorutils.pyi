@@ -207,12 +207,15 @@ class FirmwareHeaderInfo(NamedTuple):
 
 
 # upymod/modtrezorutils/modtrezorutils.c
-def check_firmware_update(header : AnyBytes) -> FirmwareHeaderInfo:
+def check_firmware_update(
+    header: AnyBytes, manifest: AnyBytes | None = None
+) -> FirmwareHeaderInfo:
     """Parses the header of an offered firmware update and returns
     information about it.
 
-    Legacy: vendor header + image header. Merkle tree: boot header prefix
-    (without signatures) + firmware manifest region; `fingerprint` is the
+    Legacy: `header` is the vendor header + image header, no `manifest`.
+    Merkle tree: `header` is the boot header prefix (without signatures)
+    and `manifest` the firmware manifest region; `fingerprint` is the
     firmware_root and `hash` the consent digest for `reboot_and_upgrade`.
     """
 

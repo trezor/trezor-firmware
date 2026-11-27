@@ -69,7 +69,7 @@
 #endif
 
 #ifdef PQ_SECURE_BOOT
-#include <sec/tree_preamble.h>
+#include <sec/tree_update.h>
 #endif
 
 #ifndef TREZOR_EMULATOR
@@ -665,21 +665,32 @@ static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_reboot_obj,
 
 /// mock:global
 
-/// def check_firmware_update(header : AnyBytes) -> FirmwareHeaderInfo:
+/// def check_firmware_update(
+///     header: AnyBytes, manifest: AnyBytes | None = None
+/// ) -> FirmwareHeaderInfo:
 ///     """Parses the header of an offered firmware update and returns
 ///     information about it.
 ///
-///     Legacy: vendor header + image header. Merkle tree: boot header prefix
-///     (without signatures) + firmware manifest region; `fingerprint` is the
+///     Legacy: `header` is the vendor header + image header, no `manifest`.
+///     Merkle tree: `header` is the boot header prefix (without signatures)
+///     and `manifest` the firmware manifest region; `fingerprint` is the
 ///     firmware_root and `hash` the consent digest for `reboot_and_upgrade`.
 ///     """
-static mp_obj_t mod_trezorutils_check_firmware_update(mp_obj_t header) {
+static mp_obj_t mod_trezorutils_check_firmware_update(size_t n_args,
+                                                      const mp_obj_t *args) {
   mp_buffer_info_t header_buf = {0};
-  mp_get_buffer_raise(header, &header_buf, MP_BUFFER_READ);
+  mp_get_buffer_raise(args[0], &header_buf, MP_BUFFER_READ);
+  const bool has_manifest = n_args > 1 && args[1] != mp_const_none;
 
 #ifdef PQ_SECURE_BOOT
-  tree_preamble_info_t info;
-  if (sectrue != tree_preamble_check(header_buf.buf, header_buf.len, &info)) {
+  if (!has_manifest) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
+  }
+  mp_buffer_info_t manifest_buf = {0};
+  mp_get_buffer_raise(args[1], &manifest_buf, MP_BUFFER_READ);
+  tree_update_info_t info;
+  if (sectrue != tree_update_check(header_buf.buf, header_buf.len,
+                                   manifest_buf.buf, manifest_buf.len, &info)) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
   }
   const uint8_t *version = info.version;
@@ -688,6 +699,9 @@ static mp_obj_t mod_trezorutils_check_firmware_update(mp_obj_t header) {
   const uint8_t *hash = info.consent_digest.bytes;
   const size_t hash_len = sizeof(info.consent_digest.bytes);
 #else
+  if (has_manifest) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
+  }
   firmware_header_info_t info;
   if (sectrue != check_firmware_header(header_buf.buf, header_buf.len, &info)) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
@@ -713,8 +727,9 @@ static mp_obj_t mod_trezorutils_check_firmware_update(mp_obj_t header) {
   return mp_obj_new_attrtuple(fields, MP_ARRAY_SIZE(fields), values);
 }
 
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_check_firmware_update_obj,
-                                 mod_trezorutils_check_firmware_update);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+    mod_trezorutils_check_firmware_update_obj, 1, 2,
+    mod_trezorutils_check_firmware_update);
 
 /// def bootloader_locked() -> bool | None:
 ///     """

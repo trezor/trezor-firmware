@@ -34,22 +34,26 @@ typedef struct {
   merkle_proof_node_t firmware_root;
   // consent digest for reboot_and_upgrade
   merkle_proof_node_t consent_digest;
-} tree_preamble_info_t;
+} tree_update_info_t;
 
 /**
- * @brief Parses a Merkle-tree release preamble offered by the host.
+ * @brief Parses a Merkle-tree release offered by the host.
  *
- * The preamble is a boot header PREFIX (auth part + Merkle proof, no
- * signatures) followed by the firmware manifest region -- the consent-digest
- * preimage. Runs unprivileged over host bytes; the signature is NOT checked
- * (that needs the bootloader code), so this is self-consistency, not
- * authenticity -- the bootloader recomputes the digest before installing.
+ * The release comes as a boot header PREFIX (auth part + Merkle proof, no
+ * signatures) and the firmware manifest region, the two halves of the
+ * consent-digest preimage. Runs unprivileged over host bytes; the signature
+ * is NOT checked (that needs the bootloader code), so this is
+ * self-consistency, not authenticity -- the bootloader recomputes the digest
+ * before installing.
  *
- * @param preamble Preamble bytes
- * @param len Preamble length
+ * @param prefix Boot header prefix; must be exactly its own extent
+ * @param prefix_len Boot header prefix length
+ * @param manifest_region Firmware manifest followed by its Merkle proof
+ * @param region_len Manifest region length
  * @param info Filled on success
- * @return sectrue if the preamble is well-formed, targets this model and its
+ * @return sectrue if both parts are well-formed, target this model and the
  *         manifest folds to the prefix's firmware_root
  */
-secbool __wur tree_preamble_check(const uint8_t *preamble, size_t len,
-                                  tree_preamble_info_t *info);
+secbool __wur tree_update_check(const uint8_t *prefix, size_t prefix_len,
+                                const uint8_t *manifest_region,
+                                size_t region_len, tree_update_info_t *info);

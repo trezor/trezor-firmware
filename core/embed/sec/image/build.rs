@@ -23,7 +23,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
             "image/fw_variant.c",
             "image/merkle.c",
             "image/model_tree.c",
-            "image/tree_preamble.c",
+            "image/tree_update.c",
         ]);
     }
 

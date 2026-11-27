@@ -23,44 +23,43 @@
 #include <sec/boot_header.h>
 #include <sec/firmware_manifest.h>
 #include <sec/fw_variant.h>
-#include <sec/tree_preamble.h>
+#include <sec/tree_update.h>
 
 #ifndef USE_BOOT_UCB
 #error "pq_secure_boot needs boot_ucb (boot header is staged via the UCB)"
 #endif
 
-secbool tree_preamble_check(const uint8_t *preamble, size_t len,
-                            tree_preamble_info_t *info) {
-  if (preamble == NULL || info == NULL) {
+secbool tree_update_check(const uint8_t *prefix, size_t prefix_len,
+                          const uint8_t *manifest_region, size_t region_len,
+                          tree_update_info_t *info) {
+  if (prefix == NULL || manifest_region == NULL || info == NULL) {
     return secfalse;
   }
   memset(info, 0, sizeof(*info));
 
-  // The prefix is self-describing, so the manifest is located the same way the
-  // bootloader will locate it.
-  size_t prefix_len = 0;
-  if (sectrue != boot_header_prefix_extent(preamble, len, &prefix_len)) {
-    return secfalse;
-  }
-  if (prefix_len >= len) {
-    // Nothing left for a manifest.
+  // The consent digest hashes prefix || manifest, so the host must not choose
+  // where one ends: a shifted split would hash the same bytes while the
+  // firmware parses a manifest the bootloader never sees. The prefix has to
+  // be exactly the extent the bootloader cuts from the header.
+  size_t extent = 0;
+  if (sectrue != boot_header_prefix_extent(prefix, prefix_len, &extent) ||
+      extent != prefix_len) {
     return secfalse;
   }
 
-  const boot_header_auth_t *hdr = (const boot_header_auth_t *)preamble;
+  const boot_header_auth_t *hdr = (const boot_header_auth_t *)prefix;
   if (hdr->hw_model != HW_MODEL || hdr->hw_revision != HW_REVISION) {
     return secfalse;
   }
 
-  const uint8_t *mh = preamble + prefix_len;
-  const size_t mh_len = len - prefix_len;
-  const firmware_manifest_t *manifest = (const firmware_manifest_t *)mh;
-  if (mh_len < sizeof(firmware_manifest_t) ||
+  const firmware_manifest_t *manifest =
+      (const firmware_manifest_t *)manifest_region;
+  if (region_len < sizeof(firmware_manifest_t) ||
       manifest->magic != FW_MANIFEST_MAGIC) {
     return secfalse;
   }
   const size_t manifest_len = firmware_manifest_size(manifest);
-  if (manifest_len > mh_len) {
+  if (manifest_len > region_len) {
     return secfalse;
   }
 
@@ -70,7 +69,7 @@ secbool tree_preamble_check(const uint8_t *preamble, size_t len,
   memcpy(root.bytes, hdr->firmware_root.bytes, sizeof(root.bytes));
   const merkle_proof_node_t *proof = NULL;
   size_t proof_count = 0;
-  if (sectrue != firmware_manifest_read_proof(manifest, mh_len, &proof,
+  if (sectrue != firmware_manifest_read_proof(manifest, region_len, &proof,
                                               &proof_count) ||
       sectrue != firmware_manifest_authentic(manifest, manifest_len, proof,
                                              proof_count, &root)) {
@@ -79,7 +78,7 @@ secbool tree_preamble_check(const uint8_t *preamble, size_t len,
 
   // Only the manifest is hashed, not its trailing proof -- same extent as the
   // bootloader.
-  if (sectrue != boot_header_consent_digest(preamble, prefix_len, mh,
+  if (sectrue != boot_header_consent_digest(prefix, prefix_len, manifest_region,
                                             manifest_len,
                                             &info->consent_digest)) {
     return secfalse;
