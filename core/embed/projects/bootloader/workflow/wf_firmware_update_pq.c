@@ -192,6 +192,14 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
     return WF_ERROR;
   }
 
+#ifdef USE_SMP
+  // Every install must offer the nRF image, or the new bootloader could end
+  // up with an old nRF. It is only streamed if the running one differs.
+  if (!msg->has_nrf_length || msg->nrf_length == 0) {
+    return fw_begin_fail(iface, "Release carries no co-processor image");
+  }
+#endif
+
   // boot_header_auth_get also enforces hw_model / hw_revision.
   const boot_header_auth_t *hdr = boot_header_auth_get((uintptr_t)bh_buf);
   if (hdr == NULL || hdr->header_size > bh_len) {
@@ -250,17 +258,6 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
       return fw_begin_fail(iface, "Invalid boot header signature");
     }
   }
-
-#ifdef USE_SMP
-  // A device with a co-processor requires every install to carry its image;
-  // otherwise arm-last would land on new bootloader + old co-processor.
-  // The requirement comes from this build, not the release (an nRF slot is
-  // indistinguishable from padding in the co-path). An already-current nRF
-  // is still skipped by nrf_update_required.
-  if (!msg->has_nrf_length || msg->nrf_length == 0) {
-    return fw_begin_fail(iface, "Release carries no co-processor image");
-  }
-#endif
 
   // Authenticate the manifest region [manifest || firmware_manifest_proof_t]:
   // the variant leaf folded through the proof must equal firmware_root.
@@ -537,15 +534,14 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
   // is fold-verified against model_root before arming, so an abort here
   // leaves the UCB unarmed and the old bootloader intact -- but not the
   // firmware, whose region the staging scratch already erased. See
-  // docs/core/embed-arch/firmware-merkle-tree.md.
-  if (msg.has_nrf_length && msg.nrf_length > 0) {
-    workflow_result_t nrf_res = workflow_nrf_ota_update(
-        iface, &model_root, nrf_co_path, nrf_out.co_path_len, nrf_image_hash,
-        nrf_out.image_hash_len, msg.nrf_length);
-    if (nrf_res != WF_OK) {
-      // workflow_nrf_ota_update already drew the fail screen + sent Failure.
-      return nrf_res;
-    }
+  // docs/core/embed-arch/firmware-merkle-tree.md. Always runs: a missing image
+  // was refused in fw_begin_preamble, and an empty one is refused here.
+  workflow_result_t nrf_res = workflow_nrf_ota_update(
+      iface, &model_root, nrf_co_path, nrf_out.co_path_len, nrf_image_hash,
+      nrf_out.image_hash_len, msg.nrf_length);
+  if (nrf_res != WF_OK) {
+    // workflow_nrf_ota_update already drew the fail screen + sent Failure.
+    return nrf_res;
   }
 #endif
 
