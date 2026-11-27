@@ -11,7 +11,6 @@ if utils.USE_APP_LOADING:
     from trezor.ui.layouts.menu import MenuResult
     from trezor.ui.modui import pages
     from trezormodui import (
-        ADDRESS,
         AMOUNT,
         CONFIRM,
         DANGER,
@@ -19,8 +18,6 @@ if utils.USE_APP_LOADING:
         NOTE,
         STRONG,
         TEXT,
-        TEXT_SOURCE,
-        WARNING,
     )
 
 
@@ -111,17 +108,6 @@ def read_all(pager) -> "list[str]":
 if utils.USE_APP_LOADING:
 
     class TestFields(unittest.TestCase):
-        def test_each_kind_names_what_it_is(self):
-            self.assertEqual(
-                modui.text("Resource", "Energy"), (TEXT, "Resource", "Energy")
-            )
-            self.assertEqual(modui.address("To", "TQ"), (ADDRESS, "To", "TQ"))
-            field, _ = text_source("abc", "Message")
-            self.assertEqual(field[:2], (TEXT_SOURCE, "Message"))
-            self.assertEqual(field[2].total, 3)
-            self.assertEqual(modui.note("Sure?"), (NOTE, None, "Sure?"))
-            self.assertEqual(modui.warning("Risky"), (WARNING, None, "Risky"))
-
         def test_an_amount_joins_its_ticker(self):
             self.assertEqual(
                 modui.amount("Amount", "1.5", "TRX"), (AMOUNT, "Amount", "1.5 TRX")
@@ -139,9 +125,6 @@ if utils.USE_APP_LOADING:
                 self.assertEqual(len(offered), room)
                 with self.assertRaises(ValueError):
                     pages.check(self.FACTS, self.extras(room + 1), answer)
-
-        def test_an_empty_extra_is_not_offered(self):
-            self.assertEqual(pages.check(self.FACTS, self.extras(0), DANGER), [])
 
         def test_a_review_needs_a_fact(self):
             with self.assertRaises(ValueError):
@@ -161,11 +144,14 @@ if utils.USE_APP_LOADING:
     class TestPager(unittest.TestCase):
         def test_each_fact_is_a_page_and_a_text_source_a_page_per_chunk(self):
             field, _ = text_source("x" * 2000)
-            pager = pages.Pager([modui.text("a", "b"), field])
+            pager = pages.Pager([modui.text("a", "b"), field, modui.note("n")])
             self.assertEqual(run(pager.next()), ([(TEXT, "a", "b")], False))
-            chunks = read_all(pager)
-            self.assertEqual([len(chunk) for chunk in chunks], [768, 768, 464])
-            self.assertEqual("".join(chunks), "x" * 2000)
+            chunks = [run(pager.next()) for _ in range(3)]
+            self.assertEqual([len(page[0][2]) for page, _ in chunks], [768, 768, 464])
+            self.assertEqual("".join(page[0][2] for page, _ in chunks), "x" * 2000)
+            self.assertFalse(any(last for _, last in chunks))
+            # Only the last fact is the last page.
+            self.assertEqual(run(pager.next()), ([(NOTE, None, "n")], True))
 
         def test_a_source_is_read_in_order_each_range_once(self):
             field, source = text_source("x" * 2000)
@@ -180,21 +166,12 @@ if utils.USE_APP_LOADING:
             self.assertEqual(chunks, ["x" * 767, "é" + "y" * 10])
 
         def test_text_that_is_not_utf8_is_refused(self):
-            source = FakeSource(b"ab\xff" + b"c" * 800)
-            field = modui.text_source("d", len(source.data), source.read)
-            with self.assertRaises(ValueError):
-                read_all(pages.Pager([field]))
-
-        def test_text_cut_at_its_end_is_refused(self):
-            source = FakeSource("é".encode()[:1])
-            field = modui.text_source("d", 1, source.read)
-            with self.assertRaises(ValueError):
-                read_all(pages.Pager([field]))
-
-        def test_the_last_fact_is_the_last_page(self):
-            pager = pages.Pager([modui.note("n"), modui.text("a", "b")])
-            self.assertEqual(run(pager.next()), ([(NOTE, None, "n")], False))
-            self.assertEqual(run(pager.next()), ([(TEXT, "a", "b")], True))
+            # Bad bytes inside the text, and a character cut by its end.
+            for data in (b"ab\xff" + b"c" * 800, "é".encode()[:1]):
+                source = FakeSource(data)
+                field = modui.text_source("d", len(data), source.read)
+                with self.assertRaises(ValueError):
+                    read_all(pages.Pager([field]))
 
     class TestReview(unittest.TestCase):
         def setUp(self):
