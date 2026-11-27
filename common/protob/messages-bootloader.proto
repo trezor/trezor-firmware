@@ -42,7 +42,15 @@ message FirmwareBegin {
 message FirmwareRequest {
     required uint32 offset = 1;             // offset of requested firmware chunk
     required uint32 length = 2;             // length of requested firmware chunk
-    optional uint32 coprocessor_index = 3;  // 0 (default) = primary stream (bootloader code / firmware), 1 = nRF image
+    optional FirmwareStream stream = 3;     // image the chunk belongs to; absent means Primary
+
+    /// Image a requested chunk belongs to.
+    enum FirmwareStream {
+        /// The image the session's FirmwareBegin (bootloader code) or FirmwareErase (firmware) announced.
+        FirmwareStream_Primary = 0;
+        /// nRF co-processor image (phase 1 only).
+        FirmwareStream_Nrf = 1;
+    }
 }
 
 /**

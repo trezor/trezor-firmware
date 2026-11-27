@@ -110,6 +110,11 @@ class RequestType(IntEnum):
     TXPAYMENTREQ = 7
 
 
+class FirmwareStream(IntEnum):
+    Primary = 0
+    Nrf = 1
+
+
 class CardanoDerivationType(IntEnum):
     LEDGER = 0
     ICARUS = 1
@@ -2238,7 +2243,7 @@ class FirmwareRequest(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("offset", "uint32", repeated=False, required=True),
         2: protobuf.Field("length", "uint32", repeated=False, required=True),
-        3: protobuf.Field("coprocessor_index", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("stream", "FirmwareStream", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -2246,11 +2251,11 @@ class FirmwareRequest(protobuf.MessageType):
         *,
         offset: int,
         length: int,
-        coprocessor_index: int | None = None,
+        stream: FirmwareStream | None = None,
     ) -> None:
         self.offset = offset
         self.length = length
-        self.coprocessor_index = coprocessor_index
+        self.stream = stream
 
 
 class FirmwareUpload(protobuf.MessageType):

@@ -49,7 +49,7 @@ secbool send_msg_failure(protob_io_t *iface, FailureType type, const char *msg);
 secbool send_msg_success(protob_io_t *iface, const char *msg);
 
 secbool send_msg_request_firmware(protob_io_t *iface, uint32_t offset,
-                                  uint32_t length, uint32_t coprocessor_index);
+                                  uint32_t length, FirmwareStream stream);
 
 secbool recv_msg_initialize(protob_io_t *iface, Initialize *msg);
 

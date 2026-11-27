@@ -627,8 +627,8 @@ pub struct FirmwareRequest {
     pub offset: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bootloader.FirmwareRequest.length)
     pub length: ::std::option::Option<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.bootloader.FirmwareRequest.coprocessor_index)
-    pub coprocessor_index: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bootloader.FirmwareRequest.stream)
+    pub stream: ::std::option::Option<::protobuf::EnumOrUnknown<firmware_request::FirmwareStream>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.bootloader.FirmwareRequest.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -683,23 +683,26 @@ impl FirmwareRequest {
         self.length = ::std::option::Option::Some(v);
     }
 
-    // optional uint32 coprocessor_index = 3;
+    // optional .hw.trezor.messages.bootloader.FirmwareRequest.FirmwareStream stream = 3;
 
-    pub fn coprocessor_index(&self) -> u32 {
-        self.coprocessor_index.unwrap_or(0)
+    pub fn stream(&self) -> firmware_request::FirmwareStream {
+        match self.stream {
+            Some(e) => e.enum_value_or(firmware_request::FirmwareStream::FirmwareStream_Primary),
+            None => firmware_request::FirmwareStream::FirmwareStream_Primary,
+        }
     }
 
-    pub fn clear_coprocessor_index(&mut self) {
-        self.coprocessor_index = ::std::option::Option::None;
+    pub fn clear_stream(&mut self) {
+        self.stream = ::std::option::Option::None;
     }
 
-    pub fn has_coprocessor_index(&self) -> bool {
-        self.coprocessor_index.is_some()
+    pub fn has_stream(&self) -> bool {
+        self.stream.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_coprocessor_index(&mut self, v: u32) {
-        self.coprocessor_index = ::std::option::Option::Some(v);
+    pub fn set_stream(&mut self, v: firmware_request::FirmwareStream) {
+        self.stream = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
@@ -716,9 +719,9 @@ impl FirmwareRequest {
             |m: &mut FirmwareRequest| { &mut m.length },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "coprocessor_index",
-            |m: &FirmwareRequest| { &m.coprocessor_index },
-            |m: &mut FirmwareRequest| { &mut m.coprocessor_index },
+            "stream",
+            |m: &FirmwareRequest| { &m.stream },
+            |m: &mut FirmwareRequest| { &mut m.stream },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<FirmwareRequest>(
             "FirmwareRequest",
@@ -751,7 +754,7 @@ impl ::protobuf::Message for FirmwareRequest {
                     self.length = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 24 => {
-                    self.coprocessor_index = ::std::option::Option::Some(is.read_uint32()?);
+                    self.stream = ::std::option::Option::Some(is.read_enum_or_unknown()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -771,8 +774,8 @@ impl ::protobuf::Message for FirmwareRequest {
         if let Some(v) = self.length {
             my_size += ::protobuf::rt::uint32_size(2, v);
         }
-        if let Some(v) = self.coprocessor_index {
-            my_size += ::protobuf::rt::uint32_size(3, v);
+        if let Some(v) = self.stream {
+            my_size += ::protobuf::rt::int32_size(3, v.value());
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -786,8 +789,8 @@ impl ::protobuf::Message for FirmwareRequest {
         if let Some(v) = self.length {
             os.write_uint32(2, v)?;
         }
-        if let Some(v) = self.coprocessor_index {
-            os.write_uint32(3, v)?;
+        if let Some(v) = self.stream {
+            os.write_enum(3, ::protobuf::EnumOrUnknown::value(&v))?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -808,7 +811,7 @@ impl ::protobuf::Message for FirmwareRequest {
     fn clear(&mut self) {
         self.offset = ::std::option::Option::None;
         self.length = ::std::option::Option::None;
-        self.coprocessor_index = ::std::option::Option::None;
+        self.stream = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -816,7 +819,7 @@ impl ::protobuf::Message for FirmwareRequest {
         static instance: FirmwareRequest = FirmwareRequest {
             offset: ::std::option::Option::None,
             length: ::std::option::Option::None,
-            coprocessor_index: ::std::option::Option::None,
+            stream: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -838,6 +841,71 @@ impl ::std::fmt::Display for FirmwareRequest {
 
 impl ::protobuf::reflect::ProtobufValue for FirmwareRequest {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `FirmwareRequest`
+pub mod firmware_request {
+    #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+    // @@protoc_insertion_point(enum:hw.trezor.messages.bootloader.FirmwareRequest.FirmwareStream)
+    pub enum FirmwareStream {
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.bootloader.FirmwareRequest.FirmwareStream.FirmwareStream_Primary)
+        FirmwareStream_Primary = 0,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.bootloader.FirmwareRequest.FirmwareStream.FirmwareStream_Nrf)
+        FirmwareStream_Nrf = 1,
+    }
+
+    impl ::protobuf::Enum for FirmwareStream {
+        const NAME: &'static str = "FirmwareStream";
+
+        fn value(&self) -> i32 {
+            *self as i32
+        }
+
+        fn from_i32(value: i32) -> ::std::option::Option<FirmwareStream> {
+            match value {
+                0 => ::std::option::Option::Some(FirmwareStream::FirmwareStream_Primary),
+                1 => ::std::option::Option::Some(FirmwareStream::FirmwareStream_Nrf),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        fn from_str(str: &str) -> ::std::option::Option<FirmwareStream> {
+            match str {
+                "FirmwareStream_Primary" => ::std::option::Option::Some(FirmwareStream::FirmwareStream_Primary),
+                "FirmwareStream_Nrf" => ::std::option::Option::Some(FirmwareStream::FirmwareStream_Nrf),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        const VALUES: &'static [FirmwareStream] = &[
+            FirmwareStream::FirmwareStream_Primary,
+            FirmwareStream::FirmwareStream_Nrf,
+        ];
+    }
+
+    impl ::protobuf::EnumFull for FirmwareStream {
+        fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().enum_by_package_relative_name("FirmwareRequest.FirmwareStream").unwrap()).clone()
+        }
+
+        fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+            let index = *self as usize;
+            Self::enum_descriptor().value_by_index(index)
+        }
+    }
+
+    impl ::std::default::Default for FirmwareStream {
+        fn default() -> Self {
+            FirmwareStream::FirmwareStream_Primary
+        }
+    }
+
+    impl FirmwareStream {
+        pub(in super) fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+            ::protobuf::reflect::GeneratedEnumDescriptorData::new::<FirmwareStream>("FirmwareRequest.FirmwareStream")
+        }
+    }
 }
 
 // @@protoc_insertion_point(message:hw.trezor.messages.bootloader.FirmwareUpload)
@@ -1276,14 +1344,16 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ode_hash\x18\x08\x20\x01(\x0cR\x08codeHash\x12\x1d\n\nnrf_length\x18\x05\
     \x20\x01(\rR\tnrfLength\x12\x1e\n\x0bnrf_co_path\x18\x06\x20\x01(\x0cR\t\
     nrfCoPath\x12$\n\x0enrf_image_hash\x18\x07\x20\x01(\x0cR\x0cnrfImageHash\
-    J\x04\x08\x04\x10\x05\"n\n\x0fFirmwareRequest\x12\x16\n\x06offset\x18\
-    \x01\x20\x02(\rR\x06offset\x12\x16\n\x06length\x18\x02\x20\x02(\rR\x06le\
-    ngth\x12+\n\x11coprocessor_index\x18\x03\x20\x01(\rR\x10coprocessorIndex\
-    \"[\n\x0eFirmwareUpload\x12\x18\n\x07payload\x18\x01\x20\x02(\x0cR\x07pa\
-    yload\x12\x12\n\x04hash\x18\x02\x20\x01(\x0cR\x04hash\x12\x1b\n\tprev_ha\
-    sh\x18\x03\x20\x01(\x0cR\x08prevHash\"&\n\nProdTestT1\x12\x18\n\x07paylo\
-    ad\x18\x01\x20\x01(\x0cR\x07payloadB>\n#com.satoshilabs.trezor.lib.proto\
-    bufB\x17TrezorMessageBootloader\
+    J\x04\x08\x04\x10\x05\"\xde\x01\n\x0fFirmwareRequest\x12\x16\n\x06offset\
+    \x18\x01\x20\x02(\rR\x06offset\x12\x16\n\x06length\x18\x02\x20\x02(\rR\
+    \x06length\x12U\n\x06stream\x18\x03\x20\x01(\x0e2=.hw.trezor.messages.bo\
+    otloader.FirmwareRequest.FirmwareStreamR\x06stream\"D\n\x0eFirmwareStrea\
+    m\x12\x1a\n\x16FirmwareStream_Primary\x10\0\x12\x16\n\x12FirmwareStream_\
+    Nrf\x10\x01\"[\n\x0eFirmwareUpload\x12\x18\n\x07payload\x18\x01\x20\x02(\
+    \x0cR\x07payload\x12\x12\n\x04hash\x18\x02\x20\x01(\x0cR\x04hash\x12\x1b\
+    \n\tprev_hash\x18\x03\x20\x01(\x0cR\x08prevHash\"&\n\nProdTestT1\x12\x18\
+    \n\x07payload\x18\x01\x20\x01(\x0cR\x07payloadB>\n#com.satoshilabs.trezo\
+    r.lib.protobufB\x17TrezorMessageBootloader\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -1307,7 +1377,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(FirmwareRequest::generated_message_descriptor_data());
             messages.push(FirmwareUpload::generated_message_descriptor_data());
             messages.push(ProdTestT1::generated_message_descriptor_data());
-            let mut enums = ::std::vec::Vec::with_capacity(0);
+            let mut enums = ::std::vec::Vec::with_capacity(1);
+            enums.push(firmware_request::FirmwareStream::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),
                 deps,

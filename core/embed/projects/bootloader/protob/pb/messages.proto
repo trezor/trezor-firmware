@@ -85,6 +85,11 @@ message Features {
     optional FirmwareScheme firmware_scheme = 65;
 }
 
+enum FirmwareStream {
+    FirmwareStream_Primary = 0;  // the image the session's FirmwareBegin / FirmwareErase announced
+    FirmwareStream_Nrf = 1;      // nRF co-processor image (phase 1 only)
+}
+
 enum FirmwareScheme {
     FirmwareScheme_Legacy = 0;    // vendor header + image header
     FirmwareScheme_PqSecure = 1;  // Merkle-tree (pq_secure_boot)
@@ -178,7 +183,7 @@ message FirmwareBegin {
 message FirmwareRequest {
     required uint32 offset = 1;             // offset of requested firmware chunk
     required uint32 length = 2;             // length of requested firmware chunk
-    optional uint32 coprocessor_index = 3;  // which image: 0 (default) = primary stream, 1 = nRF image
+    optional FirmwareStream stream = 3;     // image the chunk belongs to; absent means Primary
 }
 
 /**

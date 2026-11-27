@@ -31,6 +31,11 @@ typedef enum _MessageType {
     MessageType_MessageType_DebugLinkRecordScreen = 9003
 } MessageType;
 
+typedef enum _FirmwareStream {
+    FirmwareStream_FirmwareStream_Primary = 0,
+    FirmwareStream_FirmwareStream_Nrf = 1
+} FirmwareStream;
+
 typedef enum _FirmwareScheme {
     FirmwareScheme_FirmwareScheme_Legacy = 0,
     FirmwareScheme_FirmwareScheme_PqSecure = 1
@@ -164,8 +169,8 @@ typedef struct _FirmwareBegin {
 typedef struct _FirmwareRequest {
     uint32_t offset;
     uint32_t length;
-    bool has_coprocessor_index;
-    uint32_t coprocessor_index;
+    bool has_stream;
+    FirmwareStream stream;
 } FirmwareRequest;
 
 typedef PB_BYTES_ARRAY_T(32) FirmwareUpload_hash_t;
@@ -191,6 +196,10 @@ extern "C" {
 #define _MessageType_MIN MessageType_MessageType_Initialize
 #define _MessageType_MAX MessageType_MessageType_DebugLinkRecordScreen
 #define _MessageType_ARRAYSIZE ((MessageType)(MessageType_MessageType_DebugLinkRecordScreen+1))
+
+#define _FirmwareStream_MIN FirmwareStream_FirmwareStream_Primary
+#define _FirmwareStream_MAX FirmwareStream_FirmwareStream_Nrf
+#define _FirmwareStream_ARRAYSIZE ((FirmwareStream)(FirmwareStream_FirmwareStream_Nrf+1))
 
 #define _FirmwareScheme_MIN FirmwareScheme_FirmwareScheme_Legacy
 #define _FirmwareScheme_MAX FirmwareScheme_FirmwareScheme_PqSecure
@@ -218,6 +227,7 @@ extern "C" {
 
 
 
+#define FirmwareRequest_stream_ENUMTYPE FirmwareStream
 
 
 
@@ -234,7 +244,7 @@ extern "C" {
 #define ButtonAck_init_default                   {0}
 #define FirmwareErase_init_default               {false, 0}
 #define FirmwareBegin_init_default               {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define FirmwareRequest_init_default             {0, 0, false, 0}
+#define FirmwareRequest_init_default             {0, 0, false, _FirmwareStream_MIN}
 #define FirmwareUpload_init_default              {{{NULL}, NULL}, false, {0, {0}}, false, {0, {0}}}
 #define UnlockBootloader_init_default            {0}
 #define Initialize_init_zero                     {0}
@@ -248,7 +258,7 @@ extern "C" {
 #define ButtonAck_init_zero                      {0}
 #define FirmwareErase_init_zero                  {false, 0}
 #define FirmwareBegin_init_zero                  {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define FirmwareRequest_init_zero                {0, 0, false, 0}
+#define FirmwareRequest_init_zero                {0, 0, false, _FirmwareStream_MIN}
 #define FirmwareUpload_init_zero                 {{{NULL}, NULL}, false, {0, {0}}, false, {0, {0}}}
 #define UnlockBootloader_init_zero               {0}
 
@@ -296,7 +306,7 @@ extern "C" {
 #define FirmwareBegin_code_hash_tag              8
 #define FirmwareRequest_offset_tag               1
 #define FirmwareRequest_length_tag               2
-#define FirmwareRequest_coprocessor_index_tag    3
+#define FirmwareRequest_stream_tag               3
 #define FirmwareUpload_payload_tag               1
 #define FirmwareUpload_hash_tag                  2
 #define FirmwareUpload_prev_hash_tag             3
@@ -394,7 +404,7 @@ X(a, CALLBACK, OPTIONAL, BYTES,    code_hash,         8)
 #define FirmwareRequest_FIELDLIST(X, a) \
 X(a, STATIC,   REQUIRED, UINT32,   offset,            1) \
 X(a, STATIC,   REQUIRED, UINT32,   length,            2) \
-X(a, STATIC,   OPTIONAL, UINT32,   coprocessor_index,   3)
+X(a, STATIC,   OPTIONAL, UENUM,    stream,            3)
 #define FirmwareRequest_CALLBACK NULL
 #define FirmwareRequest_DEFAULT NULL
 
@@ -449,7 +459,7 @@ extern const pb_msgdesc_t UnlockBootloader_msg;
 #define Failure_size                             260
 #define Features_size                            530
 #define FirmwareErase_size                       6
-#define FirmwareRequest_size                     18
+#define FirmwareRequest_size                     14
 #define GetFeatures_size                         0
 #define Initialize_size                          0
 #define MESSAGES_PB_H_MAX_SIZE                   Features_size
