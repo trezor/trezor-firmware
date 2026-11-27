@@ -179,14 +179,15 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
   size_t bh_len = 0;
   size_t region_len = 0;
   // Host-claimed digest of the incoming bootloader code.
-  uint8_t code_hash[IMAGE_HASH_DIGEST_LENGTH] = {0};
+  uint8_t bootloader_code_hash[IMAGE_HASH_DIGEST_LENGTH] = {0};
   size_t ch_len = 0;
   // The static buffer persists across retries within one boot.
   memset(manifest_region, 0, sizeof(manifest_region));
-  if (sectrue != recv_msg_firmware_begin(
-                     iface, msg, bh_buf, BOOT_HEADER_MAXSIZE, &bh_len,
-                     manifest_region, sizeof(manifest_region), &region_len,
-                     code_hash, sizeof(code_hash), &ch_len, nrf_arg)) {
+  if (sectrue !=
+      recv_msg_firmware_begin(iface, msg, bh_buf, BOOT_HEADER_MAXSIZE, &bh_len,
+                              manifest_region, sizeof(manifest_region),
+                              &region_len, bootloader_code_hash,
+                              sizeof(bootloader_code_hash), &ch_len, nrf_arg)) {
     ui_screen_fail();  // recv already failed, no wire Failure to send
     return WF_ERROR;
   }
@@ -227,8 +228,8 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
 
   // Authenticate the header before anything below uses it. The leaf commits
   // to H(code): if the current on-flash code verifies, the install is
-  // header-only; otherwise the host's claimed code_hash must verify, and
-  // ucb_stage_verify later binds the delivered code to it.
+  // header-only; otherwise the host's claimed bootloader_code_hash must
+  // verify, and ucb_stage_verify later binds the delivered code to it.
   // FIH: header-only needs a positive pass; everything else takes the full
   // path, which needs its own positive pass.
   merkle_proof_node_t root;
@@ -237,14 +238,14 @@ static workflow_result_t fw_begin_preamble(protob_io_t *iface,
       (sectrue == boot_header_check_signature(hdr, &root)) ? secfalse : sectrue;
 
   if (sectrue == full_bootloader) {
-    if (!msg->has_code_length || msg->code_length == 0) {
+    if (!msg->has_bootloader_code_length || msg->bootloader_code_length == 0) {
       return fw_begin_fail(
           iface, "Bootloader code changed; full bootloader not supplied");
     }
-    if (ch_len != sizeof(code_hash)) {
+    if (ch_len != sizeof(bootloader_code_hash)) {
       return fw_begin_fail(iface, "Bootloader code hash missing");
     }
-    boot_header_calc_merkle_root_from_hash(hdr, code_hash, &root);
+    boot_header_calc_merkle_root_from_hash(hdr, bootloader_code_hash, &root);
     if (sectrue != boot_header_check_signature(hdr, &root)) {
       return fw_begin_fail(iface, "Invalid boot header signature");
     }
@@ -514,7 +515,8 @@ workflow_result_t workflow_firmware_update_pq(protob_io_t *iface) {
         .on_chunk = blcode_on_chunk,
         .on_finish = blcode_on_finish,
     };
-    if (WF_OK != run_image_upload(iface, &handler, msg.code_length)) {
+    if (WF_OK !=
+        run_image_upload(iface, &handler, msg.bootloader_code_length)) {
       // run_image_upload already showed the failure / abort screen.
       return WF_ERROR;
     }
