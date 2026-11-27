@@ -37,6 +37,7 @@ ed25519_no_precomp = []
 mldsa = []
 noise_kk1 = ["aes_gcm"]
 noise_xxpsk3 = ["aes_gcm"]
+noise_xxpsk3_responder = ["noise_xxpsk3"]
 secp256k1_zkp = []
 sphincsplus = []
 thp = ["dep:trezor-thp"]
@@ -50,6 +51,7 @@ test = [
     "models/model_t3w1",
     "noise_kk1",
     "noise_xxpsk3",
+    "noise_xxpsk3_responder",
     "rtl/error_shims",
     "secp256k1_zkp",
     "sphincsplus",

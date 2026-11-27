@@ -579,8 +579,7 @@ if TYPE_CHECKING:
         DebugLinkPairingInfo = 9012
         DebugLinkSetLogFilter = 9013
         DebugLinkK1N1Connected = 9014
-        DebugLinkK1N1Write = 9015
-        DebugLinkK1N1Read = 9016
+        DebugLinkK1N1Command = 9015
         DebugLinkK1N1Response = 9017
         DebugLinkSetBatteryState = 9018
         EthereumGetPublicKey = 450

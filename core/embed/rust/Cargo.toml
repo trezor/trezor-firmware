@@ -72,13 +72,13 @@ dma2d = []
 framebuffer = []
 haptic = ["io/haptic"]
 hw_jpeg_decoder = []
+k1n1 = ["crypto/noise_xxpsk3", "dep:zeroize"]
 layout_bolt = []
 layout_caesar = []
 layout_delizia = []
 layout_eckhart = []
 micropython = ["dep:upymod"]
 miniscript = []
-k1n1 = ["crypto/noise_xxpsk3"]
 nrf = []
 optiga = []
 pmic = []
@@ -119,6 +119,7 @@ ward = ["dep:trezor-ward", "storage"]
 
 test = [
     "crypto/aes_gcm",
+    "crypto/noise_xxpsk3_responder",
     "emulator",
     "io/button",
     "io/display_panel_t2t1",
@@ -126,6 +127,7 @@ test = [
     "io/fancy_fatal_error",
     "io/kernel_mode",
     "io/mcu_stm32f429",
+    "io/nfc",
     "io/nrf",
     "io/secure_mode",
     "io/touch",
@@ -145,6 +147,7 @@ test = [
     "dbg_console",
     "debug",
     "dma2d",
+    "k1n1",
     "layout_bolt",
     "micropython",
     "miniscript",

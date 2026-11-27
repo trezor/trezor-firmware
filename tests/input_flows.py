@@ -62,7 +62,8 @@ from .input_flows_helpers import (
     EthereumFlow,
     PinFlow,
     RecoveryFlow,
-    k1n1_handle_write,
+    k1n1_backup_intro,
+    k1n1_write_share,
     read_caesar_menu_item,
 )
 
@@ -2032,8 +2033,8 @@ class InputFlowBip39Backup(InputFlowBase):
             yield from click_through(self.debug, screens=2, code=B.ResetDevice)
             self.mnemonic = yield from get_mnemonic(self.debug)
         elif self.method is messages.BackupMethod.K1N1:
-            assert (yield).name == "backup_write"
-            self.mnemonic = k1n1_handle_write(self.debug).decode()
+            yield from k1n1_backup_intro(self.debug)
+            self.mnemonic = yield from k1n1_write_share(self.debug)
             br = yield
             assert br.name == "success_backup"
             assert br.code == B.Success
@@ -2104,8 +2105,8 @@ class InputFlowBip39ResetBackup(InputFlowBase):
             # 3. Backup your seed
             yield from click_through(self.debug, screens=3, code=B.ResetDevice)
             # 4. Backup using K1N1
-            assert (yield).name == "backup_write"
-            self.mnemonic = k1n1_handle_write(self.debug).decode()
+            yield from k1n1_backup_intro(self.debug)
+            self.mnemonic = yield from k1n1_write_share(self.debug)
             # 5. Success
             br = yield
             assert br.name == "success_backup"
@@ -2220,8 +2221,9 @@ def load_N_shares(
                 debug.press_yes()
 
         elif method is messages.BackupMethod.K1N1:
-            assert (yield).name == "backup_write"
-            mnemonics.append(k1n1_handle_write(debug).decode())
+            if not mnemonics:
+                yield from k1n1_backup_intro(debug)
+            mnemonics.append((yield from k1n1_write_share(debug)))
         else:
             raise RuntimeError
 
@@ -2255,8 +2257,9 @@ def load_N_groups(
                 debug.press_yes()
 
             elif method is messages.BackupMethod.K1N1:
-                assert (yield).name == "backup_write"
-                group_mnemonics.append(k1n1_handle_write(debug).decode())
+                if not mnemonics and not group_mnemonics:
+                    yield from k1n1_backup_intro(debug)
+                group_mnemonics.append((yield from k1n1_write_share(debug)))
             else:
                 raise RuntimeError
         mnemonics.append(group_mnemonics)
@@ -2651,8 +2654,9 @@ def load_5_groups_5_shares(
                 mnemonic = yield from read_and_confirm_mnemonic(debug)
                 assert mnemonic is not None
             elif backup_method is messages.BackupMethod.K1N1:
-                assert (yield).name == "backup_write"
-                mnemonic = k1n1_handle_write(debug).decode()
+                if not mnemonics:
+                    yield from k1n1_backup_intro(debug)
+                mnemonic = yield from k1n1_write_share(debug)
             else:
                 raise RuntimeError
             mnemonics.append(mnemonic)

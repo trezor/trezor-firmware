@@ -54,6 +54,10 @@
 #include <io/haptic.h>
 #endif
 
+#ifdef USE_NFC
+#include <io/nfc.h>
+#endif
+
 #ifdef USE_POWER_MANAGER
 #include <io/power_manager.h>
 #endif
@@ -120,6 +124,11 @@ static void drivers_init(void) {
 #ifdef USE_HAPTIC
   ts_t status = haptic_init();
   UNUSED(status);
+#endif
+
+#ifdef USE_NFC
+  ts_t nfc_status = nfc_init();
+  UNUSED(nfc_status);
 #endif
 
 #ifdef USE_POWER_MANAGER

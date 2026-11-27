@@ -1152,10 +1152,6 @@ impl<'a> MpyBuilder<'a> {
 
         if cfg!(not(feature = "pyopt")) {
             files.add(src, "apps/debug/*.py")?;
-
-            if current_model != "T3W1" {
-                files.remove(src, "apps/debug/k1n1_mock.py");
-            }
         }
 
         files.add(src, "apps/homescreen/*.py")?;
@@ -1186,6 +1182,10 @@ impl<'a> MpyBuilder<'a> {
 
         if cfg!(not(feature = "ble")) {
             files.remove(src, "apps/management/ble/*.py");
+        }
+
+        if cfg!(not(feature = "k1n1")) {
+            files.remove(src, "apps/management/k1n1/*.py");
         }
 
         files.add(src, "apps/misc/*.py")?;

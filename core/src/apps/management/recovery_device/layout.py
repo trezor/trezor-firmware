@@ -321,9 +321,9 @@ else:
             self.msg = msg
 
     async def _read_share() -> str:
-        from apps.debug import k1n1_mock
+        import apps.management.k1n1.context as k1n1
 
-        with k1n1_mock.ctx as ctx:
+        with k1n1.ctx as ctx:
             # returns `None` on cancellation or retriable error.
             await ctx.confirm_connect(
                 title=TR.recovery__title,
@@ -334,7 +334,7 @@ else:
             # continue K1N1 communication (the tag is connected)
 
             # TODO(K1N1): animate during read?
-            if (blob := await ctx.read(key="mnemonic")) is None:
+            if (blob := await ctx.read_share()) is None:
                 raise RetryRead(TR.k1n1__err_empty)
 
             # TODO(K1N1): use protobuf?

@@ -28,6 +28,12 @@ use super::typ::{EmptyType, Type};
 /// Relies on implementation details of MicroPython's exceptions. Generally
 /// sound for as long as layout of Type is not changed, but if MicroPython
 /// changes the way it recognizes exception types, this might break.
+///
+/// # Warning
+///
+/// Do not define constants of this struct - as they are not guaranteed to have
+/// a fixed address, inlining can break `id()` and `isinstance()`. Use `static`
+/// instead.
 #[derive(Debug)]
 #[repr(C)]
 pub struct ExceptionType {

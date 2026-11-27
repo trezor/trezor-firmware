@@ -768,5 +768,7 @@ def backup_method(request, _raw_test_ctx: TrezorTestContext) -> messages.BackupM
     if (capability := REQUIRED_CAPABILITY.get(method)) is not None:
         if capability not in _raw_test_ctx.capabilities:
             pytest.skip(f"Missing {capability.name}")
+    if method is messages.BackupMethod.K1N1 and not _raw_test_ctx.is_emulator:
+        pytest.skip("K1N1 is only supported on emulator")
 
     return method

@@ -5355,6 +5355,9 @@ impl ::protobuf::reflect::ProtobufValue for DebugLinkSetLogFilter {
 // @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkK1N1Connected)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct DebugLinkK1N1Connected {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkK1N1Connected.uid)
+    pub uid: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkK1N1Connected.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -5371,9 +5374,50 @@ impl DebugLinkK1N1Connected {
         ::std::default::Default::default()
     }
 
+    // required bytes uid = 1;
+
+    pub fn uid(&self) -> &[u8] {
+        match self.uid.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_uid(&mut self) {
+        self.uid = ::std::option::Option::None;
+    }
+
+    pub fn has_uid(&self) -> bool {
+        self.uid.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_uid(&mut self, v: ::std::vec::Vec<u8>) {
+        self.uid = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_uid(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.uid.is_none() {
+            self.uid = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.uid.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_uid(&mut self) -> ::std::vec::Vec<u8> {
+        self.uid.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(0);
+        let mut fields = ::std::vec::Vec::with_capacity(1);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "uid",
+            |m: &DebugLinkK1N1Connected| { &m.uid },
+            |m: &mut DebugLinkK1N1Connected| { &mut m.uid },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkK1N1Connected>(
             "DebugLinkK1N1Connected",
             fields,
@@ -5386,12 +5430,18 @@ impl ::protobuf::Message for DebugLinkK1N1Connected {
     const NAME: &'static str = "DebugLinkK1N1Connected";
 
     fn is_initialized(&self) -> bool {
+        if self.uid.is_none() {
+            return false;
+        }
         true
     }
 
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
+                10 => {
+                    self.uid = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -5404,12 +5454,18 @@ impl ::protobuf::Message for DebugLinkK1N1Connected {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
+        if let Some(v) = self.uid.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.uid.as_ref() {
+            os.write_bytes(1, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -5427,11 +5483,13 @@ impl ::protobuf::Message for DebugLinkK1N1Connected {
     }
 
     fn clear(&mut self) {
+        self.uid = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static DebugLinkK1N1Connected {
         static instance: DebugLinkK1N1Connected = DebugLinkK1N1Connected {
+            uid: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -5455,127 +5513,113 @@ impl ::protobuf::reflect::ProtobufValue for DebugLinkK1N1Connected {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkK1N1Write)
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkK1N1Command)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct DebugLinkK1N1Write {
+pub struct DebugLinkK1N1Command {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkK1N1Write.key)
-    pub key: ::std::option::Option<::std::string::String>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkK1N1Write.value)
-    pub value: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkK1N1Command.data)
+    pub data: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkK1N1Command.psk)
+    pub psk: ::std::option::Option<bool>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkK1N1Write.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkK1N1Command.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a DebugLinkK1N1Write {
-    fn default() -> &'a DebugLinkK1N1Write {
-        <DebugLinkK1N1Write as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a DebugLinkK1N1Command {
+    fn default() -> &'a DebugLinkK1N1Command {
+        <DebugLinkK1N1Command as ::protobuf::Message>::default_instance()
     }
 }
 
-impl DebugLinkK1N1Write {
-    pub fn new() -> DebugLinkK1N1Write {
+impl DebugLinkK1N1Command {
+    pub fn new() -> DebugLinkK1N1Command {
         ::std::default::Default::default()
     }
 
-    // optional string key = 1;
+    // required bytes data = 1;
 
-    pub fn key(&self) -> &str {
-        match self.key.as_ref() {
-            Some(v) => v,
-            None => "",
-        }
-    }
-
-    pub fn clear_key(&mut self) {
-        self.key = ::std::option::Option::None;
-    }
-
-    pub fn has_key(&self) -> bool {
-        self.key.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_key(&mut self, v: ::std::string::String) {
-        self.key = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_key(&mut self) -> &mut ::std::string::String {
-        if self.key.is_none() {
-            self.key = ::std::option::Option::Some(::std::string::String::new());
-        }
-        self.key.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_key(&mut self) -> ::std::string::String {
-        self.key.take().unwrap_or_else(|| ::std::string::String::new())
-    }
-
-    // optional bytes value = 2;
-
-    pub fn value(&self) -> &[u8] {
-        match self.value.as_ref() {
+    pub fn data(&self) -> &[u8] {
+        match self.data.as_ref() {
             Some(v) => v,
             None => &[],
         }
     }
 
-    pub fn clear_value(&mut self) {
-        self.value = ::std::option::Option::None;
+    pub fn clear_data(&mut self) {
+        self.data = ::std::option::Option::None;
     }
 
-    pub fn has_value(&self) -> bool {
-        self.value.is_some()
+    pub fn has_data(&self) -> bool {
+        self.data.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_value(&mut self, v: ::std::vec::Vec<u8>) {
-        self.value = ::std::option::Option::Some(v);
+    pub fn set_data(&mut self, v: ::std::vec::Vec<u8>) {
+        self.data = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_value(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.value.is_none() {
-            self.value = ::std::option::Option::Some(::std::vec::Vec::new());
+    pub fn mut_data(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.data.is_none() {
+            self.data = ::std::option::Option::Some(::std::vec::Vec::new());
         }
-        self.value.as_mut().unwrap()
+        self.data.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_value(&mut self) -> ::std::vec::Vec<u8> {
-        self.value.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_data(&mut self) -> ::std::vec::Vec<u8> {
+        self.data.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bool psk = 2;
+
+    pub fn psk(&self) -> bool {
+        self.psk.unwrap_or(false)
+    }
+
+    pub fn clear_psk(&mut self) {
+        self.psk = ::std::option::Option::None;
+    }
+
+    pub fn has_psk(&self) -> bool {
+        self.psk.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_psk(&mut self, v: bool) {
+        self.psk = ::std::option::Option::Some(v);
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "key",
-            |m: &DebugLinkK1N1Write| { &m.key },
-            |m: &mut DebugLinkK1N1Write| { &mut m.key },
+            "data",
+            |m: &DebugLinkK1N1Command| { &m.data },
+            |m: &mut DebugLinkK1N1Command| { &mut m.data },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "value",
-            |m: &DebugLinkK1N1Write| { &m.value },
-            |m: &mut DebugLinkK1N1Write| { &mut m.value },
+            "psk",
+            |m: &DebugLinkK1N1Command| { &m.psk },
+            |m: &mut DebugLinkK1N1Command| { &mut m.psk },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkK1N1Write>(
-            "DebugLinkK1N1Write",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkK1N1Command>(
+            "DebugLinkK1N1Command",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for DebugLinkK1N1Write {
-    const NAME: &'static str = "DebugLinkK1N1Write";
+impl ::protobuf::Message for DebugLinkK1N1Command {
+    const NAME: &'static str = "DebugLinkK1N1Command";
 
     fn is_initialized(&self) -> bool {
+        if self.data.is_none() {
+            return false;
+        }
         true
     }
 
@@ -5583,10 +5627,10 @@ impl ::protobuf::Message for DebugLinkK1N1Write {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.key = ::std::option::Option::Some(is.read_string()?);
+                    self.data = ::std::option::Option::Some(is.read_bytes()?);
                 },
-                18 => {
-                    self.value = ::std::option::Option::Some(is.read_bytes()?);
+                16 => {
+                    self.psk = ::std::option::Option::Some(is.read_bool()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -5600,11 +5644,11 @@ impl ::protobuf::Message for DebugLinkK1N1Write {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.key.as_ref() {
-            my_size += ::protobuf::rt::string_size(1, &v);
+        if let Some(v) = self.data.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
         }
-        if let Some(v) = self.value.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(2, &v);
+        if let Some(v) = self.psk {
+            my_size += 1 + 1;
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -5612,11 +5656,11 @@ impl ::protobuf::Message for DebugLinkK1N1Write {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.key.as_ref() {
-            os.write_string(1, v)?;
+        if let Some(v) = self.data.as_ref() {
+            os.write_bytes(1, v)?;
         }
-        if let Some(v) = self.value.as_ref() {
-            os.write_bytes(2, v)?;
+        if let Some(v) = self.psk {
+            os.write_bool(2, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -5630,198 +5674,40 @@ impl ::protobuf::Message for DebugLinkK1N1Write {
         &mut self.special_fields
     }
 
-    fn new() -> DebugLinkK1N1Write {
-        DebugLinkK1N1Write::new()
+    fn new() -> DebugLinkK1N1Command {
+        DebugLinkK1N1Command::new()
     }
 
     fn clear(&mut self) {
-        self.key = ::std::option::Option::None;
-        self.value = ::std::option::Option::None;
+        self.data = ::std::option::Option::None;
+        self.psk = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static DebugLinkK1N1Write {
-        static instance: DebugLinkK1N1Write = DebugLinkK1N1Write {
-            key: ::std::option::Option::None,
-            value: ::std::option::Option::None,
+    fn default_instance() -> &'static DebugLinkK1N1Command {
+        static instance: DebugLinkK1N1Command = DebugLinkK1N1Command {
+            data: ::std::option::Option::None,
+            psk: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
     }
 }
 
-impl ::protobuf::MessageFull for DebugLinkK1N1Write {
+impl ::protobuf::MessageFull for DebugLinkK1N1Command {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkK1N1Write").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkK1N1Command").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for DebugLinkK1N1Write {
+impl ::std::fmt::Display for DebugLinkK1N1Command {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for DebugLinkK1N1Write {
-    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
-}
-
-// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkK1N1Read)
-#[derive(PartialEq,Clone,Default,Debug)]
-pub struct DebugLinkK1N1Read {
-    // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkK1N1Read.key)
-    pub key: ::std::option::Option<::std::string::String>,
-    // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkK1N1Read.special_fields)
-    pub special_fields: ::protobuf::SpecialFields,
-}
-
-impl<'a> ::std::default::Default for &'a DebugLinkK1N1Read {
-    fn default() -> &'a DebugLinkK1N1Read {
-        <DebugLinkK1N1Read as ::protobuf::Message>::default_instance()
-    }
-}
-
-impl DebugLinkK1N1Read {
-    pub fn new() -> DebugLinkK1N1Read {
-        ::std::default::Default::default()
-    }
-
-    // optional string key = 1;
-
-    pub fn key(&self) -> &str {
-        match self.key.as_ref() {
-            Some(v) => v,
-            None => "",
-        }
-    }
-
-    pub fn clear_key(&mut self) {
-        self.key = ::std::option::Option::None;
-    }
-
-    pub fn has_key(&self) -> bool {
-        self.key.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_key(&mut self, v: ::std::string::String) {
-        self.key = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_key(&mut self) -> &mut ::std::string::String {
-        if self.key.is_none() {
-            self.key = ::std::option::Option::Some(::std::string::String::new());
-        }
-        self.key.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_key(&mut self) -> ::std::string::String {
-        self.key.take().unwrap_or_else(|| ::std::string::String::new())
-    }
-
-    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
-        let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "key",
-            |m: &DebugLinkK1N1Read| { &m.key },
-            |m: &mut DebugLinkK1N1Read| { &mut m.key },
-        ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkK1N1Read>(
-            "DebugLinkK1N1Read",
-            fields,
-            oneofs,
-        )
-    }
-}
-
-impl ::protobuf::Message for DebugLinkK1N1Read {
-    const NAME: &'static str = "DebugLinkK1N1Read";
-
-    fn is_initialized(&self) -> bool {
-        true
-    }
-
-    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
-        while let Some(tag) = is.read_raw_tag_or_eof()? {
-            match tag {
-                10 => {
-                    self.key = ::std::option::Option::Some(is.read_string()?);
-                },
-                tag => {
-                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
-                },
-            };
-        }
-        ::std::result::Result::Ok(())
-    }
-
-    // Compute sizes of nested messages
-    #[allow(unused_variables)]
-    fn compute_size(&self) -> u64 {
-        let mut my_size = 0;
-        if let Some(v) = self.key.as_ref() {
-            my_size += ::protobuf::rt::string_size(1, &v);
-        }
-        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
-        self.special_fields.cached_size().set(my_size as u32);
-        my_size
-    }
-
-    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.key.as_ref() {
-            os.write_string(1, v)?;
-        }
-        os.write_unknown_fields(self.special_fields.unknown_fields())?;
-        ::std::result::Result::Ok(())
-    }
-
-    fn special_fields(&self) -> &::protobuf::SpecialFields {
-        &self.special_fields
-    }
-
-    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
-        &mut self.special_fields
-    }
-
-    fn new() -> DebugLinkK1N1Read {
-        DebugLinkK1N1Read::new()
-    }
-
-    fn clear(&mut self) {
-        self.key = ::std::option::Option::None;
-        self.special_fields.clear();
-    }
-
-    fn default_instance() -> &'static DebugLinkK1N1Read {
-        static instance: DebugLinkK1N1Read = DebugLinkK1N1Read {
-            key: ::std::option::Option::None,
-            special_fields: ::protobuf::SpecialFields::new(),
-        };
-        &instance
-    }
-}
-
-impl ::protobuf::MessageFull for DebugLinkK1N1Read {
-    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
-        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkK1N1Read").unwrap()).clone()
-    }
-}
-
-impl ::std::fmt::Display for DebugLinkK1N1Read {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::protobuf::text_format::fmt(self, f)
-    }
-}
-
-impl ::protobuf::reflect::ProtobufValue for DebugLinkK1N1Read {
+impl ::protobuf::reflect::ProtobufValue for DebugLinkK1N1Command {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
@@ -5829,8 +5715,8 @@ impl ::protobuf::reflect::ProtobufValue for DebugLinkK1N1Read {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct DebugLinkK1N1Response {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkK1N1Response.value)
-    pub value: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkK1N1Response.data)
+    pub data: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkK1N1Response.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -5847,49 +5733,49 @@ impl DebugLinkK1N1Response {
         ::std::default::Default::default()
     }
 
-    // optional bytes value = 1;
+    // required bytes data = 1;
 
-    pub fn value(&self) -> &[u8] {
-        match self.value.as_ref() {
+    pub fn data(&self) -> &[u8] {
+        match self.data.as_ref() {
             Some(v) => v,
             None => &[],
         }
     }
 
-    pub fn clear_value(&mut self) {
-        self.value = ::std::option::Option::None;
+    pub fn clear_data(&mut self) {
+        self.data = ::std::option::Option::None;
     }
 
-    pub fn has_value(&self) -> bool {
-        self.value.is_some()
+    pub fn has_data(&self) -> bool {
+        self.data.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_value(&mut self, v: ::std::vec::Vec<u8>) {
-        self.value = ::std::option::Option::Some(v);
+    pub fn set_data(&mut self, v: ::std::vec::Vec<u8>) {
+        self.data = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_value(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.value.is_none() {
-            self.value = ::std::option::Option::Some(::std::vec::Vec::new());
+    pub fn mut_data(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.data.is_none() {
+            self.data = ::std::option::Option::Some(::std::vec::Vec::new());
         }
-        self.value.as_mut().unwrap()
+        self.data.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_value(&mut self) -> ::std::vec::Vec<u8> {
-        self.value.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_data(&mut self) -> ::std::vec::Vec<u8> {
+        self.data.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(1);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "value",
-            |m: &DebugLinkK1N1Response| { &m.value },
-            |m: &mut DebugLinkK1N1Response| { &mut m.value },
+            "data",
+            |m: &DebugLinkK1N1Response| { &m.data },
+            |m: &mut DebugLinkK1N1Response| { &mut m.data },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkK1N1Response>(
             "DebugLinkK1N1Response",
@@ -5903,6 +5789,9 @@ impl ::protobuf::Message for DebugLinkK1N1Response {
     const NAME: &'static str = "DebugLinkK1N1Response";
 
     fn is_initialized(&self) -> bool {
+        if self.data.is_none() {
+            return false;
+        }
         true
     }
 
@@ -5910,7 +5799,7 @@ impl ::protobuf::Message for DebugLinkK1N1Response {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.value = ::std::option::Option::Some(is.read_bytes()?);
+                    self.data = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -5924,7 +5813,7 @@ impl ::protobuf::Message for DebugLinkK1N1Response {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.value.as_ref() {
+        if let Some(v) = self.data.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
@@ -5933,7 +5822,7 @@ impl ::protobuf::Message for DebugLinkK1N1Response {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.value.as_ref() {
+        if let Some(v) = self.data.as_ref() {
             os.write_bytes(1, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
@@ -5953,13 +5842,13 @@ impl ::protobuf::Message for DebugLinkK1N1Response {
     }
 
     fn clear(&mut self) {
-        self.value = ::std::option::Option::None;
+        self.data = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static DebugLinkK1N1Response {
         static instance: DebugLinkK1N1Response = DebugLinkK1N1Response {
-            value: ::std::option::Option::None,
+            data: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -6059,12 +5948,12 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     inkGcInfo.DebugLinkGcInfoItemR\x05items\x1a?\n\x13DebugLinkGcInfoItem\
     \x12\x12\n\x04name\x18\x01\x20\x02(\tR\x04name\x12\x14\n\x05value\x18\
     \x02\x20\x02(\x04R\x05value\"/\n\x15DebugLinkSetLogFilter\x12\x16\n\x06f\
-    ilter\x18\x01\x20\x01(\tR\x06filter\"\x18\n\x16DebugLinkK1N1Connected\"<\
-    \n\x12DebugLinkK1N1Write\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x12\
-    \x14\n\x05value\x18\x02\x20\x01(\x0cR\x05value\"%\n\x11DebugLinkK1N1Read\
-    \x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\"-\n\x15DebugLinkK1N1Respon\
-    se\x12\x14\n\x05value\x18\x01\x20\x01(\x0cR\x05valueB=\n#com.satoshilabs\
-    .trezor.lib.protobufB\x12TrezorMessageDebug\x80\xa6\x1d\x01\
+    ilter\x18\x01\x20\x01(\tR\x06filter\"*\n\x16DebugLinkK1N1Connected\x12\
+    \x10\n\x03uid\x18\x01\x20\x02(\x0cR\x03uid\"C\n\x14DebugLinkK1N1Command\
+    \x12\x12\n\x04data\x18\x01\x20\x02(\x0cR\x04data\x12\x17\n\x03psk\x18\
+    \x02\x20\x01(\x08:\x05falseR\x03psk\"+\n\x15DebugLinkK1N1Response\x12\
+    \x12\n\x04data\x18\x01\x20\x02(\x0cR\x04dataB=\n#com.satoshilabs.trezor.\
+    lib.protobufB\x12TrezorMessageDebug\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -6085,7 +5974,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::messages_management::file_descriptor().clone());
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(27);
+            let mut messages = ::std::vec::Vec::with_capacity(26);
             messages.push(DebugLinkDecision::generated_message_descriptor_data());
             messages.push(DebugLinkLayout::generated_message_descriptor_data());
             messages.push(DebugLinkReseedRandom::generated_message_descriptor_data());
@@ -6109,8 +5998,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(DebugLinkGcInfo::generated_message_descriptor_data());
             messages.push(DebugLinkSetLogFilter::generated_message_descriptor_data());
             messages.push(DebugLinkK1N1Connected::generated_message_descriptor_data());
-            messages.push(DebugLinkK1N1Write::generated_message_descriptor_data());
-            messages.push(DebugLinkK1N1Read::generated_message_descriptor_data());
+            messages.push(DebugLinkK1N1Command::generated_message_descriptor_data());
             messages.push(DebugLinkK1N1Response::generated_message_descriptor_data());
             messages.push(debug_link_gc_info::DebugLinkGcInfoItem::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(5);

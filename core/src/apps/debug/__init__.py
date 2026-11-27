@@ -497,14 +497,43 @@ if __debug__:
         finally:
             raise RestartEventLoop
 
-    if utils.USE_K1N1:
+    if utils.USE_K1N1 and utils.EMULATOR:
+        _K1N1_POLL_SLEEP = loop.sleep(5)
+        _K1N1_COMMAND_TIMEOUT_SLEEP = loop.sleep(5000)
 
-        async def dispatch_DebugLinkConnected(msg: DebugLinkK1N1Connected) -> Success:
-            """Exchange a sequence of K1N1 messages."""
-            from .k1n1_mock import ctx
+        async def dispatch_DebugLinkK1N1Connected(
+            msg: DebugLinkK1N1Connected,
+        ) -> Success:
+            """Place an emulated K1N1 card in the NFC field and pass the frames sent
+            to it to the host, until the device ends the NFC session."""
+            import trezornfcemu as nfcemu
+            from trezor.messages import DebugLinkK1N1Command, DebugLinkK1N1Response
 
             assert DEBUG_CONTEXT is not None
-            await ctx.handle(DEBUG_CONTEXT)
+            nfcemu.set_connected(msg.uid)
+            try:
+                while True:
+                    frame = nfcemu.get_command()
+                    if frame is None:
+                        await _K1N1_POLL_SLEEP
+                        continue
+                    data, is_psk = frame
+                    res = await loop.race(
+                        DEBUG_CONTEXT.call(
+                            DebugLinkK1N1Command(data=data, psk=is_psk),
+                            DebugLinkK1N1Response,
+                        ),
+                        _K1N1_COMMAND_TIMEOUT_SLEEP,
+                    )
+                    if isinstance(res, int):
+                        raise RuntimeError("Timed out waiting for emulated K1N1")
+                    nfcemu.set_response(res.data)
+            except EOFError:
+                pass  # the device stopped discovery, which removes the card
+            finally:
+                # If the host failed to answer, this fails the pending exchange,
+                # so that the device does not wait forever.
+                nfcemu.set_connected(None)
             return Success()
 
     async def _no_op(_msg: Any) -> Success:
@@ -626,9 +655,9 @@ if __debug__:
         MessageType.WipeDevice: dispatch_WipeDevice,
     }
 
-    if utils.USE_K1N1:
+    if utils.USE_K1N1 and utils.EMULATOR:
         WORKFLOW_HANDLERS[MessageType.DebugLinkK1N1Connected] = (
-            dispatch_DebugLinkConnected
+            dispatch_DebugLinkK1N1Connected
         )
 
     if utils.USE_POWER_MANAGER and utils.EMULATOR:
