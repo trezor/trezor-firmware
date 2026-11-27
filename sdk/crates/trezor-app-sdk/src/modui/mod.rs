@@ -92,8 +92,8 @@
 //! - **[`Review::details`]** returns `Result<`[`Details`]`>`: `Show` when the
 //!   person asked for the details, `Skip` when they accepted without them, and
 //!   `Err(Cancelled)` when they refused.
-//! - **A progress** ([`progress`]) returns what the work returned, or the
-//!   error that kept it from starting.
+//! - **A progress** ([`progress`], [`Progress`]) returns `Ok(())`, or the error
+//!   that kept it from reaching core.
 //!
 //! A cancel is an `Err` so that `?` stops the flow on it: nothing after the
 //! refused screen runs, and the host sees the session end with the person's
@@ -169,21 +169,21 @@
 //! # Progress
 //!
 //! Not everything the app shows waits for the person. While the app works —
-//! hashing, fetching, signing — it can hold up a progress, so the person sees
-//! that the device has not stalled. A progress is not a layout: it asks nothing,
-//! answers nothing, and never blocks. It appears when the work starts and
-//! disappears when it ends, including through `?`, because the app never ends one
-//! by hand: the library owns the ending, the same way it owns a layout's screens.
+//! hashing, fetching, signing — it can hold up a progress bar, so the person
+//! sees that the device has not stalled. A progress is not a layout: it asks
+//! nothing, answers nothing, and never blocks.
 //!
-//! [`progress`] runs the work as one closure and hands it a [`Progress`] to
-//! report steps with, in whatever unit the app counts. The percent is never the
-//! app's arithmetic: core computes it from the total given at the start, and a
-//! step past the total pins the bar full rather than wrapping it. No total shows
-//! motion without a fill, and steps on it do nothing.
+//! Every call describes the whole bar: its label, how much is done and of how
+//! much, in whatever unit the app counts. Nothing carries over from one call to
+//! the next, so there is nothing to start or end: the bar stays until the next
+//! screen takes its place. The percent is never the app's arithmetic: core
+//! computes it, and past the total the bar shows full. A total of `0` shows
+//! motion without a fill.
 //!
-//! A step is deliberately infallible. It is a status note, not a step of the
-//! work: an update that cannot be delivered must not abort the work it
-//! describes, so the person at worst sees a stale bar until the next one.
+//! [`progress`] shows one state. [`Progress`] is a local value that keeps the
+//! label and the count for one piece of work, and sends the whole state on
+//! every [`step`](Progress::step), [`set`](Progress::set) and
+//! [`label`](Progress::label).
 //!
 //! # Errors
 //!

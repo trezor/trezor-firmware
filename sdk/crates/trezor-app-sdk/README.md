@@ -189,7 +189,7 @@ font or a screen.
 | `verify_address(step, address, account, path)` | to check one of their own addresses | `Result<()>` |
 | `verify_pubkey(step, pubkey, account, path)` | to check one of their own public keys | `Result<()>` |
 | `done(step, text)` | nothing: the flow has ended | — |
-| `progress(label, total, work)` | nothing: the app is working | what `work` returns, or the start's error |
+| `progress(label, done, total)`, `Progress::new(label, total)` | nothing: the app is working | `Ok(())`, or the error that kept it from core |
 
 Facts are `Field`s, named by what the value *is* rather than by how it
 should look: `text`, `amount`, `address`, `text_source`, `note` and
