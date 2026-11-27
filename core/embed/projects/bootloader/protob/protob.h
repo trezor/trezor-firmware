@@ -77,8 +77,9 @@ typedef struct {
 // fields when `nrf` != NULL), `msg` receives the scalars.
 secbool recv_msg_firmware_begin(protob_io_t *iface, FirmwareBegin *msg,
                                 uint8_t *bh_buf, size_t bh_size, size_t *bh_len,
-                                uint8_t *mh_buf, size_t mh_size, size_t *mh_len,
-                                uint8_t *ch_buf, size_t ch_size, size_t *ch_len,
+                                uint8_t *manifest_buf, size_t manifest_size,
+                                size_t *manifest_len, uint8_t *ch_buf,
+                                size_t ch_size, size_t *ch_len,
                                 firmware_begin_nrf_t *nrf);
 #endif
 

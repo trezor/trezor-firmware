@@ -156,7 +156,7 @@ typedef struct _FirmwareErase {
 
 typedef struct _FirmwareBegin {
     pb_callback_t boot_header;
-    pb_callback_t module_headers;
+    pb_callback_t firmware_manifest_region;
     bool has_code_length;
     uint32_t code_length;
     bool has_nrf_length;
@@ -298,7 +298,7 @@ extern "C" {
 #define ButtonRequest_code_tag                   1
 #define FirmwareErase_length_tag                 1
 #define FirmwareBegin_boot_header_tag            1
-#define FirmwareBegin_module_headers_tag         2
+#define FirmwareBegin_firmware_manifest_region_tag 2
 #define FirmwareBegin_code_length_tag            3
 #define FirmwareBegin_nrf_length_tag             5
 #define FirmwareBegin_nrf_co_path_tag            6
@@ -392,7 +392,7 @@ X(a, STATIC,   OPTIONAL, UINT32,   length,            1)
 
 #define FirmwareBegin_FIELDLIST(X, a) \
 X(a, CALLBACK, REQUIRED, BYTES,    boot_header,       1) \
-X(a, CALLBACK, REQUIRED, BYTES,    module_headers,    2) \
+X(a, CALLBACK, REQUIRED, BYTES,    firmware_manifest_region,   2) \
 X(a, STATIC,   OPTIONAL, UINT32,   code_length,       3) \
 X(a, STATIC,   OPTIONAL, UINT32,   nrf_length,        5) \
 X(a, CALLBACK, OPTIONAL, BYTES,    nrf_co_path,       6) \

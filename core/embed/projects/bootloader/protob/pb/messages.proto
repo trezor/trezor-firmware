@@ -166,7 +166,7 @@ message FirmwareErase {
  */
 message FirmwareBegin {
     required bytes boot_header = 1;     // new signed boot header (TRZQ)
-    required bytes module_headers = 2;  // firmware manifest (TRZD) + per-variant Merkle proof to firmware_root
+    required bytes firmware_manifest_region = 2;  // manifest (TRZD) + its Merkle proof up to firmware_root
     optional uint32 code_length = 3;    // new bootloader code available to stream; omit/0 => header-only
     optional bytes code_hash = 8;       // SHA-256 of that code, lets the header signature be checked before the
                                         // stream; required iff code_length > 0

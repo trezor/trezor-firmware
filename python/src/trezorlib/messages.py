@@ -2210,7 +2210,7 @@ class FirmwareBegin(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 106
     FIELDS = {
         1: protobuf.Field("boot_header", "bytes", repeated=False, required=True),
-        2: protobuf.Field("module_headers", "bytes", repeated=False, required=True),
+        2: protobuf.Field("firmware_manifest_region", "bytes", repeated=False, required=True),
         3: protobuf.Field("code_length", "uint32", repeated=False, required=False, default=None),
         8: protobuf.Field("code_hash", "bytes", repeated=False, required=False, default=None),
         5: protobuf.Field("nrf_length", "uint32", repeated=False, required=False, default=None),
@@ -2222,7 +2222,7 @@ class FirmwareBegin(protobuf.MessageType):
         self,
         *,
         boot_header: bytes,
-        module_headers: bytes,
+        firmware_manifest_region: bytes,
         code_length: int | None = None,
         code_hash: bytes | None = None,
         nrf_length: int | None = None,
@@ -2230,7 +2230,7 @@ class FirmwareBegin(protobuf.MessageType):
         nrf_image_hash: bytes | None = None,
     ) -> None:
         self.boot_header = boot_header
-        self.module_headers = module_headers
+        self.firmware_manifest_region = firmware_manifest_region
         self.code_length = code_length
         self.code_hash = code_hash
         self.nrf_length = nrf_length

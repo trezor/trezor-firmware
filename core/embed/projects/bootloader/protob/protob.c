@@ -243,18 +243,20 @@ static bool read_into_buffer(pb_istream_t *stream, const pb_field_t *field,
 
 secbool recv_msg_firmware_begin(protob_io_t *iface, FirmwareBegin *msg,
                                 uint8_t *bh_buf, size_t bh_size, size_t *bh_len,
-                                uint8_t *mh_buf, size_t mh_size, size_t *mh_len,
-                                uint8_t *ch_buf, size_t ch_size, size_t *ch_len,
+                                uint8_t *manifest_buf, size_t manifest_size,
+                                size_t *manifest_len, uint8_t *ch_buf,
+                                size_t ch_size, size_t *ch_len,
                                 firmware_begin_nrf_t *nrf) {
   buf_ctx_t bh_ctx = {.buffer = bh_buf, .buffer_size = bh_size, .len = 0};
-  buf_ctx_t mh_ctx = {.buffer = mh_buf, .buffer_size = mh_size, .len = 0};
+  buf_ctx_t manifest_ctx = {
+      .buffer = manifest_buf, .buffer_size = manifest_size, .len = 0};
   buf_ctx_t ch_ctx = {.buffer = ch_buf, .buffer_size = ch_size, .len = 0};
   buf_ctx_t cp_ctx = {0};
   buf_ctx_t ih_ctx = {0};
 
   MSG_RECV_INIT(FirmwareBegin);
   MSG_RECV_CALLBACK(boot_header, read_into_buffer, &bh_ctx);
-  MSG_RECV_CALLBACK(module_headers, read_into_buffer, &mh_ctx);
+  MSG_RECV_CALLBACK(firmware_manifest_region, read_into_buffer, &manifest_ctx);
   MSG_RECV_CALLBACK(code_hash, read_into_buffer, &ch_ctx);
   if (nrf != NULL) {
     cp_ctx.buffer = nrf->co_path_buf;
@@ -267,7 +269,7 @@ secbool recv_msg_firmware_begin(protob_io_t *iface, FirmwareBegin *msg,
   secbool result = MSG_RECV(FirmwareBegin);
   memcpy(msg, &msg_recv, sizeof(FirmwareBegin));
   *bh_len = bh_ctx.len;
-  *mh_len = mh_ctx.len;
+  *manifest_len = manifest_ctx.len;
   *ch_len = ch_ctx.len;
   if (nrf != NULL) {
     nrf->co_path_len = cp_ctx.len;
