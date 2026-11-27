@@ -2787,14 +2787,16 @@ if TYPE_CHECKING:
     class RebootToBootloader(protobuf.MessageType):
         boot_command: "BootCommand"
         firmware_header: "AnyBytes | None"
-        firmware_preamble: "AnyBytes | None"
+        boot_header_prefix: "AnyBytes | None"
+        firmware_manifest_region: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             boot_command: "BootCommand | None" = None,
             firmware_header: "AnyBytes | None" = None,
-            firmware_preamble: "AnyBytes | None" = None,
+            boot_header_prefix: "AnyBytes | None" = None,
+            firmware_manifest_region: "AnyBytes | None" = None,
         ) -> None:
             pass
 

@@ -702,9 +702,12 @@ message RebootToBootloader {
     // Deprecated (length of language blob to be installed before upgrading firmware)
     reserved 3;
     // Merkle-tree image layout: boot header prefix (authenticated part + Merkle proof,
-    // no signatures) followed by the firmware manifest region; the consent-digest
-    // preimage the bootloader recomputes before installing without asking again
-    optional bytes firmware_preamble = 4;
+    // no signatures)
+    optional bytes boot_header_prefix = 4;
+    // Merkle-tree image layout: firmware manifest region (manifest + its Merkle proof);
+    // with boot_header_prefix, what the bootloader checks before installing without
+    // asking again
+    optional bytes firmware_manifest_region = 5;
 
     enum BootCommand {
         // Go to bootloader menu

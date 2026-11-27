@@ -4209,7 +4209,8 @@ class RebootToBootloader(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("boot_command", "BootCommand", repeated=False, required=False, default=BootCommand.STOP_AND_WAIT),
         2: protobuf.Field("firmware_header", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("firmware_preamble", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("boot_header_prefix", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("firmware_manifest_region", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4217,11 +4218,13 @@ class RebootToBootloader(protobuf.MessageType):
         *,
         boot_command: BootCommand | None = BootCommand.STOP_AND_WAIT,
         firmware_header: bytes | None = None,
-        firmware_preamble: bytes | None = None,
+        boot_header_prefix: bytes | None = None,
+        firmware_manifest_region: bytes | None = None,
     ) -> None:
         self.boot_command = boot_command
         self.firmware_header = firmware_header
-        self.firmware_preamble = firmware_preamble
+        self.boot_header_prefix = boot_header_prefix
+        self.firmware_manifest_region = firmware_manifest_region
 
 
 class GetNonce(protobuf.MessageType):
