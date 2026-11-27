@@ -21,6 +21,7 @@ from hashlib import sha256
 import construct as c
 import pytest
 
+from trezorlib import extapp
 from trezorlib.extapp import AppHeader, AppImage
 
 HEADER_SIZE = 512
@@ -91,3 +92,22 @@ def test_build_payload_size_mismatch() -> None:
     image = AppImage(header=header, payload=PAYLOAD[:-1])
     with pytest.raises(c.StreamError):
         image.build()
+
+
+class NoCallSession:
+    def call(self, msg: object) -> None:
+        raise AssertionError(f"unexpected call: {msg}")
+
+
+def test_load_invalid_root_packet_sends_nothing() -> None:
+    """A bad root packet fails before the device enters the load workflow."""
+    with pytest.raises(c.ConstructError):
+        extapp.load(
+            NoCallSession(),  # type: ignore [arg-type]
+            header=header_bytes(len(PAYLOAD)),
+            chunks=[PAYLOAD],
+            chunk_hashes=[b"\x00" * 32],
+            proof=b"",
+            root_packet=b"TRZR",
+            min_version=None,
+        )

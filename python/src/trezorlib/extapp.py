@@ -200,6 +200,8 @@ def load(
         )
 
     header_parsed = AppHeader.parse(header)
+    # before the first call: a bad packet must not leave the device mid-load
+    rp = RootPacket.parse(root_packet)
 
     if min_version is not None:
         min_version_info = f"{_format_version(min_version)}+"
@@ -229,7 +231,6 @@ def load(
 
     # If the device requests the binary, we proceed to upload it.
     if isinstance(resp, messages.ExtAppHeaderRequest):
-        rp = RootPacket.parse(root_packet)
         # Send the header and proof to the device
 
         resp = session.call(
