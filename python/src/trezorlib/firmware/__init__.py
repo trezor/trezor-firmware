@@ -149,10 +149,10 @@ def firmware_begin(
         messages.FirmwareBegin(
             boot_header=boot_header,
             firmware_manifest_region=firmware_manifest_region,
-            code_length=len(code) if code else None,
+            bootloader_code_length=len(code) if code else None,
             # lets the device check the signature before the code streams; it
             # rehashes what it receives
-            code_hash=sha256(code).digest() if code else None,
+            bootloader_code_hash=sha256(code).digest() if code else None,
             nrf_length=len(nrf_image) if nrf_image else None,
             nrf_co_path=nrf_co_path,
             nrf_image_hash=nrf_image_hash,
