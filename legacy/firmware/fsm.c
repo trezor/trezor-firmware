@@ -201,6 +201,9 @@ void fsm_sendFailure(FailureType code, const char *text)
       case FailureType_Failure_InProgress:
         text = _("Operation in progress");
         break;
+      case FailureType_Failure_AppError:
+        text = _("App error");
+        break;
       case FailureType_Failure_FirmwareError:
         text = _("Firmware error");
         break;
