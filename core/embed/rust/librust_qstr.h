@@ -414,7 +414,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_fee_rate_amount;
   MP_QSTR_field;
   MP_QSTR_fields;
-  MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__restart;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
@@ -897,7 +896,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__you_are_contributing;
   MP_QSTR_send_transport_busy;
   MP_QSTR_serialize_crypto_result;
-  MP_QSTR_serialize_ui_result;
   MP_QSTR_set;
   MP_QSTR_set_brightness;
   MP_QSTR_set_enabled;
