@@ -42,7 +42,11 @@ Credential selection is supported directly on the device. The `authenticatorGetN
 
 ## AAGUID
 
-The AAGUID is a 128-bit globally unique identifier indicating the type (e.g. make and model) of the authenticator. The AAGUID for Trezor T is d6d0bdc3-62ee-c4db-de8d-7a656e4a4487.
+The AAGUID is a 128-bit globally unique identifier indicating the type (e.g. make and model) of the authenticator. Relying parties look it up in the [FIDO Metadata Service](https://fidoalliance.org/metadata/) to show the user a friendly name of the authenticator.
+
+All Trezor models use the same AAGUID d6d0bdc3-62ee-c4db-de8d-7a656e4a4487 (first 16 bytes of SHA-256("TREZOR 2")), registered under the name "Trezor". It is intentionally not model-specific: credentials are derived from the seed (see SLIP-0022), so after recovering the seed on a different model the user keeps logging in with the same credentials, while the relying party keeps the AAGUID it received at registration. A model-specific name would then be misleading. The AAGUID is also embedded in the basic attestation certificate.
+
+The metadata statement in the FIDO MDS3 format is [metadata/trezor-ctap2.json](metadata/trezor-ctap2.json).
 
 ## Certificates for basic attestation
 
