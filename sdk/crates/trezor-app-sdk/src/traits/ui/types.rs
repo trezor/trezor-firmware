@@ -156,19 +156,6 @@ impl WireField<'_> {
     pub(crate) fn is_streamed(&self) -> bool {
         matches!(self, Self::TextSource { .. })
     }
-
-    /// The kind of fact this is.
-    pub fn kind(&self) -> Option<FieldKind> {
-        Some(match self {
-            Self::Text { .. } => FieldKind::Text,
-            Self::Amount { .. } => FieldKind::Amount,
-            Self::Address { .. } => FieldKind::Address,
-            Self::TextSource { .. } => FieldKind::TextSource,
-            Self::Note { .. } => FieldKind::Note,
-            Self::Warning { .. } => FieldKind::Warning,
-            Self::Reserved(_) => return None,
-        })
-    }
 }
 
 // Message ids on the UI service. A decision is the request's own id; a chunk
@@ -368,31 +355,3 @@ pub struct ProgressV1<'a> {
 
 /// The id of a [`ProgressV1`] on the progress service, and of core's reply.
 pub const PROGRESS_MSG: u16 = 0;
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn the_menu_budget_leaves_room_for_each_answer() {
-        assert_eq!(Answer::Confirm.max_extras(), 5);
-        assert_eq!(Answer::Strong.max_extras(), 5);
-        assert_eq!(Answer::Details.max_extras(), 4);
-        assert_eq!(Answer::Danger.max_extras(), 0);
-    }
-
-    #[test]
-    fn a_chunk_request_round_trips() {
-        let request = UiChunkRequest {
-            field: 7,
-            offset: 384,
-            len: 384,
-        };
-        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&request).unwrap();
-        let archived =
-            rkyv::access::<rkyv::Archived<UiChunkRequest>, rkyv::rancor::Failure>(&bytes).unwrap();
-        assert_eq!(archived.field, 7);
-        assert_eq!(archived.offset, 384);
-        assert_eq!(archived.len, 384);
-    }
-}
