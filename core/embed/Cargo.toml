@@ -85,6 +85,10 @@ unsize = "1.1.0"
 without-alloc = "0.2.2"
 zeroize = { version = "1.8.2", default-features = false, features = ["zeroize_derive"] }
 
+cortex-m = { version = "0.7.9" }
+stm32-metapac = { version = "21.0.0" }
+critical-section = { version = "1.2.0" }
+
 models = { path = "models" }
 rtl = { path = "rtl" }
 crypto = { path = "crypto" }
