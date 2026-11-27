@@ -57,7 +57,6 @@ __all__ = [
     "PqSecureNrf",
     "authenticity_bytes",
     "boot_header_prefix",
-    "consent_preamble",
     "module_chain_intermediates",
     "module_code_hash",
     "variant_leaf",
@@ -303,8 +302,8 @@ class PqSecureFirmware:
 
     @property
     def manifest_region(self) -> bytes:
-        """``[manifest || proof]``: what the device parses, and the second half of
-        the consent preamble."""
+        """``[manifest || proof]``: what the device parses, offered as
+        ``RebootToBootloader.firmware_manifest_region``."""
         return self.data[: self._region_len]
 
     def authenticity_bytes(self) -> bytes:
@@ -388,12 +387,6 @@ def boot_header_prefix(header: bytes) -> bytes:
     return header[:prefix_len]
 
 
-def consent_preamble(header: bytes, manifest_region: bytes) -> bytes:
-    """Preimage of the interaction-less consent digest; the bootloader recomputes
-    it over what is delivered and installs without asking again on a match."""
-    return boot_header_prefix(header) + manifest_region
-
-
 #: Bundle manifest (bundle.json) and release manifest (release.json) formats this
 #: trezorlib speaks; must match core/tools/trezor_core_tools/firmware_module.py.
 #: Flow: docs/core/build/xtask.md
@@ -455,7 +448,7 @@ class PqSecureBundle:
         nrf: PqSecureNrf | None = None,
         variant_name: str | None = None,
     ) -> None:
-        #: Raw bytes kept: consent preamble and streamed code must be the signed bytes.
+        #: Raw bytes kept: the consent offer and streamed code must be the signed bytes.
         self.bootloader_bytes = bootloader_bytes
         self.bootloader = BootableImage.parse(bootloader_bytes)
         self.firmware = firmware
@@ -667,13 +660,9 @@ class PqSecureBundle:
         return bytes(self.bootloader.code)
 
     def boot_header_prefix(self) -> bytes:
-        """See :func:`boot_header_prefix`."""
+        """``RebootToBootloader.boot_header_prefix`` for this release; see
+        :func:`boot_header_prefix`."""
         return boot_header_prefix(self.bootloader_bytes)
-
-    def consent_preamble(self) -> bytes:
-        """``RebootToBootloader.firmware_preamble`` for this release; see
-        :func:`consent_preamble`."""
-        return consent_preamble(self.bootloader_bytes, self.firmware.manifest_region)
 
     def chunk_prev_hashes(self) -> dict[int, bytes]:
         return self.firmware.chunk_prev_hashes()

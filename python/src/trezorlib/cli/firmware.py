@@ -886,7 +886,8 @@ def pq_reboot_for_install(
             device.reboot_to_bootloader(
                 session,
                 boot_command=messages.BootCommand.INSTALL_UPGRADE,
-                firmware_preamble=bundle.consent_preamble(),
+                boot_header_prefix=bundle.boot_header_prefix(),
+                firmware_manifest_region=bundle.firmware.manifest_region,
             )
             return
         except exceptions.TrezorFailure as e:
