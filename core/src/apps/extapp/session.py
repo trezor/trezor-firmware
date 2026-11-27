@@ -1,3 +1,4 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import io
@@ -27,6 +28,9 @@ SERVICE_LIFECYCLE = 5
 
 # message id on `SERVICE_LIFECYCLE`: the app must exit as soon as it can
 LIFECYCLE_ABORT = 0
+
+# how long Core waits for the app's next IPC message
+IPC_TIMEOUT_MS = const(20000)
 
 # message id of a Core reply reporting a failed request
 MSG_ID_ERROR = 0xFFFF
@@ -59,14 +63,24 @@ class Session:
         self.schemas = schemas
         # keychains created so far, by curve
         self.keychains: dict[str, Keychain] = {}
-        # progress layout opened by the app via `SERVICE_PROGRESS`
+        # progress layout shown for the app via `SERVICE_PROGRESS`, and the
+        # state it shows, `(label, done, total)`; the app counts in its own
+        # units, the fill is ours
         self.progress: ProgressLayout | None = None
+        self.progress_state: tuple[str, int, int] | None = None
         # whether the app answered the host's last message
         self.response_sent = False
         # set once Core killed the app
         self.stopped = False
         # set once the app was killed because of an error
         self.dead = False
+
+    @property
+    def app_id(self) -> str:
+        """The app's identity, its image ID (`<package>.<domain>`): the prefix
+        of every step it asks for. A package name alone could be shared by two
+        vendors."""
+        return self.image.id()
 
     async def keychain(self, curve: str) -> Keychain:
         """Keychain of the app's paths on `curve`, if the app is allowed to use it."""

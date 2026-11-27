@@ -1,0 +1,283 @@
+//! Building-block UI library: one typed function per decision an app asks.
+//!
+//! An app decides which decisions to ask and in what order, and what each one
+//! says. It does not decide how anything looks or behaves: that is an
+//! implementation detail of this library and core, invisible to the app.
+//!
+//! # Who is who
+//!
+//! - **the person** — the human holding the device, and the only one who
+//!   confirms anything. Never "the user", which could equally mean the
+//!   developer reading this.
+//! - **the host** — the wallet or other software on the other end of the
+//!   cable. The app serves the host's requests; step names and errors are
+//!   reported to it.
+//! - **the device** — the Trezor. Core runs on it, every screen is drawn
+//!   on it, and the app is loaded onto it as data.
+//! - **the app** — the modular app (an *extapp*) calling these functions.
+//!   Low-trust: signed and verified before loading, but nothing here
+//!   assumes it behaves.
+//! - **this library** — `modui`, which turns the app's calls into screens.
+//!   It runs inside the app, on the low-trust side.
+//! - **core** — the firmware past the IPC boundary, which draws the screens.
+//!   Trusted.
+//!
+//! And the words for what moves between them:
+//!
+//! - **a layout** — one typed function of this library: one call, one
+//!   question, one answer (see [outcomes](#outcomes)), and the call does
+//!   not return until the person has answered. The app's only way to show
+//!   anything.
+//! - **a fact** — one thing the person reads, a [`Field`]. What it *is*
+//!   decides how it looks; see [facts](#facts).
+//! - **a screen** — what the person sees at one moment. A layout may show
+//!   several — its own, the extras menu, pages of content; the app never
+//!   counts them.
+//! - **the flow** — the app's sequence of layouts, in the order it calls
+//!   them. The app owns it; this library never sees past one layout.
+//! - **a step name** — the name of one step of the flow for the host; see
+//!   [step names](#step-names).
+//! - **extras** — labelled pieces of additional information reachable from
+//!   a review's screen; see [extras](#extras-and-the-way-out).
+//! - **a session** — one run of the app, from the host's request to its
+//!   response. A refusal ends it.
+//!
+//! # Layouts
+//!
+//! | Layout | Shows | Extras |
+//! |---|---|---|
+//! | [`review`] | facts to read before an answer | yes |
+//! | [`summary`] | a transfer's amount and fee, as the last yes | account, fee info |
+//! | [`verify_address`] | one of the person's own addresses | — |
+//! | [`verify_pubkey`] | one of the person's own public keys | — |
+//! | [`done`] | the end of the flow | — |
+//!
+//! A [`review`] is answered in one of four ways: [`Review::confirm`] is a tap,
+//! [`Review::confirm_strong`] a deliberate confirmation, drawn as a hold where
+//! the model has one, [`Review::confirm_danger`] a deliberate detour past what
+//! is risky, and [`Review::details`] offers "Show all" beside the yes. Each is
+//! an answer, not a layout of its own.
+//!
+//! A [`summary`] is a review with set roles, after core's own summary screen:
+//! the amount and the fee as its facts, the account and the fee's details as
+//! its extras, answered by [`Summary::confirm_strong`].
+//!
+//! A layout does not return until the person answers, except [`done`], which
+//! returns when its screen goes away.
+//!
+//! # Facts
+//!
+//! Every layout that asks takes its content as [`Field`]s. The constructor
+//! names what the value *is* — words, a sum, something to compare character
+//! by character, long text, a note, a warning — and core decides how that kind
+//! looks on every model: its styling, its grouping, its paging and its font.
+//! The app never picks a style, and one list may mix all six kinds.
+//!
+//! A [`text_source`](Field::text_source) field carries a length and a
+//! [`TextSource`] instead of the text: core pulls the text from the app range
+//! by range while the person pages, so a long text is never sent whole. For
+//! now the text has to come from the app itself: reading it from the host
+//! needs a protocol that does not exist yet; see [`TextSource`].
+//!
+//! # Outcomes
+//!
+//! What a layout returns depends on what kind of layout it is:
+//!
+//! - **[`review`]** (answered by `confirm`, `confirm_strong` or
+//!   `confirm_danger`), **[`summary`]**, **[`verify_address`]** and
+//!   **[`verify_pubkey`]** return `Result<()>`: `Ok(())` when the person said
+//!   yes, and `Err(`[`crate::Error::Cancelled`]`)` when they refused, by
+//!   whatever way out the model offers.
+//! - **[`done`]** returns nothing: it is the last screen of the flow.
+//! - **[`Review::details`]** returns `Result<`[`Details`]`>`: `Show` when the
+//!   person asked for the details, `Skip` when they accepted without them, and
+//!   `Err(Cancelled)` when they refused.
+//! - **A progress** ([`progress`], [`Progress`]) returns `Ok(())`, or the error
+//!   that kept it from reaching core.
+//!
+//! A cancel is an `Err` so that `?` stops the flow on it: nothing after the
+//! refused screen runs, and the host sees the session end with the person's
+//! refusal. Most screens must be a yes, so this is the case that should cost
+//! nothing to write and nothing to forget:
+//!
+//! ```text
+//! modui::review("send", "Send", &facts).confirm()?;
+//! ```
+//!
+//! A layout with more than one yes is matched after the `?`, so a refusal still
+//! ends the flow:
+//!
+//! ```text
+//! match modui::review("message", "Confirm message", &facts).details()? {
+//!     Details::Show => { /* the person wants the details */ }
+//!     Details::Skip => { /* they accepted without them */ }
+//! }
+//! ```
+//!
+//! How the person got there — which page they were on, whether they opened
+//! the extras, which button they pressed — is never reported: it happens in
+//! core, and only the layout's answer comes back.
+//!
+//! # Step names
+//!
+//! Every layout takes a *step name*: the name the host sees for every screen
+//! of that layout, relative to the app, such as `"send"` or `"approve/amount"`.
+//! Only the app knows its flow, so only the app can name its steps. Keep it
+//! stable across releases, and give each distinct step its own name — hosts and
+//! tests match on it.
+//!
+//! Core adds the app's identity in front, and the app should not: `"send"`
+//! reaches the host as `"tron.trezor.com/send"`. Screens that exist only
+//! because a review offered extras are named after the review, with `/menu` and
+//! `/details` appended.
+//!
+//! # Extras and the way out
+//!
+//! A [`review`] can take extras, a list of labelled facts the person may want
+//! to see, such as the account a payment comes from; see
+//! [`Review::extras`]. They travel with the review's request, and core presents
+//! them from the review's screen; looking at one comes back to the review as the
+//! person left it. How they are presented is core's, per model, and may change
+//! without any signature changing.
+//!
+//! The menu has room for a limited number of extras, which depends on the
+//! answer; see [`Review::extras`]. An extra with no facts is not offered at
+//! all. More is an `Err`; see [errors](#errors).
+//!
+//! Every layout can be refused, and that is never the app's to switch off: no
+//! layout takes `cancel`. Where the way out is drawn — on the screen, or in the
+//! extras on a model whose menu button takes its place — is the model's, and the
+//! app neither sees nor chooses it.
+//!
+//! # Long content
+//!
+//! Content can be longer than one screen, and two different things split it,
+//! each for its own reason:
+//!
+//! - **Streaming** is the firmware's, and exists because core's memory is
+//!   limited: the text of a [`Field::text_source`] never crosses whole. It
+//!   stays in the app's source, and core pulls it range by range while the
+//!   person pages, until they reach its end or refuse it.
+//! - **Pagination** is core's, and exists because the screen is small. Core
+//!   splits whatever one request carries across as many screens as it takes
+//!   — a screen holds a few hundred bytes at most, on the largest model — as
+//!   the person scrolls.
+//!
+//! Neither is the app's: an app describes the whole value once and gets one
+//! outcome, and never learns how many ranges or pages it took.
+//!
+//! # Progress
+//!
+//! Not everything the app shows waits for the person. While the app works —
+//! hashing, fetching, signing — it can hold up a progress bar, so the person
+//! sees that the device has not stalled. A progress is not a layout: it asks
+//! nothing, answers nothing, and never blocks.
+//!
+//! Every call describes the whole bar: its label, how much is done and of how
+//! much, in whatever unit the app counts. Nothing carries over from one call to
+//! the next, so there is nothing to start or end: the bar stays until the next
+//! screen takes its place. The percent is never the app's arithmetic: core
+//! computes it, and past the total the bar shows full. A total of `0` shows
+//! motion without a fill.
+//!
+//! [`progress`] shows one state. [`Progress`] is a local value that keeps the
+//! label and the count for one piece of work, and sends the whole state on
+//! every [`step`](Progress::step), [`set`](Progress::set) and
+//! [`label`](Progress::label).
+//!
+//! # Errors
+//!
+//! A layout's `Err` is [`crate::Error::Cancelled`] when the person refuses
+//! (see [outcomes](#outcomes)). What the library can tell before it asks — a
+//! review with no facts, more extras than the menu has room for, more than one
+//! `text_source` field in one list of facts, a `text_source` field in an extra,
+//! a summary with neither amount nor fee — is also an `Err`, and `?` ends the flow
+//! on it the same way: that is a mistake in the app, not a state to handle.
+//!
+//! A source whose `read` fails also ends the flow, but mid-review: the app gets
+//! the source's own error, not `Cancelled`.
+//!
+//! A request that cannot reach core, or whose answer cannot be read, is
+//! `Err(`[`crate::Error::ServiceError`]`)`; core asking the app to stop is
+//! `Err(`[`crate::Error::Stopped`]`)`. Both unwind to the app's entry point
+//! through `?` like any other error. A request core cannot draw ends the app:
+//! core checks the same limits again, and a request past them is a mistake in
+//! the app that only core may see.
+//!
+//! # Example
+//!
+//! ```no_run
+//! use trezor_app_sdk::Error;
+//! use trezor_app_sdk::modui::{self, Details, Field};
+//!
+//! // A sequence of layouts is just a sequence of calls. Cancelling any one of
+//! // them stops the flow, because a cancel is an `Err`.
+//! fn confirm_send(address: &str, amount: &str, fee: &str) -> trezor_app_sdk::Result<()> {
+//!     modui::review("send", "Send", &[Field::address("Recipient", address)]).confirm()?;
+//!
+//!     modui::summary("summary", "Send")
+//!         .amount("Amount", amount, "TRX")
+//!         .fee("Fee", fee, "TRX")
+//!         .confirm_strong()
+//! }
+//!
+//! // Or handle the cancel yourself, when leaving is not the end of the flow.
+//! fn offer_details(address: &str) -> trezor_app_sdk::Result<bool> {
+//!     match modui::review("send", "Send", &[Field::address("Recipient", address)]).details() {
+//!         Ok(Details::Show) => Ok(true),
+//!         Ok(Details::Skip) => Ok(false),
+//!         Err(Error::Cancelled) => Ok(false),
+//!         Err(e) => Err(e),
+//!     }
+//! }
+//! ```
+
+// For maintainers of this module; none of this is the app's concern.
+//
+// This module is compiled into every app, so it holds as little code as it
+// can: a layout puts its arguments into the `crate::traits::ui` request and
+// makes one `UiV1` call. Anything with behaviour — streaming, the menu, the
+// progress count, every default — is in the firmware: `core/embed/api` (which
+// runs on the app's task) or core. The limits are checked here as well, so that an app
+// gets an `Err` it can see rather than being stopped by core.
+//
+// One type per request, from the app to core. The request crosses the `UiV1`
+// vtable as is, `core/embed/api` serializes that same value, and core reads it
+// archived. Core runs the review's menu itself and replies once.
+//
+// So a new answer to a review means an `Answer` variant and its arm in core; a
+// new layout means a `traits::ui` type and its `TrezorUiEnumV1` variant, an arm in
+// core's dispatch, and the layout's function here. A `text_source` field
+// crosses as its length, and core pulls the text from the app's source while
+// the person pages.
+//
+// ButtonRequests: the app names the step and nothing else. Core prefixes the
+// app's identity, its image ID (`testapp.trezor.io`), and adds the `/menu` and
+// `/details` suffixes, the `ButtonRequestType`, page counts, and whether a
+// repeat is a new step.
+//
+// Layout: the public surface is this file plus one private module per layout
+// (`review`, `summary`, `verify`, `done`, `progress`), one for the facts they
+// show (`field`), and the wire call they share (`call`). A public file holds
+// only what an app may use — the layout's function and the types an app names
+// — so that reading a public file is reading the API.
+//
+// A layout file is dull on purpose: arguments in, one answer out, the wire
+// call in between. Anything cleverer belongs in the firmware, not here.
+// Each layout's own example lives on its function, where rustdoc shows it; the
+// private modules' `//!` docs are for maintainers. The re-exports below are
+// grouped by rustfmt (`group_imports`), so do not try to arrange them by hand.
+mod call;
+mod done;
+mod field;
+mod progress;
+mod review;
+mod summary;
+mod verify;
+
+pub use done::done;
+pub use field::{Field, TextSource};
+pub use progress::{Progress, progress};
+pub use review::{Details, Extra, Review, review};
+pub use summary::{Summary, summary};
+pub use verify::{verify_address, verify_pubkey};

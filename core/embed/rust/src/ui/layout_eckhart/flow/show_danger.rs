@@ -9,7 +9,7 @@ use super::super::theme;
 use crate::micropython::Error;
 use crate::strutil::TString;
 use crate::translations::TR;
-use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource};
+use crate::ui::component::text::paragraphs::{Paragraph, ParagraphSource, Paragraphs};
 use crate::ui::component::ComponentExt;
 use crate::ui::flow::base::{Decision, DecisionBuilder as _};
 use crate::ui::flow::{FlowController, FlowMsg, SwipeFlow};
@@ -54,8 +54,6 @@ pub fn new_show_danger(
     menu_title: Option<TString<'static>>,
     verb_cancel: Option<TString<'static>>,
 ) -> Result<SwipeFlow, Error> {
-    let verb_cancel = verb_cancel.unwrap_or(TR::buttons__cancel_and_exit.into());
-
     // Message
     let paragraphs = [
         Paragraph::new(&theme::TEXT_REGULAR, description),
@@ -64,6 +62,35 @@ pub fn new_show_danger(
     .into_paragraphs()
     .with_placement(LinearPlacement::vertical().with_spacing(theme::TEXT_VERTICAL_SPACING));
 
+    build(title, paragraphs, Some(1), menu_title, verb_cancel)
+}
+
+/// A danger whose message is an app's facts, paged by the screen.
+#[cfg(feature = "app_loading")]
+pub fn new_show_danger_fields(
+    title: TString<'static>,
+    fields: crate::ui::ui_modui::FieldList,
+) -> Result<SwipeFlow, Error> {
+    let paragraphs = fields
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical());
+    build(title, paragraphs, None, None, None)
+}
+
+/// The flow of a danger: the message, the menu to leave or continue anyway,
+/// and the cancelled screen on the way out.
+fn build<P>(
+    title: TString<'static>,
+    paragraphs: Paragraphs<P>,
+    page_limit: Option<u16>,
+    menu_title: Option<TString<'static>>,
+    verb_cancel: Option<TString<'static>>,
+) -> Result<SwipeFlow, Error>
+where
+    P: ParagraphSource<'static> + 'static,
+{
+    let verb_cancel = verb_cancel.unwrap_or(TR::buttons__cancel_and_exit.into());
+
     let content_message = TextScreen::new(paragraphs)
         .with_header(
             Header::new(title)
@@ -71,13 +98,16 @@ pub fn new_show_danger(
                 .with_icon(theme::ICON_INFO, theme::ORANGE)
                 .with_text_style(theme::label_title_danger()),
         )
-        .with_action_bar(ActionBar::new_single(Button::with_text(verb_cancel)))
-        .with_page_limit(1)
-        .map(|msg| match msg {
-            TextScreenMsg::Menu => Some(FlowMsg::Info),
-            TextScreenMsg::Confirmed => Some(FlowMsg::Cancelled),
-            _ => None,
-        });
+        .with_action_bar(ActionBar::new_single(Button::with_text(verb_cancel)));
+    let content_message = match page_limit {
+        Some(limit) => content_message.with_page_limit(limit),
+        None => content_message,
+    }
+    .map(|msg| match msg {
+        TextScreenMsg::Menu => Some(FlowMsg::Info),
+        TextScreenMsg::Confirmed => Some(FlowMsg::Cancelled),
+        _ => None,
+    });
 
     // Menu
     let content_menu = VerticalMenuScreen::new(

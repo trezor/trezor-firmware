@@ -46,7 +46,7 @@ pub mod traits;
 pub mod crypto;
 
 #[cfg(feature = "app")]
-pub mod ui;
+pub mod modui;
 
 #[cfg(feature = "app")]
 pub mod log;

@@ -15,6 +15,7 @@ from apps.common import paths
 
 from . import crypto, progress, ui, wire
 from .session import (
+    IPC_TIMEOUT_MS,
     LIFECYCLE_ABORT,
     SERVICE_CRYPTO,
     SERVICE_LIFECYCLE,
@@ -41,9 +42,6 @@ _SLIP44_ID = const(1)
 
 # how long the error screen stays up before the app's failure is reported
 _ERROR_POPUP_TIMEOUT_MS = const(2000)
-
-# how long Core waits for the app's next IPC message
-_IPC_TIMEOUT_MS = const(20000)
 
 # how long a stopped app has to exit on its own
 _STOP_TIMEOUT_MS = const(250)
@@ -87,9 +85,8 @@ async def run(request: ExtAppMessage) -> ExtAppResponse | None:
 async def _show_error(session: Session, exception: Exception) -> None:
     """Briefly show why the app was stopped."""
     try:
-        if session.progress is not None:
-            session.progress.stop()
-            session.progress = None
+        session.progress = None
+        session.progress_state = None
         # passed as a parameter so braces in the message aren't format fields
         with error_popup(
             TR.words__error,
@@ -188,7 +185,7 @@ async def _next_message(session: Session) -> IpcMessage | None:
             )
             msg = await loop.race(loop.wait(_IPC_EVENT), app_exit, host)
         else:
-            app_message = loop.wait(_IPC_EVENT, timeout_ms=_IPC_TIMEOUT_MS)
+            app_message = loop.wait(_IPC_EVENT, timeout_ms=IPC_TIMEOUT_MS)
             msg = await loop.race(app_message, app_exit)
 
         if msg is None:
@@ -210,7 +207,7 @@ async def _serve(session: Session, request: ExtAppMessage) -> ExtAppResponse | N
             msg = await _next_message(session)
         except loop.Timeout:
             session.die(
-                f"No message from app within {_IPC_TIMEOUT_MS} ms after service {last_service}"
+                f"No message from app within {IPC_TIMEOUT_MS} ms after service {last_service}"
             )
 
         if msg is None:
