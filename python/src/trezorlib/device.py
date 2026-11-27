@@ -635,11 +635,22 @@ def reboot_to_bootloader(
     session: Session,
     boot_command: messages.BootCommand = messages.BootCommand.STOP_AND_WAIT,
     firmware_header: bytes | None = None,
+    boot_header_prefix: bytes | None = None,
+    firmware_manifest_region: bytes | None = None,
 ) -> None:
+    """Reboot the device into its bootloader.
+
+    For ``INSTALL_UPGRADE`` pass the release the user confirms, so the bootloader
+    installs it without asking again: ``boot_header_prefix`` and
+    ``firmware_manifest_region`` (Merkle-tree layout: boot header prefix and
+    manifest + its proof) or ``firmware_header`` (CoSi: vendor header + image header).
+    """
     session.call(
         messages.RebootToBootloader(
             boot_command=boot_command,
             firmware_header=firmware_header,
+            boot_header_prefix=boot_header_prefix,
+            firmware_manifest_region=firmware_manifest_region,
         ),
         expect=messages.Success,
     )

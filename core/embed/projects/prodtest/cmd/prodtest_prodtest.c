@@ -22,7 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <sec/fwutils.h>
+#include <sys/bootutils.h>
 #include <sys/systick.h>
 
 #include "prodtest_error_codes.h"
@@ -82,13 +82,20 @@ static void prodtest_prodtest_wipe(cli_t* cli) {
   }
 #endif
 
-  cli_trace(cli, "Invalidating the production test firmware header...");
-  firmware_invalidate_header();
+  // The bootloader erases the firmware and user data and unprovisions the
+  // device (firmware cannot erase the area it runs from). Report OK before
+  // rebooting so the response reaches the host; OK means "wipe started".
+  cli_trace(cli, "Rebooting to wipe and unprovision the device...");
 
   const char msg[] = "WIPED";
   screen_prodtest_show_text(msg, strlen(msg));
 
   cli_ok(cli, "");
+  systick_delay_ms(1000);
+
+  bootutils_wipe_info_t info = {0};
+  info.unprovision = sectrue;
+  reboot_and_wipe(&info);
 }
 
 static void prodtest_homescreen(cli_t* cli) {

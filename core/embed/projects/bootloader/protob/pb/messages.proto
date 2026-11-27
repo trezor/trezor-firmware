@@ -17,6 +17,7 @@ enum MessageType {
     MessageType_ButtonAck = 27;
     MessageType_GetFeatures = 55;
     MessageType_UnlockBootloader = 96;
+    MessageType_FirmwareBegin = 106;
 
     // Debug
     MessageType_DebugLinkDecision = 100;
@@ -80,6 +81,22 @@ message Features {
     optional bool firmware_corrupted = 56;  // is firmware corrupted?
     optional bool usb_connected = 59;       // USB connected
     optional bool wireless_connected = 60;  // Wireless charger connected
+    // must match Features.firmware_scheme in common/protob/messages-management.proto
+    optional FirmwareScheme firmware_scheme = 65;
+    optional uint32 bootloader_code_major = 66;  // version of the bootloader code itself (pq_secure_boot only;
+    optional uint32 bootloader_code_minor = 67;  // major..build_version then report the installed release)
+    optional uint32 bootloader_code_patch = 68;
+    optional uint32 bootloader_code_build = 69;
+}
+
+enum FirmwareStream {
+    FirmwareStream_Primary = 0;  // the image the session's FirmwareBegin / FirmwareErase announced
+    FirmwareStream_Nrf = 1;      // nRF co-processor image (phase 1 only)
+}
+
+enum FirmwareScheme {
+    FirmwareScheme_Cosi = 0;      // vendor header + image header, signed with CoSi
+    FirmwareScheme_PqSecure = 1;  // Merkle-tree (pq_secure_boot)
 }
 
 /**
@@ -146,12 +163,30 @@ message FirmwareErase {
 }
 
 /**
+ * Request: Begin a pq_secure_boot firmware update (phase 1: authenticate,
+ * confirm, stage the boot header, reboot; phase 2 installs the modules)
+ * @start
+ * @next FirmwareRequest
+ */
+message FirmwareBegin {
+    required bytes boot_header = 1;     // new signed boot header (TRZQ)
+    required bytes firmware_manifest_region = 2;  // manifest (TRZD) + its Merkle proof up to firmware_root
+    optional uint32 bootloader_code_length = 3;  // new bootloader code available to stream; omit/0 => header-only
+    optional bytes bootloader_code_hash = 4;     // SHA-256 of that code, lets the header signature be checked
+                                                 // before the stream; required iff bootloader_code_length > 0
+    optional uint32 nrf_length = 5;     // nRF MCUboot image bytes available to stream; omit/0 => no nRF update
+    optional bytes nrf_co_path = 6;     // model-tree co-path (nRF leaf -> modelRoot), 32*depth bytes
+    optional bytes nrf_image_hash = 7;  // SHA-256 of the nRF image (update-required hint); fold-verified on device
+}
+
+/**
  * Response: Ask for firmware chunk
  * @next FirmwareUpload
  */
 message FirmwareRequest {
-    required uint32 offset = 1;  // offset of requested firmware chunk
-    required uint32 length = 2;  // length of requested firmware chunk
+    required uint32 offset = 1;             // offset of requested firmware chunk
+    required uint32 length = 2;             // length of requested firmware chunk
+    optional FirmwareStream stream = 3;     // image the chunk belongs to; absent means Primary
 }
 
 /**
@@ -161,8 +196,10 @@ message FirmwareRequest {
  * @next Failure
  */
 message FirmwareUpload {
-    required bytes payload = 1;  // firmware to be loaded into device
-    optional bytes hash = 2;     // hash of the payload
+    required bytes payload = 1;    // firmware to be loaded into device
+    optional bytes hash = 2;       // hash of the payload
+    optional bytes prev_hash = 3;  // pq_secure_boot: chain H_prev after this block (absent for a module's last
+                                   // block and for the header block)
 }
 
 /**

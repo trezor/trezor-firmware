@@ -111,6 +111,11 @@ class RequestType(IntEnum):
     TXPAYMENTREQ = 7
 
 
+class FirmwareStream(IntEnum):
+    Primary = 0
+    Nrf = 1
+
+
 class CardanoDerivationType(IntEnum):
     LEDGER = 0
     ICARUS = 1
@@ -233,6 +238,11 @@ class RecoveryType(IntEnum):
     NormalRecovery = 0
     DryRun = 1
     UnlockRepeatedBackup = 2
+
+
+class FirmwareScheme(IntEnum):
+    Cosi = 0
+    PqSecure = 1
 
 
 class BackupAvailability(IntEnum):
@@ -598,6 +608,7 @@ class MessageType(IntEnum):
     FirmwareUpload = 7
     FirmwareRequest = 8
     ProdTestT1 = 32
+    FirmwareBegin = 106
     BleUnpair = 8001
     GetPublicKey = 11
     PublicKey = 12
@@ -2197,11 +2208,44 @@ class FirmwareErase(protobuf.MessageType):
         self.length = length
 
 
+class FirmwareBegin(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 106
+    FIELDS = {
+        1: protobuf.Field("boot_header", "bytes", repeated=False, required=True),
+        2: protobuf.Field("firmware_manifest_region", "bytes", repeated=False, required=True),
+        3: protobuf.Field("bootloader_code_length", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("bootloader_code_hash", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("nrf_length", "uint32", repeated=False, required=False, default=None),
+        6: protobuf.Field("nrf_co_path", "bytes", repeated=False, required=False, default=None),
+        7: protobuf.Field("nrf_image_hash", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        boot_header: bytes,
+        firmware_manifest_region: bytes,
+        bootloader_code_length: int | None = None,
+        bootloader_code_hash: bytes | None = None,
+        nrf_length: int | None = None,
+        nrf_co_path: bytes | None = None,
+        nrf_image_hash: bytes | None = None,
+    ) -> None:
+        self.boot_header = boot_header
+        self.firmware_manifest_region = firmware_manifest_region
+        self.bootloader_code_length = bootloader_code_length
+        self.bootloader_code_hash = bootloader_code_hash
+        self.nrf_length = nrf_length
+        self.nrf_co_path = nrf_co_path
+        self.nrf_image_hash = nrf_image_hash
+
+
 class FirmwareRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 8
     FIELDS = {
         1: protobuf.Field("offset", "uint32", repeated=False, required=True),
         2: protobuf.Field("length", "uint32", repeated=False, required=True),
+        3: protobuf.Field("stream", "FirmwareStream", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -2209,9 +2253,11 @@ class FirmwareRequest(protobuf.MessageType):
         *,
         offset: int,
         length: int,
+        stream: FirmwareStream | None = None,
     ) -> None:
         self.offset = offset
         self.length = length
+        self.stream = stream
 
 
 class FirmwareUpload(protobuf.MessageType):
@@ -2219,6 +2265,7 @@ class FirmwareUpload(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("payload", "bytes", repeated=False, required=True),
         2: protobuf.Field("hash", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("prev_hash", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -2226,9 +2273,11 @@ class FirmwareUpload(protobuf.MessageType):
         *,
         payload: bytes,
         hash: bytes | None = None,
+        prev_hash: bytes | None = None,
     ) -> None:
         self.payload = payload
         self.hash = hash
+        self.prev_hash = prev_hash
 
 
 class ProdTestT1(protobuf.MessageType):
@@ -3383,6 +3432,11 @@ class Features(protobuf.MessageType):
         60: protobuf.Field("wireless_connected", "bool", repeated=False, required=False, default=None),
         63: protobuf.Field("tap_to_wake", "bool", repeated=False, required=False, default=None),
         64: protobuf.Field("max_passphrase_len", "uint32", repeated=False, required=False, default=50),
+        65: protobuf.Field("firmware_scheme", "FirmwareScheme", repeated=False, required=False, default=None),
+        66: protobuf.Field("bootloader_code_major", "uint32", repeated=False, required=False, default=None),
+        67: protobuf.Field("bootloader_code_minor", "uint32", repeated=False, required=False, default=None),
+        68: protobuf.Field("bootloader_code_patch", "uint32", repeated=False, required=False, default=None),
+        69: protobuf.Field("bootloader_code_build", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3450,6 +3504,11 @@ class Features(protobuf.MessageType):
         wireless_connected: bool | None = None,
         tap_to_wake: bool | None = None,
         max_passphrase_len: int | None = 50,
+        firmware_scheme: FirmwareScheme | None = None,
+        bootloader_code_major: int | None = None,
+        bootloader_code_minor: int | None = None,
+        bootloader_code_patch: int | None = None,
+        bootloader_code_build: int | None = None,
     ) -> None:
         self.capabilities: Sequence[Capability] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3513,6 +3572,11 @@ class Features(protobuf.MessageType):
         self.wireless_connected = wireless_connected
         self.tap_to_wake = tap_to_wake
         self.max_passphrase_len = max_passphrase_len
+        self.firmware_scheme = firmware_scheme
+        self.bootloader_code_major = bootloader_code_major
+        self.bootloader_code_minor = bootloader_code_minor
+        self.bootloader_code_patch = bootloader_code_patch
+        self.bootloader_code_build = bootloader_code_build
 
 
 class LockDevice(protobuf.MessageType):
@@ -4159,6 +4223,8 @@ class RebootToBootloader(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("boot_command", "BootCommand", repeated=False, required=False, default=BootCommand.STOP_AND_WAIT),
         2: protobuf.Field("firmware_header", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("boot_header_prefix", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("firmware_manifest_region", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4166,9 +4232,13 @@ class RebootToBootloader(protobuf.MessageType):
         *,
         boot_command: BootCommand | None = BootCommand.STOP_AND_WAIT,
         firmware_header: bytes | None = None,
+        boot_header_prefix: bytes | None = None,
+        firmware_manifest_region: bytes | None = None,
     ) -> None:
         self.boot_command = boot_command
         self.firmware_header = firmware_header
+        self.boot_header_prefix = boot_header_prefix
+        self.firmware_manifest_region = firmware_manifest_region
 
 
 class GetNonce(protobuf.MessageType):

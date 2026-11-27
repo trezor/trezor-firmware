@@ -26,6 +26,7 @@
 #include "bootui.h"
 #include "rust_ui_bootloader.h"
 #include "version.h"
+#include "version_check.h"
 
 // common shared functions
 
@@ -60,7 +61,7 @@ void ui_screen_boot(const fw_ui_info_t *const info, int wait) {
 uint32_t ui_screen_intro(const fw_ui_info_t *const info, bool fw_ok) {
   char bld_ver[VERSION_STRING_LEN];
   char ver_str[VERSION_STRING_LEN];
-  format_ver(VERSION_UINT32, bld_ver, sizeof(bld_ver));
+  format_ver(bootloader_reported_version(), bld_ver, sizeof(bld_ver));
   format_ver(info->version, ver_str, sizeof(ver_str));
 
   return screen_intro(bld_ver, info->vendor_str, info->vendor_str_len, ver_str,
@@ -85,6 +86,21 @@ confirm_result_t ui_screen_install_confirm(const vendor_header *const vhdr,
                                 is_newvendor == sectrue,
                                 is_newinstall == sectrue, version_cmp);
 }
+
+#ifdef USE_BOOT_UCB
+confirm_result_t ui_screen_install_confirm_bootloader(
+    uint32_t fw_version, const uint8_t *const fingerprint,
+    secbool should_keep_seed, secbool is_newvendor, secbool is_newinstall,
+    int version_cmp, const char *vendor, size_t vendor_len) {
+  char ver_str[VERSION_STRING_LEN];
+  format_ver(fw_version, ver_str, sizeof(ver_str));
+  // Reuses the firmware install-confirm screen; !keep_seed shows the erase
+  // warning.
+  return screen_install_confirm(
+      vendor, vendor_len, ver_str, fingerprint, should_keep_seed == sectrue,
+      is_newvendor == sectrue, is_newinstall == sectrue, version_cmp);
+}
+#endif
 
 void ui_screen_install_start(bool wireless) {
   screen_install_progress(0, true, initial_setup, wireless);

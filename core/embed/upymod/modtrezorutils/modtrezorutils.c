@@ -68,6 +68,10 @@
 #include <io/nrf.h>
 #endif
 
+#ifdef PQ_SECURE_BOOT
+#include <sec/tree_update.h>
+#endif
+
 #ifndef TREZOR_EMULATOR
 #include <sys/stack_utils.h>
 #endif
@@ -262,7 +266,8 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_firmware_hash_obj, 0,
 
 /// def firmware_vendor() -> str:
 ///     """
-///     Returns the firmware vendor string from the vendor header.
+///     Returns the firmware vendor string (CoSi: from the vendor header;
+///     Merkle tree: derived from the boot header's firmware_type).
 ///     """
 static mp_obj_t mod_trezorutils_firmware_vendor(void) {
 #ifdef TREZOR_EMULATOR
@@ -654,40 +659,88 @@ static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_reboot_obj,
 
 /// class FirmwareHeaderInfo(NamedTuple):
 ///     version: VersionTuple
+///     display_version: VersionTuple
 ///     vendor: str
 ///     fingerprint: AnyBytes
 ///     hash: AnyBytes
 
 /// mock:global
 
-/// def check_firmware_header(header : AnyBytes) -> FirmwareHeaderInfo:
-///     """Parses incoming firmware header and returns information about it."""
-static mp_obj_t mod_trezorutils_check_firmware_header(mp_obj_t header) {
+/// def check_firmware_update(
+///     header: AnyBytes, manifest: AnyBytes | None = None
+/// ) -> FirmwareHeaderInfo:
+///     """Parses the header of an offered firmware update and returns
+///     information about it.
+///
+///     CoSi: `header` is the vendor header + image header, no `manifest`.
+///     Merkle tree: `header` is the boot header prefix (without signatures)
+///     and `manifest` the firmware manifest region; `fingerprint` is the
+///     firmware_root and `hash` the consent digest for `reboot_and_upgrade`.
+///     `version` is the release version upgrade decisions compare,
+///     `display_version` the offered variant's own version, the one to show;
+///     they differ only for custom and prodtest variants.
+///     """
+static mp_obj_t mod_trezorutils_check_firmware_update(size_t n_args,
+                                                      const mp_obj_t *args) {
   mp_buffer_info_t header_buf = {0};
-  mp_get_buffer_raise(header, &header_buf, MP_BUFFER_READ);
+  mp_get_buffer_raise(args[0], &header_buf, MP_BUFFER_READ);
+  const bool has_manifest = n_args > 1 && args[1] != mp_const_none;
 
-  firmware_header_info_t info;
-
-  if (sectrue == check_firmware_header(header_buf.buf, header_buf.len, &info)) {
-    mp_obj_t version[4] = {
-        mp_obj_new_int(info.ver_major), mp_obj_new_int(info.ver_minor),
-        mp_obj_new_int(info.ver_patch), mp_obj_new_int(info.ver_build)};
-
-    static const qstr fields[4] = {MP_QSTR_version, MP_QSTR_vendor,
-                                   MP_QSTR_fingerprint, MP_QSTR_hash};
-    const mp_obj_t values[4] = {
-        mp_obj_new_tuple(MP_ARRAY_SIZE(version), version),
-        mp_obj_new_str_copy(&mp_type_str, info.vstr, info.vstr_len),
-        mp_obj_new_bytes(info.fingerprint, sizeof(info.fingerprint)),
-        mp_obj_new_bytes(info.hash, sizeof(info.hash))};
-    return mp_obj_new_attrtuple(fields, MP_ARRAY_SIZE(fields), values);
+#ifdef PQ_SECURE_BOOT
+  if (!has_manifest) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
   }
+  mp_buffer_info_t manifest_buf = {0};
+  mp_get_buffer_raise(args[1], &manifest_buf, MP_BUFFER_READ);
+  tree_update_info_t info;
+  if (sectrue != tree_update_check(header_buf.buf, header_buf.len,
+                                   manifest_buf.buf, manifest_buf.len, &info)) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
+  }
+  const uint8_t *version = info.version;
+  const uint8_t *display_version = info.firmware_version;
+  const uint8_t *fingerprint = info.firmware_root.bytes;
+  const size_t fingerprint_len = sizeof(info.firmware_root.bytes);
+  const uint8_t *hash = info.consent_digest.bytes;
+  const size_t hash_len = sizeof(info.consent_digest.bytes);
+#else
+  if (has_manifest) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
+  }
+  firmware_header_info_t info;
+  if (sectrue != check_firmware_header(header_buf.buf, header_buf.len, &info)) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
+  }
+  const uint8_t version[4] = {info.ver_major, info.ver_minor, info.ver_patch,
+                              info.ver_build};
+  const uint8_t *display_version = version;
+  const uint8_t *fingerprint = info.fingerprint;
+  const size_t fingerprint_len = sizeof(info.fingerprint);
+  const uint8_t *hash = info.hash;
+  const size_t hash_len = sizeof(info.hash);
+#endif
 
-  mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
+  mp_obj_t ver[4] = {mp_obj_new_int(version[0]), mp_obj_new_int(version[1]),
+                     mp_obj_new_int(version[2]), mp_obj_new_int(version[3])};
+  mp_obj_t display_ver[4] = {
+      mp_obj_new_int(display_version[0]), mp_obj_new_int(display_version[1]),
+      mp_obj_new_int(display_version[2]), mp_obj_new_int(display_version[3])};
+
+  static const qstr fields[5] = {MP_QSTR_version, MP_QSTR_display_version,
+                                 MP_QSTR_vendor, MP_QSTR_fingerprint,
+                                 MP_QSTR_hash};
+  const mp_obj_t values[5] = {
+      mp_obj_new_tuple(MP_ARRAY_SIZE(ver), ver),
+      mp_obj_new_tuple(MP_ARRAY_SIZE(display_ver), display_ver),
+      mp_obj_new_str_copy(&mp_type_str, info.vstr, info.vstr_len),
+      mp_obj_new_bytes(fingerprint, fingerprint_len),
+      mp_obj_new_bytes(hash, hash_len)};
+  return mp_obj_new_attrtuple(fields, MP_ARRAY_SIZE(fields), values);
 }
 
-static MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_check_firmware_header_obj,
-                                 mod_trezorutils_check_firmware_header);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+    mod_trezorutils_check_firmware_update_obj, 1, 2,
+    mod_trezorutils_check_firmware_update);
 
 /// def bootloader_locked() -> bool | None:
 ///     """
@@ -865,6 +918,8 @@ static const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether the hardware supports BLE."""
 /// USE_NFC: bool
 /// """Whether the hardware supports NFC."""
+/// USE_PQ_SECURE_BOOT: bool
+/// """Whether this build uses the Merkle-tree (pq_secure_boot) image layout."""
 /// USE_SD_CARD: bool
 /// """Whether the hardware supports SD card."""
 /// USE_SERIAL_NUMBER: bool
@@ -969,8 +1024,8 @@ static const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_reboot_to_bootloader),
      MP_ROM_PTR(&mod_trezorutils_reboot_to_bootloader_obj)},
     {MP_ROM_QSTR(MP_QSTR_reboot), MP_ROM_PTR(&mod_trezorutils_reboot_obj)},
-    {MP_ROM_QSTR(MP_QSTR_check_firmware_header),
-     MP_ROM_PTR(&mod_trezorutils_check_firmware_header_obj)},
+    {MP_ROM_QSTR(MP_QSTR_check_firmware_update),
+     MP_ROM_PTR(&mod_trezorutils_check_firmware_update_obj)},
     {MP_ROM_QSTR(MP_QSTR_bootloader_locked),
      MP_ROM_PTR(&mod_trezorutils_bootloader_locked_obj)},
     {MP_ROM_QSTR(MP_QSTR_notify_send),
@@ -1087,6 +1142,11 @@ static const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_NFC), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_NFC), mp_const_false},
+#endif
+#ifdef PQ_SECURE_BOOT
+    {MP_ROM_QSTR(MP_QSTR_USE_PQ_SECURE_BOOT), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_PQ_SECURE_BOOT), mp_const_false},
 #endif
 #ifdef USE_BACKLIGHT
     {MP_ROM_QSTR(MP_QSTR_USE_BACKLIGHT), mp_const_true},

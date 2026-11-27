@@ -30,8 +30,10 @@
 LOG_DECLARE(emulator)
 
 #undef FIRMWARE_START
+#undef BOOTLOADER_START
 
 uintptr_t FIRMWARE_START = 0;
+uintptr_t BOOTLOADER_START = 0;
 
 int bootloader_main(void);
 
@@ -64,8 +66,10 @@ void usage(void) {
   printf("  -c COLOR_VARIANT  set color variant\n");
   printf("  -b BITCOIN_ONLY  set bitcoin only flag\n");
   printf("  -i IMAGE_FILE  path to firmware image file to be used\n");
+#ifndef PQ_SECURE_BOOT
   printf(
       "  -f FIRMWARE  run interaction-less update for the specified image\n");
+#endif
 #ifdef LOCKABLE_BOOTLOADER
   printf("  -l  lock bootloader\n");
 #endif
@@ -83,6 +87,9 @@ void usage(void) {
   printf("TREZOR_EMULATOR_FAST_EXIT=1 skips the delays before exiting.\n");
 }
 
+#ifndef PQ_SECURE_BOOT
+// CoSi layout only: a Merkle-tree install is authorized by the consent
+// digest, not by a hash of the vendor and image headers.
 bool load_firmware(const char *filename, uint8_t *hash) {
   // read the first 6 kB of firmware file into a buffer
   FILE *file = fopen(filename, "rb");
@@ -119,6 +126,7 @@ bool load_firmware(const char *filename, uint8_t *hash) {
 
   return true;
 }
+#endif
 
 bool preload_firmware_image(const char *filename) {
   static uint8_t fw_buffer[FIRMWARE_MAXSIZE];
@@ -209,6 +217,7 @@ int main(int argc, char **argv) {
   flash_otp_init();
 
   FIRMWARE_START = (uintptr_t)flash_area_get_address(&FIRMWARE_AREA, 0, 0);
+  BOOTLOADER_START = (uintptr_t)flash_area_get_address(&BOOTLOADER_AREA, 0, 0);
 
   bool display_error = false;
   uint8_t set_variant = 0xff;
@@ -273,6 +282,7 @@ int main(int argc, char **argv) {
           exit(BOOTUTILS_EMU_EXIT_USAGE);
         }
       } break;
+#ifndef PQ_SECURE_BOOT
       case 'f': {
         uint8_t hash[BLAKE2S_DIGEST_LENGTH];
         if (!load_firmware(optarg, hash)) {
@@ -280,6 +290,7 @@ int main(int argc, char **argv) {
         }
         bootargs_set(BOOT_COMMAND_INSTALL_UPGRADE, hash, sizeof(hash));
       } break;
+#endif
 
 #ifdef LOCKABLE_BOOTLOADER
       case 'l':

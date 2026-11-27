@@ -35,6 +35,7 @@
 #endif
 
 #include "../version.h"
+#include "../version_check.h"
 #include "memzero.h"
 #include "pb/messages.pb.h"
 #include "protob.h"
@@ -67,10 +68,19 @@ secbool send_msg_success(protob_io_t *iface, const char *msg) {
 secbool send_msg_features(protob_io_t *iface, const fw_check_info_t *fw) {
   MSG_SEND_INIT(Features);
   MSG_SEND_ASSIGN_STRING(vendor, "trezor.io");
-  MSG_SEND_ASSIGN_REQUIRED_VALUE(major_version, VERSION_MAJOR);
-  MSG_SEND_ASSIGN_REQUIRED_VALUE(minor_version, VERSION_MINOR);
-  MSG_SEND_ASSIGN_REQUIRED_VALUE(patch_version, VERSION_PATCH);
-  MSG_SEND_ASSIGN_VALUE(build_version, VERSION_BUILD);
+  // The installed release under pq_secure_boot (see
+  // bootloader_reported_version); the code's own version goes separately.
+  const uint32_t version = bootloader_reported_version();
+  MSG_SEND_ASSIGN_REQUIRED_VALUE(major_version, version & 0xFF);
+  MSG_SEND_ASSIGN_REQUIRED_VALUE(minor_version, (version >> 8) & 0xFF);
+  MSG_SEND_ASSIGN_REQUIRED_VALUE(patch_version, (version >> 16) & 0xFF);
+  MSG_SEND_ASSIGN_VALUE(build_version, (version >> 24) & 0xFF);
+#ifdef PQ_SECURE_BOOT
+  MSG_SEND_ASSIGN_VALUE(bootloader_code_major, VERSION_MAJOR);
+  MSG_SEND_ASSIGN_VALUE(bootloader_code_minor, VERSION_MINOR);
+  MSG_SEND_ASSIGN_VALUE(bootloader_code_patch, VERSION_PATCH);
+  MSG_SEND_ASSIGN_VALUE(bootloader_code_build, VERSION_BUILD);
+#endif
   MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
   MSG_SEND_ASSIGN_STRING(model, MODEL_NAME);
   MSG_SEND_ASSIGN_STRING(internal_model, MODEL_INTERNAL_NAME);
@@ -102,6 +112,14 @@ secbool send_msg_features(protob_io_t *iface, const fw_check_info_t *fw) {
 #if LOCKABLE_BOOTLOADER
   MSG_SEND_ASSIGN_VALUE(bootloader_locked,
                         (secret_bootloader_locked() == sectrue));
+#endif
+
+  // Always reported; an absent field means a bootloader predating it.
+#ifdef PQ_SECURE_BOOT
+  MSG_SEND_ASSIGN_VALUE(firmware_scheme,
+                        FirmwareScheme_FirmwareScheme_PqSecure);
+#else
+  MSG_SEND_ASSIGN_VALUE(firmware_scheme, FirmwareScheme_FirmwareScheme_Cosi);
 #endif
 
 #ifdef USE_POWER_MANAGER
@@ -152,10 +170,14 @@ secbool recv_msg_firmware_erase(protob_io_t *iface, FirmwareErase *msg) {
 }
 
 secbool send_msg_request_firmware(protob_io_t *iface, uint32_t offset,
-                                  uint32_t length) {
+                                  uint32_t length, FirmwareStream stream) {
   MSG_SEND_INIT(FirmwareRequest);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, offset);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(length, length);
+  // The primary stream is the default, omitted on the wire.
+  if (stream != FirmwareStream_FirmwareStream_Primary) {
+    MSG_SEND_ASSIGN_VALUE(stream, stream);
+  }
   return MSG_SEND(FirmwareRequest);
 }
 
@@ -209,6 +231,64 @@ secbool recv_msg_firmware_upload(protob_io_t *iface, FirmwareUpload *msg,
   memcpy(msg, &msg_recv, sizeof(FirmwareUpload));
   return result;
 }
+
+#ifdef PQ_SECURE_BOOT
+typedef struct {
+  uint8_t *buffer;
+  size_t buffer_size;
+  size_t len;  // out: number of bytes decoded into buffer
+} buf_ctx_t;
+
+// Decodes a bytes field straight into a caller-provided buffer.
+static bool read_into_buffer(pb_istream_t *stream, const pb_field_t *field,
+                             void **arg) {
+  (void)field;
+  buf_ctx_t *c = (buf_ctx_t *)*arg;
+  if (stream->bytes_left > c->buffer_size) {
+    return false;
+  }
+  c->len = stream->bytes_left;
+  return pb_read(stream, (pb_byte_t *)c->buffer, stream->bytes_left);
+}
+
+secbool recv_msg_firmware_begin(protob_io_t *iface, FirmwareBegin *msg,
+                                uint8_t *bh_buf, size_t bh_size, size_t *bh_len,
+                                uint8_t *manifest_buf, size_t manifest_size,
+                                size_t *manifest_len, uint8_t *ch_buf,
+                                size_t ch_size, size_t *ch_len,
+                                firmware_begin_nrf_t *nrf) {
+  buf_ctx_t bh_ctx = {.buffer = bh_buf, .buffer_size = bh_size, .len = 0};
+  buf_ctx_t manifest_ctx = {
+      .buffer = manifest_buf, .buffer_size = manifest_size, .len = 0};
+  buf_ctx_t ch_ctx = {.buffer = ch_buf, .buffer_size = ch_size, .len = 0};
+  buf_ctx_t cp_ctx = {0};
+  buf_ctx_t ih_ctx = {0};
+
+  MSG_RECV_INIT(FirmwareBegin);
+  MSG_RECV_CALLBACK(boot_header, read_into_buffer, &bh_ctx);
+  MSG_RECV_CALLBACK(firmware_manifest_region, read_into_buffer, &manifest_ctx);
+  MSG_RECV_CALLBACK(bootloader_code_hash, read_into_buffer, &ch_ctx);
+  if (nrf != NULL) {
+    cp_ctx.buffer = nrf->co_path_buf;
+    cp_ctx.buffer_size = nrf->co_path_size;
+    ih_ctx.buffer = nrf->image_hash_buf;
+    ih_ctx.buffer_size = nrf->image_hash_size;
+    MSG_RECV_CALLBACK(nrf_co_path, read_into_buffer, &cp_ctx);
+    MSG_RECV_CALLBACK(nrf_image_hash, read_into_buffer, &ih_ctx);
+  }
+  secbool result = MSG_RECV(FirmwareBegin);
+  memcpy(msg, &msg_recv, sizeof(FirmwareBegin));
+  *bh_len = bh_ctx.len;
+  *manifest_len = manifest_ctx.len;
+  *ch_len = ch_ctx.len;
+  if (nrf != NULL) {
+    nrf->co_path_len = cp_ctx.len;
+    nrf->image_hash_len = ih_ctx.len;
+  }
+  return result;
+}
+
+#endif
 
 void recv_msg_unknown(protob_io_t *iface) {
   codec_flush(iface->wire, iface->msg_size, iface->buf);

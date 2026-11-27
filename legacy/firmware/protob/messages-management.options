@@ -52,3 +52,5 @@ UnlockPath.mac                          max_size:32
 UnlockedPathRequest.mac                 max_size:32
 
 RebootToBootloader.firmware_header      type:FT_IGNORE
+RebootToBootloader.boot_header_prefix   type:FT_IGNORE
+RebootToBootloader.firmware_manifest_region type:FT_IGNORE

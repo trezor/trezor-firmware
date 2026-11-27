@@ -33,6 +33,9 @@
 void bootargs_get_args(boot_args_t *args) {
   smcall_invoke1((uint32_t)args, SMCALL_BOOTARGS_GET_ARGS);
 }
+
+#ifndef PQ_SECURE_BOOT
+
 // =============================================================================
 // boot_image.h
 // =============================================================================
@@ -46,6 +49,8 @@ bool boot_image_check(const boot_image_t *image) {
 void boot_image_replace(const boot_image_t *image) {
   smcall_invoke1((uint32_t)image, SMCALL_BOOT_IMAGE_REPLACE);
 }
+
+#endif  // PQ_SECURE_BOOT
 
 // =============================================================================
 // board_capabilities.h

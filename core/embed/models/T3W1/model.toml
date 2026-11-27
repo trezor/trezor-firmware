@@ -30,3 +30,8 @@ features = [
     "layout_eckhart",
     "display_rgba8888",
 ]
+
+# Without pq_secure_boot the kernel pushes the nRF firmware and the bootloader
+# does not need SMP. Exclude it from the kernel instead under pq_secure_boot.
+[project_overrides.bootloader]
+exclude = ["smp"]

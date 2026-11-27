@@ -67,7 +67,8 @@ def firmware_hash(
 # upymod/modtrezorutils/modtrezorutils.c
 def firmware_vendor() -> str:
     """
-    Returns the firmware vendor string from the vendor header.
+    Returns the firmware vendor string (CoSi: from the vendor header;
+    Merkle tree: derived from the boot header's firmware_type).
     """
 
 
@@ -200,14 +201,27 @@ VersionTuple = Tuple[int, int, int, int]
 # upymod/modtrezorutils/modtrezorutils.c
 class FirmwareHeaderInfo(NamedTuple):
     version: VersionTuple
+    display_version: VersionTuple
     vendor: str
     fingerprint: AnyBytes
     hash: AnyBytes
 
 
 # upymod/modtrezorutils/modtrezorutils.c
-def check_firmware_header(header : AnyBytes) -> FirmwareHeaderInfo:
-    """Parses incoming firmware header and returns information about it."""
+def check_firmware_update(
+    header: AnyBytes, manifest: AnyBytes | None = None
+) -> FirmwareHeaderInfo:
+    """Parses the header of an offered firmware update and returns
+    information about it.
+
+    CoSi: `header` is the vendor header + image header, no `manifest`.
+    Merkle tree: `header` is the boot header prefix (without signatures)
+    and `manifest` the firmware manifest region; `fingerprint` is the
+    firmware_root and `hash` the consent digest for `reboot_and_upgrade`.
+    `version` is the release version upgrade decisions compare,
+    `display_version` the offered variant's own version, the one to show;
+    they differ only for custom and prodtest variants.
+    """
 
 
 # upymod/modtrezorutils/modtrezorutils.c
@@ -258,6 +272,8 @@ USE_BLE: bool
 """Whether the hardware supports BLE."""
 USE_NFC: bool
 """Whether the hardware supports NFC."""
+USE_PQ_SECURE_BOOT: bool
+"""Whether this build uses the Merkle-tree (pq_secure_boot) image layout."""
 USE_SD_CARD: bool
 """Whether the hardware supports SD card."""
 USE_SERIAL_NUMBER: bool

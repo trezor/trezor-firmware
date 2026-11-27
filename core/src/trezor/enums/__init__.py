@@ -205,6 +205,10 @@ if TYPE_CHECKING:
         DryRun = 1
         UnlockRepeatedBackup = 2
 
+    class FirmwareScheme(IntEnum):
+        Cosi = 0
+        PqSecure = 1
+
     class BackupAvailability(IntEnum):
         NotAvailable = 0
         Required = 1
@@ -535,6 +539,7 @@ if TYPE_CHECKING:
         FirmwareUpload = 7
         FirmwareRequest = 8
         ProdTestT1 = 32
+        FirmwareBegin = 106
         BleUnpair = 8001
         GetPublicKey = 11
         PublicKey = 12
