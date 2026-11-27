@@ -87,7 +87,7 @@ bootloader code, not the release.
 `fix_version` and `min_prev_version` are compared against `version`, so they are
 release numbers too, also stamped at sign time. Both are read from
 `projects/firmware/version.h`, next to the version they are compared against:
-`FIX_VERSION` (the storage-format floor the legacy image header carries) and
+`FIX_VERSION` (the storage-format floor the CoSi image header carries) and
 `MIN_PREV_VERSION` (0.0.0.0 = no floor).
 
 The bootloader relies on this in three places:
