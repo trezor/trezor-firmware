@@ -164,12 +164,11 @@ struct image_upload_handler {
    *  FLASH_BLOCK_SIZE-aligned and <= block_size. Set STATICALLY (used before
    *  on_headers runs), unlike block_size. */
   uint32_t init_chunk_size;
-  /** Image index sent in every FirmwareRequest so the host knows which image
-   *  these chunks are for: 0 (default) = the primary stream (bootloader code /
-   *  firmware); 1 = the nRF image (NRF_OTA_REQUEST_INDEX). A routing tag rather
-   *  than an index into a list -- FirmwareBegin has no co-processor array -- so
-   *  one phase-1 session can stream several images (bl code + the nRF). */
-  uint32_t request_index;
+  /** FirmwareRequest.stream sent with every request so the host knows which
+   *  image these chunks are for: Primary (zero, the default: bootloader code /
+   *  firmware) or Nrf. Lets one phase-1 session stream several images (bl
+   *  code + the nRF). */
+  FirmwareStream stream;
   /** Workflow result returned on a successful upload. */
   workflow_result_t success_result;
   /** If true, the engine does NOT send the terminal wire Success on completion

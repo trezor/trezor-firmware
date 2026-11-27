@@ -256,10 +256,9 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
     e->chunk_expected = MIN(e->block_size, seg0_end - e->stream_offset);
     if (e->chunk_size < e->chunk_expected) {
       e->read_offset = e->chunk_size;
-      if (sectrue !=
-          send_msg_request_firmware(iface, e->stream_offset + e->read_offset,
-                                    e->chunk_expected - e->read_offset,
-                                    handler->request_index)) {
+      if (sectrue != send_msg_request_firmware(
+                         iface, e->stream_offset + e->read_offset,
+                         e->chunk_expected - e->read_offset, handler->stream)) {
         return UPLOAD_ERR_COMMUNICATION;
       }
       return UPLOAD_IN_PROGRESS;
@@ -320,7 +319,7 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
 
       if (sectrue != send_msg_request_firmware(iface, image_off,
                                                e->chunk_expected,
-                                               handler->request_index)) {
+                                               handler->stream)) {
         return UPLOAD_ERR_COMMUNICATION;
       }
       return UPLOAD_IN_PROGRESS;
@@ -367,7 +366,7 @@ static upload_status_t process_upload_chunk(protob_io_t *iface,
     memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
     if (sectrue != send_msg_request_firmware(iface, e->stream_offset,
                                              e->chunk_expected,
-                                             handler->request_index)) {
+                                             handler->stream)) {
       return UPLOAD_ERR_COMMUNICATION;
     }
     return UPLOAD_IN_PROGRESS;
@@ -434,8 +433,8 @@ workflow_result_t run_image_upload(protob_io_t *iface,
   // request the header prefetch (segment 0's head)
   e.chunk_expected =
       (image_size > e.init_chunk_size) ? e.init_chunk_size : image_size;
-  if (sectrue != send_msg_request_firmware(iface, 0, e.chunk_expected,
-                                           handler->request_index)) {
+  if (sectrue !=
+      send_msg_request_firmware(iface, 0, e.chunk_expected, handler->stream)) {
     handler->ui->fail(UPLOAD_ERR_COMMUNICATION);
     return WF_ERROR;
   }
