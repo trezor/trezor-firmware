@@ -159,11 +159,11 @@ typedef struct _FirmwareBegin {
     pb_callback_t firmware_manifest_region;
     bool has_bootloader_code_length;
     uint32_t bootloader_code_length;
+    pb_callback_t bootloader_code_hash;
     bool has_nrf_length;
     uint32_t nrf_length;
     pb_callback_t nrf_co_path;
     pb_callback_t nrf_image_hash;
-    pb_callback_t bootloader_code_hash;
 } FirmwareBegin;
 
 typedef struct _FirmwareRequest {
@@ -243,7 +243,7 @@ extern "C" {
 #define ButtonRequest_init_default               {false, _ButtonRequestType_MIN}
 #define ButtonAck_init_default                   {0}
 #define FirmwareErase_init_default               {false, 0}
-#define FirmwareBegin_init_default               {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
+#define FirmwareBegin_init_default               {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, {{NULL}, NULL}, false, 0, {{NULL}, NULL}, {{NULL}, NULL}}
 #define FirmwareRequest_init_default             {0, 0, false, _FirmwareStream_MIN}
 #define FirmwareUpload_init_default              {{{NULL}, NULL}, false, {0, {0}}, false, {0, {0}}}
 #define UnlockBootloader_init_default            {0}
@@ -257,7 +257,7 @@ extern "C" {
 #define ButtonRequest_init_zero                  {false, _ButtonRequestType_MIN}
 #define ButtonAck_init_zero                      {0}
 #define FirmwareErase_init_zero                  {false, 0}
-#define FirmwareBegin_init_zero                  {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, false, 0, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
+#define FirmwareBegin_init_zero                  {{{NULL}, NULL}, {{NULL}, NULL}, false, 0, {{NULL}, NULL}, false, 0, {{NULL}, NULL}, {{NULL}, NULL}}
 #define FirmwareRequest_init_zero                {0, 0, false, _FirmwareStream_MIN}
 #define FirmwareUpload_init_zero                 {{{NULL}, NULL}, false, {0, {0}}, false, {0, {0}}}
 #define UnlockBootloader_init_zero               {0}
@@ -300,10 +300,10 @@ extern "C" {
 #define FirmwareBegin_boot_header_tag            1
 #define FirmwareBegin_firmware_manifest_region_tag 2
 #define FirmwareBegin_bootloader_code_length_tag 3
+#define FirmwareBegin_bootloader_code_hash_tag   4
 #define FirmwareBegin_nrf_length_tag             5
 #define FirmwareBegin_nrf_co_path_tag            6
 #define FirmwareBegin_nrf_image_hash_tag         7
-#define FirmwareBegin_bootloader_code_hash_tag   8
 #define FirmwareRequest_offset_tag               1
 #define FirmwareRequest_length_tag               2
 #define FirmwareRequest_stream_tag               3
@@ -394,10 +394,10 @@ X(a, STATIC,   OPTIONAL, UINT32,   length,            1)
 X(a, CALLBACK, REQUIRED, BYTES,    boot_header,       1) \
 X(a, CALLBACK, REQUIRED, BYTES,    firmware_manifest_region,   2) \
 X(a, STATIC,   OPTIONAL, UINT32,   bootloader_code_length,   3) \
+X(a, CALLBACK, OPTIONAL, BYTES,    bootloader_code_hash,   4) \
 X(a, STATIC,   OPTIONAL, UINT32,   nrf_length,        5) \
 X(a, CALLBACK, OPTIONAL, BYTES,    nrf_co_path,       6) \
-X(a, CALLBACK, OPTIONAL, BYTES,    nrf_image_hash,    7) \
-X(a, CALLBACK, OPTIONAL, BYTES,    bootloader_code_hash,   8)
+X(a, CALLBACK, OPTIONAL, BYTES,    nrf_image_hash,    7)
 #define FirmwareBegin_CALLBACK pb_default_field_callback
 #define FirmwareBegin_DEFAULT NULL
 

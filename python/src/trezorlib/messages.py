@@ -2212,7 +2212,7 @@ class FirmwareBegin(protobuf.MessageType):
         1: protobuf.Field("boot_header", "bytes", repeated=False, required=True),
         2: protobuf.Field("firmware_manifest_region", "bytes", repeated=False, required=True),
         3: protobuf.Field("bootloader_code_length", "uint32", repeated=False, required=False, default=None),
-        8: protobuf.Field("bootloader_code_hash", "bytes", repeated=False, required=False, default=None),
+        4: protobuf.Field("bootloader_code_hash", "bytes", repeated=False, required=False, default=None),
         5: protobuf.Field("nrf_length", "uint32", repeated=False, required=False, default=None),
         6: protobuf.Field("nrf_co_path", "bytes", repeated=False, required=False, default=None),
         7: protobuf.Field("nrf_image_hash", "bytes", repeated=False, required=False, default=None),

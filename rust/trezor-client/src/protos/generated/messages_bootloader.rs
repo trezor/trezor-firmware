@@ -290,7 +290,7 @@ impl FirmwareBegin {
         self.bootloader_code_length = ::std::option::Option::Some(v);
     }
 
-    // optional bytes bootloader_code_hash = 8;
+    // optional bytes bootloader_code_hash = 4;
 
     pub fn bootloader_code_hash(&self) -> &[u8] {
         match self.bootloader_code_hash.as_ref() {
@@ -488,7 +488,7 @@ impl ::protobuf::Message for FirmwareBegin {
                 24 => {
                     self.bootloader_code_length = ::std::option::Option::Some(is.read_uint32()?);
                 },
-                66 => {
+                34 => {
                     self.bootloader_code_hash = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 40 => {
@@ -522,7 +522,7 @@ impl ::protobuf::Message for FirmwareBegin {
             my_size += ::protobuf::rt::uint32_size(3, v);
         }
         if let Some(v) = self.bootloader_code_hash.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(8, &v);
+            my_size += ::protobuf::rt::bytes_size(4, &v);
         }
         if let Some(v) = self.nrf_length {
             my_size += ::protobuf::rt::uint32_size(5, v);
@@ -549,7 +549,7 @@ impl ::protobuf::Message for FirmwareBegin {
             os.write_uint32(3, v)?;
         }
         if let Some(v) = self.bootloader_code_hash.as_ref() {
-            os.write_bytes(8, v)?;
+            os.write_bytes(4, v)?;
         }
         if let Some(v) = self.nrf_length {
             os.write_uint32(5, v)?;
@@ -1338,23 +1338,23 @@ impl ::protobuf::reflect::ProtobufValue for ProdTestT1 {
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x19messages-bootloader.proto\x12\x1dhw.trezor.messages.bootloader\"'\
     \n\rFirmwareErase\x12\x16\n\x06length\x18\x01\x20\x01(\rR\x06length\"\
-    \xbd\x02\n\rFirmwareBegin\x12\x1f\n\x0bboot_header\x18\x01\x20\x02(\x0cR\
+    \xb7\x02\n\rFirmwareBegin\x12\x1f\n\x0bboot_header\x18\x01\x20\x02(\x0cR\
     \nbootHeader\x128\n\x18firmware_manifest_region\x18\x02\x20\x02(\x0cR\
     \x16firmwareManifestRegion\x124\n\x16bootloader_code_length\x18\x03\x20\
-    \x01(\rR\x14bootloaderCodeLength\x120\n\x14bootloader_code_hash\x18\x08\
+    \x01(\rR\x14bootloaderCodeLength\x120\n\x14bootloader_code_hash\x18\x04\
     \x20\x01(\x0cR\x12bootloaderCodeHash\x12\x1d\n\nnrf_length\x18\x05\x20\
     \x01(\rR\tnrfLength\x12\x1e\n\x0bnrf_co_path\x18\x06\x20\x01(\x0cR\tnrfC\
-    oPath\x12$\n\x0enrf_image_hash\x18\x07\x20\x01(\x0cR\x0cnrfImageHashJ\
-    \x04\x08\x04\x10\x05\"\xde\x01\n\x0fFirmwareRequest\x12\x16\n\x06offset\
-    \x18\x01\x20\x02(\rR\x06offset\x12\x16\n\x06length\x18\x02\x20\x02(\rR\
-    \x06length\x12U\n\x06stream\x18\x03\x20\x01(\x0e2=.hw.trezor.messages.bo\
-    otloader.FirmwareRequest.FirmwareStreamR\x06stream\"D\n\x0eFirmwareStrea\
-    m\x12\x1a\n\x16FirmwareStream_Primary\x10\0\x12\x16\n\x12FirmwareStream_\
-    Nrf\x10\x01\"[\n\x0eFirmwareUpload\x12\x18\n\x07payload\x18\x01\x20\x02(\
-    \x0cR\x07payload\x12\x12\n\x04hash\x18\x02\x20\x01(\x0cR\x04hash\x12\x1b\
-    \n\tprev_hash\x18\x03\x20\x01(\x0cR\x08prevHash\"&\n\nProdTestT1\x12\x18\
-    \n\x07payload\x18\x01\x20\x01(\x0cR\x07payloadB>\n#com.satoshilabs.trezo\
-    r.lib.protobufB\x17TrezorMessageBootloader\
+    oPath\x12$\n\x0enrf_image_hash\x18\x07\x20\x01(\x0cR\x0cnrfImageHash\"\
+    \xde\x01\n\x0fFirmwareRequest\x12\x16\n\x06offset\x18\x01\x20\x02(\rR\
+    \x06offset\x12\x16\n\x06length\x18\x02\x20\x02(\rR\x06length\x12U\n\x06s\
+    tream\x18\x03\x20\x01(\x0e2=.hw.trezor.messages.bootloader.FirmwareReque\
+    st.FirmwareStreamR\x06stream\"D\n\x0eFirmwareStream\x12\x1a\n\x16Firmwar\
+    eStream_Primary\x10\0\x12\x16\n\x12FirmwareStream_Nrf\x10\x01\"[\n\x0eFi\
+    rmwareUpload\x12\x18\n\x07payload\x18\x01\x20\x02(\x0cR\x07payload\x12\
+    \x12\n\x04hash\x18\x02\x20\x01(\x0cR\x04hash\x12\x1b\n\tprev_hash\x18\
+    \x03\x20\x01(\x0cR\x08prevHash\"&\n\nProdTestT1\x12\x18\n\x07payload\x18\
+    \x01\x20\x01(\x0cR\x07payloadB>\n#com.satoshilabs.trezor.lib.protobufB\
+    \x17TrezorMessageBootloader\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
