@@ -26,7 +26,7 @@
 /**
  * @brief Layout-agnostic firmware information for the screens that show it.
  *
- * Filled from whatever the installed firmware layout provides: the legacy
+ * Filled from whatever the installed firmware layout provides: the CoSi
  * vendor + image headers, or the Merkle-tree boot header. Keeps the `ui_*`
  * layer (the vendor warning shown before running the firmware, and the
  * bootloader intro) independent of the header format, so it never touches a
@@ -57,7 +57,7 @@ typedef struct {
                                a firmware is present with valid metadata to show
                                (vendor/version) -- even if its body is corrupt.
                                Drives menu-vs-empty-device routing, the Features
-                               reply, and the storage-wipe decision. (legacy: a
+                               reply, and the storage-wipe decision. (CoSi: a
                                valid signed firmware header; tree: a valid boot
                                header.) */
 
@@ -136,7 +136,7 @@ typedef struct {
  * decisions. Fatal-errors (via `ensure`) on any verification or downgrade
  * failure, so on return the firmware is authentic and bootable.
  *
- * Implemented by exactly one of fw_check.c (legacy vendor/image/secmon headers)
+ * Implemented by exactly one of fw_check.c (CoSi vendor/image/secmon headers)
  * or fw_check_pq.c (Merkle-tree layout); the build selects which.
  */
 void fw_run_prepare(fw_run_info_t *info);

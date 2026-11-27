@@ -88,7 +88,7 @@ void usage(void) {
 }
 
 #ifndef PQ_SECURE_BOOT
-// Legacy layout only: a Merkle-tree install is authorized by the consent
+// CoSi layout only: a Merkle-tree install is authorized by the consent
 // digest, not by a hash of the vendor and image headers.
 bool load_firmware(const char *filename, uint8_t *hash) {
   // read the first 6 kB of firmware file into a buffer

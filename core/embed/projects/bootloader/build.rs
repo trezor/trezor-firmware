@@ -56,7 +56,7 @@ fn main() -> Result<()> {
             lib.add_source("workflow/wf_unlock_bootloader.c");
         }
 
-        // Legacy or Merkle-tree firmware check + update flow; exactly one, both
+        // CoSi or Merkle-tree firmware check + update flow; exactly one, both
         // provide `workflow_firmware_update`.
         if cfg!(feature = "pq_secure_boot") {
             lib.add_source("fw_check_pq.c");
