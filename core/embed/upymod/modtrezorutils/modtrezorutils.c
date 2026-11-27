@@ -266,7 +266,7 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_firmware_hash_obj, 0,
 
 /// def firmware_vendor() -> str:
 ///     """
-///     Returns the firmware vendor string (legacy: from the vendor header;
+///     Returns the firmware vendor string (CoSi: from the vendor header;
 ///     Merkle tree: derived from the boot header's firmware_type).
 ///     """
 static mp_obj_t mod_trezorutils_firmware_vendor(void) {
@@ -672,7 +672,7 @@ static MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_reboot_obj,
 ///     """Parses the header of an offered firmware update and returns
 ///     information about it.
 ///
-///     Legacy: `header` is the vendor header + image header, no `manifest`.
+///     CoSi: `header` is the vendor header + image header, no `manifest`.
 ///     Merkle tree: `header` is the boot header prefix (without signatures)
 ///     and `manifest` the firmware manifest region; `fingerprint` is the
 ///     firmware_root and `hash` the consent digest for `reboot_and_upgrade`.

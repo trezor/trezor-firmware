@@ -67,7 +67,7 @@ def firmware_hash(
 # upymod/modtrezorutils/modtrezorutils.c
 def firmware_vendor() -> str:
     """
-    Returns the firmware vendor string (legacy: from the vendor header;
+    Returns the firmware vendor string (CoSi: from the vendor header;
     Merkle tree: derived from the boot header's firmware_type).
     """
 
@@ -214,7 +214,7 @@ def check_firmware_update(
     """Parses the header of an offered firmware update and returns
     information about it.
 
-    Legacy: `header` is the vendor header + image header, no `manifest`.
+    CoSi: `header` is the vendor header + image header, no `manifest`.
     Merkle tree: `header` is the boot header prefix (without signatures)
     and `manifest` the firmware manifest region; `fingerprint` is the
     firmware_root and `hash` the consent digest for `reboot_and_upgrade`.

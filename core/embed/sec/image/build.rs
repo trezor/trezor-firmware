@@ -42,7 +42,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         bail_unsupported!();
     }
 
-    // Legacy vendor/image/secmon header verification; a Merkle-tree build
+    // CoSi vendor/image/secmon header verification; a Merkle-tree build
     // verifies boot headers and manifests instead.
     if !cfg!(feature = "pq_secure_boot") {
         lib.add_source("image/image.c");
