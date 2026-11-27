@@ -2125,6 +2125,10 @@ if TYPE_CHECKING:
         tap_to_wake: "bool | None"
         max_passphrase_len: "int"
         firmware_scheme: "FirmwareScheme | None"
+        bootloader_code_major: "int | None"
+        bootloader_code_minor: "int | None"
+        bootloader_code_patch: "int | None"
+        bootloader_code_build: "int | None"
 
         def __init__(
             self,
@@ -2191,6 +2195,10 @@ if TYPE_CHECKING:
             tap_to_wake: "bool | None" = None,
             max_passphrase_len: "int | None" = None,
             firmware_scheme: "FirmwareScheme | None" = None,
+            bootloader_code_major: "int | None" = None,
+            bootloader_code_minor: "int | None" = None,
+            bootloader_code_patch: "int | None" = None,
+            bootloader_code_build: "int | None" = None,
         ) -> None:
             pass
 

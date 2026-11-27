@@ -489,6 +489,14 @@ pub struct Features {
     pub max_passphrase_len: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.firmware_scheme)
     pub firmware_scheme: ::std::option::Option<::protobuf::EnumOrUnknown<features::FirmwareScheme>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.bootloader_code_major)
+    pub bootloader_code_major: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.bootloader_code_minor)
+    pub bootloader_code_minor: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.bootloader_code_patch)
+    pub bootloader_code_patch: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.Features.bootloader_code_build)
+    pub bootloader_code_build: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.Features.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1877,8 +1885,84 @@ impl Features {
         self.firmware_scheme = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
     }
 
+    // optional uint32 bootloader_code_major = 66;
+
+    pub fn bootloader_code_major(&self) -> u32 {
+        self.bootloader_code_major.unwrap_or(0)
+    }
+
+    pub fn clear_bootloader_code_major(&mut self) {
+        self.bootloader_code_major = ::std::option::Option::None;
+    }
+
+    pub fn has_bootloader_code_major(&self) -> bool {
+        self.bootloader_code_major.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_bootloader_code_major(&mut self, v: u32) {
+        self.bootloader_code_major = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 bootloader_code_minor = 67;
+
+    pub fn bootloader_code_minor(&self) -> u32 {
+        self.bootloader_code_minor.unwrap_or(0)
+    }
+
+    pub fn clear_bootloader_code_minor(&mut self) {
+        self.bootloader_code_minor = ::std::option::Option::None;
+    }
+
+    pub fn has_bootloader_code_minor(&self) -> bool {
+        self.bootloader_code_minor.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_bootloader_code_minor(&mut self, v: u32) {
+        self.bootloader_code_minor = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 bootloader_code_patch = 68;
+
+    pub fn bootloader_code_patch(&self) -> u32 {
+        self.bootloader_code_patch.unwrap_or(0)
+    }
+
+    pub fn clear_bootloader_code_patch(&mut self) {
+        self.bootloader_code_patch = ::std::option::Option::None;
+    }
+
+    pub fn has_bootloader_code_patch(&self) -> bool {
+        self.bootloader_code_patch.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_bootloader_code_patch(&mut self, v: u32) {
+        self.bootloader_code_patch = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 bootloader_code_build = 69;
+
+    pub fn bootloader_code_build(&self) -> u32 {
+        self.bootloader_code_build.unwrap_or(0)
+    }
+
+    pub fn clear_bootloader_code_build(&mut self) {
+        self.bootloader_code_build = ::std::option::Option::None;
+    }
+
+    pub fn has_bootloader_code_build(&self) -> bool {
+        self.bootloader_code_build.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_bootloader_code_build(&mut self, v: u32) {
+        self.bootloader_code_build = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(63);
+        let mut fields = ::std::vec::Vec::with_capacity(67);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "vendor",
@@ -2195,6 +2279,26 @@ impl Features {
             |m: &Features| { &m.firmware_scheme },
             |m: &mut Features| { &mut m.firmware_scheme },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "bootloader_code_major",
+            |m: &Features| { &m.bootloader_code_major },
+            |m: &mut Features| { &mut m.bootloader_code_major },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "bootloader_code_minor",
+            |m: &Features| { &m.bootloader_code_minor },
+            |m: &mut Features| { &mut m.bootloader_code_minor },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "bootloader_code_patch",
+            |m: &Features| { &m.bootloader_code_patch },
+            |m: &mut Features| { &mut m.bootloader_code_patch },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "bootloader_code_build",
+            |m: &Features| { &m.bootloader_code_build },
+            |m: &mut Features| { &mut m.bootloader_code_build },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Features>(
             "Features",
             fields,
@@ -2414,6 +2518,18 @@ impl ::protobuf::Message for Features {
                 520 => {
                     self.firmware_scheme = ::std::option::Option::Some(is.read_enum_or_unknown()?);
                 },
+                528 => {
+                    self.bootloader_code_major = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                536 => {
+                    self.bootloader_code_minor = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                544 => {
+                    self.bootloader_code_patch = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                552 => {
+                    self.bootloader_code_build = ::std::option::Option::Some(is.read_uint32()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2615,6 +2731,18 @@ impl ::protobuf::Message for Features {
         if let Some(v) = self.firmware_scheme {
             my_size += ::protobuf::rt::int32_size(65, v.value());
         }
+        if let Some(v) = self.bootloader_code_major {
+            my_size += ::protobuf::rt::uint32_size(66, v);
+        }
+        if let Some(v) = self.bootloader_code_minor {
+            my_size += ::protobuf::rt::uint32_size(67, v);
+        }
+        if let Some(v) = self.bootloader_code_patch {
+            my_size += ::protobuf::rt::uint32_size(68, v);
+        }
+        if let Some(v) = self.bootloader_code_build {
+            my_size += ::protobuf::rt::uint32_size(69, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2810,6 +2938,18 @@ impl ::protobuf::Message for Features {
         if let Some(v) = self.firmware_scheme {
             os.write_enum(65, ::protobuf::EnumOrUnknown::value(&v))?;
         }
+        if let Some(v) = self.bootloader_code_major {
+            os.write_uint32(66, v)?;
+        }
+        if let Some(v) = self.bootloader_code_minor {
+            os.write_uint32(67, v)?;
+        }
+        if let Some(v) = self.bootloader_code_patch {
+            os.write_uint32(68, v)?;
+        }
+        if let Some(v) = self.bootloader_code_build {
+            os.write_uint32(69, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -2890,6 +3030,10 @@ impl ::protobuf::Message for Features {
         self.tap_to_wake = ::std::option::Option::None;
         self.max_passphrase_len = ::std::option::Option::None;
         self.firmware_scheme = ::std::option::Option::None;
+        self.bootloader_code_major = ::std::option::Option::None;
+        self.bootloader_code_minor = ::std::option::Option::None;
+        self.bootloader_code_patch = ::std::option::Option::None;
+        self.bootloader_code_build = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2958,6 +3102,10 @@ impl ::protobuf::Message for Features {
             tap_to_wake: ::std::option::Option::None,
             max_passphrase_len: ::std::option::Option::None,
             firmware_scheme: ::std::option::Option::None,
+            bootloader_code_major: ::std::option::Option::None,
+            bootloader_code_minor: ::std::option::Option::None,
+            bootloader_code_patch: ::std::option::Option::None,
+            bootloader_code_build: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -13660,7 +13808,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \roptions.proto\"\x80\x01\n\nInitialize\x12\x1d\n\nsession_id\x18\x01\
     \x20\x01(\x0cR\tsessionId\x12,\n\x10_skip_passphrase\x18\x02\x20\x01(\
     \x08R\x0eSkipPassphraseB\x02\x18\x01\x12%\n\x0ederive_cardano\x18\x03\
-    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xfe\x1d\n\x08Featur\
+    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xce\x1f\n\x08Featur\
     es\x12\x16\n\x06vendor\x18\x01\x20\x01(\tR\x06vendor\x12#\n\rmajor_versi\
     on\x18\x02\x20\x02(\rR\x0cmajorVersion\x12#\n\rminor_version\x18\x03\x20\
     \x02(\rR\x0cminorVersion\x12#\n\rpatch_version\x18\x04\x20\x02(\rR\x0cpa\
@@ -13721,7 +13869,11 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     to_wake\x18?\x20\x01(\x08R\ttapToWake\x120\n\x12max_passphrase_len\x18@\
     \x20\x01(\r:\x0250R\x10maxPassphraseLen\x12_\n\x0ffirmware_scheme\x18A\
     \x20\x01(\x0e26.hw.trezor.messages.management.Features.FirmwareSchemeR\
-    \x0efirmwareScheme\"F\n\x0eFirmwareScheme\x12\x17\n\x13FirmwareScheme_Co\
+    \x0efirmwareScheme\x122\n\x15bootloader_code_major\x18B\x20\x01(\rR\x13b\
+    ootloaderCodeMajor\x122\n\x15bootloader_code_minor\x18C\x20\x01(\rR\x13b\
+    ootloaderCodeMinor\x122\n\x15bootloader_code_patch\x18D\x20\x01(\rR\x13b\
+    ootloaderCodePatch\x122\n\x15bootloader_code_build\x18E\x20\x01(\rR\x13b\
+    ootloaderCodeBuild\"F\n\x0eFirmwareScheme\x12\x17\n\x13FirmwareScheme_Co\
     si\x10\0\x12\x1b\n\x17FirmwareScheme_PqSecure\x10\x01\"C\n\x12BackupAvai\
     lability\x12\x10\n\x0cNotAvailable\x10\0\x12\x0c\n\x08Required\x10\x01\
     \x12\r\n\tAvailable\x10\x02\"7\n\x0eRecoveryStatus\x12\x0b\n\x07Nothing\

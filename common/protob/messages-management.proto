@@ -149,6 +149,10 @@ message Features {
     optional uint32 max_passphrase_len = 64 [default = 50];        // maximal passphrase length (in bytes)
     optional FirmwareScheme firmware_scheme = 65;                  // image layout of the reporting binary (bootloader
                                                                    // or firmware); absent means unknown, not Cosi
+    optional uint32 bootloader_code_major = 66;                    // bootloader mode, pq_secure_boot: version of the
+    optional uint32 bootloader_code_minor = 67;                    // bootloader code itself; major..build_version then
+    optional uint32 bootloader_code_patch = 68;                    // report the installed release version
+    optional uint32 bootloader_code_build = 69;
 
     /// Firmware image layout, i.e. which kind of release the reporting binary can consume.
     enum FirmwareScheme {

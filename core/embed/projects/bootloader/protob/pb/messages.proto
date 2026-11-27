@@ -83,6 +83,10 @@ message Features {
     optional bool wireless_connected = 60;  // Wireless charger connected
     // must match Features.firmware_scheme in common/protob/messages-management.proto
     optional FirmwareScheme firmware_scheme = 65;
+    optional uint32 bootloader_code_major = 66;  // version of the bootloader code itself (pq_secure_boot only;
+    optional uint32 bootloader_code_minor = 67;  // major..build_version then report the installed release)
+    optional uint32 bootloader_code_patch = 68;
+    optional uint32 bootloader_code_build = 69;
 }
 
 enum FirmwareStream {

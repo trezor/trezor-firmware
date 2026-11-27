@@ -3431,6 +3431,10 @@ class Features(protobuf.MessageType):
         63: protobuf.Field("tap_to_wake", "bool", repeated=False, required=False, default=None),
         64: protobuf.Field("max_passphrase_len", "uint32", repeated=False, required=False, default=50),
         65: protobuf.Field("firmware_scheme", "FirmwareScheme", repeated=False, required=False, default=None),
+        66: protobuf.Field("bootloader_code_major", "uint32", repeated=False, required=False, default=None),
+        67: protobuf.Field("bootloader_code_minor", "uint32", repeated=False, required=False, default=None),
+        68: protobuf.Field("bootloader_code_patch", "uint32", repeated=False, required=False, default=None),
+        69: protobuf.Field("bootloader_code_build", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3499,6 +3503,10 @@ class Features(protobuf.MessageType):
         tap_to_wake: bool | None = None,
         max_passphrase_len: int | None = 50,
         firmware_scheme: FirmwareScheme | None = None,
+        bootloader_code_major: int | None = None,
+        bootloader_code_minor: int | None = None,
+        bootloader_code_patch: int | None = None,
+        bootloader_code_build: int | None = None,
     ) -> None:
         self.capabilities: Sequence[Capability] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3563,6 +3571,10 @@ class Features(protobuf.MessageType):
         self.tap_to_wake = tap_to_wake
         self.max_passphrase_len = max_passphrase_len
         self.firmware_scheme = firmware_scheme
+        self.bootloader_code_major = bootloader_code_major
+        self.bootloader_code_minor = bootloader_code_minor
+        self.bootloader_code_patch = bootloader_code_patch
+        self.bootloader_code_build = bootloader_code_build
 
 
 class LockDevice(protobuf.MessageType):
