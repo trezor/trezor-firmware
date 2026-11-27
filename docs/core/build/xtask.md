@@ -287,7 +287,7 @@ consumed only by the firmware build).
 
 ### Where `xtask flash` and `xtask upload` read from
 
-On a model with the legacy image layout, both read the signed binary from the
+On a model with the CoSi image layout, both read the signed binary from the
 collected artifacts directory:
 
 - `build/artifacts/<MODEL_ID>/<project>.bin`

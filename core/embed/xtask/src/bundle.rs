@@ -1005,7 +1005,7 @@ fn prebuilt_bootloader(args: &ResolvedBuildArgs) -> Result<PathBuf> {
 /// The boot header's release version and floors, in release numbers (the header
 /// version is the universal firmware_version, stamped by the signer). Both sit
 /// next to that version in projects/firmware/version.h; FIX_VERSION is the same
-/// storage-format floor the legacy image header carries.
+/// storage-format floor the CoSi image header carries.
 struct ReleaseFloors {
     /// The firmware VERSION; the release version when no universal or
     /// bitcoin-only image carries it (a prodtest-only build).
