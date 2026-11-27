@@ -582,6 +582,21 @@ def _sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
         if not address_n and not txo.address:
             raise DataError("Missing address")
 
+    if txo.contact_pubkey is not None or txo.contact_signature is not None:
+        # A contact attestation names the owner of an external address only.
+        if (
+            txo.contact_pubkey is None
+            or txo.contact_signature is None
+            or len(txo.contact_pubkey) != 32
+            or len(txo.contact_signature) != 64
+            or not txo.address
+            or address_n
+            or txo.multisig
+            or script_type == OutputScriptType.PAYTOOPRETURN
+            or txo.payment_req_index is not None
+        ):
+            raise DataError("Invalid contact attestation.")
+
     if txo.orig_hash and txo.orig_index is None:
         raise DataError("Missing orig_index field.")
 
