@@ -25,9 +25,11 @@ message FirmwareErase {
 message FirmwareBegin {
     required bytes boot_header = 1;     // new signed boot header (TRZQ)
     required bytes firmware_manifest_region = 2;  // manifest (TRZD) + its Merkle proof up to firmware_root
-    optional uint32 code_length = 3;    // new bootloader code available to stream; omit/0 => header-only update
-    optional bytes code_hash = 8;       // SHA-256 of that code, required if code_length > 0; lets the device verify
-                                        // the signature before streaming (it rehashes the received bytes)
+    optional uint32 bootloader_code_length = 3;  // new bootloader code available to stream; omit/0 => header-only
+                                                 // update
+    optional bytes bootloader_code_hash = 8;     // SHA-256 of that code, required if bootloader_code_length > 0;
+                                                 // lets the device verify the signature before streaming (it
+                                                 // rehashes the received bytes)
     reserved 4;                         // was custom_install; custom is now an authenticated manifest variant
     optional uint32 nrf_length = 5;     // nRF MCUboot image bytes available to stream; omit/0 => no nRF update
     optional bytes nrf_co_path = 6;     // model-tree co-path (nRF leaf -> modelRoot), 32*depth bytes

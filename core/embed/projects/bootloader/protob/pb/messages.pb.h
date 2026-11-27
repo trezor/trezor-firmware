@@ -157,13 +157,13 @@ typedef struct _FirmwareErase {
 typedef struct _FirmwareBegin {
     pb_callback_t boot_header;
     pb_callback_t firmware_manifest_region;
-    bool has_code_length;
-    uint32_t code_length;
+    bool has_bootloader_code_length;
+    uint32_t bootloader_code_length;
     bool has_nrf_length;
     uint32_t nrf_length;
     pb_callback_t nrf_co_path;
     pb_callback_t nrf_image_hash;
-    pb_callback_t code_hash;
+    pb_callback_t bootloader_code_hash;
 } FirmwareBegin;
 
 typedef struct _FirmwareRequest {
@@ -299,11 +299,11 @@ extern "C" {
 #define FirmwareErase_length_tag                 1
 #define FirmwareBegin_boot_header_tag            1
 #define FirmwareBegin_firmware_manifest_region_tag 2
-#define FirmwareBegin_code_length_tag            3
+#define FirmwareBegin_bootloader_code_length_tag 3
 #define FirmwareBegin_nrf_length_tag             5
 #define FirmwareBegin_nrf_co_path_tag            6
 #define FirmwareBegin_nrf_image_hash_tag         7
-#define FirmwareBegin_code_hash_tag              8
+#define FirmwareBegin_bootloader_code_hash_tag   8
 #define FirmwareRequest_offset_tag               1
 #define FirmwareRequest_length_tag               2
 #define FirmwareRequest_stream_tag               3
@@ -393,11 +393,11 @@ X(a, STATIC,   OPTIONAL, UINT32,   length,            1)
 #define FirmwareBegin_FIELDLIST(X, a) \
 X(a, CALLBACK, REQUIRED, BYTES,    boot_header,       1) \
 X(a, CALLBACK, REQUIRED, BYTES,    firmware_manifest_region,   2) \
-X(a, STATIC,   OPTIONAL, UINT32,   code_length,       3) \
+X(a, STATIC,   OPTIONAL, UINT32,   bootloader_code_length,   3) \
 X(a, STATIC,   OPTIONAL, UINT32,   nrf_length,        5) \
 X(a, CALLBACK, OPTIONAL, BYTES,    nrf_co_path,       6) \
 X(a, CALLBACK, OPTIONAL, BYTES,    nrf_image_hash,    7) \
-X(a, CALLBACK, OPTIONAL, BYTES,    code_hash,         8)
+X(a, CALLBACK, OPTIONAL, BYTES,    bootloader_code_hash,   8)
 #define FirmwareBegin_CALLBACK pb_default_field_callback
 #define FirmwareBegin_DEFAULT NULL
 

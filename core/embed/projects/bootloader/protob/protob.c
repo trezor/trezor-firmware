@@ -257,7 +257,7 @@ secbool recv_msg_firmware_begin(protob_io_t *iface, FirmwareBegin *msg,
   MSG_RECV_INIT(FirmwareBegin);
   MSG_RECV_CALLBACK(boot_header, read_into_buffer, &bh_ctx);
   MSG_RECV_CALLBACK(firmware_manifest_region, read_into_buffer, &manifest_ctx);
-  MSG_RECV_CALLBACK(code_hash, read_into_buffer, &ch_ctx);
+  MSG_RECV_CALLBACK(bootloader_code_hash, read_into_buffer, &ch_ctx);
   if (nrf != NULL) {
     cp_ctx.buffer = nrf->co_path_buf;
     cp_ctx.buffer_size = nrf->co_path_size;
