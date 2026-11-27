@@ -23,6 +23,15 @@
 #include "model_version.h"
 #include "version_check.h"
 
+#include "version.h"
+
+#ifdef PQ_SECURE_BOOT
+#include <sec/boot_header.h>
+#ifdef TREZOR_EMULATOR
+#include "emulator.h"
+#endif
+#endif
+
 // The way monoctr encodes its counters, not the uint8_t the value travels in,
 // is what caps them at MONOCTR_MAX_VALUE. monoctr_write rejects anything above
 // that, so at runtime the version would simply fail to be stored -- and the
@@ -80,4 +89,16 @@ void ensure_secmon_min_version(uint8_t version) {
   uint8_t val = 0;
   ensure(monoctr_read(MONOCTR_SECMON_VERSION, &val), NULL);
   ensure(sectrue * (val == version), "Secmon downgrade protection");
+}
+
+uint32_t bootloader_reported_version(void) {
+#ifdef PQ_SECURE_BOOT
+  const boot_header_auth_t *hdr = boot_header_auth_get(BOOTLOADER_START);
+  if (hdr != NULL) {
+    return (uint32_t)hdr->version.major | ((uint32_t)hdr->version.minor << 8) |
+           ((uint32_t)hdr->version.patch << 16) |
+           ((uint32_t)hdr->version.build << 24);
+  }
+#endif
+  return VERSION_UINT32;
 }

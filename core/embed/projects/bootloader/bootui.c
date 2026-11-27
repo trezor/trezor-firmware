@@ -26,6 +26,7 @@
 #include "bootui.h"
 #include "rust_ui_bootloader.h"
 #include "version.h"
+#include "version_check.h"
 
 // common shared functions
 
@@ -60,7 +61,7 @@ void ui_screen_boot(const fw_ui_info_t *const info, int wait) {
 uint32_t ui_screen_intro(const fw_ui_info_t *const info, bool fw_ok) {
   char bld_ver[VERSION_STRING_LEN];
   char ver_str[VERSION_STRING_LEN];
-  format_ver(VERSION_UINT32, bld_ver, sizeof(bld_ver));
+  format_ver(bootloader_reported_version(), bld_ver, sizeof(bld_ver));
   format_ver(info->version, ver_str, sizeof(ver_str));
 
   return screen_intro(bld_ver, info->vendor_str, info->vendor_str_len, ver_str,

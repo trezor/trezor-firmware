@@ -21,6 +21,14 @@
 
 #include <trezor_types.h>
 
+// Version the bootloader reports (Features, intro screen), packed as
+// VERSION_UINT32. Under pq_secure_boot it is the installed RELEASE version,
+// from the bootloader's own boot header -- the number install decisions use,
+// and which a header-only update changes without touching the code. Falls
+// back to the compiled VERSION_* when that header does not parse, and is the
+// compiled version on the legacy scheme.
+uint32_t bootloader_reported_version(void);
+
 // Protection against bootloader downgrade
 
 // Ensures bootloader version is stored in monotonic counter

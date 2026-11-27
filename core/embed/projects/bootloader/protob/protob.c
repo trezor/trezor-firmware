@@ -35,6 +35,7 @@
 #endif
 
 #include "../version.h"
+#include "../version_check.h"
 #include "memzero.h"
 #include "pb/messages.pb.h"
 #include "protob.h"
@@ -67,10 +68,19 @@ secbool send_msg_success(protob_io_t *iface, const char *msg) {
 secbool send_msg_features(protob_io_t *iface, const fw_check_info_t *fw) {
   MSG_SEND_INIT(Features);
   MSG_SEND_ASSIGN_STRING(vendor, "trezor.io");
-  MSG_SEND_ASSIGN_REQUIRED_VALUE(major_version, VERSION_MAJOR);
-  MSG_SEND_ASSIGN_REQUIRED_VALUE(minor_version, VERSION_MINOR);
-  MSG_SEND_ASSIGN_REQUIRED_VALUE(patch_version, VERSION_PATCH);
-  MSG_SEND_ASSIGN_VALUE(build_version, VERSION_BUILD);
+  // The installed release under pq_secure_boot (see
+  // bootloader_reported_version); the code's own version goes separately.
+  const uint32_t version = bootloader_reported_version();
+  MSG_SEND_ASSIGN_REQUIRED_VALUE(major_version, version & 0xFF);
+  MSG_SEND_ASSIGN_REQUIRED_VALUE(minor_version, (version >> 8) & 0xFF);
+  MSG_SEND_ASSIGN_REQUIRED_VALUE(patch_version, (version >> 16) & 0xFF);
+  MSG_SEND_ASSIGN_VALUE(build_version, (version >> 24) & 0xFF);
+#ifdef PQ_SECURE_BOOT
+  MSG_SEND_ASSIGN_VALUE(bootloader_code_major, VERSION_MAJOR);
+  MSG_SEND_ASSIGN_VALUE(bootloader_code_minor, VERSION_MINOR);
+  MSG_SEND_ASSIGN_VALUE(bootloader_code_patch, VERSION_PATCH);
+  MSG_SEND_ASSIGN_VALUE(bootloader_code_build, VERSION_BUILD);
+#endif
   MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
   MSG_SEND_ASSIGN_STRING(model, MODEL_NAME);
   MSG_SEND_ASSIGN_STRING(internal_model, MODEL_INTERNAL_NAME);
