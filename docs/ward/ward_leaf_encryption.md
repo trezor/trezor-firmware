@@ -31,6 +31,11 @@ a separate capability.
 The `app_id` is the domain the WARD service assigns to the caller. It is part of `leaf_identity`,
 so applications get separate paths even under the global key set.
 
+`K_path` and `K_ident` stay global even with per-application data keys. The identity is what names
+the application, so its key cannot depend on `app_id`: a reader would have to know the `app_id`
+before opening the identity that carries it. `entry_key` is derived from the whole identity under
+the global `K_path` for the same reason.
+
 | Key | Lets its holder |
 | --- | --- |
 | `K_path` | Compute the `entry_key` of an identifier it knows |
@@ -56,7 +61,7 @@ leaf (in the trie)
       value             the entry; for a pointer, the target's leaf_identity
 
 stored beside the leaf
-└── sealed_identity     leaf_identity sealed under K_ident(app), domain 0x04
+└── sealed_identity     leaf_identity sealed under K_ident, domain 0x04
       device_id         empty, or the ID of the device the entry belongs to
       app_id            the caller's domain
       identifier        how the application looks up the entry (an xpub or an address)
@@ -90,7 +95,7 @@ seal(K, domain, pt) = 0x01 || nonce || tag || ct
                            aad   = domain || entry_key
 
 sealed_content  = seal(K_data(app),  0x05, leaf_content)
-sealed_identity = seal(K_ident(app), 0x04, leaf_identity)
+sealed_identity = seal(K_ident,      0x04, leaf_identity)
 ```
 
 - **Random nonce:** the nonce is never derived from the leaf, because a rollback or a second device
@@ -99,7 +104,7 @@ sealed_identity = seal(K_ident(app), 0x04, leaf_identity)
   its tag. The trie binds content to its path only where a proof is checked. Re-adding, listing
   with a released key and restoring an export can handle a part outside such a proof, and the tag
   then still refuses a part taken from another entry. For `sealed_identity`, the tag also lets a
-  holder of `K_ident(app)` alone check that an identity belongs to its path. The domain byte is
+  holder of `K_ident` check that an identity belongs to its path without `K_path`. The domain byte is
   redundant while `K_data` and `K_ident` are different keys.
 - **Domains:** every domain and hash prefix byte is distinct. The trie's tags follow
   `rust/trezor-ward`: `0x00` leaf hash, `0x01` branch, `0x02` empty tree, `0x03` value digest. The
@@ -128,8 +133,10 @@ The key holder walks every leaf of the verified trie, taking each leaf's `entry_
    decides whose leaf it is.
     - Under the global key set, a tag failure is an error.
     - Under per-application keys, a tag failure means another application's leaf: skip it.
-2. Listing: request and open `sealed_identity` stored beside the leaf with `K_ident(app)`. Verify
-   that `HMAC(leaf_identity) = entry_key`.
+2. Listing: request and open `sealed_identity` stored beside the leaf with the global `K_ident`.
+   Verify that `HMAC(leaf_identity) = entry_key`. `K_ident` never leaves the device, so an
+   application holding only its released `K_data(app)` reads its values but not their identities;
+   names are listed through the device.
 3. Skip the leaf if its `app_id` is not the caller's.
 4. A pointer is shown as a pointer and not followed.
 
