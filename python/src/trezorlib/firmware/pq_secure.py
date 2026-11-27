@@ -303,7 +303,8 @@ class PqSecureFirmware:
     @property
     def manifest_region(self) -> bytes:
         """``[manifest || proof]``: what the device parses, offered as
-        ``RebootToBootloader.firmware_manifest_region``."""
+        ``RebootToBootloader.firmware_manifest_region``
+        and ``FirmwareBegin.firmware_manifest_region``."""
         return self.data[: self._region_len]
 
     def authenticity_bytes(self) -> bytes:

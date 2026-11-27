@@ -128,7 +128,7 @@ def _stream_firmware_upload(
 def firmware_begin(
     session: Session,
     boot_header: bytes,
-    module_headers: bytes,
+    firmware_manifest_region: bytes,
     code: bytes | None = None,
     nrf_image: bytes | None = None,
     nrf_co_path: bytes | None = None,
@@ -148,7 +148,7 @@ def firmware_begin(
     resp = session.call(
         messages.FirmwareBegin(
             boot_header=boot_header,
-            module_headers=module_headers,
+            firmware_manifest_region=firmware_manifest_region,
             code_length=len(code) if code else None,
             # lets the device check the signature before the code streams; it
             # rehashes what it receives
