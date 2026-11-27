@@ -327,7 +327,7 @@ def unpack_content(pt: bytes) -> tuple[str, int, bytes]:
 #
 # `ek` is the entry_key of the leaf the part belongs to; a part moved elsewhere fails.
 
-DOMAIN_CONTENT = 0x02
+DOMAIN_CONTENT = 0x05
 DOMAIN_IDENTITY = 0x04
 
 

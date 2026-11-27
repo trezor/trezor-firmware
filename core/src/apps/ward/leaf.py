@@ -6,14 +6,15 @@
     leaf_content    = len8(entry_type) || entry_type || C_leaf(4B BE) || value
     seal(K, d, ek, pt) = 0x01 || nonce(12B) || tag(16B)
                          || AES-256-GCM(K, nonce, aad = d || ek, pt)
-    sealed_content  = seal(K_data,  0x02, entry_key, leaf_content)
+    sealed_content  = seal(K_data,  0x05, entry_key, leaf_content)
     sealed_identity = seal(K_ident, 0x04, entry_key, leaf_identity)
     value_digest    = sha256(0x03 || sealed_content)
     leaf            = sha256(0x00 || entry_key || value_digest)
 
 The entry_key in the AAD binds each part to its path: a part moved to another leaf fails its tag,
-even where no trie proof is checked. Every domain and hash prefix byte is distinct: 0x00 leaf,
-0x01 branch, 0x02 content, 0x03 value digest, 0x04 identity.
+even where no trie proof is checked. Every domain and hash prefix byte is distinct. The trie's
+tags follow rust/trezor-ward: 0x00 leaf, 0x01 branch, 0x02 empty tree, 0x03 value digest. The
+seals take the next ones: 0x04 identity, 0x05 content.
 
 Only `sealed_content` is in the trie. `sealed_identity` is stored beside the leaf: the path
 already authenticates the identity, so the trie does not commit to it. An EMPTY
@@ -28,7 +29,7 @@ keyless, so a host with no keys can still serve proofs. Vectors in
 from micropython import const
 
 SCHEME_AESGCM = const(0x01)  # the first byte of a sealed part; the only scheme
-DOMAIN_CONTENT = const(0x02)  # AAD of sealed_content
+DOMAIN_CONTENT = const(0x05)  # AAD of sealed_content; above the trie's tags 0x00-0x03
 DOMAIN_IDENTITY = const(0x04)  # AAD of sealed_identity; distinct from every other domain byte
 _ENTRY_KEY_LEN = const(32)
 

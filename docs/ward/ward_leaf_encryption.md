@@ -50,7 +50,7 @@ entry belongs to, as the firmware assigns it.
 ```
 leaf (in the trie)
 ├── entry_key           32 B, the trie path in the clear
-└── sealed_content      leaf_content sealed under K_data(app), domain 0x02
+└── sealed_content      leaf_content sealed under K_data(app), domain 0x05
       entry_type        how to read the value: address, pointer, ...
       C_leaf            counter of the transition that wrote the entry
       value             the entry; for a pointer, the target's leaf_identity
@@ -89,7 +89,7 @@ seal(K, domain, pt) = 0x01 || nonce || tag || ct
                       with nonce = 12 random bytes, fresh for every seal
                            aad   = domain || entry_key
 
-sealed_content  = seal(K_data(app),  0x02, leaf_content)
+sealed_content  = seal(K_data(app),  0x05, leaf_content)
 sealed_identity = seal(K_ident(app), 0x04, leaf_identity)
 ```
 
@@ -101,8 +101,9 @@ sealed_identity = seal(K_ident(app), 0x04, leaf_identity)
   then still refuses a part taken from another entry. For `sealed_identity`, the tag also lets a
   holder of `K_ident(app)` alone check that an identity belongs to its path. The domain byte is
   redundant while `K_data` and `K_ident` are different keys.
-- **Domains:** every domain and hash prefix byte is distinct: `0x00` leaf hash, `0x01` branch,
-  `0x02` content, `0x03` value digest, `0x04` identity.
+- **Domains:** every domain and hash prefix byte is distinct. The trie's tags follow
+  `rust/trezor-ward`: `0x00` leaf hash, `0x01` branch, `0x02` empty tree, `0x03` value digest. The
+  seals take the next ones: `0x04` identity, `0x05` content.
 - **Scheme byte:** the first byte is the scheme. `0x01`, AES-256-GCM, is the only one.
 
 ## Reading

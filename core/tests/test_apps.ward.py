@@ -210,7 +210,7 @@ class TestWardLeaf(unittest.TestCase):
     )
     OTHER_EK = bytes([7]) * 32
     SEALED_CONTENT = bytes.fromhex(
-        "015a5a5a5a5a5a5a5a5a5a5a5a35c3055372dfce33ca4d0b0192a4bf80b86985acabee6c38"
+        "015a5a5a5a5a5a5a5a5a5a5a5af97dec7d3df7bf4f8943f0d3324ad4e6b86985acabee6c38"
         "ee32ae912cf36b441766be2b98dd"
     )
     SEALED_IDENTITY = bytes.fromhex(
