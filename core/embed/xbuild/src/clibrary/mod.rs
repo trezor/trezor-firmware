@@ -1,3 +1,4 @@
+pub mod c_bindings;
 pub mod cc_generator;
 pub mod compile;
 pub mod embed;
