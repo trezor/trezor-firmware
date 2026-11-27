@@ -148,12 +148,12 @@ message Features {
     optional bool tap_to_wake = 63;                                // tap to wake is enabled (None = not supported)
     optional uint32 max_passphrase_len = 64 [default = 50];        // maximal passphrase length (in bytes)
     optional FirmwareScheme firmware_scheme = 65;                  // image layout of the reporting binary (bootloader
-                                                                   // or firmware); absent means unknown, not Legacy
+                                                                   // or firmware); absent means unknown, not Cosi
 
     /// Firmware image layout, i.e. which kind of release the reporting binary can consume.
     enum FirmwareScheme {
         /// Vendor header + image header, signed with CoSi.
-        FirmwareScheme_Legacy = 0;
+        FirmwareScheme_Cosi = 0;
         /// Merkle-tree (pq_secure_boot): signed boot header + manifest folding to firmware_root.
         FirmwareScheme_PqSecure = 1;
     }

@@ -1859,8 +1859,8 @@ impl Features {
 
     pub fn firmware_scheme(&self) -> features::FirmwareScheme {
         match self.firmware_scheme {
-            Some(e) => e.enum_value_or(features::FirmwareScheme::FirmwareScheme_Legacy),
-            None => features::FirmwareScheme::FirmwareScheme_Legacy,
+            Some(e) => e.enum_value_or(features::FirmwareScheme::FirmwareScheme_Cosi),
+            None => features::FirmwareScheme::FirmwareScheme_Cosi,
         }
     }
 
@@ -2986,8 +2986,8 @@ pub mod features {
     #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
     // @@protoc_insertion_point(enum:hw.trezor.messages.management.Features.FirmwareScheme)
     pub enum FirmwareScheme {
-        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.FirmwareScheme.FirmwareScheme_Legacy)
-        FirmwareScheme_Legacy = 0,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.FirmwareScheme.FirmwareScheme_Cosi)
+        FirmwareScheme_Cosi = 0,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.FirmwareScheme.FirmwareScheme_PqSecure)
         FirmwareScheme_PqSecure = 1,
     }
@@ -3001,7 +3001,7 @@ pub mod features {
 
         fn from_i32(value: i32) -> ::std::option::Option<FirmwareScheme> {
             match value {
-                0 => ::std::option::Option::Some(FirmwareScheme::FirmwareScheme_Legacy),
+                0 => ::std::option::Option::Some(FirmwareScheme::FirmwareScheme_Cosi),
                 1 => ::std::option::Option::Some(FirmwareScheme::FirmwareScheme_PqSecure),
                 _ => ::std::option::Option::None
             }
@@ -3009,14 +3009,14 @@ pub mod features {
 
         fn from_str(str: &str) -> ::std::option::Option<FirmwareScheme> {
             match str {
-                "FirmwareScheme_Legacy" => ::std::option::Option::Some(FirmwareScheme::FirmwareScheme_Legacy),
+                "FirmwareScheme_Cosi" => ::std::option::Option::Some(FirmwareScheme::FirmwareScheme_Cosi),
                 "FirmwareScheme_PqSecure" => ::std::option::Option::Some(FirmwareScheme::FirmwareScheme_PqSecure),
                 _ => ::std::option::Option::None
             }
         }
 
         const VALUES: &'static [FirmwareScheme] = &[
-            FirmwareScheme::FirmwareScheme_Legacy,
+            FirmwareScheme::FirmwareScheme_Cosi,
             FirmwareScheme::FirmwareScheme_PqSecure,
         ];
     }
@@ -3035,7 +3035,7 @@ pub mod features {
 
     impl ::std::default::Default for FirmwareScheme {
         fn default() -> Self {
-            FirmwareScheme::FirmwareScheme_Legacy
+            FirmwareScheme::FirmwareScheme_Cosi
         }
     }
 
@@ -13660,7 +13660,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \roptions.proto\"\x80\x01\n\nInitialize\x12\x1d\n\nsession_id\x18\x01\
     \x20\x01(\x0cR\tsessionId\x12,\n\x10_skip_passphrase\x18\x02\x20\x01(\
     \x08R\x0eSkipPassphraseB\x02\x18\x01\x12%\n\x0ederive_cardano\x18\x03\
-    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\x80\x1e\n\x08Featur\
+    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xfe\x1d\n\x08Featur\
     es\x12\x16\n\x06vendor\x18\x01\x20\x01(\tR\x06vendor\x12#\n\rmajor_versi\
     on\x18\x02\x20\x02(\rR\x0cmajorVersion\x12#\n\rminor_version\x18\x03\x20\
     \x02(\rR\x0cminorVersion\x12#\n\rpatch_version\x18\x04\x20\x02(\rR\x0cpa\
@@ -13721,9 +13721,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     to_wake\x18?\x20\x01(\x08R\ttapToWake\x120\n\x12max_passphrase_len\x18@\
     \x20\x01(\r:\x0250R\x10maxPassphraseLen\x12_\n\x0ffirmware_scheme\x18A\
     \x20\x01(\x0e26.hw.trezor.messages.management.Features.FirmwareSchemeR\
-    \x0efirmwareScheme\"H\n\x0eFirmwareScheme\x12\x19\n\x15FirmwareScheme_Le\
-    gacy\x10\0\x12\x1b\n\x17FirmwareScheme_PqSecure\x10\x01\"C\n\x12BackupAv\
-    ailability\x12\x10\n\x0cNotAvailable\x10\0\x12\x0c\n\x08Required\x10\x01\
+    \x0efirmwareScheme\"F\n\x0eFirmwareScheme\x12\x17\n\x13FirmwareScheme_Co\
+    si\x10\0\x12\x1b\n\x17FirmwareScheme_PqSecure\x10\x01\"C\n\x12BackupAvai\
+    lability\x12\x10\n\x0cNotAvailable\x10\0\x12\x0c\n\x08Required\x10\x01\
     \x12\r\n\tAvailable\x10\x02\"7\n\x0eRecoveryStatus\x12\x0b\n\x07Nothing\
     \x10\0\x12\x0c\n\x08Recovery\x10\x01\x12\n\n\x06Backup\x10\x02\"\x9c\x06\
     \n\nCapability\x12\x1c\n\x12Capability_Bitcoin\x10\x01\x1a\x04\x80\xa6\

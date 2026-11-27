@@ -2,5 +2,5 @@
 # fmt: off
 # isort:skip_file
 
-Legacy = 0
+Cosi = 0
 PqSecure = 1

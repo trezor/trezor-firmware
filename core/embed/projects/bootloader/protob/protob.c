@@ -109,7 +109,7 @@ secbool send_msg_features(protob_io_t *iface, const fw_check_info_t *fw) {
   MSG_SEND_ASSIGN_VALUE(firmware_scheme,
                         FirmwareScheme_FirmwareScheme_PqSecure);
 #else
-  MSG_SEND_ASSIGN_VALUE(firmware_scheme, FirmwareScheme_FirmwareScheme_Legacy);
+  MSG_SEND_ASSIGN_VALUE(firmware_scheme, FirmwareScheme_FirmwareScheme_Cosi);
 #endif
 
 #ifdef USE_POWER_MANAGER

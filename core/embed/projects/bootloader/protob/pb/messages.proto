@@ -91,7 +91,7 @@ enum FirmwareStream {
 }
 
 enum FirmwareScheme {
-    FirmwareScheme_Legacy = 0;    // vendor header + image header
+    FirmwareScheme_Cosi = 0;      // vendor header + image header, signed with CoSi
     FirmwareScheme_PqSecure = 1;  // Merkle-tree (pq_secure_boot)
 }
 

@@ -37,7 +37,7 @@ typedef enum _FirmwareStream {
 } FirmwareStream;
 
 typedef enum _FirmwareScheme {
-    FirmwareScheme_FirmwareScheme_Legacy = 0,
+    FirmwareScheme_FirmwareScheme_Cosi = 0,
     FirmwareScheme_FirmwareScheme_PqSecure = 1
 } FirmwareScheme;
 
@@ -201,7 +201,7 @@ extern "C" {
 #define _FirmwareStream_MAX FirmwareStream_FirmwareStream_Nrf
 #define _FirmwareStream_ARRAYSIZE ((FirmwareStream)(FirmwareStream_FirmwareStream_Nrf+1))
 
-#define _FirmwareScheme_MIN FirmwareScheme_FirmwareScheme_Legacy
+#define _FirmwareScheme_MIN FirmwareScheme_FirmwareScheme_Cosi
 #define _FirmwareScheme_MAX FirmwareScheme_FirmwareScheme_PqSecure
 #define _FirmwareScheme_ARRAYSIZE ((FirmwareScheme)(FirmwareScheme_FirmwareScheme_PqSecure+1))
 

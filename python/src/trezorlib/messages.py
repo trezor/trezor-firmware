@@ -240,7 +240,7 @@ class RecoveryType(IntEnum):
 
 
 class FirmwareScheme(IntEnum):
-    Legacy = 0
+    Cosi = 0
     PqSecure = 1
 
 

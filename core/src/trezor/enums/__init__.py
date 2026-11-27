@@ -205,7 +205,7 @@ if TYPE_CHECKING:
         UnlockRepeatedBackup = 2
 
     class FirmwareScheme(IntEnum):
-        Legacy = 0
+        Cosi = 0
         PqSecure = 1
 
     class BackupAvailability(IntEnum):
