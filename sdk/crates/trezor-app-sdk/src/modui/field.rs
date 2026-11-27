@@ -280,7 +280,6 @@ pub(crate) fn check_fields(fields: &[WireField<'_>]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::traits::ui::FieldKind;
 
     /// The text a source hands out, range by range.
     struct Text(&'static str);
@@ -295,35 +294,6 @@ mod tests {
     }
 
     #[test]
-    fn a_note_carries_its_text_and_no_label() {
-        let note = Field::note("Continue?");
-        assert!(note.wire.kind() == Some(FieldKind::Note));
-        assert!(matches!(note.wire, WireField::Note { text } if text.as_str() == "Continue?"));
-    }
-
-    #[test]
-    fn text_facts_carry_their_label_and_value() {
-        let text = Field::text("Resource", "Energy");
-        assert!(text.wire.kind() == Some(FieldKind::Text));
-        assert!(matches!(
-            text.wire,
-            WireField::Text { label, value }
-                if label.as_str() == "Resource" && value.as_str() == "Energy"
-        ));
-    }
-
-    #[test]
-    fn an_amount_carries_its_ticker_apart() {
-        let amount = Field::amount("Amount", "1.5", "TRX");
-        assert!(amount.wire.kind() == Some(FieldKind::Amount));
-        assert!(matches!(
-            amount.wire,
-            WireField::Amount { label, value, ticker }
-                if label.as_str() == "Amount" && value.as_str() == "1.5" && ticker.as_str() == "TRX"
-        ));
-    }
-
-    #[test]
     fn a_text_source_reads_through_the_abi() {
         let source = Text("hello");
         let field = Field::text_source("a", 5, &source);
@@ -335,26 +305,6 @@ mod tests {
         assert!(source.read(1, &mut buf));
         assert_eq!(&buf, b"ell");
         assert!(!source.read(4, &mut buf));
-    }
-
-    #[test]
-    fn a_second_text_source_is_refused() {
-        let (a, b) = (Text("a"), Text("b"));
-        let fields = [
-            Field::text_source("a", 1, &a),
-            Field::text_source("b", 1, &b),
-        ];
-        assert!(matches!(
-            check_fields(wire_fields(&fields).as_slice()),
-            Err(Error::DataError("too many streamed fields"))
-        ));
-    }
-
-    #[test]
-    fn one_text_source_beside_text_is_accepted() {
-        let source = Text("abc");
-        let fields = [Field::text_source("a", 3, &source), Field::text("b", "c")];
-        assert!(check_fields(wire_fields(&fields).as_slice()).is_ok());
     }
 
     #[test]

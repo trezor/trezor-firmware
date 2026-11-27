@@ -448,12 +448,14 @@ mod tests {
 
     #[test]
     fn a_review_holds_at_most_one_text_source() {
-        let facts = [
+        let one = [Field::text_source("a", 1, &Silent), Field::text("b", "c")];
+        assert!(review("s", "t", &one).request(Answer::Confirm).is_ok());
+        let two = [
             Field::text_source("a", 1, &Silent),
             Field::text_source("b", 1, &Silent),
         ];
         assert!(matches!(
-            review("s", "t", &facts).request(Answer::Confirm),
+            review("s", "t", &two).request(Answer::Confirm),
             Err(Error::DataError("too many streamed fields"))
         ));
     }
