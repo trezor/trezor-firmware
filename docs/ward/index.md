@@ -21,5 +21,3 @@ changes across devices and attests the head it holds.
 
 - [Threat model and accepted limitations](threat_model.md) · [Security gaps](gaps.md)
 - [Address labels, offline changes and backup](user_story.md)
-- Proposed upgrades from [mini-WARD to MVP](miniscript_to_mvp.md) and [MVP to a manager](mvp_to_final_migration.md)
-- [Verification coverage](ward_testing.md) · [Adversarial checks](ward_adversarial_testing.md)
