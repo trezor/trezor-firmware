@@ -177,7 +177,6 @@ impl<T> LayoutMaybeTrace for T where T: Layout<Value = Result<Obj, Error>> + May
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 enum Repaint {
     None,
-    Partial,
     Full,
 }
 
@@ -289,8 +288,8 @@ impl LayoutObjInner {
         // Check if we should repaint next time
         if self.event_ctx.needs_repaint_root() {
             self.obj_request_repaint()?;
-        } else if self.event_ctx.needs_repaint() && self.repaint == Repaint::None {
-            self.repaint = Repaint::Partial;
+        } else if self.event_ctx.needs_repaint() {
+            self.repaint = Repaint::Full;
         }
 
         // All concerning `Child` wrappers should have already marked themselves for

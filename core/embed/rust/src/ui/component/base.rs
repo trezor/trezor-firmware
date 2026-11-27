@@ -62,22 +62,18 @@ pub trait Component {
 }
 
 /// Components should always avoid unnecessary overpaint to prevent obvious
-/// tearing and flickering. `Child` wraps an inner component `T` and keeps a
-/// dirty flag for it. Any mutation of `T` has to happen through the `mutate`
-/// accessor, `T` can then request a paint call to be scheduled later by calling
-/// `EventCtx::request_paint` in its `event` pass.
+/// tearing and flickering. `Child` wraps an inner component `T`. Any mutation
+/// of `T` has to happen through the `mutate` accessor, `T` can then request a
+/// paint call to be scheduled later by calling `EventCtx::request_paint` in its
+/// `event` pass.
 #[derive(Clone)]
 pub struct Child<T> {
     component: T,
-    marked_for_paint: bool,
 }
 
 impl<T> Child<T> {
     pub const fn new(component: T) -> Self {
-        Self {
-            component,
-            marked_for_paint: true,
-        }
+        Self { component }
     }
 
     pub fn inner(&self) -> &T {
@@ -94,30 +90,7 @@ impl<T> Child<T> {
     where
         F: FnOnce(&mut EventCtx, &mut T) -> U,
     {
-        let prev_requested = core::mem::replace(&mut ctx.paint_requested, false);
-        let result = component_func(ctx, &mut self.component);
-        if ctx.paint_requested {
-            // If a paint was requested anywhere in the inner component tree, we need to
-            // mark ourselves for paint as well, and keep the `ctx` flag so it can
-            // propagate upwards.
-            self.marked_for_paint = true;
-        } else {
-            // Paint has not been requested in the *inner* component, so there's no need to
-            // paint it, but we need to preserve the previous flag carried in `ctx` so it
-            // properly propagates upwards (i.e. from our previous siblings).
-            ctx.paint_requested = prev_requested;
-        }
-        result
-    }
-
-    /// Do not draw on screen until an event requests paint. This is used by
-    /// homescreens to avoid flickering when workflow restart happens.
-    pub fn skip_paint(&mut self) {
-        self.marked_for_paint = false;
-    }
-
-    pub fn will_paint(&self) -> bool {
-        self.marked_for_paint
+        component_func(ctx, &mut self.component)
     }
 }
 
