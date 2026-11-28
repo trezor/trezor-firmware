@@ -11,9 +11,10 @@
           "container_path": "FROM"
         },
         "label": "Account Owner",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       }
     ],
-    "provider_name": "Celo"
+    "provider_name": "Celo Accounts"
   }
 }

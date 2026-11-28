@@ -33,7 +33,8 @@
           ]
         },
         "label": "Input Token",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       },
       {
         "path": {
@@ -47,7 +48,8 @@
           "path": [
             0
           ]
-        }
+        },
+        "lookup_address": false
       },
       {
         "path": {
@@ -56,7 +58,8 @@
           ]
         },
         "label": "Output Token",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       },
       {
         "path": {
@@ -73,7 +76,8 @@
         },
         "native_currency_address": [
           "0000000000000000000000000000000000000000"
-        ]
+        ],
+        "lookup_address": false
       },
       {
         "path": {
@@ -82,9 +86,10 @@
           ]
         },
         "label": "Router",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       }
     ],
-    "provider_name": "TeraSwap"
+    "provider_name": "TeraSwap: TeraSwapFeeCollector"
   }
 }

@@ -27,7 +27,8 @@
           ]
         },
         "label": "Swap ID",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
@@ -36,7 +37,8 @@
           ]
         },
         "label": "Token to swap",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       },
       {
         "path": {
@@ -45,7 +47,8 @@
           ]
         },
         "label": "Solver",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       },
       {
         "path": {
@@ -59,9 +62,10 @@
           "path": [
             1
           ]
-        }
+        },
+        "lookup_address": false
       }
     ],
-    "provider_name": "Layerswap"
+    "provider_name": "Layerswap: LayerswapDepository"
   }
 }

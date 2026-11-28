@@ -25,7 +25,8 @@
         },
         "label": "Withdraw exactly",
         "formatter": "FORMATTER_TOKEN_AMOUNT",
-        "const_token_address": "dc035d45d973e3ec169d2276ddab16f1e407384f"
+        "const_token_address": "dc035d45d973e3ec169d2276ddab16f1e407384f",
+        "lookup_address": false
       },
       {
         "path": {
@@ -34,7 +35,8 @@
           ]
         },
         "label": "To",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       },
       {
         "path": {
@@ -43,9 +45,10 @@
           ]
         },
         "label": "Owner",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       }
     ],
-    "provider_name": "Sky"
+    "provider_name": "Sky: sUSDS"
   }
 }

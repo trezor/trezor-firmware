@@ -56,7 +56,8 @@
           "container_path": "VALUE"
         },
         "label": "Amount to send",
-        "formatter": "FORMATTER_AMOUNT"
+        "formatter": "FORMATTER_AMOUNT",
+        "lookup_address": false
       },
       {
         "path": {
@@ -71,7 +72,8 @@
             5,
             3
           ]
-        }
+        },
+        "lookup_address": false
       },
       {
         "path": {
@@ -80,9 +82,10 @@
           ]
         },
         "label": "Recipient",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       }
     ],
-    "provider_name": "LI.FI"
+    "provider_name": "LI.FI Service GmbH"
   }
 }

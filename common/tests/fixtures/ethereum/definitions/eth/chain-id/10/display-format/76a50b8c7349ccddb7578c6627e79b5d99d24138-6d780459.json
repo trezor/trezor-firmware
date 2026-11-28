@@ -24,7 +24,8 @@
           ]
         },
         "label": "Sender",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": false
       },
       {
         "path": {
@@ -33,7 +34,8 @@
           ]
         },
         "label": "Recipient",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": false
       },
       {
         "path": {
@@ -44,9 +46,10 @@
         "label": "Shares amount",
         "formatter": "FORMATTER_UNIT",
         "decimals": 18,
-        "base": " shares"
+        "base": " shares",
+        "lookup_address": false
       }
     ],
-    "provider_name": "Lido DAO"
+    "provider_name": "Lido DAO: stETH"
   }
 }

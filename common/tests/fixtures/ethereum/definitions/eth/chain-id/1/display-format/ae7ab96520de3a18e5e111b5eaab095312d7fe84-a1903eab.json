@@ -16,9 +16,10 @@
           "container_path": "VALUE"
         },
         "label": "Amount",
-        "formatter": "FORMATTER_AMOUNT"
+        "formatter": "FORMATTER_AMOUNT",
+        "lookup_address": false
       }
     ],
-    "provider_name": "Lido DAO"
+    "provider_name": "Lido DAO: stETH"
   }
 }

@@ -96,7 +96,8 @@
             "key": 5,
             "value": "cbBTC"
           }
-        ]
+        ],
+        "lookup_address": false
       },
       {
         "path": {
@@ -106,7 +107,8 @@
           ]
         },
         "label": "Cover amount",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
@@ -117,7 +119,8 @@
         },
         "label": "Cover duration",
         "formatter": "FORMATTER_UNIT",
-        "base": "days"
+        "base": "days",
+        "lookup_address": false
       },
       {
         "path": {
@@ -153,7 +156,8 @@
             "key": 5,
             "value": "cbBTC"
           }
-        ]
+        ],
+        "lookup_address": false
       },
       {
         "path": {
@@ -163,7 +167,8 @@
           ]
         },
         "label": "Premium amount",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
@@ -173,7 +178,8 @@
           ]
         },
         "label": "Fee amount",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
@@ -182,9 +188,10 @@
           ]
         },
         "label": "Recipient",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": false
       }
     ],
-    "provider_name": "OpenCover"
+    "provider_name": "OpenCover: Quote"
   }
 }

@@ -65,7 +65,8 @@
             5,
             2
           ]
-        }
+        },
+        "lookup_address": false
       },
       {
         "path": {
@@ -74,7 +75,12 @@
           ]
         },
         "label": "Minimum Amount to receive",
-        "formatter": "FORMATTER_AMOUNT"
+        "formatter": "FORMATTER_TOKEN_AMOUNT",
+        "native_currency_address": [
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "0000000000000000000000000000000000000000"
+        ],
+        "lookup_address": false
       },
       {
         "path": {
@@ -83,9 +89,10 @@
           ]
         },
         "label": "Receiver",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       }
     ],
-    "provider_name": "LI.FI"
+    "provider_name": "LI.FI Service GmbH"
   }
 }

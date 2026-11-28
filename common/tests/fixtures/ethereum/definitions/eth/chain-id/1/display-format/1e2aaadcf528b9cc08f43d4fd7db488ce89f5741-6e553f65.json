@@ -22,14 +22,16 @@
         },
         "label": "Deposit asset",
         "formatter": "FORMATTER_TOKEN_AMOUNT",
-        "const_token_address": "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+        "const_token_address": "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "lookup_address": false
       },
       {
         "path": {
           "const_value": "9SUSDC11Core"
         },
         "label": "Share ticker",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
@@ -38,7 +40,8 @@
           ]
         },
         "label": "Send shares to",
-        "formatter": "FORMATTER_ADDRESS_NAME"
+        "formatter": "FORMATTER_ADDRESS_NAME",
+        "lookup_address": true
       }
     ],
     "provider_name": "9Summits"

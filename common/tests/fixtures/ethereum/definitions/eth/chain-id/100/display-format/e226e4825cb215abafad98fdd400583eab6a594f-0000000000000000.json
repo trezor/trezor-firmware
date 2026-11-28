@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 100,
+    "address": "e226e4825cb215abafad98fdd400583eab6a594f",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "Layerswap: LayerswapDepository"
+  }
+}

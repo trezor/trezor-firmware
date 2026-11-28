@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "1231deb6f5749ef6ce6943a275a1d3e7486f4eae",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "LI.FI Service GmbH"
+  }
+}

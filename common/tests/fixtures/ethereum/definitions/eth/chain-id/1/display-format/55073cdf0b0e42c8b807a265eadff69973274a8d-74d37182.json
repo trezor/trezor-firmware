@@ -22,7 +22,8 @@
           "const_value": "teWBTC"
         },
         "label": "Vault share ticker",
-        "formatter": "FORMATTER_RAW"
+        "formatter": "FORMATTER_RAW",
+        "lookup_address": false
       },
       {
         "path": {
@@ -32,7 +33,8 @@
         },
         "label": "Initial deposit",
         "formatter": "FORMATTER_TOKEN_AMOUNT",
-        "const_token_address": "2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+        "const_token_address": "2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+        "lookup_address": false
       },
       {
         "path": {
@@ -43,7 +45,8 @@
         "label": "Max management fee",
         "formatter": "FORMATTER_UNIT",
         "decimals": 2,
-        "base": "%"
+        "base": "%",
+        "lookup_address": false
       },
       {
         "path": {
@@ -54,9 +57,10 @@
         "label": "Max performance fee",
         "formatter": "FORMATTER_UNIT",
         "decimals": 2,
-        "base": "%"
+        "base": "%",
+        "lookup_address": false
       }
     ],
-    "provider_name": "Tesseract Earn Oy"
+    "provider_name": "Tesseract Earn Oy: Tesseract Vault Deployer (WBTC)"
   }
 }

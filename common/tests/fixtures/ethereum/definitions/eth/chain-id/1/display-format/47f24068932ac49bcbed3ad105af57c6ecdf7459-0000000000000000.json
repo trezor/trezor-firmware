@@ -1,0 +1,10 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "message": {
+    "chain_id": 1,
+    "address": "47f24068932ac49bcbed3ad105af57c6ecdf7459",
+    "func_sig": "0000000000000000",
+    "intent": "",
+    "provider_name": "TeraSwap: TeraSwapFeeCollector"
+  }
+}

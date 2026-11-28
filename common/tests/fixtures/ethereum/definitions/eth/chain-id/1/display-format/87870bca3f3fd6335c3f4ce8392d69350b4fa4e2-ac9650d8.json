@@ -23,9 +23,10 @@
         "formatter": "FORMATTER_CALLDATA",
         "callee_path": {
           "container_path": "TO"
-        }
+        },
+        "lookup_address": false
       }
     ],
-    "provider_name": "Aave DAO"
+    "provider_name": "Aave DAO: PoolInstance"
   }
 }
