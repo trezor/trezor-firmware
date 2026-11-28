@@ -39,11 +39,9 @@ impl<'a> InputStream<'a> {
     }
 
     pub fn read(&mut self, len: usize) -> Result<&'a [u8], Error> {
-        let buf = self
-            .buf
-            .get(self.pos..self.pos + len)
-            .ok_or(Error::EOFError)?;
-        self.pos += len;
+        let end = self.pos.checked_add(len).ok_or(Error::EOFError)?;
+        let buf = self.buf.get(self.pos..end).ok_or(Error::EOFError)?;
+        self.pos = end;
         Ok(buf)
     }
 
@@ -254,6 +252,22 @@ mod tests {
         // Truncated stream: continuation bit set but no more bytes.
         assert!(matches!(
             InputStream::new(&[0x80]).read_uvarint(),
+            Err(Error::EOFError)
+        ));
+    }
+
+    #[test]
+    fn read_len_overflow_is_eof_not_panic() {
+        // `len` comes from a host-controlled protobuf length field. A value near
+        // usize::MAX must be rejected as EOFError, never make `self.pos + len`
+        // overflow (which panics under overflow-checks / debug-assertions).
+        let mut s = InputStream::new(&[1, 2, 3, 4]);
+        assert_eq!(unwrap!(s.read(2)), &[1, 2]); // pos is now 2
+        assert!(matches!(s.read(usize::MAX), Err(Error::EOFError)));
+        assert!(matches!(s.read(usize::MAX - 1), Err(Error::EOFError)));
+        // A normal, non-overflowing out-of-bounds read is EOFError too.
+        assert!(matches!(
+            InputStream::new(&[1, 2, 3]).read(99),
             Err(Error::EOFError)
         ));
     }
