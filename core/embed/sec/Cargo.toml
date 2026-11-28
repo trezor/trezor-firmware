@@ -64,6 +64,8 @@ telemetry = ["backup_ram"]
 time_estimate = []
 tropic = []
 tropic_logging = []
+tropic_rev_abab = []
+tropic_rev_acab = []
 trustzone = ["sys/trustzone"]
 
 # --------------------------------------------------------------------------

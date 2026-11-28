@@ -84,6 +84,7 @@ cannot be used bare:
 - `--perf-overlay` — show UI performance overlay.
 - `--disable-optiga` — disable OPTIGA support.
 - `--disable-tropic` — disable TROPIC support.
+- `--tropic-rev <abab|acab>` — TROPIC silicon revision to build for (`acab` by default).
 - `--mem-perf` — MicroPython memory performance measurements.
 - `--benchmark` — include crypto benchmarks.
 - `--log-stack-usage` — log stack usage.

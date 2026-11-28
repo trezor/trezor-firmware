@@ -78,5 +78,6 @@ production                    = { true = ["production"], false = ["dev_keys"] }
 pyopt                         = { true = ["pyopt"], false = ["debug", "optiga_testing", "ui_debug_overlay"] }
 source-lines                  = { true = ["micropy_enable_source_lines"] }
 storage-insecure-testing-mode = { true = ["storage_insecure_testing_mode"] }
+tropic-rev                    = { abab = ["sec/tropic_rev_abab"], acab = ["sec/tropic_rev_acab"] }
 unsafe-fw                     = { true = ["unsafe_fw"] }
 ward                          = { true = ["ward"] }
