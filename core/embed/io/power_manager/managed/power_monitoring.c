@@ -190,9 +190,10 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
 
 #ifndef USE_CHARGER
 // No charger on this PMIC (e.g. power latch): the charging controller is a
-// no-op. The public charging API (pm_charging_enable/disable/set_max_current)
-// still exists but does nothing, and the state machine never enters
-// PM_STATE_CHARGING because usb/wireless are never reported connected.
+// no-op. The public charging API (pm_charging_enable/disable/set_max_current,
+// pm_set_soc_target) still exists but returns PM_REQUEST_REJECTED, and the
+// state machine never enters PM_STATE_CHARGING because usb/wireless are never
+// reported connected.
 void pm_charging_controller(pm_driver_t* drv) { (void)drv; }
 #else
 void pm_charging_controller(pm_driver_t* drv) {
