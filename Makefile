@@ -191,10 +191,10 @@ docs_summary_check: ## check if there are unlinked documentation files
 	python3 tools/check_docs_summary.py
 
 vendorheader: ## generate vendor header
-	./core/tools/generate_vendorheader.sh --quiet
+	./core/tools/generate_vendorheader.py
 
 vendorheader_check: ## check that vendor header is up to date
-	./core/tools/generate_vendorheader.sh --quiet --check
+	./core/tools/generate_vendorheader.py --check
 
 bootloader_hashes: ## generate bootloader hashes
 	bootloader_hashes
@@ -240,9 +240,11 @@ python_doc: ## generate trezorctl OPTIONS.rst
 python_doc_check: ## check that trezorctl OPTIONS.rst is up to date
 	make -C python doc_check
 
-gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_config hsm_keys prodtest_error_codes certs python_doc ## regenerate auto-generated files from sources
+gen: ## regenerate auto-generated files from sources (V=1 for details)
+	./tools/gen.py $(if $(filter-out 0,$(V)),-v)
 
-gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_config_check hsm_keys_check prodtest_error_codes_check certs_check python_doc_check ## check validity of auto-generated files
+gen_check: ## check validity of auto-generated files (V=1 for details)
+	./tools/gen.py --check $(if $(filter-out 0,$(V)),-v)
 
 uvlock_check: ## check that uv.lock is up to date
 	@echo [UVLOCK-CHECK]
