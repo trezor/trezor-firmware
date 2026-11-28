@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import typing as t
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
@@ -47,6 +48,24 @@ def _get_session_screenshot_dir(base_dir: Path) -> Path:
 
     session_dir.mkdir(parents=True, exist_ok=True)
     return session_dir
+
+
+@contextmanager
+def debuglink_context(transport: Transport) -> t.Generator[DebugLink, None, None]:
+    """Context manager that opens the debug transport and yields a DebugLink.
+
+    Ensures the debug transport is properly closed even if an exception occurs.
+
+    :param transport: the device transport (e.g. ``session.client.transport``).
+
+    Example::
+
+        with debuglink_context(session.client.transport) as debug:
+            debug.do_something()
+    """
+    debug_transport = transport.find_debug()
+    with debug_transport:
+        yield DebugLink(transport=debug_transport)
 
 
 def record_screen(transport: Transport, base_dir: Path | None) -> None:
@@ -118,23 +137,17 @@ def prodtest_t1(session: Session) -> None:
 @with_session(seedless=True)
 def optiga_set_sec_max(session: Session) -> None:
     """Set Optiga's security event counter to maximum."""
-    debug_transport = session.client.transport.find_debug()
-    debug_transport.open()
-    debug = DebugLink(transport=debug_transport)
-    debuglink_optiga_set_sec_max(debug)
-    debug_transport.close()
+    with debuglink_context(session.client.transport) as debug:
+        debuglink_optiga_set_sec_max(debug)
 
 
 @cli.command()
-@click.argument("filter", required=False)
+@click.argument("log_filter", metavar="FILTER", required=False)
 @with_session(seedless=True)
-def set_log_filter(session: Session, filter: str) -> None:
+def set_log_filter(session: Session, log_filter: str) -> None:
     """Set logging filter string."""
-    debug_transport = session.client.transport.find_debug()
-    debug_transport.open()
-    debug = DebugLink(transport=debug_transport)
-    debuglink_set_log_filter(debug, filter)
-    debug_transport.close()
+    with debuglink_context(session.client.transport) as debug:
+        debuglink_set_log_filter(debug, log_filter)
 
 
 @cli.command()
@@ -197,9 +210,6 @@ def set_battery_state(
 
       trezorctl debug set-battery-state --no-battery
     """
-    debug_transport = session.client.transport.find_debug()
-    debug_transport.open()
-    debug = DebugLink(transport=debug_transport)
     flags = dict(
         usb_connected=usb_connected,
         wireless_connected=wireless_connected,
@@ -208,8 +218,9 @@ def set_battery_state(
         temp_control_active=temp_control_active,
         battery_connected=battery_connected,
     )
-    debug.set_battery_state(soc=soc, **flags)
-    debug_transport.close()
+
+    with debuglink_context(session.client.transport) as debug:
+        debug.set_battery_state(soc=soc, **flags)
 
     parts = []
     if soc is not None:
