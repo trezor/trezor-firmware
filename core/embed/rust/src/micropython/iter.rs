@@ -53,10 +53,9 @@ pub struct Iter<'a> {
 impl<'a> Iter<'a> {
     fn try_from_obj_with_buf(o: Obj, iter_buf: &'a mut IterBuf) -> Result<Self, Error> {
         // SAFETY:
-        //  - In the common case, `ffi::mp_getiter` does not heap-allocate, but instead
-        //    uses memory from the passed `iter_buf`. We maintain this invariant by
-        //    taking a mut ref to `IterBuf` and tying it to the lifetime of returned
-        //    `Iter`.
+        //  - In the common case, `ffi::mp_getiter` does not heap-allocate, but instead uses memory
+        //    from the passed `iter_buf`. We maintain this invariant by taking a mut ref to
+        //    `IterBuf` and tying it to the lifetime of returned `Iter`.
         //  - Returned obj is referencing into `iter_buf`.
         // EXCEPTION: Raises if `o` is not iterable and possibly in other cases too.
         let iter = catch_exception!(unsafe { ffi::mp_getiter } => { o, &mut iter_buf.iter_buf })?;
@@ -76,8 +75,8 @@ impl<'a> Iterator for Iter<'a> {
             return None;
         }
         // SAFETY:
-        //  - We assume that `mp_iternext` returns objects without any lifetime
-        //    invariants, i.e. heap-allocated, unlike `mp_getiter`.
+        //  - We assume that `mp_iternext` returns objects without any lifetime invariants, i.e.
+        //    heap-allocated, unlike `mp_getiter`.
         // EXCEPTION: Can raise from the underlying iterator.
         let item = catch_exception!(unsafe { ffi::mp_iternext } => { self.iter });
         match item {

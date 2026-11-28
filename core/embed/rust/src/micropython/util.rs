@@ -97,12 +97,11 @@ pub fn new_attrtuple(field_qstrs: &'static [Attribute], values: &[Obj]) -> Resul
         return Err(Error::TypeError);
     }
     // SAFETY:
-    // * `values` are copied into the tuple, but the `fields` array is stored as a
-    //   pointer in the last tuple item. Hence the requirement that `fields` is
-    //   'static. See objattrtuple.c:79
-    // * we cast `field_qstrs` to the required type `qstr`, which is internally
-    //   usize. (py/qstr.h:48). This is valid for as long as Attribute is
-    //   repr(transparent) over the ffi::qstr type.
+    // * `values` are copied into the tuple, but the `fields` array is stored as a pointer in the
+    //   last tuple item. Hence the requirement that `fields` is 'static. See objattrtuple.c:79
+    // * we cast `field_qstrs` to the required type `qstr`, which is internally usize.
+    //   (py/qstr.h:48). This is valid for as long as Attribute is repr(transparent) over the
+    //   ffi::qstr type.
     // EXCEPTION: Raises if allocation fails, does not return NULL.
     catch_exception!(unsafe { ffi::mp_obj_new_attrtuple } => { field_qstrs.as_ptr() as *const _, values.len(), values.as_ptr() })
 }
