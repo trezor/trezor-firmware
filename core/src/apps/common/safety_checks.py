@@ -42,5 +42,8 @@ def apply_setting(level: SafetyCheckLevel) -> None:
 def is_strict() -> bool:
     """
     Shorthand for checking whether the effective level is Strict.
+
+    A caller which skips a check because the level is not Strict has to warn the
+    user before carrying out the dangerous action. See docs/common/safety-checks.md.
     """
     return read_setting() == SafetyCheckLevel.Strict

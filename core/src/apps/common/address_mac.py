@@ -25,6 +25,13 @@ def check_address_mac(
 def get_address_mac(
     address: str, slip44: int, address_n: Bip32Path, keychain: Keychain
 ) -> bytes:
+    """
+    Issue a MAC by which Trezor later recognises the address as the user's own.
+
+    An address for which a MAC is issued is treated as a displayed address. For a
+    non-standard path, the caller has to show a warning first, see
+    docs/common/safety-checks.md.
+    """
     from trezor.crypto import hmac
 
     from .writers import write_bytes_unchecked, write_compact_size, write_uint32_le
