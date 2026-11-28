@@ -31,6 +31,12 @@ target_sources(app PRIVATE
         src/trezor-crypto/memzero.c
 )
 
+if(CONFIG_TRZ_CONSOLE OR CONFIG_TRZ_DEBUG_LINK)
+  target_sources(app PRIVATE src/ble/aux_chan.c)
+endif()
+target_sources_ifdef(CONFIG_TRZ_CONSOLE app PRIVATE src/ble/console.c)
+target_sources_ifdef(CONFIG_TRZ_DEBUG_LINK app PRIVATE src/ble/debug.c)
+
 include_directories(src/signals/inc)
 include_directories(src/trz_comm/inc)
 include_directories(src/ble/inc)
