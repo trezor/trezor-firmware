@@ -265,6 +265,10 @@ class BasicApprover(Approver):
                 self.external_output_index,
                 self.chunkify,
                 source_path,
+                # Pay-to-contact: name the output if the user's WARD knows the
+                # identity that attested the address. Replacement, payment request
+                # and CoinJoin outputs never ask.
+                lookup_contact=txo.contact_pubkey is not None,
             )
             self.external_output_index += 1
         else:

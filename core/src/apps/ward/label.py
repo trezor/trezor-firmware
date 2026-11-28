@@ -24,6 +24,10 @@ NOTE_CORRUPT = "A label is stored here but cannot be read."
 # never from the wire: capability scoping, not authentication.
 _CAPABILITIES = {
     "display_address": ("read",),
+    # SignTx asks only for the npub of a contact attestation it verified for the output's
+    # address (apps.bitcoin.sign_tx.contact). The host picks that npub, but it can only
+    # make SignTx read the entry of an identity that attested the address being paid.
+    "sign_tx": ("read",),
 }
 
 

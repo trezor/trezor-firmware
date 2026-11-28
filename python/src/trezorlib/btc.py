@@ -28,8 +28,10 @@ from . import exceptions, messages
 from .tools import prepare_message_bytes, workflow
 
 if TYPE_CHECKING:
+    from . import protobuf
     from .client import Session
     from .tools import Address
+    from .ward import EntryProvider
 
     class ScriptSig(TypedDict):
         asm: str
@@ -151,6 +153,7 @@ def get_authenticated_address(
     unlock_path: Optional[List[int]] = None,
     unlock_path_mac: Optional[bytes] = None,
     chunkify: bool = False,
+    contact_attestation: bool = False,
 ) -> messages.Address:
     if unlock_path:
         session.call(
@@ -167,6 +170,7 @@ def get_authenticated_address(
             script_type=script_type,
             ignore_xpub_magic=ignore_xpub_magic,
             chunkify=chunkify,
+            contact_attestation=contact_attestation or None,
         ),
         expect=messages.Address,
     )
@@ -281,6 +285,7 @@ def sign_tx(
     preauthorized: bool = False,
     unlock_path: Optional[List[int]] = None,
     unlock_path_mac: Optional[bytes] = None,
+    ward_provider: Optional["EntryProvider"] = None,
     **kwargs: Any,
 ) -> Tuple[Sequence[Optional[bytes]], bytes]:
     """Sign a Bitcoin-like transaction.
@@ -293,9 +298,37 @@ def sign_tx(
     must correspond to a field in the `SignTx` data type. Note that some fields
     (`inputs_count`, `outputs_count`, `coin_name`) will be inferred from the arguments
     and cannot be overriden by kwargs.
+
+    An output with contact fields may make the device pull the contact's WARD entry
+    before it shows that output. `ward_provider` answers those pulls; without one
+    each pull gets an empty answer, and the device then shows the bare address.
     """
     if prev_txes is None:
         prev_txes = {}
+
+    def _call(msg: protobuf.MessageType) -> messages.TxRequest:
+        # A WARD pull sits between a TxAck and the next TxRequest. Answering it with
+        # anything other than a WardEntryAck would end the signing on the device.
+        res = session.call(msg)
+        while isinstance(res, messages.WardEntryRequest):
+            from . import ward
+
+            if ward_provider is None:
+                answer = ward.Answer()
+            else:
+                answer = ward_provider(res.entry_key or b"")
+            leaf = answer.leaf or ward.Leaf(None, None)
+            res = session.call(
+                messages.WardEntryAck(
+                    sealed_content=leaf.content or None,
+                    proof=answer.proof or [],
+                    witness_entry_key=answer.witness_entry_key,
+                    witness_commit=answer.witness_commit,
+                )
+            )
+        if not isinstance(res, messages.TxRequest):
+            raise exceptions.UnexpectedMessageError(messages.TxRequest, res)
+        return res
 
     if details is not None:
         warnings.warn(
@@ -326,7 +359,7 @@ def sign_tx(
     elif preauthorized:
         session.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
 
-    res = session.call(signtx, expect=messages.TxRequest)
+    res = _call(signtx)
 
     # Prepare structure for signatures
     signatures: List[Optional[bytes]] = [None] * len(inputs)
@@ -385,7 +418,7 @@ def sign_tx(
         if res.request_type == R.TXPAYMENTREQ:
             assert res.details.request_index is not None
             msg = payment_reqs[res.details.request_index]
-            res = session.call(msg, expect=messages.TxRequest)
+            res = _call(msg)
         else:
             msg = messages.TransactionType()
             if res.request_type == R.TXMETA:
@@ -415,7 +448,7 @@ def sign_tx(
                     f"Unknown request type - {res.request_type}."
                 )
 
-            res = session.call(messages.TxAck(tx=msg), expect=messages.TxRequest)
+            res = _call(messages.TxAck(tx=msg))
 
     for i, sig in zip(inputs, signatures):
         if i.script_type != messages.InputScriptType.EXTERNAL and sig is None:

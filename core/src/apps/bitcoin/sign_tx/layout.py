@@ -65,6 +65,7 @@ async def confirm_output(
     output_index: int,
     chunkify: bool,
     address_n: Bip32Path | None,
+    contact_label: str | None = None,
 ) -> None:
     from trezor.enums import OutputScriptType
 
@@ -98,7 +99,9 @@ async def confirm_output(
         else:
             title = None
 
-        address_label = None
+        # The verified contact name (sign_tx/contact.py). The address_n label below
+        # never replaces it: contact fields are rejected together with address_n.
+        address_label = contact_label
         if output.address_n and not output.multisig:
             from trezor import utils
 

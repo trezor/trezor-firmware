@@ -25,10 +25,11 @@ if TYPE_CHECKING:
 
 
 @workflow()
-def get_pubkey(session: "Session", n: "Address") -> bytes:
+def get_pubkey(session: "Session", n: "Address", show_display: bool = False) -> bytes:
     return session.call(
         messages.NostrGetPubkey(
             address_n=n,
+            show_display=show_display or None,
         ),
         expect=messages.NostrPubkey,
     ).pubkey

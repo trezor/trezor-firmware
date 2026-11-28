@@ -40,6 +40,24 @@ def _get_xpubs(
     return result
 
 
+def _can_attest(
+    msg: GetAddress, keychain: Keychain, coin: CoinInfo, address: str
+) -> bool:
+    """Attest only a single-sig receive address the user has just seen."""
+    from apps.common import contacts
+
+    from .keychain import validate_path_against_script_type
+
+    return (
+        bool(msg.show_display)
+        and not msg.multisig
+        and contacts.is_attestable_path(msg.address_n)
+        and keychain.is_in_keychain(msg.address_n)
+        and validate_path_against_script_type(coin, msg)
+        and contacts.is_attestable_address(address)
+    )
+
+
 @with_keychain
 async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Address:
     from trezor import TR
@@ -166,4 +184,30 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
                 chunkify=bool(msg.chunkify),
             )
 
-    return Address(address=address, mac=mac)
+    contact_signature: bytes | None = None
+    contact_pubkey: bytes | None = None
+    if msg.contact_attestation and _can_attest(msg, keychain, coin, address):
+        from trezor.enums import ButtonRequestType
+        from trezor.ui.layouts import confirm_action
+
+        from apps.common import contacts
+
+        # The receive screen above only shows the address. Sharing hands the
+        # host a non-expiring proof that this address belongs to the user's
+        # contact identity, so it needs its own consent.
+        await confirm_action(
+            "contact_share_address",
+            "Share address",
+            description="Share this address with a contact? They will see it is yours.",
+            br_code=ButtonRequestType.ProtectCall,
+        )
+        contact_signature, contact_pubkey = await contacts.sign_address(
+            coin.slip44, address
+        )
+
+    return Address(
+        address=address,
+        mac=mac,
+        contact_signature=contact_signature,
+        contact_pubkey=contact_pubkey,
+    )
