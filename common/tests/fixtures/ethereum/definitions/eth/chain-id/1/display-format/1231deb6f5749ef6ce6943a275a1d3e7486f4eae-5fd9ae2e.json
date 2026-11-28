@@ -47,7 +47,7 @@
                 "atomic": "ABI_BOOL"
               }
             ],
-            "is_dynamic": false
+            "is_dynamic": true
           }
         }
       }
