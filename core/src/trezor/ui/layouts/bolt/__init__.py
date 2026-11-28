@@ -554,7 +554,7 @@ async def confirm_payment_request(
     )
     menu_ctx = trezorui_api.confirm_properties(
         title="",
-        items=menu_items,
+        items=with_colon(menu_items),
         verb=TR.buttons__close,
     )
     with main_ctx as main_layout, menu_ctx as menu_layout:
@@ -1009,7 +1009,7 @@ async def confirm_trade(
     trade: Trade,
     extra_menu_items: Iterable[tuple[str, str]],
 ) -> None:
-    menu_items: list[PropertyType] = [
+    menu_items: list[StrPropertyType] = [
         (TR.address__title_receive_address, trade.address, None)
     ]
     if trade.account:
@@ -1031,7 +1031,7 @@ async def confirm_trade(
         external_menu=True,
     )
     info_ctx = trezorui_api.confirm_properties(
-        title="", items=menu_items, verb=TR.buttons__close
+        title="", items=with_colon(menu_items), verb=TR.buttons__close
     )
     with main_ctx as main_layout, info_ctx as info_layout:
         await with_info(
