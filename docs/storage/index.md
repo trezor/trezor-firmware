@@ -87,6 +87,8 @@ Storage entries are stored as items in norcow flash. The format of the items is 
 
 The PIN is not stored in the flash storage. An entry is added to the flash storage consisting of a 256-bit encrypted data encryption key (EDEK) followed by a 128-bit encrypted storage authentication key (ESAK) and a 64-bit PIN verification code (PVC). The PIN is used to decrypt the EDEK and ESAK and the PVC is used to verify that the correct PIN was used. The resulting data encryption key (DEK) is then used to encrypt/decrypt protected entries in the flash storage. We use Chacha20Poly1305 as defined in [RFC 7539](https://tools.ietf.org/html/rfc7539) to encrypt the EDEK and the protected entries. The storage authentication key (SAK) is used to authenticate the list of (APP, KEY) values for all protected entries that have been set in the storage. This prevents an attacker from erasing or adding entries to the storage.
 
+The PIN and the wipe code are arbitrary byte strings that must not contain the zero byte.
+
 
 ## PIN verification and decryption of protected entries in flash storage
 

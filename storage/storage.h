@@ -116,6 +116,7 @@ typedef enum {
   UNLOCK_PIN_RESET_FAILS_FAILED,
   UNLOCK_ACCESS_VIOLATION,
   UNLOCK_UNKNOWN,
+  UNLOCK_INVALID_PIN_FORMAT,
 } storage_unlock_result_t;
 
 typedef enum {
@@ -127,6 +128,7 @@ typedef enum {
   PIN_CHANGE_CANNOT_SET_PIN,
   PIN_CHANGE_ACCESS_VIOLATION,
   PIN_CHANGE_UNKNOWN,
+  PIN_CHANGE_INVALID_PIN_FORMAT,
 } storage_pin_change_result_t;
 
 /**
@@ -190,7 +192,8 @@ void storage_lock(void);
  * registered by storage_init(), which may abort the operation.
  *
  * @param pin PIN to verify, PIN_EMPTY for an empty PIN. If NULL, the function
- * fails with UNLOCK_NO_PIN
+ * fails with UNLOCK_NO_PIN. A PIN containing a zero byte fails with
+ * UNLOCK_INVALID_PIN_FORMAT without spending an unlock attempt
  * @param pin_len Length of pin in bytes
  * @param ext_salt External salt of EXTERNAL_SALT_SIZE bytes, or NULL to mix in
  * no external salt
@@ -228,7 +231,8 @@ uint32_t storage_get_pin_rem(void);
  * Progress is reported through the callback registered by storage_init().
  *
  * @param newpin New PIN, PIN_EMPTY to remove the PIN. If NULL, the function
- * fails with PIN_CHANGE_WRONG_ARGUMENT
+ * fails with PIN_CHANGE_WRONG_ARGUMENT. If containing a zero byte, it fails
+ * with PIN_CHANGE_INVALID_PIN_FORMAT
  * @param newpin_len Length of newpin in bytes
  * @param new_ext_salt New external salt of EXTERNAL_SALT_SIZE bytes, or NULL
  * to mix in no external salt
@@ -244,7 +248,8 @@ storage_pin_change_result_t storage_change_pin(const uint8_t *newpin,
  * On a match the storage is wiped and the wipe code screen is shown, and the
  * function does not return.
  *
- * @param pin PIN to check. Must not be NULL
+ * @param pin PIN to check. Must not be NULL. A PIN containing a zero byte
+ * never matches, since such a wipe code cannot be set
  * @param pin_len Length of pin in bytes
  */
 void storage_ensure_not_wipe_code(const uint8_t *pin, size_t pin_len);
@@ -267,8 +272,9 @@ secbool storage_has_wipe_code(void);
  * @param pin_len Length of pin in bytes
  * @param ext_salt External salt of EXTERNAL_SALT_SIZE bytes, or NULL to mix in
  * no external salt
- * @param wipe_code New wipe code, which must differ from the PIN. If NULL, the
- * function fails; pass wipe_code_len of 0 to remove the wipe code
+ * @param wipe_code New wipe code, which must differ from the PIN. If NULL or
+ * containing a zero byte, the function fails; pass wipe_code_len of 0 to
+ * remove the wipe code
  * @param wipe_code_len Length of wipe_code in bytes
  * @return sectrue on success, secfalse otherwise
  */
