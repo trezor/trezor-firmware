@@ -1,0 +1,53 @@
+{
+  "data_type": "ETHEREUM_DISPLAY_FORMAT",
+  "unchecked_enums": true,
+  "message": {
+    "chain_id": 10,
+    "address": "7e57000000000000000000000000000000000099",
+    "func_sig": "6d780459",
+    "intent": "Transfer stETH shares",
+    "parameter_definitions": [
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_ADDRESS"
+      },
+      {
+        "atomic": "ABI_UINT256"
+      }
+    ],
+    "field_definitions": [
+      {
+        "path": {
+          "path": [
+            0
+          ]
+        },
+        "label": "Sender",
+        "formatter": 99
+      },
+      {
+        "path": {
+          "path": [
+            1
+          ]
+        },
+        "label": "Recipient",
+        "formatter": "FORMATTER_ADDRESS_NAME"
+      },
+      {
+        "path": {
+          "path": [
+            2
+          ]
+        },
+        "label": "Shares amount",
+        "formatter": "FORMATTER_UNIT",
+        "decimals": 18,
+        "base": " shares"
+      }
+    ],
+    "provider_name": "Lido DAO"
+  }
+}

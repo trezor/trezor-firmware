@@ -865,6 +865,26 @@
             }
         },
         {
+            "name": "unknown_formatter_enum_blind_sign",
+            "parameters": {
+                "comment": "lido_stETH_L2_transferSharesFrom calldata on a fake address whose descriptor has an unknown formatter enum (99): must fall back to blind signing",
+                "data": "6d7804590000000000000000000000007364ad99a3acb7bcbd2dd9a9b147a5a16dc7a8fd0000000000000000000000001cefc6ac8b8681f801d0f207f5d8e1b50dc1788d0000000000000000000000000000000000000000000000000000000000002710",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0x7e57000000000000000000000000000000000099",
+                "chain_id": 10,
+                "nonce": "0x0",
+                "gas_price": "0x149",
+                "gas_limit": "0xf83b",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 55,
+                "sig_r": "90acb73885d50ee523d22af57a1b9e1467ff82d1b4689cd40ce4177c8e2b4a1e",
+                "sig_s": "2c3122c3fcadde26c9853a1659c272bcf4e6607c2a33b869f10c847498e20497"
+            }
+        },
+        {
             "name": "lombard_lbtc_mainnet_permit",
             "parameters": {
                 "comment": "supported | https://etherscan.io/tx/0x91a3ce21dda58b8af495726cb5df275545fcfc407fda453c4ae3ef830a7c740f",
