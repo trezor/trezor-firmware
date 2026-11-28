@@ -25,9 +25,7 @@ kind, the boot command it left behind, and whether storage survived.
 
 from __future__ import annotations
 
-import json
 import logging
-import subprocess
 import time
 import typing as t
 from concurrent.futures import Future, ThreadPoolExecutor
@@ -536,20 +534,19 @@ class BootloaderEmulator(Emulator):
         return record
 
     def properties(self) -> dict[str, t.Any]:
-        """Model and flash layout, as printed by ``bootloader-emu -p``."""
-        properties = self._properties
-        if properties is None:
-            out = subprocess.run(
-                [str(self.executable), "-p"],
-                cwd=self.workdir,
-                env=self.make_env(),
-                capture_output=True,
-                text=True,
-                check=True,
-            ).stdout
-            properties = json.loads(out)
+        """Model and flash layout, as printed by ``--emulator-properties``.
+
+        Unlike the firmware emulators, a bootloader run cannot do without
+        them, so a binary that does not report them is an error.
+        """
+        if self._properties is None:
+            properties = super().properties()
+            if not properties:
+                raise RuntimeError(
+                    f"{self.executable} reported no properties, see the log"
+                )
             self._properties = properties
-        return properties
+        return self._properties
 
     def storage_erased(self) -> bool | None:
         """Whether both storage areas in the flash file are blank."""

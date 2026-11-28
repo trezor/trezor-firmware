@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -22,6 +23,7 @@
 
 #include "emulator.h"
 #include "rust_ui_common.h"
+#include "version.h"
 
 #include <io/display_utils.h>
 #include <sys/systask.h>
@@ -69,7 +71,8 @@ void usage(void) {
 #ifdef LOCKABLE_BOOTLOADER
   printf("  -l  lock bootloader\n");
 #endif
-  printf("  -p  print the emulator properties as JSON and exit\n");
+  printf("  --emulator-properties  print the properties as JSON and exit\n");
+  printf("                         (only as the first option)\n");
   printf("  -h  show this help\n");
   printf("\n");
   printf("On exit, the boot command for the next run is written to\n");
@@ -146,8 +149,17 @@ static void print_properties(void) {
 #else
   const char *secmon = "false";
 #endif
-  printf("{\"model\": \"%s\", \"code_alignment\": %u, ", MODEL_INTERNAL_NAME,
-         (unsigned)CODE_ALIGNMENT);
+  // the common keys first, as the firmware emulator prints them
+  printf("{\"internal_model\": \"%s\", ", MODEL_INTERNAL_NAME);
+#ifdef USE_TROPIC
+  printf("\"tropic\": true, ");
+#endif
+#ifdef USE_BLE
+  printf("\"ble\": true, ");
+#endif
+  printf("\"version\": \"%d.%d.%d.%d\", ", VERSION_MAJOR, VERSION_MINOR,
+         VERSION_PATCH, VERSION_BUILD);
+  printf("\"code_alignment\": %u, ", (unsigned)CODE_ALIGNMENT);
   printf("\"secmon_verification\": %s, \"storage_areas\": [", secmon);
   for (size_t i = 0; i < ARRAY_LENGTH(STORAGE_AREAS); i++) {
     // storage areas are single subareas, see storage_empty()
@@ -181,19 +193,19 @@ static bool sdl_event_filter(void *userdata, SDL_Event *event) {
   return true;
 }
 
-#define EMULATOR_OPTSTRING "ahpslewc:b:f:i:r:B:WR"
+#define EMULATOR_OPTSTRING "ahslewc:b:f:i:r:B:WR"
 
 int main(int argc, char **argv) {
   int opt;
 
   // The informational options answer before the display opens and before
   // the flash file is mapped, which would create it if missing.
+  if (argc > 1 && strcmp(argv[1], "--emulator-properties") == 0) {
+    print_properties();
+    exit(0);
+  }
   opterr = 0;
   while ((opt = getopt(argc, argv, EMULATOR_OPTSTRING)) != -1) {
-    if (opt == 'p') {
-      print_properties();
-      exit(0);
-    }
     if (opt == 'h') {
       usage();
       exit(0);
