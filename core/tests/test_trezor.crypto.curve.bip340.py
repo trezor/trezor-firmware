@@ -49,6 +49,30 @@ class TestCryptoBip340(unittest.TestCase):
             sig = bip340.sign(sk, dig)
             self.assertTrue(bip340.verify(pk, sig, dig))
 
+    def test_sign_verify_with_aux_rand(self):
+        for _ in range(50):
+            sk = bip340.generate_secret()
+            pk = bip340.publickey(sk)
+            dig = random.bytes(32)
+            aux = random.bytes(32)
+            sig = bip340.sign(sk, dig, aux)
+            self.assertTrue(bip340.verify(pk, sig, dig))
+
+        # Different aux_rand values must produce different signatures for the same key and digest.
+        sk = bip340.generate_secret()
+        dig = random.bytes(32)
+        sig_a = bip340.sign(sk, dig, random.bytes(32))
+        sig_b = bip340.sign(sk, dig, random.bytes(32))
+        self.assertNotEqual(sig_a, sig_b)
+
+        # Verify invalid aux_rand length raises ValueError
+        sk = bip340.generate_secret()
+        dig = random.bytes(32)
+        with self.assertRaises(ValueError):
+            bip340.sign(sk, dig, b"too_short")
+        with self.assertRaises(ValueError):
+            bip340.sign(sk, dig, b"too_long" * 5)
+
 
 if __name__ == "__main__":
     unittest.main()
