@@ -19,6 +19,9 @@ struct OutputSection {
     load_address: Option<u64>,
 }
 
+/// Output section holding the zero fill that pads an image to its full size.
+const PADDING_SECTION: &str = ".flash_padding";
+
 /// Returns true for zero-initialized / reserved sections (`.bss`, `.stack`,
 /// `.heap`). These are NOBITS: they occupy RAM but carry no bytes in the flash
 /// image. GNU ld nonetheless reports a `load address` for them (the LMA cursor
@@ -39,12 +42,13 @@ pub fn print_memusage(mapfile: &Path) -> Result<()> {
         .with_context(|| format!("Failed to read `{}`", mapfile.display()))?;
 
     let regions = parse_memory_regions(&content)?;
-    let sections = parse_output_sections(&content)?;
 
-    // Some images (e.g. the boot_ucb bootloader) are zero-padded to fill their
-    // whole flash region. The linker exports `__flash_padding_size` so we can
-    // report real content usage instead of a misleading 100%.
-    let flash_padding = parse_symbol_value(&content, "__flash_padding_size");
+    // Some images (e.g. the U5 bootloaders) are zero-filled up to their full
+    // size by a dedicated output section. Report it separately so the usage
+    // reflects real content instead of a misleading 100%.
+    let (padding, sections): (Vec<_>, Vec<_>) = parse_output_sections(&content)?
+        .into_iter()
+        .partition(|section| section.name == PADDING_SECTION);
 
     println!(
         "xtask: Memory usage from `{}`",
@@ -59,18 +63,14 @@ pub fn print_memusage(mapfile: &Path) -> Result<()> {
     );
 
     for region in regions {
-        let mut used = used_bytes_for_region(&region, &sections);
+        let used = used_bytes_for_region(&region, &sections);
 
-        // Exclude the fixed-size image padding from the reported usage so the
-        // figure reflects real content. The padding only applies to the FLASH
-        // region the image is linked into.
-        let mut note = String::new();
-        if region.name == "FLASH"
-            && let Some(padding) = flash_padding
-        {
-            used = used.saturating_sub(padding);
-            note = format!("  (+{} padding)", format_bytes(padding));
-        }
+        let padding = used_bytes_for_region(&region, &padding);
+        let note = if padding > 0 {
+            format!("  (+{} padding)", format_bytes(padding))
+        } else {
+            String::new()
+        };
 
         let percent = if region.length == 0 {
             0.0
@@ -89,21 +89,6 @@ pub fn print_memusage(mapfile: &Path) -> Result<()> {
     }
 
     Ok(())
-}
-
-/// Parses the value of a symbol assignment from the map file, i.e. a line of
-/// the form `0x<value>  <name> = ...`.
-fn parse_symbol_value(content: &str, name: &str) -> Option<u64> {
-    for line in content.lines() {
-        let mut parts = line.split_whitespace();
-        let (Some(value), Some(symbol)) = (parts.next(), parts.next()) else {
-            continue;
-        };
-        if symbol == name && parts.next() == Some("=") {
-            return parse_hex(value).ok();
-        }
-    }
-    None
 }
 
 /// Parses the memory regions from the "Memory Configuration" part of
@@ -343,7 +328,7 @@ fn format_bytes(value: u64) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        parse_memory_regions, parse_output_sections, parse_symbol_value, used_bytes_for_region,
+        PADDING_SECTION, parse_memory_regions, parse_output_sections, used_bytes_for_region,
     };
 
     #[test]
@@ -375,28 +360,6 @@ Linker script and memory map
 
         assert_eq!(used_bytes_for_region(flash, &sections), 0x1a0);
         assert_eq!(used_bytes_for_region(ram, &sections), 0x60);
-    }
-
-    #[test]
-    fn parses_padding_symbol_value() {
-        // Symbol assignment lines look like this in the map file.
-        let map = r#"
-Linker script and memory map
-
-                0x000018e4                        __flash_padding_size = (_bootloader_code_end - __flash_padding_start)
-                0x0c03c000                        _bootloader_code_end = .
-"#;
-
-        assert_eq!(
-            parse_symbol_value(map, "__flash_padding_size"),
-            Some(0x18e4)
-        );
-        assert_eq!(
-            parse_symbol_value(map, "_bootloader_code_end"),
-            Some(0x0c03c000)
-        );
-        // A symbol that is not present yields None (no padding to subtract).
-        assert_eq!(parse_symbol_value(map, "__missing_symbol"), None);
     }
 
     #[test]
@@ -434,18 +397,20 @@ Linker script and memory map
     }
 
     #[test]
-    fn padding_symbol_does_not_confuse_section_parsing() {
-        // A symbol line (leading whitespace, no leading '.') must not be picked
-        // up as an output section.
+    fn parses_padding_section() {
+        // The zero fill is a separate output section after `.data`'s load
+        // image; symbol lines inside it must not be taken for sections.
         let map = r#"
 Linker script and memory map
 
-.flash          0x0c016000     0x1f5d0
-                0x000018e4                        __flash_padding_size = 0x18e4
+.flash          0x0c010400    0x1f868
+                0x0c02fdb0                        _bootloader_code_end = .
+.flash_padding  0x0c02fdb0      0x250
 "#;
 
         let sections = parse_output_sections(map).expect("sections should parse");
-        assert_eq!(sections.len(), 1);
-        assert_eq!(sections[0].address, 0x0c016000);
+        assert_eq!(sections.len(), 2);
+        assert_eq!(sections[1].name, PADDING_SECTION);
+        assert_eq!(sections[1].size, 0x250);
     }
 }

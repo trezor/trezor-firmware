@@ -88,5 +88,8 @@ runs:
         elf: ${{ steps.cfg.outputs.artifacts }}/bootloader.elf
         ld: ${{ steps.cfg.outputs.memory_ld }} ${{ steps.cfg.outputs.linker_dir }}/bootloader.ld
         map_file: ${{ steps.cfg.outputs.artifacts }}/bootloader.map
+        # U5 bootloaders are zero-filled up to BOOTLOADER_MAXSIZE; counting the
+        # fill would show them permanently full and hide every size change
+        skip_sections: .flash_padding
         exclude_alignment: true
         api_key: ${{ inputs.api-key }}
